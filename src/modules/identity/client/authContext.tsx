@@ -9,14 +9,14 @@ import {
   useState,
 } from "react";
 import { clearSessionToken, getSessionToken, saveSessionToken } from "./authStorage";
-import { loginRequest, meRequest, type AuthUser } from "./authClient";
+import { loginRequest, logoutRequest, meRequest, type AuthUser } from "./authClient";
 
 type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 };
 
@@ -62,9 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    clearSessionToken();
-    setUser(null);
+  const logout = useCallback(async () => {
+    try {
+      await logoutRequest();
+    } catch {
+      // Si el servidor falla, igualmente se limpia la sesión local.
+    } finally {
+      clearSessionToken();
+      setUser(null);
+    }
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -76,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshUser,
     }),
-    [user, isLoading, login, logout, refreshUser]
+    [user, isLoading, login, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

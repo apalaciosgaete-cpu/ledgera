@@ -49,7 +49,7 @@ export async function loginRequest(email: string, password: string) {
   const session = response.data?.session ?? response.session;
 
   if (!user || !session?.token) {
-    throw new Error("Respuesta de login invalida");
+    throw new Error("Respuesta de login inválida");
   }
 
   return {
@@ -68,8 +68,15 @@ export async function meRequest() {
   const user = response.data?.user ?? response.user;
 
   if (!user) {
-    throw new Error("Respuesta de sesion invalida");
+    throw new Error("Respuesta de sesión inválida");
   }
 
   return user;
+}
+
+export async function logoutRequest() {
+  await httpClient("/api/logout", {
+    method: "POST",
+    auth: true,
+  });
 }
