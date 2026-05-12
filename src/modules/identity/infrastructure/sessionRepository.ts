@@ -25,9 +25,7 @@ function mapRowToSession(row: {
   };
 }
 
-export async function createSession(
-  input: CreateSessionInput,
-): Promise<Session> {
+export async function createSession(input: CreateSessionInput): Promise<Session> {
   const sessionId = randomUUID();
 
   const result = await db.query(
@@ -48,20 +46,13 @@ export async function createSession(
         expires_at,
         created_at
     `,
-    [
-      sessionId,
-      input.userId,
-      input.token,
-      input.expiresAt,
-    ],
+    [sessionId, input.userId, input.token, input.expiresAt],
   );
 
   return mapRowToSession(result.rows[0]);
 }
 
-export async function getSessionByToken(
-  token: string,
-): Promise<Session | null> {
+export async function getSessionByToken(token: string): Promise<Session | null> {
   const result = await db.query(
     `
       select
@@ -82,4 +73,27 @@ export async function getSessionByToken(
   }
 
   return mapRowToSession(result.rows[0]);
+}
+
+export async function deleteSessionByToken(token: string): Promise<boolean> {
+  const result = await db.query(
+    `
+      delete from sessions
+      where token = $1
+    `,
+    [token],
+  );
+
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function deleteExpiredSessions(): Promise<number> {
+  const result = await db.query(
+    `
+      delete from sessions
+      where expires_at <= now()
+    `,
+  );
+
+  return result.rowCount ?? 0;
 }
