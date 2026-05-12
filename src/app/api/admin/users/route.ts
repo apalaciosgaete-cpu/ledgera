@@ -28,11 +28,12 @@ export async function GET(req: NextRequest) {
     }
 
     const users = await getUsers();
+    const nonAdminUsers = users.filter((user) => user.role !== "admin");
 
     return NextResponse.json({
       ok: true,
       message: "Usuarios obtenidos correctamente.",
-      data: users.map(sanitizeUser),
+      data: nonAdminUsers.map(sanitizeUser),
     });
   } catch (error) {
     console.error("[api/admin/users][GET]", error);
