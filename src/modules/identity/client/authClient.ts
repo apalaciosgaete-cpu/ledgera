@@ -1,0 +1,75 @@
+// src/modules/identity/client/authClient.ts
+
+import { httpClient } from "@/shared/http/httpClient";
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  role: "personal" | "contador" | "empresa" | "admin";
+  status?: "active" | "inactive" | "suspended";
+  subscriptionPlan?: "BASICO" | "PROFESIONAL" | "EMPRESA";
+  subscriptionExpiresAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+type LoginResponse = {
+  ok?: boolean;
+  message?: string;
+  data?: {
+    user: AuthUser;
+    session: {
+      token: string;
+      expiresAt: string;
+    };
+  };
+  user?: AuthUser;
+  session?: {
+    token: string;
+    expiresAt: string;
+  };
+};
+
+type MeResponse = {
+  ok?: boolean;
+  message?: string;
+  data?: {
+    user: AuthUser;
+  };
+  user?: AuthUser;
+};
+
+export async function loginRequest(email: string, password: string) {
+  const response = await httpClient<LoginResponse>("/api/login", {
+    method: "POST",
+    body: { email, password },
+  });
+
+  const user = response.data?.user ?? response.user;
+  const session = response.data?.session ?? response.session;
+
+  if (!user || !session?.token) {
+    throw new Error("Respuesta de login invalida");
+  }
+
+  return {
+    user,
+    token: session.token,
+    expiresAt: session.expiresAt,
+  };
+}
+
+export async function meRequest() {
+  const response = await httpClient<MeResponse>("/api/me", {
+    method: "GET",
+    auth: true,
+  });
+
+  const user = response.data?.user ?? response.user;
+
+  if (!user) {
+    throw new Error("Respuesta de sesion invalida");
+  }
+
+  return user;
+}

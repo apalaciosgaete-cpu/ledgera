@@ -1,0 +1,492 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+type TaxHealthStatus = "OK" | "REVIEW" | "RISK";
+type AlertLevel = "danger" | "warning" | "info";
+
+interface HealthData {
+  status: TaxHealthStatus;
+  score?: number;
+  summary: {
+    totalMovements: number;
+    totalSellMovements: number;
+    totalTaxEvents: number;
+    sellWithoutEvent: number;
+    unclassifiedEvents?: number;
+  };
+  details: {
+    sellWithoutEventIds: string[];
+  };
+}
+
+interface IntegrityData {
+  summary: {
+    totalMovements: number;
+    totalSellMovements: number;
+    totalTaxEvents: number;
+    sellWithoutEvent: number;
+    orphanEvents: number;
+  };
+  details: {
+    sellWithoutEventIds: string[];
+    orphanEventIds: string[];
+  };
+}
+
+interface PanelData {
+  health: HealthData;
+  integrity: IntegrityData;
+  twoFactorEnabled: boolean;
+}
+
+interface PanelAlert {
+  level: AlertLevel;
+  message: string;
+  action: string;
+  href: string;
+}
+
+interface StatusConfigItem {
+  label: string;
+  sublabel: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  pulse: boolean;
+}
+
+interface AlertStyleItem {
+  bg: string;
+  border: string;
+  dot: string;
+  actionColor: string;
+}
+
+interface MetricCardProps {
+  label: string;
+  value: number;
+  note: string;
+  highlight?: boolean;
+}
+
+// ─── Status Config ───────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<TaxHealthStatus, StatusConfigItem> = {
+  OK: {
+    label: "OK",
+    sublabel: "Todas las ventas tienen cobertura tributaria.",
+    color: "#16A34A",
+    bgColor: "rgba(22, 163, 74, 0.07)",
+    borderColor: "rgba(22, 163, 74, 0.22)",
+    pulse: false,
+  },
+  REVIEW: {
+    label: "REVISAR",
+    sublabel: "Hay eventos que requieren revisión antes de cerrar reportes.",
+    color: "#D97706",
+    bgColor: "rgba(245, 158, 11, 0.07)",
+    borderColor: "rgba(245, 158, 11, 0.22)",
+    pulse: false,
+  },
+  RISK: {
+    label: "RIESGO",
+    sublabel: "Múltiples ventas sin cobertura. Acción requerida.",
+    color: "#DC2626",
+    bgColor: "rgba(220, 38, 38, 0.07)",
+    borderColor: "rgba(220, 38, 38, 0.22)",
+    pulse: true,
+  },
+};
+
+// ─── Alert Styles ─────────────────────────────────────────────────────────────
+
+const ALERT_STYLES: Record<AlertLevel, AlertStyleItem> = {
+  danger: {
+    bg: "rgba(220, 38, 38, 0.06)",
+    border: "rgba(220, 38, 38, 0.18)",
+    dot: "#DC2626",
+    actionColor: "#DC2626",
+  },
+  warning: {
+    bg: "rgba(245, 158, 11, 0.06)",
+    border: "rgba(245, 158, 11, 0.18)",
+    dot: "#D97706",
+    actionColor: "#D97706",
+  },
+  info: {
+    bg: "rgba(22, 163, 74, 0.06)",
+    border: "rgba(22, 163, 74, 0.18)",
+    dot: "#16A34A",
+    actionColor: "#16A34A",
+  },
+};
+
+// ─── Alert Builder ────────────────────────────────────────────────────────────
+
+function buildAlerts(health: HealthData, integrity: IntegrityData): PanelAlert[] {
+  const alerts: PanelAlert[] = [];
+
+  if (health.summary.sellWithoutEvent > 5) {
+    alerts.push({
+      level: "danger",
+      message: `${health.summary.sellWithoutEvent} ventas sin evento tributario registrado`,
+      action: "Ir a Tributario → Revisión",
+      href: "/tributario",
+    });
+  } else if (health.summary.sellWithoutEvent > 0) {
+    const n = health.summary.sellWithoutEvent;
+    alerts.push({
+      level: "warning",
+      message: `${n} venta${n > 1 ? "s" : ""} sin evento tributario`,
+      action: "Ir a Tributario → Revisión",
+      href: "/tributario",
+    });
+  }
+
+  if (integrity.summary.orphanEvents > 0) {
+    const n = integrity.summary.orphanEvents;
+    alerts.push({
+      level: "warning",
+      message: `${n} evento${n > 1 ? "s" : ""} huérfano${n > 1 ? "s" : ""} sin movimiento asociado`,
+      action: "Ver en Auditoría",
+      href: "/auditoria",
+    });
+  }
+
+  const unclassified = health.summary.unclassifiedEvents ?? 0;
+  if (unclassified > 0) {
+    alerts.push({
+      level: "warning",
+      message: `${unclassified} evento${unclassified > 1 ? "s" : ""} sin categoría tributaria asignada`,
+      action: "Clasificar en Tributario",
+      href: "/tributario",
+    });
+  }
+
+  if (alerts.length === 0 && health.status === "RISK") {
+    alerts.push({
+      level: "danger",
+      message: "Riesgo tributario detectado. Revisa los eventos y clasificaciones pendientes.",
+      action: "Ir a Tributario",
+      href: "/tributario",
+    });
+  } else if (alerts.length === 0 && health.status === "REVIEW") {
+    alerts.push({
+      level: "warning",
+      message: "Hay eventos que requieren revisión antes de cerrar reportes tributarios.",
+      action: "Ir a Tributario",
+      href: "/tributario",
+    });
+  }
+
+  if (alerts.length === 0) {
+    alerts.push({
+      level: "info",
+      message: "Sin alertas activas. Tu portafolio tributario está al día.",
+      action: "Ver portafolio",
+      href: "/portafolio",
+    });
+  }
+
+  return alerts;
+}
+
+// ─── MetricCard ───────────────────────────────────────────────────────────────
+
+function MetricCard({ label, value, note, highlight = false }: MetricCardProps) {
+  return (
+    <div
+      style={{
+        background: highlight ? "rgba(245, 158, 11, 0.06)" : "#F1F5F9",
+        borderRadius: "10px",
+        padding: "1rem",
+        border: highlight ? "1px solid rgba(245, 158, 11, 0.2)" : "1px solid transparent",
+      }}
+    >
+      <p style={{ fontSize: "0.6875rem", color: "#64748B", margin: "0 0 6px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        {label}
+      </p>
+      <p style={{ fontFamily: "var(--font-display)", fontSize: "1.875rem", fontWeight: 700, color: highlight ? "#D97706" : "#0F2A3D", margin: "0 0 4px", lineHeight: 1 }}>
+        {value.toLocaleString("es-CL")}
+      </p>
+      <p style={{ fontSize: "0.75rem", color: "#94A3B8", margin: 0 }}>{note}</p>
+    </div>
+  );
+}
+
+// ─── Banner 2FA ───────────────────────────────────────────────────────────────
+
+function Banner2FA({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      style={{
+        background:   "rgba(245,158,11,0.07)",
+        border:       "1px solid rgba(245,158,11,0.25)",
+        borderRadius: "12px",
+        padding:      "1rem 1.25rem",
+        marginBottom: "1.25rem",
+        display:      "flex",
+        alignItems:   "center",
+        gap:          "0.875rem",
+        flexWrap:     "wrap",
+      }}
+    >
+      {/* Ícono escudo */}
+      <div style={{ width: 36, height: 36, borderRadius: "8px", background: "rgba(245,158,11,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+
+      {/* Texto */}
+      <div style={{ flex: 1, minWidth: "200px" }}>
+        <p style={{ margin: "0 0 2px", fontSize: "13px", fontWeight: 700, color: "#92400E" }}>
+          Tu cuenta no tiene 2FA activo
+        </p>
+        <p style={{ margin: 0, fontSize: "12px", color: "#78716C" }}>
+          Protege tu información tributaria activando la verificación en dos pasos.
+        </p>
+      </div>
+
+      {/* Acción */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        <Link
+          href="/configuracion"
+          style={{
+            padding:      "8px 16px",
+            borderRadius: "7px",
+            background:   "#D97706",
+            color:        "#ffffff",
+            fontSize:     "12px",
+            fontWeight:   700,
+            textDecoration: "none",
+            whiteSpace:   "nowrap",
+          }}
+        >
+          Activar 2FA →
+        </Link>
+        <button
+          type="button"
+          onClick={onDismiss}
+          style={{
+            background:   "transparent",
+            border:       "none",
+            cursor:       "pointer",
+            color:        "#A8A29E",
+            fontSize:     "18px",
+            lineHeight:   1,
+            padding:      "4px",
+          }}
+          title="Cerrar"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
+export default function PanelPage() {
+  const [data,           setData]           = useState<PanelData | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState<string | null>(null);
+  const [show2FABanner,  setShow2FABanner]  = useState(false);
+
+  useEffect(() => {
+    async function fetchDashboard() {
+      try {
+        const [healthRes, integrityRes, twoFARes] = await Promise.all([
+          fetch("/api/tax/health"),
+          fetch("/api/tax/events/integrity"),
+          fetch("/api/2fa/status"),
+        ]);
+
+        if (!healthRes.ok || !integrityRes.ok) {
+          throw new Error("Error al conectar con el motor tributario");
+        }
+
+        const healthJson    = await healthRes.json();
+        const integrityJson = await integrityRes.json();
+        const twoFAJson     = await twoFARes.json().catch(() => ({ enabled: true }));
+
+        if (!healthJson.ok || !integrityJson.ok) {
+          throw new Error(healthJson.message ?? integrityJson.message ?? "Respuesta inválida");
+        }
+
+        setData({
+          health:           healthJson.data,
+          integrity:        integrityJson.data,
+          twoFactorEnabled: twoFAJson.enabled ?? true,
+        });
+
+        // Mostrar banner solo si 2FA no está activo
+        if (!twoFAJson.enabled) setShow2FABanner(true);
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error inesperado");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboard();
+  }, []);
+
+  if (loading) {
+    return (
+      <>
+        <style>{`@keyframes ledgera-spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60vh", gap: "1rem" }}>
+          <div style={{ width: 28, height: 28, border: "2px solid rgba(15, 42, 61, 0.12)", borderTopColor: "#0F2A3D", borderRadius: "50%", animation: "ledgera-spin 0.75s linear infinite" }} />
+          <p style={{ color: "#94A3B8", fontFamily: "var(--font-body)", fontSize: "0.875rem", margin: 0 }}>
+            Cargando estado tributario...
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.18)", borderRadius: "12px", padding: "1.25rem 1.5rem", fontFamily: "var(--font-body)" }}>
+          <p style={{ color: "#DC2626", fontWeight: 600, margin: "0 0 4px", fontSize: "0.9375rem" }}>Error al cargar el Panel</p>
+          <p style={{ color: "#64748B", margin: 0, fontSize: "0.875rem" }}>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { health, integrity } = data;
+  const cfg    = STATUS_CONFIG[health.status];
+  const alerts = buildAlerts(health, integrity);
+
+  const coverageRate =
+    health.summary.totalSellMovements > 0
+      ? Math.round(
+          ((health.summary.totalSellMovements - health.summary.sellWithoutEvent) /
+            health.summary.totalSellMovements) * 100
+        )
+      : 100;
+
+  return (
+    <>
+      {cfg.pulse && (
+        <style>{`
+          @keyframes ledgera-pulse {
+            0%   { transform: scale(1); opacity: 0.45; }
+            100% { transform: scale(2.2); opacity: 0; }
+          }
+        `}</style>
+      )}
+
+      <div style={{ padding: "2rem", maxWidth: "960px", fontFamily: "var(--font-body)" }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: "1.75rem" }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>
+            Panel
+          </h1>
+          <p style={{ color: "#94A3B8", margin: 0, fontSize: "0.875rem" }}>
+            Estado consolidado de tu situación tributaria
+          </p>
+        </div>
+
+        {/* ── Banner 2FA ── */}
+        {show2FABanner && (
+          <Banner2FA onDismiss={() => setShow2FABanner(false)} />
+        )}
+
+        {/* Semáforo Hero */}
+        <div
+          style={{
+            background:    cfg.bgColor,
+            border:        `1px solid ${cfg.borderColor}`,
+            borderRadius:  "16px",
+            padding:       "1.75rem 2rem",
+            marginBottom:  "1.25rem",
+            display:       "flex",
+            alignItems:    "center",
+            gap:           "1.5rem",
+          }}
+        >
+          <div style={{ position: "relative", flexShrink: 0, width: 52, height: 52 }}>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: cfg.color }} />
+            {cfg.pulse && (
+              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: cfg.color, animation: "ledgera-pulse 1.6s ease-out infinite" }} />
+            )}
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "0.625rem", marginBottom: "5px" }}>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "1.875rem", fontWeight: 700, color: cfg.color, lineHeight: 1 }}>
+                {cfg.label}
+              </span>
+              <span style={{ fontSize: "0.8125rem", color: "#94A3B8", fontWeight: 500 }}>Estado tributario</span>
+            </div>
+            <p style={{ color: "#475569", margin: 0, fontSize: "0.9375rem" }}>{cfg.sublabel}</p>
+          </div>
+
+          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.55)", borderRadius: "12px", padding: "0.75rem 1.25rem", flexShrink: 0 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.625rem", fontWeight: 700, color: cfg.color, lineHeight: 1 }}>
+              {coverageRate}%
+            </div>
+            <div style={{ fontSize: "0.6875rem", color: "#94A3B8", marginTop: "4px", fontWeight: 500 }}>COBERTURA</div>
+          </div>
+        </div>
+
+        {/* Métricas */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px", marginBottom: "1.25rem" }}>
+          <MetricCard label="Movimientos"       value={health.summary.totalMovements}    note="total portafolio" />
+          <MetricCard label="Ventas"            value={health.summary.totalSellMovements} note="operaciones SELL" />
+          <MetricCard label="Eventos tributarios" value={health.summary.totalTaxEvents}  note="generados por motor" />
+          <MetricCard label="Sin cobertura"     value={health.summary.sellWithoutEvent}  note="ventas pendientes"     highlight={health.summary.sellWithoutEvent > 0} />
+          <MetricCard label="Huérfanos"         value={integrity.summary.orphanEvents}   note="sin movimiento padre"  highlight={integrity.summary.orphanEvents > 0} />
+        </div>
+
+        {/* PnL Placeholder */}
+        <div style={{ background: "#F8FAFC", border: "1px dashed rgba(15, 42, 61, 0.13)", borderRadius: "12px", padding: "1.125rem 1.5rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.875rem" }}>
+          <div style={{ width: 34, height: 34, borderRadius: "8px", background: "rgba(15, 42, 61, 0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <path d="M1.5 11L5.5 7.5L8.5 10L13.5 4.5" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: "0.875rem", color: "#CBD5E1" }}>PnL USD / CLP</p>
+            <p style={{ margin: 0, fontSize: "0.8125rem", color: "#E2E8F0" }}>Próximamente — requiere integración de precios de mercado</p>
+          </div>
+        </div>
+
+        {/* Alertas */}
+        <div>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "0.9375rem", fontWeight: 700, color: "#0F2A3D", margin: "0 0 0.625rem" }}>
+            Alertas accionables
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {alerts.map((alert, i) => {
+              const s = ALERT_STYLES[alert.level];
+              return (
+                <div key={i} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: "10px", padding: "0.875rem 1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
+                  <p style={{ flex: 1, margin: 0, fontSize: "0.875rem", color: "#1E293B", minWidth: 0 }}>{alert.message}</p>
+                  <Link href={alert.href} style={{ fontSize: "0.8125rem", fontWeight: 600, color: s.actionColor, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+                    {alert.action} →
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+    </>
+  );
+}

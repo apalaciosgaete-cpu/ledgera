@@ -1,0 +1,39 @@
+import { NextRequest, NextResponse } from "next/server";
+import speakeasy from "speakeasy";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getSessionFromRequest(req);
+    if (!session) {
+      return NextResponse.json({ ok: false, message: "No autorizado" }, { status: 401 });
+    }
+
+    const { code } = await req.json();
+    if (!code) {
+      return NextResponse.json({ ok: false, message: "Código requerido" }, { status: 400 });
+    }
+
+    const user = await getUserById(session.user.id);
+    if (!user?.twoFactorSecret || !user?.twoFactorEnabled) {
+      return NextResponse.json({ ok: false, message: "2FA no habilitado" }, { status: 400 });
+    }
+
+    const isValid = speakeasy.totp.verify({
+      secret:   user.twoFactorSecret,
+      encoding: "base32",
+      token:    code,
+      window:   1,
+    });
+
+    if (!isValid) {
+      return NextResponse.json({ ok: false, message: "Código inválido." }, { status: 400 });
+    }
+
+    return NextResponse.json({ ok: true, message: "Código válido." });
+  } catch (error) {
+    console.error("[2fa/validate]", error);
+    return NextResponse.json({ ok: false, message: "Error al validar código" }, { status: 500 });
+  }
+}

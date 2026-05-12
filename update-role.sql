@@ -1,0 +1,1 @@
+ALTER TABLE users DROP CONSTRAINT users_role_check; ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('personal', 'contador', 'empresa', 'admin')); UPDATE users SET role = 'admin' WHERE email = 'admin@ledgera.cl';
