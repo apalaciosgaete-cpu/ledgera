@@ -28,6 +28,8 @@ model PortfolioMovement {
   executedAt              DateTime  @default(now())
   deletedAt               DateTime?
   deletedReason           String?
+
+  user                    users     @relation(fields: [userId], references: [id])
   taxEvent                TaxEvent?
 
   @@index([userId])
@@ -58,6 +60,8 @@ model TaxEvent {
   realizedPnlClp        Float             @default(0)
   executedAt            DateTime
   taxYear               Int               @default(0)
+
+  user                  users             @relation(fields: [userId], references: [id])
   movement              PortfolioMovement @relation(fields: [movementId], references: [id])
 
   @@index([userId])
@@ -93,6 +97,8 @@ model TaxPeriodClose {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  user         users     @relation(fields: [userId], references: [id])
+
   @@unique([userId, periodYear])
   @@map("tax_period_closures")
 }
@@ -108,6 +114,8 @@ model TaxPeriodAuditLog {
   metadata   String?
   createdAt  DateTime @default(now())
 
+  user       users    @relation(fields: [userId], references: [id])
+
   @@index([userId])
   @@index([year])
   @@index([action])
@@ -122,6 +130,8 @@ model TaxPeriodSnapshot {
   contentHash     String
   snapshotPayload String
   createdAt       DateTime @default(now())
+
+  user            users    @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([year])
@@ -168,22 +178,28 @@ model SettingsAuditLog {
 }
 
 model users {
-  id                      String       @id @default(cuid())
-  email                   String       @unique
+  id                      String                @id @default(cuid())
+  email                   String                @unique
   full_name               String
   password_hash           String
-  status                  String       @default("active")
-  email_verified_at       DateTime?    @db.Timestamptz(6)
-  created_at              DateTime     @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime     @default(now()) @db.Timestamptz(6)
-  role                    String       @default("personal")
-  subscription_plan       String       @default("BASICO")
-  subscription_expires_at DateTime?    @db.Timestamptz(6)
+  status                  String                @default("active")
+  email_verified_at       DateTime?             @db.Timestamptz(6)
+  created_at              DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime              @default(now()) @db.Timestamptz(6)
+  role                    String                @default("personal")
+  subscription_plan       String                @default("BASICO")
+  subscription_expires_at DateTime?             @db.Timestamptz(6)
   twoFactorSecret         String?
-  twoFactorEnabled        Boolean      @default(false)
+  twoFactorEnabled        Boolean               @default(false)
 
   portfolios              portfolios[]
   sessions                sessions[]
+
+  portfolioMovements      PortfolioMovement[]
+  taxEvents               TaxEvent[]
+  taxPeriodClosures       TaxPeriodClose[]
+  taxPeriodAuditLogs      TaxPeriodAuditLog[]
+  taxPeriodSnapshots      TaxPeriodSnapshot[]
 
   @@index([email], map: "idx_users_email")
   @@index([subscription_expires_at], map: "idx_users_subscription_expires_at")
@@ -195,6 +211,7 @@ model portfolios {
   name       String   @default("Main Portfolio")
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @db.Timestamptz(6)
+
   users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id], map: "idx_portfolios_user_id")
@@ -208,6 +225,7 @@ model sessions {
   expires_at DateTime @db.Timestamptz(6)
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @db.Timestamptz(6)
+
   users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([token], map: "idx_sessions_token")
