@@ -8,22 +8,26 @@ import { requireActiveSubscription } from "@/modules/subscription/application/re
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type MovementRow = {
+type TaxEventRow = {
   id: string;
-  type: string;
+  movementId: string;
+  eventType: string;
   symbol: string;
-  quantity: number;
-  priceUsd: number;
-  feeUsd: number;
-  suggestedTaxCategory: string;
-  appliedTaxCategory: string | null;
-  taxClassificationSource: string;
   executedAt: Date;
-};
-
-type InventoryLot = {
   quantity: number;
-  unitCostUsd: number;
+  effectiveTaxCategory: string;
+  averageCostUsdAtSale: number;
+  proceedsGrossUsd: number;
+  proceedsNetUsd: number;
+  costBasisUsd: number;
+  feeUsd: number;
+  realizedPnlUsd: number;
+  usdClp: number;
+  proceedsGrossClp: number;
+  proceedsNetClp: number;
+  costBasisClp: number;
+  feeClp: number;
+  realizedPnlClp: number;
 };
 
 const FINAL_TAX_CATEGORIES = new Set([
@@ -37,19 +41,17 @@ function round(value: number, decimals = 8): number {
   return Math.round((value + Number.EPSILON) * factor) / factor;
 }
 
-function resolveUsdClpRate(): number {
-  return Number(process.env.USD_TO_CLP_RATE) || 950;
-}
-
-function normalizeType(value: string) {
-  return value.trim().toUpperCase();
-}
-
 function normalizeSymbol(value: string) {
   return value.trim().toUpperCase();
 }
 
-function buildExecutedAtRange(year: string) {
+function normalizeCategory(value: string) {
+  return value.trim().toUpperCase();
+}
+
+function buildExecutedAtRange(year?: string | null) {
+  if (!year) return null;
+
   const y = Number(year);
 
   if (!Number.isInteger(y) || y < 2000 || y > 2100) {
@@ -63,7 +65,7 @@ function buildExecutedAtRange(year: string) {
 }
 
 function translateCategory(cat: string | null) {
-  switch (cat) {
+  switch (normalizeCategory(cat || "UNCLASSIFIED")) {
     case "ORDINARY_INCOME":
       return "Renta ordinaria";
     case "CAPITAL_GAIN":
@@ -72,17 +74,6 @@ function translateCategory(cat: string | null) {
       return "No afecto";
     default:
       return "Sin clasificar";
-  }
-}
-
-function translateSource(src: string | null) {
-  switch (src) {
-    case "USER":
-      return "Usuario";
-    case "ACCOUNTANT":
-      return "Contador";
-    default:
-      return "Sistema";
   }
 }
 
@@ -106,42 +97,23 @@ function buildFilename(year: string | null, symbol: string | null) {
   const safeYear = year ? year.trim() : "all";
   const safeSymbol = symbol ? symbol.trim().toUpperCase() : "all";
 
-  return `ledgera-resumen-contador-${safeYear}-${safeSymbol}.csv`;
+  return `ledgera-borrador-revision-${safeYear}-${safeSymbol}.csv`;
 }
 
-function resolveEffectiveCategory(movement: MovementRow) {
-  return (
-    movement.appliedTaxCategory ||
-    movement.suggestedTaxCategory ||
-    "UNCLASSIFIED"
-  )
-    .trim()
-    .toUpperCase();
-}
-
-function evaluateStrictExportEligibility(movements: MovementRow[]) {
-  const sellMovements = movements.filter(
-    (movement) => normalizeType(movement.type) === "SELL",
-  );
-
-  const pendingMovements = sellMovements.filter((movement) => {
-    const category = resolveEffectiveCategory(movement);
+function evaluateInformativeContext(events: TaxEventRow[]) {
+  const pendingCount = events.filter((event) => {
+    const category = normalizeCategory(event.effectiveTaxCategory);
     return !FINAL_TAX_CATEGORIES.has(category);
-  });
+  }).length;
 
-  const riskMovements = sellMovements.filter((movement) => {
-    const category = resolveEffectiveCategory(movement);
-    const source = (movement.taxClassificationSource || "SYSTEM")
-      .trim()
-      .toUpperCase();
-
-    return category === "ORDINARY_INCOME" && source === "SYSTEM";
-  });
+  const riskCount = events.filter((event) => {
+    const category = normalizeCategory(event.effectiveTaxCategory);
+    return category === "ORDINARY_INCOME";
+  }).length;
 
   return {
-    isBlocked: pendingMovements.length > 0 || riskMovements.length > 0,
-    pendingCount: pendingMovements.length,
-    riskCount: riskMovements.length,
+    pendingCount,
+    riskCount,
   };
 }
 
@@ -177,7 +149,7 @@ export async function GET(req: NextRequest) {
     const rawSymbol = searchParams.get("symbol");
     const symbol = rawSymbol ? normalizeSymbol(rawSymbol) : null;
 
-    const range = year ? buildExecutedAtRange(year) : null;
+    const range = buildExecutedAtRange(year);
 
     if (year && !range) {
       return NextResponse.json(
@@ -190,36 +162,42 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const movements = (await prisma.portfolioMovement.findMany({
+    const events = (await prisma.taxEvent.findMany({
       where: {
         userId: auth.user.id,
-        deletedAt: null,
         ...(symbol ? { symbol } : {}),
         ...(range ? { executedAt: range } : {}),
       },
       orderBy: [{ executedAt: "asc" }, { id: "asc" }],
-    })) as MovementRow[];
+    })) as TaxEventRow[];
 
-    const eligibility = evaluateStrictExportEligibility(movements);
-
-    if (eligibility.isBlocked) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message:
-            "El resumen para contador está bloqueado porque existen pendientes tributarios o señales de riesgo.",
-          data: {
-            pendingCount: eligibility.pendingCount,
-            riskCount: eligibility.riskCount,
-          },
-        },
-        { status: 409 },
-      );
-    }
-
-    const usdClp = resolveUsdClpRate();
-    const inventory = new Map<string, InventoryLot[]>();
+    const context = evaluateInformativeContext(events);
     const rows: string[] = [];
+
+    rows.push(
+      ["Tipo de documento", "Borrador informativo"].map(escapeCsv).join(","),
+    );
+
+    rows.push(
+      [
+        "Advertencia",
+        "Este archivo puede usarse para consulta o revisión con especialista, pero no constituye cierre tributario definitivo.",
+      ]
+        .map(escapeCsv)
+        .join(","),
+    );
+
+    rows.push(
+      ["Pendientes detectados", context.pendingCount].map(escapeCsv).join(","),
+    );
+
+    rows.push(
+      ["Señales de riesgo detectadas", context.riskCount]
+        .map(escapeCsv)
+        .join(","),
+    );
+
+    rows.push("");
 
     rows.push(
       [
@@ -228,75 +206,45 @@ export async function GET(req: NextRequest) {
         "Activo",
         "Cantidad",
         "Clasificación tributaria",
+        "Costo unitario USD",
+        "Ingreso bruto USD",
         "Ingreso neto USD",
         "Costo tributario USD",
+        "Fee USD",
         "Resultado USD",
         "Tipo cambio",
+        "Ingreso bruto CLP",
+        "Ingreso neto CLP",
+        "Costo tributario CLP",
+        "Fee CLP",
         "Resultado CLP",
-        "Origen clasificación",
+        "ID evento",
         "ID movimiento",
       ].join(","),
     );
 
-    for (const movement of movements) {
-      const type = normalizeType(movement.type);
-      const sym = normalizeSymbol(movement.symbol);
-
-      if (!inventory.has(sym)) {
-        inventory.set(sym, []);
-      }
-
-      const lots = inventory.get(sym)!;
-
-      if (type === "BUY") {
-        const totalCostUsd = movement.quantity * movement.priceUsd + movement.feeUsd;
-
-        lots.push({
-          quantity: movement.quantity,
-          unitCostUsd: movement.quantity > 0 ? totalCostUsd / movement.quantity : 0,
-        });
-
-        continue;
-      }
-
-      if (type !== "SELL") {
-        continue;
-      }
-
-      let remaining = movement.quantity;
-      let costBasisUsd = 0;
-
-      while (remaining > 0 && lots.length > 0) {
-        const lot = lots[0];
-        const used = Math.min(lot.quantity, remaining);
-
-        costBasisUsd += used * lot.unitCostUsd;
-        lot.quantity -= used;
-        remaining -= used;
-
-        if (lot.quantity <= 0) {
-          lots.shift();
-        }
-      }
-
-      const proceedsNetUsd = movement.quantity * movement.priceUsd - movement.feeUsd;
-      const pnlUsd = proceedsNetUsd - costBasisUsd;
-      const pnlClp = Math.round(pnlUsd * usdClp);
-
+    for (const event of events) {
       rows.push(
         [
-          movement.executedAt.toISOString(),
-          type,
-          sym,
-          round(movement.quantity),
-          translateCategory(resolveEffectiveCategory(movement)),
-          round(proceedsNetUsd, 2),
-          round(costBasisUsd, 2),
-          round(pnlUsd, 2),
-          usdClp,
-          pnlClp,
-          translateSource(movement.taxClassificationSource),
-          movement.id,
+          event.executedAt.toISOString(),
+          event.eventType,
+          event.symbol,
+          round(event.quantity),
+          translateCategory(event.effectiveTaxCategory),
+          round(event.averageCostUsdAtSale, 8),
+          round(event.proceedsGrossUsd, 8),
+          round(event.proceedsNetUsd, 8),
+          round(event.costBasisUsd, 8),
+          round(event.feeUsd, 8),
+          round(event.realizedPnlUsd, 8),
+          round(event.usdClp, 4),
+          round(event.proceedsGrossClp, 4),
+          round(event.proceedsNetClp, 4),
+          round(event.costBasisClp, 4),
+          round(event.feeClp, 4),
+          round(event.realizedPnlClp, 4),
+          event.id,
+          event.movementId,
         ]
           .map(escapeCsv)
           .join(","),
@@ -317,13 +265,13 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("tax strict export error:", error);
+    console.error("tax informative export error:", error);
 
     return NextResponse.json(
       {
         ok: false,
-        message: "No fue posible generar el resumen para contador.",
-        data: null,
+        message: "No fue posible generar el borrador de revisión.",
+        error: error instanceof Error ? error.message : "unknown error",
       },
       { status: 500 },
     );
