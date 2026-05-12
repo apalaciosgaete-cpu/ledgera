@@ -5,6 +5,7 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 import { createTaxPeriodAuditLog } from "@/modules/tax/infrastructure/taxPeriodAuditLogRepository";
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 
 type ReopenBody = {
   year?: number | string;
@@ -15,13 +16,13 @@ export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
-  const subscriptionCheck = requireActiveSubscription({
-    id: auth.user.id,
-    email: auth.user.email,
-    role: auth.user.role ?? "personal",
-    subscriptionPlan: "BASICO",
-    subscriptionExpiresAt: null,
-  });
+  const currentUser = await getUserById(auth.user.id);
+
+  if (!currentUser) {
+    return fail("Usuario no encontrado.", 404);
+  }
+
+  const subscriptionCheck = requireActiveSubscription(currentUser);
 
   if (!subscriptionCheck.ok) {
     return subscriptionCheck.response;
