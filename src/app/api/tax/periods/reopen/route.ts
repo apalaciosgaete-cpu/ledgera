@@ -4,9 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 import { createTaxPeriodAuditLog } from "@/modules/tax/infrastructure/taxPeriodAuditLogRepository";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 
 type ReopenBody = {
-  year?:         number | string;
+  year?: number | string;
   reopenReason?: string;
 };
 
@@ -14,9 +15,21 @@ export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
+  const subscriptionCheck = requireActiveSubscription({
+    id: auth.user.id,
+    email: auth.user.email,
+    role: auth.user.role ?? "personal",
+    subscriptionPlan: "BASICO",
+    subscriptionExpiresAt: null,
+  });
+
+  if (!subscriptionCheck.ok) {
+    return subscriptionCheck.response;
+  }
+
   try {
-    const body         = (await request.json()) as ReopenBody;
-    const year         = Number(body.year);
+    const body = (await request.json()) as ReopenBody;
+    const year = Number(body.year);
     const reopenReason = String(body.reopenReason ?? "").trim();
 
     if (!Number.isInteger(year) || year < 2000 || year > 2100) {
@@ -31,40 +44,40 @@ export async function POST(request: NextRequest) {
       where: { userId_periodYear: { userId: auth.user.id, periodYear: year } },
     });
 
-    if (!closure)          return fail("El período no está cerrado.", 404);
+    if (!closure) return fail("El período no está cerrado.", 404);
     if (closure.reopenedAt) return fail("El período ya fue reabierto.", 409);
 
     const reopened = await prisma.taxPeriodClose.update({
       where: { userId_periodYear: { userId: auth.user.id, periodYear: year } },
       data: {
-        status:       "REOPENED",
-        reopenedAt:   new Date(),
+        status: "REOPENED",
+        reopenedAt: new Date(),
         closedReason: `${closure.closedReason ?? ""}\nReapertura: ${reopenReason}`.trim(),
       },
     });
 
     await createTaxPeriodAuditLog({
       year,
-      action:     "REOPEN",
-      reason:     reopenReason,
-      actorId:    auth.user.id,
+      action: "REOPEN",
+      reason: reopenReason,
+      actorId: auth.user.id,
       actorEmail: auth.user.email,
       metadata: {
-        source:       "api/tax/periods/reopen",
+        source: "api/tax/periods/reopen",
         statusBefore: closure.status,
-        statusAfter:  "REOPENED",
-        closedAt:     closure.closedAt.toISOString(),
-        reopenedAt:   reopened.reopenedAt?.toISOString() ?? null,
+        statusAfter: "REOPENED",
+        closedAt: closure.closedAt.toISOString(),
+        reopenedAt: reopened.reopenedAt?.toISOString() ?? null,
       },
     });
 
     return ok(
       {
         year,
-        status:     reopened.status,
-        closedAt:   reopened.closedAt,
+        status: reopened.status,
+        closedAt: reopened.closedAt,
         reopenedAt: reopened.reopenedAt,
-        reason:     reopenReason,
+        reason: reopenReason,
       },
       "Período tributario reabierto correctamente.",
     );
