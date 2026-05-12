@@ -1,4 +1,6 @@
 // src/app/api/portfolio/import/confirm/route.ts
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
@@ -70,7 +72,17 @@ function validateMovement(m: NormalizedMovement) {
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado", 401);
+const currentUser = await getUserById(auth.user.id);
 
+if (!currentUser) {
+  return fail("Usuario no encontrado.", 404);
+}
+
+const subscriptionCheck = requireActiveSubscription(currentUser);
+
+if (!subscriptionCheck.ok) {
+  return subscriptionCheck.response;
+}
   try {
     const { rows }: { rows: RawRow[] } = await req.json();
     if (!rows || !Array.isArray(rows)) return fail("rows inválido", 400);
