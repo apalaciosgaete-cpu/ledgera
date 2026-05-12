@@ -1,3 +1,5 @@
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
@@ -309,7 +311,20 @@ export async function GET(req: NextRequest) {
         { status: 401 }
       );
     }
+const currentUser = await getUserById(auth.user.id);
 
+if (!currentUser) {
+  return NextResponse.json(
+    { ok: false, message: "Usuario no encontrado." },
+    { status: 404 },
+  );
+}
+
+const subscriptionCheck = requireActiveSubscription(currentUser);
+
+if (!subscriptionCheck.ok) {
+  return subscriptionCheck.response;
+}
     const yearParam = req.nextUrl.searchParams.get("year");
     const year = yearParam ? Number(yearParam) : new Date().getFullYear();
     const symbolParam = req.nextUrl.searchParams.get("symbol");
@@ -324,12 +339,13 @@ export async function GET(req: NextRequest) {
 
     const events = (await prisma.taxEvent.findMany({
       where: {
-        executedAt: {
-          gte: new Date(`${year}-01-01T00:00:00.000Z`),
-          lt:  new Date(`${year + 1}-01-01T00:00:00.000Z`),
-        },
-        ...(symbol ? { symbol } : {}),
-      },
+  userId: auth.user.id,
+  executedAt: {
+    gte: new Date(`${year}-01-01T00:00:00.000Z`),
+    lt:  new Date(`${year + 1}-01-01T00:00:00.000Z`),
+  },
+  ...(symbol ? { symbol } : {}),
+},
       orderBy: [{ executedAt: "asc" }, { id: "asc" }],
     })) as TaxEventRow[];
 
