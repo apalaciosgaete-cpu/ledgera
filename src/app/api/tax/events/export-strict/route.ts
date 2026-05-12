@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+import { requireAuth } from "@/shared";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -110,7 +114,9 @@ function resolveEffectiveCategory(movement: MovementRow) {
     movement.appliedTaxCategory ||
     movement.suggestedTaxCategory ||
     "UNCLASSIFIED"
-  ).trim().toUpperCase();
+  )
+    .trim()
+    .toUpperCase();
 }
 
 function evaluateStrictExportEligibility(movements: MovementRow[]) {
@@ -140,12 +146,36 @@ function evaluateStrictExportEligibility(movements: MovementRow[]) {
 }
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+
+  if (!auth || auth instanceof NextResponse) {
+    return NextResponse.json(
+      { ok: false, message: "No autorizado.", data: null },
+      { status: 401 },
+    );
+  }
+
+  const currentUser = await getUserById(auth.user.id);
+
+  if (!currentUser) {
+    return NextResponse.json(
+      { ok: false, message: "Usuario no encontrado.", data: null },
+      { status: 404 },
+    );
+  }
+
+  const subscriptionCheck = requireActiveSubscription(currentUser);
+
+  if (!subscriptionCheck.ok) {
+    return subscriptionCheck.response;
+  }
+
   try {
     const { searchParams } = new URL(req.url);
 
     const year = searchParams.get("year");
     const rawSymbol = searchParams.get("symbol");
-    const symbol = rawSymbol ? rawSymbol.toUpperCase() : null;
+    const symbol = rawSymbol ? normalizeSymbol(rawSymbol) : null;
 
     const range = year ? buildExecutedAtRange(year) : null;
 
@@ -154,6 +184,7 @@ export async function GET(req: NextRequest) {
         {
           ok: false,
           message: "El parámetro year es inválido.",
+          data: null,
         },
         { status: 400 },
       );
@@ -161,10 +192,12 @@ export async function GET(req: NextRequest) {
 
     const movements = (await prisma.portfolioMovement.findMany({
       where: {
+        userId: auth.user.id,
+        deletedAt: null,
         ...(symbol ? { symbol } : {}),
         ...(range ? { executedAt: range } : {}),
       },
-      orderBy: [{ executedAt: "asc" }],
+      orderBy: [{ executedAt: "asc" }, { id: "asc" }],
     })) as MovementRow[];
 
     const eligibility = evaluateStrictExportEligibility(movements);
@@ -216,13 +249,11 @@ export async function GET(req: NextRequest) {
       const lots = inventory.get(sym)!;
 
       if (type === "BUY") {
-        const totalCostUsd =
-          movement.quantity * movement.priceUsd + movement.feeUsd;
+        const totalCostUsd = movement.quantity * movement.priceUsd + movement.feeUsd;
 
         lots.push({
           quantity: movement.quantity,
-          unitCostUsd:
-            movement.quantity > 0 ? totalCostUsd / movement.quantity : 0,
+          unitCostUsd: movement.quantity > 0 ? totalCostUsd / movement.quantity : 0,
         });
 
         continue;
@@ -292,6 +323,7 @@ export async function GET(req: NextRequest) {
       {
         ok: false,
         message: "No fue posible generar el resumen para contador.",
+        data: null,
       },
       { status: 500 },
     );

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+import { requireAuth } from "@/shared";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -81,6 +85,7 @@ function translateSource(src: string | null) {
 
 function escapeCsv(value: unknown) {
   const str = String(value ?? "");
+
   if (
     str.includes(",") ||
     str.includes('"') ||
@@ -89,25 +94,29 @@ function escapeCsv(value: unknown) {
   ) {
     return `"${str.replace(/"/g, '""')}"`;
   }
+
   return str;
 }
 
 function buildFilename(year: string | null, symbol: string | null) {
   const safeYear = year?.trim() ?? "all";
   const safeSymbol = symbol?.trim().toUpperCase() ?? "all";
+
   return `ledgera-resumen-contador-${safeYear}-${safeSymbol}.csv`;
 }
 
 function evaluateEligibility(events: TaxEventRow[]) {
   const pendingEvents = events.filter(
-    (e) => !FINAL_TAX_CATEGORIES.has(normalizeCategory(e.effectiveTaxCategory))
+    (e) => !FINAL_TAX_CATEGORIES.has(normalizeCategory(e.effectiveTaxCategory)),
   );
 
   const riskEvents = events.filter((e) => {
     const cat = normalizeCategory(e.effectiveTaxCategory);
+
     const src = (e.movement?.taxClassificationSource ?? "SYSTEM")
       .trim()
       .toUpperCase();
+
     return cat === "ORDINARY_INCOME" && src === "SYSTEM";
   });
 
@@ -119,6 +128,30 @@ function evaluateEligibility(events: TaxEventRow[]) {
 }
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+
+  if (!auth || auth instanceof NextResponse) {
+    return NextResponse.json(
+      { ok: false, message: "No autorizado." },
+      { status: 401 },
+    );
+  }
+
+  const currentUser = await getUserById(auth.user.id);
+
+  if (!currentUser) {
+    return NextResponse.json(
+      { ok: false, message: "Usuario no encontrado." },
+      { status: 404 },
+    );
+  }
+
+  const subscriptionCheck = requireActiveSubscription(currentUser);
+
+  if (!subscriptionCheck.ok) {
+    return subscriptionCheck.response;
+  }
+
   try {
     const { searchParams } = new URL(req.url);
 
@@ -131,13 +164,13 @@ export async function GET(req: NextRequest) {
     if (year && !range) {
       return NextResponse.json(
         { ok: false, message: "El parámetro year es inválido." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Lee desde taxEvents — fuente única de verdad
     const events = (await prisma.taxEvent.findMany({
       where: {
+        userId: auth.user.id,
         ...(symbol ? { symbol } : {}),
         ...(range ? { executedAt: range } : {}),
       },
@@ -162,13 +195,12 @@ export async function GET(req: NextRequest) {
             riskCount: eligibility.riskCount,
           },
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     const rows: string[] = [];
 
-    // Cabecera del CSV
     rows.push(
       [
         "Fecha operación",
@@ -185,7 +217,7 @@ export async function GET(req: NextRequest) {
         "Origen clasificación",
         "ID evento",
         "ID movimiento",
-      ].join(",")
+      ].join(","),
     );
 
     for (const event of events) {
@@ -207,7 +239,7 @@ export async function GET(req: NextRequest) {
           event.movementId,
         ]
           .map(escapeCsv)
-          .join(",")
+          .join(","),
       );
     }
 
@@ -219,16 +251,21 @@ export async function GET(req: NextRequest) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${filename}"`,
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
         Pragma: "no-cache",
         Expires: "0",
       },
     });
   } catch (error) {
     console.error("export-strict error:", error);
+
     return NextResponse.json(
-      { ok: false, message: "No fue posible generar el reporte para contador." },
-      { status: 500 }
+      {
+        ok: false,
+        message: "No fue posible generar el reporte para contador.",
+      },
+      { status: 500 },
     );
   }
 }
