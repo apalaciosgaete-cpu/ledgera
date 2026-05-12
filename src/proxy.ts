@@ -2,14 +2,43 @@ import { NextRequest, NextResponse } from "next/server";
 
 function getBearerToken(req: NextRequest): string | null {
   const authHeader = req.headers.get("authorization");
+
   if (!authHeader) return null;
+
   const [type, token] = authHeader.split(" ");
+
   if (type !== "Bearer" || !token) return null;
+
   return token;
+}
+
+function isStaticAsset(pathname: string): boolean {
+  return (
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.endsWith(".jpg") ||
+    pathname.endsWith(".jpeg") ||
+    pathname.endsWith(".png") ||
+    pathname.endsWith(".webp") ||
+    pathname.endsWith(".svg") ||
+    pathname.endsWith(".ico") ||
+    pathname.endsWith(".css") ||
+    pathname.endsWith(".js") ||
+    pathname.endsWith(".map") ||
+    pathname.endsWith(".woff") ||
+    pathname.endsWith(".woff2") ||
+    pathname.endsWith(".ttf")
+  );
 }
 
 export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  if (isStaticAsset(pathname)) {
+    return NextResponse.next();
+  }
 
   const publicRoutes = [
     "/",
@@ -23,7 +52,7 @@ export default function proxy(req: NextRequest) {
   ];
 
   const isPublic = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
   if (isPublic) return NextResponse.next();
@@ -36,9 +65,10 @@ export default function proxy(req: NextRequest) {
     if (!sessionToken) {
       return NextResponse.json(
         { ok: false, message: "No autorizado" },
-        { status: 401 }
+        { status: 401 },
       );
     }
+
     return NextResponse.next();
   }
 
@@ -50,5 +80,7 @@ export default function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+  ],
 };
