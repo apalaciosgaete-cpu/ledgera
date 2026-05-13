@@ -9,9 +9,120 @@ type RequestOptions = {
   auth?: boolean;
 };
 
+type ErrorPayload = {
+  ok?: false;
+  message?: string;
+  data?: unknown;
+  error?: unknown;
+};
+
+export class HttpClientError extends Error {
+  status: number;
+  data: unknown;
+  code: string | null;
+  retryAfterSeconds: number | null;
+
+  constructor(input: {
+    status: number;
+    message: string;
+    data?: unknown;
+    code?: string | null;
+    retryAfterSeconds?: number | null;
+  }) {
+    super(input.message);
+
+    this.name = "HttpClientError";
+    this.status = input.status;
+    this.data = input.data ?? null;
+    this.code = input.code ?? null;
+    this.retryAfterSeconds = input.retryAfterSeconds ?? null;
+  }
+}
+
+function isErrorPayload(value: unknown): value is ErrorPayload {
+  return typeof value === "object" && value !== null;
+}
+
+function resolveErrorMessage(payload: unknown, status: number): string {
+  if (
+    isErrorPayload(payload) &&
+    typeof payload.message === "string" &&
+    payload.message.trim()
+  ) {
+    return payload.message;
+  }
+
+  switch (status) {
+    case 401:
+      return "Sesión expirada o no autorizada.";
+    case 402:
+      return "Suscripción requerida para continuar.";
+    case 403:
+      return "No tienes permisos para realizar esta acción.";
+    case 404:
+      return "Recurso no encontrado.";
+    case 409:
+      return "La operación no se puede completar por conflicto de estado.";
+    case 429:
+      return "Demasiados intentos. Intenta nuevamente más tarde.";
+    case 500:
+      return "Error interno del servidor.";
+    default:
+      return `HTTP ${status}`;
+  }
+}
+
+function resolveErrorCode(payload: unknown): string | null {
+  if (!isErrorPayload(payload)) return null;
+
+  const data = payload.data;
+
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "code" in data &&
+    typeof (data as { code?: unknown }).code === "string"
+  ) {
+    return (data as { code: string }).code;
+  }
+
+  return null;
+}
+
+function resolveRetryAfterSeconds(
+  response: Response,
+  payload: unknown,
+): number | null {
+  const header = response.headers.get("Retry-After");
+
+  if (header) {
+    const value = Number(header);
+    if (Number.isFinite(value)) return value;
+  }
+
+  if (!isErrorPayload(payload)) return null;
+
+  const data = payload.data;
+
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "retryAfterSeconds" in data &&
+    typeof (data as { retryAfterSeconds?: unknown }).retryAfterSeconds === "number"
+  ) {
+    return (data as { retryAfterSeconds: number }).retryAfterSeconds;
+  }
+
+  return null;
+}
+
+export function isHttpClientError(error: unknown): error is HttpClientError {
+  return error instanceof HttpClientError;
+}
+
 export async function httpClient<T = unknown>(
   url: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
 ): Promise<T> {
   const { method = "GET", body, headers, auth = false } = options;
 
@@ -23,6 +134,7 @@ export async function httpClient<T = unknown>(
 
   if (auth) {
     const token = getSessionToken();
+
     if (token) {
       finalHeaders.set("Authorization", `Bearer ${token}`);
     }
@@ -44,15 +156,13 @@ export async function httpClient<T = unknown>(
   }
 
   if (!response.ok) {
-    const message =
-      typeof payload === "object" &&
-      payload !== null &&
-      "message" in payload &&
-      typeof (payload as any).message === "string"
-        ? (payload as any).message
-        : `HTTP ${response.status}`;
-
-    throw new Error(message);
+    throw new HttpClientError({
+      status: response.status,
+      message: resolveErrorMessage(payload, response.status),
+      data: isErrorPayload(payload) ? payload.data ?? payload.error ?? null : null,
+      code: resolveErrorCode(payload),
+      retryAfterSeconds: resolveRetryAfterSeconds(response, payload),
+    });
   }
 
   return payload as T;
