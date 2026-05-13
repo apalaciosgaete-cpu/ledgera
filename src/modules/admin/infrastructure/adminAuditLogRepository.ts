@@ -9,6 +9,17 @@ export type AdminAuditAction =
   | "USER_REACTIVATED"
   | "USER_DELETED";
 
+export type AdminAuditLogRow = {
+  id: string;
+  action: AdminAuditAction;
+  actor_id: string | null;
+  actor_email: string | null;
+  target_user_id: string | null;
+  target_user_email: string | null;
+  metadata: string | null;
+  created_at: string;
+};
+
 type CreateAdminAuditLogInput = {
   action: AdminAuditAction;
   actorId?: string | null;
@@ -18,7 +29,14 @@ type CreateAdminAuditLogInput = {
   metadata?: Record<string, unknown> | null;
 };
 
-export async function createAdminAuditLog(input: CreateAdminAuditLogInput) {
+type ListAdminAuditLogsInput = {
+  limit?: number;
+  action?: string | null;
+};
+
+export async function createAdminAuditLog(
+  input: CreateAdminAuditLogInput,
+) {
   try {
     await db.query(
       `
@@ -47,4 +65,42 @@ export async function createAdminAuditLog(input: CreateAdminAuditLogInput) {
   } catch (error) {
     console.error("[adminAuditLog] No se pudo registrar auditoría:", error);
   }
+}
+
+export async function listAdminAuditLogs(
+  input?: ListAdminAuditLogsInput,
+) {
+  const limit = Math.min(Math.max(input?.limit ?? 100, 1), 500);
+
+  const values: unknown[] = [limit];
+
+  let query = `
+    select
+      id,
+      action,
+      actor_id,
+      actor_email,
+      target_user_id,
+      target_user_email,
+      metadata,
+      created_at
+    from admin_audit_logs
+  `;
+
+  if (input?.action) {
+    values.push(input.action);
+
+    query += `
+      where action = $2
+    `;
+  }
+
+  query += `
+    order by created_at desc
+    limit $1
+  `;
+
+  const result = await db.query<AdminAuditLogRow>(query, values);
+
+  return result.rows;
 }
