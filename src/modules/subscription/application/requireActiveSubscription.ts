@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 
-type SessionUser = {
-  id: string;
-  email: string;
-  role?: string;
-};
+import { resolveSubscriptionState } from "./resolveSubscriptionState";
 
 type UserWithSubscription = {
   id: string;
-  role: string;
-  subscriptionPlan: string | null;
-  subscriptionExpiresAt: Date | string | null;
+  role?: string | null;
+  subscriptionPlan?: string | null;
+  subscriptionExpiresAt?: Date | string | null;
 };
 
 type SubscriptionCheckResult =
@@ -22,43 +18,33 @@ type SubscriptionCheckResult =
       response: NextResponse;
     };
 
-function isSubscriptionActive(user: UserWithSubscription): boolean {
-  if (user.role === "admin") {
-    return true;
-  }
-
-  if (!user.subscriptionExpiresAt) {
-    return false;
-  }
-
-  return new Date(user.subscriptionExpiresAt).getTime() > Date.now();
-}
-
 export function requireActiveSubscription(
-  user: UserWithSubscription | SessionUser,
+  user: UserWithSubscription,
 ): SubscriptionCheckResult {
-  if (user.role === "admin") {
+  const subscription = resolveSubscriptionState(user);
+
+  if (!subscription.isBlocked) {
     return { ok: true };
   }
 
-  const maybeUser = user as UserWithSubscription;
-
-  if (!isSubscriptionActive(maybeUser)) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        {
-          ok: false,
-          message:
-            "Tu suscripción no está activa. Actualiza tu plan para continuar.",
-          data: {
-            code: "SUBSCRIPTION_INACTIVE",
-          },
+  return {
+    ok: false,
+    response: NextResponse.json(
+      {
+        ok: false,
+        message:
+          subscription.state === "EXPIRED"
+            ? "Tu suscripción está vencida. Actualiza tu plan para continuar."
+            : "Tu suscripción no está activa. Actualiza tu plan para continuar.",
+        data: {
+          code:
+            subscription.state === "EXPIRED"
+              ? "SUBSCRIPTION_EXPIRED"
+              : "SUBSCRIPTION_INACTIVE",
+          subscription,
         },
-        { status: 402 },
-      ),
-    };
-  }
-
-  return { ok: true };
+      },
+      { status: 402 },
+    ),
+  };
 }
