@@ -1,5 +1,5 @@
 // src/app/api/admin/users/[id]/status/route.ts
-
+import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { updateUserStatus, getUserById } from "@/modules/identity/infrastructure/userRepository";
@@ -73,7 +73,18 @@ export async function PATCH(
         { status: 500 },
       );
     }
-
+await createAdminAuditLog({
+  action: status === "suspended" ? "USER_SUSPENDED" : "USER_REACTIVATED",
+  actorId: auth.user.id,
+  actorEmail: auth.user.email,
+  targetUserId: user.id,
+  targetUserEmail: user.email,
+  metadata: {
+    source: "api/admin/users/[id]/status",
+    previousStatus: user.status,
+    newStatus: status,
+  },
+});
     return NextResponse.json({
       ok: true,
       message: `Estado actualizado a: ${status}`,

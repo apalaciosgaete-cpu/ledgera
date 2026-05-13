@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { deleteSessionByToken } from "@/modules/identity/infrastructure/sessionRepository";
+import {
+  deleteSessionByToken,
+  getSessionByToken,
+} from "@/modules/identity/infrastructure/sessionRepository";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 
 function extractToken(req: NextRequest): string | null {
   const authHeader = req.headers.get("authorization");
@@ -17,7 +22,22 @@ export async function POST(req: NextRequest) {
     const token = extractToken(req);
 
     if (token) {
+      const session = await getSessionByToken(token);
+      const user = session ? await getUserById(session.userId) : null;
+
       await deleteSessionByToken(token);
+
+      if (user?.role === "admin") {
+        await createAdminAuditLog({
+          action: "ADMIN_LOGOUT",
+          actorId: user.id,
+          actorEmail: user.email,
+          metadata: {
+            source: "api/logout",
+            sessionId: session?.id ?? null,
+          },
+        });
+      }
     }
 
     const response = NextResponse.json({

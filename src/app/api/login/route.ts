@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
+import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { createSession } from "@/modules/identity/infrastructure/sessionRepository";
 import { getUserByEmail } from "@/modules/identity/infrastructure/userRepository";
 import { generateSessionToken } from "@/modules/identity/application/sessionToken";
@@ -115,7 +115,17 @@ export async function POST(req: NextRequest) {
       token: sessionToken,
       expiresAt,
     });
-
+if (user.role === "admin") {
+  await createAdminAuditLog({
+    action: "ADMIN_LOGIN",
+    actorId: user.id,
+    actorEmail: user.email,
+    metadata: {
+      source: "api/login",
+      twoFactor: false,
+    },
+  });
+}
     clearLoginRateLimit(rateLimitKey);
 
     const response = NextResponse.json({

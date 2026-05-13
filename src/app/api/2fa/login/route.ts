@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import speakeasy from "speakeasy";
+import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { createSession } from "@/modules/identity/infrastructure/sessionRepository";
 import { generateSessionToken } from "@/modules/identity/application/sessionToken";
@@ -47,7 +48,17 @@ export async function POST(req: NextRequest) {
       token:  sessionToken,
       expiresAt,
     });
-
+if (user.role === "admin") {
+  await createAdminAuditLog({
+    action: "ADMIN_LOGIN",
+    actorId: user.id,
+    actorEmail: user.email,
+    metadata: {
+      source: "api/2fa/login",
+      twoFactor: true,
+    },
+  });
+}
     const response = NextResponse.json({
       ok:      true,
       message: "Autenticación completada.",

@@ -176,7 +176,22 @@ model SettingsAuditLog {
   @@index([userId])
   @@map("settings_audit_logs")
 }
+model AdminAuditLog {
+  id              String   @id @default(cuid())
+  action          String
+  actorId         String?
+  actorEmail      String?
+  targetUserId    String?
+  targetUserEmail String?
+  metadata        String?
+  createdAt       DateTime @default(now())
 
+  @@index([action])
+  @@index([actorId])
+  @@index([targetUserId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}
 model users {
   id                      String                @id @default(cuid())
   email                   String                @unique

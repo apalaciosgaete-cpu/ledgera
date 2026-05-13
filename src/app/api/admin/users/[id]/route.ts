@@ -1,5 +1,5 @@
 // src/app/api/admin/users/[id]/route.ts
-
+import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { deleteUser, getUserById } from "@/modules/identity/infrastructure/userRepository";
@@ -48,7 +48,19 @@ export async function DELETE(
         { status: 500 },
       );
     }
-
+await createAdminAuditLog({
+  action: "USER_DELETED",
+  actorId: auth.user.id,
+  actorEmail: auth.user.email,
+  targetUserId: user.id,
+  targetUserEmail: user.email,
+  metadata: {
+    source: "api/admin/users/[id]",
+    deletedRole: user.role,
+    deletedStatus: user.status,
+    deletedSubscriptionPlan: user.subscriptionPlan,
+  },
+});
     return NextResponse.json({
       ok: true,
       message: `Usuario ${user.email} eliminado correctamente`,
