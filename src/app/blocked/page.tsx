@@ -20,11 +20,17 @@ export default function BlockedPage() {
       .catch(() => null);
   }, []);
 
-  function handleLogout() {
-    document.cookie =
-      "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  async function handleLogout() {
+  try {
+    await fetch("/api/logout", {
+      method: "POST",
+    });
+  } catch {
+    // ignorar error logout
+  } finally {
     router.push("/login");
   }
+}
 
   return (
     <div
