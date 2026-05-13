@@ -102,7 +102,7 @@ export default function AdminAuditPage() {
                     </td>
 
                     <td className="px-4 py-3">
-                      <pre className="max-w-[420px] overflow-x-auto whitespace-pre-wrap text-xs">
+                      <pre className="max-w-105px overflow-x-auto whitespace-pre-wrap text-xs">
                         {log.metadata ?? "-"}
                       </pre>
                     </td>
