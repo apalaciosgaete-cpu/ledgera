@@ -5,7 +5,10 @@ import {
   getSessionByToken,
 } from "@/modules/identity/infrastructure/sessionRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
-import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
 
 function extractToken(req: NextRequest): string | null {
   const authHeader = req.headers.get("authorization");
@@ -32,6 +35,7 @@ export async function POST(req: NextRequest) {
           action: "ADMIN_LOGOUT",
           actorId: user.id,
           actorEmail: user.email,
+          ...getAuditRequestContext(req),
           metadata: {
             source: "api/logout",
             sessionId: session?.id ?? null,

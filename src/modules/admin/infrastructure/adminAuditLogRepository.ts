@@ -16,6 +16,8 @@ export type AdminAuditLogRow = {
   actor_email: string | null;
   target_user_id: string | null;
   target_user_email: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
   metadata: string | null;
   created_at: string;
 };
@@ -26,6 +28,8 @@ type CreateAdminAuditLogInput = {
   actorEmail?: string | null;
   targetUserId?: string | null;
   targetUserEmail?: string | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
   metadata?: Record<string, unknown> | null;
 };
 
@@ -34,9 +38,24 @@ type ListAdminAuditLogsInput = {
   action?: string | null;
 };
 
-export async function createAdminAuditLog(
-  input: CreateAdminAuditLogInput,
-) {
+export function getAuditRequestContext(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const realIp = request.headers.get("x-real-ip");
+
+  const ipAddress =
+    forwardedFor?.split(",")[0]?.trim() ||
+    realIp ||
+    null;
+
+  const userAgent = request.headers.get("user-agent") ?? null;
+
+  return {
+    ipAddress,
+    userAgent,
+  };
+}
+
+export async function createAdminAuditLog(input: CreateAdminAuditLogInput) {
   try {
     await db.query(
       `
@@ -47,10 +66,12 @@ export async function createAdminAuditLog(
           actor_email,
           target_user_id,
           target_user_email,
+          ip_address,
+          user_agent,
           metadata,
           created_at
         )
-        values ($1, $2, $3, $4, $5, $6, $7, now())
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
       `,
       [
         randomUUID(),
@@ -59,6 +80,8 @@ export async function createAdminAuditLog(
         input.actorEmail ?? null,
         input.targetUserId ?? null,
         input.targetUserEmail ?? null,
+        input.ipAddress ?? null,
+        input.userAgent ?? null,
         input.metadata ? JSON.stringify(input.metadata) : null,
       ],
     );
@@ -67,9 +90,7 @@ export async function createAdminAuditLog(
   }
 }
 
-export async function listAdminAuditLogs(
-  input?: ListAdminAuditLogsInput,
-) {
+export async function listAdminAuditLogs(input?: ListAdminAuditLogsInput) {
   const limit = Math.min(Math.max(input?.limit ?? 100, 1), 500);
 
   const values: unknown[] = [limit];
@@ -82,6 +103,8 @@ export async function listAdminAuditLogs(
       actor_email,
       target_user_id,
       target_user_email,
+      ip_address,
+      user_agent,
       metadata,
       created_at
     from admin_audit_logs

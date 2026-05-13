@@ -1,39 +1,59 @@
 // src/app/api/admin/users/[id]/status/route.ts
-import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { NextRequest, NextResponse } from "next/server";
+
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-import { updateUserStatus, getUserById } from "@/modules/identity/infrastructure/userRepository";
+import {
+  getUserById,
+  updateUserStatus,
+} from "@/modules/identity/infrastructure/userRepository";
 
 const VALID_STATUSES = ["active", "inactive", "suspended"] as const;
-type ValidStatus = typeof VALID_STATUSES[number];
+type ValidStatus = (typeof VALID_STATUSES)[number];
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const auth = await getSessionFromRequest(req);
+
   if (!auth) {
-    return NextResponse.json({ ok: false, message: "No autenticado" }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, message: "No autenticado", data: null },
+      { status: 401 },
+    );
   }
+
   if (auth.user.role !== "admin") {
-    return NextResponse.json({ ok: false, message: "Sin permisos" }, { status: 403 });
+    return NextResponse.json(
+      { ok: false, message: "Sin permisos", data: null },
+      { status: 403 },
+    );
   }
 
   const { id } = await params;
 
   if (id === auth.user.id) {
     return NextResponse.json(
-      { ok: false, message: "No puedes cambiar el estado de tu propia cuenta" },
+      {
+        ok: false,
+        message: "No puedes cambiar el estado de tu propia cuenta",
+        data: null,
+      },
       { status: 400 },
     );
   }
 
   let body: { status?: string };
+
   try {
     body = await req.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Body inválido" },
+      { ok: false, message: "Body inválido", data: null },
       { status: 400 },
     );
   }
@@ -45,6 +65,7 @@ export async function PATCH(
       {
         ok: false,
         message: `Estado inválido. Valores permitidos: ${VALID_STATUSES.join(", ")}`,
+        data: null,
       },
       { status: 400 },
     );
@@ -52,52 +73,70 @@ export async function PATCH(
 
   try {
     const user = await getUserById(id);
+
     if (!user) {
       return NextResponse.json(
-        { ok: false, message: "Usuario no encontrado" },
+        { ok: false, message: "Usuario no encontrado", data: null },
         { status: 404 },
       );
     }
 
     if (user.role === "admin") {
       return NextResponse.json(
-        { ok: false, message: "No puedes modificar una cuenta admin" },
+        {
+          ok: false,
+          message: "No puedes modificar una cuenta admin",
+          data: null,
+        },
         { status: 400 },
       );
     }
 
     const updated = await updateUserStatus(id, status as ValidStatus);
+
     if (!updated) {
       return NextResponse.json(
-        { ok: false, message: "No se pudo actualizar el estado" },
+        {
+          ok: false,
+          message: "No se pudo actualizar el estado",
+          data: null,
+        },
         { status: 500 },
       );
     }
-await createAdminAuditLog({
-  action: status === "suspended" ? "USER_SUSPENDED" : "USER_REACTIVATED",
-  actorId: auth.user.id,
-  actorEmail: auth.user.email,
-  targetUserId: user.id,
-  targetUserEmail: user.email,
-  metadata: {
-    source: "api/admin/users/[id]/status",
-    previousStatus: user.status,
-    newStatus: status,
-  },
-});
+
+    await createAdminAuditLog({
+      action: status === "suspended" ? "USER_SUSPENDED" : "USER_REACTIVATED",
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      targetUserId: user.id,
+      targetUserEmail: user.email,
+      ...getAuditRequestContext(req),
+      metadata: {
+        source: "api/admin/users/[id]/status",
+        previousStatus: user.status,
+        newStatus: status,
+      },
+    });
+
     return NextResponse.json({
       ok: true,
       message: `Estado actualizado a: ${status}`,
       data: {
-        id:     updated.id,
-        email:  updated.email,
+        id: updated.id,
+        email: updated.email,
         status: updated.status,
       },
     });
   } catch (error) {
     console.error("[admin/users/status PATCH]", error);
+
     return NextResponse.json(
-      { ok: false, message: "Error al actualizar estado" },
+      {
+        ok: false,
+        message: "Error al actualizar estado",
+        data: null,
+      },
       { status: 500 },
     );
   }

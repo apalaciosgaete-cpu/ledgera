@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminAuditLog } from "@/modules/admin/infrastructure/adminAuditLogRepository";
+
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import {
   getUserById,
@@ -114,27 +118,35 @@ export async function PATCH(
       plan: plan as SubscriptionPlan,
       expiresAt,
     });
-await createAdminAuditLog({
-  action: "USER_SUBSCRIPTION_UPDATED",
-  actorId: auth.user.id,
-  actorEmail: auth.user.email,
-  targetUserId: targetUser.id,
-  targetUserEmail: targetUser.email,
-  metadata: {
-    source: "api/admin/users/[id]/subscription",
-    previousPlan: targetUser.subscriptionPlan,
-    newPlan: plan,
-    previousRole: targetUser.role,
-    newRole: targetUser.role,
-    subscriptionExpiresAt: expiresAt,
-  },
-});
+
     if (!updated) {
       return NextResponse.json(
-        { ok: false, message: "No se pudo actualizar la suscripción", data: null },
+        {
+          ok: false,
+          message: "No se pudo actualizar la suscripción",
+          data: null,
+        },
         { status: 500 },
       );
     }
+
+    await createAdminAuditLog({
+      action: "USER_SUBSCRIPTION_UPDATED",
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      targetUserId: targetUser.id,
+      targetUserEmail: targetUser.email,
+      ...getAuditRequestContext(req),
+      metadata: {
+        source: "api/admin/users/[id]/subscription",
+        previousPlan: targetUser.subscriptionPlan,
+        newPlan: updated.subscriptionPlan,
+        previousRole: targetUser.role,
+        newRole: updated.role,
+        previousExpiresAt: targetUser.subscriptionExpiresAt,
+        subscriptionExpiresAt: updated.subscriptionExpiresAt,
+      },
+    });
 
     return NextResponse.json({
       ok: true,
@@ -153,7 +165,11 @@ await createAdminAuditLog({
     console.error("[admin/users/subscription PATCH]", error);
 
     return NextResponse.json(
-      { ok: false, message: "Error al actualizar suscripción", data: null },
+      {
+        ok: false,
+        message: "Error al actualizar suscripción",
+        data: null,
+      },
       { status: 500 },
     );
   }

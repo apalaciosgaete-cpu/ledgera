@@ -183,6 +183,8 @@ model AdminAuditLog {
   actorEmail      String?
   targetUserId    String?
   targetUserEmail String?
+  ipAddress       String?
+  userAgent       String?
   metadata        String?
   createdAt       DateTime @default(now())
 
