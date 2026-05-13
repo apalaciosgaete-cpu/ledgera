@@ -1,41 +1,38 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
-export function ok<T>(
-  data: T,
-  message = "OK",
-  status: number = 200
-) {
+export function ok<T>(data: T, message = "OK", status = 200) {
   return NextResponse.json(
-    { ok: true, message, data },
-    { status }
+    {
+      ok: true,
+      message,
+      data,
+    },
+    { status },
   );
 }
 
-export function fail(
-  message: string,
-  status: number = 400,
-  options?: { code?: string; data?: unknown }
-) {
+export function fail(message = "Error", status = 400, data: unknown = null) {
   return NextResponse.json(
     {
       ok: false,
       message,
-      code: options?.code ?? null,
-      data: options?.data ?? null,
+      data,
     },
-    { status }
+    { status },
   );
 }
 
 export function serverError(error: unknown) {
   console.error(error);
+  Sentry.captureException(error);
+
   return NextResponse.json(
     {
       ok: false,
-      message: "Error interno del servidor",
-      code: null,
+      message: "Error interno del servidor.",
       data: null,
     },
-    { status: 500 }
+    { status: 500 },
   );
 }
