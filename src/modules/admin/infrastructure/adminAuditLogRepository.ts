@@ -19,7 +19,7 @@ export type AdminAuditLogRow = {
   ip_address: string | null;
   user_agent: string | null;
   metadata: string | null;
-  created_at: string;
+  created_at: Date | string;
 };
 
 type CreateAdminAuditLogInput = {
@@ -42,11 +42,7 @@ export function getAuditRequestContext(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const realIp = request.headers.get("x-real-ip");
 
-  const ipAddress =
-    forwardedFor?.split(",")[0]?.trim() ||
-    realIp ||
-    null;
-
+  const ipAddress = forwardedFor?.split(",")[0]?.trim() || realIp || null;
   const userAgent = request.headers.get("user-agent") ?? null;
 
   return {
@@ -90,8 +86,10 @@ export async function createAdminAuditLog(input: CreateAdminAuditLogInput) {
   }
 }
 
-export async function listAdminAuditLogs(input?: ListAdminAuditLogsInput) {
-  const limit = Math.min(Math.max(input?.limit ?? 100, 1), 500);
+export async function listAdminAuditLogs(
+  input: ListAdminAuditLogsInput = {},
+): Promise<AdminAuditLogRow[]> {
+  const limit = Math.min(Math.max(input.limit ?? 100, 1), 250);
 
   const values: unknown[] = [limit];
 
@@ -110,7 +108,7 @@ export async function listAdminAuditLogs(input?: ListAdminAuditLogsInput) {
     from admin_audit_logs
   `;
 
-  if (input?.action) {
+  if (input.action) {
     values.push(input.action);
 
     query += `
