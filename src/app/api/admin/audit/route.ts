@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/shared";
-import { listAdminAuditLogs } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+import { listAdminAuditLogs } from "@/modules/admin/infrastructure/adminAuditRepository";
 
 function forbidden() {
   return NextResponse.json(
@@ -16,13 +16,13 @@ function forbidden() {
 }
 
 function resolveLimit(value: string | null): number {
-  const limit = Number(value ?? "250");
+  const parsed = Number(value ?? "100");
 
-  if (!Number.isFinite(limit)) {
-    return 250;
+  if (!Number.isFinite(parsed)) {
+    return 100;
   }
 
-  return Math.min(Math.max(limit, 1), 250);
+  return Math.min(Math.max(parsed, 1), 250);
 }
 
 export async function GET(req: NextRequest) {
@@ -48,22 +48,35 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const limit = resolveLimit(searchParams.get("limit"));
 
-    const logs = await listAdminAuditLogs({ limit });
+    const limit = resolveLimit(
+      searchParams.get("limit"),
+    );
+
+    const action = searchParams.get("action");
+
+    const logs = await listAdminAuditLogs({
+      limit,
+      action,
+    });
 
     return NextResponse.json({
       ok: true,
-      message: "Logs de auditoría obtenidos correctamente.",
+      message:
+        "Logs de auditoría obtenidos correctamente.",
       data: logs,
     });
   } catch (error) {
-    console.error("[api/admin/audit][GET]", error);
+    console.error(
+      "[api/admin/audit][GET]",
+      error,
+    );
 
     return NextResponse.json(
       {
         ok: false,
-        message: "Error al obtener logs de auditoría.",
+        message:
+          "Error al obtener logs de auditoría.",
         data: null,
       },
       { status: 500 },
