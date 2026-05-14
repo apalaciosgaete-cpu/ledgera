@@ -8,8 +8,19 @@ import {
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { createSession } from "@/modules/identity/infrastructure/sessionRepository";
 import { generateSessionToken } from "@/modules/identity/application/sessionToken";
+import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitResponse = enforceRequestRateLimit(req, {
+    scope: "2fa-login",
+    maxAttempts: 5,
+    windowMs: 60_000,
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const { userId, code } = await req.json();
 

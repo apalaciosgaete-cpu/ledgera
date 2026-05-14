@@ -1,12 +1,19 @@
-import { getUsers, createUser, getUserByEmail } from "@/modules/identity/infrastructure/userRepository";
+import { NextRequest } from "next/server";
+
+import {
+  getUsers,
+  createUser,
+  getUserByEmail,
+} from "@/modules/identity/infrastructure/userRepository";
 import { hashPassword } from "@/modules/identity/application/password";
 import { sanitizeUser } from "@/modules/identity/application/sanitizeUser";
 import { createPortfolio } from "@/modules/portfolio/infrastructure/portfolioRepository";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
+import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 const validRoles = ["personal", "contador", "empresa"] as const;
-type Role = typeof validRoles[number];
+type Role = (typeof validRoles)[number];
 
 function isValidRole(value: unknown): value is Role {
   return validRoles.includes(value as Role);
@@ -15,8 +22,12 @@ function isValidRole(value: unknown): value is Role {
 export async function GET() {
   try {
     const users = await getUsers();
+
     return ok(
-      { count: users.length, users: users.map(sanitizeUser) },
+      {
+        count: users.length,
+        users: users.map(sanitizeUser),
+      },
       "Usuarios obtenidos correctamente.",
     );
   } catch (error) {
@@ -24,11 +35,21 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const rateLimitResponse = enforceRequestRateLimit(request, {
+    scope: "register",
+    maxAttempts: 5,
+    windowMs: 60_000,
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const body = await request.json();
 
-    const email    = String(body.email    ?? "").trim().toLowerCase();
+    const email = String(body.email ?? "").trim().toLowerCase();
     const fullName = String(body.fullName ?? "").trim();
     const password = String(body.password ?? "");
     const role: Role = isValidRole(body.role) ? body.role : "personal";
@@ -42,19 +63,28 @@ export async function POST(request: Request) {
     }
 
     const existingUser = await getUserByEmail(email);
+
     if (existingUser) {
       return fail("El email ya está registrado.", 409);
     }
 
     const passwordHash = await hashPassword(password);
 
-    const user = await createUser({ email, fullName, passwordHash, role });
+    const user = await createUser({
+      email,
+      fullName,
+      passwordHash,
+      role,
+    });
 
     await createPortfolio(user.id);
 
-    // Email de bienvenida — no bloquea si falla
     try {
-      await sendWelcomeEmail({ to: email, fullName, role });
+      await sendWelcomeEmail({
+        to: email,
+        fullName,
+        role,
+      });
     } catch (emailError) {
       console.warn("[users/POST] Email bienvenida falló:", emailError);
     }
