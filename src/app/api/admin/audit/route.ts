@@ -48,35 +48,22 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
+    const limit = resolveLimit(searchParams.get("limit"));
 
-    const limit = resolveLimit(
-      searchParams.get("limit"),
-    );
-
-    const action = searchParams.get("action");
-
-    const logs = await listAdminAuditLogs({
-      limit,
-      action,
-    });
+    const logs = await listAdminAuditLogs({ limit });
 
     return NextResponse.json({
       ok: true,
-      message:
-        "Logs de auditoría obtenidos correctamente.",
+      message: "Logs de auditoría obtenidos correctamente.",
       data: logs,
     });
   } catch (error) {
-    console.error(
-      "[api/admin/audit][GET]",
-      error,
-    );
+    console.error("[api/admin/audit][GET]", error);
 
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "Error al obtener logs de auditoría.",
+        message: "Error al obtener logs de auditoría.",
         data: null,
       },
       { status: 500 },

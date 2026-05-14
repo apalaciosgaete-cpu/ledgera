@@ -28,7 +28,6 @@ type AdminAuditLogRow = {
 
 export type ListAdminAuditLogsInput = {
   limit?: number;
-  action?: string | null;
 };
 
 function parseMetadata(value: string | null): unknown {
@@ -78,39 +77,24 @@ export async function listAdminAuditLogs(
     250,
   );
 
-  const values: unknown[] = [limit];
-
-  let query = `
-    select
-      id,
-      action,
-      actor_id,
-      actor_email,
-      target_user_id,
-      target_user_email,
-      ip_address,
-      user_agent,
-      metadata,
-      created_at
-    from admin_audit_logs
-  `;
-
-  if (input.action) {
-    values.push(input.action);
-
-    query += `
-      where action = $2
-    `;
-  }
-
-  query += `
-    order by created_at desc
-    limit $1
-  `;
-
   const result = await db.query<AdminAuditLogRow>(
-    query,
-    values,
+    `
+      select
+        id,
+        action,
+        actor_id,
+        actor_email,
+        target_user_id,
+        target_user_email,
+        ip_address,
+        user_agent,
+        metadata,
+        created_at
+      from admin_audit_logs
+      order by created_at desc
+      limit $1
+    `,
+    [limit],
   );
 
   return result.rows.map(mapRowToAdminAuditLog);
