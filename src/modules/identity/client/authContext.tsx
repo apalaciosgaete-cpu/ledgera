@@ -8,15 +8,30 @@ import {
   useMemo,
   useState,
 } from "react";
-import { clearSessionToken, getSessionToken, saveSessionToken } from "./authStorage";
-import { loginRequest, logoutRequest, meRequest, type AuthUser } from "./authClient";
+
+import {
+  clearSessionToken,
+  getSessionToken,
+  saveSessionToken,
+} from "./authStorage";
+import {
+  loginRequest,
+  logoutRequest,
+  meRequest,
+  type AuthUser,
+} from "./authClient";
 import { isHttpClientError } from "@/shared/http/httpClient";
+import {
+  resolveSubscriptionState,
+  type SubscriptionStateResult,
+} from "@/modules/subscription/application/resolveSubscriptionState";
 
 type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   lastAuthError: string | null;
+  subscriptionState: SubscriptionStateResult | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -58,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isHttpClientError(error)) {
         if (error.status === 401) {
           setLastAuthError("Sesión expirada. Inicia sesión nuevamente.");
+        } else if (error.status === 402) {
+          setLastAuthError("Suscripción requerida para continuar.");
         } else if (error.status === 403) {
           setLastAuthError("Tu cuenta no tiene permisos para acceder.");
         } else {
@@ -107,12 +124,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [clearLocalSession]);
 
+  const subscriptionState = useMemo(() => {
+    if (!user) return null;
+
+    return resolveSubscriptionState({
+      role: user.role,
+      status: user.status,
+      subscriptionPlan: user.subscriptionPlan,
+      subscriptionExpiresAt: user.subscriptionExpiresAt,
+    });
+  }, [user]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: !!user,
       isLoading,
       lastAuthError,
+      subscriptionState,
       login,
       logout,
       refreshUser,
@@ -122,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       isLoading,
       lastAuthError,
+      subscriptionState,
       login,
       logout,
       refreshUser,

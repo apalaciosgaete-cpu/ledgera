@@ -4,33 +4,59 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type MeResponse = {
+  data?: {
+    user?: {
+      email?: string;
+      status?: string;
+      subscriptionPlan?: string | null;
+      subscriptionExpiresAt?: string | null;
+    };
+  };
+};
+
 export default function BlockedPage() {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
+  const [reason, setReason] = useState("La cuenta no tiene una suscripción activa.");
 
   useEffect(() => {
-    // Intentar obtener email del usuario para personalizar el mensaje
     fetch("/api/me")
-      .then((r) => r.json())
+      .then((response) => response.json() as Promise<MeResponse>)
       .then((data) => {
-        if (data?.data?.user?.email) {
-          setEmail(data.data.user.email);
+        const user = data?.data?.user;
+
+        if (user?.email) {
+          setEmail(user.email);
+        }
+
+        if (user?.status === "suspended") {
+          setReason("La cuenta fue suspendida temporalmente.");
+          return;
+        }
+
+        if (user?.subscriptionExpiresAt) {
+          const expiresAt = new Date(user.subscriptionExpiresAt);
+
+          if (!Number.isNaN(expiresAt.getTime()) && expiresAt < new Date()) {
+            setReason("La suscripción asociada a la cuenta está vencida.");
+          }
         }
       })
       .catch(() => null);
   }, []);
 
   async function handleLogout() {
-  try {
-    await fetch("/api/logout", {
-      method: "POST",
-    });
-  } catch {
-    // ignorar error logout
-  } finally {
-    router.push("/login");
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+    } catch {
+      // ignorar error logout
+    } finally {
+      router.push("/login");
+    }
   }
-}
 
   return (
     <div
@@ -56,7 +82,6 @@ export default function BlockedPage() {
           boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
         }}
       >
-        {/* Logo */}
         <div style={{ marginBottom: "32px" }}>
           <svg
             width="48"
@@ -64,14 +89,13 @@ export default function BlockedPage() {
             viewBox="0 0 64 56"
             style={{ margin: "0 auto" }}
           >
-            <rect x="4"  y="44" width="10" height="12" rx="2" fill="#16A34A" fillOpacity="0.4" />
+            <rect x="4" y="44" width="10" height="12" rx="2" fill="#16A34A" fillOpacity="0.4" />
             <rect x="18" y="32" width="10" height="24" rx="2" fill="#16A34A" fillOpacity="0.65" />
             <rect x="32" y="18" width="10" height="38" rx="2" fill="#16A34A" />
-            <rect x="46" y="4"  width="10" height="52" rx="2" fill="#F59E0B" />
+            <rect x="46" y="4" width="10" height="52" rx="2" fill="#F59E0B" />
           </svg>
         </div>
 
-        {/* Ícono de bloqueo */}
         <div
           style={{
             width: 64,
@@ -99,7 +123,6 @@ export default function BlockedPage() {
           </svg>
         </div>
 
-        {/* Título */}
         <h1
           style={{
             fontFamily: "var(--font-display)",
@@ -109,10 +132,9 @@ export default function BlockedPage() {
             margin: "0 0 12px",
           }}
         >
-          Cuenta suspendida
+          Acceso temporalmente bloqueado
         </h1>
 
-        {/* Descripción */}
         <p
           style={{
             fontSize: "15px",
@@ -121,8 +143,7 @@ export default function BlockedPage() {
             margin: "0 0 8px",
           }}
         >
-          Tu suscripción ha vencido y el acceso a LEDGERA ha sido suspendido
-          temporalmente.
+          {reason}
         </p>
 
         {email && (
@@ -137,7 +158,6 @@ export default function BlockedPage() {
           </p>
         )}
 
-        {/* Instrucciones */}
         <div
           style={{
             background: "#F8FAFC",
@@ -160,6 +180,7 @@ export default function BlockedPage() {
           >
             ¿Qué puedo hacer?
           </p>
+
           <ul
             style={{
               margin: 0,
@@ -169,13 +190,12 @@ export default function BlockedPage() {
               lineHeight: "1.8",
             }}
           >
-            <li>Contacta a soporte para renovar tu plan</li>
-            <li>Escríbenos a <strong>soporte@ledgera.cl</strong></li>
-            <li>Tu información está segura y disponible al renovar</li>
+            <li>Contacta a soporte para revisar el estado de la cuenta.</li>
+            <li>Escríbenos a <strong>soporte@ledgera.cl</strong>.</li>
+            <li>Tu información permanece segura y disponible al regularizar el acceso.</li>
           </ul>
         </div>
 
-        {/* Botón cerrar sesión */}
         <button
           onClick={handleLogout}
           style={{
