@@ -34,16 +34,20 @@ function formatDate(value: string) {
 export default function SeguridadPage() {
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [processingId, setProcessingId] =
     useState<string | null>(null);
 
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] =
+    useState<string | null>(null);
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
 
   const secondarySessionsCount = useMemo(() => {
-    return sessions.filter((session) => !session.isCurrent)
-      .length;
+    return sessions.filter(
+      (session) => !session.isCurrent,
+    ).length;
   }, [sessions]);
 
   const loadSessions = useCallback(async () => {
@@ -90,10 +94,13 @@ export default function SeguridadPage() {
       setMessage(null);
       setError(null);
 
-      await httpClient(`/api/sessions/${sessionId}`, {
-        method: "DELETE",
-        auth: true,
-      });
+      await httpClient(
+        `/api/sessions/${sessionId}`,
+        {
+          method: "DELETE",
+          auth: true,
+        },
+      );
 
       setSessions((current) =>
         current.filter(
@@ -101,7 +108,9 @@ export default function SeguridadPage() {
         ),
       );
 
-      setMessage("Sesión cerrada correctamente.");
+      setMessage(
+        "Sesión cerrada correctamente.",
+      );
     } catch (err) {
       console.error(err);
 
@@ -129,7 +138,9 @@ export default function SeguridadPage() {
       });
 
       setSessions((current) =>
-        current.filter((session) => session.isCurrent),
+        current.filter(
+          (session) => session.isCurrent,
+        ),
       );
 
       setMessage(
@@ -243,6 +254,16 @@ export default function SeguridadPage() {
                 color: "#FCA5A5",
                 borderRadius: "12px",
                 padding: "10px 14px",
+                cursor:
+                  secondarySessionsCount === 0 ||
+                  processingId === "ALL"
+                    ? "not-allowed"
+                    : "pointer",
+                opacity:
+                  secondarySessionsCount === 0 ||
+                  processingId === "ALL"
+                    ? 0.6
+                    : 1,
               }}
             >
               {processingId === "ALL"
@@ -282,6 +303,17 @@ export default function SeguridadPage() {
               }}
             >
               {error}
+            </div>
+          ) : null}
+
+          {loading ? (
+            <div
+              style={{
+                marginTop: "24px",
+                color: "#94A3B8",
+              }}
+            >
+              Cargando sesiones activas...
             </div>
           ) : null}
 
@@ -399,6 +431,26 @@ export default function SeguridadPage() {
                               processingId ===
                               session.id
                             }
+                            style={{
+                              border:
+                                "1px solid rgba(239,68,68,0.45)",
+                              background:
+                                "rgba(239,68,68,0.12)",
+                              color: "#FCA5A5",
+                              borderRadius: "10px",
+                              padding:
+                                "8px 12px",
+                              cursor:
+                                processingId ===
+                                session.id
+                                  ? "not-allowed"
+                                  : "pointer",
+                              opacity:
+                                processingId ===
+                                session.id
+                                  ? 0.6
+                                  : 1,
+                            }}
                           >
                             {processingId ===
                             session.id
@@ -406,7 +458,12 @@ export default function SeguridadPage() {
                               : "Cerrar"}
                           </button>
                         ) : (
-                          <span>
+                          <span
+                            style={{
+                              color: "#94A3B8",
+                              fontSize: "12px",
+                            }}
+                          >
                             Sesión actual
                           </span>
                         )}
@@ -415,6 +472,18 @@ export default function SeguridadPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          ) : null}
+
+          {!loading &&
+          sessions.length === 0 ? (
+            <div
+              style={{
+                marginTop: "24px",
+                color: "#94A3B8",
+              }}
+            >
+              No existen sesiones activas.
             </div>
           ) : null}
         </section>
