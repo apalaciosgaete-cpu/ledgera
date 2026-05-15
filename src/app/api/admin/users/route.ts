@@ -1,27 +1,9 @@
-// src/app/api/admin/users/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  createAdminAuditLog,
-  getAuditRequestContext,
-} from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import { getUsers } from "@/modules/identity/infrastructure/userRepository";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-import {
-  deleteUser,
-  getUserById,
-} from "@/modules/identity/infrastructure/userRepository";
-import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const csrfResponse = enforceCsrfProtection(req);
-
-  if (csrfResponse) {
-    return csrfResponse;
-  }
-
+export async function GET(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
 
   if (!auth) {
@@ -38,83 +20,30 @@ export async function DELETE(
     );
   }
 
-  const { id } = await params;
-
-  if (id === auth.user.id) {
-    return NextResponse.json(
-      {
-        ok: false,
-        message: "No puedes eliminar tu propia cuenta",
-        data: null,
-      },
-      { status: 400 },
-    );
-  }
-
   try {
-    const user = await getUserById(id);
-
-    if (!user) {
-      return NextResponse.json(
-        { ok: false, message: "Usuario no encontrado", data: null },
-        { status: 404 },
-      );
-    }
-
-    if (user.role === "admin") {
-      return NextResponse.json(
-        {
-          ok: false,
-          message: "No puedes eliminar una cuenta admin",
-          data: null,
-        },
-        { status: 400 },
-      );
-    }
-
-    const deleted = await deleteUser(id);
-
-    if (!deleted) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message: "No se pudo eliminar el usuario",
-          data: null,
-        },
-        { status: 500 },
-      );
-    }
-
-    await createAdminAuditLog({
-      action: "USER_DELETED",
-      actorId: auth.user.id,
-      actorEmail: auth.user.email,
-      targetUserId: user.id,
-      targetUserEmail: user.email,
-      ...getAuditRequestContext(req),
-      metadata: {
-        source: "api/admin/users/[id]",
-        deletedRole: user.role,
-        deletedStatus: user.status,
-        deletedSubscriptionPlan: user.subscriptionPlan,
-      },
-    });
+    const users = await getUsers();
 
     return NextResponse.json({
       ok: true,
-      message: `Usuario ${user.email} eliminado correctamente`,
-      data: {
+      message: "Usuarios obtenidos correctamente.",
+      data: users.map((user) => ({
         id: user.id,
         email: user.email,
-      },
+        fullName: user.fullName,
+        role: user.role,
+        status: user.status,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionExpiresAt: user.subscriptionExpiresAt,
+        createdAt: user.createdAt,
+      })),
     });
   } catch (error) {
-    console.error("[admin/users DELETE]", error);
+    console.error("[admin/users GET]", error);
 
     return NextResponse.json(
       {
         ok: false,
-        message: "Error al eliminar usuario",
+        message: "Error al obtener usuarios.",
         data: null,
       },
       { status: 500 },
