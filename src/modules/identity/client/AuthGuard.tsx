@@ -4,7 +4,14 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "./authContext";
 
-const PUBLIC_ROUTES = ["/", "/bienvenida", "/login", "/register"];
+const PUBLIC_ROUTES = [
+  "/",
+  "/bienvenida",
+  "/login",
+  "/register",
+  "/blocked",
+  "/verify/report",
+];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
@@ -21,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !publicRoute) {
-      router.push("/bienvenida");
+      router.push("/login");
     }
   }, [isAuthenticated, isLoading, publicRoute, router]);
 
