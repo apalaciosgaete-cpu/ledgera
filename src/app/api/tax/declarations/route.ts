@@ -1,190 +1,170 @@
-import { createHash, randomUUID } from "crypto";
+import { NextRequest, NextResponse } from "next/server";
 
-import type {
-  TaxDeclarationDraft,
-  TaxDeclarationEventLine,
-  TaxDeclarationPayload,
-  TaxDeclarationSymbolSummary,
-  TaxDeclarationType,
-} from "@/modules/tax-dj/domain/declaration";
+import { prisma } from "@/lib/prisma";
 
-export type TaxEventForDeclaration = {
-  id: string;
-  movementId: string;
-  eventType: string;
-  symbol: string;
-  executedAt: Date;
-  quantity: number;
-  effectiveTaxCategory: string;
-  proceedsNetUsd: number;
-  proceedsNetClp: number;
-  costBasisUsd: number;
-  costBasisClp: number;
-  feeUsd: number;
-  feeClp: number;
-  realizedPnlUsd: number;
-  realizedPnlClp: number;
-  usdClp: number;
-};
+import { requireAuth } from "@/shared";
+import { fail, ok, serverError } from "@/shared/apiResponse";
 
-type BuildDeclarationDraftInput = {
-  userId: string;
-  taxYear: number;
-  declarationType: TaxDeclarationType;
-  events: TaxEventForDeclaration[];
-};
+import {
+  buildDeclarationDraft,
+  type TaxEventForDeclaration,
+} from "@/modules/tax-dj/application/buildDeclarationDraft";
 
-function round(value: number, decimals = 8): number {
-  const factor = 10 ** decimals;
-  return Math.round((value + Number.EPSILON) * factor) / factor;
-}
+import type { TaxDeclarationType } from "@/modules/tax-dj/domain/declaration";
 
-function normalizeSymbol(value: string): string {
-  return value.trim().toUpperCase();
-}
+const VALID_DECLARATION_TYPES: TaxDeclarationType[] = [
+  "DJ_CRYPTO_SUMMARY",
+  "DJ_REALIZED_GAINS",
+  "DJ_FOREIGN_EXCHANGE_ACTIVITY",
+  "DJ_TAX_SUPPORTING_LEDGER",
+];
 
-function serializeEvent(event: TaxEventForDeclaration): TaxDeclarationEventLine {
-  return {
-    taxEventId: event.id,
-    movementId: event.movementId,
-    eventType: event.eventType,
-    symbol: normalizeSymbol(event.symbol),
-    executedAt: event.executedAt.toISOString(),
-    quantity: round(event.quantity, 8),
-    effectiveTaxCategory: event.effectiveTaxCategory,
-    proceedsNetUsd: round(event.proceedsNetUsd, 8),
-    proceedsNetClp: round(event.proceedsNetClp, 4),
-    costBasisUsd: round(event.costBasisUsd, 8),
-    costBasisClp: round(event.costBasisClp, 4),
-    feeUsd: round(event.feeUsd, 8),
-    feeClp: round(event.feeClp, 4),
-    realizedPnlUsd: round(event.realizedPnlUsd, 8),
-    realizedPnlClp: round(event.realizedPnlClp, 4),
-    usdClp: round(event.usdClp, 4),
-  };
-}
+function resolveTaxYear(value: string | null): number {
+  const year = Number(value);
 
-function buildPayload(events: TaxEventForDeclaration[]): TaxDeclarationPayload {
-  const lines = events.map(serializeEvent);
-  const bySymbolMap = new Map<string, TaxDeclarationSymbolSummary>();
-
-  for (const line of lines) {
-    const current =
-      bySymbolMap.get(line.symbol) ??
-      {
-        symbol: line.symbol,
-        events: 0,
-        quantity: 0,
-        proceedsUsd: 0,
-        proceedsClp: 0,
-        costBasisUsd: 0,
-        costBasisClp: 0,
-        feesUsd: 0,
-        feesClp: 0,
-        realizedPnlUsd: 0,
-        realizedPnlClp: 0,
-      };
-
-    current.events += 1;
-    current.quantity += line.quantity;
-    current.proceedsUsd += line.proceedsNetUsd;
-    current.proceedsClp += line.proceedsNetClp;
-    current.costBasisUsd += line.costBasisUsd;
-    current.costBasisClp += line.costBasisClp;
-    current.feesUsd += line.feeUsd;
-    current.feesClp += line.feeClp;
-    current.realizedPnlUsd += line.realizedPnlUsd;
-    current.realizedPnlClp += line.realizedPnlClp;
-
-    bySymbolMap.set(line.symbol, current);
+  if (!Number.isInteger(year)) {
+    throw new Error("Año inválido.");
   }
 
-  const bySymbol = Array.from(bySymbolMap.values()).map((item) => ({
-    ...item,
-    quantity: round(item.quantity, 8),
-    proceedsUsd: round(item.proceedsUsd, 8),
-    proceedsClp: round(item.proceedsClp, 4),
-    costBasisUsd: round(item.costBasisUsd, 8),
-    costBasisClp: round(item.costBasisClp, 4),
-    feesUsd: round(item.feesUsd, 8),
-    feesClp: round(item.feesClp, 4),
-    realizedPnlUsd: round(item.realizedPnlUsd, 8),
-    realizedPnlClp: round(item.realizedPnlClp, 4),
-  }));
+  if (year < 2000 || year > 2100) {
+    throw new Error("Año inválido.");
+  }
 
-  return {
-    summary: {
-      totalEvents: lines.length,
-      totalSymbols: bySymbol.length,
-      totalProceedsUsd: round(
-        lines.reduce((sum, line) => sum + line.proceedsNetUsd, 0),
-        8,
-      ),
-      totalProceedsClp: round(
-        lines.reduce((sum, line) => sum + line.proceedsNetClp, 0),
-        4,
-      ),
-      totalCostBasisUsd: round(
-        lines.reduce((sum, line) => sum + line.costBasisUsd, 0),
-        8,
-      ),
-      totalCostBasisClp: round(
-        lines.reduce((sum, line) => sum + line.costBasisClp, 0),
-        4,
-      ),
-      totalFeesUsd: round(
-        lines.reduce((sum, line) => sum + line.feeUsd, 0),
-        8,
-      ),
-      totalFeesClp: round(
-        lines.reduce((sum, line) => sum + line.feeClp, 0),
-        4,
-      ),
-      totalRealizedPnlUsd: round(
-        lines.reduce((sum, line) => sum + line.realizedPnlUsd, 0),
-        8,
-      ),
-      totalRealizedPnlClp: round(
-        lines.reduce((sum, line) => sum + line.realizedPnlClp, 0),
-        4,
-      ),
-      pendingClassificationEvents: lines.filter(
-        (line) =>
-          !line.effectiveTaxCategory ||
-          line.effectiveTaxCategory === "UNCLASSIFIED",
-      ).length,
-    },
-    bySymbol,
-    events: lines,
-  };
+  return year;
 }
 
-function buildContentHash(payload: unknown): string {
-  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+function resolveDeclarationType(
+  value: string | null,
+): TaxDeclarationType {
+  const declarationType = String(
+    value ?? "DJ_CRYPTO_SUMMARY",
+  )
+    .trim()
+    .toUpperCase();
+
+  if (
+    !VALID_DECLARATION_TYPES.includes(
+      declarationType as TaxDeclarationType,
+    )
+  ) {
+    throw new Error(
+      "Tipo de declaración inválido.",
+    );
+  }
+
+  return declarationType as TaxDeclarationType;
 }
 
-export function buildDeclarationDraft(
-  input: BuildDeclarationDraftInput,
-): TaxDeclarationDraft {
-  const payloadJson = buildPayload(input.events);
+export async function GET(
+  req: NextRequest,
+) {
+  const auth = await requireAuth(req);
 
-  const contentHash = buildContentHash({
-    userId: input.userId,
-    taxYear: input.taxYear,
-    declarationType: input.declarationType,
-    payloadJson,
-  });
+  if (
+    !auth ||
+    auth instanceof NextResponse
+  ) {
+    return fail(
+      "No autorizado.",
+      401,
+    );
+  }
 
-  return {
-    id: randomUUID(),
-    userId: input.userId,
-    taxYear: input.taxYear,
-    declarationType: input.declarationType,
-    status: "DRAFT",
-    source: "SYSTEM",
-    generatedAt: new Date().toISOString(),
-    confirmedAt: null,
-    contentHash,
-    payloadJson,
-  };
+  try {
+    const { searchParams } =
+      new URL(req.url);
+
+    let taxYear: number;
+    let declarationType: TaxDeclarationType;
+
+    try {
+      taxYear = resolveTaxYear(
+        searchParams.get("year"),
+      );
+
+      declarationType =
+        resolveDeclarationType(
+          searchParams.get("type"),
+        );
+    } catch (error) {
+      return fail(
+        error instanceof Error
+          ? error.message
+          : "Parámetros inválidos.",
+        400,
+      );
+    }
+
+    const events =
+      (await prisma.taxEvent.findMany({
+        where: {
+          userId: auth.user.id,
+          executedAt: {
+            gte: new Date(
+              `${taxYear}-01-01T00:00:00.000Z`,
+            ),
+
+            lt: new Date(
+              `${
+                taxYear + 1
+              }-01-01T00:00:00.000Z`,
+            ),
+          },
+        },
+
+        orderBy: [
+          {
+            executedAt: "asc",
+          },
+
+          {
+            id: "asc",
+          },
+        ],
+
+        select: {
+          id: true,
+          movementId: true,
+          eventType: true,
+          symbol: true,
+          executedAt: true,
+          quantity: true,
+          effectiveTaxCategory: true,
+          proceedsNetUsd: true,
+          proceedsNetClp: true,
+          costBasisUsd: true,
+          costBasisClp: true,
+          feeUsd: true,
+          feeClp: true,
+          realizedPnlUsd: true,
+          realizedPnlClp: true,
+          usdClp: true,
+        },
+      })) as TaxEventForDeclaration[];
+
+    const declaration =
+      buildDeclarationDraft({
+        userId: auth.user.id,
+        taxYear,
+        declarationType,
+        events,
+      });
+
+    return ok(
+      {
+        declaration,
+
+        meta: {
+          officialSiiForm: false,
+
+          purpose:
+            "Borrador interno auditable de declaración tributaria.",
+        },
+      },
+
+      "Borrador de declaración generado correctamente.",
+    );
+  } catch (error) {
+    return serverError(error);
+  }
 }
