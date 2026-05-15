@@ -10,6 +10,7 @@ import {
   getUserById,
   updateUserStatus,
 } from "@/modules/identity/infrastructure/userRepository";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 const VALID_STATUSES = ["active", "inactive", "suspended"] as const;
 type ValidStatus = (typeof VALID_STATUSES)[number];
@@ -18,6 +19,12 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const csrfResponse = enforceCsrfProtection(req);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
   const auth = await getSessionFromRequest(req);
 
   if (!auth) {

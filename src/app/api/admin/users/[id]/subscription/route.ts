@@ -11,6 +11,7 @@ import {
 } from "@/modules/identity/infrastructure/userRepository";
 import type { SubscriptionPlan } from "@/modules/identity/domain/user";
 import { PLAN_TO_ROLE } from "@/modules/identity/domain/user";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 const VALID_PLANS: SubscriptionPlan[] = ["BASICO", "PROFESIONAL", "EMPRESA"];
 
@@ -18,6 +19,12 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const csrfResponse = enforceCsrfProtection(req);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
   const auth = await getSessionFromRequest(req);
 
   if (!auth) {

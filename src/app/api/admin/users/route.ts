@@ -1,47 +1,120 @@
+// src/app/api/admin/users/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/shared";
-import { getUsers } from "@/modules/identity/infrastructure/userRepository";
-import { sanitizeUser } from "@/modules/identity/application/sanitizeUser";
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import {
+  deleteUser,
+  getUserById,
+} from "@/modules/identity/infrastructure/userRepository";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
-function forbidden() {
-  return NextResponse.json(
-    {
-      ok: false,
-      message: "Acceso denegado. Se requiere rol administrador.",
-      data: null,
-    },
-    { status: 403 },
-  );
-}
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const csrfResponse = enforceCsrfProtection(req);
 
-export async function GET(req: NextRequest) {
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
+  const auth = await getSessionFromRequest(req);
+
+  if (!auth) {
+    return NextResponse.json(
+      { ok: false, message: "No autenticado", data: null },
+      { status: 401 },
+    );
+  }
+
+  if (auth.user.role !== "admin") {
+    return NextResponse.json(
+      { ok: false, message: "Sin permisos", data: null },
+      { status: 403 },
+    );
+  }
+
+  const { id } = await params;
+
+  if (id === auth.user.id) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "No puedes eliminar tu propia cuenta",
+        data: null,
+      },
+      { status: 400 },
+    );
+  }
+
   try {
-    const auth = await requireAuth(req);
+    const user = await getUserById(id);
 
-    if (auth instanceof NextResponse) {
-      return auth;
+    if (!user) {
+      return NextResponse.json(
+        { ok: false, message: "Usuario no encontrado", data: null },
+        { status: 404 },
+      );
     }
 
-    if (!auth || auth.user.role !== "admin") {
-      return forbidden();
+    if (user.role === "admin") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "No puedes eliminar una cuenta admin",
+          data: null,
+        },
+        { status: 400 },
+      );
     }
 
-    const users = await getUsers();
-    const nonAdminUsers = users.filter((user) => user.role !== "admin");
+    const deleted = await deleteUser(id);
+
+    if (!deleted) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "No se pudo eliminar el usuario",
+          data: null,
+        },
+        { status: 500 },
+      );
+    }
+
+    await createAdminAuditLog({
+      action: "USER_DELETED",
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      targetUserId: user.id,
+      targetUserEmail: user.email,
+      ...getAuditRequestContext(req),
+      metadata: {
+        source: "api/admin/users/[id]",
+        deletedRole: user.role,
+        deletedStatus: user.status,
+        deletedSubscriptionPlan: user.subscriptionPlan,
+      },
+    });
 
     return NextResponse.json({
       ok: true,
-      message: "Usuarios obtenidos correctamente.",
-      data: nonAdminUsers.map(sanitizeUser),
+      message: `Usuario ${user.email} eliminado correctamente`,
+      data: {
+        id: user.id,
+        email: user.email,
+      },
     });
   } catch (error) {
-    console.error("[api/admin/users][GET]", error);
+    console.error("[admin/users DELETE]", error);
 
     return NextResponse.json(
       {
         ok: false,
-        message: "Error al obtener usuarios.",
+        message: "Error al eliminar usuario",
         data: null,
       },
       { status: 500 },

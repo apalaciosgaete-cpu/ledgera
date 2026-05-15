@@ -6,6 +6,7 @@ import { requireAuth } from "@/shared";
 import { createTaxPeriodAuditLog } from "@/modules/tax/infrastructure/taxPeriodAuditLogRepository";
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 type ReopenBody = {
   year?: number | string;
@@ -13,6 +14,12 @@ type ReopenBody = {
 };
 
 export async function POST(request: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(request);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 

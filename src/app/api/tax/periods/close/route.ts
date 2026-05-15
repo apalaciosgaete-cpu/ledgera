@@ -7,6 +7,7 @@ import { createTaxPeriodSnapshot } from "@/modules/tax/infrastructure/taxPeriodS
 import { createTaxPeriodAuditLog } from "@/modules/tax/infrastructure/taxPeriodAuditLogRepository";
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 type CloseBody = {
   year?: number | string;
@@ -22,6 +23,12 @@ type TaxEventLite = {
 };
 
 export async function POST(request: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(request);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
@@ -89,7 +96,9 @@ export async function POST(request: NextRequest) {
     const totalTaxEvents = taxEvents.length;
 
     const pendingEvents = taxEvents.filter(
-      (e) => !e.effectiveTaxCategory || e.effectiveTaxCategory === "UNCLASSIFIED",
+      (event) =>
+        !event.effectiveTaxCategory ||
+        event.effectiveTaxCategory === "UNCLASSIFIED",
     );
 
     const snapshotPayload = {
@@ -99,20 +108,22 @@ export async function POST(request: NextRequest) {
         totalSellMovements,
         totalTaxEvents,
         totalPnlUsd: taxEvents.reduce(
-          (acc: number, e: TaxEventLite) => acc + (e.realizedPnlUsd ?? 0),
+          (acc: number, event: TaxEventLite) =>
+            acc + (event.realizedPnlUsd ?? 0),
           0,
         ),
         totalPnlClp: taxEvents.reduce(
-          (acc: number, e: TaxEventLite) => acc + (e.realizedPnlClp ?? 0),
+          (acc: number, event: TaxEventLite) =>
+            acc + (event.realizedPnlClp ?? 0),
           0,
         ),
       },
-      events: taxEvents.map((e: TaxEventLite) => ({
-        id: e.id,
-        movementId: e.movementId,
-        effectiveTaxCategory: e.effectiveTaxCategory,
-        realizedPnlUsd: e.realizedPnlUsd,
-        realizedPnlClp: e.realizedPnlClp,
+      events: taxEvents.map((event: TaxEventLite) => ({
+        id: event.id,
+        movementId: event.movementId,
+        effectiveTaxCategory: event.effectiveTaxCategory,
+        realizedPnlUsd: event.realizedPnlUsd,
+        realizedPnlClp: event.realizedPnlClp,
       })),
     };
 
