@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+
 import { deleteSessionByIdForUser } from "@/modules/identity/infrastructure/sessionRepository";
+
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 export async function DELETE(

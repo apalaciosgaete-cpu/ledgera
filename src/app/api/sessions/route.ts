@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+
 import {
   deleteOtherSessionsForUser,
   listSessionsByUserId,
 } from "@/modules/identity/infrastructure/sessionRepository";
+
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 function maskToken(token: string): string {

@@ -1,5 +1,3 @@
-// src/modules/security/application/csrfProtection.ts
-
 import { NextRequest, NextResponse } from "next/server";
 
 const CSRF_HEADER_NAME = "x-ledgera-csrf";
@@ -51,6 +49,16 @@ export function setCsrfCookie(
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
+export function clearCsrfCookie(response: NextResponse) {
+  response.cookies.set(CSRF_COOKIE_NAME, "", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
   });
 }
 
