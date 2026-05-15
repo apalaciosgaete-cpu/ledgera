@@ -75,6 +75,26 @@ export async function getSessionByToken(token: string): Promise<Session | null> 
   return mapRowToSession(result.rows[0]);
 }
 
+export async function listSessionsByUserId(userId: string): Promise<Session[]> {
+  const result = await db.query(
+    `
+      select
+        id,
+        user_id,
+        token,
+        expires_at,
+        created_at
+      from sessions
+      where user_id = $1
+        and expires_at > now()
+      order by created_at desc
+    `,
+    [userId],
+  );
+
+  return result.rows.map(mapRowToSession);
+}
+
 export async function deleteSessionByToken(token: string): Promise<boolean> {
   const result = await db.query(
     `
@@ -85,6 +105,38 @@ export async function deleteSessionByToken(token: string): Promise<boolean> {
   );
 
   return (result.rowCount ?? 0) > 0;
+}
+
+export async function deleteSessionByIdForUser(input: {
+  sessionId: string;
+  userId: string;
+}): Promise<boolean> {
+  const result = await db.query(
+    `
+      delete from sessions
+      where id = $1
+        and user_id = $2
+    `,
+    [input.sessionId, input.userId],
+  );
+
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function deleteOtherSessionsForUser(input: {
+  userId: string;
+  currentSessionId: string;
+}): Promise<number> {
+  const result = await db.query(
+    `
+      delete from sessions
+      where user_id = $1
+        and id <> $2
+    `,
+    [input.userId, input.currentSessionId],
+  );
+
+  return result.rowCount ?? 0;
 }
 
 export async function deleteSessionsByUserId(userId: string): Promise<number> {
