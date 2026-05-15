@@ -9,6 +9,10 @@ import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import {
+  enforceCsrfProtection,
+  getCsrfCookieName,
+} from "@/modules/security/application/csrfProtection";
 
 function extractToken(req: NextRequest): string | null {
   const authHeader = req.headers.get("authorization");
@@ -21,6 +25,12 @@ function extractToken(req: NextRequest): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(req);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
   try {
     const token = extractToken(req);
 
@@ -52,6 +62,14 @@ export async function POST(req: NextRequest) {
 
     response.cookies.set("session_token", "", {
       httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+
+    response.cookies.set(getCsrfCookieName(), "", {
+      httpOnly: false,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
