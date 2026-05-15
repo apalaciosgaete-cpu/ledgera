@@ -1,4 +1,3 @@
-// src/app/api/portfolio/import/confirm/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
@@ -8,6 +7,7 @@ import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 type RawRow = Record<string, string>;
 
@@ -57,19 +57,25 @@ function normalizeRow(row: RawRow): NormalizedMovement | null {
   }
 }
 
-function validateMovement(m: NormalizedMovement) {
+function validateMovement(movement: NormalizedMovement) {
   const errors: string[] = [];
 
-  if (!m.symbol) errors.push("symbol requerido");
-  if (!["BUY", "SELL"].includes(m.type)) errors.push("type inválido");
-  if (!Number.isFinite(m.quantity) || m.quantity <= 0) errors.push("quantity inválido");
-  if (!Number.isFinite(m.priceUsd) || m.priceUsd <= 0) errors.push("priceUsd inválido");
-  if (!Number.isFinite(m.feeUsd) || m.feeUsd < 0) errors.push("feeUsd inválido");
+  if (!movement.symbol) errors.push("symbol requerido");
+  if (!["BUY", "SELL"].includes(movement.type)) errors.push("type inválido");
+  if (!Number.isFinite(movement.quantity) || movement.quantity <= 0) {
+    errors.push("quantity inválido");
+  }
+  if (!Number.isFinite(movement.priceUsd) || movement.priceUsd <= 0) {
+    errors.push("priceUsd inválido");
+  }
+  if (!Number.isFinite(movement.feeUsd) || movement.feeUsd < 0) {
+    errors.push("feeUsd inválido");
+  }
 
-  if (!m.executedAt) {
+  if (!movement.executedAt) {
     errors.push("executedAt requerido");
   } else {
-    const date = new Date(m.executedAt);
+    const date = new Date(movement.executedAt);
     if (Number.isNaN(date.getTime())) errors.push("executedAt inválido");
   }
 
@@ -77,6 +83,12 @@ function validateMovement(m: NormalizedMovement) {
 }
 
 export async function POST(req: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(req);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
   const rateLimitResponse = enforceRequestRateLimit(req, {
     scope: "portfolio-import-confirm",
     maxAttempts: 10,
@@ -115,7 +127,7 @@ export async function POST(req: NextRequest) {
     const normalizedRows: { index: number; data: NormalizedMovement }[] = [];
     const errorsMap: Record<number, string> = {};
 
-    for (let i = 0; i < rows.length; i++) {
+    for (let i = 0; i < rows.length; i += 1) {
       const normalized = normalizeRow(rows[i]);
 
       if (!normalized) {
@@ -250,7 +262,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const insertedCount = results.filter((r) => r.ok).length;
+    const insertedCount = results.filter((result) => result.ok).length;
     let rebuildResult: Awaited<ReturnType<typeof rebuildTaxEvents>> | null = null;
 
     if (insertedCount > 0) {

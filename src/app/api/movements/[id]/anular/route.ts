@@ -1,15 +1,21 @@
-// src/app/api/movements/[id]/anular/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
 import { requireAuth } from "@/shared";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireAuth(request as Parameters<typeof requireAuth>[0]);
+  const csrfResponse = enforceCsrfProtection(request);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
+  const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) {
     return NextResponse.json({ ok: false, message: "No autorizado" }, { status: 401 });
   }
@@ -22,7 +28,7 @@ export async function PATCH(
     if (!reason || String(reason).trim().length === 0) {
       return NextResponse.json(
         { ok: false, message: "El motivo de anulación es requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -33,30 +39,30 @@ export async function PATCH(
     if (!movement) {
       return NextResponse.json(
         { ok: false, message: "Movimiento no encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (movement.userId !== auth.user.id) {
       return NextResponse.json(
         { ok: false, message: "Sin permisos sobre este movimiento" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     if (movement.deletedAt) {
       return NextResponse.json(
         { ok: false, message: "El movimiento ya está anulado" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
-    await assertPeriodOpen(new Date(movement.executedAt));
+    await assertPeriodOpen(new Date(movement.executedAt), auth.user.id);
 
     await prisma.portfolioMovement.update({
       where: { id },
       data: {
-        deletedAt:     new Date(),
+        deletedAt: new Date(),
         deletedReason: String(reason).trim(),
       },
     });
@@ -68,27 +74,33 @@ export async function PATCH(
         where: { id },
         data: { deletedAt: null, deletedReason: null },
       });
+
       return NextResponse.json(
-        { ok: false, message: "Error en el motor tributario. La anulación fue revertida." },
-        { status: 500 }
+        {
+          ok: false,
+          message: "Error en el motor tributario. La anulación fue revertida.",
+        },
+        { status: 500 },
       );
     }
 
     return NextResponse.json({
-      ok:      true,
+      ok: true,
       message: "Movimiento anulado correctamente",
     });
   } catch (error) {
     if (error instanceof Error && error.message.includes("período tributario")) {
       return NextResponse.json(
         { ok: false, message: error.message },
-        { status: 409 }
+        { status: 409 },
       );
     }
-    console.error("[anular/route]", error);
+
+    console.error("[portfolio/movements/[id]/PATCH]", error);
+
     return NextResponse.json(
       { ok: false, message: "Error interno al anular el movimiento" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
