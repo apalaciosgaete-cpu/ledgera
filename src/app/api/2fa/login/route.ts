@@ -6,8 +6,11 @@ import {
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
-import { createSession } from "@/modules/identity/infrastructure/sessionRepository";
-import { generateSessionToken } from "@/modules/identity/application/sessionToken";
+import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
+import {
+  buildSessionExpirationDate,
+  generateSessionToken,
+} from "@/modules/identity/application/sessionToken";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 export async function POST(req: NextRequest) {
@@ -40,6 +43,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.status !== "active") {
+      return NextResponse.json(
+        { ok: false, message: "El usuario no está activo.", data: null },
+        { status: 403 },
+      );
+    }
+
     const isValid = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
       encoding: "base32",
@@ -55,10 +65,9 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionToken = generateSessionToken();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    const expiresAt = buildSessionExpirationDate();
 
-    const session = await createSession({
+    const session = await rotateSessionForUser({
       userId: user.id,
       token: sessionToken,
       expiresAt,
@@ -74,6 +83,7 @@ export async function POST(req: NextRequest) {
           source: "api/2fa/login",
           twoFactor: true,
           sessionId: session.id,
+          sessionRotation: true,
         },
       });
     }

@@ -87,6 +87,24 @@ export async function deleteSessionByToken(token: string): Promise<boolean> {
   return (result.rowCount ?? 0) > 0;
 }
 
+export async function deleteSessionsByUserId(userId: string): Promise<number> {
+  const result = await db.query(
+    `
+      delete from sessions
+      where user_id = $1
+    `,
+    [userId],
+  );
+
+  return result.rowCount ?? 0;
+}
+
+export async function rotateSessionForUser(input: CreateSessionInput): Promise<Session> {
+  await deleteSessionsByUserId(input.userId);
+
+  return createSession(input);
+}
+
 export async function deleteExpiredSessions(): Promise<number> {
   const result = await db.query(
     `

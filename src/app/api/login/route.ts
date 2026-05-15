@@ -4,9 +4,12 @@ import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
-import { createSession } from "@/modules/identity/infrastructure/sessionRepository";
+import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { getUserByEmail } from "@/modules/identity/infrastructure/userRepository";
-import { generateSessionToken } from "@/modules/identity/application/sessionToken";
+import {
+  buildSessionExpirationDate,
+  generateSessionToken,
+} from "@/modules/identity/application/sessionToken";
 import { verifyPassword } from "@/modules/identity/application/password";
 import {
   checkLoginRateLimit,
@@ -17,12 +20,6 @@ type LoginRequestBody = {
   email?: string;
   password?: string;
 };
-
-function buildSessionExpirationDate() {
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
-  return expiresAt;
-}
 
 function getClientIp(req: NextRequest): string {
   const forwardedFor = req.headers.get("x-forwarded-for");
@@ -114,7 +111,7 @@ export async function POST(req: NextRequest) {
     const sessionToken = generateSessionToken();
     const expiresAt = buildSessionExpirationDate();
 
-    const session = await createSession({
+    const session = await rotateSessionForUser({
       userId: user.id,
       token: sessionToken,
       expiresAt,
@@ -130,6 +127,7 @@ export async function POST(req: NextRequest) {
           source: "api/login",
           twoFactor: false,
           sessionId: session.id,
+          sessionRotation: true,
         },
       });
     }

@@ -9,6 +9,12 @@ export function generateSessionToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+export function buildSessionExpirationDate(days = 7): Date {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + days);
+  return expiresAt;
+}
+
 async function resolveTokenFromRequest(request: Request): Promise<string | null> {
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get("session_token")?.value;
@@ -41,16 +47,16 @@ export async function getSessionFromRequest(request: Request) {
 
     return {
       user: {
-        id:                    user.id,
-        email:                 user.email,
-        role:                  user.role,
-        status:                user.status,
-        subscriptionPlan:      user.subscriptionPlan,
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        subscriptionPlan: user.subscriptionPlan,
         subscriptionExpiresAt: user.subscriptionExpiresAt,
       },
       session: {
-        id:        session.id,
-        token:     session.token,
+        id: session.id,
+        token: session.token,
         expiresAt: session.expiresAt,
       },
     };
