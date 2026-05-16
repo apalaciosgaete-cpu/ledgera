@@ -21,6 +21,20 @@ const VALID_DECLARATION_TYPES: TaxDeclarationType[] = [
   "DJ_TAX_SUPPORTING_LEDGER",
 ];
 
+type TaxDeclarationRecord = {
+  id: string;
+  taxYear: number;
+  declarationType: string;
+  status: string;
+  source: string;
+  contentHash: string;
+  generatedAt: Date;
+  confirmedAt: Date | null;
+  voidedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 function resolveTaxYear(value: string | null): number {
   const year = Number(value);
 
@@ -41,6 +55,22 @@ function resolveDeclarationType(value: string | null): TaxDeclarationType {
   }
 
   return declarationType as TaxDeclarationType;
+}
+
+function serializeDeclaration(declaration: TaxDeclarationRecord) {
+  return {
+    id: declaration.id,
+    taxYear: declaration.taxYear,
+    declarationType: declaration.declarationType,
+    status: declaration.status,
+    source: declaration.source,
+    contentHash: declaration.contentHash,
+    generatedAt: declaration.generatedAt,
+    confirmedAt: declaration.confirmedAt,
+    voidedAt: declaration.voidedAt,
+    createdAt: declaration.createdAt,
+    updatedAt: declaration.updatedAt,
+  };
 }
 
 async function fetchTaxEventsForDeclaration(input: {
@@ -90,26 +120,14 @@ export async function GET(req: NextRequest) {
 
     const taxYear = yearParam ? resolveTaxYear(yearParam) : undefined;
 
-    const declarations = await listTaxDeclarationsByUser({
+    const declarations = (await listTaxDeclarationsByUser({
       userId: auth.user.id,
       taxYear,
-    });
+    })) as TaxDeclarationRecord[];
 
     return ok(
       {
-        declarations: declarations.map((declaration) => ({
-          id: declaration.id,
-          taxYear: declaration.taxYear,
-          declarationType: declaration.declarationType,
-          status: declaration.status,
-          source: declaration.source,
-          contentHash: declaration.contentHash,
-          generatedAt: declaration.generatedAt,
-          confirmedAt: declaration.confirmedAt,
-          voidedAt: declaration.voidedAt,
-          createdAt: declaration.createdAt,
-          updatedAt: declaration.updatedAt,
-        })),
+        declarations: declarations.map(serializeDeclaration),
       },
       "Declaraciones obtenidas correctamente.",
     );
@@ -152,22 +170,13 @@ export async function POST(req: NextRequest) {
       events,
     });
 
-    const declaration = await createTaxDeclarationDraft(draft);
+    const declaration = (await createTaxDeclarationDraft(
+      draft,
+    )) as TaxDeclarationRecord;
 
     return ok(
       {
-        declaration: {
-          id: declaration.id,
-          taxYear: declaration.taxYear,
-          declarationType: declaration.declarationType,
-          status: declaration.status,
-          source: declaration.source,
-          contentHash: declaration.contentHash,
-          generatedAt: declaration.generatedAt,
-          confirmedAt: declaration.confirmedAt,
-          createdAt: declaration.createdAt,
-          updatedAt: declaration.updatedAt,
-        },
+        declaration: serializeDeclaration(declaration),
       },
       "Borrador de declaración guardado correctamente.",
       201,
