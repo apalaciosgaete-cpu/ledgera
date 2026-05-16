@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ui } from "@/styles/design-system";
 
-type DeclarationStatus = "DRAFT" | "REVIEW" | "CONFIRMED" | "EXPORTED" | "VOIDED";
+type DeclarationStatus =
+  | "DRAFT"
+  | "REVIEW"
+  | "CONFIRMED"
+  | "EXPORTED"
+  | "VOIDED";
 
 type DeclarationItem = {
   id: string;
@@ -25,6 +30,25 @@ type DeclarationsResponse = {
   data: {
     declarations: DeclarationItem[];
   };
+};
+
+type VerifyResponse = {
+  ok: boolean;
+  message: string;
+  data: {
+    verification: {
+      valid: boolean;
+      computedHash: string;
+      expectedHash: string;
+    };
+  };
+};
+
+type VerificationResult = {
+  declarationId: string;
+  valid: boolean;
+  computedHash: string;
+  expectedHash: string;
 };
 
 const DECLARATION_TYPES = [
@@ -86,6 +110,9 @@ export default function TaxDeclarationsPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [verification, setVerification] = useState<VerificationResult | null>(
+    null,
+  );
 
   const sortedDeclarations = useMemo(() => {
     return [...declarations].sort(
@@ -147,6 +174,7 @@ export default function TaxDeclarationsPage() {
       setProcessing("generate");
       setMessage(null);
       setError(null);
+      setVerification(null);
 
       await initializeCsrf();
 
@@ -194,6 +222,7 @@ export default function TaxDeclarationsPage() {
       setProcessing(`${id}:${status}`);
       setMessage(null);
       setError(null);
+      setVerification(null);
 
       await initializeCsrf();
 
@@ -212,7 +241,9 @@ export default function TaxDeclarationsPage() {
       const json = await response.json();
 
       if (!response.ok || !json.ok) {
-        throw new Error(json.message || "No fue posible actualizar la declaración.");
+        throw new Error(
+          json.message || "No fue posible actualizar la declaración.",
+        );
       }
 
       setMessage("Declaración actualizada correctamente.");
@@ -222,6 +253,56 @@ export default function TaxDeclarationsPage() {
         err instanceof Error
           ? err.message
           : "No fue posible actualizar la declaración.",
+      );
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function verifyHash(declaration: DeclarationItem) {
+    try {
+      setProcessing(`${declaration.id}:verify`);
+      setMessage(null);
+      setError(null);
+      setVerification(null);
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `/api/tax/declarations/${declaration.id}/verify`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token ?? ""}`,
+          },
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      const json = (await response.json()) as VerifyResponse;
+
+      if (!response.ok || !json.ok) {
+        throw new Error(json.message || "No fue posible verificar el hash.");
+      }
+
+      setVerification({
+        declarationId: declaration.id,
+        valid: json.data.verification.valid,
+        computedHash: json.data.verification.computedHash,
+        expectedHash: json.data.verification.expectedHash,
+      });
+
+      setMessage(
+        json.data.verification.valid
+          ? "Hash verificado correctamente."
+          : "La declaración presenta inconsistencias de integridad.",
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible verificar el hash.",
       );
     } finally {
       setProcessing(null);
@@ -249,7 +330,9 @@ export default function TaxDeclarationsPage() {
 
       if (!response.ok) {
         const json = await response.json().catch(() => null);
-        throw new Error(json?.message || "No fue posible exportar la declaración.");
+        throw new Error(
+          json?.message || "No fue posible exportar la declaración.",
+        );
       }
 
       const blob = await response.blob();
@@ -257,7 +340,9 @@ export default function TaxDeclarationsPage() {
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = `ledgera-ddjj-${declaration.taxYear}-${declaration.declarationType.toLowerCase()}.csv`;
+      link.download = `ledgera-ddjj-${
+        declaration.taxYear
+      }-${declaration.declarationType.toLowerCase()}.csv`;
 
       document.body.appendChild(link);
       link.click();
@@ -346,6 +431,26 @@ export default function TaxDeclarationsPage() {
         </div>
       )}
 
+      {verification && (
+        <div
+          className={`${
+            verification.valid ? ui.alertOk : ui.alertRisk
+          } rounded-md p-3 text-sm space-y-1`}
+        >
+          <p className="font-medium">
+            {verification.valid
+              ? "Integridad verificada"
+              : "Integridad no verificada"}
+          </p>
+          <p className="font-mono text-xs break-all">
+            Esperado: {verification.expectedHash}
+          </p>
+          <p className="font-mono text-xs break-all">
+            Calculado: {verification.computedHash}
+          </p>
+        </div>
+      )}
+
       <div className={ui.tableWrapper}>
         <table className={ui.table}>
           <thead className={ui.tableHead}>
@@ -411,7 +516,9 @@ export default function TaxDeclarationsPage() {
                         <>
                           <button
                             type="button"
-                            onClick={() => updateStatus(declaration.id, "REVIEW")}
+                            onClick={() =>
+                              updateStatus(declaration.id, "REVIEW")
+                            }
                             disabled={processing !== null}
                             className={ui.buttonSecondary}
                           >
@@ -431,6 +538,17 @@ export default function TaxDeclarationsPage() {
 
                           <button
                             type="button"
+                            onClick={() => verifyHash(declaration)}
+                            disabled={processing !== null}
+                            className={ui.buttonSecondary}
+                          >
+                            {processing === `${declaration.id}:verify`
+                              ? "Verificando..."
+                              : "Verificar hash"}
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => downloadCsv(declaration)}
                             disabled={processing !== null}
                             className={ui.buttonSecondary}
@@ -440,7 +558,9 @@ export default function TaxDeclarationsPage() {
 
                           <button
                             type="button"
-                            onClick={() => updateStatus(declaration.id, "VOIDED")}
+                            onClick={() =>
+                              updateStatus(declaration.id, "VOIDED")
+                            }
                             disabled={processing !== null}
                             className={ui.buttonDanger}
                           >
