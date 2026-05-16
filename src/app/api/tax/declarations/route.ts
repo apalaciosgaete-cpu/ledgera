@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import {
   buildDeclarationDraft,
   type TaxEventForDeclaration,
@@ -10,9 +11,9 @@ import {
 import type { TaxDeclarationType } from "@/modules/tax-dj/domain/declaration";
 import {
   createTaxDeclarationDraft,
+  findActiveDeclarationByHash,
   listTaxDeclarationsByUser,
 } from "@/modules/tax-dj/infrastructure/declarationRepository";
-import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 const VALID_DECLARATION_TYPES: TaxDeclarationType[] = [
   "DJ_CRYPTO_SUMMARY",
@@ -170,6 +171,23 @@ export async function POST(req: NextRequest) {
       events,
     });
 
+    const existing = (await findActiveDeclarationByHash({
+      userId: auth.user.id,
+      taxYear,
+      declarationType,
+      contentHash: draft.contentHash,
+    })) as TaxDeclarationRecord | null;
+
+    if (existing) {
+      return ok(
+        {
+          declaration: serializeDeclaration(existing),
+          reused: true,
+        },
+        "Ya existe un borrador activo con el mismo contenido.",
+      );
+    }
+
     const declaration = (await createTaxDeclarationDraft(
       draft,
     )) as TaxDeclarationRecord;
@@ -177,6 +195,7 @@ export async function POST(req: NextRequest) {
     return ok(
       {
         declaration: serializeDeclaration(declaration),
+        reused: false,
       },
       "Borrador de declaración guardado correctamente.",
       201,
