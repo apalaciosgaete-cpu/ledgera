@@ -28,22 +28,10 @@ type DeclarationsResponse = {
 };
 
 const DECLARATION_TYPES = [
-  {
-    value: "DJ_CRYPTO_SUMMARY",
-    label: "Resumen cripto",
-  },
-  {
-    value: "DJ_REALIZED_GAINS",
-    label: "Ganancias realizadas",
-  },
-  {
-    value: "DJ_FOREIGN_EXCHANGE_ACTIVITY",
-    label: "Actividad en exchanges extranjeros",
-  },
-  {
-    value: "DJ_TAX_SUPPORTING_LEDGER",
-    label: "Libro auxiliar tributario",
-  },
+  { value: "DJ_CRYPTO_SUMMARY", label: "Resumen cripto" },
+  { value: "DJ_REALIZED_GAINS", label: "Ganancias realizadas" },
+  { value: "DJ_FOREIGN_EXCHANGE_ACTIVITY", label: "Actividad en exchanges extranjeros" },
+  { value: "DJ_TAX_SUPPORTING_LEDGER", label: "Libro auxiliar tributario" },
 ];
 
 function formatDate(value: string | null) {
@@ -51,9 +39,7 @@ function formatDate(value: string | null) {
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
+  if (Number.isNaN(date.getTime())) return "—";
 
   return date.toLocaleString("es-CL");
 }
@@ -80,7 +66,7 @@ function statusClass(status: DeclarationStatus) {
   if (status === "VOIDED") return ui.badgeRisk;
   if (status === "REVIEW") return ui.badgeWarning;
 
-  return "border border-[var(--color-border)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)]";
+  return "border border-(--color-border) bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)]";
 }
 
 export default function TaxDeclarationsPage() {
@@ -97,9 +83,7 @@ export default function TaxDeclarationsPage() {
 
   const sortedDeclarations = useMemo(() => {
     return [...declarations].sort(
-      (a, b) =>
-        new Date(b.generatedAt).getTime() -
-        new Date(a.generatedAt).getTime(),
+      (a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime(),
     );
   }, [declarations]);
 
@@ -136,9 +120,7 @@ export default function TaxDeclarationsPage() {
       setDeclarations(json.data.declarations ?? []);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible cargar declaraciones.",
+        err instanceof Error ? err.message : "No fue posible cargar declaraciones.",
       );
     } finally {
       setLoading(false);
@@ -147,6 +129,7 @@ export default function TaxDeclarationsPage() {
 
   useEffect(() => {
     void loadDeclarations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function generateDraft() {
@@ -182,9 +165,7 @@ export default function TaxDeclarationsPage() {
       await loadDeclarations();
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible generar el borrador.",
+        err instanceof Error ? err.message : "No fue posible generar el borrador.",
       );
     } finally {
       setProcessing(null);
@@ -221,9 +202,7 @@ export default function TaxDeclarationsPage() {
       await loadDeclarations();
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible actualizar la declaración.",
+        err instanceof Error ? err.message : "No fue posible actualizar la declaración.",
       );
     } finally {
       setProcessing(null);
@@ -238,16 +217,13 @@ export default function TaxDeclarationsPage() {
 
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `/api/tax/declarations/${declaration.id}/export`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token ?? ""}`,
-          },
-          credentials: "include",
+      const response = await fetch(`/api/tax/declarations/${declaration.id}/export`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token ?? ""}`,
         },
-      );
+        credentials: "include",
+      });
 
       if (!response.ok) {
         const json = await response.json().catch(() => null);
@@ -270,9 +246,7 @@ export default function TaxDeclarationsPage() {
       setMessage("CSV DDJJ descargado correctamente.");
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible exportar la declaración.",
+        err instanceof Error ? err.message : "No fue posible exportar la declaración.",
       );
     } finally {
       setProcessing(null);
@@ -376,9 +350,7 @@ export default function TaxDeclarationsPage() {
                   <td className={ui.tableCell}>{declaration.taxYear}</td>
 
                   <td className={ui.tableCell}>
-                    <span className="font-medium">
-                      {declaration.declarationType}
-                    </span>
+                    <span className="font-medium">{declaration.declarationType}</span>
                   </td>
 
                   <td className={ui.tableCell}>
@@ -395,9 +367,7 @@ export default function TaxDeclarationsPage() {
                     {declaration.contentHash.slice(0, 16)}...
                   </td>
 
-                  <td className={ui.tableCell}>
-                    {formatDate(declaration.generatedAt)}
-                  </td>
+                  <td className={ui.tableCell}>{formatDate(declaration.generatedAt)}</td>
 
                   <td className={ui.tableCell}>
                     <div className="flex flex-wrap gap-2">
@@ -414,9 +384,7 @@ export default function TaxDeclarationsPage() {
 
                           <button
                             type="button"
-                            onClick={() =>
-                              updateStatus(declaration.id, "CONFIRMED")
-                            }
+                            onClick={() => updateStatus(declaration.id, "CONFIRMED")}
                             disabled={processing !== null}
                             className={ui.buttonPrimary}
                           >
