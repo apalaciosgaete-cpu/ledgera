@@ -15,6 +15,21 @@ const MUTABLE_STATUSES: TaxDeclarationStatus[] = [
   "VOIDED",
 ];
 
+type TaxDeclarationRecord = {
+  id: string;
+  taxYear: number;
+  declarationType: string;
+  status: string;
+  source: string;
+  payloadJson: string;
+  contentHash: string;
+  generatedAt: Date;
+  confirmedAt: Date | null;
+  voidedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 function parsePayloadJson(value: string) {
   try {
     return JSON.parse(value);
@@ -33,6 +48,23 @@ function normalizeStatus(value: unknown): TaxDeclarationStatus | null {
   return status as TaxDeclarationStatus;
 }
 
+function serializeDeclaration(declaration: TaxDeclarationRecord) {
+  return {
+    id: declaration.id,
+    taxYear: declaration.taxYear,
+    declarationType: declaration.declarationType,
+    status: declaration.status,
+    source: declaration.source,
+    payloadJson: parsePayloadJson(declaration.payloadJson),
+    contentHash: declaration.contentHash,
+    generatedAt: declaration.generatedAt,
+    confirmedAt: declaration.confirmedAt,
+    voidedAt: declaration.voidedAt,
+    createdAt: declaration.createdAt,
+    updatedAt: declaration.updatedAt,
+  };
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -46,10 +78,10 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const declaration = await getTaxDeclarationByIdForUser({
+    const declaration = (await getTaxDeclarationByIdForUser({
       id,
       userId: auth.user.id,
-    });
+    })) as TaxDeclarationRecord | null;
 
     if (!declaration) {
       return fail("Declaración no encontrada.", 404);
@@ -57,20 +89,7 @@ export async function GET(
 
     return ok(
       {
-        declaration: {
-          id: declaration.id,
-          taxYear: declaration.taxYear,
-          declarationType: declaration.declarationType,
-          status: declaration.status,
-          source: declaration.source,
-          payloadJson: parsePayloadJson(declaration.payloadJson),
-          contentHash: declaration.contentHash,
-          generatedAt: declaration.generatedAt,
-          confirmedAt: declaration.confirmedAt,
-          voidedAt: declaration.voidedAt,
-          createdAt: declaration.createdAt,
-          updatedAt: declaration.updatedAt,
-        },
+        declaration: serializeDeclaration(declaration),
       },
       "Declaración obtenida correctamente.",
     );
@@ -105,10 +124,10 @@ export async function PATCH(
       return fail("Estado inválido.", 400);
     }
 
-    const existing = await getTaxDeclarationByIdForUser({
+    const existing = (await getTaxDeclarationByIdForUser({
       id,
       userId: auth.user.id,
-    });
+    })) as TaxDeclarationRecord | null;
 
     if (!existing) {
       return fail("Declaración no encontrada.", 404);
