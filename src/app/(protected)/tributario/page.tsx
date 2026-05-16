@@ -1,887 +1,679 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ui } from "@/styles/design-system";
 
-type TaxHealthStatus = "OK" | "REVIEW" | "RISK";
-type PeriodStatus = "OPEN" | "CLOSED" | "REOPENED";
-type Section = "resumen" | "eventos" | "reportes" | "declaraciones";
+type DeclarationStatus =
+  | "DRAFT"
+  | "REVIEW"
+  | "CONFIRMED"
+  | "EXPORTED"
+  | "VOIDED";
 
-type TaxEvent = {
+type DeclarationItem = {
   id: string;
-  movementId: string;
-  eventType: string;
-  symbol: string;
-  executedAt: string;
-  quantity: number;
-  effectiveTaxCategory: string;
-  averageCostUsdAtSale: number;
-  proceedsGrossUsd: number;
-  proceedsNetUsd: number;
-  costBasisUsd: number;
-  feeUsd: number;
-  realizedPnlUsd: number;
-  usdClp: number;
-  realizedPnlClp: number;
+  taxYear: number;
+  declarationType: string;
+  status: DeclarationStatus;
+  source: string;
+  contentHash: string;
+  generatedAt: string;
+  confirmedAt: string | null;
+  voidedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-type TaxTotals = {
-  totalEvents: number;
-  totalQuantity: number;
-  totalPnlUsd: number;
-  totalPnlClp: number;
-  totalProceedsGrossUsd: number;
-  totalProceedsNetUsd: number;
-  totalCostBasisUsd: number;
-  totalFeeUsd: number;
-};
-
-type TaxCategory = {
-  normalizedTaxType: "CAPITAL" | "ORDINARY" | "NON_TAXABLE" | "PENDING";
-  label: string;
-  count: number;
-  totalPnlUsd: number;
-  totalPnlClp: number;
-  totalProceedsNetUsd: number;
-  totalCostBasisUsd: number;
-  totalFeeUsd: number;
-};
-
-type TaxHealth = {
-  status: TaxHealthStatus;
-  score: number;
-  issues: { type: string; count: number; message: string }[];
-  blocked: boolean;
-  blockReason?: string;
-};
-
-type PeriodData = {
-  year: number;
-  status: PeriodStatus;
-  isClosed: boolean;
-  closedAt: string | null;
-  reopenedAt: string | null;
-  closedReason: string | null;
-};
-
-type TributarioData = {
-  events: TaxEvent[];
-  totals: TaxTotals;
-  taxSummary: {
-    totalEvents: number;
-    categories: TaxCategory[];
+type DeclarationsResponse = {
+  ok: boolean;
+  message: string;
+  data: {
+    declarations: DeclarationItem[];
   };
-  taxHealth: TaxHealth;
-  period: PeriodData;
 };
 
-type ReporteItem = {
-  key: string;
-  title: string;
-  description: string;
-  href: string;
-  color: string;
-  blockedWhen: "never" | "pending" | "noEvents";
+type VerifyResponse = {
+  ok: boolean;
+  message: string;
+  data: {
+    verification: {
+      valid: boolean;
+      computedHash: string;
+      expectedHash: string;
+    };
+  };
 };
 
-const currentYear = new Date().getFullYear();
+type VerificationResult = {
+  declarationId: string;
+  valid: boolean;
+  computedHash: string;
+  expectedHash: string;
+};
 
-const REPORTES: ReporteItem[] = [
+const DECLARATION_TYPES = [
   {
-    key: "csv-informativo",
-    title: "CSV Borrador informativo",
+    value: "DJ_CRYPTO_SUMMARY",
+    label: "Resumen tributario cripto",
     description:
-      "Resumen tributario del período para revisión personal. Incluye PnL, categorías y detalle de eventos.",
-    href: "/api/tax/events/export-informative",
-    color: "#0F2A3D",
-    blockedWhen: "noEvents",
+      "Resumen consolidado de resultados tributarios y actividad cripto del período.",
   },
   {
-    key: "csv-contador",
-    title: "CSV para contador",
+    value: "DJ_REALIZED_GAINS",
+    label: "Ganancias realizadas",
     description:
-      "Reporte formal para entrega a contador. Requiere clasificación definitiva.",
-    href: "/api/tax/events/export-strict",
-    color: "#16A34A",
-    blockedWhen: "pending",
+      "Detalle de ganancias y pérdidas realizadas por ventas y conversiones.",
   },
   {
-    key: "pdf-informativo",
-    title: "PDF Borrador informativo",
+    value: "DJ_FOREIGN_EXCHANGE_ACTIVITY",
+    label: "Actividad en exchanges extranjeros",
     description:
-      "Versión PDF del borrador informativo con detalle de eventos y resumen por período.",
-    href: "/api/tax/reports/pdf-informative",
-    color: "#0F2A3D",
-    blockedWhen: "noEvents",
+      "Operaciones realizadas en plataformas internacionales y exchanges externos.",
   },
   {
-    key: "pdf-estricto",
-    title: "PDF verificable (contador / SII)",
+    value: "DJ_TAX_SUPPORTING_LEDGER",
+    label: "Libro auxiliar tributario",
     description:
-      "Reporte formal con hash SHA256 y QR de verificación pública. Requiere clasificación completa.",
-    href: "/api/tax/reports/pdf-strict",
-    color: "#16A34A",
-    blockedWhen: "pending",
+      "Libro tributario de respaldo para auditoría, revisión contable y trazabilidad.",
   },
 ];
 
-function formatUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
+function resolveDeclarationMeta(type: string) {
+  return (
+    DECLARATION_TYPES.find((item) => item.value === type) ?? {
+      value: type,
+      label: type,
+      description: "Declaración tributaria interna.",
+    }
+  );
 }
 
-function formatClp(value: number) {
-  return new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-  }).format(value);
+function readCookie(name: string) {
+  if (typeof document === "undefined") return "";
+
+  const match = document.cookie
+    .split("; ")
+    .find((item) => item.startsWith(`${name}=`));
+
+  return match ? decodeURIComponent(match.split("=")[1] ?? "") : "";
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("es-CL", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
+async function resolveCsrfToken() {
+  await fetch("/api/csrf", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
   });
+
+  return readCookie("ledgera_csrf");
 }
 
-function formatNumber(value: number, decimals = 8) {
-  return new Intl.NumberFormat("es-CL", {
-    maximumFractionDigits: decimals,
-  }).format(value);
+function formatDate(value: string | null) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("es-CL");
 }
 
-function pnlColor(value: number) {
-  if (value > 0) return "#16A34A";
-  if (value < 0) return "#DC2626";
-  return "#64748B";
-}
-
-function statusColor(status: TaxHealthStatus) {
-  if (status === "OK") return "#16A34A";
-  if (status === "REVIEW") return "#D97706";
-  return "#DC2626";
-}
-
-function periodLabel(status: PeriodStatus) {
-  if (status === "OPEN") return "Período abierto";
-  if (status === "CLOSED") return "Período cerrado";
-  return "Período reabierto";
-}
-
-function sectionLabel(section: Section) {
-  if (section === "resumen") return "Resumen";
-  if (section === "eventos") return "Eventos";
-  if (section === "reportes") return "Reportes";
-  return "Declaraciones";
-}
-
-function Card({
-  children,
-  muted = false,
-}: {
-  children: React.ReactNode;
-  muted?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        background: muted ? "#F8FAFC" : "#ffffff",
-        border: "1px solid #E2E8F0",
-        borderRadius: "12px",
-        padding: "1.25rem 1.5rem",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function ReportesSection({
-  year,
-  hasEvents,
-  hasPending,
-  blocked,
-}: {
-  year: number;
-  hasEvents: boolean;
-  hasPending: boolean;
-  blocked: boolean;
-}) {
-  const [loadingKey, setLoadingKey] = useState<string | null>(null);
-  const [errorKey, setErrorKey] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  function isBlocked(reporte: ReporteItem) {
-    if (blocked) {
-      return {
-        blocked: true,
-        reason: "Operaciones bloqueadas por inconsistencias tributarias.",
-      };
-    }
-
-    if (reporte.blockedWhen === "noEvents" && !hasEvents) {
-      return {
-        blocked: true,
-        reason: `Sin eventos tributarios para ${year}.`,
-      };
-    }
-
-    if (reporte.blockedWhen === "pending" && hasPending) {
-      return {
-        blocked: true,
-        reason: "Requiere clasificación definitiva de todos los eventos.",
-      };
-    }
-
-    return { blocked: false, reason: "" };
+function statusLabel(status: DeclarationStatus) {
+  switch (status) {
+    case "DRAFT":
+      return "Borrador";
+    case "REVIEW":
+      return "En revisión";
+    case "CONFIRMED":
+      return "Confirmada";
+    case "EXPORTED":
+      return "Exportada";
+    case "VOIDED":
+      return "Anulada";
+    default:
+      return status;
   }
-
-  async function handleDownload(reporte: ReporteItem) {
-    setErrorKey(null);
-    setErrorMsg(null);
-    setLoadingKey(reporte.key);
-
-    try {
-      const response = await fetch(`${reporte.href}?year=${year}`);
-
-      if (!response.ok) {
-        const json = await response.json().catch(() => null);
-        setErrorKey(reporte.key);
-        setErrorMsg(json?.message ?? "Error al generar el reporte.");
-        return;
-      }
-
-      const blob = await response.blob();
-      const disposition = response.headers.get("content-disposition") ?? "";
-      const match = disposition.match(/filename="?([^"]+)"?/);
-      const filename = match?.[1] ?? `ledgera-reporte-${year}`;
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-
-      URL.revokeObjectURL(url);
-    } catch {
-      setErrorKey(reporte.key);
-      setErrorMsg("Error de conexión al generar el reporte.");
-    } finally {
-      setLoadingKey(null);
-    }
-  }
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      {REPORTES.map((reporte) => {
-        const blockedState = isBlocked(reporte);
-        const loading = loadingKey === reporte.key;
-        const hasError = errorKey === reporte.key;
-
-        return (
-          <Card key={reporte.key}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "1rem",
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: "220px" }}>
-                <p
-                  style={{
-                    margin: "0 0 4px",
-                    fontWeight: 700,
-                    color: blockedState.blocked ? "#94A3B8" : "#0F2A3D",
-                  }}
-                >
-                  {reporte.title}
-                </p>
-
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "0.8125rem",
-                    color: "#64748B",
-                  }}
-                >
-                  {reporte.description}
-                </p>
-
-                {blockedState.blocked && (
-                  <p
-                    style={{
-                      margin: "6px 0 0",
-                      fontSize: "0.75rem",
-                      color: "#D97706",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {blockedState.reason}
-                  </p>
-                )}
-
-                {hasError && errorMsg && (
-                  <p
-                    style={{
-                      margin: "6px 0 0",
-                      fontSize: "0.75rem",
-                      color: "#DC2626",
-                    }}
-                  >
-                    {errorMsg}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleDownload(reporte)}
-                disabled={blockedState.blocked || loading}
-                style={{
-                  padding: "0.5rem 1.25rem",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: blockedState.blocked
-                    ? "#F1F5F9"
-                    : loading
-                      ? "#94A3B8"
-                      : reporte.color,
-                  color: blockedState.blocked ? "#94A3B8" : "#ffffff",
-                  fontSize: "0.8125rem",
-                  fontWeight: 600,
-                  cursor:
-                    blockedState.blocked || loading ? "not-allowed" : "pointer",
-                  height: "38px",
-                }}
-              >
-                {loading ? "Generando..." : `Descargar ${year}`}
-              </button>
-            </div>
-          </Card>
-        );
-      })}
-    </div>
-  );
 }
 
-function DeclaracionesSection({ year }: { year: number }) {
-  return (
-    <Card>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "1rem",
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ flex: 1, minWidth: "260px" }}>
-          <p
-            style={{
-              margin: "0 0 6px",
-              fontWeight: 700,
-              fontSize: "1rem",
-              color: "#0F2A3D",
-            }}
-          >
-            Declaraciones Juradas
-          </p>
+function statusClass(status: DeclarationStatus) {
+  if (status === "CONFIRMED") return ui.badgeOk;
+  if (status === "VOIDED") return ui.badgeRisk;
+  if (status === "REVIEW") return ui.badgeWarning;
 
-          <p
-            style={{
-              margin: 0,
-              fontSize: "0.875rem",
-              color: "#64748B",
-              lineHeight: 1.6,
-            }}
-          >
-            Gestiona borradores DDJJ tributarios, validación hash, estados
-            internos y exportación CSV auditable para el período {year}.
-          </p>
-
-          <div
-            style={{
-              marginTop: "12px",
-              display: "grid",
-              gap: "6px",
-              fontSize: "0.75rem",
-              color: "#16A34A",
-              fontWeight: 600,
-            }}
-          >
-            <span>✓ Generación de borradores DDJJ</span>
-            <span>✓ Confirmación, revisión y anulación</span>
-            <span>✓ Verificación hash SHA256</span>
-            <span>✓ Exportación CSV auditable</span>
-          </div>
-        </div>
-
-        <a
-          href="/tax/declarations"
-          style={{
-            padding: "0.65rem 1.25rem",
-            borderRadius: "8px",
-            background: "#0F2A3D",
-            color: "#ffffff",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-            height: "40px",
-          }}
-        >
-          Abrir módulo DDJJ
-        </a>
-      </div>
-    </Card>
-  );
+  return "border border-(--color-border) bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)]";
 }
 
-export default function TributarioPage() {
-  const [year, setYear] = useState(currentYear);
-  const [section, setSection] = useState<Section>("resumen");
-  const [data, setData] = useState<TributarioData | null>(null);
+export default function TaxDeclarationsPage() {
+  const currentYear = new Date().getFullYear();
+
+  const [year, setYear] = useState(String(currentYear));
+  const [declarationType, setDeclarationType] = useState("DJ_CRYPTO_SUMMARY");
+  const [declarations, setDeclarations] = useState<DeclarationItem[]>([]);
+
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [verification, setVerification] = useState<VerificationResult | null>(
+    null,
+  );
 
-  useEffect(() => {
-    async function fetchAll() {
+  const sortedDeclarations = useMemo(() => {
+    return [...declarations].sort(
+      (a, b) =>
+        new Date(b.generatedAt).getTime() -
+        new Date(a.generatedAt).getTime(),
+    );
+  }, [declarations]);
+
+  async function loadDeclarations() {
+    try {
       setLoading(true);
       setError(null);
 
-      try {
-        const [eventsRes, periodRes, healthRes] = await Promise.all([
-          fetch(`/api/tax/events?year=${year}`),
-          fetch(`/api/tax/periods/status?year=${year}`),
-          fetch("/api/tax/health"),
-        ]);
+      const token = localStorage.getItem("token");
 
-        if (!eventsRes.ok || !periodRes.ok) {
-          throw new Error("Error al conectar con el motor tributario.");
-        }
+      const response = await fetch(`/api/tax/declarations?year=${year}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token ?? ""}`,
+        },
+        credentials: "include",
+        cache: "no-store",
+      });
 
-        const eventsJson = await eventsRes.json();
-        const periodJson = await periodRes.json();
-        const healthJson = await healthRes.json();
+      const json = (await response.json()) as DeclarationsResponse;
 
-        if (!eventsJson.ok || !periodJson.ok) {
-          throw new Error(
-            eventsJson.message ??
-              periodJson.message ??
-              "Respuesta tributaria inválida.",
-          );
-        }
-
-        setData({
-          events: eventsJson.data.events,
-          totals: eventsJson.data.totals,
-          taxSummary: eventsJson.data.taxSummary,
-          taxHealth: {
-            ...eventsJson.data.taxHealth,
-            blocked: healthJson.ok ? healthJson.data.blocked : false,
-            blockReason: healthJson.ok ? healthJson.data.blockReason : undefined,
-          },
-          period: periodJson.data,
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error inesperado.");
-      } finally {
-        setLoading(false);
+      if (!response.ok || !json.ok) {
+        throw new Error(json.message || "No fue posible cargar declaraciones.");
       }
+
+      setDeclarations(json.data.declarations ?? []);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible cargar declaraciones.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    void fetchAll();
-  }, [year]);
-
-  if (loading) {
-    return (
-      <>
-        <style>
-          {`@keyframes ledgera-spin { to { transform: rotate(360deg); } }`}
-        </style>
-
-        <div
-          style={{
-            height: "60vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            gap: "1rem",
-          }}
-        >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              border: "2px solid rgba(15,42,61,0.12)",
-              borderTopColor: "#0F2A3D",
-              borderRadius: "50%",
-              animation: "ledgera-spin 0.75s linear infinite",
-            }}
-          />
-          <p style={{ color: "#94A3B8", fontSize: "0.875rem", margin: 0 }}>
-            Cargando módulo tributario...
-          </p>
-        </div>
-      </>
-    );
   }
 
-  if (error) {
-    return (
-      <div style={{ padding: "2rem" }}>
-        <Card muted>
-          <p style={{ color: "#DC2626", fontWeight: 700, margin: "0 0 4px" }}>
-            Error al cargar Tributario
-          </p>
-          <p style={{ color: "#64748B", margin: 0 }}>{error}</p>
-        </Card>
-      </div>
-    );
+  useEffect(() => {
+    void loadDeclarations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function generateDraft() {
+    try {
+      setProcessing("generate");
+      setMessage(null);
+      setError(null);
+      setVerification(null);
+
+      const csrfToken = await resolveCsrfToken();
+      const token = localStorage.getItem("token");
+
+      const response = await fetch("/api/tax/declarations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token ?? ""}`,
+          "Content-Type": "application/json",
+          "x-ledgera-csrf": csrfToken,
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          year,
+          type: declarationType,
+        }),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || !json.ok) {
+        throw new Error(json.message || "No fue posible generar el borrador.");
+      }
+
+      setMessage(
+        json.data?.reused
+          ? "Ya existía un borrador activo con el mismo contenido."
+          : "Borrador DDJJ generado correctamente.",
+      );
+
+      await loadDeclarations();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible generar el borrador.",
+      );
+    } finally {
+      setProcessing(null);
+    }
   }
 
-  if (!data) return null;
+  async function updateStatus(id: string, status: DeclarationStatus) {
+    try {
+      setProcessing(`${id}:${status}`);
+      setMessage(null);
+      setError(null);
+      setVerification(null);
 
-  const { events, totals, taxSummary, taxHealth, period } = data;
-  const healthColor = statusColor(taxHealth.status);
+      const csrfToken = await resolveCsrfToken();
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`/api/tax/declarations/${id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token ?? ""}`,
+          "Content-Type": "application/json",
+          "x-ledgera-csrf": csrfToken,
+        },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || !json.ok) {
+        throw new Error(
+          json.message || "No fue posible actualizar la declaración.",
+        );
+      }
+
+      setMessage("Declaración actualizada correctamente.");
+      await loadDeclarations();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible actualizar la declaración.",
+      );
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function verifyIntegrity(declaration: DeclarationItem) {
+    try {
+      setProcessing(`${declaration.id}:verify`);
+      setMessage(null);
+      setError(null);
+      setVerification(null);
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `/api/tax/declarations/${declaration.id}/verify`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token ?? ""}`,
+          },
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      const json = (await response.json()) as VerifyResponse;
+
+      if (!response.ok || !json.ok) {
+        throw new Error(
+          json.message || "No fue posible verificar integridad.",
+        );
+      }
+
+      setVerification({
+        declarationId: declaration.id,
+        valid: json.data.verification.valid,
+        computedHash: json.data.verification.computedHash,
+        expectedHash: json.data.verification.expectedHash,
+      });
+
+      setMessage(
+        json.data.verification.valid
+          ? "La declaración mantiene integridad y no presenta alteraciones."
+          : "La declaración presenta inconsistencias de integridad.",
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible verificar integridad.",
+      );
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function downloadCsv(declaration: DeclarationItem) {
+    try {
+      setProcessing(`${declaration.id}:export`);
+      setMessage(null);
+      setError(null);
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `/api/tax/declarations/${declaration.id}/export`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token ?? ""}`,
+          },
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        const json = await response.json().catch(() => null);
+
+        throw new Error(
+          json?.message || "No fue posible exportar la declaración.",
+        );
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `ledgera-ddjj-${
+        declaration.taxYear
+      }-${declaration.declarationType.toLowerCase()}.csv`;
+
+      document.body.appendChild(link);
+
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      setMessage("CSV DDJJ descargado correctamente.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible exportar la declaración.",
+      );
+    } finally {
+      setProcessing(null);
+    }
+  }
 
   return (
-    <div
-      style={{
-        maxWidth: "1100px",
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "1rem",
-          flexWrap: "wrap",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: "1.375rem",
-              fontWeight: 700,
-              color: "#0F2A3D",
-              margin: "0 0 4px",
-            }}
-          >
-            Tributario
-          </h1>
-          <p style={{ color: "#94A3B8", margin: 0, fontSize: "0.875rem" }}>
-            Análisis tributario de tus operaciones cripto.
-          </p>
-        </div>
+    <section className={ui.page}>
+      <div>
+        <h1 className={ui.title}>Declaraciones Juradas</h1>
 
-        <div style={{ display: "flex", gap: "8px" }}>
-          {[currentYear - 1, currentYear].map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setYear(item)}
-              style={{
-                padding: "6px 16px",
-                borderRadius: "8px",
-                border: "1px solid",
-                borderColor: year === item ? "#0F2A3D" : "rgba(15,42,61,0.15)",
-                background: year === item ? "#0F2A3D" : "transparent",
-                color: year === item ? "#ffffff" : "#64748B",
-                fontWeight: year === item ? 600 : 400,
-                cursor: "pointer",
-              }}
+        <p className={ui.subtitle}>
+          Gestión interna de borradores tributarios auditables y verificables.
+        </p>
+      </div>
+
+      <div className={`${ui.card} p-4 space-y-4`}>
+        <div className="grid gap-3 md:grid-cols-3">
+          <label className="space-y-1">
+            <span className={ui.label}>Año tributario</span>
+
+            <input
+              value={year}
+              onChange={(event) => setYear(event.target.value)}
+              className="w-full rounded-md border border-(--color-border) bg-white px-3 py-2 text-sm"
+            />
+          </label>
+
+          <label className="space-y-1 md:col-span-2">
+            <span className={ui.label}>Tipo de declaración</span>
+
+            <select
+              value={declarationType}
+              onChange={(event) => setDeclarationType(event.target.value)}
+              className="w-full rounded-md border border-(--color-border) bg-white px-3 py-2 text-sm"
             >
-              {item}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {taxHealth.blocked && (
-        <div
-          style={{
-            background: "rgba(220,38,38,0.06)",
-            border: "1px solid rgba(220,38,38,0.25)",
-            borderRadius: "12px",
-            padding: "1rem 1.25rem",
-            marginBottom: "1.25rem",
-          }}
-        >
-          <p style={{ margin: "0 0 4px", color: "#DC2626", fontWeight: 700 }}>
-            Operaciones bloqueadas
-          </p>
-          <p style={{ margin: 0, color: "#64748B", fontSize: "0.8125rem" }}>
-            {taxHealth.blockReason ??
-              "Existen inconsistencias tributarias que deben resolverse."}
-          </p>
-        </div>
-      )}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "10px",
-          marginBottom: "1.25rem",
-        }}
-      >
-        <Card muted>
-          <p style={{ margin: 0, color: "#64748B", fontSize: "0.75rem" }}>
-            Estado del período
-          </p>
-          <p style={{ margin: "4px 0 0", fontWeight: 700, color: "#0F2A3D" }}>
-            {periodLabel(period.status)}
-          </p>
-          <p style={{ margin: "4px 0 0", color: "#94A3B8", fontSize: "0.75rem" }}>
-            Período {year}
-            {period.closedAt ? ` — cerrado ${formatDate(period.closedAt)}` : ""}
-          </p>
-        </Card>
-
-        <Card muted>
-          <p style={{ margin: 0, color: "#64748B", fontSize: "0.75rem" }}>
-            Salud tributaria
-          </p>
-          <p style={{ margin: "4px 0 0", fontWeight: 700, color: healthColor }}>
-            {taxHealth.status}
-          </p>
-          <p style={{ margin: "4px 0 0", color: "#94A3B8", fontSize: "0.75rem" }}>
-            Score {taxHealth.score}/100
-          </p>
-        </Card>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "4px",
-          marginBottom: "1.5rem",
-          borderBottom: "1px solid #E2E8F0",
-          flexWrap: "wrap",
-        }}
-      >
-        {(["resumen", "eventos", "reportes", "declaraciones"] as Section[]).map(
-          (item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setSection(item)}
-              style={{
-                padding: "8px 18px",
-                borderRadius: "8px 8px 0 0",
-                border: "none",
-                borderBottom:
-                  section === item
-                    ? "2px solid #0F2A3D"
-                    : "2px solid transparent",
-                background: "transparent",
-                color: section === item ? "#0F2A3D" : "#94A3B8",
-                fontWeight: section === item ? 600 : 400,
-                cursor: "pointer",
-              }}
-            >
-              {sectionLabel(item)}
-            </button>
-          ),
-        )}
-      </div>
-
-      {section === "resumen" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-              gap: "10px",
-            }}
-          >
-            {[
-              { label: "Eventos totales", value: String(totals.totalEvents) },
-              { label: "PnL realizado USD", value: formatUsd(totals.totalPnlUsd) },
-              { label: "PnL realizado CLP", value: formatClp(totals.totalPnlClp) },
-              {
-                label: "Ingresos netos USD",
-                value: formatUsd(totals.totalProceedsNetUsd),
-              },
-              { label: "Costo base USD", value: formatUsd(totals.totalCostBasisUsd) },
-            ].map((item) => (
-              <Card key={item.label} muted>
-                <p
-                  style={{
-                    margin: "0 0 6px",
-                    color: "#64748B",
-                    fontSize: "0.6875rem",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                  }}
-                >
+              {DECLARATION_TYPES.map((item) => (
+                <option key={item.value} value={item.value}>
                   {item.label}
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    color: "#0F2A3D",
-                    fontSize: "1.25rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  {item.value}
-                </p>
-              </Card>
-            ))}
-          </div>
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-          <Card>
-            <p
-              style={{
-                margin: "0 0 0.75rem",
-                color: "#0F2A3D",
-                fontWeight: 700,
-              }}
-            >
-              Distribución por categoría
-            </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={generateDraft}
+            disabled={processing !== null}
+            className={ui.buttonPrimary}
+          >
+            {processing === "generate"
+              ? "Generando..."
+              : "Generar borrador DDJJ"}
+          </button>
 
-            {taxSummary.categories.length === 0 ? (
-              <p style={{ margin: 0, color: "#94A3B8" }}>
-                Sin eventos tributarios para el período {year}.
-              </p>
-            ) : (
-              <div style={{ display: "grid", gap: "8px" }}>
-                {taxSummary.categories.map((cat) => (
-                  <div
-                    key={cat.normalizedTaxType}
-                    style={{
-                      border: "1px solid #E2E8F0",
-                      borderRadius: "10px",
-                      padding: "1rem",
-                    }}
-                  >
-                    <p style={{ margin: 0, color: "#0F2A3D", fontWeight: 700 }}>
-                      {cat.label}
-                    </p>
-                    <p style={{ margin: "4px 0 0", color: "#64748B" }}>
-                      {cat.count} evento{cat.count !== 1 ? "s" : ""} —{" "}
-                      {formatUsd(cat.totalPnlUsd)} / {formatClp(cat.totalPnlClp)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+          <button
+            type="button"
+            onClick={loadDeclarations}
+            disabled={loading || processing !== null}
+            className={ui.buttonSecondary}
+          >
+            {loading ? "Cargando..." : "Actualizar"}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>
+          {error}
         </div>
       )}
 
-      {section === "eventos" && (
-        <Card>
-          {events.length === 0 ? (
-            <p style={{ margin: 0, color: "#94A3B8" }}>
-              Sin eventos tributarios para {year}.
+      {message && (
+        <div className={`${ui.alertOk} rounded-md p-3 text-sm`}>
+          {message}
+        </div>
+      )}
+
+      {verification && (
+        <div
+          className={`${
+            verification.valid ? ui.alertOk : ui.alertRisk
+          } rounded-md p-4 text-sm space-y-2`}
+        >
+          <p className="font-semibold">
+            {verification.valid
+              ? "Integridad validada correctamente"
+              : "Se detectaron inconsistencias de integridad"}
+          </p>
+
+          <p className="text-xs text-(--color-text-muted)">
+            La verificación compara el contenido actual de la declaración con su
+            huella digital registrada al momento de generación.
+          </p>
+
+          <div className="space-y-1">
+            <p className="font-mono text-xs break-all">
+              Registro esperado: {verification.expectedHash}
             </p>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <thead>
-                  <tr>
-                    {[
-                      "Fecha",
-                      "Símbolo",
-                      "Cantidad",
-                      "Ingreso neto USD",
-                      "Costo base USD",
-                      "PnL USD",
-                      "PnL CLP",
-                      "Categoría",
-                    ].map((col) => (
-                      <th
-                        key={col}
-                        style={{
-                          textAlign: "left",
-                          padding: "0.625rem",
-                          color: "#94A3B8",
-                          borderBottom: "1px solid #E2E8F0",
-                          whiteSpace: "nowrap",
-                        }}
+
+            <p className="font-mono text-xs break-all">
+              Registro calculado: {verification.computedHash}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className={ui.tableWrapper}>
+        <table className={ui.table}>
+          <thead className={ui.tableHead}>
+            <tr>
+              <th className={ui.tableCell}>Año</th>
+              <th className={ui.tableCell}>Declaración</th>
+              <th className={ui.tableCell}>Estado</th>
+              <th className={ui.tableCell}>Integridad</th>
+              <th className={ui.tableCell}>Generada</th>
+              <th className={ui.tableCell}>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr className={ui.tableRow}>
+                <td className={ui.tableCell} colSpan={6}>
+                  Cargando declaraciones...
+                </td>
+              </tr>
+            ) : null}
+
+            {!loading && sortedDeclarations.length === 0 ? (
+              <tr className={ui.tableRow}>
+                <td className={ui.tableCell} colSpan={6}>
+                  No existen declaraciones para el período seleccionado.
+                </td>
+              </tr>
+            ) : null}
+
+            {!loading &&
+              sortedDeclarations.map((declaration) => {
+                const meta = resolveDeclarationMeta(
+                  declaration.declarationType,
+                );
+
+                return (
+                  <tr key={declaration.id} className={ui.tableRow}>
+                    <td className={ui.tableCell}>
+                      {declaration.taxYear}
+                    </td>
+
+                    <td className={ui.tableCell}>
+                      <div className="space-y-1">
+                        <p className="font-semibold text-sm">
+                          {meta.label}
+                        </p>
+
+                        <p className="text-xs text-(--color-text-muted)">
+                          {meta.description}
+                        </p>
+
+                        <p className="font-mono text-[11px] text-(--color-text-muted)">
+                          {declaration.declarationType}
+                        </p>
+                      </div>
+                    </td>
+
+                    <td className={ui.tableCell}>
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass(
+                          declaration.status,
+                        )}`}
                       >
-                        {col}
-                      </th>
-                    ))}
+                        {statusLabel(declaration.status)}
+                      </span>
+                    </td>
+
+                    <td className={ui.tableCell}>
+                      <div className="space-y-1">
+                        <p className="font-mono text-xs">
+                          {declaration.contentHash.slice(0, 14)}...
+                        </p>
+
+                        <p className="text-[11px] text-(--color-text-muted)">
+                          Registro verificable
+                        </p>
+                      </div>
+                    </td>
+
+                    <td className={ui.tableCell}>
+                      {formatDate(declaration.generatedAt)}
+                    </td>
+
+                    <td className={ui.tableCell}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {declaration.status !== "VOIDED" ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateStatus(
+                                  declaration.id,
+                                  "REVIEW",
+                                )
+                              }
+                              disabled={processing !== null}
+                              className={ui.buttonSecondary}
+                            >
+                              Revisar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateStatus(
+                                  declaration.id,
+                                  "CONFIRMED",
+                                )
+                              }
+                              disabled={processing !== null}
+                              className={ui.buttonPrimary}
+                            >
+                              Confirmar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadCsv(declaration)
+                              }
+                              disabled={processing !== null}
+                              className={ui.buttonSecondary}
+                            >
+                              Exportar CSV
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                verifyIntegrity(declaration)
+                              }
+                              disabled={processing !== null}
+                              className={ui.buttonSecondary}
+                            >
+                              {processing ===
+                              `${declaration.id}:verify`
+                                ? "Verificando..."
+                                : "Verificar integridad"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateStatus(
+                                  declaration.id,
+                                  "VOIDED",
+                                )
+                              }
+                              disabled={processing !== null}
+                              className={ui.buttonDanger}
+                            >
+                              Anular
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-sm text-(--color-text-muted)">
+                            Declaración anulada
+                          </span>
+                        )}
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-
-                <tbody>
-                  {events.map((event) => (
-                    <tr key={event.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                      <td style={{ padding: "0.625rem", whiteSpace: "nowrap" }}>
-                        {formatDate(event.executedAt)}
-                      </td>
-                      <td style={{ padding: "0.625rem", fontWeight: 700 }}>
-                        {event.symbol}
-                      </td>
-                      <td style={{ padding: "0.625rem" }}>
-                        {formatNumber(event.quantity)}
-                      </td>
-                      <td style={{ padding: "0.625rem" }}>
-                        {formatUsd(event.proceedsNetUsd)}
-                      </td>
-                      <td style={{ padding: "0.625rem" }}>
-                        {formatUsd(event.costBasisUsd)}
-                      </td>
-                      <td
-                        style={{
-                          padding: "0.625rem",
-                          color: pnlColor(event.realizedPnlUsd),
-                          fontWeight: 700,
-                        }}
-                      >
-                        {formatUsd(event.realizedPnlUsd)}
-                      </td>
-                      <td
-                        style={{
-                          padding: "0.625rem",
-                          color: pnlColor(event.realizedPnlClp),
-                          fontWeight: 700,
-                        }}
-                      >
-                        {formatClp(event.realizedPnlClp)}
-                      </td>
-                      <td style={{ padding: "0.625rem" }}>
-                        {event.effectiveTaxCategory}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {section === "reportes" && (
-        <ReportesSection
-          year={year}
-          hasEvents={events.length > 0}
-          hasPending={taxHealth.status === "RISK"}
-          blocked={taxHealth.blocked}
-        />
-      )}
-
-      {section === "declaraciones" && <DeclaracionesSection year={year} />}
-    </div>
+                );
+              })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
