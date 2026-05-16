@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ui } from "@/styles/design-system";
 
-type DeclarationStatus = "DRAFT" | "REVIEW" | "CONFIRMED" | "EXPORTED" | "VOIDED";
+type DeclarationStatus =
+  | "DRAFT"
+  | "REVIEW"
+  | "CONFIRMED"
+  | "EXPORTED"
+  | "VOIDED";
 
 type DeclarationItem = {
   id: string;
@@ -22,7 +27,9 @@ type DeclarationItem = {
 type DeclarationsResponse = {
   ok: boolean;
   message: string;
-  data: { declarations: DeclarationItem[] };
+  data: {
+    declarations: DeclarationItem[];
+  };
 };
 
 type VerifyResponse = {
@@ -44,11 +51,18 @@ type VerificationResult = {
   expectedHash: string;
 };
 
-const DECLARATION_TYPES = [
+type DeclarationMeta = {
+  value: string;
+  label: string;
+  description: string;
+};
+
+const DECLARATION_TYPES: DeclarationMeta[] = [
   {
     value: "DJ_CRYPTO_SUMMARY",
     label: "Resumen tributario cripto",
-    description: "Resumen consolidado de resultados tributarios y actividad cripto.",
+    description:
+      "Resumen consolidado de resultados tributarios y actividad cripto.",
   },
   {
     value: "DJ_REALIZED_GAINS",
@@ -63,11 +77,12 @@ const DECLARATION_TYPES = [
   {
     value: "DJ_TAX_SUPPORTING_LEDGER",
     label: "Libro auxiliar tributario",
-    description: "Respaldo para auditoría, revisión contable y trazabilidad.",
+    description:
+      "Respaldo para auditoría, revisión contable y trazabilidad.",
   },
 ];
 
-function resolveDeclarationMeta(type: string) {
+function resolveDeclarationMeta(type: string): DeclarationMeta {
   return (
     DECLARATION_TYPES.find((item) => item.value === type) ?? {
       value: type,
@@ -80,11 +95,13 @@ function resolveDeclarationMeta(type: string) {
 function readCookie(name: string) {
   if (typeof document === "undefined") return "";
 
-  const match = document.cookie
+  const item = document.cookie
     .split("; ")
-    .find((item) => item.startsWith(`${name}=`));
+    .find((cookie) => cookie.startsWith(`${name}=`));
 
-  return match ? decodeURIComponent(match.split("=")[1] ?? "") : "";
+  if (!item) return "";
+
+  return decodeURIComponent(item.substring(name.length + 1));
 }
 
 async function resolveCsrfToken() {
@@ -142,12 +159,15 @@ export default function TaxDeclarationsPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [verification, setVerification] = useState<VerificationResult | null>(null);
+  const [verification, setVerification] = useState<VerificationResult | null>(
+    null,
+  );
 
   const sortedDeclarations = useMemo(() => {
     return [...declarations].sort(
       (a, b) =>
-        new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime(),
+        new Date(b.generatedAt).getTime() -
+        new Date(a.generatedAt).getTime(),
     );
   }, [declarations]);
 
@@ -351,6 +371,7 @@ export default function TaxDeclarationsPage() {
 
       if (!response.ok) {
         const json = await response.json().catch(() => null);
+
         throw new Error(
           json?.message || "No fue posible exportar la declaración.",
         );
@@ -387,6 +408,7 @@ export default function TaxDeclarationsPage() {
     <section className={ui.page}>
       <div>
         <h1 className={ui.title}>Declaraciones Juradas</h1>
+
         <p className={ui.subtitle}>
           Gestión interna de borradores tributarios auditables y verificables.
         </p>
@@ -396,6 +418,7 @@ export default function TaxDeclarationsPage() {
         <div className="grid gap-3 md:grid-cols-3">
           <label className="space-y-1">
             <span className={ui.label}>Año tributario</span>
+
             <input
               value={year}
               onChange={(event) => setYear(event.target.value)}
@@ -405,6 +428,7 @@ export default function TaxDeclarationsPage() {
 
           <label className="space-y-1 md:col-span-2">
             <span className={ui.label}>Tipo de declaración</span>
+
             <select
               value={declarationType}
               onChange={(event) => setDeclarationType(event.target.value)}
@@ -443,11 +467,15 @@ export default function TaxDeclarationsPage() {
       </div>
 
       {error && (
-        <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>{error}</div>
+        <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>
+          {error}
+        </div>
       )}
 
       {message && (
-        <div className={`${ui.alertOk} rounded-md p-3 text-sm`}>{message}</div>
+        <div className={`${ui.alertOk} rounded-md p-3 text-sm`}>
+          {message}
+        </div>
       )}
 
       {verification && (
@@ -469,31 +497,40 @@ export default function TaxDeclarationsPage() {
         </div>
       )}
 
-      <div className={ui.tableWrapper}>
-        <table className={`${ui.table} min-w-[1180px]`}>
-          <thead className={ui.tableHead}>
-            <tr>
-              <th className={ui.tableCell}>Año</th>
-              <th className={ui.tableCell}>Declaración</th>
-              <th className={ui.tableCell}>Estado</th>
-              <th className={ui.tableCell}>Integridad</th>
-              <th className={ui.tableCell}>Generada</th>
-              <th className={`${ui.tableCell} min-w-[460px]`}>Acciones</th>
+      <div className="w-full overflow-x-auto">
+        <table className="w-full min-w-[1180px] border-collapse">
+          <thead>
+            <tr className="bg-[#0F2A3D] text-white">
+              <th className="rounded-tl-2xl px-7 py-5 text-left text-sm font-bold">
+                Declaración
+              </th>
+              <th className="px-7 py-5 text-left text-sm font-bold">
+                Estado
+              </th>
+              <th className="px-7 py-5 text-left text-sm font-bold">
+                Integridad
+              </th>
+              <th className="px-7 py-5 text-left text-sm font-bold">
+                Generada
+              </th>
+              <th className="rounded-tr-2xl px-7 py-5 text-left text-sm font-bold">
+                Acciones
+              </th>
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
-              <tr className={ui.tableRow}>
-                <td className={ui.tableCell} colSpan={6}>
+              <tr>
+                <td className="px-7 py-7 text-sm text-[#64748B]" colSpan={5}>
                   Cargando declaraciones...
                 </td>
               </tr>
             ) : null}
 
             {!loading && sortedDeclarations.length === 0 ? (
-              <tr className={ui.tableRow}>
-                <td className={ui.tableCell} colSpan={6}>
+              <tr>
+                <td className="px-7 py-7 text-sm text-[#64748B]" colSpan={5}>
                   No existen declaraciones para el período seleccionado.
                 </td>
               </tr>
@@ -504,21 +541,25 @@ export default function TaxDeclarationsPage() {
                 const meta = resolveDeclarationMeta(declaration.declarationType);
 
                 return (
-                  <tr key={declaration.id} className={ui.tableRow}>
-                    <td className={ui.tableCell}>{declaration.taxYear}</td>
+                  <tr
+                    key={declaration.id}
+                    className="border-b border-[#E2E8F0] bg-white"
+                  >
+                    <td className="px-7 py-6 align-middle">
+                      <div className="max-w-[320px] space-y-1">
+                        <p className="text-sm font-semibold text-[#0F2A3D]">
+                          {meta.label}
+                        </p>
 
-                    <td className={ui.tableCell}>
-                      <div className="space-y-1 max-w-[300px]">
-                        <p className="font-semibold text-sm">{meta.label}</p>
-                        <p className="text-xs text-(--color-text-muted)">
+                        <p className="text-sm leading-relaxed text-[#64748B]">
                           {meta.description}
                         </p>
                       </div>
                     </td>
 
-                    <td className={ui.tableCell}>
+                    <td className="px-7 py-6 align-middle">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass(
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClass(
                           declaration.status,
                         )}`}
                       >
@@ -526,22 +567,25 @@ export default function TaxDeclarationsPage() {
                       </span>
                     </td>
 
-                    <td className={ui.tableCell}>
+                    <td className="px-7 py-6 align-middle">
                       <div className="space-y-1">
-                        <p className="text-xs font-medium">Registro protegido</p>
-                        <p className="text-[11px] text-(--color-text-muted)">
+                        <p className="text-sm font-semibold text-[#0F2A3D]">
+                          Registro protegido
+                        </p>
+
+                        <p className="text-sm leading-relaxed text-[#64748B]">
                           Verificable contra alteraciones
                         </p>
                       </div>
                     </td>
 
-                    <td className={ui.tableCell}>
+                    <td className="px-7 py-6 align-middle text-sm text-[#0F2A3D]">
                       {formatDate(declaration.generatedAt)}
                     </td>
 
-                    <td className={ui.tableCell}>
+                    <td className="px-7 py-6 align-middle">
                       {declaration.status !== "VOIDED" ? (
-                        <div className="flex flex-nowrap items-center gap-2">
+                        <div className="flex flex-nowrap items-center gap-3">
                           <button
                             type="button"
                             onClick={() =>
@@ -596,7 +640,7 @@ export default function TaxDeclarationsPage() {
                           </button>
                         </div>
                       ) : (
-                        <span className="text-sm text-(--color-text-muted)">
+                        <span className="text-sm text-[#64748B]">
                           Declaración anulada
                         </span>
                       )}
