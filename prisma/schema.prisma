@@ -260,12 +260,7 @@ model users {
   taxDeclarations          TaxDeclaration[]
   taxDeclarationAuditLogs  TaxDeclarationAuditLog[]
 
-  @@index([email], map: "idx_users_email")
-  @@index(
-    [subscription_expires_at],
-    map: "idx_users_subscription_expires_at"
-  )
-}
+  @@index([subscription_expires_at], map: "idx_users_subscription_expires_at")
 
 model portfolios {
   id         String   @id @default(cuid())
