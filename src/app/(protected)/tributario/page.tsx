@@ -3,12 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ui } from "@/styles/design-system";
 
-type DeclarationStatus =
-  | "DRAFT"
-  | "REVIEW"
-  | "CONFIRMED"
-  | "EXPORTED"
-  | "VOIDED";
+type DeclarationStatus = "DRAFT" | "REVIEW" | "CONFIRMED" | "EXPORTED" | "VOIDED";
 
 type DeclarationItem = {
   id: string;
@@ -27,9 +22,7 @@ type DeclarationItem = {
 type DeclarationsResponse = {
   ok: boolean;
   message: string;
-  data: {
-    declarations: DeclarationItem[];
-  };
+  data: { declarations: DeclarationItem[] };
 };
 
 type VerifyResponse = {
@@ -55,26 +48,22 @@ const DECLARATION_TYPES = [
   {
     value: "DJ_CRYPTO_SUMMARY",
     label: "Resumen tributario cripto",
-    description:
-      "Resumen consolidado de resultados tributarios y actividad cripto del período.",
+    description: "Resumen consolidado de resultados tributarios y actividad cripto.",
   },
   {
     value: "DJ_REALIZED_GAINS",
     label: "Ganancias realizadas",
-    description:
-      "Detalle de ganancias y pérdidas realizadas por ventas y conversiones.",
+    description: "Detalle de ganancias y pérdidas realizadas.",
   },
   {
     value: "DJ_FOREIGN_EXCHANGE_ACTIVITY",
     label: "Actividad en exchanges extranjeros",
-    description:
-      "Operaciones realizadas en plataformas internacionales y exchanges externos.",
+    description: "Operaciones realizadas en plataformas internacionales.",
   },
   {
     value: "DJ_TAX_SUPPORTING_LEDGER",
     label: "Libro auxiliar tributario",
-    description:
-      "Libro tributario de respaldo para auditoría, revisión contable y trazabilidad.",
+    description: "Respaldo para auditoría, revisión contable y trazabilidad.",
   },
 ];
 
@@ -82,7 +71,7 @@ function resolveDeclarationMeta(type: string) {
   return (
     DECLARATION_TYPES.find((item) => item.value === type) ?? {
       value: type,
-      label: type,
+      label: "Declaración tributaria",
       description: "Declaración tributaria interna.",
     }
   );
@@ -149,20 +138,16 @@ export default function TaxDeclarationsPage() {
   const [year, setYear] = useState(String(currentYear));
   const [declarationType, setDeclarationType] = useState("DJ_CRYPTO_SUMMARY");
   const [declarations, setDeclarations] = useState<DeclarationItem[]>([]);
-
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [verification, setVerification] = useState<VerificationResult | null>(
-    null,
-  );
+  const [verification, setVerification] = useState<VerificationResult | null>(null);
 
   const sortedDeclarations = useMemo(() => {
     return [...declarations].sort(
       (a, b) =>
-        new Date(b.generatedAt).getTime() -
-        new Date(a.generatedAt).getTime(),
+        new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime(),
     );
   }, [declarations]);
 
@@ -319,9 +304,7 @@ export default function TaxDeclarationsPage() {
       const json = (await response.json()) as VerifyResponse;
 
       if (!response.ok || !json.ok) {
-        throw new Error(
-          json.message || "No fue posible verificar integridad.",
-        );
+        throw new Error(json.message || "No fue posible verificar integridad.");
       }
 
       setVerification({
@@ -368,7 +351,6 @@ export default function TaxDeclarationsPage() {
 
       if (!response.ok) {
         const json = await response.json().catch(() => null);
-
         throw new Error(
           json?.message || "No fue posible exportar la declaración.",
         );
@@ -376,7 +358,6 @@ export default function TaxDeclarationsPage() {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
 
       link.href = url;
@@ -385,7 +366,6 @@ export default function TaxDeclarationsPage() {
       }-${declaration.declarationType.toLowerCase()}.csv`;
 
       document.body.appendChild(link);
-
       link.click();
       link.remove();
 
@@ -407,7 +387,6 @@ export default function TaxDeclarationsPage() {
     <section className={ui.page}>
       <div>
         <h1 className={ui.title}>Declaraciones Juradas</h1>
-
         <p className={ui.subtitle}>
           Gestión interna de borradores tributarios auditables y verificables.
         </p>
@@ -417,7 +396,6 @@ export default function TaxDeclarationsPage() {
         <div className="grid gap-3 md:grid-cols-3">
           <label className="space-y-1">
             <span className={ui.label}>Año tributario</span>
-
             <input
               value={year}
               onChange={(event) => setYear(event.target.value)}
@@ -427,7 +405,6 @@ export default function TaxDeclarationsPage() {
 
           <label className="space-y-1 md:col-span-2">
             <span className={ui.label}>Tipo de declaración</span>
-
             <select
               value={declarationType}
               onChange={(event) => setDeclarationType(event.target.value)}
@@ -466,15 +443,11 @@ export default function TaxDeclarationsPage() {
       </div>
 
       {error && (
-        <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>
-          {error}
-        </div>
+        <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>{error}</div>
       )}
 
       {message && (
-        <div className={`${ui.alertOk} rounded-md p-3 text-sm`}>
-          {message}
-        </div>
+        <div className={`${ui.alertOk} rounded-md p-3 text-sm`}>{message}</div>
       )}
 
       {verification && (
@@ -490,24 +463,14 @@ export default function TaxDeclarationsPage() {
           </p>
 
           <p className="text-xs text-(--color-text-muted)">
-            La verificación compara el contenido actual de la declaración con su
-            huella digital registrada al momento de generación.
+            Esta verificación compara el contenido guardado con su registro
+            digital interno para confirmar que no fue alterado.
           </p>
-
-          <div className="space-y-1">
-            <p className="font-mono text-xs break-all">
-              Registro esperado: {verification.expectedHash}
-            </p>
-
-            <p className="font-mono text-xs break-all">
-              Registro calculado: {verification.computedHash}
-            </p>
-          </div>
         </div>
       )}
 
       <div className={ui.tableWrapper}>
-        <table className={ui.table}>
+        <table className={`${ui.table} min-w-[1180px]`}>
           <thead className={ui.tableHead}>
             <tr>
               <th className={ui.tableCell}>Año</th>
@@ -515,7 +478,7 @@ export default function TaxDeclarationsPage() {
               <th className={ui.tableCell}>Estado</th>
               <th className={ui.tableCell}>Integridad</th>
               <th className={ui.tableCell}>Generada</th>
-              <th className={ui.tableCell}>Acciones</th>
+              <th className={`${ui.tableCell} min-w-[460px]`}>Acciones</th>
             </tr>
           </thead>
 
@@ -538,28 +501,17 @@ export default function TaxDeclarationsPage() {
 
             {!loading &&
               sortedDeclarations.map((declaration) => {
-                const meta = resolveDeclarationMeta(
-                  declaration.declarationType,
-                );
+                const meta = resolveDeclarationMeta(declaration.declarationType);
 
                 return (
                   <tr key={declaration.id} className={ui.tableRow}>
-                    <td className={ui.tableCell}>
-                      {declaration.taxYear}
-                    </td>
+                    <td className={ui.tableCell}>{declaration.taxYear}</td>
 
                     <td className={ui.tableCell}>
-                      <div className="space-y-1">
-                        <p className="font-semibold text-sm">
-                          {meta.label}
-                        </p>
-
+                      <div className="space-y-1 max-w-[300px]">
+                        <p className="font-semibold text-sm">{meta.label}</p>
                         <p className="text-xs text-(--color-text-muted)">
                           {meta.description}
-                        </p>
-
-                        <p className="font-mono text-[11px] text-(--color-text-muted)">
-                          {declaration.declarationType}
                         </p>
                       </div>
                     </td>
@@ -576,12 +528,9 @@ export default function TaxDeclarationsPage() {
 
                     <td className={ui.tableCell}>
                       <div className="space-y-1">
-                        <p className="font-mono text-xs">
-                          {declaration.contentHash.slice(0, 14)}...
-                        </p>
-
+                        <p className="text-xs font-medium">Registro protegido</p>
                         <p className="text-[11px] text-(--color-text-muted)">
-                          Registro verificable
+                          Verificable contra alteraciones
                         </p>
                       </div>
                     </td>
@@ -591,82 +540,66 @@ export default function TaxDeclarationsPage() {
                     </td>
 
                     <td className={ui.tableCell}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {declaration.status !== "VOIDED" ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateStatus(
-                                  declaration.id,
-                                  "REVIEW",
-                                )
-                              }
-                              disabled={processing !== null}
-                              className={ui.buttonSecondary}
-                            >
-                              Revisar
-                            </button>
+                      {declaration.status !== "VOIDED" ? (
+                        <div className="flex flex-nowrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateStatus(declaration.id, "REVIEW")
+                            }
+                            disabled={processing !== null}
+                            className={ui.buttonSecondary}
+                          >
+                            Revisar
+                          </button>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateStatus(
-                                  declaration.id,
-                                  "CONFIRMED",
-                                )
-                              }
-                              disabled={processing !== null}
-                              className={ui.buttonPrimary}
-                            >
-                              Confirmar
-                            </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateStatus(declaration.id, "CONFIRMED")
+                            }
+                            disabled={processing !== null}
+                            className={ui.buttonPrimary}
+                          >
+                            Confirmar
+                          </button>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                downloadCsv(declaration)
-                              }
-                              disabled={processing !== null}
-                              className={ui.buttonSecondary}
-                            >
-                              Exportar CSV
-                            </button>
+                          <button
+                            type="button"
+                            onClick={() => downloadCsv(declaration)}
+                            disabled={processing !== null}
+                            className={ui.buttonSecondary}
+                          >
+                            CSV
+                          </button>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                verifyIntegrity(declaration)
-                              }
-                              disabled={processing !== null}
-                              className={ui.buttonSecondary}
-                            >
-                              {processing ===
-                              `${declaration.id}:verify`
-                                ? "Verificando..."
-                                : "Verificar integridad"}
-                            </button>
+                          <button
+                            type="button"
+                            onClick={() => verifyIntegrity(declaration)}
+                            disabled={processing !== null}
+                            className={ui.buttonSecondary}
+                          >
+                            {processing === `${declaration.id}:verify`
+                              ? "Verificando..."
+                              : "Integridad"}
+                          </button>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateStatus(
-                                  declaration.id,
-                                  "VOIDED",
-                                )
-                              }
-                              disabled={processing !== null}
-                              className={ui.buttonDanger}
-                            >
-                              Anular
-                            </button>
-                          </>
-                        ) : (
-                          <span className="text-sm text-(--color-text-muted)">
-                            Declaración anulada
-                          </span>
-                        )}
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateStatus(declaration.id, "VOIDED")
+                            }
+                            disabled={processing !== null}
+                            className={ui.buttonDanger}
+                          >
+                            Anular
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-(--color-text-muted)">
+                          Declaración anulada
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );
