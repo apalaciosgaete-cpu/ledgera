@@ -295,7 +295,7 @@ export default function TaxDeclarationsPage() {
             <input
               value={year}
               onChange={(event) => setYear(event.target.value)}
-              className="w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              className="w-full rounded-md border border-(--color-border) bg-white px-3 py-2 text-sm"
             />
           </label>
 
@@ -304,7 +304,7 @@ export default function TaxDeclarationsPage() {
             <select
               value={declarationType}
               onChange={(event) => setDeclarationType(event.target.value)}
-              className="w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              className="w-full rounded-md border border-(--color-border) bg-white px-3 py-2 text-sm"
             >
               {DECLARATION_TYPES.map((item) => (
                 <option key={item.value} value={item.value}>
@@ -442,7 +442,7 @@ export default function TaxDeclarationsPage() {
                           </button>
                         </>
                       ) : (
-                        <span className="text-sm text-[var(--color-text-muted)]">
+                        <span className="text-sm text-(--color-text-muted)">
                           Sin acciones
                         </span>
                       )}
