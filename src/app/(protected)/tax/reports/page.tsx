@@ -1,11 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ui } from "@/styles/design-system";
-
-type TaxHealthStatus = "OK" | "REVIEW" | "RISK";
 
 type ReportResult = {
   validationCode?: string;
@@ -18,12 +15,9 @@ type ReportAction = {
   description: string;
   href: string;
   variant: "primary" | "secondary";
-  requiresCleanTaxState?: boolean;
 };
 
 export default function TaxReportsPage() {
-  const router = useRouter();
-
   const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -66,7 +60,6 @@ export default function TaxReportsPage() {
         throw new Error("No fue posible generar el reporte.");
       }
 
-      // 🔥 CASO JSON (pdf-strict actual)
       if (contentType.includes("application/json")) {
         const data = await response.json();
 
@@ -80,7 +73,6 @@ export default function TaxReportsPage() {
         return;
       }
 
-      // 🔥 CASO archivo
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
 
@@ -109,10 +101,9 @@ export default function TaxReportsPage() {
   }
 
   return (
-    <section className={`${ui.page}`}>
+    <section className={ui.page}>
       <h1 className={ui.title}>Reportes tributarios</h1>
 
-      {/* BOTONES */}
       <div className="grid gap-3 md:grid-cols-2 mt-4">
         {reportActions.map((action) => (
           <div key={action.href} className={`${ui.card} p-4`}>
@@ -120,38 +111,41 @@ export default function TaxReportsPage() {
             <p className="text-sm text-slate-500">{action.description}</p>
 
             <button
+              type="button"
               onClick={() => downloadReport(action)}
               disabled={downloading !== null}
               className={`${ui.buttonPrimary} mt-3`}
             >
-              {downloading === action.href
-                ? "Procesando..."
-                : "Generar"}
+              {downloading === action.href ? "Procesando..." : "Generar"}
             </button>
           </div>
         ))}
+
+        <div className={`${ui.card} p-4`}>
+          <p className="font-medium">Declaraciones Juradas</p>
+          <p className="text-sm text-slate-500">
+            Borradores internos auditables para soporte DDJJ.
+          </p>
+
+          <Link href="/tax/declarations" className={`${ui.buttonSecondary} mt-3`}>
+            Abrir DDJJ
+          </Link>
+        </div>
       </div>
 
-      {/* RESULTADO */}
       {reportResult && (
         <div className={`${ui.card} p-4 mt-6`}>
-          <h2 className="font-semibold text-slate-900">
-            Reporte generado
-          </h2>
+          <h2 className="font-semibold text-slate-900">Reporte generado</h2>
 
           <div className="mt-3 text-sm space-y-2">
             <div>
               <strong>Código:</strong>{" "}
-              <span className="font-mono">
-                {reportResult.validationCode}
-              </span>
+              <span className="font-mono">{reportResult.validationCode}</span>
             </div>
 
             <div>
               <strong>Hash:</strong>{" "}
-              <span className="font-mono text-xs">
-                {reportResult.hash}
-              </span>
+              <span className="font-mono text-xs">{reportResult.hash}</span>
             </div>
 
             <div>
@@ -169,9 +163,8 @@ export default function TaxReportsPage() {
           <div className="mt-4 flex gap-2">
             {reportResult.verificationUrl && (
               <button
-                onClick={() =>
-                  copyToClipboard(reportResult.verificationUrl!)
-                }
+                type="button"
+                onClick={() => copyToClipboard(reportResult.verificationUrl!)}
                 className={ui.buttonSecondary}
               >
                 Copiar link
@@ -180,11 +173,9 @@ export default function TaxReportsPage() {
 
             {reportResult.verificationUrl && (
               <button
+                type="button"
                 onClick={() =>
-                  window.open(
-                    reportResult.verificationUrl!,
-                    "_blank",
-                  )
+                  window.open(reportResult.verificationUrl!, "_blank")
                 }
                 className={ui.buttonPrimary}
               >
@@ -195,18 +186,9 @@ export default function TaxReportsPage() {
         </div>
       )}
 
-      {/* MENSAJES */}
-      {error && (
-        <div className={`${ui.alertRisk} mt-4 p-3`}>
-          {error}
-        </div>
-      )}
+      {error && <div className={`${ui.alertRisk} mt-4 p-3`}>{error}</div>}
 
-      {message && (
-        <div className={`${ui.alertOk} mt-4 p-3`}>
-          {message}
-        </div>
-      )}
+      {message && <div className={`${ui.alertOk} mt-4 p-3`}>{message}</div>}
     </section>
   );
 }
