@@ -64,6 +64,26 @@ const DECLARATION_TYPES = [
   },
 ];
 
+function readCookie(name: string) {
+  if (typeof document === "undefined") return "";
+
+  const match = document.cookie
+    .split("; ")
+    .find((item) => item.startsWith(`${name}=`));
+
+  return match ? decodeURIComponent(match.split("=")[1] ?? "") : "";
+}
+
+async function resolveCsrfToken() {
+  await fetch("/api/csrf", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  return readCookie("ledgera_csrf");
+}
+
 function formatDate(value: string | null) {
   if (!value) return "—";
 
@@ -122,14 +142,6 @@ export default function TaxDeclarationsPage() {
     );
   }, [declarations]);
 
-  async function initializeCsrf() {
-    await fetch("/api/csrf", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-  }
-
   async function loadDeclarations() {
     try {
       setLoading(true);
@@ -176,8 +188,7 @@ export default function TaxDeclarationsPage() {
       setError(null);
       setVerification(null);
 
-      await initializeCsrf();
-
+      const csrfToken = await resolveCsrfToken();
       const token = localStorage.getItem("token");
 
       const response = await fetch("/api/tax/declarations", {
@@ -185,6 +196,7 @@ export default function TaxDeclarationsPage() {
         headers: {
           Authorization: `Bearer ${token ?? ""}`,
           "Content-Type": "application/json",
+          "x-ledgera-csrf": csrfToken,
         },
         credentials: "include",
         body: JSON.stringify({
@@ -224,8 +236,7 @@ export default function TaxDeclarationsPage() {
       setError(null);
       setVerification(null);
 
-      await initializeCsrf();
-
+      const csrfToken = await resolveCsrfToken();
       const token = localStorage.getItem("token");
 
       const response = await fetch(`/api/tax/declarations/${id}`, {
@@ -233,6 +244,7 @@ export default function TaxDeclarationsPage() {
         headers: {
           Authorization: `Bearer ${token ?? ""}`,
           "Content-Type": "application/json",
+          "x-ledgera-csrf": csrfToken,
         },
         credentials: "include",
         body: JSON.stringify({ status }),
@@ -367,7 +379,8 @@ export default function TaxDeclarationsPage() {
       <div>
         <h1 className={ui.title}>Declaraciones Juradas</h1>
         <p className={ui.subtitle}>
-          Genera, revisa y exporta borradores internos auditables para soporte tributario.
+          Genera, revisa y exporta borradores internos auditables para soporte
+          tributario.
         </p>
       </div>
 
@@ -442,9 +455,11 @@ export default function TaxDeclarationsPage() {
               ? "Integridad verificada"
               : "Integridad no verificada"}
           </p>
+
           <p className="font-mono text-xs break-all">
             Esperado: {verification.expectedHash}
           </p>
+
           <p className="font-mono text-xs break-all">
             Calculado: {verification.computedHash}
           </p>
