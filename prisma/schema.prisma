@@ -33,28 +33,28 @@ model PortfolioMovement {
 }
 
 model TaxEvent {
-  id                       String   @id @default(cuid())
-  userId                   String
-  movementId               String   @unique
-  eventType                String
-  symbol                   String
-  executedAt               DateTime
-  quantity                 Float
-  effectiveTaxCategory     String
-  averageCostUsdAtSale     Float?
-  proceedsGrossUsd         Float?
-  proceedsNetUsd           Float?
-  costBasisUsd             Float?
-  feeUsd                   Float?
-  realizedPnlUsd           Float?
-  usdClp                   Float?
-  proceedsGrossClp         Float?
-  proceedsNetClp           Float?
-  costBasisClp             Float?
-  feeClp                   Float?
-  realizedPnlClp           Float?
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  userId               String
+  movementId           String   @unique
+  eventType            String
+  symbol               String
+  executedAt           DateTime
+  quantity             Float
+  effectiveTaxCategory String
+  averageCostUsdAtSale Float?
+  proceedsGrossUsd     Float?
+  proceedsNetUsd       Float?
+  costBasisUsd         Float?
+  feeUsd               Float?
+  realizedPnlUsd       Float?
+  usdClp               Float?
+  proceedsGrossClp     Float?
+  proceedsNetClp       Float?
+  costBasisClp         Float?
+  feeClp               Float?
+  realizedPnlClp       Float?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   user users @relation(fields: [userId], references: [id])
 
@@ -86,15 +86,15 @@ model TaxPeriodClose {
 }
 
 model TaxPeriodAuditLog {
-  id          String   @id @default(cuid())
-  userId      String
-  year        Int
-  action      String
-  reason      String?
-  actorId     String?
-  actorEmail  String?
-  metadata    String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  year       Int
+  action     String
+  reason     String?
+  actorId    String?
+  actorEmail String?
+  metadata   String?
+  createdAt  DateTime @default(now())
 
   user users @relation(fields: [userId], references: [id])
 
@@ -136,8 +136,7 @@ model TaxDeclaration {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user users @relation(fields: [userId], references: [id])
-
+  user      users                    @relation(fields: [userId], references: [id])
   auditLogs TaxDeclarationAuditLog[]
 
   @@index([userId])
@@ -249,18 +248,19 @@ model users {
   twoFactorSecret         String?
   twoFactorEnabled        Boolean   @default(false)
 
-  portfolios portfolios[]
-  sessions   sessions[]
+  portfolios              portfolios[]
+  sessions                sessions[]
+  portfolioMovements      PortfolioMovement[]
+  taxEvents               TaxEvent[]
+  taxPeriodClosures       TaxPeriodClose[]
+  taxPeriodAuditLogs      TaxPeriodAuditLog[]
+  taxPeriodSnapshots      TaxPeriodSnapshot[]
+  taxDeclarations         TaxDeclaration[]
+  taxDeclarationAuditLogs TaxDeclarationAuditLog[]
 
-  portfolioMovements       PortfolioMovement[]
-  taxEvents                TaxEvent[]
-  taxPeriodClosures        TaxPeriodClose[]
-  taxPeriodAuditLogs       TaxPeriodAuditLog[]
-  taxPeriodSnapshots       TaxPeriodSnapshot[]
-  taxDeclarations          TaxDeclaration[]
-  taxDeclarationAuditLogs  TaxDeclarationAuditLog[]
-
+  @@index([email], map: "idx_users_email")
   @@index([subscription_expires_at], map: "idx_users_subscription_expires_at")
+}
 
 model portfolios {
   id         String   @id @default(cuid())
