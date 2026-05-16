@@ -2,11 +2,10 @@ import { prisma } from "@/lib/prisma";
 import type {
   TaxDeclarationDraft,
   TaxDeclarationStatus,
+  TaxDeclarationType,
 } from "@/modules/tax-dj/domain/declaration";
 
-export async function createTaxDeclarationDraft(
-  draft: TaxDeclarationDraft,
-) {
+export async function createTaxDeclarationDraft(draft: TaxDeclarationDraft) {
   return prisma.taxDeclaration.create({
     data: {
       userId: draft.userId,
@@ -18,6 +17,28 @@ export async function createTaxDeclarationDraft(
       contentHash: draft.contentHash,
       generatedAt: new Date(draft.generatedAt),
       confirmedAt: draft.confirmedAt ? new Date(draft.confirmedAt) : null,
+    },
+  });
+}
+
+export async function findActiveDeclarationByHash(input: {
+  userId: string;
+  taxYear: number;
+  declarationType: TaxDeclarationType;
+  contentHash: string;
+}) {
+  return prisma.taxDeclaration.findFirst({
+    where: {
+      userId: input.userId,
+      taxYear: input.taxYear,
+      declarationType: input.declarationType,
+      contentHash: input.contentHash,
+      status: {
+        not: "VOIDED",
+      },
+    },
+    orderBy: {
+      generatedAt: "desc",
     },
   });
 }
