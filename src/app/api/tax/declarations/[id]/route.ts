@@ -1,0 +1,141 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { requireAuth } from "@/shared";
+import { fail, ok, serverError } from "@/shared/apiResponse";
+import type { TaxDeclarationStatus } from "@/modules/tax-dj/domain/declaration";
+import {
+  getTaxDeclarationByIdForUser,
+  updateTaxDeclarationStatus,
+} from "@/modules/tax-dj/infrastructure/declarationRepository";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+
+const MUTABLE_STATUSES: TaxDeclarationStatus[] = [
+  "REVIEW",
+  "CONFIRMED",
+  "VOIDED",
+];
+
+function parsePayloadJson(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeStatus(value: unknown): TaxDeclarationStatus | null {
+  const status = String(value ?? "").trim().toUpperCase();
+
+  if (!MUTABLE_STATUSES.includes(status as TaxDeclarationStatus)) {
+    return null;
+  }
+
+  return status as TaxDeclarationStatus;
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireAuth(req);
+
+  if (!auth || auth instanceof NextResponse) {
+    return fail("No autorizado.", 401);
+  }
+
+  try {
+    const { id } = await params;
+
+    const declaration = await getTaxDeclarationByIdForUser({
+      id,
+      userId: auth.user.id,
+    });
+
+    if (!declaration) {
+      return fail("Declaración no encontrada.", 404);
+    }
+
+    return ok(
+      {
+        declaration: {
+          id: declaration.id,
+          taxYear: declaration.taxYear,
+          declarationType: declaration.declarationType,
+          status: declaration.status,
+          source: declaration.source,
+          payloadJson: parsePayloadJson(declaration.payloadJson),
+          contentHash: declaration.contentHash,
+          generatedAt: declaration.generatedAt,
+          confirmedAt: declaration.confirmedAt,
+          voidedAt: declaration.voidedAt,
+          createdAt: declaration.createdAt,
+          updatedAt: declaration.updatedAt,
+        },
+      },
+      "Declaración obtenida correctamente.",
+    );
+  } catch (error) {
+    return serverError(error);
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const csrfResponse = enforceCsrfProtection(req);
+
+  if (csrfResponse) {
+    return csrfResponse;
+  }
+
+  const auth = await requireAuth(req);
+
+  if (!auth || auth instanceof NextResponse) {
+    return fail("No autorizado.", 401);
+  }
+
+  try {
+    const { id } = await params;
+    const body = (await req.json()) as { status?: string };
+
+    const status = normalizeStatus(body.status);
+
+    if (!status) {
+      return fail("Estado inválido.", 400);
+    }
+
+    const existing = await getTaxDeclarationByIdForUser({
+      id,
+      userId: auth.user.id,
+    });
+
+    if (!existing) {
+      return fail("Declaración no encontrada.", 404);
+    }
+
+    if (existing.status === "VOIDED") {
+      return fail("La declaración ya fue anulada.", 409);
+    }
+
+    const result = await updateTaxDeclarationStatus({
+      id,
+      userId: auth.user.id,
+      status,
+    });
+
+    if (result.count === 0) {
+      return fail("No fue posible actualizar la declaración.", 500);
+    }
+
+    return ok(
+      {
+        id,
+        status,
+      },
+      "Declaración actualizada correctamente.",
+    );
+  } catch (error) {
+    return serverError(error);
+  }
+}
