@@ -51,14 +51,13 @@ export type ExportDeclarationCsvInput = {
   declarationType: string;
   status: string;
   contentHash: string;
-  generatedAt: Date;
-  confirmedAt: Date | null;
+  generatedAt: Date | string;
+  confirmedAt: Date | string | null;
   payloadJson: string;
 };
 
 function escapeCsv(value: unknown) {
-  const normalized = value ?? "";
-  const str = String(normalized);
+  const str = String(value ?? "");
 
   if (
     str.includes(",") ||
@@ -75,12 +74,7 @@ function escapeCsv(value: unknown) {
 function parsePayload(value: string): DeclarationPayload {
   try {
     const parsed = JSON.parse(value) as DeclarationPayload;
-
-    if (!parsed || typeof parsed !== "object") {
-      return {};
-    }
-
-    return parsed;
+    return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
     return {};
   }
@@ -91,11 +85,7 @@ function safeIsoDate(value: Date | string | null | undefined) {
 
   const date = value instanceof Date ? value : new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toISOString();
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
 function row(values: unknown[]) {

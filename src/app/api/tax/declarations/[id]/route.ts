@@ -1,69 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/shared";
-import { fail, ok, serverError } from "@/shared/apiResponse";
-import type { TaxDeclarationStatus } from "@/modules/tax-dj/domain/declaration";
 import {
-  getTaxDeclarationByIdForUser,
-  updateTaxDeclarationStatus,
-} from "@/modules/tax-dj/infrastructure/declarationRepository";
-import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+  buildDeclarationCsv,
+  buildDeclarationCsvFilename,
+  type ExportDeclarationCsvInput,
+} from "@/modules/tax-dj/application/exportDeclarationCsv";
+import { getTaxDeclarationByIdForUser } from "@/modules/tax-dj/infrastructure/declarationRepository";
 
-const MUTABLE_STATUSES: TaxDeclarationStatus[] = [
-  "REVIEW",
-  "CONFIRMED",
-  "VOIDED",
-];
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-type TaxDeclarationRecord = {
+type TaxDeclarationExportRecord = {
   id: string;
   taxYear: number;
   declarationType: string;
   status: string;
-  source: string;
-  payloadJson: string;
   contentHash: string;
   generatedAt: Date;
   confirmedAt: Date | null;
-  voidedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+  payloadJson: string;
 };
-
-function parsePayloadJson(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
-function normalizeStatus(value: unknown): TaxDeclarationStatus | null {
-  const status = String(value ?? "").trim().toUpperCase();
-
-  if (!MUTABLE_STATUSES.includes(status as TaxDeclarationStatus)) {
-    return null;
-  }
-
-  return status as TaxDeclarationStatus;
-}
-
-function serializeDeclaration(declaration: TaxDeclarationRecord) {
-  return {
-    id: declaration.id,
-    taxYear: declaration.taxYear,
-    declarationType: declaration.declarationType,
-    status: declaration.status,
-    source: declaration.source,
-    payloadJson: parsePayloadJson(declaration.payloadJson),
-    contentHash: declaration.contentHash,
-    generatedAt: declaration.generatedAt,
-    confirmedAt: declaration.confirmedAt,
-    voidedAt: declaration.voidedAt,
-    createdAt: declaration.createdAt,
-    updatedAt: declaration.updatedAt,
-  };
-}
 
 export async function GET(
   req: NextRequest,
@@ -72,7 +29,10 @@ export async function GET(
   const auth = await requireAuth(req);
 
   if (!auth || auth instanceof NextResponse) {
-    return fail("No autorizado.", 401);
+    return NextResponse.json(
+      { ok: false, message: "No autorizado.", data: null },
+      { status: 401 },
+    );
   }
 
   try {
@@ -81,80 +41,54 @@ export async function GET(
     const declaration = (await getTaxDeclarationByIdForUser({
       id,
       userId: auth.user.id,
-    })) as TaxDeclarationRecord | null;
+    })) as TaxDeclarationExportRecord | null;
 
     if (!declaration) {
-      return fail("Declaración no encontrada.", 404);
+      return NextResponse.json(
+        { ok: false, message: "Declaración no encontrada.", data: null },
+        { status: 404 },
+      );
     }
 
-    return ok(
-      {
-        declaration: serializeDeclaration(declaration),
-      },
-      "Declaración obtenida correctamente.",
-    );
-  } catch (error) {
-    return serverError(error);
-  }
-}
-
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const csrfResponse = enforceCsrfProtection(req);
-
-  if (csrfResponse) {
-    return csrfResponse;
-  }
-
-  const auth = await requireAuth(req);
-
-  if (!auth || auth instanceof NextResponse) {
-    return fail("No autorizado.", 401);
-  }
-
-  try {
-    const { id } = await params;
-    const body = (await req.json()) as { status?: string };
-
-    const status = normalizeStatus(body.status);
-
-    if (!status) {
-      return fail("Estado inválido.", 400);
+    if (declaration.status === "VOIDED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "No se puede exportar una declaración anulada.",
+          data: null,
+        },
+        { status: 409 },
+      );
     }
 
-    const existing = (await getTaxDeclarationByIdForUser({
-      id,
-      userId: auth.user.id,
-    })) as TaxDeclarationRecord | null;
+    const csv = buildDeclarationCsv(declaration as ExportDeclarationCsvInput);
 
-    if (!existing) {
-      return fail("Declaración no encontrada.", 404);
-    }
-
-    if (existing.status === "VOIDED") {
-      return fail("La declaración ya fue anulada.", 409);
-    }
-
-    const result = await updateTaxDeclarationStatus({
-      id,
-      userId: auth.user.id,
-      status,
+    const filename = buildDeclarationCsvFilename({
+      id: declaration.id,
+      taxYear: declaration.taxYear,
+      declarationType: declaration.declarationType,
     });
 
-    if (result.count === 0) {
-      return fail("No fue posible actualizar la declaración.", 500);
-    }
-
-    return ok(
-      {
-        id,
-        status,
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
-      "Declaración actualizada correctamente.",
-    );
+    });
   } catch (error) {
-    return serverError(error);
+    console.error("[api/tax/declarations/[id]/export][GET]", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "No fue posible exportar la declaración.",
+        data: null,
+      },
+      { status: 500 },
+    );
   }
 }
