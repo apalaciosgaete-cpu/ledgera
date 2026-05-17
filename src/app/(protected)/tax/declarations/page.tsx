@@ -52,7 +52,7 @@ type VerificationResult = {
 };
 
 const DECLARATION_TYPES = [
-  { value: "DJ_CRYPTO_SUMMARY", label: "Resumen cripto" },
+  { value: "DJ_CRYPTO_SUMMARY", label: "Resumen tributario cripto" },
   { value: "DJ_REALIZED_GAINS", label: "Ganancias realizadas" },
   {
     value: "DJ_FOREIGN_EXCHANGE_ACTIVITY",
@@ -117,6 +117,36 @@ function statusClass(status: DeclarationStatus) {
   if (status === "REVIEW") return ui.badgeWarning;
 
   return "border border-(--color-border) bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)]";
+}
+
+function declarationTypeLabel(type: string) {
+  return DECLARATION_TYPES.find((item) => item.value === type)?.label ?? type;
+}
+
+function declarationTypeDescription(type: string) {
+  switch (type) {
+    case "DJ_CRYPTO_SUMMARY":
+      return "Consolidado anual de operaciones y eventos tributarios cripto.";
+    case "DJ_REALIZED_GAINS":
+      return "Detalle de ganancias y pérdidas realizadas para soporte tributario.";
+    case "DJ_FOREIGN_EXCHANGE_ACTIVITY":
+      return "Operaciones realizadas en plataformas internacionales.";
+    case "DJ_TAX_SUPPORTING_LEDGER":
+      return "Respaldo para auditoría, revisión contable y trazabilidad.";
+    default:
+      return "Declaración tributaria auditable generada por LEDGERA.";
+  }
+}
+
+function statusTimeline(status: DeclarationStatus) {
+  if (status === "VOIDED") return ["Borrador", "Anulada"];
+  if (status === "CONFIRMED") return ["Borrador", "Revisión", "Confirmada"];
+  if (status === "EXPORTED") {
+    return ["Borrador", "Revisión", "Confirmada", "Exportada"];
+  }
+  if (status === "REVIEW") return ["Borrador", "Revisión"];
+
+  return ["Borrador"];
 }
 
 export default function TaxDeclarationsPage() {
@@ -379,8 +409,7 @@ export default function TaxDeclarationsPage() {
       <div>
         <h1 className={ui.title}>Declaraciones Juradas</h1>
         <p className={ui.subtitle}>
-          Genera, revisa y exporta borradores internos auditables para soporte
-          tributario.
+          Gestión interna de borradores tributarios auditables y verificables.
         </p>
       </div>
 
@@ -418,7 +447,7 @@ export default function TaxDeclarationsPage() {
             disabled={processing !== null}
             className={ui.buttonPrimary}
           >
-            {processing === "generate" ? "Generando..." : "Generar borrador"}
+            {processing === "generate" ? "Generando..." : "Generar borrador DDJJ"}
           </button>
 
           <button
@@ -427,7 +456,7 @@ export default function TaxDeclarationsPage() {
             disabled={loading || processing !== null}
             className={ui.buttonSecondary}
           >
-            {loading ? "Cargando..." : "Actualizar listado"}
+            {loading ? "Cargando..." : "Actualizar"}
           </button>
         </div>
       </div>
@@ -466,133 +495,174 @@ export default function TaxDeclarationsPage() {
         </div>
       )}
 
-      <div className={ui.tableWrapper}>
-        <table className={ui.table}>
-          <thead className={ui.tableHead}>
-            <tr>
-              <th className={ui.tableCell}>Año</th>
-              <th className={ui.tableCell}>Tipo</th>
-              <th className={ui.tableCell}>Estado</th>
-              <th className={ui.tableCell}>Hash</th>
-              <th className={ui.tableCell}>Generada</th>
-              <th className={ui.tableCell}>Acciones</th>
-            </tr>
-          </thead>
+      <div className="space-y-4">
+        {loading ? (
+          <div className={`${ui.card} p-5 text-sm text-[var(--color-text-secondary)]`}>
+            Cargando declaraciones...
+          </div>
+        ) : null}
 
-          <tbody>
-            {loading ? (
-              <tr className={ui.tableRow}>
-                <td className={ui.tableCell} colSpan={6}>
-                  Cargando declaraciones...
-                </td>
-              </tr>
-            ) : null}
+        {!loading && sortedDeclarations.length === 0 ? (
+          <div className={`${ui.card} p-5 text-sm text-[var(--color-text-secondary)]`}>
+            No hay borradores DDJJ para el año seleccionado.
+          </div>
+        ) : null}
 
-            {!loading && sortedDeclarations.length === 0 ? (
-              <tr className={ui.tableRow}>
-                <td className={ui.tableCell} colSpan={6}>
-                  No hay borradores DDJJ para el año seleccionado.
-                </td>
-              </tr>
-            ) : null}
+        {!loading &&
+          sortedDeclarations.map((declaration) => {
+            const isVoided = declaration.status === "VOIDED";
+            const timeline = statusTimeline(declaration.status);
 
-            {!loading &&
-              sortedDeclarations.map((declaration) => (
-                <tr key={declaration.id} className={ui.tableRow}>
-                  <td className={ui.tableCell}>{declaration.taxYear}</td>
+            return (
+              <article key={declaration.id} className={`${ui.card} p-5`}>
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="min-w-0 flex-1 space-y-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
+                            {declarationTypeLabel(declaration.declarationType)}
+                          </h2>
 
-                  <td className={ui.tableCell}>
-                    <span className="font-medium">
-                      {declaration.declarationType}
-                    </span>
-                  </td>
-
-                  <td className={ui.tableCell}>
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass(
-                        declaration.status,
-                      )}`}
-                    >
-                      {statusLabel(declaration.status)}
-                    </span>
-                  </td>
-
-                  <td className={`${ui.tableCell} font-mono text-xs`}>
-                    {declaration.contentHash.slice(0, 16)}...
-                  </td>
-
-                  <td className={ui.tableCell}>
-                    {formatDate(declaration.generatedAt)}
-                  </td>
-
-                  <td className={ui.tableCell}>
-                    <div className="flex flex-wrap gap-2">
-                      {declaration.status !== "VOIDED" ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateStatus(declaration.id, "REVIEW")
-                            }
-                            disabled={processing !== null}
-                            className={ui.buttonSecondary}
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass(
+                              declaration.status,
+                            )}`}
                           >
-                            Revisar
-                          </button>
+                            {statusLabel(declaration.status)}
+                          </span>
+                        </div>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateStatus(declaration.id, "CONFIRMED")
-                            }
-                            disabled={processing !== null}
-                            className={ui.buttonPrimary}
-                          >
-                            Confirmar
-                          </button>
+                        <p className="max-w-3xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                          {declarationTypeDescription(declaration.declarationType)}
+                        </p>
+                      </div>
 
-                          <button
-                            type="button"
-                            onClick={() => verifyHash(declaration)}
-                            disabled={processing !== null}
-                            className={ui.buttonSecondary}
-                          >
-                            {processing === `${declaration.id}:verify`
-                              ? "Verificando..."
-                              : "Verificar hash"}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => downloadCsv(declaration)}
-                            disabled={processing !== null}
-                            className={ui.buttonSecondary}
-                          >
-                            CSV
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateStatus(declaration.id, "VOIDED")
-                            }
-                            disabled={processing !== null}
-                            className={ui.buttonDanger}
-                          >
-                            Anular
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-sm text-(--color-text-muted)">
-                          Sin acciones
-                        </span>
-                      )}
+                      <div className={`${ui.cardSoft} px-3 py-2 lg:w-56`}>
+                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                          Integridad
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">
+                          Registro protegido
+                        </p>
+                        <p className="text-xs text-[var(--color-text-secondary)]">
+                          Verificable contra alteraciones
+                        </p>
+                      </div>
                     </div>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <div className={ui.cardSoft + " p-3"}>
+                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                          Hash
+                        </p>
+                        <p className="mt-1 font-mono text-xs break-all text-[var(--color-text-secondary)]">
+                          {declaration.contentHash.slice(0, 24)}...
+                        </p>
+                      </div>
+
+                      <div className={ui.cardSoft + " p-3"}>
+                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                          Generada
+                        </p>
+                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                          {formatDate(declaration.generatedAt)}
+                        </p>
+                      </div>
+
+                      <div className={ui.cardSoft + " p-3"}>
+                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                          Año tributario
+                        </p>
+                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                          {declaration.taxYear}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className={`${ui.cardSoft} p-3`}>
+                      <p className="mb-2 text-xs font-medium text-[var(--color-text-muted)]">
+                        Flujo operacional
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {timeline.map((step, index) => (
+                          <div key={`${declaration.id}-${step}`} className="flex items-center gap-2">
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-medium text-[var(--color-text-light)]">
+                              {index + 1}
+                            </span>
+                            <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+                              {step}
+                            </span>
+                            {index < timeline.length - 1 ? (
+                              <span className="h-px w-6 bg-[var(--color-border)]" />
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex w-full flex-wrap gap-2 xl:w-52 xl:flex-col">
+                    {!isVoided ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(declaration.id, "CONFIRMED")}
+                          disabled={processing !== null}
+                          className={ui.buttonPrimary}
+                        >
+                          Confirmar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(declaration.id, "REVIEW")}
+                          disabled={processing !== null}
+                          className={ui.buttonSecondary}
+                        >
+                          Revisar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => verifyHash(declaration)}
+                          disabled={processing !== null}
+                          className={ui.buttonSecondary}
+                        >
+                          {processing === `${declaration.id}:verify`
+                            ? "Verificando..."
+                            : "Verificar hash"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => downloadCsv(declaration)}
+                          disabled={processing !== null}
+                          className={ui.buttonSecondary}
+                        >
+                          CSV
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(declaration.id, "VOIDED")}
+                          disabled={processing !== null}
+                          className={ui.buttonDanger}
+                        >
+                          Anular
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-sm text-[var(--color-text-muted)]">
+                        Declaración anulada
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
       </div>
     </section>
   );
