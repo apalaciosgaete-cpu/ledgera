@@ -9,8 +9,6 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
 function GearIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -29,8 +27,6 @@ function LogoutIcon() {
     </svg>
   );
 }
-
-// ── Nav config ────────────────────────────────────────────────────────────────
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   personal: [
@@ -60,8 +56,6 @@ const navItemsByRole: Record<string, { href: string; label: string }[]> = {
 };
 
 const ROLES_CON_CONFIGURACION = ["admin", "empresa", "contador"];
-
-// ── Role tokens ───────────────────────────────────────────────────────────────
 
 const roleTokens: Record<string, {
   label:          string;
@@ -95,8 +89,6 @@ const roleTokens: Record<string, {
   },
 };
 
-// ── Shell ─────────────────────────────────────────────────────────────────────
-
 function ProtectedShell({ children }: { children: React.ReactNode }) {
   const pathname         = usePathname();
   const router           = useRouter();
@@ -113,9 +105,10 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const token    = roleTokens[role] ?? roleTokens.personal;
   const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : "??";
 
+  // ── Navegar primero, limpiar sesión después ──────────────────────────────
   function handleLogout() {
-    logout();
     router.push("/bienvenida");
+    setTimeout(() => logout(), 150);
   }
 
   function isActive(href: string) {
@@ -125,7 +118,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", background: colors.bgApp, fontFamily: fonts.body }}>
 
-      {/* ── Header — una sola fila ── */}
       <header style={{
         background:   colors.primary,
         borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -145,12 +137,10 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           gap:            "24px",
         }}>
 
-          {/* ── Izquierda: Logo ── */}
           <Link href="/portafolio" style={{ textDecoration: "none", flexShrink: 0 }}>
             <Logo variant="light" size="md" showSubtitle />
           </Link>
 
-          {/* ── Centro: Nav tabs ── */}
           <nav style={{
             display:        "flex",
             alignItems:     "center",
@@ -187,10 +177,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* ── Derecha: Gear + User pill ── */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
 
-            {/* Gear */}
             {showConfig && (
               <Link
                 href="/configuracion"
@@ -222,7 +210,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               </Link>
             )}
 
-            {/* User pill */}
             <div style={{
               display:      "flex",
               alignItems:   "center",
@@ -233,7 +220,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               padding:      "5px 6px 5px 10px",
             }}>
 
-              {/* Avatar */}
               <div style={{
                 width:          "30px",
                 height:         "30px",
@@ -256,7 +242,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                 </span>
               </div>
 
-              {/* Email + badge */}
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <span style={{
                   fontSize:     "12px",
@@ -287,7 +272,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                 </span>
               </div>
 
-              {/* Divider */}
               <div style={{
                 width:      "1px",
                 height:     "24px",
@@ -295,7 +279,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                 flexShrink: 0,
               }} />
 
-              {/* Logout */}
               <button
                 onClick={handleLogout}
                 title="Cerrar sesión"
@@ -325,7 +308,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* ── Content ── */}
       <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "32px 24px" }}>
         {children}
       </main>
