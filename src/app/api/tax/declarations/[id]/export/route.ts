@@ -9,6 +9,7 @@ import {
 import {
   createTaxDeclarationAuditLog,
   getTaxDeclarationByIdForUser,
+  updateTaxDeclarationStatus,
 } from "@/modules/tax-dj/infrastructure/declarationRepository";
 
 export const dynamic = "force-dynamic";
@@ -83,6 +84,27 @@ export async function GET(
     });
 
     const requestMetadata = resolveRequestMetadata(req);
+    const previousStatus = declaration.status;
+    const nextStatus = "EXPORTED";
+
+    if (declaration.status !== "EXPORTED") {
+      const result = await updateTaxDeclarationStatus({
+        id: declaration.id,
+        userId: auth.user.id,
+        status: nextStatus,
+      });
+
+      if (result.count === 0) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message: "No fue posible marcar la declaración como exportada.",
+            data: null,
+          },
+          { status: 500 },
+        );
+      }
+    }
 
     await createTaxDeclarationAuditLog({
       userId: auth.user.id,
@@ -92,8 +114,8 @@ export async function GET(
       actorEmail: auth.user.email,
       taxYear: declaration.taxYear,
       declarationType: declaration.declarationType,
-      statusFrom: declaration.status,
-      statusTo: declaration.status,
+      statusFrom: previousStatus,
+      statusTo: nextStatus,
       contentHash: declaration.contentHash,
       ipAddress: requestMetadata.ipAddress,
       userAgent: requestMetadata.userAgent,
