@@ -92,15 +92,25 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
-  const result = await db.query(
+  // INSERT simple sin RETURNING complejo
+  const insertResult = await db.query(
     `
-      insert into users (email, full_name, password_hash, role)
-      values ($1, $2, $3, $4)
-      returning ${USER_SELECT}
+      INSERT INTO users (email, full_name, password_hash, role)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
     `,
     [input.email, input.fullName, input.passwordHash, input.role],
   );
-  return mapRowToUser(result.rows[0]);
+
+  const newId = insertResult.rows[0].id;
+
+  // SELECT separado con todos los campos
+  const selectResult = await db.query(
+    `SELECT ${USER_SELECT} FROM users WHERE id = $1 LIMIT 1`,
+    [newId],
+  );
+
+  return mapRowToUser(selectResult.rows[0]);
 }
 
 export async function deleteUser(id: string): Promise<boolean> {
