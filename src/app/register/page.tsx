@@ -29,8 +29,8 @@ const roles: { value: Role; label: string; description: string }[] = [
 ];
 
 export default function RegisterPage() {
-  const router  = useRouter();
-  const { login } = useAuth();
+  const router      = useRouter();
+  const { login }   = useAuth();
 
   const [fullName,      setFullName]      = useState("");
   const [email,         setEmail]         = useState("");
@@ -74,23 +74,12 @@ export default function RegisterPage() {
       }
 
       // 2. Login automático con las mismas credenciales
-      const loginRes = await fetch("/api/login", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email, password }),
-      });
-
-      const loginJson = await loginRes.json();
-
-      if (!loginJson.ok) {
-        // Registro OK pero login falló — ir a login manual
+      try {
+        await login(email, password);
+        router.push("/portafolio");
+      } catch {
         router.push("/login?registered=1");
-        return;
       }
-
-      // 3. Guardar sesión en contexto y redirigir a portafolio
-      login(loginJson.data.user, loginJson.data.session.token);
-      router.push("/portafolio");
 
     } catch {
       setErrorMessage("Error de conexión. Intenta nuevamente.");
