@@ -138,3 +138,24 @@ export async function createTaxDeclarationAuditLog(
     return null;
   }
 }
+
+export async function listTaxDeclarationAuditLogs(input: {
+  userId: string;
+  taxYear?: number;
+  declarationId?: string;
+  action?: TaxDeclarationAuditAction;
+  limit?: number;
+}) {
+  return prisma.taxDeclarationAuditLog.findMany({
+    where: {
+      userId: input.userId,
+      ...(input.taxYear ? { taxYear: input.taxYear } : {}),
+      ...(input.declarationId ? { declarationId: input.declarationId } : {}),
+      ...(input.action ? { action: input.action } : {}),
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: input.limit ?? 100,
+  });
+}
