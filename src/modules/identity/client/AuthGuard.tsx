@@ -1,6 +1,7 @@
+// src/modules/identity/client/AuthGuard.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "./authContext";
 
@@ -15,19 +16,31 @@ const PUBLIC_ROUTES = [
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router        = useRouter();
+  const pathname      = usePathname();
   const { isAuthenticated, isLoading } = useAuth();
+  const publicRoute   = isPublicRoute(pathname);
+  const wasAuthenticated = useRef(false);
 
-  const publicRoute = isPublicRoute(pathname);
+  // Trackear si el usuario estaba autenticado antes
+  useEffect(() => {
+    if (isAuthenticated) {
+      wasAuthenticated.current = true;
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !publicRoute) {
+      // Si el usuario estaba autenticado y ahora no lo está
+      // significa que hizo logout → no redirigir aquí, el layout lo maneja
+      if (wasAuthenticated.current) {
+        return;
+      }
       router.push("/login");
     }
   }, [isAuthenticated, isLoading, publicRoute, router]);
@@ -40,7 +53,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated && !publicRoute) {
+  if (!isAuthenticated && !publicRoute && !wasAuthenticated.current) {
     return null;
   }
 
