@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
@@ -91,11 +91,13 @@ const roleTokens: Record<string, {
 
 function ProtectedShell({ children }: { children: React.ReactNode }) {
   const pathname         = usePathname();
-  const router           = useRouter();
   const { user, logout } = useAuth();
 
   const [gearHover,   setGearHover]   = useState(false);
   const [logoutHover, setLogoutHover] = useState(false);
+
+  // ── Sin usuario — no renderizar ──────────────────────────────────────────
+  if (!user) return null;
 
   const role         = (user as { role?: string })?.role ?? "personal";
   const navItems     = navItemsByRole[role] ?? navItemsByRole.personal;
@@ -103,12 +105,13 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const showConfig   = ROLES_CON_CONFIGURACION.includes(role);
 
   const token    = roleTokens[role] ?? roleTokens.personal;
-  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : "??";
+  const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
 
-  // ── Navegar primero, limpiar sesión después ──────────────────────────────
-  function handleLogout() {
-    router.push("/bienvenida");
-    setTimeout(() => logout(), 150);
+  // ── Logout — navegación completa evita re-render del AuthGuard ───────────
+  async function handleLogout() {
+    setLogoutHover(false);
+    await logout();
+    window.location.href = "/bienvenida";
   }
 
   function isActive(href: string) {
@@ -253,7 +256,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                   textOverflow: "ellipsis",
                   whiteSpace:   "nowrap",
                 }}>
-                  {user?.email ?? "—"}
+                  {user.email}
                 </span>
                 <span style={{
                   display:       "inline-flex",
