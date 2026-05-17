@@ -10,6 +10,7 @@ import {
 } from "@/modules/tax-dj/application/buildDeclarationDraft";
 import type { TaxDeclarationType } from "@/modules/tax-dj/domain/declaration";
 import {
+  createTaxDeclarationAuditLog,
   createTaxDeclarationDraft,
   findActiveDeclarationByHash,
   listTaxDeclarationsByUser,
@@ -71,6 +72,16 @@ function serializeDeclaration(declaration: TaxDeclarationRecord) {
     voidedAt: declaration.voidedAt,
     createdAt: declaration.createdAt,
     updatedAt: declaration.updatedAt,
+  };
+}
+
+function resolveRequestMetadata(req: NextRequest) {
+  return {
+    ipAddress:
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      null,
+    userAgent: req.headers.get("user-agent") ?? null,
   };
 }
 
@@ -191,6 +202,27 @@ export async function POST(req: NextRequest) {
     const declaration = (await createTaxDeclarationDraft(
       draft,
     )) as TaxDeclarationRecord;
+
+    const requestMetadata = resolveRequestMetadata(req);
+
+    await createTaxDeclarationAuditLog({
+      userId: auth.user.id,
+      declarationId: declaration.id,
+      action: "DECLARATION_CREATED",
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      taxYear: declaration.taxYear,
+      declarationType: declaration.declarationType,
+      statusFrom: null,
+      statusTo: declaration.status,
+      contentHash: declaration.contentHash,
+      ipAddress: requestMetadata.ipAddress,
+      userAgent: requestMetadata.userAgent,
+      metadata: {
+        source: declaration.source,
+        generatedAt: declaration.generatedAt,
+      },
+    });
 
     return ok(
       {
