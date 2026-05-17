@@ -8,86 +8,97 @@ datasource db {
 }
 
 model PortfolioMovement {
-  id                      String   @id @default(cuid())
-  userId                  String
+  id                      String    @id @default(cuid())
+  userId                  String    @default("")
   type                    String
   symbol                  String
   quantity                Float
   priceUsd                Float
-  feeUsd                  Float    @default(0)
-  executedAt              DateTime
-  exchange                String?
-  notes                   String?
-  suggestedTaxCategory    String   @default("UNCLASSIFIED")
+  feeUsd                  Float     @default(0)
+  suggestedTaxCategory    String    @default("UNCLASSIFIED")
   appliedTaxCategory      String?
-  taxClassificationSource String   @default("SYSTEM")
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  taxClassificationSource String    @default("SYSTEM")
+  executedAt              DateTime  @default(now())
+  deletedAt               DateTime?
+  deletedReason           String?
 
-  user users @relation(fields: [userId], references: [id])
+  user     users     @relation(fields: [userId], references: [id])
+  taxEvent TaxEvent?
 
   @@index([userId])
-  @@index([symbol])
   @@index([executedAt])
+  @@index([userId, executedAt])
   @@map("portfolio_movements")
 }
 
 model TaxEvent {
   id                   String   @id @default(cuid())
-  userId               String
+  userId               String   @default("")
   movementId           String   @unique
-  eventType            String
   symbol               String
-  executedAt           DateTime
+  eventType            String
   quantity             Float
-  effectiveTaxCategory String
-  averageCostUsdAtSale Float?
-  proceedsGrossUsd     Float?
-  proceedsNetUsd       Float?
-  costBasisUsd         Float?
-  feeUsd               Float?
-  realizedPnlUsd       Float?
-  usdClp               Float?
-  proceedsGrossClp     Float?
-  proceedsNetClp       Float?
-  costBasisClp         Float?
-  feeClp               Float?
-  realizedPnlClp       Float?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  effectiveTaxCategory String   @default("UNCLASSIFIED")
+  averageCostUsdAtSale Float    @default(0)
+  proceedsGrossUsd     Float    @default(0)
+  proceedsNetUsd       Float    @default(0)
+  costBasisUsd         Float    @default(0)
+  feeUsd               Float    @default(0)
+  realizedPnlUsd       Float    @default(0)
+  usdClp               Float    @default(950)
+  proceedsGrossClp     Float    @default(0)
+  proceedsNetClp       Float    @default(0)
+  costBasisClp         Float    @default(0)
+  feeClp               Float    @default(0)
+  realizedPnlClp       Float    @default(0)
+  executedAt           DateTime
+  taxYear              Int      @default(0)
 
-  user users @relation(fields: [userId], references: [id])
+  user     users             @relation(fields: [userId], references: [id])
+  movement PortfolioMovement @relation(fields: [movementId], references: [id])
 
   @@index([userId])
-  @@index([movementId])
-  @@index([executedAt])
+  @@index([taxYear])
   @@index([symbol])
+  @@index([userId, taxYear])
+  @@index([userId, executedAt])
   @@map("tax_events")
+}
+
+model ReportValidation {
+  id        String    @id @default(cuid())
+  type      String    @default("INFORMATIVE")
+  year      Int       @default(0)
+  hash      String    @unique @default("")
+  symbol    String?
+  issuedAt  DateTime  @default(now())
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("report_validations")
 }
 
 model TaxPeriodClose {
   id           String    @id @default(cuid())
-  userId       String
-  year         Int
-  status       String    @default("OPEN")
-  closedAt     DateTime?
+  userId       String    @default("")
+  periodYear   Int
+  status       String    @default("CLOSED")
   closedReason String?
+  closedAt     DateTime  @default(now())
   reopenedAt   DateTime?
-  reopenReason String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   user users @relation(fields: [userId], references: [id])
 
-  @@unique([userId, year])
-  @@index([userId])
-  @@index([year])
+  @@unique([userId, periodYear])
   @@map("tax_period_closures")
 }
 
 model TaxPeriodAuditLog {
   id         String   @id @default(cuid())
-  userId     String
+  userId     String   @default("")
   year       Int
   action     String
   reason     String?
@@ -98,6 +109,7 @@ model TaxPeriodAuditLog {
 
   user users @relation(fields: [userId], references: [id])
 
+  @@index([userId])
   @@index([year])
   @@index([action])
   @@index([userId, year])
