@@ -6,7 +6,10 @@ import {
   buildDeclarationCsvFilename,
   type ExportDeclarationCsvInput,
 } from "@/modules/tax-dj/application/exportDeclarationCsv";
-import { getTaxDeclarationByIdForUser } from "@/modules/tax-dj/infrastructure/declarationRepository";
+import {
+  createTaxDeclarationAuditLog,
+  getTaxDeclarationByIdForUser,
+} from "@/modules/tax-dj/infrastructure/declarationRepository";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,6 +24,16 @@ type TaxDeclarationExportRecord = {
   confirmedAt: Date | string | null;
   payloadJson: string;
 };
+
+function resolveRequestMetadata(req: NextRequest) {
+  return {
+    ipAddress:
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      null,
+    userAgent: req.headers.get("user-agent") ?? null,
+  };
+}
 
 export async function GET(
   req: NextRequest,
@@ -67,6 +80,27 @@ export async function GET(
       id: declaration.id,
       taxYear: declaration.taxYear,
       declarationType: declaration.declarationType,
+    });
+
+    const requestMetadata = resolveRequestMetadata(req);
+
+    await createTaxDeclarationAuditLog({
+      userId: auth.user.id,
+      declarationId: declaration.id,
+      action: "DECLARATION_EXPORTED",
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      taxYear: declaration.taxYear,
+      declarationType: declaration.declarationType,
+      statusFrom: declaration.status,
+      statusTo: declaration.status,
+      contentHash: declaration.contentHash,
+      ipAddress: requestMetadata.ipAddress,
+      userAgent: requestMetadata.userAgent,
+      metadata: {
+        exportFormat: "CSV",
+        filename,
+      },
     });
 
     return new NextResponse(csv, {
