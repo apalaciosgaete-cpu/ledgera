@@ -5,6 +5,7 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import type { TaxDeclarationStatus } from "@/modules/tax-dj/domain/declaration";
 import {
+  createTaxDeclarationAuditLog,
   getTaxDeclarationByIdForUser,
   updateTaxDeclarationStatus,
 } from "@/modules/tax-dj/infrastructure/declarationRepository";
@@ -46,6 +47,29 @@ function normalizeStatus(value: unknown): TaxDeclarationStatus | null {
   }
 
   return status as TaxDeclarationStatus;
+}
+
+function resolveAuditAction(status: TaxDeclarationStatus) {
+  switch (status) {
+    case "REVIEW":
+      return "DECLARATION_REVIEWED" as const;
+    case "CONFIRMED":
+      return "DECLARATION_CONFIRMED" as const;
+    case "VOIDED":
+      return "DECLARATION_VOIDED" as const;
+    default:
+      return null;
+  }
+}
+
+function resolveRequestMetadata(req: NextRequest) {
+  return {
+    ipAddress:
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      null,
+    userAgent: req.headers.get("user-agent") ?? null,
+  };
 }
 
 function serializeDeclaration(declaration: TaxDeclarationRecord) {
@@ -137,6 +161,10 @@ export async function PATCH(
       return fail("La declaración ya fue anulada.", 409);
     }
 
+    if (existing.status === status) {
+      return fail("La declaración ya posee ese estado.", 409);
+    }
+
     const result = await updateTaxDeclarationStatus({
       id,
       userId: auth.user.id,
@@ -145,6 +173,30 @@ export async function PATCH(
 
     if (result.count === 0) {
       return fail("No fue posible actualizar la declaración.", 500);
+    }
+
+    const action = resolveAuditAction(status);
+    const requestMetadata = resolveRequestMetadata(req);
+
+    if (action) {
+      await createTaxDeclarationAuditLog({
+        userId: auth.user.id,
+        declarationId: existing.id,
+        action,
+        actorId: auth.user.id,
+        actorEmail: auth.user.email,
+        taxYear: existing.taxYear,
+        declarationType: existing.declarationType,
+        statusFrom: existing.status,
+        statusTo: status,
+        contentHash: existing.contentHash,
+        ipAddress: requestMetadata.ipAddress,
+        userAgent: requestMetadata.userAgent,
+        metadata: {
+          declarationId: existing.id,
+          updatedStatus: status,
+        },
+      });
     }
 
     return ok(
