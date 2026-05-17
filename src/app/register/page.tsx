@@ -1,3 +1,4 @@
+// src/app/register/page.tsx
 "use client";
 
 import { FormEvent, useState } from "react";
@@ -5,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
+import { useAuth } from "@/modules/identity/client/authContext";
 
 type Role = "personal" | "contador" | "empresa";
 
@@ -27,16 +29,17 @@ const roles: { value: Role; label: string; description: string }[] = [
 ];
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const router  = useRouter();
+  const { login } = useAuth();
 
-  const [fullName,       setFullName]       = useState("");
-  const [email,          setEmail]          = useState("");
-  const [password,       setPassword]       = useState("");
-  const [showPassword,   setShowPassword]   = useState(false);
-  const [role,           setRole]           = useState<Role>("personal");
-  const [accordionOpen,  setAccordionOpen]  = useState(false);
-  const [errorMessage,   setErrorMessage]   = useState("");
-  const [submitting,     setSubmitting]     = useState(false);
+  const [fullName,      setFullName]      = useState("");
+  const [email,         setEmail]         = useState("");
+  const [password,      setPassword]      = useState("");
+  const [showPassword,  setShowPassword]  = useState(false);
+  const [role,          setRole]          = useState<Role>("personal");
+  const [accordionOpen, setAccordionOpen] = useState(false);
+  const [errorMessage,  setErrorMessage]  = useState("");
+  const [submitting,    setSubmitting]    = useState(false);
 
   const selectedRole = roles.find((r) => r.value === role) ?? roles[0];
 
@@ -56,20 +59,39 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch("/api/users", {
-        method: "POST",
+      // 1. Crear usuario
+      const registerRes = await fetch("/api/users", {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, password, role }),
+        body:    JSON.stringify({ fullName, email, password, role }),
       });
 
-      const json = await response.json();
+      const registerJson = await registerRes.json();
 
-      if (!json.ok) {
-        setErrorMessage(json.message ?? "No fue posible crear la cuenta.");
+      if (!registerJson.ok) {
+        setErrorMessage(registerJson.message ?? "No fue posible crear la cuenta.");
         return;
       }
 
-      router.push("/login?registered=1");
+      // 2. Login automático con las mismas credenciales
+      const loginRes = await fetch("/api/login", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email, password }),
+      });
+
+      const loginJson = await loginRes.json();
+
+      if (!loginJson.ok) {
+        // Registro OK pero login falló — ir a login manual
+        router.push("/login?registered=1");
+        return;
+      }
+
+      // 3. Guardar sesión en contexto y redirigir a portafolio
+      login(loginJson.data.user, loginJson.data.session.token);
+      router.push("/portafolio");
+
     } catch {
       setErrorMessage("Error de conexión. Intenta nuevamente.");
     } finally {
