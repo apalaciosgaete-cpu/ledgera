@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
-import { getTaxDeclarationByIdForUser } from "@/modules/tax-dj/infrastructure/declarationRepository";
+import {
+  createTaxDeclarationAuditLog,
+  getTaxDeclarationByIdForUser,
+} from "@/modules/tax-dj/infrastructure/declarationRepository";
 import { verifyDeclarationHash } from "@/modules/tax-dj/application/verifyDeclarationHash";
 
 type TaxDeclarationVerifyRecord = {
@@ -21,6 +24,16 @@ function parsePayloadJson(value: string): unknown {
   } catch {
     return null;
   }
+}
+
+function resolveRequestMetadata(req: NextRequest) {
+  return {
+    ipAddress:
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      null,
+    userAgent: req.headers.get("user-agent") ?? null,
+  };
 }
 
 export async function GET(
@@ -50,6 +63,28 @@ export async function GET(
     const verification = verifyDeclarationHash({
       payloadJson,
       expectedHash: declaration.contentHash,
+    });
+
+    const requestMetadata = resolveRequestMetadata(req);
+
+    await createTaxDeclarationAuditLog({
+      userId: auth.user.id,
+      declarationId: declaration.id,
+      action: "DECLARATION_INTEGRITY_VERIFIED",
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      taxYear: declaration.taxYear,
+      declarationType: declaration.declarationType,
+      statusFrom: declaration.status,
+      statusTo: declaration.status,
+      contentHash: declaration.contentHash,
+      ipAddress: requestMetadata.ipAddress,
+      userAgent: requestMetadata.userAgent,
+      metadata: {
+        verificationValid: verification.valid,
+        computedHash: verification.computedHash,
+        expectedHash: verification.expectedHash,
+      },
     });
 
     return ok(
