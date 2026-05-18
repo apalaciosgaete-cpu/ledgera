@@ -388,7 +388,7 @@ export default function PanelPage() {
         `}</style>
       )}
 
-      <div style={{ padding: "2rem", maxWidth: "960px", fontFamily: "var(--font-body)" }}>
+      <div style={{ padding: "2rem", maxWidth: "960px", margin: "0 auto", fontFamily: "var(--font-body)" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "1.75rem" }}>
@@ -408,38 +408,38 @@ export default function PanelPage() {
         {/* Semáforo Hero */}
         <div
           style={{
-            background:    cfg.bgColor,
-            border:        `1px solid ${cfg.borderColor}`,
-            borderRadius:  "16px",
-            padding:       "1.75rem 2rem",
-            marginBottom:  "1.25rem",
-            display:       "flex",
-            alignItems:    "center",
-            gap:           "1.5rem",
+            background:   cfg.bgColor,
+            border:       `1px solid ${cfg.borderColor}`,
+            borderRadius: "12px",
+            padding:      "1rem 1.25rem",
+            marginBottom: "1.25rem",
+            display:      "flex",
+            alignItems:   "center",
+            gap:          "1rem",
           }}
         >
-          <div style={{ position: "relative", flexShrink: 0, width: 52, height: 52 }}>
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: cfg.color }} />
+          <div style={{ position: "relative", flexShrink: 0, width: 32, height: 32 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: cfg.color }} />
             {cfg.pulse && (
               <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: cfg.color, animation: "ledgera-pulse 1.6s ease-out infinite" }} />
             )}
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "0.625rem", marginBottom: "5px" }}>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: "1.875rem", fontWeight: 700, color: cfg.color, lineHeight: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "1.125rem", fontWeight: 700, color: cfg.color }}>
                 {cfg.label}
               </span>
-              <span style={{ fontSize: "0.8125rem", color: "#94A3B8", fontWeight: 500 }}>Estado tributario</span>
+              <span style={{ fontSize: "0.8125rem", color: "#94A3B8" }}>Estado tributario</span>
             </div>
-            <p style={{ color: "#475569", margin: 0, fontSize: "0.9375rem" }}>{cfg.sublabel}</p>
+            <p style={{ color: "#475569", margin: 0, fontSize: "0.875rem" }}>{cfg.sublabel}</p>
           </div>
 
-          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.55)", borderRadius: "12px", padding: "0.75rem 1.25rem", flexShrink: 0 }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.625rem", fontWeight: 700, color: cfg.color, lineHeight: 1 }}>
+          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.55)", borderRadius: "8px", padding: "0.5rem 1rem", flexShrink: 0 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", fontWeight: 700, color: cfg.color, lineHeight: 1 }}>
               {coverageRate}%
             </div>
-            <div style={{ fontSize: "0.6875rem", color: "#94A3B8", marginTop: "4px", fontWeight: 500 }}>COBERTURA</div>
+            <div style={{ fontSize: "0.625rem", color: "#94A3B8", marginTop: "3px", fontWeight: 500 }}>COBERTURA</div>
           </div>
         </div>
 
@@ -450,19 +450,6 @@ export default function PanelPage() {
           <MetricCard label="Eventos tributarios" value={health.summary.totalTaxEvents}  note="generados por motor" />
           <MetricCard label="Sin cobertura"     value={health.summary.sellWithoutEvent}  note="ventas pendientes"     highlight={health.summary.sellWithoutEvent > 0} />
           <MetricCard label="Huérfanos"         value={integrity.summary.orphanEvents}   note="sin movimiento padre"  highlight={integrity.summary.orphanEvents > 0} />
-        </div>
-
-        {/* PnL Placeholder */}
-        <div style={{ background: "#F8FAFC", border: "1px dashed rgba(15, 42, 61, 0.13)", borderRadius: "12px", padding: "1.125rem 1.5rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.875rem" }}>
-          <div style={{ width: 34, height: 34, borderRadius: "8px", background: "rgba(15, 42, 61, 0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <path d="M1.5 11L5.5 7.5L8.5 10L13.5 4.5" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: "0.875rem", color: "#CBD5E1" }}>PnL USD / CLP</p>
-            <p style={{ margin: 0, fontSize: "0.8125rem", color: "#E2E8F0" }}>Próximamente — requiere integración de precios de mercado</p>
-          </div>
         </div>
 
         {/* Alertas */}
