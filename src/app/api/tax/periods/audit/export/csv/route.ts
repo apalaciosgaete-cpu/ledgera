@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
     }
     lines.push("");
 
-    lines.push(row("REGISTROS DE CIERRE — SNAPSHOTS"));
+    lines.push(row("REGISTROS DE CIERRE"));
     lines.push(row("#", "Fecha", "Hash de integridad"));
     if (snapshots.length === 0) {
       lines.push(row("Sin registros"));

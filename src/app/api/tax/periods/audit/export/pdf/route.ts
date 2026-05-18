@@ -232,7 +232,7 @@ export async function GET(req: NextRequest) {
 
       // ── Registros de cierre ──
       if (y + 60 > CONTENT_BOTTOM) y = newPage();
-      y = drawSectionTitle(doc, `Registros de cierre — snapshots (${snapshots.length})`, y);
+      y = drawSectionTitle(doc, `Registros de cierre (${snapshots.length})`, y);
 
       if (snapshots.length === 0) {
         doc.font("Helvetica").fontSize(8).fillColor("#94A3B8").text("Sin registros de cierre para este periodo.", 40, y);
