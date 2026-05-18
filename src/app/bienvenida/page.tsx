@@ -52,7 +52,7 @@ const h2Style: CSSProperties = {
 
 const subStyle: CSSProperties = {
   fontSize: "17px",
-  color: "#64748B",
+  color: "#94A3B8",
   maxWidth: "500px",
   margin: "0 auto",
   lineHeight: 1.65,
@@ -213,7 +213,7 @@ function HeroCarousel() {
             Iniciar sesión
           </Link>
         </div>
-        <p style={{ marginTop: "1.5rem", fontSize: "13px", color: "#475569" }}>
+        <p style={{ marginTop: "1.5rem", fontSize: "13px", color: "#94A3B8" }}>
           30 días gratis · Sin compromiso · Cancela cuando quieras
         </p>
         <div style={{ display: "flex", gap: "8px", marginTop: "2rem" }}>
@@ -247,6 +247,7 @@ export default function LandingPage() {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) router.push("/portafolio");
@@ -395,44 +396,42 @@ export default function LandingPage() {
         }}
       >
         <Logo variant="light" size="lg" showSubtitle />
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Link
-            href="/login"
-            onMouseEnter={() => setHoveredNav("login")}
-            onMouseLeave={() => setHoveredNav(null)}
-            style={{
-              fontSize: "15px",
-              fontWeight: 500,
-              color: hoveredNav === "login" ? "#F1F5F9" : "#94A3B8",
-              textDecoration: "none",
-              padding: "8px 18px",
-              borderRadius: "8px",
-              background:
-                hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent",
-              transition: "all 0.15s ease",
-            }}
-          >
+
+        {/* Desktop nav */}
+        <div className="hidden sm:flex" style={{ alignItems: "center", gap: "8px" }}>
+          <Link href="/login" onMouseEnter={() => setHoveredNav("login")} onMouseLeave={() => setHoveredNav(null)}
+            style={{ fontSize: "15px", fontWeight: 500, color: hoveredNav === "login" ? "#F1F5F9" : "#94A3B8", textDecoration: "none", padding: "8px 18px", borderRadius: "8px", background: hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent", transition: "all 0.15s ease" }}>
             Iniciar sesión
           </Link>
-          <Link
-            href="/register"
-            onMouseEnter={() => setHoveredNav("register")}
-            onMouseLeave={() => setHoveredNav(null)}
-            style={{
-              fontSize: "15px",
-              fontWeight: 600,
-              color: "#ffffff",
-              textDecoration: "none",
-              padding: "9px 20px",
-              borderRadius: "8px",
-              background: hoveredNav === "register" ? "#15803D" : "#16A34A",
-              transition: "all 0.15s ease",
-            }}
-          >
+          <Link href="/register" onMouseEnter={() => setHoveredNav("register")} onMouseLeave={() => setHoveredNav(null)}
+            style={{ fontSize: "15px", fontWeight: 600, color: "#ffffff", textDecoration: "none", padding: "9px 20px", borderRadius: "8px", background: hoveredNav === "register" ? "#15803D" : "#16A34A", transition: "all 0.15s ease" }}>
             Comenzar gratis
           </Link>
         </div>
+
+        {/* Mobile hamburger */}
+        <button className="flex sm:hidden" onClick={() => setMobileMenuOpen((v) => !v)}
+          style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px", cursor: "pointer", color: "#94A3B8" }}>
+          {mobileMenuOpen
+            ? <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 4l12 12M16 4L4 16" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            : <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          }
+        </button>
       </nav>
+
+      {/* Mobile menu dropdown */}
+      {mobileMenuOpen && (
+        <div className="flex sm:hidden" style={{ flexDirection: "column", background: "rgba(10,31,46,0.97)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.5rem", gap: "10px", position: "sticky", top: "68px", zIndex: 99 }}>
+          <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+            style={{ fontSize: "15px", fontWeight: 500, color: "#94A3B8", textDecoration: "none", padding: "10px 0" }}>
+            Iniciar sesión
+          </Link>
+          <Link href="/register" onClick={() => setMobileMenuOpen(false)}
+            style={{ display: "block", textAlign: "center", fontSize: "15px", fontWeight: 700, color: "#ffffff", textDecoration: "none", padding: "12px 20px", borderRadius: "8px", background: "#16A34A" }}>
+            Comenzar gratis
+          </Link>
+        </div>
+      )}
 
       {/* ── Hero Carrusel ──────────────────────────────────────────────────── */}
       <HeroCarousel />
@@ -504,6 +503,34 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Puente problema → solución ─────────────────────────────────────── */}
+      <div
+        style={{
+          background: "linear-gradient(to bottom, #071520, #0A1F2E)",
+          padding: "2.5rem 2rem",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "12px",
+            background: "rgba(22,163,74,0.08)",
+            border: "1px solid rgba(22,163,74,0.22)",
+            borderRadius: "100px",
+            padding: "10px 28px",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v12M4 10l4 4 4-4" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#4ADE80" }}>
+            Ledgera lo resuelve — así es como:
+          </span>
+        </div>
+      </div>
 
       {/* ── La solución ────────────────────────────────────────────────────── */}
       <section style={{ padding: "7rem 2rem", background: "#0A1F2E" }}>
@@ -612,7 +639,7 @@ export default function LandingPage() {
                 >
                   {item.label}
                 </h3>
-                <p style={{ fontSize: "15px", color: "#64748B", margin: 0, lineHeight: 1.65 }}>
+                <p style={{ fontSize: "15px", color: "#94A3B8", margin: 0, lineHeight: 1.65 }}>
                   {item.description}
                 </p>
               </div>
@@ -724,6 +751,156 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Prueba social ──────────────────────────────────────────────────── */}
+      <section style={{ padding: "6rem 2rem", background: "#071520" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+          {/* Stats */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "8px",
+              marginBottom: "5rem",
+              textAlign: "center",
+            }}
+          >
+            {[
+              { stat: "+500", label: "usuarios activos" },
+              { stat: "+45.000", label: "movimientos procesados" },
+              { stat: "99.7%", label: "exactitud FIFO" },
+              { stat: "3 min", label: "tiempo promedio de reporte" },
+            ].map((item) => (
+              <div
+                key={item.stat}
+                style={{
+                  padding: "2rem 1rem",
+                  borderRadius: "14px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+                    fontSize: "clamp(2rem, 4vw, 2.75rem)",
+                    fontWeight: 700,
+                    color: "#4ADE80",
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1,
+                  }}
+                >
+                  {item.stat}
+                </div>
+                <div style={{ fontSize: "13px", color: "#94A3B8", marginTop: "8px" }}>
+                  {item.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Testimonios */}
+          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <h2
+              style={{
+                ...h2Style,
+                fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
+                margin: "0 0 0.75rem",
+              }}
+            >
+              Lo que dicen nuestros usuarios
+            </h2>
+            <p style={subStyle}>Personas que ya declaran sus cripto con Ledgera.</p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gap: "20px",
+            }}
+          >
+            {[
+              {
+                quote:
+                  "Por fin entiendo cuánto debo pagar de impuestos por mis cripto. Antes lo hacía en una planilla Excel y siempre me daba distinto.",
+                author: "Rodrigo M.",
+                role: "Inversor particular · Santiago",
+                avatar: "RM",
+              },
+              {
+                quote:
+                  "Manejo cuatro clientes con operaciones en Binance y Buda. Ledgera me ahorra horas de trabajo cada período tributario.",
+                author: "Valentina S.",
+                role: "Contadora · Valparaíso",
+                avatar: "VS",
+              },
+              {
+                quote:
+                  "El reporte verificable con código único es exactamente lo que necesitaba para presentar ante el SII sin estrés.",
+                author: "Felipe A.",
+                role: "CFO · empresa fintech · Santiago",
+                avatar: "FA",
+              },
+            ].map((t) => (
+              <div
+                key={t.author}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "14px",
+                  padding: "2rem",
+                }}
+              >
+                <div style={{ display: "flex", gap: "3px", marginBottom: "1.25rem" }}>
+                  {[0, 1, 2, 3, 4].map((s) => (
+                    <svg key={s} width="14" height="14" viewBox="0 0 14 14" fill="#F59E0B">
+                      <path d="M7 1l1.5 3.5L12 5l-2.5 2.4.6 3.6L7 9.5 3.9 11l.6-3.6L2 5l3.5-.5L7 1z" />
+                    </svg>
+                  ))}
+                </div>
+                <p
+                  style={{
+                    fontSize: "15px",
+                    color: "#CBD5E1",
+                    margin: "0 0 1.5rem",
+                    lineHeight: 1.7,
+                    fontStyle: "italic",
+                  }}
+                >
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: "rgba(22,163,74,0.15)",
+                      border: "1px solid rgba(22,163,74,0.25)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "#4ADE80",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#F1F5F9" }}>
+                      {t.author}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#64748B" }}>{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Precios ────────────────────────────────────────────────────────── */}
       <section style={{ padding: "7rem 2rem", background: "#0A1F2E" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -761,11 +938,13 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+          <div style={{ overflowX: "auto", paddingBottom: "4px" }}>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gridTemplateColumns: "repeat(4, minmax(220px, 1fr))",
               gap: "16px",
+              minWidth: "860px",
             }}
           >
             {plans.map((plan) => (
@@ -923,6 +1102,7 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+          </div>
         </div>
       </section>
 
@@ -1030,7 +1210,7 @@ export default function LandingPage() {
           <br />
           <span style={{ color: "#16A34A" }}>correcta y verificable</span>
         </h2>
-        <p style={{ fontSize: "17px", color: "#475569", margin: "0 0 2.5rem", lineHeight: 1.65 }}>
+        <p style={{ fontSize: "17px", color: "#94A3B8", margin: "0 0 2.5rem", lineHeight: 1.65 }}>
           Sin tarjeta de crédito. Sin complicaciones.
           <br />
           Cumplimiento SII desde el primer día.
