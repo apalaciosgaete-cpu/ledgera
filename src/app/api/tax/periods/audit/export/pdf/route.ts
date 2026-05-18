@@ -11,8 +11,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const PAGE_TOP_Y      = 100;
-const CONTENT_BOTTOM  = 715;
-const FOOTER_TOP      = 750;
+const CONTENT_BOTTOM  = 700;
+const FOOTER_TOP      = 738;
 
 function getAppUrl(req: NextRequest) {
   return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? req.nextUrl.origin;
@@ -59,20 +59,29 @@ function drawFooter(
   qrDataUrl: string,
   verificationUrl: string,
 ) {
-  const qrSize = 52;
-  const qrX    = doc.page.width - 92;
-  const qrY    = FOOTER_TOP + 4;
+  const qrSize = 70;
+  const qrX    = doc.page.width - 110;
+  const qrY    = FOOTER_TOP + 2;
 
   doc.moveTo(40, FOOTER_TOP).lineTo(doc.page.width - 40, FOOTER_TOP).strokeColor("#E5E7EB").stroke();
+
+  // QR
   doc.image(qrDataUrl, qrX, qrY, { width: qrSize, height: qrSize });
   doc.link(qrX, qrY, qrSize, qrSize, verificationUrl);
 
+  // Texto izquierdo: etiqueta + URL + instrucción + página
   doc.font("Helvetica-Bold").fontSize(7).fillColor("#111827")
-    .text("Verificación pública:", 40, FOOTER_TOP + 10, { lineBreak: false });
-  doc.font("Helvetica").fontSize(6.5).fillColor("#6B7280")
-    .text("Escanear QR o visitar la URL para verificar autenticidad.", 40, FOOTER_TOP + 22, { width: 280, lineBreak: false });
-  doc.font("Helvetica").fontSize(7).fillColor("#6B7280")
-    .text(`Página ${page} de ${total}`, doc.page.width - 200, FOOTER_TOP + 10, { width: 100, align: "right", lineBreak: false });
+    .text("Verificación pública:", 40, FOOTER_TOP + 6, { lineBreak: false });
+
+  doc.font("Helvetica").fontSize(6.5).fillColor("#15803D")
+    .text(verificationUrl, 40, FOOTER_TOP + 18, { width: qrX - 55, lineBreak: false });
+
+  doc.font("Helvetica").fontSize(6).fillColor("#94A3B8")
+    .text("Escanear el QR o visitar la URL para verificar autenticidad del documento.", 40, FOOTER_TOP + 32, { width: qrX - 55, lineBreak: false });
+
+  doc.font("Helvetica").fontSize(6.5).fillColor("#94A3B8")
+    .text(`Página ${page} de ${total}`, 40, FOOTER_TOP + 56, { lineBreak: false });
+
   doc.fillColor("#111827");
 }
 
@@ -191,14 +200,7 @@ export async function GET(req: NextRequest) {
         y += 16;
       });
 
-      y += 12;
-
-      // ── URL verificación ──
-      if (y + 40 > CONTENT_BOTTOM) y = newPage();
-      doc.roundedRect(40, y, doc.page.width - 80, 36, 6).fillAndStroke("#F0FDF4", "#BBF7D0");
-      doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#15803D").text("Verificación pública:", 52, y + 9, { lineBreak: false });
-      doc.font("Helvetica").fontSize(7.5).fillColor("#15803D").text(verificationUrl, 52, y + 21, { width: doc.page.width - 104, lineBreak: false });
-      y += 48;
+      y += 16;
 
       // ── Historial de acciones ──
       if (y + 60 > CONTENT_BOTTOM) y = newPage();
