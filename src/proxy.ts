@@ -46,6 +46,7 @@ export default function proxy(req: NextRequest) {
     "/login",
     "/register",
     "/api/login",
+    "/api/2fa/login",
     "/api/users",
     "/verify",
     "/api/verify",
