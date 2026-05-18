@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ui } from "@/styles/design-system";
 
 type DeclarationStatus =
@@ -27,21 +27,13 @@ type DeclarationItem = {
 type DeclarationsResponse = {
   ok: boolean;
   message: string;
-  data: {
-    declarations: DeclarationItem[];
-  };
+  data: { declarations: DeclarationItem[] };
 };
 
 type VerifyResponse = {
   ok: boolean;
   message: string;
-  data: {
-    verification: {
-      valid: boolean;
-      computedHash: string;
-      expectedHash: string;
-    };
-  };
+  data: { verification: { valid: boolean; computedHash: string; expectedHash: string } };
 };
 
 type VerificationResult = {
@@ -54,60 +46,36 @@ type VerificationResult = {
 const DECLARATION_TYPES = [
   { value: "DJ_CRYPTO_SUMMARY", label: "Resumen cripto" },
   { value: "DJ_REALIZED_GAINS", label: "Ganancias realizadas" },
-  {
-    value: "DJ_FOREIGN_EXCHANGE_ACTIVITY",
-    label: "Actividad en exchanges extranjeros",
-  },
-  {
-    value: "DJ_TAX_SUPPORTING_LEDGER",
-    label: "Libro auxiliar tributario",
-  },
+  { value: "DJ_FOREIGN_EXCHANGE_ACTIVITY", label: "Exchanges extranjeros" },
+  { value: "DJ_TAX_SUPPORTING_LEDGER", label: "Libro auxiliar tributario" },
 ];
 
 function readCookie(name: string) {
   if (typeof document === "undefined") return "";
-
-  const match = document.cookie
-    .split("; ")
-    .find((item) => item.startsWith(`${name}=`));
-
+  const match = document.cookie.split("; ").find((item) => item.startsWith(`${name}=`));
   return match ? decodeURIComponent(match.split("=")[1] ?? "") : "";
 }
 
 async function resolveCsrfToken() {
-  await fetch("/api/csrf", {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-
+  await fetch("/api/csrf", { method: "GET", credentials: "include", cache: "no-store" });
   return readCookie("ledgera_csrf");
 }
 
 function formatDate(value: string | null) {
   if (!value) return "—";
-
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) return "—";
-
-  return date.toLocaleString("es-CL");
+  return date.toLocaleDateString("es-CL");
 }
 
 function statusLabel(status: DeclarationStatus) {
   switch (status) {
-    case "DRAFT":
-      return "Borrador";
-    case "REVIEW":
-      return "En revisión";
-    case "CONFIRMED":
-      return "Confirmada";
-    case "EXPORTED":
-      return "Exportada";
-    case "VOIDED":
-      return "Anulada";
-    default:
-      return status;
+    case "DRAFT": return "Borrador";
+    case "REVIEW": return "En revisión";
+    case "CONFIRMED": return "Confirmada";
+    case "EXPORTED": return "Exportada";
+    case "VOIDED": return "Anulada";
+    default: return status;
   }
 }
 
@@ -115,39 +83,58 @@ function statusClass(status: DeclarationStatus) {
   if (status === "CONFIRMED" || status === "EXPORTED") return ui.badgeOk;
   if (status === "VOIDED") return ui.badgeRisk;
   if (status === "REVIEW") return ui.badgeWarning;
-
   return "border border-[var(--color-border)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)]";
 }
 
-function declarationTypeLabel(type: string) {
+function typeLabel(type: string) {
   return DECLARATION_TYPES.find((item) => item.value === type)?.label ?? type;
 }
 
-function declarationTypeDescription(type: string) {
-  switch (type) {
-    case "DJ_CRYPTO_SUMMARY":
-      return "Consolidado anual de operaciones y eventos tributarios cripto.";
-    case "DJ_REALIZED_GAINS":
-      return "Detalle de ganancias y pérdidas realizadas para soporte tributario.";
-    case "DJ_FOREIGN_EXCHANGE_ACTIVITY":
-      return "Operaciones realizadas en plataformas internacionales.";
-    case "DJ_TAX_SUPPORTING_LEDGER":
-      return "Respaldo para auditoría, revisión contable y trazabilidad.";
-    default:
-      return "Declaración tributaria auditable generada por LEDGERA.";
-  }
+// ─── Dropdown menú para acciones secundarias ──────────────────────────────────
+
+function MoreMenu({ items }: { items: { label: string; onClick: () => void; danger?: boolean }[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-alt)]"
+        title="Más acciones"
+      >
+        ···
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-1 min-w-[170px] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-lg">
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => { setOpen(false); item.onClick(); }}
+              className={`w-full px-4 py-2 text-left text-sm transition hover:bg-[var(--color-surface-alt)] ${item.danger ? "text-red-600" : "text-[var(--color-text-primary)]"}`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-function statusTimeline(status: DeclarationStatus) {
-  if (status === "VOIDED") return ["Borrador", "Anulada"];
-  if (status === "EXPORTED") {
-    return ["Borrador", "Revisión", "Confirmada", "Exportada"];
-  }
-  if (status === "CONFIRMED") return ["Borrador", "Revisión", "Confirmada"];
-  if (status === "REVIEW") return ["Borrador", "Revisión"];
-
-  return ["Borrador"];
-}
+// ─── Página principal ─────────────────────────────────────────────────────────
 
 export default function TaxDeclarationsPage() {
   const currentYear = new Date().getFullYear();
@@ -160,541 +147,281 @@ export default function TaxDeclarationsPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [verification, setVerification] = useState<VerificationResult | null>(
-    null,
+  const [verification, setVerification] = useState<VerificationResult | null>(null);
+
+  const sorted = useMemo(
+    () => [...declarations].sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime()),
+    [declarations],
   );
 
-  const sortedDeclarations = useMemo(() => {
-    return [...declarations].sort(
-      (a, b) =>
-        new Date(b.generatedAt).getTime() -
-        new Date(a.generatedAt).getTime(),
-    );
-  }, [declarations]);
-
-  async function loadDeclarations() {
+  async function load() {
     try {
       setLoading(true);
       setError(null);
-
       const token = localStorage.getItem("token");
-
-      const response = await fetch(`/api/tax/declarations?year=${year}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token ?? ""}`,
-        },
+      const res = await fetch(`/api/tax/declarations?year=${year}`, {
+        headers: { Authorization: `Bearer ${token ?? ""}` },
         credentials: "include",
         cache: "no-store",
       });
-
-      const json = (await response.json()) as DeclarationsResponse;
-
-      if (!response.ok || !json.ok) {
-        throw new Error(json.message || "No fue posible cargar declaraciones.");
-      }
-
+      const json = (await res.json()) as DeclarationsResponse;
+      if (!res.ok || !json.ok) throw new Error(json.message || "Error al cargar.");
       setDeclarations(json.data.declarations ?? []);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible cargar declaraciones.",
-      );
+      setError(err instanceof Error ? err.message : "Error al cargar declaraciones.");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    void loadDeclarations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function generateDraft() {
+  async function generate() {
     try {
-      setProcessing("generate");
-      setMessage(null);
-      setError(null);
-      setVerification(null);
-
-      const csrfToken = await resolveCsrfToken();
+      setProcessing("generate"); setMessage(null); setError(null); setVerification(null);
+      const csrf = await resolveCsrfToken();
       const token = localStorage.getItem("token");
-
-      const response = await fetch("/api/tax/declarations", {
+      const res = await fetch("/api/tax/declarations", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token ?? ""}`,
-          "Content-Type": "application/json",
-          "x-ledgera-csrf": csrfToken,
-        },
+        headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json", "x-ledgera-csrf": csrf },
         credentials: "include",
-        body: JSON.stringify({
-          year,
-          type: declarationType,
-        }),
+        body: JSON.stringify({ year, type: declarationType }),
       });
-
-      const json = await response.json();
-
-      if (!response.ok || !json.ok) {
-        throw new Error(json.message || "No fue posible generar el borrador.");
-      }
-
-      setMessage(
-        json.data?.reused
-          ? "Ya existía un borrador activo con el mismo contenido."
-          : "Borrador DDJJ generado correctamente.",
-      );
-
-      await loadDeclarations();
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.message || "Error al generar.");
+      setMessage(json.data?.reused ? "Ya existe un borrador activo con el mismo contenido." : "Borrador generado correctamente.");
+      await load();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible generar el borrador.",
-      );
+      setError(err instanceof Error ? err.message : "Error al generar el borrador.");
     } finally {
       setProcessing(null);
     }
   }
 
-  async function updateStatus(id: string, status: DeclarationStatus) {
+  async function changeStatus(id: string, status: DeclarationStatus) {
     try {
-      setProcessing(`${id}:${status}`);
-      setMessage(null);
-      setError(null);
-      setVerification(null);
-
-      const csrfToken = await resolveCsrfToken();
+      setProcessing(`${id}:${status}`); setMessage(null); setError(null); setVerification(null);
+      const csrf = await resolveCsrfToken();
       const token = localStorage.getItem("token");
-
-      const response = await fetch(`/api/tax/declarations/${id}`, {
+      const res = await fetch(`/api/tax/declarations/${id}`, {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token ?? ""}`,
-          "Content-Type": "application/json",
-          "x-ledgera-csrf": csrfToken,
-        },
+        headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json", "x-ledgera-csrf": csrf },
         credentials: "include",
         body: JSON.stringify({ status }),
       });
-
-      const json = await response.json();
-
-      if (!response.ok || !json.ok) {
-        throw new Error(
-          json.message || "No fue posible actualizar la declaración.",
-        );
-      }
-
-      setMessage("Declaración actualizada correctamente.");
-      await loadDeclarations();
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.message || "Error al actualizar.");
+      setMessage("Declaración actualizada.");
+      await load();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible actualizar la declaración.",
-      );
+      setError(err instanceof Error ? err.message : "Error al actualizar.");
     } finally {
       setProcessing(null);
     }
   }
 
-  async function verifyHash(declaration: DeclarationItem) {
+  async function verify(decl: DeclarationItem) {
     try {
-      setProcessing(`${declaration.id}:verify`);
-      setMessage(null);
-      setError(null);
-      setVerification(null);
-
+      setProcessing(`${decl.id}:verify`); setMessage(null); setError(null); setVerification(null);
       const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        `/api/tax/declarations/${declaration.id}/verify`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token ?? ""}`,
-          },
-          credentials: "include",
-          cache: "no-store",
-        },
-      );
-
-      const json = (await response.json()) as VerifyResponse;
-
-      if (!response.ok || !json.ok) {
-        throw new Error(json.message || "No fue posible verificar el hash.");
-      }
-
+      const res = await fetch(`/api/tax/declarations/${decl.id}/verify`, {
+        headers: { Authorization: `Bearer ${token ?? ""}` },
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = (await res.json()) as VerifyResponse;
+      if (!res.ok || !json.ok) throw new Error(json.message || "Error al verificar.");
       setVerification({
-        declarationId: declaration.id,
+        declarationId: decl.id,
         valid: json.data.verification.valid,
         computedHash: json.data.verification.computedHash,
         expectedHash: json.data.verification.expectedHash,
       });
-
-      setMessage(
-        json.data.verification.valid
-          ? "Hash verificado correctamente."
-          : "La declaración presenta inconsistencias de integridad.",
-      );
+      setMessage(json.data.verification.valid ? "Integridad verificada correctamente." : "Inconsistencia de integridad detectada.");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible verificar el hash.",
-      );
+      setError(err instanceof Error ? err.message : "Error al verificar.");
     } finally {
       setProcessing(null);
     }
   }
 
-  async function downloadCsv(declaration: DeclarationItem) {
+  async function download(decl: DeclarationItem) {
     try {
-      setProcessing(`${declaration.id}:export`);
-      setMessage(null);
-      setError(null);
-
+      setProcessing(`${decl.id}:export`); setMessage(null); setError(null);
       const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        `/api/tax/declarations/${declaration.id}/export`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token ?? ""}`,
-          },
-          credentials: "include",
-        },
-      );
-
-      if (!response.ok) {
-        const json = await response.json().catch(() => null);
-        throw new Error(
-          json?.message || "No fue posible exportar la declaración.",
-        );
+      const res = await fetch(`/api/tax/declarations/${decl.id}/export`, {
+        headers: { Authorization: `Bearer ${token ?? ""}` },
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.message || "Error al exportar.");
       }
-
-      const blob = await response.blob();
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `ledgera-ddjj-${
-        declaration.taxYear
-      }-${declaration.declarationType.toLowerCase()}.csv`;
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ledgera-ddjj-${decl.taxYear}-${decl.declarationType.toLowerCase()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       window.URL.revokeObjectURL(url);
-
-      setMessage("CSV DDJJ descargado correctamente.");
-      await loadDeclarations();
+      setMessage("CSV descargado.");
+      await load();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible exportar la declaración.",
-      );
+      setError(err instanceof Error ? err.message : "Error al exportar.");
     } finally {
       setProcessing(null);
     }
   }
+
+  const busy = processing !== null;
 
   return (
     <section className={ui.page}>
+      {/* Encabezado */}
       <div>
         <h1 className={ui.title}>Declaraciones Juradas</h1>
-        <p className={ui.subtitle}>
-          Genera, revisa, verifica y exporta borradores internos auditables para
-          soporte tributario.
-        </p>
+        <p className={ui.subtitle}>Borradores tributarios auditables por año.</p>
       </div>
 
-      <div className={`${ui.card} p-4 space-y-4`}>
-        <div className="grid gap-3 md:grid-cols-3">
+      {/* Controles */}
+      <div className={`${ui.card} p-4`}>
+        <div className="flex flex-wrap items-end gap-3">
           <label className="space-y-1">
-            <span className={ui.label}>Año tributario</span>
+            <span className={ui.label}>Año</span>
             <input
               value={year}
-              onChange={(event) => setYear(event.target.value)}
-              className="w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              onChange={(e) => setYear(e.target.value)}
+              className="w-24 rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
             />
           </label>
 
-          <label className="space-y-1 md:col-span-2">
-            <span className={ui.label}>Tipo de declaración</span>
+          <label className="min-w-0 flex-1 space-y-1">
+            <span className={ui.label}>Tipo</span>
             <select
               value={declarationType}
-              onChange={(event) => setDeclarationType(event.target.value)}
+              onChange={(e) => setDeclarationType(e.target.value)}
               className="w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
             >
-              {DECLARATION_TYPES.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
+              {DECLARATION_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
           </label>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={generateDraft}
-            disabled={processing !== null}
-            className={ui.buttonPrimary}
-          >
-            {processing === "generate" ? "Generando..." : "Generar borrador"}
-          </button>
-
-          <button
-            type="button"
-            onClick={loadDeclarations}
-            disabled={loading || processing !== null}
-            className={ui.buttonSecondary}
-          >
-            {loading ? "Cargando..." : "Actualizar listado"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={generate}
+              disabled={busy}
+              className={ui.buttonPrimary}
+            >
+              {processing === "generate" ? "Generando…" : "Generar borrador"}
+            </button>
+            <button
+              type="button"
+              onClick={load}
+              disabled={loading || busy}
+              className={ui.buttonSecondary}
+            >
+              {loading ? "…" : "↺"}
+            </button>
+          </div>
         </div>
       </div>
 
-      {error && (
-        <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>
-          {error}
-        </div>
-      )}
+      {/* Alertas */}
+      {error && <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>{error}</div>}
+      {message && <div className={`${ui.alertOk} rounded-md p-3 text-sm`}>{message}</div>}
 
-      {message && (
-        <div className={`${ui.alertOk} rounded-md p-3 text-sm`}>
-          {message}
-        </div>
-      )}
-
+      {/* Resultado verificación */}
       {verification && (
-        <div
-          className={`${
-            verification.valid ? ui.alertOk : ui.alertRisk
-          } rounded-md p-3 text-sm space-y-1`}
-        >
-          <p className="font-medium">
-            {verification.valid
-              ? "Integridad verificada"
-              : "Integridad no verificada"}
-          </p>
-
-          <p className="font-mono text-xs break-all">
-            Esperado: {verification.expectedHash}
-          </p>
-
-          <p className="font-mono text-xs break-all">
-            Calculado: {verification.computedHash}
-          </p>
+        <div className={`${verification.valid ? ui.alertOk : ui.alertRisk} rounded-md p-3 text-sm space-y-1`}>
+          <p className="font-semibold">{verification.valid ? "Integridad OK" : "Integridad INVÁLIDA"}</p>
+          <p className="font-mono text-[11px] break-all opacity-80">Hash esperado: {verification.expectedHash}</p>
+          <p className="font-mono text-[11px] break-all opacity-80">Hash calculado: {verification.computedHash}</p>
         </div>
       )}
 
-      <div className="space-y-4">
-        {loading ? (
-          <div
-            className={`${ui.card} p-5 text-sm text-[var(--color-text-secondary)]`}
-          >
-            Cargando declaraciones...
+      {/* Lista */}
+      <div className="space-y-2">
+        {loading && (
+          <div className={`${ui.card} p-4 text-sm text-[var(--color-text-secondary)]`}>Cargando…</div>
+        )}
+
+        {!loading && sorted.length === 0 && (
+          <div className={`${ui.card} p-4 text-sm text-[var(--color-text-secondary)]`}>
+            No hay declaraciones para {year}.
           </div>
-        ) : null}
+        )}
 
-        {!loading && sortedDeclarations.length === 0 ? (
-          <div
-            className={`${ui.card} p-5 text-sm text-[var(--color-text-secondary)]`}
-          >
-            No hay borradores DDJJ para el año seleccionado.
-          </div>
-        ) : null}
+        {!loading && sorted.map((decl) => {
+          const voided = decl.status === "VOIDED";
+          const confirmed = decl.status === "CONFIRMED";
+          const exported = decl.status === "EXPORTED";
+          const review = decl.status === "REVIEW";
 
-        {!loading &&
-          sortedDeclarations.map((declaration) => {
-            const timeline = statusTimeline(declaration.status);
-            const isVoided = declaration.status === "VOIDED";
-            const isConfirmed = declaration.status === "CONFIRMED";
-            const isExported = declaration.status === "EXPORTED";
-            const isReview = declaration.status === "REVIEW";
+          // Acción principal visible
+          const primaryAction = !voided && !confirmed && !exported
+            ? (
+              <button
+                type="button"
+                onClick={() => changeStatus(decl.id, "CONFIRMED")}
+                disabled={busy}
+                className={ui.buttonPrimary}
+              >
+                {processing === `${decl.id}:CONFIRMED` ? "Confirmando…" : "Confirmar"}
+              </button>
+            )
+            : null;
 
-            return (
-              <article key={declaration.id} className={`${ui.card} p-5`}>
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="min-w-0 flex-1 space-y-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
-                            {declarationTypeLabel(
-                              declaration.declarationType,
-                            )}
-                          </h2>
+          // Acciones secundarias en dropdown
+          const moreItems: { label: string; onClick: () => void; danger?: boolean }[] = [];
 
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass(
-                              declaration.status,
-                            )}`}
-                          >
-                            {statusLabel(declaration.status)}
-                          </span>
-                        </div>
+          if (!voided && !review && !confirmed && !exported) {
+            moreItems.push({ label: "Marcar en revisión", onClick: () => changeStatus(decl.id, "REVIEW") });
+          }
+          moreItems.push({ label: "Descargar CSV", onClick: () => download(decl) });
+          moreItems.push({ label: "Verificar integridad", onClick: () => verify(decl) });
+          if (!voided && !exported) {
+            moreItems.push({ label: "Anular", onClick: () => changeStatus(decl.id, "VOIDED"), danger: true });
+          }
 
-                        <p className="max-w-3xl text-sm leading-6 text-[var(--color-text-secondary)]">
-                          {declarationTypeDescription(
-                            declaration.declarationType,
-                          )}
-                        </p>
-                      </div>
-
-                      <div className={`${ui.cardSoft} px-3 py-2 lg:w-56`}>
-                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
-                          Integridad
-                        </p>
-                        <p className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">
-                          Registro protegido
-                        </p>
-                        <p className="text-xs text-[var(--color-text-secondary)]">
-                          Verificable contra alteraciones
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-3">
-                      <div className={`${ui.cardSoft} p-3`}>
-                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
-                          Hash
-                        </p>
-                        <p className="mt-1 font-mono text-xs break-all text-[var(--color-text-secondary)]">
-                          {declaration.contentHash.slice(0, 24)}...
-                        </p>
-                      </div>
-
-                      <div className={`${ui.cardSoft} p-3`}>
-                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
-                          Generada
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                          {formatDate(declaration.generatedAt)}
-                        </p>
-                      </div>
-
-                      <div className={`${ui.cardSoft} p-3`}>
-                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
-                          Año tributario
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                          {declaration.taxYear}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className={`${ui.cardSoft} p-3`}>
-                      <p className="mb-2 text-xs font-medium text-[var(--color-text-muted)]">
-                        Flujo operacional
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        {timeline.map((step, index) => (
-                          <div
-                            key={`${declaration.id}-${step}`}
-                            className="flex items-center gap-2"
-                          >
-                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-medium text-[var(--color-text-light)]">
-                              {index + 1}
-                            </span>
-
-                            <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-                              {step}
-                            </span>
-
-                            {index < timeline.length - 1 ? (
-                              <span className="h-px w-6 bg-[var(--color-border)]" />
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex w-full flex-wrap gap-2 xl:w-52 xl:flex-col">
-                    {!isVoided ? (
-                      <>
-                        {!isReview && !isConfirmed && !isExported ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateStatus(declaration.id, "REVIEW")
-                            }
-                            disabled={processing !== null}
-                            className={ui.buttonSecondary}
-                          >
-                            Revisar
-                          </button>
-                        ) : null}
-
-                        {!isConfirmed && !isExported ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateStatus(declaration.id, "CONFIRMED")
-                            }
-                            disabled={processing !== null}
-                            className={ui.buttonPrimary}
-                          >
-                            Confirmar
-                          </button>
-                        ) : null}
-
-                        <button
-                          type="button"
-                          onClick={() => verifyHash(declaration)}
-                          disabled={processing !== null}
-                          className={ui.buttonSecondary}
-                        >
-                          {processing === `${declaration.id}:verify`
-                            ? "Verificando..."
-                            : "Verificar hash"}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => downloadCsv(declaration)}
-                          disabled={processing !== null}
-                          className={ui.buttonSecondary}
-                        >
-                          {processing === `${declaration.id}:export`
-                            ? "Exportando..."
-                            : "CSV"}
-                        </button>
-
-                        {!isExported ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateStatus(declaration.id, "VOIDED")
-                            }
-                            disabled={processing !== null}
-                            className={ui.buttonDanger}
-                          >
-                            Anular
-                          </button>
-                        ) : null}
-                      </>
-                    ) : (
-                      <div className="text-sm text-[var(--color-text-muted)]">
-                        Declaración anulada
-                      </div>
-                    )}
-                  </div>
+          return (
+            <div
+              key={decl.id}
+              className={`${ui.card} flex items-center gap-4 px-4 py-3 ${voided ? "opacity-50" : ""}`}
+            >
+              {/* Info */}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {typeLabel(decl.declarationType)}
+                  </span>
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusClass(decl.status)}`}>
+                    {statusLabel(decl.status)}
+                  </span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{decl.taxYear}</span>
                 </div>
-              </article>
-            );
-          })}
+                <div className="mt-0.5 flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
+                  <span>{formatDate(decl.generatedAt)}</span>
+                  <code className="font-mono text-[10px]">🔒 {decl.contentHash.slice(0, 10)}…</code>
+                </div>
+              </div>
+
+              {/* Acciones */}
+              {!voided ? (
+                <div className="flex shrink-0 items-center gap-2">
+                  {primaryAction}
+                  <MoreMenu items={moreItems} />
+                </div>
+              ) : (
+                <span className="text-xs text-[var(--color-text-muted)]">Anulada</span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );
