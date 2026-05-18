@@ -230,7 +230,15 @@ export default function AuditoriaPage() {
           ))}
           <a href="/api/movements/audit/export" download="movimientos_auditoria.csv" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#ffffff", color: "#0F2A3D", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#0F2A3D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Exportar CSV
+            Movimientos CSV
+          </a>
+          <a href={`/api/tax/periods/audit/export/csv?year=${year}`} download={`ledgera-trazabilidad-auditoria-${year}.csv`} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#ffffff", color: "#0F2A3D", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#0F2A3D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Trazabilidad XLS
+          </a>
+          <a href={`/api/tax/periods/audit/export/pdf?year=${year}`} download={`ledgera-trazabilidad-auditoria-${year}.pdf`} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#0F2A3D", color: "#ffffff", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Trazabilidad PDF
           </a>
         </div>
       </div>

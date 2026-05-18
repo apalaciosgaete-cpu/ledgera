@@ -7,7 +7,9 @@ type CreateReportValidationInput = {
     | "STRICT_TAX_REPORT"
     | "INFORMATIVE_TAX_REPORT"
     | "STRICT_TAX_CSV"
-    | "INFORMATIVE_TAX_CSV";
+    | "INFORMATIVE_TAX_CSV"
+    | "AUDIT_TRAIL_PDF"
+    | "AUDIT_TRAIL_CSV";
   periodYear?: number | null;
   symbol?:     string | null;
   payload:     unknown;

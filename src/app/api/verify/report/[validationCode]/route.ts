@@ -14,6 +14,8 @@ function getReportTypeLabel(type: string): string {
     case "INFORMATIVE_TAX_REPORT": return "Borrador informativo tributario";
     case "STRICT_TAX_CSV":         return "Reporte contador CSV";
     case "INFORMATIVE_TAX_CSV":    return "Borrador informativo CSV";
+    case "AUDIT_TRAIL_PDF":        return "Trazabilidad de auditoría (PDF)";
+    case "AUDIT_TRAIL_CSV":        return "Trazabilidad de auditoría (CSV)";
     default:                       return "Reporte LEDGERA";
   }
 }
