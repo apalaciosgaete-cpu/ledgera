@@ -358,7 +358,6 @@ export default function TributarioPage() {
           if (!voided && !review && !confirmed && !exported) {
             moreItems.push({ label: "Marcar en revisión", onClick: () => changeStatus(decl.id, "REVIEW") });
           }
-          moreItems.push({ label: "Descargar CSV", onClick: () => download(decl) });
           moreItems.push({ label: "Verificar integridad", onClick: () => verify(decl) });
           if (!voided && !exported) {
             moreItems.push({ label: "Anular", onClick: () => changeStatus(decl.id, "VOIDED"), danger: true });
@@ -388,6 +387,15 @@ export default function TributarioPage() {
               {!voided ? (
                 <div className="flex shrink-0 items-center gap-2">
                   {primaryAction}
+                  <button
+                    type="button"
+                    onClick={() => download(decl)}
+                    disabled={busy}
+                    title="Descargar CSV"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-alt)]"
+                  >
+                    {processing === `${decl.id}:export` ? "…" : "↓"}
+                  </button>
                   <MoreMenu items={moreItems} />
                 </div>
               ) : (
