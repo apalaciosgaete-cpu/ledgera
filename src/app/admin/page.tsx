@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Logo } from "@/components/brand/Logo";
-import { colors, fonts, shadows } from "@/styles/tokens";
+import { colors, fonts, radius, shadows } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
 type SubscriptionPlan = "BASICO" | "PROFESIONAL" | "EMPRESA";
@@ -538,14 +538,11 @@ export default function AdminPage() {
 
                       <td style={{ padding: "14px 16px" }}>
                         {user.role !== "admin" ? (
-                          <div style={{ display: "flex", gap: "8px" }}>
+                          <div style={{ display: "flex", gap: "6px" }}>
                             <button
-                              onClick={() => {
-                                setEditSubscription(user);
-                                setSelectedPlan(user.subscriptionPlan);
-                                setDaysToAdd(30);
-                              }}
+                              onClick={() => { setEditSubscription(user); setSelectedPlan(user.subscriptionPlan); setDaysToAdd(30); }}
                               disabled={actionLoading === `${user.id}_sub`}
+                              style={{ background: colors.surface, color: colors.textSecondary, border: `1px solid ${colors.border}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
                             >
                               Suscripción
                             </button>
@@ -553,6 +550,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => handleStatusToggle(user)}
                               disabled={actionLoading === `${user.id}_status`}
+                              style={{ background: user.status === "active" ? colors.warningMuted : colors.accentMuted, color: user.status === "active" ? colors.warningHover : colors.accentHover, border: `1px solid ${user.status === "active" ? colors.warning : colors.accent}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
                             >
                               {user.status === "active" ? "Suspender" : "Activar"}
                             </button>
@@ -560,6 +558,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => setConfirmDelete(user)}
                               disabled={actionLoading === user.id}
+                              style={{ background: colors.dangerMuted, color: colors.dangerHover, border: `1px solid ${colors.danger}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
                             >
                               Eliminar
                             </button>
@@ -593,19 +592,34 @@ export default function AdminPage() {
           <div
             style={{
               background: colors.surface,
-              borderRadius: "16px",
-              padding: "40px",
+              borderRadius: radius.xl,
+              padding: "32px",
               maxWidth: "440px",
               width: "100%",
+              boxShadow: shadows.lg,
             }}
           >
-            <h2>¿Eliminar usuario?</h2>
-            <p>Esta acción es irreversible.</p>
-            <p>{confirmDelete.email}</p>
+            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 8px" }}>
+              ¿Eliminar usuario?
+            </h2>
+            <p style={{ fontFamily: fonts.body, fontSize: "14px", color: colors.textSecondary, margin: "0 0 4px" }}>
+              Esta acción es irreversible.
+            </p>
+            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: colors.textMuted, margin: "0 0 24px" }}>
+              {confirmDelete.email}
+            </p>
 
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button onClick={() => setConfirmDelete(null)}>Cancelar</button>
-              <button onClick={() => handleDelete(confirmDelete)}>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                style={{ background: colors.surface, color: colors.textSecondary, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDelete)}
+                style={{ background: colors.danger, color: "#ffffff", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
+              >
                 {actionLoading === confirmDelete.id ? "Eliminando..." : "Eliminar"}
               </button>
             </div>
@@ -629,40 +643,61 @@ export default function AdminPage() {
           <div
             style={{
               background: colors.surface,
-              borderRadius: "16px",
-              padding: "40px",
+              borderRadius: radius.xl,
+              padding: "32px",
               maxWidth: "440px",
               width: "100%",
+              boxShadow: shadows.lg,
             }}
           >
-            <h2>Actualizar suscripción</h2>
-            <p>{editSubscription.email}</p>
+            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 4px" }}>
+              Actualizar suscripción
+            </h2>
+            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: colors.textMuted, margin: "0 0 24px" }}>
+              {editSubscription.email}
+            </p>
 
-            <select
-              value={selectedPlan}
-              onChange={(event) =>
-                setSelectedPlan(event.target.value as SubscriptionPlan)
-              }
-            >
-              <option value="BASICO">Básico</option>
-              <option value="PROFESIONAL">Profesional</option>
-              <option value="EMPRESA">Empresa</option>
-            </select>
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                Plan
+              </label>
+              <select
+                value={selectedPlan}
+                onChange={(event) => setSelectedPlan(event.target.value as SubscriptionPlan)}
+                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: colors.textPrimary, background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 12px", outline: "none" }}
+              >
+                <option value="BASICO">Básico</option>
+                <option value="PROFESIONAL">Profesional</option>
+                <option value="EMPRESA">Empresa</option>
+              </select>
+            </div>
 
-            <input
-              type="number"
-              min={1}
-              max={365}
-              value={daysToAdd}
-              onChange={(event) => setDaysToAdd(Number(event.target.value))}
-            />
+            <div style={{ marginBottom: "24px" }}>
+              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                Días a agregar
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={daysToAdd}
+                onChange={(event) => setDaysToAdd(Number(event.target.value))}
+                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: colors.textPrimary, background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 12px", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
 
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button onClick={() => setEditSubscription(null)}>Cancelar</button>
-              <button onClick={handleUpdateSubscription}>
-                {actionLoading === `${editSubscription.id}_sub`
-                  ? "Guardando..."
-                  : "Guardar"}
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setEditSubscription(null)}
+                style={{ background: colors.surface, color: colors.textSecondary, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateSubscription}
+                style={{ background: colors.accent, color: "#ffffff", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
+              >
+                {actionLoading === `${editSubscription.id}_sub` ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>
