@@ -127,7 +127,7 @@ export default function TaxReportsPage() {
             Borradores internos auditables para soporte DDJJ.
           </p>
 
-          <Link href="/tax/declarations" className={`${ui.buttonSecondary} mt-3`}>
+          <Link href="/tributario" className={`${ui.buttonSecondary} mt-3`}>
             Abrir DDJJ
           </Link>
         </div>
