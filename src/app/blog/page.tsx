@@ -97,9 +97,33 @@ export default function BlogPage() {
           justifyContent: "space-between",
         }}
       >
-        <Link href="/bienvenida" style={{ textDecoration: "none" }}>
-          <Logo variant="light" size="lg" showSubtitle />
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <Link href="/bienvenida" style={{ textDecoration: "none" }}>
+            <Logo variant="light" size="lg" showSubtitle />
+          </Link>
+          <Link
+            href="/bienvenida"
+            style={{
+              fontSize: "14px",
+              color: "#64748B",
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M13 8H3M7 4L3 8l4 4"
+                stroke="#64748B"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Inicio
+          </Link>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Link
             href="/login"
@@ -192,8 +216,12 @@ export default function BlogPage() {
           }}
         >
           {ARTICLES.map((article) => (
-            <article
+            <Link
               key={article.slug}
+              href={`/blog/${article.slug}`}
+              style={{ textDecoration: "none", display: "contents" }}
+            >
+            <article
               style={{
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.07)",
@@ -202,6 +230,8 @@ export default function BlogPage() {
                 display: "flex",
                 flexDirection: "column",
                 gap: "0",
+                cursor: "pointer",
+                transition: "border-color 0.15s ease",
               }}
             >
               <div
@@ -272,10 +302,9 @@ export default function BlogPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: "4px",
-                    cursor: "default",
                   }}
                 >
-                  Próximamente
+                  Leer artículo
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                     <path
                       d="M3 8h10M9 4l4 4-4 4"
@@ -288,6 +317,7 @@ export default function BlogPage() {
                 </span>
               </div>
             </article>
+            </Link>
           ))}
         </div>
       </section>
