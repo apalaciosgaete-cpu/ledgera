@@ -392,7 +392,7 @@ export default function TributarioPage() {
                     onClick={() => download(decl)}
                     disabled={busy}
                     title="Descargar CSV"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-alt)]"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] font-bold transition hover:bg-[var(--color-surface-alt)]"
                   >
                     {processing === `${decl.id}:export` ? "…" : "↓"}
                   </button>
