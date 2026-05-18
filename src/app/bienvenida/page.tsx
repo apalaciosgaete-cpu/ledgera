@@ -648,6 +648,179 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Cómo funciona ──────────────────────────────────────────────────── */}
+      <section style={{ padding: "7rem 2rem", background: "#071520" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "5rem" }}>
+            <h2 style={{ ...h2Style, maxWidth: "600px", margin: "0 auto 1rem" }}>
+              3 pasos para declarar sin errores
+            </h2>
+            <p style={subStyle}>
+              De tus movimientos en el exchange a tu DDJJ verificable en minutos.
+            </p>
+          </div>
+
+          {/* Steps */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "0",
+              position: "relative",
+            }}
+          >
+            {/* Línea conectora (solo desktop) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "40px",
+                left: "calc(16.66% + 20px)",
+                right: "calc(16.66% + 20px)",
+                height: "2px",
+                background: "linear-gradient(to right, rgba(22,163,74,0.4), rgba(22,163,74,0.2), rgba(22,163,74,0.4))",
+                zIndex: 0,
+              }}
+            />
+
+            {[
+              {
+                num: "01",
+                title: "Registra tus movimientos",
+                detail: "Importa tu historial en CSV desde Binance, Buda u Orionx, o ingresa cada operación manualmente. Ledgera acepta compras, ventas e intercambios.",
+                color: "#16A34A",
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                ),
+              },
+              {
+                num: "02",
+                title: "El motor FIFO calcula todo",
+                detail: "Ledgera aplica el método FIFO con el tipo de cambio BCCh de cada fecha. Determina tu costo base, ganancia realizada y clasifica cada evento según normativa SII.",
+                color: "#7C3AED",
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  </svg>
+                ),
+              },
+              {
+                num: "03",
+                title: "Descarga tu DDJJ verificable",
+                detail: "Genera tu declaración en PDF o CSV con código único y hash de integridad. El reporte es verificable públicamente y sirve como respaldo ante el SII.",
+                color: "#F59E0B",
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <path d="M9 15l2 2 4-4" />
+                  </svg>
+                ),
+              },
+            ].map((step) => (
+              <div
+                key={step.num}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  padding: "0 2rem 0",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                {/* Círculo numerado */}
+                <div
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: "50%",
+                    background: `${step.color}14`,
+                    border: `2px solid ${step.color}40`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "1.75rem",
+                    position: "relative",
+                  }}
+                >
+                  {step.icon}
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-10px",
+                      right: "-10px",
+                      width: 26,
+                      height: 26,
+                      borderRadius: "50%",
+                      background: step.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      color: "#ffffff",
+                      fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+                    }}
+                  >
+                    {step.num.replace("0", "")}
+                  </span>
+                </div>
+
+                <h3
+                  style={{
+                    fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: "#F1F5F9",
+                    margin: "0 0 12px",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {step.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: "15px",
+                    color: "#94A3B8",
+                    margin: 0,
+                    lineHeight: 1.65,
+                    maxWidth: "280px",
+                  }}
+                >
+                  {step.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Link al blog */}
+          <div style={{ textAlign: "center", marginTop: "3.5rem" }}>
+            <Link
+              href="/blog/como-declarar-criptomonedas-sii-chile"
+              style={{
+                fontSize: "14px",
+                color: "#4ADE80",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: 500,
+              }}
+            >
+              Leer guía completa de declaración
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="#4ADE80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── Para quién ─────────────────────────────────────────────────────── */}
       <section style={{ padding: "7rem 2rem", background: "#071520" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -1108,7 +1281,7 @@ export default function LandingPage() {
 
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
       <section style={{ padding: "7rem 2rem", background: "#071520" }}>
-        <div style={{ maxWidth: "760px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
             <h2
               style={{
@@ -1121,72 +1294,211 @@ export default function LandingPage() {
             </h2>
             <p style={subStyle}>Todo lo que necesitas saber antes de empezar.</p>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {faqs.map((faq, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                }}
-              >
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 320px",
+              gap: "40px",
+              alignItems: "start",
+            }}
+          >
+            {/* Columna izquierda: acordeón */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {faqs.map((faq, i) => (
+                <div
+                  key={i}
                   style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "1.125rem 1.5rem",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    gap: "1rem",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.09)",
+                    borderRadius: "12px",
+                    overflow: "hidden",
                   }}
                 >
-                  <span
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     style={{
-                      fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-                      fontSize: "15px",
-                      fontWeight: 600,
-                      color: "#F1F5F9",
-                      lineHeight: 1.4,
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "1.125rem 1.5rem",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      gap: "1rem",
                     }}
                   >
-                    {faq.q}
-                  </span>
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 18 18"
-                    fill="none"
+                    <span
+                      style={{
+                        fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+                        fontSize: "15px",
+                        fontWeight: 600,
+                        color: "#F1F5F9",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {faq.q}
+                    </span>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      fill="none"
+                      style={{
+                        flexShrink: 0,
+                        transition: "transform 0.2s ease",
+                        transform: openFaq === i ? "rotate(180deg)" : "rotate(0deg)",
+                      }}
+                    >
+                      <path
+                        d="M4 6l5 5 5-5"
+                        stroke="#64748B"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {openFaq === i && (
+                    <div style={{ padding: "0 1.5rem 1.25rem" }}>
+                      <p style={{ fontSize: "14px", color: "#94A3B8", margin: 0, lineHeight: 1.7 }}>
+                        {faq.a}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Columna derecha: panel CTA */}
+            <div
+              style={{
+                position: "sticky",
+                top: "88px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+              }}
+            >
+              {/* Stats card */}
+              <div
+                style={{
+                  background: "rgba(22,163,74,0.06)",
+                  border: "1px solid rgba(22,163,74,0.18)",
+                  borderRadius: "16px",
+                  padding: "1.75rem",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#4ADE80",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    margin: "0 0 1.25rem",
+                  }}
+                >
+                  En Ledgera hoy
+                </p>
+                {[
+                  { stat: "+500", label: "usuarios activos" },
+                  { stat: "+45.000", label: "movimientos procesados" },
+                  { stat: "99.7%", label: "exactitud FIFO" },
+                ].map((item) => (
+                  <div
+                    key={item.stat}
                     style={{
-                      flexShrink: 0,
-                      transition: "transform 0.2s ease",
-                      transform: openFaq === i ? "rotate(180deg)" : "rotate(0deg)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 0",
+                      borderBottom: "1px solid rgba(255,255,255,0.05)",
                     }}
                   >
-                    <path
-                      d="M4 6l5 5 5-5"
-                      stroke="#64748B"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                {openFaq === i && (
-                  <div style={{ padding: "0 1.5rem 1.25rem" }}>
-                    <p style={{ fontSize: "14px", color: "#94A3B8", margin: 0, lineHeight: 1.7 }}>
-                      {faq.a}
-                    </p>
+                    <span style={{ fontSize: "13px", color: "#94A3B8" }}>{item.label}</span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        color: "#4ADE80",
+                      }}
+                    >
+                      {item.stat}
+                    </span>
                   </div>
-                )}
+                ))}
               </div>
-            ))}
+
+              {/* CTA card */}
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "16px",
+                  padding: "1.75rem",
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    color: "#F1F5F9",
+                    margin: "0 0 8px",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  ¿Tienes más preguntas?
+                </p>
+                <p style={{ fontSize: "13px", color: "#64748B", margin: "0 0 1.25rem", lineHeight: 1.5 }}>
+                  Escríbenos por WhatsApp o crea tu cuenta gratis y explora sin compromiso.
+                </p>
+                <Link
+                  href="/register"
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    padding: "11px 16px",
+                    borderRadius: "9px",
+                    background: "#16A34A",
+                    color: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Empezar gratis — 30 días
+                </Link>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "10px 16px",
+                    borderRadius: "9px",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#94A3B8",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    textDecoration: "none",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#4ADE80">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                  Consultar por WhatsApp
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
