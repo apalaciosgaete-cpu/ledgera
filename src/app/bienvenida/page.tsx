@@ -398,13 +398,26 @@ export default function LandingPage() {
         <Logo variant="light" size="lg" showSubtitle />
 
         {/* Desktop nav */}
-        <div className="hidden sm:flex" style={{ alignItems: "center", gap: "8px" }}>
+        <div className="hidden sm:flex" style={{ alignItems: "center", gap: "4px" }}>
+          {[
+            { label: "Quiénes somos", href: "#quienes-somos" },
+            { label: "Cómo funciona", href: "#como-funciona" },
+            { label: "Blog", href: "/blog" },
+          ].map((item) => (
+            <Link key={item.label} href={item.href}
+              onMouseEnter={() => setHoveredNav(item.label)}
+              onMouseLeave={() => setHoveredNav(null)}
+              style={{ fontSize: "14px", fontWeight: 500, color: hoveredNav === item.label ? "#F1F5F9" : "#94A3B8", textDecoration: "none", padding: "8px 14px", borderRadius: "8px", background: hoveredNav === item.label ? "rgba(255,255,255,0.06)" : "transparent", transition: "all 0.15s ease" }}>
+              {item.label}
+            </Link>
+          ))}
+          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)", margin: "0 8px" }} />
           <Link href="/login" onMouseEnter={() => setHoveredNav("login")} onMouseLeave={() => setHoveredNav(null)}
-            style={{ fontSize: "15px", fontWeight: 500, color: hoveredNav === "login" ? "#F1F5F9" : "#94A3B8", textDecoration: "none", padding: "8px 18px", borderRadius: "8px", background: hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent", transition: "all 0.15s ease" }}>
+            style={{ fontSize: "14px", fontWeight: 500, color: hoveredNav === "login" ? "#F1F5F9" : "#94A3B8", textDecoration: "none", padding: "8px 14px", borderRadius: "8px", background: hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent", transition: "all 0.15s ease" }}>
             Iniciar sesión
           </Link>
           <Link href="/register" onMouseEnter={() => setHoveredNav("register")} onMouseLeave={() => setHoveredNav(null)}
-            style={{ fontSize: "15px", fontWeight: 600, color: "#ffffff", textDecoration: "none", padding: "9px 20px", borderRadius: "8px", background: hoveredNav === "register" ? "#15803D" : "#16A34A", transition: "all 0.15s ease" }}>
+            style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", textDecoration: "none", padding: "9px 18px", borderRadius: "8px", background: hoveredNav === "register" ? "#15803D" : "#16A34A", transition: "all 0.15s ease" }}>
             Comenzar gratis
           </Link>
         </div>
@@ -421,7 +434,18 @@ export default function LandingPage() {
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="flex sm:hidden" style={{ flexDirection: "column", background: "rgba(10,31,46,0.97)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.5rem", gap: "10px", position: "sticky", top: "68px", zIndex: 99 }}>
+        <div className="flex sm:hidden" style={{ flexDirection: "column", background: "rgba(10,31,46,0.97)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.5rem", gap: "4px", position: "sticky", top: "68px", zIndex: 99 }}>
+          {[
+            { label: "Quiénes somos", href: "#quienes-somos" },
+            { label: "Cómo funciona", href: "#como-funciona" },
+            { label: "Blog", href: "/blog" },
+          ].map((item) => (
+            <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: "14px", fontWeight: 500, color: "#94A3B8", textDecoration: "none", padding: "10px 0" }}>
+              {item.label}
+            </Link>
+          ))}
+          <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
           <Link href="/login" onClick={() => setMobileMenuOpen(false)}
             style={{ fontSize: "15px", fontWeight: 500, color: "#94A3B8", textDecoration: "none", padding: "10px 0" }}>
             Iniciar sesión
@@ -437,9 +461,9 @@ export default function LandingPage() {
       <HeroCarousel />
 
       {/* ── El problema ────────────────────────────────────────────────────── */}
-      <section style={{ padding: "7rem 2rem", background: "#071520" }}>
+      <section style={{ padding: "5rem 2rem", background: "#071520" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <h2 style={{ ...h2Style, maxWidth: "700px", margin: "0 auto 1rem" }}>
               Operar con criptomonedas
               <br />
@@ -508,7 +532,7 @@ export default function LandingPage() {
       <div
         style={{
           background: "linear-gradient(to bottom, #071520, #0A1F2E)",
-          padding: "2.5rem 2rem",
+          padding: "1.5rem 2rem",
           textAlign: "center",
         }}
       >
@@ -533,9 +557,9 @@ export default function LandingPage() {
       </div>
 
       {/* ── La solución ────────────────────────────────────────────────────── */}
-      <section style={{ padding: "7rem 2rem", background: "#0A1F2E" }}>
+      <section style={{ padding: "5rem 2rem", background: "#0A1F2E" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <h2 style={{ ...h2Style, maxWidth: "700px", margin: "0 auto 1rem" }}>
               Todo lo que necesitas
               <br />
@@ -649,9 +673,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Cómo funciona ──────────────────────────────────────────────────── */}
-      <section style={{ padding: "7rem 2rem", background: "#071520" }}>
+      <section id="como-funciona" style={{ padding: "5rem 2rem", background: "#071520" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "5rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2 style={{ ...h2Style, maxWidth: "600px", margin: "0 auto 1rem" }}>
               3 pasos para declarar sin errores
             </h2>
@@ -822,9 +846,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Para quién ─────────────────────────────────────────────────────── */}
-      <section style={{ padding: "7rem 2rem", background: "#071520" }}>
+      <section id="quienes-somos" style={{ padding: "5rem 2rem", background: "#071520" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <h2 style={{ ...h2Style, maxWidth: "600px", margin: "0 auto 1rem" }}>
               Diseñado para cada perfil
             </h2>
@@ -925,7 +949,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Prueba social ──────────────────────────────────────────────────── */}
-      <section style={{ padding: "6rem 2rem", background: "#071520" }}>
+      <section style={{ padding: "4rem 2rem", background: "#071520" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           {/* Stats */}
           <div
@@ -933,7 +957,7 @@ export default function LandingPage() {
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
               gap: "8px",
-              marginBottom: "5rem",
+              marginBottom: "3rem",
               textAlign: "center",
             }}
           >
@@ -1075,7 +1099,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Precios ────────────────────────────────────────────────────────── */}
-      <section style={{ padding: "7rem 2rem", background: "#0A1F2E" }}>
+      <section style={{ padding: "5rem 2rem", background: "#0A1F2E" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2 style={{ ...h2Style, margin: "0 auto 2rem" }}>Simple y transparente</h2>
@@ -1280,7 +1304,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
-      <section style={{ padding: "7rem 2rem", background: "#071520" }}>
+      <section style={{ padding: "5rem 2rem", background: "#071520" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
             <h2
@@ -1505,7 +1529,7 @@ export default function LandingPage() {
 
       {/* ── CTA Final ──────────────────────────────────────────────────────── */}
       <section
-        style={{ padding: "8rem 2rem", background: "#0A1F2E", textAlign: "center" }}
+        style={{ padding: "5rem 2rem", background: "#0A1F2E", textAlign: "center" }}
       >
         <h2
           style={{
