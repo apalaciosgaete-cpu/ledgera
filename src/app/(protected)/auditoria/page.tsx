@@ -409,7 +409,7 @@ export default function AuditoriaPage() {
                   <div key={reg.id} style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "10px", padding: "0.875rem 1.25rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
                     <div style={{ flex: 1, minWidth: "200px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                        <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#94A3B8", background: "#EEF2FF", padding: "2px 8px", borderRadius: "4px" }}>#{registros.length - index}</span>
+                        <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#94A3B8", background: "#EEF2FF", padding: "2px 8px", borderRadius: "4px" }}>#{index + 1}</span>
                         <span style={{ fontSize: "0.75rem", color: "#94A3B8" }}>{formatDateShort(reg.createdAt)}</span>
                       </div>
                       <p style={{ margin: 0, fontFamily: "monospace", fontSize: "0.75rem", color: "#94A3B8", wordBreak: "break-all" }}>{reg.contentHash}</p>

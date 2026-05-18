@@ -247,7 +247,7 @@ export async function GET(req: NextRequest) {
         snapshots.forEach((snap, i) => {
           if (y + 24 > CONTENT_BOTTOM) { y = newPage(); y = drawTableHeader(doc, snapCols, y); }
           y = drawRow(doc, [
-            { text: String(snapshots.length - i), x: 46,  width: 24  },
+            { text: String(i + 1), x: 46,  width: 24  },
             { text: formatDateTime(snap.createdAt), x: 74,  width: 90 },
             { text: snap.contentHash,              x: 168, width: 382, color: "#475569" },
           ], y, 24, i);

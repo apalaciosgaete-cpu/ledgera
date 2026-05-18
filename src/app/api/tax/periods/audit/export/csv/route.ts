@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
       lines.push(row("Sin registros"));
     } else {
       snapshots.forEach((snap, i) => {
-        lines.push(row(snapshots.length - i, formatDateTime(snap.createdAt), snap.contentHash));
+        lines.push(row(i + 1, formatDateTime(snap.createdAt), snap.contentHash));
       });
     }
 
