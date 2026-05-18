@@ -443,13 +443,17 @@ export default function PanelPage() {
           </div>
         </div>
 
-        {/* Métricas */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px", marginBottom: "1.25rem" }}>
-          <MetricCard label="Movimientos"       value={health.summary.totalMovements}    note="total portafolio" />
-          <MetricCard label="Ventas"            value={health.summary.totalSellMovements} note="operaciones SELL" />
-          <MetricCard label="Eventos tributarios" value={health.summary.totalTaxEvents}  note="generados por motor" />
-          <MetricCard label="Sin cobertura"     value={health.summary.sellWithoutEvent}  note="ventas pendientes"     highlight={health.summary.sellWithoutEvent > 0} />
-          <MetricCard label="Huérfanos"         value={integrity.summary.orphanEvents}   note="sin movimiento padre"  highlight={integrity.summary.orphanEvents > 0} />
+        {/* Métricas de alerta */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px", marginBottom: "10px" }}>
+          <MetricCard label="Sin cobertura" value={health.summary.sellWithoutEvent} note="ventas pendientes"    highlight={health.summary.sellWithoutEvent > 0} />
+          <MetricCard label="Huérfanos"     value={integrity.summary.orphanEvents}  note="sin movimiento padre" highlight={integrity.summary.orphanEvents > 0} />
+        </div>
+
+        {/* Métricas informativas */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "1.25rem" }}>
+          <MetricCard label="Movimientos" value={health.summary.totalMovements}     note="total portafolio" />
+          <MetricCard label="Ventas"      value={health.summary.totalSellMovements} note="operaciones SELL" />
+          <MetricCard label="Eventos"     value={health.summary.totalTaxEvents}     note="generados por motor" />
         </div>
 
         {/* Alertas */}
