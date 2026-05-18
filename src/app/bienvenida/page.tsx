@@ -247,6 +247,13 @@ export default function LandingPage() {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) router.push("/portafolio");
@@ -375,7 +382,7 @@ export default function LandingPage() {
           {[
             { label: "Quiénes somos", href: "#quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
-            { label: "Preguntas", href: "#faq" },
+            { label: "Preguntas", href: "/preguntas" },
             { label: "Blog", href: "/blog" },
           ].map((item) => (
             <Link key={item.label} href={item.href}
@@ -412,7 +419,7 @@ export default function LandingPage() {
           {[
             { label: "Quiénes somos", href: "#quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
-            { label: "Preguntas", href: "#faq" },
+            { label: "Preguntas", href: "/preguntas" },
             { label: "Blog", href: "/blog" },
           ].map((item) => (
             <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
@@ -1092,45 +1099,42 @@ export default function LandingPage() {
               gridTemplateColumns: "repeat(4, minmax(220px, 1fr))",
               gap: "16px",
               minWidth: "860px",
+              paddingTop: "28px",
             }}
           >
             {plans.map((plan) => (
-              <div
-                key={plan.key}
-                style={{
-                  background: plan.highlight
-                    ? "rgba(22,163,74,0.08)"
-                    : "rgba(255,255,255,0.03)",
-                  border: plan.highlight
-                    ? "1px solid rgba(22,163,74,0.35)"
-                    : "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: "14px",
-                  padding: "2rem",
-                  position: "relative",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
+              <div key={plan.key} style={{ position: "relative" }}>
                 {plan.highlight && (
                   <div
                     style={{
                       position: "absolute",
-                      top: "-13px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      background: "#16A34A",
-                      color: "#ffffff",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      padding: "4px 14px",
-                      borderRadius: "100px",
-                      whiteSpace: "nowrap",
-                      letterSpacing: "0.06em",
+                      top: "-22px",
+                      left: 0,
+                      right: 0,
+                      display: "flex",
+                      justifyContent: "center",
                     }}
                   >
-                    MÁS POPULAR
+                    <span style={{ background: "#16A34A", color: "#ffffff", fontSize: "11px", fontWeight: 700, padding: "4px 14px", borderRadius: "100px", whiteSpace: "nowrap", letterSpacing: "0.06em" }}>
+                      MÁS POPULAR
+                    </span>
                   </div>
                 )}
+                <div
+                  style={{
+                    background: plan.highlight
+                      ? "rgba(22,163,74,0.08)"
+                      : "rgba(255,255,255,0.03)",
+                    border: plan.highlight
+                      ? "1px solid rgba(22,163,74,0.35)"
+                      : "1px solid rgba(255,255,255,0.07)",
+                    borderRadius: "14px",
+                    padding: "2rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                  }}
+                >
                 <div style={{ marginBottom: "1.5rem" }}>
                   <h3
                     style={{
@@ -1246,6 +1250,7 @@ export default function LandingPage() {
                 >
                   {plan.cta}
                 </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -1480,6 +1485,35 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* ── Scroll to top ───────────────────────────────────────────────────── */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            position: "fixed",
+            bottom: "92px",
+            right: "28px",
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: "rgba(10,31,46,0.92)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 998,
+            backdropFilter: "blur(8px)",
+            transition: "opacity 0.2s ease",
+          }}
+          aria-label="Volver arriba"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 13V5M5 9l4-4 4 4" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
 
       {/* ── WhatsApp flotante ───────────────────────────────────────────────── */}
       <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={waStyle}>
