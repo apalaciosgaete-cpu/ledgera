@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
 
@@ -42,8 +41,7 @@ const NAV_LINKS = [
 ];
 
 export default function PreciosPage() {
-  const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -54,12 +52,6 @@ export default function PreciosPage() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) router.push("/portafolio");
-  }, [isAuthenticated, isLoading, router]);
-
-  if (isLoading) return null;
 
   const plans: Plan[] = [
     {
@@ -226,7 +218,7 @@ export default function PreciosPage() {
             Iniciar sesión
           </Link>
           <Link
-            href="/register"
+            href={isAuthenticated ? "/portafolio" : "/register"}
             onMouseEnter={() => setHoveredNav("register")}
             onMouseLeave={() => setHoveredNav(null)}
             style={{
@@ -240,7 +232,7 @@ export default function PreciosPage() {
               transition: "all 0.15s ease",
             }}
           >
-            Comenzar gratis
+            {isAuthenticated ? "Ir a mi cuenta" : "Comenzar gratis"}
           </Link>
         </div>
 
