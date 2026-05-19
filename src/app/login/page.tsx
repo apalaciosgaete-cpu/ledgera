@@ -123,6 +123,13 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
+      const pending = sessionStorage.getItem("pendingCheckout");
+      if (pending) {
+        sessionStorage.removeItem("pendingCheckout");
+        const { plan, billing: b } = JSON.parse(pending) as { plan: string; billing: string };
+        window.location.href = `/planes?autoCheckout=${plan}&billing=${b}`;
+        return;
+      }
       window.location.href = planParam
         ? `/planes?autoCheckout=${planParam}&billing=${billingParam}`
         : "/portafolio";

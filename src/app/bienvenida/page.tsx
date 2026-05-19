@@ -261,7 +261,8 @@ export default function LandingPage() {
 
   const handleCheckout = useCallback(async (planKey: string) => {
     if (!isAuthenticated) {
-      window.location.href = `/register?plan=${planKey}&billing=${billing}`;
+      sessionStorage.setItem("pendingCheckout", JSON.stringify({ plan: planKey, billing }));
+      window.location.href = "/register";
       return;
     }
     try {

@@ -80,13 +80,20 @@ function RegisterForm() {
       // 2. Login automático con las mismas credenciales
       try {
         await login(email, password);
+        const pending = sessionStorage.getItem("pendingCheckout");
+        if (pending) {
+          sessionStorage.removeItem("pendingCheckout");
+          const { plan, billing } = JSON.parse(pending) as { plan: string; billing: string };
+          window.location.href = `/planes?autoCheckout=${plan}&billing=${billing}`;
+          return;
+        }
         if (planParam) {
           window.location.href = `/planes?autoCheckout=${planParam}&billing=${billingParam}`;
           return;
         }
         router.push("/portafolio");
       } catch {
-        router.push(planParam ? `/login?plan=${planParam}&billing=${billingParam}` : "/login?registered=1");
+        router.push("/login?registered=1");
       }
 
     } catch {

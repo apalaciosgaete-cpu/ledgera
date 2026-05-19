@@ -60,7 +60,8 @@ function PlanesContent() {
   const handleCheckout = useCallback(async (planKey: string, billingOverride?: "monthly" | "annual") => {
     const activeBilling = billingOverride ?? billing;
     if (!isAuthenticated) {
-      window.location.href = `/register?plan=${planKey}&billing=${activeBilling}`;
+      sessionStorage.setItem("pendingCheckout", JSON.stringify({ plan: planKey, billing: activeBilling }));
+      window.location.href = "/register";
       return;
     }
     setLoadingPlan(planKey);
