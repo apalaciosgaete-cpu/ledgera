@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, url: session.url });
   } catch (error) {
-    console.error("[stripe/checkout]", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[stripe/checkout] FULL ERROR:", msg);
     return NextResponse.json(
       { ok: false, message: "No se pudo crear la sesión de pago." },
       { status: 500 },
