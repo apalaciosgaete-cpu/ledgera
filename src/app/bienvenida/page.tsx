@@ -276,6 +276,8 @@ export default function LandingPage() {
           auth:   true,
         });
         if (json.url) { window.location.href = json.url; return; }
+      } catch {
+        router.push(`/checkout?plan=${stripeKey}&billing=${bill}`);
       } finally { setCheckingOut(false); }
       return;
     }
