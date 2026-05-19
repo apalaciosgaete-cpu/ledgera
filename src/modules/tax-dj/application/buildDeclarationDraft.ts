@@ -7,6 +7,7 @@ import type {
   TaxDeclarationSymbolSummary,
   TaxDeclarationType,
 } from "@/modules/tax-dj/domain/declaration";
+import { round, normalizeSymbol } from "@/shared/utils/math";
 
 export type TaxEventForDeclaration = {
   id: string;
@@ -33,15 +34,6 @@ type BuildDeclarationDraftInput = {
   declarationType: TaxDeclarationType;
   events: TaxEventForDeclaration[];
 };
-
-function round(value: number, decimals = 8): number {
-  const factor = 10 ** decimals;
-  return Math.round((value + Number.EPSILON) * factor) / factor;
-}
-
-function normalizeSymbol(value: string): string {
-  return value.trim().toUpperCase();
-}
 
 function serializeEvent(event: TaxEventForDeclaration): TaxDeclarationEventLine {
   return {

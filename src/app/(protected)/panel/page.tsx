@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/modules/identity/client/authContext";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -292,11 +294,162 @@ function Banner2FA({ onDismiss }: { onDismiss: () => void }) {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
+// ─── Subscription Card ───────────────────────────────────────────────────────
+
+const PLAN_LABELS_PANEL: Record<string, string> = {
+  BASICO:      "Gratuito",
+  PERSONAL:    "Personal",
+  PROFESIONAL: "Contador",
+  EMPRESA:     "Empresa",
+};
+
+const PLAN_COLORS_PANEL: Record<string, string> = {
+  BASICO:      "#64748B",
+  PERSONAL:    "#10B981",
+  PROFESIONAL: "#7C3AED",
+  EMPRESA:     "#0EA5E9",
+};
+
+const PLAN_PRICES_PANEL: Record<string, { mensual: number; anual: number }> = {
+  PERSONAL:    { mensual: 4990,  anual: 49900  },
+  PROFESIONAL: { mensual: 14990, anual: 149900 },
+  EMPRESA:     { mensual: 29990, anual: 299900 },
+};
+
+interface StripeSub {
+  status:            string;
+  currentPeriodEnd:  string;
+  cancelAtPeriodEnd: boolean;
+  card:              { brand: string; last4: string; expMonth: number; expYear: number } | null;
+}
+
+function SubscriptionCard({ plan, stripeSub, onUpgrade, onPortal, upgrading }: {
+  plan:       string;
+  stripeSub:  StripeSub | null;
+  onUpgrade:  (p: "PERSONAL" | "PROFESIONAL" | "EMPRESA", billing: "mensual" | "anual") => void;
+  onPortal:   () => void;
+  upgrading:  boolean;
+}) {
+  const [billing, setBilling] = useState<"mensual" | "anual">("mensual");
+  const color   = PLAN_COLORS_PANEL[plan] ?? "#64748B";
+  const daysLeft = stripeSub
+    ? Math.max(0, Math.ceil((new Date(stripeSub.currentPeriodEnd).getTime() - Date.now()) / 86400000))
+    : null;
+
+  const upgradePlans = (["PERSONAL", "PROFESIONAL", "EMPRESA"] as const).filter(p => p !== plan);
+
+  return (
+    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "1.25rem" }}>
+      {/* Fila superior: plan actual + estado */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", marginBottom: stripeSub ? 0 : "0.875rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "11px", fontWeight: 700, color, background: `${color}18`, border: `1px solid ${color}30`, borderRadius: "6px", padding: "3px 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            {PLAN_LABELS_PANEL[plan] ?? plan}
+          </span>
+          {stripeSub && (
+            <span style={{ fontSize: "12px", color: "#64748B" }}>
+              {stripeSub.cancelAtPeriodEnd ? `Cancela en ${daysLeft} días` : `Renueva en ${daysLeft} días`}
+            </span>
+          )}
+          {stripeSub?.card && (
+            <span style={{ fontSize: "12px", color: "#94A3B8" }}>
+              {stripeSub.card.brand.toUpperCase()} ···{stripeSub.card.last4}
+            </span>
+          )}
+        </div>
+        {stripeSub && (
+          <button type="button" onClick={onPortal} disabled={upgrading}
+            style={{ padding: "7px 14px", borderRadius: "7px", border: "1px solid #E2E8F0", background: "#fff", color: "#475569", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+            Gestionar suscripción →
+          </button>
+        )}
+      </div>
+
+      {/* Planes de upgrade (solo si no tiene suscripción activa) */}
+      {!stripeSub && plan === "BASICO" && (
+        <>
+          {/* Toggle mensual / anual */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
+            <span style={{ fontSize: "12px", color: "#64748B" }}>Facturación:</span>
+            {(["mensual", "anual"] as const).map(b => (
+              <button key={b} type="button" onClick={() => setBilling(b)}
+                style={{ padding: "4px 12px", borderRadius: "6px", border: "1px solid #E2E8F0", background: billing === b ? "#0F2A3D" : "#fff", color: billing === b ? "#fff" : "#64748B", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                {b === "mensual" ? "Mensual" : "Anual  −17%"}
+              </button>
+            ))}
+          </div>
+
+          {/* Cards de planes */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+            {upgradePlans.map(p => {
+              const c      = PLAN_COLORS_PANEL[p];
+              const prices = PLAN_PRICES_PANEL[p];
+              const price  = billing === "mensual" ? prices.mensual : Math.round(prices.anual / 12);
+              return (
+                <div key={p} style={{ border: `1px solid ${c}30`, borderRadius: "10px", padding: "0.875rem", background: `${c}06` }}>
+                  <p style={{ margin: "0 0 2px", fontSize: "11px", fontWeight: 700, color: c, textTransform: "uppercase", letterSpacing: "0.06em" }}>{PLAN_LABELS_PANEL[p]}</p>
+                  <p style={{ margin: "0 0 10px", fontSize: "18px", fontWeight: 700, color: "#0F2A3D", lineHeight: 1 }}>
+                    ${price.toLocaleString("es-CL")}
+                    <span style={{ fontSize: "11px", fontWeight: 400, color: "#94A3B8" }}>/mes</span>
+                  </p>
+                  <button type="button" onClick={() => onUpgrade(p, billing)} disabled={upgrading}
+                    style={{ width: "100%", padding: "7px 0", borderRadius: "7px", border: "none", background: c, color: "#fff", fontSize: "12px", fontWeight: 700, cursor: upgrading ? "not-allowed" : "pointer", opacity: upgrading ? 0.7 : 1 }}>
+                    {upgrading ? "Redirigiendo..." : "Contratar →"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function PanelPage() {
+  const searchParams   = useSearchParams();
+  const { user }       = useAuth();
+  const plan           = (user as { subscriptionPlan?: string })?.subscriptionPlan ?? "BASICO";
+
   const [data,           setData]           = useState<PanelData | null>(null);
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState<string | null>(null);
   const [show2FABanner,  setShow2FABanner]  = useState(false);
+  const [stripeSub,      setStripeSub]      = useState<StripeSub | null>(null);
+  const [upgrading,      setUpgrading]      = useState(false);
+  const [checkoutOk,     setCheckoutOk]     = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") setCheckoutOk(true);
+  }, [searchParams]);
+
+  const fetchStripeSub = useCallback(async () => {
+    try {
+      const res  = await fetch("/api/stripe/subscription");
+      const json = await res.json();
+      if (json.ok && json.data) setStripeSub(json.data);
+    } catch { /* silencioso */ }
+  }, []);
+
+  useEffect(() => { void fetchStripeSub(); }, [fetchStripeSub]);
+
+  async function handleUpgrade(targetPlan: "PERSONAL" | "PROFESIONAL" | "EMPRESA", billing: "mensual" | "anual") {
+    setUpgrading(true);
+    try {
+      const res  = await fetch("/api/stripe/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: targetPlan, billing }) });
+      const json = await res.json();
+      if (json.url) window.location.href = json.url;
+    } catch { setUpgrading(false); }
+  }
+
+  async function handlePortal() {
+    setUpgrading(true);
+    try {
+      const res  = await fetch("/api/stripe/portal", { method: "POST" });
+      const json = await res.json();
+      if (json.url) window.location.href = json.url;
+    } catch { setUpgrading(false); }
+  }
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -399,6 +552,14 @@ export default function PanelPage() {
             Estado consolidado de tu situación tributaria
           </p>
         </div>
+
+        {/* ── Checkout success ── */}
+        {checkoutOk && (
+          <div style={{ background: "rgba(22,163,74,0.07)", border: "1px solid rgba(22,163,74,0.22)", borderRadius: "12px", padding: "0.875rem 1.25rem", marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#15803D" }}>¡Suscripción activada! Bienvenido al plan {PLAN_LABELS_PANEL[plan]}.</span>
+            <button type="button" onClick={() => setCheckoutOk(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#94A3B8", fontSize: "16px", lineHeight: 1 }}>×</button>
+          </div>
+        )}
 
         {/* ── Banner 2FA ── */}
         {show2FABanner && (

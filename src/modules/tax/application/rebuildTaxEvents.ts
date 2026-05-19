@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { TAX_ENGINE_METADATA } from "@/modules/tax/domain/taxEngineVersion";
 import { resolveTaxCategory } from "@/modules/tax/domain/resolveTaxCategory";
 import { createTaxPeriodSnapshot } from "@/modules/tax/infrastructure/taxPeriodSnapshotRepository";
+import { round, normalizeSymbol } from "@/shared/utils/math";
 
 interface InventoryLot {
   quantity:    number;
@@ -63,15 +64,6 @@ interface RebuildResult {
   error?: unknown;
 }
 
-function round(value: number, decimals = 8) {
-  const factor = 10 ** decimals;
-  return Math.round((value + Number.EPSILON) * factor) / factor;
-}
-
-function normalizeSymbol(symbol: string): string {
-  return String(symbol ?? "").trim().toUpperCase();
-}
-
 function addBuyLot(params: {
   inventory:  Record<string, InventoryLot[]>;
   symbol:     string;
@@ -128,15 +120,20 @@ async function fetchMindicadorRate(date: Date): Promise<number | null> {
   }
 }
 
-async function getUsdClp(date: Date): Promise<number> {
+async function getUsdClp(date: Date, cache: Map<string, number>): Promise<number> {
   const dateStr = date.toISOString().slice(0, 10);
+  if (cache.has(dateStr)) return cache.get(dateStr)!;
+
   const dateKey = new Date(`${dateStr}T00:00:00.000Z`);
 
   try {
     const exact = await prisma.fxRate.findFirst({
       where: { currency: "USD", date: dateKey },
     });
-    if (exact && Number(exact.valueClp) > 0) return Number(exact.valueClp);
+    if (exact && Number(exact.valueClp) > 0) {
+      cache.set(dateStr, Number(exact.valueClp));
+      return Number(exact.valueClp);
+    }
   } catch { /* continuar */ }
 
   const rate = await fetchMindicadorRate(date);
@@ -148,6 +145,7 @@ async function getUsdClp(date: Date): Promise<number> {
         create: { currency: "USD", date: dateKey, valueClp: rate, source: "mindicador" },
       });
     } catch { /* no bloquear */ }
+    cache.set(dateStr, rate);
     return rate;
   }
 
@@ -156,9 +154,13 @@ async function getUsdClp(date: Date): Promise<number> {
       where:   { currency: "USD", date: { lte: dateKey } },
       orderBy: { date: "desc" },
     });
-    if (closest && Number(closest.valueClp) > 0) return Number(closest.valueClp);
+    if (closest && Number(closest.valueClp) > 0) {
+      cache.set(dateStr, Number(closest.valueClp));
+      return Number(closest.valueClp);
+    }
   } catch { /* continuar */ }
 
+  cache.set(dateStr, 950);
   return 950;
 }
 
@@ -223,6 +225,7 @@ export async function rebuildTaxEvents(userId: string): Promise<RebuildResult> {
     const yearSellCount:    Record<number, number>                                         = {};
     const symbolSellCount:  Record<string, number>                                         = {};
     const suggestedUpdates: Array<{ movementId: string; suggestedTaxCategory: string }>    = [];
+    const fxCache           = new Map<string, number>();
 
     for (const movement of movements) {
       const type     = movement.type;
@@ -279,7 +282,7 @@ export async function rebuildTaxEvents(userId: string): Promise<RebuildResult> {
         suggestedTaxCategory: resolved.suggestedTaxCategory,
       });
 
-      const usdClp = await getUsdClp(executedAt);
+      const usdClp = await getUsdClp(executedAt, fxCache);
 
       events.push({
         movementId:           movement.id,

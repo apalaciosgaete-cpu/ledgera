@@ -15,7 +15,15 @@ const DEFAULTS: Record<string, { value: string; category: string }> = {
   COMPANY_GIRO:                 { value: "",                 category: "company" },
   COMPANY_DIRECCION:            { value: "",                 category: "company" },
   COMPANY_REPRESENTANTE:        { value: "",                 category: "company" },
-  COMPANY_EMAIL:                { value: "admin@ledgera.cl", category: "company" },
+  COMPANY_EMAIL:                { value: "",                 category: "company" },
+  PN_NOMBRE:                    { value: "",                 category: "persona" },
+  PN_RUT:                       { value: "",                 category: "persona" },
+  PN_DIRECCION:                 { value: "",                 category: "persona" },
+  PN_COMUNA:                    { value: "",                 category: "persona" },
+  PN_CIUDAD:                    { value: "",                 category: "persona" },
+  PN_PAIS:                      { value: "Chile",            category: "persona" },
+  PN_TELEFONO:                  { value: "",                 category: "persona" },
+  PN_EMAIL:                     { value: "",                 category: "persona" },
   SECURITY_SESSION_HOURS:       { value: "24",               category: "security" },
   SECURITY_MAX_LOGIN_ATTEMPTS:  { value: "5",                category: "security" },
   SECURITY_REQUIRE_2FA:         { value: "false",            category: "security" },
@@ -25,7 +33,7 @@ const ALLOWED_KEYS_BY_ROLE: Record<string, string[]> = {
   admin:    Object.keys(DEFAULTS),
   empresa:  Object.keys(DEFAULTS).filter(k => k.startsWith("COMPANY_")),
   contador: Object.keys(DEFAULTS).filter(k => k.startsWith("COMPANY_")),
-  personal: [],
+  personal: Object.keys(DEFAULTS).filter(k => k.startsWith("PN_")),
 };
 
 export async function GET() {

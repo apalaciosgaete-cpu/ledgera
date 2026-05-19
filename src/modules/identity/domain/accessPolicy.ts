@@ -5,10 +5,7 @@ export type AccessPolicyUser = {
 };
 
 export function isAdmin(user: AccessPolicyUser): boolean {
-  return (
-    user.role?.toLowerCase() === "admin" ||
-    user.email.toLowerCase() === "admin@ledgera.cl"
-  );
+  return user.role?.toLowerCase() === "admin";
 }
 
 export function buildUserScopeWhere(user: AccessPolicyUser): { userId?: string } {

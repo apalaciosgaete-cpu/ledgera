@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
+import { round, normalizeSymbol } from "@/shared/utils/math";
 
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 
@@ -38,25 +39,6 @@ type TaxEventRow = {
   createdAt?: Date | null;
   updatedAt?: Date | null;
 };
-
-function round(
-  value: number,
-  decimals = 8,
-): number {
-  const factor = 10 ** decimals;
-
-  return (
-    Math.round(
-      (value + Number.EPSILON) * factor,
-    ) / factor
-  );
-}
-
-function normalizeSymbol(
-  value: string,
-): string {
-  return value.trim().toUpperCase();
-}
 
 function normalizeTaxCategory(
   value: string,

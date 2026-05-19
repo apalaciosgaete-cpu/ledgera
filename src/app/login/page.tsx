@@ -73,6 +73,8 @@ function LoginForm() {
   const { isAuthenticated, isLoading } = useAuth();
 
   const justRegistered = searchParams.get("registered") === "1";
+  const planParam      = searchParams.get("plan") as "PERSONAL" | "PROFESIONAL" | "EMPRESA" | null;
+  const billingParam   = (searchParams.get("billing") ?? "mensual") as "mensual" | "anual";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,7 +123,9 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-      window.location.href = "/portafolio";
+      window.location.href = planParam
+        ? `/planes?autoCheckout=${planParam}&billing=${billingParam}`
+        : "/portafolio";
     } catch (error) {
       setErrorMessage(
         resolveClientError(

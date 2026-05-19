@@ -259,6 +259,10 @@ model users {
   subscription_expires_at DateTime? @db.Timestamptz(6)
   twoFactorSecret         String?
   twoFactorEnabled        Boolean   @default(false)
+  stripe_customer_id      String?   @unique
+  stripe_subscription_id  String?   @unique
+  stripe_price_id         String?
+  stripe_status           String?
 
   portfolios              portfolios[]
   sessions                sessions[]

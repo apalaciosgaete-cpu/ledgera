@@ -69,7 +69,6 @@ function buildQuery(year: string, symbol: string) {
   const query = params.toString();
   return query ? `?${query}` : "";
 }
-console.log("RENDER TAX SUMMARY");
 export default function TaxSummaryPage() {
   const [rows, setRows] = useState<SummaryRow[]>([]);
   const [totals, setTotals] = useState({

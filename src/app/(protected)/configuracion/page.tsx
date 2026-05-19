@@ -13,11 +13,12 @@ type AuditEntry = {
   actorEmail: string | null;
   createdAt:  string;
 };
-type Section = "tributario" | "empresa" | "seguridad" | "integraciones" | "auditoria";
+type Section = "tributario" | "persona" | "empresa" | "seguridad" | "integraciones" | "auditoria";
 type TwoFAStep = "idle" | "setup" | "confirm" | "active" | "disable";
 
 const ALL_SECTIONS: { key: Section; label: string; description: string; roles: string[]; icon: React.ReactNode }[] = [
   { key: "tributario",    label: "Tributario",    description: "Motor FIFO y reglas SII",       roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg> },
+  { key: "persona",       label: "Persona natural", description: "Identidad del contribuyente", roles: ["admin","personal"],             icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
   { key: "empresa",       label: "Empresa",       description: "Identidad del contribuyente",   roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg> },
   { key: "seguridad",     label: "Seguridad",     description: "Sesiones y acceso",             roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> },
   { key: "integraciones", label: "Integraciones", description: "Exchanges y APIs externas",     roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M13 6h3a2 2 0 0 1 2 2v7" /><line x1="6" y1="9" x2="6" y2="21" /></svg> },
@@ -26,6 +27,7 @@ const ALL_SECTIONS: { key: Section; label: string; description: string; roles: s
 
 const SECTION_PREFIX: Record<Section, string> = {
   tributario:    "TAX_",
+  persona:       "PN_",
   empresa:       "COMPANY_",
   seguridad:     "SECURITY_",
   integraciones: "INTEGRATION_",
@@ -463,6 +465,43 @@ export default function ConfiguracionPage() {
                 </Field>
                 <Field label="Proveedor FX" hint="Fuente del valor USD/CLP histórico para calcular el mayor valor en pesos.">
                   <SelectInput value={str("TAX_FX_PROVIDER")} onChange={v => set("TAX_FX_PROVIDER", v)} options={[{ value: "mindicador", label: "Mindicador.cl — Banco Central de Chile" }, { value: "manual", label: "Manual — ingreso por período" }]} />
+                </Field>
+              </div>
+            </SectionCard>
+            <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
+          </>
+        )}
+
+        {/* PERSONA NATURAL */}
+        {section === "persona" && (
+          <>
+            <SectionCard title="Datos del contribuyente" description="Información personal que aparecerá en los reportes tributarios exportables">
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <Field label="Nombre completo">
+                  <TextInput value={str("PN_NOMBRE")} onChange={v => set("PN_NOMBRE", v)} placeholder="Ej: Juan Andrés Pérez González" />
+                </Field>
+                <Field label="RUT" hint="Con puntos y guión. Ej: 12.345.678-9">
+                  <TextInput value={str("PN_RUT")} onChange={v => set("PN_RUT", v)} placeholder="12.345.678-9" />
+                </Field>
+                <Field label="Dirección">
+                  <TextInput value={str("PN_DIRECCION")} onChange={v => set("PN_DIRECCION", v)} placeholder="Ej: Av. Las Condes 12345" />
+                </Field>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <Field label="Comuna">
+                    <TextInput value={str("PN_COMUNA")} onChange={v => set("PN_COMUNA", v)} placeholder="Ej: Las Condes" />
+                  </Field>
+                  <Field label="Ciudad">
+                    <TextInput value={str("PN_CIUDAD")} onChange={v => set("PN_CIUDAD", v)} placeholder="Ej: Santiago" />
+                  </Field>
+                </div>
+                <Field label="País">
+                  <TextInput value={str("PN_PAIS")} onChange={v => set("PN_PAIS", v)} placeholder="Chile" />
+                </Field>
+                <Field label="Teléfono">
+                  <TextInput value={str("PN_TELEFONO")} onChange={v => set("PN_TELEFONO", v)} placeholder="+56 9 1234 5678" type="tel" />
+                </Field>
+                <Field label="Email de contacto">
+                  <TextInput value={str("PN_EMAIL")} onChange={v => set("PN_EMAIL", v)} placeholder="correo@ejemplo.cl" type="email" />
                 </Field>
               </div>
             </SectionCard>

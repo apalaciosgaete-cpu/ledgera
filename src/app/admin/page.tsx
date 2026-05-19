@@ -8,7 +8,7 @@ import { Logo } from "@/components/brand/Logo";
 import { colors, fonts, radius, shadows } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
-type SubscriptionPlan = "BASICO" | "PROFESIONAL" | "EMPRESA";
+type SubscriptionPlan = "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
 type UserStatus = "active" | "inactive" | "suspended";
 type UserRole = "personal" | "contador" | "empresa" | "admin";
 
@@ -36,9 +36,24 @@ type MutationResponse<T = unknown> = {
 };
 
 const PLAN_LABELS: Record<SubscriptionPlan, string> = {
-  BASICO: "Básico",
-  PROFESIONAL: "Profesional",
-  EMPRESA: "Empresa",
+  BASICO:      "Básico",
+  PERSONAL:    "Personal",
+  PROFESIONAL: "Contador",
+  EMPRESA:     "Empresa",
+};
+
+const PLAN_PRICES: Record<SubscriptionPlan, number> = {
+  BASICO:      0,
+  PERSONAL:    4990,
+  PROFESIONAL: 14990,
+  EMPRESA:     29990,
+};
+
+const PLAN_COLORS: Record<SubscriptionPlan, string> = {
+  BASICO:      "#64748B",
+  PERSONAL:    "#10B981",
+  PROFESIONAL: "#7C3AED",
+  EMPRESA:     "#0EA5E9",
 };
 
 const STATUS_LABELS: Record<UserStatus, string> = {
@@ -242,11 +257,36 @@ export default function AdminPage() {
     }
   }
 
-  const totalUsers = users.length;
-  const activeUsers = users.filter((user) => user.status === "active").length;
-  const expiredUsers = users.filter((user) =>
-    isExpired(user.subscriptionExpiresAt),
-  ).length;
+  const totalUsers  = users.length;
+  const activeUsers = users.filter(u => u.status === "active").length;
+  const expiredUsers = users.filter(u => isExpired(u.subscriptionExpiresAt)).length;
+
+  const expiringUsers = users.filter(u => {
+    if (!u.subscriptionExpiresAt || u.status !== "active") return false;
+    const diff = new Date(u.subscriptionExpiresAt).getTime() - Date.now();
+    return diff > 0 && diff <= 7 * 24 * 60 * 60 * 1000;
+  }).length;
+
+  const mrr = users
+    .filter(u => u.status === "active" && !isExpired(u.subscriptionExpiresAt))
+    .reduce((acc, u) => acc + PLAN_PRICES[u.subscriptionPlan], 0);
+
+  const planCounts: Record<SubscriptionPlan, number> = {
+    BASICO:      users.filter(u => u.subscriptionPlan === "BASICO").length,
+    PERSONAL:    users.filter(u => u.subscriptionPlan === "PERSONAL").length,
+    PROFESIONAL: users.filter(u => u.subscriptionPlan === "PROFESIONAL").length,
+    EMPRESA:     users.filter(u => u.subscriptionPlan === "EMPRESA").length,
+  };
+
+  const roleCounts: Record<UserRole, number> = {
+    personal: users.filter(u => u.role === "personal").length,
+    contador: users.filter(u => u.role === "contador").length,
+    empresa:  users.filter(u => u.role === "empresa").length,
+    admin:    users.filter(u => u.role === "admin").length,
+  };
+
+  const suspendedUsers = users.filter(u => u.status === "suspended").length;
+  const inactiveUsers  = users.filter(u => u.status === "inactive").length;
 
   return (
     <div
@@ -325,57 +365,111 @@ export default function AdminPage() {
           </p>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "16px",
-            marginBottom: "32px",
-          }}
-        >
+        {/* Métricas */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px", marginBottom: "24px" }}>
           {[
-            { label: "Total usuarios", value: totalUsers, color: colors.primary },
-            { label: "Cuentas activas", value: activeUsers, color: colors.accent },
-            {
-              label: "Suscripciones vencidas",
-              value: expiredUsers,
-              color: colors.danger,
-            },
-          ].map((metric) => (
-            <div
-              key={metric.label}
-              style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: "12px",
-                padding: "24px",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: colors.textMuted,
-                  margin: "0 0 8px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                {metric.label}
+            { label: "Total usuarios",       value: totalUsers,    color: colors.textPrimary, sub: "registrados" },
+            { label: "Cuentas activas",      value: activeUsers,   color: colors.accent,      sub: "en uso" },
+            { label: "Suscripciones vencidas", value: expiredUsers, color: colors.danger,     sub: "requieren acción" },
+            { label: "Por vencer (≤7 días)", value: expiringUsers, color: colors.warning,     sub: "avisar al cliente" },
+            { label: "MRR estimado",         value: loading ? "—" : `$${mrr.toLocaleString("es-CL")}`, color: "#7C3AED", sub: "CLP/mes activo", isText: true },
+          ].map(m => (
+            <div key={m.label} style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "20px" }}>
+              <p style={{ fontSize: "11px", fontWeight: 600, color: colors.textMuted, margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.label}</p>
+              <p style={{ fontSize: m.isText ? "22px" : "30px", fontWeight: 700, color: m.color, margin: "0 0 4px", fontFamily: fonts.display, lineHeight: 1 }}>
+                {loading ? "—" : (m.isText ? m.value : m.value)}
               </p>
-
-              <p
-                style={{
-                  fontSize: "32px",
-                  fontWeight: 700,
-                  color: metric.color,
-                  margin: 0,
-                  fontFamily: fonts.display,
-                }}
-              >
-                {loading ? "—" : metric.value}
-              </p>
+              <p style={{ fontSize: "11px", color: colors.textMuted, margin: 0 }}>{m.sub}</p>
             </div>
           ))}
+        </div>
+
+        {/* Analytics */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+
+          {/* Distribución por plan */}
+          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "24px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary, margin: "0 0 20px" }}>Distribución por plan</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+              {/* Donut */}
+              <div style={{ position: "relative", flexShrink: 0 }}>
+                {(() => {
+                  const tot = totalUsers || 1;
+                  const d1 = planCounts.BASICO      / tot * 360;
+                  const d2 = planCounts.PROFESIONAL  / tot * 360;
+                  const d3 = planCounts.EMPRESA      / tot * 360;
+                  const a1 = d1;
+                  const a2 = a1 + d2;
+                  const gradient = totalUsers === 0
+                    ? `conic-gradient(#E2E8F0 0deg 360deg)`
+                    : `conic-gradient(${PLAN_COLORS.BASICO} 0deg ${a1}deg, ${PLAN_COLORS.PROFESIONAL} ${a1}deg ${a2}deg, ${PLAN_COLORS.EMPRESA} ${a2}deg 360deg)`;
+                  return (
+                    <div style={{ width: 110, height: 110, borderRadius: "50%", background: gradient, position: "relative" }}>
+                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 66, height: 66, borderRadius: "50%", background: colors.surface, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+                        <span style={{ fontSize: "18px", fontWeight: 700, color: colors.textPrimary, lineHeight: 1, fontFamily: fonts.display }}>{loading ? "—" : totalUsers}</span>
+                        <span style={{ fontSize: "9px", color: colors.textMuted, letterSpacing: "0.04em" }}>usuarios</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+              {/* Leyenda */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
+                {(["BASICO", "PROFESIONAL", "EMPRESA"] as SubscriptionPlan[]).map(plan => (
+                  <div key={plan} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "3px", background: PLAN_COLORS[plan], flexShrink: 0 }} />
+                      <span style={{ fontSize: "12px", color: colors.textSecondary }}>{PLAN_LABELS[plan]}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ width: 80, height: 6, background: colors.surfaceAlt, borderRadius: "3px", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${totalUsers ? planCounts[plan] / totalUsers * 100 : 0}%`, background: PLAN_COLORS[plan], borderRadius: "3px" }} />
+                      </div>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: colors.textPrimary, minWidth: "16px", textAlign: "right" }}>{loading ? "—" : planCounts[plan]}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Desglose de cuentas */}
+          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "24px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary, margin: "0 0 20px" }}>Desglose de cuentas</p>
+            <p style={{ fontSize: "11px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por estado</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+              {[
+                { label: "Activos",      value: activeUsers,    color: colors.accent },
+                { label: "Suspendidos",  value: suspendedUsers, color: colors.danger },
+                { label: "Inactivos",    value: inactiveUsers,  color: colors.textMuted },
+              ].map(row => (
+                <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "12px", color: colors.textSecondary, width: "80px" }}>{row.label}</span>
+                  <div style={{ flex: 1, height: 8, background: colors.surfaceAlt, borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${totalUsers ? row.value / totalUsers * 100 : 0}%`, background: row.color, borderRadius: "4px", transition: "width 0.4s ease" }} />
+                  </div>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: colors.textPrimary, minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: "11px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por rol</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {[
+                { label: "Personal",  value: roleCounts.personal, color: "#16A34A" },
+                { label: "Contador",  value: roleCounts.contador,  color: "#0EA5E9" },
+                { label: "Empresa",   value: roleCounts.empresa,   color: "#7C3AED" },
+                { label: "Admin",     value: roleCounts.admin,     color: "#F59E0B" },
+              ].map(row => (
+                <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "12px", color: colors.textSecondary, width: "80px" }}>{row.label}</span>
+                  <div style={{ flex: 1, height: 8, background: colors.surfaceAlt, borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${totalUsers ? row.value / totalUsers * 100 : 0}%`, background: row.color, borderRadius: "4px", transition: "width 0.4s ease" }} />
+                  </div>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: colors.textPrimary, minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div
@@ -573,6 +667,68 @@ export default function AdminPage() {
               </table>
             </div>
           )}
+        </div>
+        {/* Medios de pago */}
+        <div style={{ marginTop: "24px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <h2 style={{ fontFamily: fonts.display, fontSize: "16px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 4px" }}>Medios de pago</h2>
+            <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>Métodos disponibles para cobro de suscripciones.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+            {[
+              {
+                name:   "Facturación manual",
+                desc:   "El administrador asigna plan y vigencia directamente desde este panel.",
+                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
+                status: "Activo",
+                color:  colors.accent,
+                bg:     "rgba(22,163,74,0.08)",
+                border: "rgba(22,163,74,0.2)",
+              },
+              {
+                name:   "Webpay Plus",
+                desc:   "Transbank Chile. Tarjetas de débito y crédito nacionales.",
+                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+                status: "Próximamente",
+                color:  colors.warning,
+                bg:     "rgba(245,158,11,0.08)",
+                border: "rgba(245,158,11,0.2)",
+              },
+              {
+                name:   "Transferencia bancaria",
+                desc:   "Pago manual por transferencia. Admin confirma y activa la cuenta.",
+                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+                status: "Próximamente",
+                color:  colors.warning,
+                bg:     "rgba(245,158,11,0.08)",
+                border: "rgba(245,158,11,0.2)",
+              },
+              {
+                name:   "PayPal",
+                desc:   "Pagos internacionales en USD. Para clientes fuera de Chile.",
+                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>,
+                status: "Próximamente",
+                color:  colors.textMuted,
+                bg:     colors.surfaceAlt,
+                border: colors.border,
+              },
+            ].map(method => (
+              <div key={method.name} style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "10px", background: method.bg, border: `1px solid ${method.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: method.color, flexShrink: 0 }}>
+                    {method.icon}
+                  </div>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: method.color, background: method.bg, border: `1px solid ${method.border}`, borderRadius: "6px", padding: "3px 8px", letterSpacing: "0.05em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                    {method.status}
+                  </span>
+                </div>
+                <div>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary, margin: "0 0 4px", fontFamily: fonts.display }}>{method.name}</p>
+                  <p style={{ fontSize: "11px", color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>{method.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
 

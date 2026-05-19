@@ -892,7 +892,7 @@ export default function PortafolioPage() {
                       fontFamily: "var(--font-body)",
                     }}
                   >
-                    {t}
+                    {t === "BUY" ? "Compra" : "Venta"}
                   </button>
                 ))}
               </div>
@@ -960,7 +960,7 @@ export default function PortafolioPage() {
               fontFamily: "var(--font-body)",
             }}
           >
-            {submitting ? (form.type === "SELL" ? "Ejecutando motor FIFO..." : "Guardando...") : `Registrar ${form.type}`}
+            {submitting ? (form.type === "SELL" ? "Ejecutando motor FIFO..." : "Guardando...") : `Registrar ${form.type === "BUY" ? "compra" : "venta"}`}
           </button>
         </div>
       )}
@@ -995,7 +995,7 @@ export default function PortafolioPage() {
                       <td style={cellStyle}>{formatDate(m.executedAt)}</td>
                       <td style={cellStyle}>
                         <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, background: m.type === "BUY" ? "rgba(22,163,74,0.1)" : "rgba(220,38,38,0.1)", color: m.type === "BUY" ? "#16A34A" : "#DC2626" }}>
-                          {m.type}
+                          {m.type === "BUY" ? "COMPRA" : "VENTA"}
                         </span>
                       </td>
                       <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D", fontFamily: "var(--font-display)" }}>{m.symbol}</td>

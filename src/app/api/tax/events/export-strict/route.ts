@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { round, normalizeSymbol } from "@/shared/utils/math";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,15 +36,6 @@ const FINAL_TAX_CATEGORIES = new Set([
   "CAPITAL_GAIN",
   "NON_TAXABLE",
 ]);
-
-function round(value: number, decimals = 8): number {
-  const factor = 10 ** decimals;
-  return Math.round((value + Number.EPSILON) * factor) / factor;
-}
-
-function normalizeSymbol(value: string) {
-  return value.trim().toUpperCase();
-}
 
 function normalizeCategory(value: string) {
   return value.trim().toUpperCase();

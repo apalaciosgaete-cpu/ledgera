@@ -1,4 +1,4 @@
-import { db } from "@/infrastructure/db/client";
+import { prisma } from "@/lib/prisma";
 import type { Portfolio } from "@/modules/portfolio/domain/portfolio";
 
 function mapRow(row: {
@@ -17,48 +17,15 @@ function mapRow(row: {
   };
 }
 
-export async function getPortfolioByUserId(
-  userId: string
-): Promise<Portfolio | null> {
-  const result = await db.query(
-    `
-      select
-        id,
-        user_id,
-        name,
-        created_at,
-        updated_at
-      from portfolios
-      where user_id = $1
-      limit 1
-    `,
-    [userId]
-  );
-
-  if (result.rows.length === 0) {
-    return null;
-  }
-
-  return mapRow(result.rows[0]);
+export async function getPortfolioByUserId(userId: string): Promise<Portfolio | null> {
+  const portfolio = await prisma.portfolios.findFirst({ where: { user_id: userId } });
+  if (!portfolio) return null;
+  return mapRow(portfolio);
 }
 
 export async function createPortfolio(userId: string): Promise<Portfolio> {
-  const result = await db.query(
-    `
-      insert into portfolios (
-        user_id,
-        name
-      )
-      values ($1, $2)
-      returning
-        id,
-        user_id,
-        name,
-        created_at,
-        updated_at
-    `,
-    [userId, "Main Portfolio"]
-  );
-
-  return mapRow(result.rows[0]);
+  const portfolio = await prisma.portfolios.create({
+    data: { user_id: userId, name: "Main Portfolio" },
+  });
+  return mapRow(portfolio);
 }

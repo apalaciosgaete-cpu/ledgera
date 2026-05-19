@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
-import { db } from "@/infrastructure/db/client";
+import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
@@ -34,10 +34,10 @@ export async function GET(req: NextRequest) {
 
     const qrCodeDataUrl = await QRCode.toDataURL(secret.otpauth_url!);
 
-    await db.query(
-      `update users set "twoFactorSecret" = $1, updated_at = now() where id = $2`,
-      [secret.base32, session.user.id],
-    );
+    await prisma.users.update({
+      where: { id: session.user.id },
+      data: { twoFactorSecret: secret.base32, updated_at: new Date() },
+    });
 
     return NextResponse.json({
       ok: true,

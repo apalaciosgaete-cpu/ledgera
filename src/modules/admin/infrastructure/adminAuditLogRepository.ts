@@ -1,5 +1,4 @@
-import { randomUUID } from "crypto";
-import { db } from "@/infrastructure/db/client";
+import { prisma } from "@/lib/prisma";
 
 export type AdminAuditAction =
   | "ADMIN_LOGIN"
@@ -41,46 +40,25 @@ type ListAdminAuditLogsInput = {
 export function getAuditRequestContext(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const realIp = request.headers.get("x-real-ip");
-
   const ipAddress = forwardedFor?.split(",")[0]?.trim() || realIp || null;
   const userAgent = request.headers.get("user-agent") ?? null;
-
-  return {
-    ipAddress,
-    userAgent,
-  };
+  return { ipAddress, userAgent };
 }
 
 export async function createAdminAuditLog(input: CreateAdminAuditLogInput) {
   try {
-    await db.query(
-      `
-        insert into admin_audit_logs (
-          id,
-          action,
-          actor_id,
-          actor_email,
-          target_user_id,
-          target_user_email,
-          ip_address,
-          user_agent,
-          metadata,
-          created_at
-        )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
-      `,
-      [
-        randomUUID(),
-        input.action,
-        input.actorId ?? null,
-        input.actorEmail ?? null,
-        input.targetUserId ?? null,
-        input.targetUserEmail ?? null,
-        input.ipAddress ?? null,
-        input.userAgent ?? null,
-        input.metadata ? JSON.stringify(input.metadata) : null,
-      ],
-    );
+    await prisma.adminAuditLog.create({
+      data: {
+        action:          input.action,
+        actorId:         input.actorId ?? null,
+        actorEmail:      input.actorEmail ?? null,
+        targetUserId:    input.targetUserId ?? null,
+        targetUserEmail: input.targetUserEmail ?? null,
+        ipAddress:       input.ipAddress ?? null,
+        userAgent:       input.userAgent ?? null,
+        metadata:        input.metadata ? JSON.stringify(input.metadata) : null,
+      },
+    });
   } catch (error) {
     console.error("[adminAuditLog] No se pudo registrar auditoría:", error);
   }
@@ -91,37 +69,22 @@ export async function listAdminAuditLogs(
 ): Promise<AdminAuditLogRow[]> {
   const limit = Math.min(Math.max(input.limit ?? 100, 1), 250);
 
-  const values: unknown[] = [limit];
+  const logs = await prisma.adminAuditLog.findMany({
+    where: input.action ? { action: input.action } : undefined,
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
 
-  let query = `
-    select
-      id,
-      action,
-      actor_id,
-      actor_email,
-      target_user_id,
-      target_user_email,
-      ip_address,
-      user_agent,
-      metadata,
-      created_at
-    from admin_audit_logs
-  `;
-
-  if (input.action) {
-    values.push(input.action);
-
-    query += `
-      where action = $2
-    `;
-  }
-
-  query += `
-    order by created_at desc
-    limit $1
-  `;
-
-  const result = await db.query<AdminAuditLogRow>(query, values);
-
-  return result.rows;
+  return logs.map((log) => ({
+    id:                log.id,
+    action:            log.action as AdminAuditAction,
+    actor_id:          log.actorId,
+    actor_email:       log.actorEmail,
+    target_user_id:    log.targetUserId,
+    target_user_email: log.targetUserEmail,
+    ip_address:        log.ipAddress,
+    user_agent:        log.userAgent,
+    metadata:          log.metadata,
+    created_at:        log.createdAt,
+  }));
 }

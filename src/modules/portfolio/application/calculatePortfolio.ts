@@ -1,4 +1,4 @@
-// src/modules/portfolio/application/calculatePortfolio.ts
+import { round, normalizeSymbol as sharedNormalizeSymbol } from "@/shared/utils/math";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -77,17 +77,9 @@ async function convertUsdToClp(amountUsd: number): Promise<number> {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function roundTo2(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
 function normalizeMovementType(type: string): PortfolioMovementType | null {
   if (type === "BUY" || type === "SELL") return type;
   return null;
-}
-
-function normalizeSymbol(symbol: string): string {
-  return symbol.trim().toUpperCase();
 }
 
 function toTimestamp(occurredAt?: string | Date): number {
@@ -110,7 +102,7 @@ export async function calculatePortfolio(
 
   for (const movement of sortedMovements) {
     const type = normalizeMovementType(movement.type);
-    const symbol = normalizeSymbol(movement.symbol);
+    const symbol = sharedNormalizeSymbol(movement.symbol);
     const quantity = Number(movement.quantity);
     const priceUsd = Number(movement.priceUsd);
     const feeUsd = Number(movement.feeUsd ?? 0);
@@ -171,11 +163,11 @@ export async function calculatePortfolio(
 
     positions.push({
       symbol: position.symbol,
-      quantity: roundTo2(position.quantity),
-      averageCostUsd: roundTo2(averageCostUsd),
-      totalCostUsd: roundTo2(position.totalCostUsd),
-      averageCostClp: roundTo2(averageCostClpRaw),
-      totalCostClp: roundTo2(totalCostClpRaw),
+      quantity: round(position.quantity, 2),
+      averageCostUsd: round(averageCostUsd, 2),
+      totalCostUsd: round(position.totalCostUsd, 2),
+      averageCostClp: round(averageCostClpRaw, 2),
+      totalCostClp: round(totalCostClpRaw, 2),
     });
   }
 
@@ -183,9 +175,9 @@ export async function calculatePortfolio(
 
   const totals: CalculatedPortfolioTotals = {
     symbolCount: positions.length,
-    totalQuantity: roundTo2(positions.reduce((acc, p) => acc + p.quantity, 0)),
-    totalCostUsd: roundTo2(positions.reduce((acc, p) => acc + p.totalCostUsd, 0)),
-    totalCostClp: roundTo2(positions.reduce((acc, p) => acc + p.totalCostClp, 0)),
+    totalQuantity: round(positions.reduce((acc, p) => acc + p.quantity, 0), 2),
+    totalCostUsd: round(positions.reduce((acc, p) => acc + p.totalCostUsd, 0), 2),
+    totalCostClp: round(positions.reduce((acc, p) => acc + p.totalCostClp, 0), 2),
   };
 
   return {

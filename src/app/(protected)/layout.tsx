@@ -33,24 +33,28 @@ const navItemsByRole: Record<string, { href: string; label: string }[]> = {
     { href: "/portafolio", label: "Portafolio" },
     { href: "/tributario", label: "Tributario" },
     { href: "/panel",      label: "Panel" },
+    { href: "/planes",     label: "Planes" },
   ],
   contador: [
     { href: "/portafolio", label: "Portafolio" },
     { href: "/tributario", label: "Tributario" },
     { href: "/panel",      label: "Panel" },
     { href: "/auditoria",  label: "Auditoría" },
+    { href: "/planes",     label: "Planes" },
   ],
   empresa: [
     { href: "/portafolio", label: "Portafolio" },
     { href: "/tributario", label: "Tributario" },
     { href: "/panel",      label: "Panel" },
     { href: "/auditoria",  label: "Auditoría" },
+    { href: "/planes",     label: "Planes" },
   ],
   admin: [
     { href: "/portafolio", label: "Portafolio" },
     { href: "/tributario", label: "Tributario" },
     { href: "/panel",      label: "Panel" },
     { href: "/auditoria",  label: "Auditoría" },
+    { href: "/planes",     label: "Planes" },
     { href: "/admin",      label: "Admin" },
   ],
 };

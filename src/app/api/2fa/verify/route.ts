@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import speakeasy from "speakeasy";
 
-import { db } from "@/infrastructure/db/client";
+import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
@@ -59,10 +59,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await db.query(
-      `update users set "twoFactorEnabled" = true, updated_at = now() where id = $1`,
-      [session.user.id],
-    );
+    await prisma.users.update({
+      where: { id: session.user.id },
+      data: { twoFactorEnabled: true, updated_at: new Date() },
+    });
 
     return NextResponse.json({
       ok: true,

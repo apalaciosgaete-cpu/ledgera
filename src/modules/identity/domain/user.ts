@@ -1,6 +1,6 @@
 import type { UUID } from "@/shared/types/common";
 
-export type SubscriptionPlan = "BASICO" | "PROFESIONAL" | "EMPRESA";
+export type SubscriptionPlan = "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
 export type UserRole = "personal" | "contador" | "empresa" | "admin";
 export type UserStatus = "active" | "inactive" | "suspended";
 
@@ -22,6 +22,7 @@ export interface User {
 
 export const PLAN_TO_ROLE: Record<SubscriptionPlan, UserRole> = {
   BASICO:      "personal",
+  PERSONAL:    "personal",
   PROFESIONAL: "contador",
   EMPRESA:     "empresa",
 };

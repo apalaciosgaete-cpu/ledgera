@@ -1,8 +1,8 @@
 // src/app/register/page.tsx
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
@@ -28,9 +28,13 @@ const roles: { value: Role; label: string; description: string }[] = [
   },
 ];
 
-export default function RegisterPage() {
-  const router      = useRouter();
-  const { login }   = useAuth();
+function RegisterForm() {
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const { login }    = useAuth();
+
+  const planParam    = searchParams.get("plan") as "PERSONAL" | "PROFESIONAL" | "EMPRESA" | null;
+  const billingParam = (searchParams.get("billing") ?? "mensual") as "mensual" | "anual";
 
   const [fullName,      setFullName]      = useState("");
   const [email,         setEmail]         = useState("");
@@ -76,9 +80,13 @@ export default function RegisterPage() {
       // 2. Login automático con las mismas credenciales
       try {
         await login(email, password);
+        if (planParam) {
+          window.location.href = `/planes?autoCheckout=${planParam}&billing=${billingParam}`;
+          return;
+        }
         router.push("/portafolio");
       } catch {
-        router.push("/login?registered=1");
+        router.push(planParam ? `/login?plan=${planParam}&billing=${billingParam}` : "/login?registered=1");
       }
 
     } catch {
@@ -258,5 +266,13 @@ export default function RegisterPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }

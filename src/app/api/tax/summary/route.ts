@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { round, normalizeSymbol } from "@/shared/utils/math";
 
 type CanonicalMovementType = "BUY" | "SELL";
 
@@ -84,15 +85,6 @@ async function fetchUsdClp(): Promise<number> {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function round(value: number, decimals = 2): number {
-  const factor = 10 ** decimals;
-  return Math.round(value * factor) / factor;
-}
-
-function normalizeSymbol(symbol: string): string {
-  return String(symbol).trim().toUpperCase();
-}
 
 function normalizeType(type: string): CanonicalMovementType | null {
   const normalized = String(type).trim().toUpperCase();
