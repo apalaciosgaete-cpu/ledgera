@@ -382,8 +382,9 @@ export default function LandingPage() {
           {[
             { label: "Quiénes somos", href: "#quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
-            { label: "Preguntas", href: "/preguntas" },
-            { label: "Blog", href: "/blog" },
+            { label: "Precios",       href: "/precios" },
+            { label: "Preguntas",     href: "/preguntas" },
+            { label: "Blog",          href: "/blog" },
           ].map((item) => (
             <Link key={item.label} href={item.href}
               onMouseEnter={() => setHoveredNav(item.label)}
@@ -419,8 +420,9 @@ export default function LandingPage() {
           {[
             { label: "Quiénes somos", href: "#quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
-            { label: "Preguntas", href: "/preguntas" },
-            { label: "Blog", href: "/blog" },
+            { label: "Precios",       href: "/precios" },
+            { label: "Preguntas",     href: "/preguntas" },
+            { label: "Blog",          href: "/blog" },
           ].map((item) => (
             <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
               style={{ fontSize: "14px", fontWeight: 500, color: "#94A3B8", textDecoration: "none", padding: "10px 0" }}>
