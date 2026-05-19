@@ -5,7 +5,6 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
-import { httpClient } from "@/shared/http/httpClient";
 
 type Plan = {
   key: string;
@@ -256,33 +255,9 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const [checkingOut, setCheckingOut] = useState(false);
-
-  async function handlePlanClick(plan: Plan) {
-    if (plan.key === "free") {
-      router.push("/login");
-      return;
-    }
-    const planMap: Record<string, string> = { personal: "PERSONAL", contador: "PROFESIONAL", empresa: "EMPRESA" };
-    const stripeKey = planMap[plan.key];
-    if (!stripeKey) return;
-    const bill = billing === "annual" ? "anual" : "mensual";
-    if (isAuthenticated) {
-      setCheckingOut(true);
-      try {
-        const json = await httpClient<{ url?: string }>("/api/stripe/checkout", {
-          method: "POST",
-          body:   { plan: stripeKey, billing: bill },
-          auth:   true,
-        });
-        if (json.url) { window.location.href = json.url; return; }
-      } catch {
-        router.push(`/checkout?plan=${stripeKey}&billing=${bill}`);
-      } finally { setCheckingOut(false); }
-      return;
-    }
-    router.push(`/checkout?plan=${stripeKey}&billing=${bill}`);
-  }
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) router.push("/portafolio");
+  }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) return null;
 
@@ -314,7 +289,7 @@ export default function LandingPage() {
       description: "Para el inversor individual",
       highlight: true,
       cta: "Empezar ahora",
-      href: `/register?plan=PERSONAL&billing=${billing === "annual" ? "anual" : "mensual"}`,
+      href: "/register",
       features: [
         "Movimientos ilimitados",
         "Motor FIFO automático",
@@ -333,7 +308,7 @@ export default function LandingPage() {
       description: "Para gestión de múltiples clientes",
       highlight: false,
       cta: "Empezar ahora",
-      href: `/register?plan=PROFESIONAL&billing=${billing === "annual" ? "anual" : "mensual"}`,
+      href: "/register",
       features: [
         "Todo lo de Personal",
         "Hasta 5 clientes incluidos",
@@ -352,7 +327,7 @@ export default function LandingPage() {
       description: "Para operación corporativa",
       highlight: false,
       cta: "Empezar ahora",
-      href: `/register?plan=EMPRESA&billing=${billing === "annual" ? "anual" : "mensual"}`,
+      href: "/register",
       features: [
         "Todo lo de Contador",
         "Clientes ilimitados",
@@ -857,7 +832,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
 
           {/* Header */}
-          <div style={{ maxWidth: "680px", marginBottom: "4rem", margin: "0 auto 4rem", textAlign: "center" }}>
+          <div style={{ maxWidth: "680px", marginBottom: "4rem" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.22)", borderRadius: "100px", padding: "4px 16px", marginBottom: "1.25rem" }}>
               <span style={{ fontSize: "12px", fontWeight: 700, color: "#4ADE80", letterSpacing: "0.04em" }}>Quiénes somos</span>
             </div>
@@ -1258,13 +1233,10 @@ export default function LandingPage() {
                     {plan.note}
                   </p>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handlePlanClick(plan)}
-                  disabled={checkingOut}
+                <Link
+                  href={plan.href}
                   style={{
                     display: "block",
-                    width: "100%",
                     textAlign: "center",
                     padding: "13px 20px",
                     borderRadius: "9px",
@@ -1273,12 +1245,11 @@ export default function LandingPage() {
                     color: plan.highlight ? "#ffffff" : "#E2E8F0",
                     fontSize: "14px",
                     fontWeight: 700,
-                    cursor: checkingOut ? "not-allowed" : "pointer",
-                    opacity: checkingOut ? 0.7 : 1,
+                    textDecoration: "none",
                   }}
                 >
-                  {checkingOut ? "Redirigiendo..." : plan.cta}
-                </button>
+                  {plan.cta}
+                </Link>
                 </div>
               </div>
             ))}
