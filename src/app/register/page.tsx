@@ -80,17 +80,33 @@ function RegisterForm() {
       // 2. Login automático con las mismas credenciales
       try {
         await login(email, password);
+
+        // Si hay un plan pendiente, llamar a Stripe directamente
         const pending = sessionStorage.getItem("pendingCheckout");
-        if (pending) {
+        const fallbackPlan = planParam ? { plan: planParam, billing: billingParam } : null;
+        const checkoutData = pending ? (JSON.parse(pending) as { plan: string; billing: string }) : fallbackPlan;
+
+        if (checkoutData) {
           sessionStorage.removeItem("pendingCheckout");
-          const { plan, billing } = JSON.parse(pending) as { plan: string; billing: string };
-          window.location.href = `/planes?autoCheckout=${plan}&billing=${billing}`;
-          return;
+          try {
+            const res = await fetch("/api/stripe/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ plan: checkoutData.plan, billing: checkoutData.billing }),
+              credentials: "include",
+            });
+            const data = await res.json();
+            if (data.url) {
+              window.location.href = data.url;
+              return;
+            }
+          } catch {
+            // Si Stripe falla, ir a planes para que intente manualmente
+            router.push("/planes");
+            return;
+          }
         }
-        if (planParam) {
-          window.location.href = `/planes?autoCheckout=${planParam}&billing=${billingParam}`;
-          return;
-        }
+
         router.push("/portafolio");
       } catch {
         router.push("/login?registered=1");
