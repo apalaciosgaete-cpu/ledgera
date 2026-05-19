@@ -40,7 +40,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, url: session.url });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error al crear sesión de pago";
-    console.error("[stripe/checkout]", message);
+    if (err && typeof err === "object" && "type" in err) {
+      const se = err as { type?: string; code?: string; statusCode?: number };
+      console.error("[stripe/checkout]", JSON.stringify({ type: se.type, code: se.code, status: se.statusCode, message }));
+    } else {
+      console.error("[stripe/checkout]", message);
+    }
     return NextResponse.json({ ok: false, message }, { status: 500 });
   }
 }
