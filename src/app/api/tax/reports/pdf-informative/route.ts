@@ -189,6 +189,62 @@ function drawFooter(
   doc.fillColor("#111827");
 }
 
+type UserProfile = {
+  fullName: string;
+  email:    string;
+  rut:      string | null;
+  phone:    string | null;
+  address:  string | null;
+  commune:  string | null;
+  country:  string | null;
+};
+
+function drawUserInfo(doc: PDFKit.PDFDocument, user: UserProfile, y: number): number {
+  const boxH = 62;
+  doc.roundedRect(40, y, doc.page.width - 80, boxH, 6).fillAndStroke("#F8FAFC", "#E2E8F0");
+
+  doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#374151")
+    .text("Datos del contribuyente", 52, y + 10, { lineBreak: false });
+
+  const col1X = 52;
+  const col2X = 300;
+  const rowH  = 13;
+  let   ry    = y + 24;
+
+  const dirParts = [user.address, user.commune, user.country].filter(Boolean);
+  const direccion = dirParts.length > 0 ? dirParts.join(", ") : "No registrada";
+
+  const left: [string, string][] = [
+    ["Nombre",   user.fullName || "No registrado"],
+    ["RUT",      user.rut      || "No registrado"],
+    ["Dirección",direccion],
+  ];
+  const right: [string, string][] = [
+    ["Email",    user.email],
+    ["Teléfono", user.phone || "No registrado"],
+  ];
+
+  left.forEach(([label, value]) => {
+    doc.font("Helvetica-Bold").fontSize(6.5).fillColor("#6B7280")
+      .text(`${label}:`, col1X, ry, { lineBreak: false, width: 50 });
+    doc.font("Helvetica").fontSize(6.5).fillColor("#111827")
+      .text(value, col1X + 52, ry, { lineBreak: false, width: 195 });
+    ry += rowH;
+  });
+
+  ry = y + 24;
+  right.forEach(([label, value]) => {
+    doc.font("Helvetica-Bold").fontSize(6.5).fillColor("#6B7280")
+      .text(`${label}:`, col2X, ry, { lineBreak: false, width: 42 });
+    doc.font("Helvetica").fontSize(6.5).fillColor("#111827")
+      .text(value, col2X + 44, ry, { lineBreak: false, width: 180 });
+    ry += rowH;
+  });
+
+  doc.fillColor("#111827");
+  return y + boxH + 12;
+}
+
 function drawSectionTitle(
   doc: PDFKit.PDFDocument,
   title: string,
@@ -409,6 +465,17 @@ if (!subscriptionCheck.ok) {
 
       drawHeader(doc, year, symbol);
       let y = PAGE_TOP_Y;
+
+      // ── Datos del contribuyente ──
+      y = drawUserInfo(doc, {
+        fullName: currentUser.fullName,
+        email:    currentUser.email,
+        rut:      currentUser.rut,
+        phone:    currentUser.phone,
+        address:  currentUser.address,
+        commune:  currentUser.commune,
+        country:  currentUser.country,
+      }, y);
 
       // ── Resumen general ──
       y = drawSectionTitle(doc, "Resumen general", y);
