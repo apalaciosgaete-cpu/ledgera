@@ -35,12 +35,12 @@ const h2Style: CSSProperties = {
 const NAV_LINKS = [
   { label: "Quiénes somos", href: "/bienvenida#quienes-somos" },
   { label: "Cómo funciona", href: "/bienvenida#como-funciona" },
-  { label: "Precios",       href: "/precios" },
+  { label: "Planes",        href: "/planes" },
   { label: "Preguntas",     href: "/preguntas" },
   { label: "Blog",          href: "/blog" },
 ];
 
-export default function PreciosPage() {
+export default function PlanesPage() {
   const { isAuthenticated } = useAuth();
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
@@ -173,7 +173,7 @@ export default function PreciosPage() {
         {/* Desktop nav */}
         <div className="hidden sm:flex" style={{ alignItems: "center", gap: "4px" }}>
           {NAV_LINKS.map((item) => {
-            const isActive = item.href === "/precios";
+            const isActive = item.href === "/planes";
             return (
               <Link
                 key={item.label}
@@ -283,8 +283,8 @@ export default function PreciosPage() {
               onClick={() => setMobileMenuOpen(false)}
               style={{
                 fontSize: "14px",
-                fontWeight: item.href === "/precios" ? 600 : 500,
-                color: item.href === "/precios" ? "#4ADE80" : "#94A3B8",
+                fontWeight: item.href === "/planes" ? 600 : 500,
+                color: item.href === "/planes" ? "#4ADE80" : "#94A3B8",
                 textDecoration: "none",
                 padding: "10px 0",
               }}
@@ -722,7 +722,7 @@ export default function PreciosPage() {
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <Link href="/register" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Comenzar gratis</Link>
-                  <Link href="/precios" style={{ fontSize: "13px", color: "#4ADE80", textDecoration: "none" }}>Precios</Link>
+                  <Link href="/planes" style={{ fontSize: "13px", color: "#4ADE80", textDecoration: "none" }}>Precios</Link>
                   <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Iniciar sesión</Link>
                   <Link href="/blog" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Blog</Link>
                 </div>

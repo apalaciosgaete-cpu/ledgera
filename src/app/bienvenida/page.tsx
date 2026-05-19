@@ -382,7 +382,7 @@ export default function LandingPage() {
           {[
             { label: "Quiénes somos", href: "#quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
-            { label: "Precios",       href: "/precios" },
+            { label: "Planes",        href: "/planes" },
             { label: "Preguntas",     href: "/preguntas" },
             { label: "Blog",          href: "/blog" },
           ].map((item) => (
@@ -420,7 +420,7 @@ export default function LandingPage() {
           {[
             { label: "Quiénes somos", href: "#quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
-            { label: "Precios",       href: "/precios" },
+            { label: "Planes",        href: "/planes" },
             { label: "Preguntas",     href: "/preguntas" },
             { label: "Blog",          href: "/blog" },
           ].map((item) => (
