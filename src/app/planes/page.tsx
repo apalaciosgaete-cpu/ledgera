@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, useCallback, type CSSProperties } from "react";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
 
@@ -46,12 +46,34 @@ export default function PlanesPage() {
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 400);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const handleCheckout = useCallback(async (planKey: string) => {
+    if (!isAuthenticated) { window.location.href = "/register"; return; }
+    setLoadingPlan(planKey);
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planKey, billing }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.message ?? "Error al iniciar el pago.");
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      setCheckoutError(err instanceof Error ? err.message : "Error al iniciar el pago.");
+      setLoadingPlan(null);
+    }
+  }, [isAuthenticated, billing]);
 
   const plans: Plan[] = [
     {
@@ -395,6 +417,11 @@ export default function PlanesPage() {
 
       {/* ── Plan cards ─────────────────────────────────────────────────────── */}
       <section style={{ padding: "0 2rem 5rem" }}>
+        {checkoutError && (
+          <div style={{ maxWidth: "1100px", margin: "0 auto 16px", padding: "12px 16px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "10px", color: "#F87171", fontSize: "13px" }}>
+            {checkoutError}
+          </div>
+        )}
         <div style={{ maxWidth: "1100px", margin: "0 auto", overflowX: "auto", paddingBottom: "4px" }}>
           <div
             style={{
@@ -546,23 +573,46 @@ export default function PlanesPage() {
                     </p>
                   )}
 
-                  <Link
-                    href={plan.href}
-                    style={{
-                      display: "block",
-                      textAlign: "center",
-                      padding: "13px 20px",
-                      borderRadius: "9px",
-                      background: plan.highlight ? "#16A34A" : "rgba(255,255,255,0.06)",
-                      border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.1)",
-                      color: plan.highlight ? "#ffffff" : "#E2E8F0",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {plan.cta}
-                  </Link>
+                  {plan.key === "free" || !isAuthenticated ? (
+                    <Link
+                      href={plan.key === "free" && isAuthenticated ? "/portafolio" : plan.href}
+                      style={{
+                        display: "block",
+                        textAlign: "center",
+                        padding: "13px 20px",
+                        borderRadius: "9px",
+                        background: plan.highlight ? "#16A34A" : "rgba(255,255,255,0.06)",
+                        border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.1)",
+                        color: plan.highlight ? "#ffffff" : "#E2E8F0",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        textDecoration: "none",
+                      }}
+                    >
+                      {plan.key === "free" && isAuthenticated ? "Ir al panel" : plan.cta}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleCheckout(plan.key)}
+                      disabled={loadingPlan !== null}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "center",
+                        padding: "13px 20px",
+                        borderRadius: "9px",
+                        background: plan.highlight ? "#16A34A" : "rgba(255,255,255,0.06)",
+                        border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.1)",
+                        color: plan.highlight ? "#ffffff" : "#E2E8F0",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        cursor: loadingPlan !== null ? "wait" : "pointer",
+                        opacity: loadingPlan !== null && loadingPlan !== plan.key ? 0.5 : 1,
+                      }}
+                    >
+                      {loadingPlan === plan.key ? "Redirigiendo…" : plan.cta}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
