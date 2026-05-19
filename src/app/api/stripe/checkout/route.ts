@@ -32,15 +32,14 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: auth.user.email,
       success_url: `${appUrl}/portafolio?upgraded=1`,
       cancel_url:  `${appUrl}/planes`,
       metadata: {
-        userId:         auth.user.id,
-        plan:           plan,
-        billing:        billing,
+        userId:           auth.user.id,
+        plan:             plan,
+        billing:          billing,
         subscriptionPlan: PLAN_KEY_TO_SUBSCRIPTION[plan as PaidPlan],
       },
       subscription_data: {
