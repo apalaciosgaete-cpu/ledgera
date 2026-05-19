@@ -52,10 +52,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, url: session.url });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error("[stripe/checkout] FULL ERROR:", msg);
+    const msg   = error instanceof Error ? error.message : String(error);
+    const type  = (error as Record<string, unknown>)?.type  ?? "unknown";
+    const code  = (error as Record<string, unknown>)?.code  ?? "none";
+    const param = (error as Record<string, unknown>)?.param ?? "none";
+    console.error("[stripe/checkout] type=" + type + " code=" + code + " param=" + param + " msg=" + msg);
     return NextResponse.json(
-      { ok: false, message: "No se pudo crear la sesión de pago." },
+      { ok: false, message: msg || "No se pudo crear la sesión de pago." },
       { status: 500 },
     );
   }
