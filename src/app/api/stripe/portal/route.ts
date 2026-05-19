@@ -14,10 +14,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, message: "No tienes una suscripción activa de Stripe" }, { status: 404 });
   }
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer:   stripeData.stripeCustomerId,
-    return_url: `${APP_URL}/panel`,
-  });
-
-  return NextResponse.json({ ok: true, url: session.url });
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer:   stripeData.stripeCustomerId,
+      return_url: `${APP_URL}/planes`,
+    });
+    return NextResponse.json({ ok: true, url: session.url });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error al abrir portal";
+    console.error("[stripe/portal]", message);
+    return NextResponse.json({ ok: false, message }, { status: 500 });
+  }
 }
