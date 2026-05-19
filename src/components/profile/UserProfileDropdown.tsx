@@ -184,21 +184,24 @@ export function UserProfileDropdown({
       {/* Dropdown panel */}
       {open && (
         <div style={{
-          position:   "absolute",
-          top:        "calc(100% + 8px)",
-          right:      0,
-          width:      "340px",
-          background: "#0F2236",
-          border:     "1px solid rgba(255,255,255,0.1)",
+          position:     "absolute",
+          top:          "calc(100% + 8px)",
+          right:        0,
+          width:        "340px",
+          background:   "#0F2236",
+          border:       "1px solid rgba(255,255,255,0.1)",
           borderRadius: "14px",
-          boxShadow:  "0 16px 40px rgba(0,0,0,0.5)",
-          zIndex:     200,
-          overflow:   "hidden",
+          boxShadow:    "0 16px 40px rgba(0,0,0,0.5)",
+          zIndex:       200,
+          display:      "flex",
+          flexDirection:"column",
+          maxHeight:    "min(520px, calc(100vh - 100px))",
         }}>
-          {/* Header */}
+          {/* Header — fijo */}
           <div style={{
             padding:      "16px 20px 14px",
             borderBottom: "1px solid rgba(255,255,255,0.07)",
+            flexShrink:   0,
           }}>
             <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#F1F5F9" }}>
               Mis datos
@@ -208,9 +211,19 @@ export function UserProfileDropdown({
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSave} style={{ padding: "16px 20px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-
+          {/* Body scrolleable */}
+          <form
+            id="profile-form"
+            onSubmit={handleSave}
+            style={{
+              padding:    "16px 20px",
+              display:    "flex",
+              flexDirection: "column",
+              gap:        "12px",
+              overflowY:  "auto",
+              flex:       1,
+            }}
+          >
             <div>
               <label style={labelStyle}>Nombre completo</label>
               <input
@@ -289,26 +302,35 @@ export function UserProfileDropdown({
                 {error}
               </p>
             )}
+          </form>
 
+          {/* Footer — fijo con botón guardar */}
+          <div style={{
+            padding:      "12px 20px 16px",
+            borderTop:    "1px solid rgba(255,255,255,0.07)",
+            flexShrink:   0,
+          }}>
             <button
               type="submit"
+              form="profile-form"
               disabled={saving || !profile}
               style={{
+                width:        "100%",
                 padding:      "10px",
                 borderRadius: "9px",
                 border:       "none",
-                background:   saved ? "#16A34A" : "#16A34A",
+                background:   saved ? "#15803D" : "#16A34A",
                 color:        "#fff",
                 fontSize:     "13px",
                 fontWeight:   700,
                 cursor:       saving ? "wait" : "pointer",
-                opacity:      saving ? 0.7 : 1,
+                opacity:      saving || !profile ? 0.7 : 1,
                 transition:   "all 0.15s ease",
               }}
             >
               {saved ? "¡Guardado!" : saving ? "Guardando…" : "Guardar cambios"}
             </button>
-          </form>
+          </div>
         </div>
       )}
     </div>
