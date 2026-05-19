@@ -75,8 +75,8 @@ function CheckoutContent() {
       });
       if (json.url) { window.location.href = json.url; return; }
       setErrorMessage("No fue posible iniciar el pago.");
-    } catch {
-      setErrorMessage("Error al conectar con el servidor de pagos.");
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Error al conectar con el servidor de pagos.");
     } finally {
       setRedirecting(false);
     }
