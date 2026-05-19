@@ -28,6 +28,11 @@ function mapRowToUser(row: {
   subscription_expires_at: Date | null;
   twoFactorSecret:         string | null;
   twoFactorEnabled:        boolean;
+  rut:                     string | null;
+  phone:                   string | null;
+  address:                 string | null;
+  commune:                 string | null;
+  country:                 string | null;
 }): User {
   return {
     id:                    row.id,
@@ -43,6 +48,11 @@ function mapRowToUser(row: {
     subscriptionExpiresAt: row.subscription_expires_at,
     twoFactorSecret:       row.twoFactorSecret ?? null,
     twoFactorEnabled:      row.twoFactorEnabled ?? false,
+    rut:                   row.rut ?? null,
+    phone:                 row.phone ?? null,
+    address:               row.address ?? null,
+    commune:               row.commune ?? null,
+    country:               row.country ?? "Chile",
   };
 }
 
@@ -113,6 +123,38 @@ export async function updateUserSubscription(
         subscription_expires_at: input.expiresAt,
         role,
         updated_at:              new Date(),
+      },
+    });
+    return mapRowToUser(user);
+  } catch {
+    return null;
+  }
+}
+
+export interface UpdateProfileInput {
+  userId:   string;
+  fullName: string;
+  rut:      string | null;
+  phone:    string | null;
+  address:  string | null;
+  commune:  string | null;
+  country:  string | null;
+}
+
+export async function updateUserProfile(
+  input: UpdateProfileInput,
+): Promise<User | null> {
+  try {
+    const user = await prisma.users.update({
+      where: { id: input.userId },
+      data: {
+        full_name:  input.fullName,
+        rut:        input.rut,
+        phone:      input.phone,
+        address:    input.address,
+        commune:    input.commune,
+        country:    input.country,
+        updated_at: new Date(),
       },
     });
     return mapRowToUser(user);

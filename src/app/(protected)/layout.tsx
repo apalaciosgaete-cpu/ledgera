@@ -8,6 +8,7 @@ import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
+import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
 function GearIcon() {
   return (
@@ -217,99 +218,38 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               </Link>
             )}
 
-            <div style={{
-              display:      "flex",
-              alignItems:   "center",
-              gap:          "10px",
-              background:   "rgba(255,255,255,0.04)",
-              border:       "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "12px",
-              padding:      "5px 6px 5px 10px",
-            }}>
+            <UserProfileDropdown
+              email={user.email}
+              initials={initials}
+              avatarGradient={token.avatarGradient}
+              badgeBg={token.badgeBg}
+              badgeColor={token.badgeColor}
+              roleLabel={token.label}
+            />
 
-              <div style={{
-                width:          "30px",
-                height:         "30px",
-                borderRadius:   "50%",
-                background:     token.avatarGradient,
+            <button
+              onClick={handleLogout}
+              title="Cerrar sesión"
+              onMouseEnter={() => setLogoutHover(true)}
+              onMouseLeave={() => setLogoutHover(false)}
+              style={{
                 display:        "flex",
                 alignItems:     "center",
                 justifyContent: "center",
+                width:          "34px",
+                height:         "34px",
+                borderRadius:   "9px",
+                background:     logoutHover ? "rgba(239,68,68,0.12)" : "transparent",
+                border:         "1px solid rgba(255,255,255,0.08)",
+                color:          logoutHover ? "#F87171" : colors.textMuted,
+                cursor:         "pointer",
+                transition:     "all 0.15s ease",
+                padding:        0,
                 flexShrink:     0,
-              }}>
-                <span style={{
-                  fontSize:      "11px",
-                  fontWeight:    700,
-                  color:         "#fff",
-                  fontFamily:    fonts.display,
-                  letterSpacing: "0.04em",
-                  lineHeight:    1,
-                }}>
-                  {initials}
-                </span>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <span style={{
-                  fontSize:     "12px",
-                  fontWeight:   500,
-                  color:        "#E2E8F0",
-                  lineHeight:   1,
-                  maxWidth:     "160px",
-                  overflow:     "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace:   "nowrap",
-                }}>
-                  {user.email}
-                </span>
-                <span style={{
-                  display:       "inline-flex",
-                  alignSelf:     "flex-start",
-                  fontSize:      "9px",
-                  fontWeight:    700,
-                  color:         token.badgeColor,
-                  background:    token.badgeBg,
-                  borderRadius:  "4px",
-                  padding:       "2px 6px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  lineHeight:    "13px",
-                }}>
-                  {token.label}
-                </span>
-              </div>
-
-              <div style={{
-                width:      "1px",
-                height:     "24px",
-                background: "rgba(255,255,255,0.08)",
-                flexShrink: 0,
-              }} />
-
-              <button
-                onClick={handleLogout}
-                title="Cerrar sesión"
-                onMouseEnter={() => setLogoutHover(true)}
-                onMouseLeave={() => setLogoutHover(false)}
-                style={{
-                  display:        "flex",
-                  alignItems:     "center",
-                  justifyContent: "center",
-                  width:          "30px",
-                  height:         "30px",
-                  borderRadius:   "8px",
-                  background:     logoutHover ? "rgba(239,68,68,0.12)" : "transparent",
-                  border:         "none",
-                  color:          logoutHover ? "#F87171" : colors.textMuted,
-                  cursor:         "pointer",
-                  transition:     "all 0.15s ease",
-                  padding:        0,
-                  flexShrink:     0,
-                }}
-              >
-                <LogoutIcon />
-              </button>
-            </div>
+              }}
+            >
+              <LogoutIcon />
+            </button>
           </div>
 
         </div>

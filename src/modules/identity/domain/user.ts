@@ -18,6 +18,11 @@ export interface User {
   subscriptionExpiresAt: Date | null;
   twoFactorSecret:      string | null;
   twoFactorEnabled:     boolean;
+  rut:                  string | null;
+  phone:                string | null;
+  address:              string | null;
+  commune:              string | null;
+  country:              string | null;
 }
 
 export const PLAN_TO_ROLE: Record<SubscriptionPlan, UserRole> = {

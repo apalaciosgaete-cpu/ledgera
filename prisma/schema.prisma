@@ -259,6 +259,11 @@ model users {
   subscription_expires_at DateTime? @db.Timestamptz(6)
   twoFactorSecret         String?
   twoFactorEnabled        Boolean   @default(false)
+  rut                     String?
+  phone                   String?
+  address                 String?
+  commune                 String?
+  country                 String?   @default("Chile")
 
   portfolios              portfolios[]
   sessions                sessions[]
