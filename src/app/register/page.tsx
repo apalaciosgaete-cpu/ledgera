@@ -33,8 +33,8 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const { login }    = useAuth();
 
-  const planParam    = searchParams.get("plan") as "PERSONAL" | "PROFESIONAL" | "EMPRESA" | null;
-  const billingParam = (searchParams.get("billing") ?? "mensual") as "mensual" | "anual";
+  const planParam    = searchParams.get("plan");
+  const billingParam = searchParams.get("billing") ?? "monthly";
 
   const [fullName,      setFullName]      = useState("");
   const [email,         setEmail]         = useState("");

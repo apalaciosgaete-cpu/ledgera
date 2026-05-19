@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useCallback, type CSSProperties } from "react";
+import { Suspense, useEffect, useState, useCallback, type CSSProperties } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
 
@@ -40,8 +41,9 @@ const NAV_LINKS = [
   { label: "Blog",          href: "/blog" },
 ];
 
-export default function PlanesPage() {
+function PlanesContent() {
   const { isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -55,15 +57,19 @@ export default function PlanesPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleCheckout = useCallback(async (planKey: string) => {
-    if (!isAuthenticated) { window.location.href = "/register"; return; }
+  const handleCheckout = useCallback(async (planKey: string, billingOverride?: "monthly" | "annual") => {
+    const activeBilling = billingOverride ?? billing;
+    if (!isAuthenticated) {
+      window.location.href = `/register?plan=${planKey}&billing=${activeBilling}`;
+      return;
+    }
     setLoadingPlan(planKey);
     setCheckoutError(null);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planKey, billing }),
+        body: JSON.stringify({ plan: planKey, billing: activeBilling }),
         credentials: "include",
       });
       const data = await res.json();
@@ -74,6 +80,17 @@ export default function PlanesPage() {
       setLoadingPlan(null);
     }
   }, [isAuthenticated, billing]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const plan = searchParams.get("autoCheckout");
+    if (!plan) return;
+    const b = searchParams.get("billing");
+    const activeBilling: "monthly" | "annual" = b === "annual" ? "annual" : "monthly";
+    setBilling(activeBilling);
+    handleCheckout(plan, activeBilling);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const plans: Plan[] = [
     {
@@ -845,5 +862,13 @@ export default function PlanesPage() {
         </button>
       )}
     </main>
+  );
+}
+
+export default function PlanesPage() {
+  return (
+    <Suspense>
+      <PlanesContent />
+    </Suspense>
   );
 }
