@@ -259,7 +259,10 @@ function RegisterForm() {
         {/* Login */}
         <p style={{ textAlign: "center", fontSize: "13px", color: colors.textSecondary, margin: 0 }}>
           ¿Ya tienes cuenta?{" "}
-          <Link href="/login" style={{ color: colors.accent, textDecoration: "none", fontWeight: 600 }}>
+          <Link
+            href={planParam ? `/login?plan=${planParam}&billing=${billingParam}` : "/login"}
+            style={{ color: colors.accent, textDecoration: "none", fontWeight: 600 }}
+          >
             Iniciar sesión
           </Link>
         </p>

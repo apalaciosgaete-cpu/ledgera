@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState, useCallback, type CSSProperties } from "react";
+import { Suspense, useEffect, useRef, useState, useCallback, type CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
@@ -81,16 +81,34 @@ function PlanesContent() {
     }
   }, [isAuthenticated, billing]);
 
+  const autoCheckoutRan = useRef(false);
   useEffect(() => {
     if (!isAuthenticated) return;
+    if (autoCheckoutRan.current) return;
     const plan = searchParams.get("autoCheckout");
     if (!plan) return;
+    autoCheckoutRan.current = true;
     const b = searchParams.get("billing");
     const activeBilling: "monthly" | "annual" = b === "annual" ? "annual" : "monthly";
     setBilling(activeBilling);
-    handleCheckout(plan, activeBilling);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+    setLoadingPlan(plan);
+    setCheckoutError(null);
+    fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan, billing: activeBilling }),
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.url) throw new Error(data.message ?? "Error al iniciar el pago.");
+        window.location.href = data.url;
+      })
+      .catch((err: unknown) => {
+        setCheckoutError(err instanceof Error ? err.message : "Error al iniciar el pago.");
+        setLoadingPlan(null);
+      });
+  }, [isAuthenticated, searchParams]);
 
   const plans: Plan[] = [
     {
