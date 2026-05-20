@@ -2,7 +2,7 @@
 "use client";
 
 import { FormEvent, Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/Logo";
@@ -45,11 +45,7 @@ const roles: { value: Role; label: string; description: string }[] = [
 
 function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
-
-  const planParam = searchParams.get("plan");
-  const billingParam = searchParams.get("billing") ?? "monthly";
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -82,45 +78,6 @@ function RegisterForm() {
     return "Error de conexión. Intenta nuevamente.";
   }
 
-  async function redirectAfterRegister() {
-    const pending = sessionStorage.getItem("pendingCheckout");
-    const fallbackPlan = planParam
-      ? { plan: planParam, billing: billingParam }
-      : null;
-
-    const checkoutData = pending
-      ? (JSON.parse(pending) as { plan: string; billing: string })
-      : fallbackPlan;
-
-    if (checkoutData) {
-      sessionStorage.removeItem("pendingCheckout");
-
-      try {
-        const response = await fetch("/api/stripe/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            plan: checkoutData.plan,
-            billing: checkoutData.billing,
-          }),
-          credentials: "include",
-        });
-
-        const data = await response.json();
-
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        }
-      } catch {
-        router.push("/planes");
-        return;
-      }
-    }
-
-    router.push("/portafolio");
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -151,7 +108,7 @@ function RegisterForm() {
       }
 
       await refreshUser();
-      await redirectAfterRegister();
+      router.push("/portafolio");
     } catch (error) {
       setErrorMessage(resolveErrorMessage(error));
     } finally {
@@ -583,11 +540,7 @@ function RegisterForm() {
         >
           ¿Ya tienes cuenta?{" "}
           <Link
-            href={
-              planParam
-                ? `/login?plan=${planParam}&billing=${billingParam}`
-                : "/login"
-            }
+            href="/login"
             style={{
               color: colors.accent,
               textDecoration: "none",

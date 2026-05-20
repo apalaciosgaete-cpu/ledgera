@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useCallback, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
@@ -258,27 +258,6 @@ export default function LandingPage() {
   useEffect(() => {
     if (!isLoading && isAuthenticated) router.push("/portafolio");
   }, [isAuthenticated, isLoading, router]);
-
-  const handleCheckout = useCallback(async (planKey: string) => {
-    if (!isAuthenticated) {
-      sessionStorage.setItem("pendingCheckout", JSON.stringify({ plan: planKey, billing }));
-      window.location.href = "/register";
-      return;
-    }
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planKey, billing }),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.message ?? "Error al iniciar el pago.");
-      window.location.href = data.url;
-    } catch {
-      window.location.href = `/planes`;
-    }
-  }, [isAuthenticated, billing]);
 
   const plans: Plan[] = [
     {
@@ -1254,44 +1233,23 @@ export default function LandingPage() {
                     {plan.note}
                   </p>
                 )}
-                {plan.key === "free" ? (
-                  <Link
-                    href={plan.href}
-                    style={{
-                      display: "block",
-                      textAlign: "center",
-                      padding: "13px 20px",
-                      borderRadius: "9px",
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      color: "#E2E8F0",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {plan.cta}
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => handleCheckout(plan.key)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "center",
-                      padding: "13px 20px",
-                      borderRadius: "9px",
-                      background: plan.highlight ? "#16A34A" : "rgba(255,255,255,0.06)",
-                      border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.1)",
-                      color: plan.highlight ? "#ffffff" : "#E2E8F0",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {plan.cta}
-                  </button>
-                )}
+                <Link
+                  href={plan.href}
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    padding: "13px 20px",
+                    borderRadius: "9px",
+                    background: plan.highlight ? "#16A34A" : "rgba(255,255,255,0.06)",
+                    border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.1)",
+                    color: plan.highlight ? "#ffffff" : "#E2E8F0",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                  }}
+                >
+                  {plan.cta}
+                </Link>
                 </div>
               </div>
             ))}

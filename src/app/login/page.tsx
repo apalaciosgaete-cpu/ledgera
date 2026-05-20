@@ -73,8 +73,6 @@ function LoginForm() {
   const { isAuthenticated, isLoading } = useAuth();
 
   const justRegistered = searchParams.get("registered") === "1";
-  const planParam    = searchParams.get("plan");
-  const billingParam = searchParams.get("billing") ?? "monthly";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -123,32 +121,6 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-
-      // Si hay plan pendiente, ir directo a Stripe
-      const pending = sessionStorage.getItem("pendingCheckout");
-      const fallbackPlan = planParam ? { plan: planParam, billing: billingParam } : null;
-      const checkoutData = pending ? (JSON.parse(pending) as { plan: string; billing: string }) : fallbackPlan;
-
-      if (checkoutData) {
-        sessionStorage.removeItem("pendingCheckout");
-        try {
-          const res = await fetch("/api/stripe/checkout", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ plan: checkoutData.plan, billing: checkoutData.billing }),
-            credentials: "include",
-          });
-          const data = await res.json();
-          if (data.url) {
-            window.location.href = data.url;
-            return;
-          }
-        } catch {
-          window.location.href = "/planes";
-          return;
-        }
-      }
-
       window.location.href = "/portafolio";
     } catch (error) {
       setErrorMessage(

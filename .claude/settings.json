@@ -10,7 +10,10 @@
       "mcp__claude_ai_Vercel__list_deployments",
       "mcp__claude_ai_Vercel__get_deployment_build_logs",
       "Bash(git check-ignore *)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('deps:', p.dependencies?.stripe\\); console.log\\('devDeps:', p.devDependencies?.stripe\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('deps:', p.dependencies?.stripe\\); console.log\\('devDeps:', p.devDependencies?.stripe\\)\")",
+      "Bash(rm -rf \"src/app/api/stripe\")",
+      "Bash(rm -f \"src/lib/stripe.ts\")",
+      "Bash(npx prisma *)"
     ]
   }
 }
