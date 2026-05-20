@@ -10,26 +10,18 @@ import {
 
 import { Logo } from "@/components/brand/Logo";
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
+import { BillingPaymentStatusBanner } from "@/components/billing/BillingPaymentStatusBanner";
 import { useAuth } from "@/modules/identity/client/authContext";
 
 const WHATSAPP_URL =
   "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
 
-type PlanKey =
-  | "free"
-  | "personal"
-  | "contador"
-  | "empresa";
-
+type PlanKey = "free" | "personal" | "contador" | "empresa";
 type PaidPlanKey = Exclude<PlanKey, "free">;
-
-type BillingPlan =
-  | "PROFESIONAL"
-  | "EMPRESA";
+type BillingPlan = "PROFESIONAL" | "EMPRESA";
 
 type Plan = {
   key: PlanKey;
-  billingPlan: BillingPlan | null;
   name: string;
   monthly: number;
   annual: number;
@@ -52,7 +44,6 @@ const NAV_LINKS = [
 const plans: Plan[] = [
   {
     key: "free",
-    billingPlan: null,
     name: "Gratuito",
     monthly: 0,
     annual: 0,
@@ -71,7 +62,6 @@ const plans: Plan[] = [
   },
   {
     key: "personal",
-    billingPlan: "PROFESIONAL",
     name: "Personal",
     monthly: 4990,
     annual: 49900,
@@ -90,7 +80,6 @@ const plans: Plan[] = [
   },
   {
     key: "contador",
-    billingPlan: "PROFESIONAL",
     name: "Contador",
     monthly: 14990,
     annual: 149900,
@@ -109,7 +98,6 @@ const plans: Plan[] = [
   },
   {
     key: "empresa",
-    billingPlan: "EMPRESA",
     name: "Empresa",
     monthly: 29990,
     annual: 299900,
@@ -149,45 +137,29 @@ function formatClp(value: number) {
 }
 
 function resolvePaidPlan(planKey: PaidPlanKey): BillingPlan {
-  if (planKey === "empresa") {
-    return "EMPRESA";
-  }
-
-  return "PROFESIONAL";
+  return planKey === "empresa" ? "EMPRESA" : "PROFESIONAL";
 }
 
 function PlanesContent() {
   const { isAuthenticated } = useAuth();
 
-  const [billing, setBilling] =
-    useState<"monthly" | "annual">("monthly");
-
-  const [hoveredNav, setHoveredNav] =
-    useState<string | null>(null);
-
-  const [mobileMenuOpen, setMobileMenuOpen] =
-    useState(false);
-
-  const [showScrollTop, setShowScrollTop] =
-    useState(false);
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const onScroll = () =>
-      setShowScrollTop(window.scrollY > 400);
+    const onScroll = () => setShowScrollTop(window.scrollY > 400);
 
-    window.addEventListener("scroll", onScroll, {
-      passive: true,
-    });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
-    return () =>
-      window.removeEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
     <main
       style={{
-        fontFamily:
-          "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+        fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
         background: "#0A1F2E",
         color: "#F1F5F9",
         overflowX: "hidden",
@@ -212,13 +184,7 @@ function PlanesContent() {
           <Logo variant="light" size="lg" showSubtitle />
         </Link>
 
-        <div
-          className="hidden sm:flex"
-          style={{
-            alignItems: "center",
-            gap: "4px",
-          }}
-        >
+        <div className="hidden sm:flex" style={{ alignItems: "center", gap: "4px" }}>
           {NAV_LINKS.map((item) => {
             const isActive = item.href === "/planes";
 
@@ -267,17 +233,12 @@ function PlanesContent() {
             style={{
               fontSize: "14px",
               fontWeight: 500,
-              color:
-                hoveredNav === "login"
-                  ? "#F1F5F9"
-                  : "#94A3B8",
+              color: hoveredNav === "login" ? "#F1F5F9" : "#94A3B8",
               textDecoration: "none",
               padding: "8px 14px",
               borderRadius: "8px",
               background:
-                hoveredNav === "login"
-                  ? "rgba(255,255,255,0.06)"
-                  : "transparent",
+                hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent",
               transition: "all 0.15s ease",
             }}
           >
@@ -295,16 +256,11 @@ function PlanesContent() {
               textDecoration: "none",
               padding: "9px 18px",
               borderRadius: "8px",
-              background:
-                hoveredNav === "register"
-                  ? "#15803D"
-                  : "#16A34A",
+              background: hoveredNav === "register" ? "#15803D" : "#16A34A",
               transition: "all 0.15s ease",
             }}
           >
-            {isAuthenticated
-              ? "Ir a mi cuenta"
-              : "Comenzar gratis"}
+            {isAuthenticated ? "Ir a mi cuenta" : "Comenzar gratis"}
           </Link>
         </div>
 
@@ -364,10 +320,7 @@ function PlanesContent() {
               style={{
                 fontSize: "14px",
                 fontWeight: item.href === "/planes" ? 600 : 500,
-                color:
-                  item.href === "/planes"
-                    ? "#4ADE80"
-                    : "#94A3B8",
+                color: item.href === "/planes" ? "#4ADE80" : "#94A3B8",
                 textDecoration: "none",
                 padding: "10px 0",
               }}
@@ -449,13 +402,7 @@ function PlanesContent() {
           </span>
         </div>
 
-        <h1
-          style={{
-            ...h2Style,
-            margin: "0 auto 1rem",
-            maxWidth: "700px",
-          }}
-        >
+        <h1 style={{ ...h2Style, margin: "0 auto 1rem", maxWidth: "700px" }}>
           Simple y transparente
         </h1>
 
@@ -468,8 +415,8 @@ function PlanesContent() {
             lineHeight: 1.65,
           }}
         >
-          Elige el plan que se adapte a tu operación. Ahora puedes
-          pagar con Mercado Pago o transferencia bancaria vía Khipu.
+          Elige el plan que se adapte a tu operación. Puedes pagar con
+          Mercado Pago o transferencia bancaria vía Khipu.
         </p>
 
         <div
@@ -493,28 +440,21 @@ function PlanesContent() {
                 fontSize: "14px",
                 fontWeight: 600,
                 cursor: "pointer",
-                fontFamily:
-                  "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-                background:
-                  billing === option
-                    ? "#16A34A"
-                    : "transparent",
-                color:
-                  billing === option
-                    ? "#ffffff"
-                    : "#64748B",
+                fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+                background: billing === option ? "#16A34A" : "transparent",
+                color: billing === option ? "#ffffff" : "#64748B",
                 transition: "all 0.15s ease",
               }}
             >
-              {option === "monthly"
-                ? "Mensual"
-                : "Anual — 1 mes gratis"}
+              {option === "monthly" ? "Mensual" : "Anual — 1 mes gratis"}
             </button>
           ))}
         </div>
       </section>
 
       <section style={{ padding: "0 2rem 5rem" }}>
+        <BillingPaymentStatusBanner />
+
         <div
           style={{
             maxWidth: "1100px",
@@ -625,12 +565,7 @@ function PlanesContent() {
                       </span>
 
                       {plan.monthly > 0 && (
-                        <span
-                          style={{
-                            fontSize: "13px",
-                            color: "#475569",
-                          }}
-                        >
+                        <span style={{ fontSize: "13px", color: "#475569" }}>
                           /{billing === "monthly" ? "mes" : "año"}
                         </span>
                       )}
@@ -645,9 +580,7 @@ function PlanesContent() {
                           fontWeight: 500,
                         }}
                       >
-                        Equivale a{" "}
-                        {formatClp(Math.round(plan.annual / 12))}
-                        /mes
+                        Equivale a {formatClp(Math.round(plan.annual / 12))}/mes
                       </p>
                     )}
                   </div>
@@ -664,8 +597,7 @@ function PlanesContent() {
                     }}
                   >
                     {plan.features.map((feature) => {
-                      const isDisabled =
-                        plan.disabled.includes(feature);
+                      const isDisabled = plan.disabled.includes(feature);
 
                       return (
                         <li
@@ -675,9 +607,7 @@ function PlanesContent() {
                             alignItems: "center",
                             gap: "10px",
                             fontSize: "14px",
-                            color: isDisabled
-                              ? "#334155"
-                              : "#94A3B8",
+                            color: isDisabled ? "#334155" : "#94A3B8",
                           }}
                         >
                           <svg
@@ -742,11 +672,7 @@ function PlanesContent() {
 
                   {plan.key === "free" ? (
                     <Link
-                      href={
-                        isAuthenticated
-                          ? "/portafolio"
-                          : "/register"
-                      }
+                      href={isAuthenticated ? "/portafolio" : "/register"}
                       style={{
                         display: "block",
                         textAlign: "center",
@@ -763,13 +689,7 @@ function PlanesContent() {
                       {isAuthenticated ? "Ir al panel" : plan.cta}
                     </Link>
                   ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "8px",
-                      }}
-                    >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       <BillingCheckoutButton
                         provider="MERCADOPAGO"
                         plan={resolvePaidPlan(plan.key)}
@@ -782,9 +702,7 @@ function PlanesContent() {
                           border: plan.highlight
                             ? "none"
                             : "1px solid rgba(255,255,255,0.1)",
-                          color: plan.highlight
-                            ? "#ffffff"
-                            : "#E2E8F0",
+                          color: plan.highlight ? "#ffffff" : "#E2E8F0",
                           fontSize: "14px",
                           fontWeight: 700,
                           fontFamily:
@@ -801,8 +719,7 @@ function PlanesContent() {
                           padding: "11px 20px",
                           borderRadius: "9px",
                           background: "transparent",
-                          border:
-                            "1px solid rgba(255,255,255,0.12)",
+                          border: "1px solid rgba(255,255,255,0.12)",
                           color: "#94A3B8",
                           fontSize: "13px",
                           fontWeight: 600,
@@ -819,45 +736,13 @@ function PlanesContent() {
             ))}
           </div>
         </div>
-
-        <div
-          style={{
-            maxWidth: "520px",
-            margin: "2.5rem auto 0",
-            textAlign: "center",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "13px",
-              color: "#475569",
-              lineHeight: 1.7,
-              margin: 0,
-            }}
-          >
-            Los pagos se procesan de forma externa con Mercado Pago
-            o Khipu. La activación se confirma mediante webhook y
-            queda registrada en el módulo de billing.
-          </p>
-        </div>
       </section>
 
-      <section
-        style={{
-          padding: "3rem 2rem 5rem",
-          background: "#071520",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "700px",
-            margin: "0 auto",
-          }}
-        >
+      <section style={{ padding: "3rem 2rem 5rem", background: "#071520" }}>
+        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
           <h2
             style={{
-              fontFamily:
-                "var(--font-display, 'Space Grotesk', sans-serif)",
+              fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
               fontSize: "clamp(1.5rem, 3vw, 2rem)",
               fontWeight: 700,
               color: "#F1F5F9",
@@ -868,13 +753,7 @@ function PlanesContent() {
             Preguntas frecuentes sobre los planes
           </h2>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-            }}
-          >
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {[
               {
                 q: "¿Puedo pagar con transferencia?",
@@ -886,7 +765,7 @@ function PlanesContent() {
               },
               {
                 q: "¿Cuándo se activa el plan?",
-                a: "La activación ocurre cuando el proveedor confirma el pago mediante webhook. Esto evita activar planes desde el frontend.",
+                a: "La activación ocurre cuando el proveedor confirma el pago mediante webhook.",
               },
               {
                 q: "¿Puedo cambiar de plan después?",
@@ -915,82 +794,11 @@ function PlanesContent() {
                   {item.q}
                 </h3>
 
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "#94A3B8",
-                    margin: 0,
-                    lineHeight: 1.65,
-                  }}
-                >
+                <p style={{ fontSize: "14px", color: "#94A3B8", margin: 0, lineHeight: 1.65 }}>
                   {item.a}
                 </p>
               </div>
             ))}
-          </div>
-
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "2.5rem",
-            }}
-          >
-            <p
-              style={{
-                fontSize: "14px",
-                color: "#64748B",
-                margin: "0 0 1rem",
-              }}
-            >
-              ¿Tienes más preguntas?
-            </p>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "11px 22px",
-                  borderRadius: "9px",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#94A3B8",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                }}
-              >
-                Escribir por WhatsApp
-              </a>
-
-              <a
-                href="mailto:admin@ledgera.cl"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "11px 22px",
-                  borderRadius: "9px",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#94A3B8",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                }}
-              >
-                admin@ledgera.cl
-              </a>
-            </div>
           </div>
         </div>
       </section>
@@ -1002,12 +810,7 @@ function PlanesContent() {
           borderTop: "1px solid rgba(255,255,255,0.05)",
         }}
       >
-        <div
-          style={{
-            maxWidth: "1100px",
-            margin: "0 auto",
-          }}
-        >
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div
             style={{
               display: "flex",
@@ -1032,18 +835,11 @@ function PlanesContent() {
                   lineHeight: 1.6,
                 }}
               >
-                Software tributario especializado en criptomonedas
-                para el mercado chileno.
+                Software tributario especializado en criptomonedas para el mercado chileno.
               </p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "3rem",
-                flexWrap: "wrap",
-              }}
-            >
+            <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap" }}>
               <div>
                 <p
                   style={{
@@ -1058,43 +854,14 @@ function PlanesContent() {
                   Producto
                 </p>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                  }}
-                >
-                  <Link
-                    href="/register"
-                    style={{
-                      fontSize: "13px",
-                      color: "#475569",
-                      textDecoration: "none",
-                    }}
-                  >
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <Link href="/register" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
                     Comenzar gratis
                   </Link>
-
-                  <Link
-                    href="/planes"
-                    style={{
-                      fontSize: "13px",
-                      color: "#4ADE80",
-                      textDecoration: "none",
-                    }}
-                  >
+                  <Link href="/planes" style={{ fontSize: "13px", color: "#4ADE80", textDecoration: "none" }}>
                     Precios
                   </Link>
-
-                  <Link
-                    href="/login"
-                    style={{
-                      fontSize: "13px",
-                      color: "#475569",
-                      textDecoration: "none",
-                    }}
-                  >
+                  <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
                     Iniciar sesión
                   </Link>
                 </div>
@@ -1114,34 +881,11 @@ function PlanesContent() {
                   Contacto
                 </p>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                  }}
-                >
-                  <a
-                    href="mailto:admin@ledgera.cl"
-                    style={{
-                      fontSize: "13px",
-                      color: "#475569",
-                      textDecoration: "none",
-                    }}
-                  >
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
                     admin@ledgera.cl
                   </a>
-
-                  <a
-                    href={WHATSAPP_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: "13px",
-                      color: "#475569",
-                      textDecoration: "none",
-                    }}
-                  >
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
                     WhatsApp
                   </a>
                 </div>
@@ -1159,24 +903,11 @@ function PlanesContent() {
               flexWrap: "wrap",
             }}
           >
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#334155",
-                margin: 0,
-              }}
-            >
-              © {new Date().getFullYear()} LEDGERA. Todos los
-              derechos reservados.
+            <p style={{ fontSize: "12px", color: "#334155", margin: 0 }}>
+              © {new Date().getFullYear()} LEDGERA. Todos los derechos reservados.
             </p>
 
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#334155",
-                margin: 0,
-              }}
-            >
+            <p style={{ fontSize: "12px", color: "#334155", margin: 0 }}>
               Pagos integrados con Mercado Pago y Khipu.
             </p>
           </div>
@@ -1185,12 +916,7 @@ function PlanesContent() {
 
       {showScrollTop && (
         <button
-          onClick={() =>
-            window.scrollTo({
-              top: 0,
-              behavior: "smooth",
-            })
-          }
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           style={{
             position: "fixed",
             right: "24px",
