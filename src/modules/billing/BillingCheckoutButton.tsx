@@ -50,8 +50,7 @@ export function BillingCheckoutButton({
   const { isAuthenticated } = useAuth();
 
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleClick() {
     setErrorMessage(null);
@@ -67,9 +66,9 @@ export function BillingCheckoutButton({
       );
 
       router.push(
-        `/register?plan=${encodeURIComponent(plan)}&provider=${encodeURIComponent(
-          provider,
-        )}`,
+        `/register?plan=${encodeURIComponent(
+          plan,
+        )}&provider=${encodeURIComponent(provider)}`,
       );
 
       return;
@@ -92,7 +91,13 @@ export function BillingCheckoutButton({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+      }}
+    >
       <button
         type="button"
         onClick={handleClick}

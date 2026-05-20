@@ -2,9 +2,7 @@ import { httpClient } from "@/shared/http/httpClient";
 
 export type BillingProvider = "MERCADOPAGO" | "KHIPU";
 
-export type BillingCheckoutPlan =
-  | "PROFESIONAL"
-  | "EMPRESA";
+export type BillingCheckoutPlan = "PROFESIONAL" | "EMPRESA";
 
 type BillingCheckoutResponse = {
   ok: boolean;
@@ -39,8 +37,7 @@ export async function createBillingCheckout(input: {
 
   if (!paymentUrl) {
     throw new Error(
-      response.message ??
-        "No fue posible obtener la URL de pago.",
+      response.message ?? "No fue posible obtener la URL de pago.",
     );
   }
 
