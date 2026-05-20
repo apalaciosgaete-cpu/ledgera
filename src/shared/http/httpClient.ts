@@ -1,11 +1,6 @@
 import { getSessionToken } from "@/modules/identity/client/authStorage";
 
-type HttpMethod =
-  | "GET"
-  | "POST"
-  | "PUT"
-  | "PATCH"
-  | "DELETE";
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 type RequestOptions = {
   method?: HttpMethod;
@@ -40,57 +35,35 @@ export class HttpClientError extends Error {
     this.status = input.status;
     this.data = input.data ?? null;
     this.code = input.code ?? null;
-    this.retryAfterSeconds =
-      input.retryAfterSeconds ?? null;
+    this.retryAfterSeconds = input.retryAfterSeconds ?? null;
   }
 }
 
 const CSRF_COOKIE_NAME = "ledgera_csrf";
 const CSRF_HEADER_NAME = "X-LEDGERA-CSRF";
 
-function isErrorPayload(
-  value: unknown,
-): value is ErrorPayload {
+function isErrorPayload(value: unknown): value is ErrorPayload {
   return typeof value === "object" && value !== null;
 }
 
-function isMutationMethod(
-  method: HttpMethod,
-): boolean {
-  return (
-    method === "POST" ||
-    method === "PUT" ||
-    method === "PATCH" ||
-    method === "DELETE"
-  );
+function isMutationMethod(method: HttpMethod): boolean {
+  return method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
 }
 
 function readCookie(name: string): string | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
+  if (typeof document === "undefined") return null;
 
-  const cookies = document.cookie
+  const target = document.cookie
     .split(";")
-    .map((cookie) => cookie.trim());
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(`${name}=`));
 
-  const target = cookies.find((cookie) =>
-    cookie.startsWith(`${name}=`),
-  );
+  if (!target) return null;
 
-  if (!target) {
-    return null;
-  }
-
-  return decodeURIComponent(
-    target.slice(name.length + 1),
-  );
+  return decodeURIComponent(target.slice(name.length + 1));
 }
 
-function resolveErrorMessage(
-  payload: unknown,
-  status: number,
-): string {
+function resolveErrorMessage(payload: unknown, status: number): string {
   if (
     isErrorPayload(payload) &&
     typeof payload.message === "string" &&
@@ -102,36 +75,25 @@ function resolveErrorMessage(
   switch (status) {
     case 401:
       return "Sesión expirada o no autorizada.";
-
     case 402:
       return "Suscripción requerida para continuar.";
-
     case 403:
       return "No tienes permisos para realizar esta acción.";
-
     case 404:
       return "Recurso no encontrado.";
-
     case 409:
       return "La operación no se puede completar.";
-
     case 429:
       return "Demasiados intentos. Intenta nuevamente más tarde.";
-
     case 500:
       return "Error interno del servidor.";
-
     default:
       return `HTTP ${status}`;
   }
 }
 
-function resolveErrorCode(
-  payload: unknown,
-): string | null {
-  if (!isErrorPayload(payload)) {
-    return null;
-  }
+function resolveErrorCode(payload: unknown): string | null {
+  if (!isErrorPayload(payload)) return null;
 
   const data = payload.data;
 
@@ -147,12 +109,8 @@ function resolveErrorCode(
   return null;
 }
 
-function resolveRetryAfterSeconds(
-  response: Response,
-  payload: unknown,
-): number | null {
-  const retryAfterHeader =
-    response.headers.get("Retry-After");
+function resolveRetryAfterSeconds(response: Response, payload: unknown): number | null {
+  const retryAfterHeader = response.headers.get("Retry-After");
 
   if (retryAfterHeader) {
     const value = Number(retryAfterHeader);
@@ -162,9 +120,7 @@ function resolveRetryAfterSeconds(
     }
   }
 
-  if (!isErrorPayload(payload)) {
-    return null;
-  }
+  if (!isErrorPayload(payload)) return null;
 
   const data = payload.data;
 
@@ -172,20 +128,15 @@ function resolveRetryAfterSeconds(
     typeof data === "object" &&
     data !== null &&
     "retryAfterSeconds" in data &&
-    typeof (data as { retryAfterSeconds?: unknown })
-      .retryAfterSeconds === "number"
+    typeof (data as { retryAfterSeconds?: unknown }).retryAfterSeconds === "number"
   ) {
-    return (
-      data as { retryAfterSeconds: number }
-    ).retryAfterSeconds;
+    return (data as { retryAfterSeconds: number }).retryAfterSeconds;
   }
 
   return null;
 }
 
-export function isHttpClientError(
-  error: unknown,
-): error is HttpClientError {
+export function isHttpClientError(error: unknown): error is HttpClientError {
   return error instanceof HttpClientError;
 }
 
@@ -202,51 +153,32 @@ export async function httpClient<T = unknown>(
 
   const finalHeaders = new Headers(headers ?? {});
 
-  if (
-    body !== undefined &&
-    !finalHeaders.has("Content-Type")
-  ) {
-    finalHeaders.set(
-      "Content-Type",
-      "application/json",
-    );
+  if (body !== undefined && !finalHeaders.has("Content-Type")) {
+    finalHeaders.set("Content-Type", "application/json");
   }
 
   if (auth) {
     const token = getSessionToken();
 
     if (token) {
-      finalHeaders.set(
-        "Authorization",
-        `Bearer ${token}`,
-      );
+      finalHeaders.set("Authorization", `Bearer ${token}`);
     }
   }
 
-  if (
-    isMutationMethod(method) &&
-    !finalHeaders.has(CSRF_HEADER_NAME)
-  ) {
-    const csrfToken = readCookie(
-      CSRF_COOKIE_NAME,
-    );
+  if (isMutationMethod(method) && !finalHeaders.has(CSRF_HEADER_NAME)) {
+    const csrfToken = readCookie(CSRF_COOKIE_NAME);
 
     if (csrfToken) {
-      finalHeaders.set(
-        CSRF_HEADER_NAME,
-        csrfToken,
-      );
+      finalHeaders.set(CSRF_HEADER_NAME, csrfToken);
     }
   }
 
   const response = await fetch(url, {
     method,
     headers: finalHeaders,
-    body:
-      body !== undefined
-        ? JSON.stringify(body)
-        : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
     cache: "no-store",
+    credentials: "include",
   });
 
   let payload: unknown = null;
@@ -260,19 +192,10 @@ export async function httpClient<T = unknown>(
   if (!response.ok) {
     throw new HttpClientError({
       status: response.status,
-      message: resolveErrorMessage(
-        payload,
-        response.status,
-      ),
-      data: isErrorPayload(payload)
-        ? payload.data ?? payload.error ?? null
-        : null,
+      message: resolveErrorMessage(payload, response.status),
+      data: isErrorPayload(payload) ? payload.data ?? payload.error ?? null : null,
       code: resolveErrorCode(payload),
-      retryAfterSeconds:
-        resolveRetryAfterSeconds(
-          response,
-          payload,
-        ),
+      retryAfterSeconds: resolveRetryAfterSeconds(response, payload),
     });
   }
 

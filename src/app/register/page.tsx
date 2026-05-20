@@ -4,11 +4,26 @@
 import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+
 import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
+import { saveSessionToken } from "@/modules/identity/client/authStorage";
 import { useAuth } from "@/modules/identity/client/authContext";
+import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
 type Role = "personal" | "contador" | "empresa";
+
+type RegisterResponse = {
+  ok?: boolean;
+  message?: string;
+  data?: {
+    user?: unknown;
+    session?: {
+      token?: string;
+      expiresAt?: string;
+    };
+  };
+};
 
 const roles: { value: Role; label: string; description: string }[] = [
   {
@@ -29,31 +44,86 @@ const roles: { value: Role; label: string; description: string }[] = [
 ];
 
 function RegisterForm() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { login }    = useAuth();
+  const { refreshUser } = useAuth();
 
-  const planParam    = searchParams.get("plan");
+  const planParam = searchParams.get("plan");
   const billingParam = searchParams.get("billing") ?? "monthly";
 
-  const [fullName,      setFullName]      = useState("");
-  const [email,         setEmail]         = useState("");
-  const [password,      setPassword]      = useState("");
-  const [showPassword,  setShowPassword]  = useState(false);
-  const [role,          setRole]          = useState<Role>("personal");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState<Role>("personal");
   const [accordionOpen, setAccordionOpen] = useState(false);
-  const [errorMessage,  setErrorMessage]  = useState("");
-  const [submitting,    setSubmitting]    = useState(false);
 
-  const selectedRole = roles.find((r) => r.value === role) ?? roles[0];
+  const [errorMessage, setErrorMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSelectRole(r: Role) {
-    setRole(r);
+  const selectedRole =
+    roles.find((currentRole) => currentRole.value === role) ?? roles[0];
+
+  function handleSelectRole(nextRole: Role) {
+    setRole(nextRole);
     setAccordionOpen(false);
   }
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function resolveErrorMessage(error: unknown) {
+    if (isHttpClientError(error)) {
+      if (error.status === 429 && error.retryAfterSeconds) {
+        return `Demasiados intentos. Intenta nuevamente en ${error.retryAfterSeconds} segundos.`;
+      }
+
+      return error.message;
+    }
+
+    return "Error de conexión. Intenta nuevamente.";
+  }
+
+  async function redirectAfterRegister() {
+    const pending = sessionStorage.getItem("pendingCheckout");
+    const fallbackPlan = planParam
+      ? { plan: planParam, billing: billingParam }
+      : null;
+
+    const checkoutData = pending
+      ? (JSON.parse(pending) as { plan: string; billing: string })
+      : fallbackPlan;
+
+    if (checkoutData) {
+      sessionStorage.removeItem("pendingCheckout");
+
+      try {
+        const response = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan: checkoutData.plan,
+            billing: checkoutData.billing,
+          }),
+          credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } catch {
+        router.push("/planes");
+        return;
+      }
+    }
+
+    router.push("/portafolio");
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
     setErrorMessage("");
 
     if (password.length < 8) {
@@ -62,66 +132,45 @@ function RegisterForm() {
     }
 
     setSubmitting(true);
+
     try {
-      // 1. Crear usuario
-      const registerRes = await fetch("/api/users", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ fullName, email, password, role }),
+      const response = await httpClient<RegisterResponse>("/api/users", {
+        method: "POST",
+        body: {
+          fullName,
+          email,
+          password,
+          role,
+        },
       });
 
-      const registerJson = await registerRes.json();
+      const token = response.data?.session?.token;
 
-      if (!registerJson.ok) {
-        setErrorMessage(registerJson.message ?? "No fue posible crear la cuenta.");
-        return;
+      if (token) {
+        saveSessionToken(token);
       }
 
-      // 2. Login automático con las mismas credenciales
-      try {
-        await login(email, password);
-
-        // Si hay un plan pendiente, llamar a Stripe directamente
-        const pending = sessionStorage.getItem("pendingCheckout");
-        const fallbackPlan = planParam ? { plan: planParam, billing: billingParam } : null;
-        const checkoutData = pending ? (JSON.parse(pending) as { plan: string; billing: string }) : fallbackPlan;
-
-        if (checkoutData) {
-          sessionStorage.removeItem("pendingCheckout");
-          try {
-            const res = await fetch("/api/stripe/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ plan: checkoutData.plan, billing: checkoutData.billing }),
-              credentials: "include",
-            });
-            const data = await res.json();
-            if (data.url) {
-              window.location.href = data.url;
-              return;
-            }
-          } catch {
-            // Si Stripe falla, ir a planes para que intente manualmente
-            router.push("/planes");
-            return;
-          }
-        }
-
-        router.push("/portafolio");
-      } catch {
-        router.push("/login?registered=1");
-      }
-
-    } catch {
-      setErrorMessage("Error de conexión. Intenta nuevamente.");
+      await refreshUser();
+      await redirectAfterRegister();
+    } catch (error) {
+      setErrorMessage(resolveErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: colors.primary, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: fonts.body }}>
-
+    <main
+      style={{
+        minHeight: "100vh",
+        background: colors.primary,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        fontFamily: fonts.body,
+      }}
+    >
       <style>{`
         * { box-sizing: border-box; }
         input::placeholder { color: #334155; }
@@ -129,54 +178,191 @@ function RegisterForm() {
         .role-option:hover { background: rgba(22,163,74,0.06) !important; }
       `}</style>
 
-      <div style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", gap: "28px" }}>
-
-        {/* Logo */}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "420px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "28px",
+        }}
+      >
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Logo variant="light" size="lg" showSubtitle />
         </div>
 
-        {/* Card */}
-        <div style={{ background: colors.surfaceDark, borderRadius: "16px", padding: "32px", border: `0.5px solid ${colors.borderDark}` }}>
-          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "#F6F8FA", margin: "0 0 24px" }}>
+        <div
+          style={{
+            background: colors.surfaceDark,
+            borderRadius: "16px",
+            padding: "32px",
+            border: `0.5px solid ${colors.borderDark}`,
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: fonts.display,
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "#F6F8FA",
+              margin: "0 0 24px",
+            }}
+          >
             Crear cuenta
           </h1>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-
-            {/* Tipo de cuenta */}
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+            }}
+          >
             <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: colors.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: "6px",
+                }}
+              >
                 Tipo de cuenta
               </label>
 
               <button
                 type="button"
                 onClick={() => setAccordionOpen(!accordionOpen)}
-                style={{ width: "100%", background: accordionOpen ? "rgba(22,163,74,0.08)" : colors.primary, border: accordionOpen ? `1px solid ${colors.accent}` : `0.5px solid ${colors.borderDark}`, borderRadius: accordionOpen ? "10px 10px 0 0" : "10px", padding: "12px 14px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                style={{
+                  width: "100%",
+                  background: accordionOpen
+                    ? "rgba(22,163,74,0.08)"
+                    : colors.primary,
+                  border: accordionOpen
+                    ? `1px solid ${colors.accent}`
+                    : `0.5px solid ${colors.borderDark}`,
+                  borderRadius: accordionOpen ? "10px 10px 0 0" : "10px",
+                  padding: "12px 14px",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
                 <div>
-                  <p style={{ color: colors.accent, fontSize: "13px", fontWeight: 600, margin: 0 }}>{selectedRole.label}</p>
-                  <p style={{ color: "#64748B", fontSize: "11px", margin: 0 }}>{selectedRole.description}</p>
+                  <p
+                    style={{
+                      color: colors.accent,
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      margin: 0,
+                    }}
+                  >
+                    {selectedRole.label}
+                  </p>
+                  <p
+                    style={{
+                      color: "#64748B",
+                      fontSize: "11px",
+                      margin: 0,
+                    }}
+                  >
+                    {selectedRole.description}
+                  </p>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 16 16" style={{ flexShrink: 0, transition: "transform 0.2s", transform: accordionOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
-                  <path d="M4 6l4 4 4-4" stroke="#64748B" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  style={{
+                    flexShrink: 0,
+                    transition: "transform 0.2s",
+                    transform: accordionOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  }}
+                >
+                  <path
+                    d="M4 6l4 4 4-4"
+                    stroke="#64748B"
+                    strokeWidth="1.5"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
 
               {accordionOpen && (
-                <div style={{ background: "#0a1f2e", border: `1px solid ${colors.accent}`, borderTop: "none", borderRadius: "0 0 10px 10px", overflow: "hidden" }}>
-                  {roles.map((r) => (
+                <div
+                  style={{
+                    background: "#0a1f2e",
+                    border: `1px solid ${colors.accent}`,
+                    borderTop: "none",
+                    borderRadius: "0 0 10px 10px",
+                    overflow: "hidden",
+                  }}
+                >
+                  {roles.map((currentRole) => (
                     <div
-                      key={r.value}
+                      key={currentRole.value}
                       className="role-option"
-                      onClick={() => handleSelectRole(r.value)}
-                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "11px 14px", cursor: "pointer", borderBottom: `0.5px solid ${colors.borderDark}`, background: role === r.value ? "rgba(22,163,74,0.1)" : "transparent", transition: "all 0.15s" }}
+                      onClick={() => handleSelectRole(currentRole.value)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "11px 14px",
+                        cursor: "pointer",
+                        borderBottom: `0.5px solid ${colors.borderDark}`,
+                        background:
+                          role === currentRole.value
+                            ? "rgba(22,163,74,0.1)"
+                            : "transparent",
+                        transition: "all 0.15s",
+                      }}
                     >
-                      <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: role === r.value ? "none" : "2px solid #334155", background: role === r.value ? colors.accent : "transparent", flexShrink: 0, transition: "all 0.15s" }} />
+                      <div
+                        style={{
+                          width: "14px",
+                          height: "14px",
+                          borderRadius: "50%",
+                          border:
+                            role === currentRole.value
+                              ? "none"
+                              : "2px solid #334155",
+                          background:
+                            role === currentRole.value
+                              ? colors.accent
+                              : "transparent",
+                          flexShrink: 0,
+                          transition: "all 0.15s",
+                        }}
+                      />
+
                       <div>
-                        <p style={{ color: "#F6F8FA", fontSize: "13px", fontWeight: 500, margin: 0 }}>{r.label}</p>
-                        <p style={{ color: "#64748B", fontSize: "11px", margin: 0 }}>{r.description}</p>
+                        <p
+                          style={{
+                            color: "#F6F8FA",
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            margin: 0,
+                          }}
+                        >
+                          {currentRole.label}
+                        </p>
+                        <p
+                          style={{
+                            color: "#64748B",
+                            fontSize: "11px",
+                            margin: 0,
+                          }}
+                        >
+                          {currentRole.description}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -184,112 +370,233 @@ function RegisterForm() {
               )}
             </div>
 
-            {/* Nombre */}
             <div>
-              <label htmlFor="fullName" style={{ display: "block", fontSize: "12px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+              <label
+                htmlFor="fullName"
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: colors.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: "6px",
+                }}
+              >
                 Nombre completo
               </label>
+
               <input
                 id="fullName"
                 type="text"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(event) => setFullName(event.target.value)}
                 required
                 placeholder="Tu nombre"
-                style={{ width: "100%", padding: "11px 14px", background: colors.primary, border: `0.5px solid ${colors.borderDark}`, borderRadius: "8px", color: "#F6F8FA", fontSize: "14px", fontFamily: fonts.body }}
+                style={{
+                  width: "100%",
+                  padding: "11px 14px",
+                  background: colors.primary,
+                  border: `0.5px solid ${colors.borderDark}`,
+                  borderRadius: "8px",
+                  color: "#F6F8FA",
+                  fontSize: "14px",
+                  fontFamily: fonts.body,
+                }}
               />
             </div>
 
-            {/* Email */}
             <div>
-              <label htmlFor="email" style={{ display: "block", fontSize: "12px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+              <label
+                htmlFor="email"
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: colors.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: "6px",
+                }}
+              >
                 Correo electrónico
               </label>
+
               <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 required
                 placeholder="tu@correo.cl"
-                style={{ width: "100%", padding: "11px 14px", background: colors.primary, border: `0.5px solid ${colors.borderDark}`, borderRadius: "8px", color: "#F6F8FA", fontSize: "14px", fontFamily: fonts.body }}
+                style={{
+                  width: "100%",
+                  padding: "11px 14px",
+                  background: colors.primary,
+                  border: `0.5px solid ${colors.borderDark}`,
+                  borderRadius: "8px",
+                  color: "#F6F8FA",
+                  fontSize: "14px",
+                  fontFamily: fonts.body,
+                }}
               />
             </div>
 
-            {/* Password */}
             <div>
-              <label htmlFor="password" style={{ display: "block", fontSize: "12px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+              <label
+                htmlFor="password"
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: colors.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: "6px",
+                }}
+              >
                 Contraseña
               </label>
+
               <div style={{ position: "relative" }}>
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
                   minLength={8}
                   placeholder="Mínimo 8 caracteres"
-                  style={{ width: "100%", padding: "11px 42px 11px 14px", background: colors.primary, border: `0.5px solid ${colors.borderDark}`, borderRadius: "8px", color: "#F6F8FA", fontSize: "14px", fontFamily: fonts.body }}
+                  style={{
+                    width: "100%",
+                    padding: "11px 42px 11px 14px",
+                    background: colors.primary,
+                    border: `0.5px solid ${colors.borderDark}`,
+                    borderRadius: "8px",
+                    color: "#F6F8FA",
+                    fontSize: "14px",
+                    fontFamily: fonts.body,
+                  }}
                 />
+
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: colors.textMuted, display: "flex", alignItems: "center" }}
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    color: colors.textMuted,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     {showPassword ? (
                       <>
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                        <line x1="1" y1="1" x2="23" y2="23"/>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
                       </>
                     ) : (
                       <>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
                       </>
                     )}
                   </svg>
                 </button>
               </div>
+
               {password.length > 0 && password.length < 8 && (
-                <p style={{ fontSize: "11px", color: colors.warning, margin: "4px 0 0" }}>
+                <p
+                  style={{
+                    fontSize: "11px",
+                    color: colors.warning,
+                    margin: "4px 0 0",
+                  }}
+                >
                   {8 - password.length} caracteres más requeridos
                 </p>
               )}
             </div>
 
-            {/* Error */}
             {errorMessage && (
-              <p style={{ color: "#F87171", fontSize: "13px", margin: 0, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: "6px", border: "1px solid rgba(239,68,68,0.15)" }}>
+              <p
+                style={{
+                  color: "#F87171",
+                  fontSize: "13px",
+                  margin: 0,
+                  background: "rgba(239,68,68,0.08)",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid rgba(239,68,68,0.15)",
+                }}
+              >
                 {errorMessage}
               </p>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={submitting}
-              style={{ width: "100%", padding: "13px", background: submitting ? colors.accentHover : colors.accent, border: "none", borderRadius: "8px", color: "#fff", fontSize: "14px", fontWeight: 600, fontFamily: fonts.body, cursor: submitting ? "not-allowed" : "pointer", marginTop: "4px", transition: "background 0.15s ease" }}
+              style={{
+                width: "100%",
+                padding: "13px",
+                background: submitting ? colors.accentHover : colors.accent,
+                border: "none",
+                borderRadius: "8px",
+                color: "#fff",
+                fontSize: "14px",
+                fontWeight: 600,
+                fontFamily: fonts.body,
+                cursor: submitting ? "not-allowed" : "pointer",
+                marginTop: "4px",
+                transition: "background 0.15s ease",
+              }}
             >
               {submitting ? "Creando cuenta..." : "Crear cuenta"}
             </button>
-
           </form>
         </div>
 
-        {/* Login */}
-        <p style={{ textAlign: "center", fontSize: "13px", color: colors.textSecondary, margin: 0 }}>
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "13px",
+            color: colors.textSecondary,
+            margin: 0,
+          }}
+        >
           ¿Ya tienes cuenta?{" "}
           <Link
-            href={planParam ? `/login?plan=${planParam}&billing=${billingParam}` : "/login"}
-            style={{ color: colors.accent, textDecoration: "none", fontWeight: 600 }}
+            href={
+              planParam
+                ? `/login?plan=${planParam}&billing=${billingParam}`
+                : "/login"
+            }
+            style={{
+              color: colors.accent,
+              textDecoration: "none",
+              fontWeight: 600,
+            }}
           >
             Iniciar sesión
           </Link>
         </p>
-
       </div>
     </main>
   );

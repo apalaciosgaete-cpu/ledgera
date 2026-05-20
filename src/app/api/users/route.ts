@@ -1,10 +1,15 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import {
   getUsers,
   createUser,
   getUserByEmail,
 } from "@/modules/identity/infrastructure/userRepository";
+import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
+import {
+  buildSessionExpirationDate,
+  generateSessionToken,
+} from "@/modules/identity/application/sessionToken";
 import { hashPassword } from "@/modules/identity/application/password";
 import { sanitizeUser } from "@/modules/identity/application/sanitizeUser";
 import { createPortfolio } from "@/modules/portfolio/infrastructure/portfolioRepository";
@@ -79,6 +84,15 @@ export async function POST(request: NextRequest) {
 
     await createPortfolio(user.id);
 
+    const sessionToken = generateSessionToken();
+    const expiresAt = buildSessionExpirationDate();
+
+    const session = await rotateSessionForUser({
+      userId: user.id,
+      token: sessionToken,
+      expiresAt,
+    });
+
     try {
       await sendWelcomeEmail({
         to: email,
@@ -89,7 +103,31 @@ export async function POST(request: NextRequest) {
       console.warn("[users/POST] Email bienvenida falló:", emailError);
     }
 
-    return ok(sanitizeUser(user), "Usuario creado correctamente.", 201);
+    const response = NextResponse.json(
+      {
+        ok: true,
+        message: "Usuario creado correctamente.",
+        data: {
+          user: sanitizeUser(user),
+          session: {
+            id: session.id,
+            token: session.token,
+            expiresAt: session.expiresAt,
+          },
+        },
+      },
+      { status: 201 },
+    );
+
+    response.cookies.set("session_token", sessionToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      expires: expiresAt,
+    });
+
+    return response;
   } catch (error) {
     return serverError(error);
   }
