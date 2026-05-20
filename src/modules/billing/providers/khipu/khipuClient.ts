@@ -51,6 +51,8 @@ function getKhipuSecret(): string {
   return secret;
 }
 
+const KHIPU_BASE = "https://khipu.com/api/2.0";
+
 function buildFormBody(
   input: Record<string, string | number | boolean | null | undefined>,
 ): URLSearchParams {
@@ -58,19 +60,53 @@ function buildFormBody(
 
   Object.entries(input).forEach(([key, value]) => {
     if (value === null || value === undefined) return;
-
     body.set(key, String(value));
   });
 
   return body;
 }
 
+function buildKhipuAuthHeader(
+  method: string,
+  url: string,
+  params: URLSearchParams,
+  receiverId: string,
+  secret: string,
+): string {
+  const sorted = [...params.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+
+  const toSign = `${method.toUpperCase()}&${encodeURIComponent(url)}&${encodeURIComponent(sorted)}`;
+
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(toSign)
+    .digest("hex");
+
+  return `${receiverId}:${signature}`;
+}
+
 async function khipuRequest<T>(
   path: string,
-  options: RequestInit,
+  method: string,
+  params: URLSearchParams,
+  receiverId: string,
+  secret: string,
 ): Promise<T> {
-  const response = await fetch(`https://khipu.com/api/2.0${path}`, {
-    ...options,
+  const url = `${KHIPU_BASE}${path}`;
+  const isGet = method.toUpperCase() === "GET";
+
+  const authorization = buildKhipuAuthHeader(method, url, params, receiverId, secret);
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      Authorization: authorization,
+      ...(!isGet && { "Content-Type": "application/x-www-form-urlencoded" }),
+    },
+    body: isGet ? undefined : params,
     cache: "no-store",
   });
 
@@ -103,16 +139,13 @@ export async function createKhipuPayment(
     payer_email: input.payerEmail,
   });
 
-  return khipuRequest<KhipuCreatePaymentResponse>("/payments", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${receiverId}:${secret}`).toString(
-        "base64",
-      )}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+  return khipuRequest<KhipuCreatePaymentResponse>(
+    "/payments",
+    "POST",
     body,
-  });
+    receiverId,
+    secret,
+  );
 }
 
 export async function getKhipuPayment(
@@ -121,16 +154,14 @@ export async function getKhipuPayment(
   const receiverId = getKhipuReceiverId();
   const secret = getKhipuSecret();
 
+  const body = new URLSearchParams();
+
   return khipuRequest<KhipuPaymentResponse>(
     `/payments/${encodeURIComponent(paymentId)}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${receiverId}:${secret}`).toString(
-          "base64",
-        )}`,
-      },
-    },
+    "GET",
+    body,
+    receiverId,
+    secret,
   );
 }
 
