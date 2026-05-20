@@ -1,35 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  generateCsrfToken,
-  setCsrfCookie,
-} from "@/modules/security/application/csrfProtection";
+import { deleteSessionByToken } from "@/modules/identity/infrastructure/sessionRepository";
 
-export async function GET(_req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const token = generateCsrfToken();
+    const sessionToken = request.cookies.get("session_token")?.value;
+
+    if (sessionToken) {
+      await deleteSessionByToken(sessionToken);
+    }
 
     const response = NextResponse.json({
       ok: true,
-      data: {
-        csrfInitialized: true,
-      },
+      message: "Sesión cerrada correctamente.",
     });
 
-    setCsrfCookie(response, token);
+    response.cookies.set("session_token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      expires: new Date(0),
+    });
 
     return response;
   } catch (error) {
-    console.error("CSRF_INIT_ERROR", error);
+    console.error("[api/logout]", error);
 
     return NextResponse.json(
       {
         ok: false,
-        message: "No fue posible inicializar protección CSRF.",
+        message: "No fue posible cerrar sesión.",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }
