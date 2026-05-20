@@ -11,9 +11,7 @@ import {
   updateBillingSubscription,
 } from "@/modules/billing/infrastructure/billingRepository";
 
-import {
-  resolveSubscriptionStatusFromPayment,
-} from "@/modules/billing/domain/billing";
+import { resolveSubscriptionStatusFromPayment } from "@/modules/billing/domain/billing";
 
 type ActivateSubscriptionInput = {
   paymentId: string;
@@ -36,25 +34,44 @@ function calculateCurrentPeriodEnd(): Date {
   return end;
 }
 
-function resolveUserSubscriptionStatus(
+function isSuccessfulPayment(
   status: BillingPaymentStatus,
-): string {
-  if (
+): boolean {
+  return (
     status === "APPROVED" ||
     status === "AUTHORIZED"
-  ) {
-    return "active";
-  }
+  );
+}
 
-  if (
+function isFailedPayment(
+  status: BillingPaymentStatus,
+): boolean {
+  return (
     status === "REJECTED" ||
     status === "CANCELED" ||
     status === "FAILED"
+  );
+}
+
+function resolvePlanFromPaymentDescription(
+  description: string,
+): BillingPlan {
+  const normalizedDescription =
+    description.toLowerCase();
+
+  if (
+    normalizedDescription.includes("empresa")
   ) {
-    return "payment_failed";
+    return "EMPRESA";
   }
 
-  return "pending";
+  if (
+    normalizedDescription.includes("profesional")
+  ) {
+    return "PROFESIONAL";
+  }
+
+  return "PROFESIONAL";
 }
 
 export async function activateSubscriptionFromPayment(
@@ -70,18 +87,19 @@ export async function activateSubscriptionFromPayment(
     );
   }
 
-  const paidAt =
-    input.status === "APPROVED" ||
-    input.status === "AUTHORIZED"
-      ? new Date()
-      : null;
+  const paymentSucceeded =
+    isSuccessfulPayment(input.status);
 
-  const failedAt =
-    input.status === "REJECTED" ||
-    input.status === "CANCELED" ||
-    input.status === "FAILED"
-      ? new Date()
-      : null;
+  const paymentFailed =
+    isFailedPayment(input.status);
+
+  const paidAt = paymentSucceeded
+    ? new Date()
+    : null;
+
+  const failedAt = paymentFailed
+    ? new Date()
+    : null;
 
   const updatedPayment =
     await updateBillingPayment({
@@ -119,18 +137,16 @@ export async function activateSubscriptionFromPayment(
     });
   }
 
-  if (paidAt) {
+  if (paymentSucceeded) {
     await prisma.users.update({
       where: {
         id: payment.userId,
       },
       data: {
         subscription_plan:
-          payment.description.includes("Empresa")
-            ? ("EMPRESA" satisfies BillingPlan)
-            : ("PROFESIONAL" satisfies BillingPlan),
-        subscription_status:
-          resolveUserSubscriptionStatus(input.status),
+          resolvePlanFromPaymentDescription(
+            payment.description,
+          ),
         subscription_expires_at:
           calculateCurrentPeriodEnd(),
         updated_at: new Date(),
@@ -138,14 +154,12 @@ export async function activateSubscriptionFromPayment(
     });
   }
 
-  if (failedAt) {
+  if (paymentFailed) {
     await prisma.users.update({
       where: {
         id: payment.userId,
       },
       data: {
-        subscription_status:
-          resolveUserSubscriptionStatus(input.status),
         updated_at: new Date(),
       },
     });
