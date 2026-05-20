@@ -122,12 +122,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[billing/khipu/payment]", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[billing/khipu/payment] ERROR:", msg);
 
     return NextResponse.json(
       {
         ok: false,
-        message: "No fue posible crear el pago Khipu.",
+        message: msg || "No fue posible crear el pago Khipu.",
         data: null,
       },
       { status: 500 },
