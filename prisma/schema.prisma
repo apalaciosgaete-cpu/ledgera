@@ -362,10 +362,6 @@ model users {
   role                    String    @default("personal")
   subscription_plan       String    @default("BASICO")
   subscription_expires_at DateTime? @db.Timestamptz(6)
-  subscription_status     String    @default("free")
-  stripe_customer_id      String?   @unique
-  stripe_subscription_id  String?   @unique
-  stripe_price_id         String?
   twoFactorSecret         String?
   twoFactorEnabled        Boolean   @default(false)
   rut                     String?
@@ -388,8 +384,6 @@ model users {
   billingPayments         BillingPayment[]
 
   @@index([email], map: "idx_users_email")
-  @@index([subscription_expires_at], map: "idx_users_subscription_expires_at")
-  @@index([subscription_status], map: "idx_users_subscription_status")
   @@map("users")
 }
 
