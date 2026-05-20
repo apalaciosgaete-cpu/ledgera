@@ -73,12 +73,10 @@ function buildKhipuAuthHeader(
   receiverId: string,
   secret: string,
 ): string {
-  const sorted = [...params.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join("&");
+  const sortedEntries = [...params.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const queryString = new URLSearchParams(sortedEntries).toString();
 
-  const toSign = `${method.toUpperCase()}&${encodeURIComponent(url)}&${encodeURIComponent(sorted)}`;
+  const toSign = `${method.toUpperCase()}&${encodeURIComponent(url)}&${encodeURIComponent(queryString)}`;
 
   const signature = crypto
     .createHmac("sha256", secret)
