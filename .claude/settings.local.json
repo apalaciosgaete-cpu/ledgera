@@ -27,7 +27,11 @@
       "Bash(Write-Output \"dir created\")",
       "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\HOME\\\\Documents\\\\ledgera\\\\src\\\\app\\\\blog\")",
       "Bash(grep -v \"^$\")",
-      "Bash(vercel --prod --yes)"
+      "Bash(vercel --prod --yes)",
+      "Bash(rm \"c:\\\\Users\\\\HOME\\\\Documents\\\\ledgera\\\\src\\\\modules\\\\billing\\\\health\\\\route.ts\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\HOME\\Documents\\ledgera\\src\\modules\\billing\\health"
     ]
   }
 }
