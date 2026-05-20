@@ -32,7 +32,7 @@ export type KhipuPaymentResponse = {
 };
 
 function getKhipuReceiverId(): string {
-  const receiverId = process.env.KHIPU_RECEIVER_ID;
+  const receiverId = process.env.KHIPU_RECEIVER_ID?.trim();
 
   if (!receiverId) {
     throw new Error("KHIPU_RECEIVER_ID no está configurado.");
@@ -42,7 +42,7 @@ function getKhipuReceiverId(): string {
 }
 
 function getKhipuSecret(): string {
-  const secret = process.env.KHIPU_SECRET;
+  const secret = process.env.KHIPU_SECRET?.trim();
 
   if (!secret) {
     throw new Error("KHIPU_SECRET no está configurado.");
