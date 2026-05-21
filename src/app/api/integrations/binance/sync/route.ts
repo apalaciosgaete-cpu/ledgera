@@ -11,6 +11,9 @@ import {
 import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
 import { syncBinance } from "@/modules/integrations/binance/application/syncBinance";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
+import { autoConfirmImports } from "@/modules/integrations/binance/application/autoConfirmImports";
+import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
+import { generateAnnualTaxSummary } from "@/modules/tax/application/generateAnnualTaxSummary";
 
 function getStaleSyncMinutes(): number {
   const val = Number(process.env.BINANCE_STALE_SYNC_MINUTES ?? "30");
@@ -122,16 +125,45 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    const message = hasFailed
-      ? `Sincronización parcial: ${result.imported} nuevos, ${result.errors.length} errores.`
-      : `Sincronización completada: ${result.imported} nuevos, ${result.skipped} ya existentes.`;
+    // ── Auto-confirmación de eventos seguros ──────────────────────────
+    let autoConfirm = { confirmed: 0, skippedReview: 0, errors: [] as string[] };
+    let taxRebuilt  = false;
+
+    if (result.imported > 0 || result.skipped > 0) {
+      try {
+        autoConfirm = await autoConfirmImports(auth.user.id);
+
+        if (autoConfirm.confirmed > 0) {
+          const rebuild = await rebuildTaxEvents(auth.user.id);
+          taxRebuilt = rebuild.ok;
+          if (taxRebuilt) {
+            await generateAnnualTaxSummary(auth.user.id);
+          }
+        }
+      } catch (autoErr) {
+        console.error("[sync] auto-confirm error:", autoErr);
+        autoConfirm.errors.push(
+          autoErr instanceof Error ? autoErr.message : "Error en auto-confirmación",
+        );
+      }
+    }
+
+    const allErrors  = [...result.errors, ...autoConfirm.errors];
+    const hasErrors  = allErrors.length > 0;
+
+    const message = hasErrors
+      ? `Sincronización parcial: ${result.imported} descargados, ${autoConfirm.confirmed} confirmados, ${allErrors.length} errores.`
+      : `Sincronización completa: ${result.imported} descargados, ${autoConfirm.confirmed} confirmados automáticamente${autoConfirm.skippedReview > 0 ? `, ${autoConfirm.skippedReview} en revisión manual` : ""}.`;
 
     return ok(
       {
-        imported:    result.imported,
-        skipped:     result.skipped,
-        errors:      result.errors,
-        symbolStats: result.symbolStats,
+        imported:      result.imported,
+        skipped:       result.skipped,
+        autoConfirmed: autoConfirm.confirmed,
+        pendingReview: autoConfirm.skippedReview,
+        errors:        allErrors,
+        symbolStats:   result.symbolStats,
+        taxRebuilt,
       },
       message,
     );
