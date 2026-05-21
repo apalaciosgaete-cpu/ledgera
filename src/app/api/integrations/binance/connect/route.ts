@@ -1,0 +1,80 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/shared";
+import { fail, ok, serverError } from "@/shared/apiResponse";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { fetchAccountInfo } from "@/modules/integrations/binance/infrastructure/binanceClient";
+import { encryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
+import {
+  findConnectionByUser,
+  upsertConnection,
+} from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
+import { countPendingImports } from "@/modules/integrations/binance/infrastructure/exchangeImportRepository";
+
+export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request);
+  if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
+
+  try {
+    const conn = await findConnectionByUser(auth.user.id, "BINANCE");
+    if (!conn) {
+      return ok({ connected: false }, "Sin conexión configurada.");
+    }
+
+    const pending = await countPendingImports(auth.user.id);
+
+    return ok({
+      connected:      true,
+      status:         conn.status,
+      lastSyncAt:     conn.lastSyncAt,
+      lastSyncStatus: conn.lastSyncStatus,
+      lastSyncError:  conn.lastSyncError,
+      pendingCount:   pending,
+      apiKeyHint:     conn.apiKey.slice(-8),
+    }, "Conexión encontrada.");
+  } catch (error) {
+    return serverError(error);
+  }
+}
+
+type ConnectBody = { apiKey?: string; apiSecret?: string };
+
+export async function POST(request: NextRequest) {
+  const csrf = enforceCsrfProtection(request);
+  if (csrf) return csrf;
+
+  const auth = await requireAuth(request);
+  if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
+
+  try {
+    const body = (await request.json()) as ConnectBody;
+    const apiKey    = body.apiKey?.trim()    ?? "";
+    const apiSecret = body.apiSecret?.trim() ?? "";
+
+    if (!apiKey || !apiSecret) return fail("API Key y Secret son obligatorios.", 400);
+
+    // Valida credenciales contra Binance antes de guardar
+    try {
+      await fetchAccountInfo(apiKey, apiSecret);
+    } catch {
+      return fail("Credenciales inválidas o sin permisos de lectura en Binance.", 422);
+    }
+
+    const encryptedKey    = encryptSecret(apiKey);
+    const encryptedSecret = encryptSecret(apiSecret);
+
+    const connection = await upsertConnection({
+      userId:    auth.user.id,
+      provider:  "BINANCE",
+      apiKey:    encryptedKey,
+      apiSecret: encryptedSecret,
+    });
+
+    return ok(
+      { connectionId: connection.id, provider: "BINANCE", status: connection.status },
+      "Conexión con Binance establecida correctamente.",
+      201,
+    );
+  } catch (error) {
+    return serverError(error);
+  }
+}

@@ -21,13 +21,17 @@ model PortfolioMovement {
   executedAt              DateTime  @default(now())
   deletedAt               DateTime?
   deletedReason           String?
+  source                  String    @default("MANUAL")
+  externalId              String?
 
-  user     users     @relation(fields: [userId], references: [id])
-  taxEvent TaxEvent?
+  user         users                  @relation(fields: [userId], references: [id])
+  taxEvent     TaxEvent?
+  importRecord ExchangeImportRecord?
 
   @@index([userId])
   @@index([executedAt])
   @@index([userId, executedAt])
+  @@index([source])
   @@map("portfolio_movements")
 }
 
@@ -382,6 +386,8 @@ model users {
   billingCustomers        BillingCustomer[]
   billingSubscriptions    BillingSubscription[]
   billingPayments         BillingPayment[]
+  exchangeConnections     ExchangeConnection[]
+  exchangeImportRecords   ExchangeImportRecord[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -412,4 +418,53 @@ model sessions {
   @@index([user_id], map: "idx_sessions_user_id")
   @@index([token], map: "idx_sessions_token")
   @@map("sessions")
+}
+
+model ExchangeConnection {
+  id              String    @id @default(cuid())
+  userId          String
+  provider        String
+  apiKey          String
+  apiSecret       String
+  status          String    @default("ACTIVE")
+  lastSyncAt      DateTime?
+  lastSyncStatus  String?
+  lastSyncError   String?
+  syncCheckpoint  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user    users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imports ExchangeImportRecord[]
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([provider])
+  @@map("exchange_connections")
+}
+
+model ExchangeImportRecord {
+  id             String    @id @default(cuid())
+  userId         String
+  connectionId   String
+  provider       String
+  externalId     String
+  externalType   String
+  rawPayload     String
+  normalizedJson String?
+  status         String    @default("PENDING")
+  movementId     String?   @unique
+  occurredAt     DateTime
+  createdAt      DateTime  @default(now())
+
+  user       users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection ExchangeConnection  @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  movement   PortfolioMovement?  @relation(fields: [movementId], references: [id])
+
+  @@unique([userId, provider, externalId])
+  @@index([userId])
+  @@index([connectionId])
+  @@index([status])
+  @@index([provider])
+  @@map("exchange_import_records")
 }

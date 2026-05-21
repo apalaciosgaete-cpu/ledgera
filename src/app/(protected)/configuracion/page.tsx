@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { colors, fonts } from "@/styles/tokens";
+import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 
 type SettingsMap = Record<string, string>;
 type AuditEntry = {
@@ -21,7 +22,7 @@ const ALL_SECTIONS: { key: Section; label: string; description: string; roles: s
   { key: "persona",       label: "Persona natural", description: "Identidad del contribuyente", roles: ["admin","personal"],             icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
   { key: "empresa",       label: "Empresa",       description: "Identidad del contribuyente",   roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg> },
   { key: "seguridad",     label: "Seguridad",     description: "Sesiones y acceso",             roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> },
-  { key: "integraciones", label: "Integraciones", description: "Exchanges y APIs externas",     roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M13 6h3a2 2 0 0 1 2 2v7" /><line x1="6" y1="9" x2="6" y2="21" /></svg> },
+  { key: "integraciones", label: "Integraciones", description: "Exchanges y APIs externas",     roles: ["admin","empresa","contador","personal"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M13 6h3a2 2 0 0 1 2 2v7" /><line x1="6" y1="9" x2="6" y2="21" /></svg> },
   { key: "auditoria",     label: "Auditoría",     description: "Registro de cambios",           roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg> },
 ];
 
@@ -550,24 +551,27 @@ export default function ConfiguracionPage() {
         {/* INTEGRACIONES */}
         {section === "integraciones" && (
           <>
-            <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "10px", padding: "1rem 1.25rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "10px" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-              <span style={{ fontSize: "13px", color: "#FCD34D" }}>Las integraciones con exchanges están en desarrollo. Podrás configurar tus API keys desde aquí.</span>
-            </div>
-            {EXCHANGES.map(ex => (
-              <div key={ex.name} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "1rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ width: "38px", height: "38px", borderRadius: "8px", background: `${ex.color}18`, border: `1px solid ${ex.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: ex.color, fontFamily: fonts.display, flexShrink: 0 }}>
-                    {ex.name.slice(0, 2).toUpperCase()}
+            {/* Binance — operativo */}
+            <BinanceIntegrationPanel />
+
+            {/* Exchanges futuros */}
+            <div style={{ marginTop: "1.5rem" }}>
+              <p style={{ fontSize: "11px", fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.75rem" }}>Próximamente</p>
+              {EXCHANGES.filter(ex => ex.name !== "Binance").map(ex => (
+                <div key={ex.name} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "1rem", opacity: 0.6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ width: "34px", height: "34px", borderRadius: "8px", background: `${ex.color}18`, border: `1px solid ${ex.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: ex.color, fontFamily: fonts.display, flexShrink: 0 }}>
+                      {ex.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p style={{ fontSize: "13px", fontWeight: 600, color: "#94A3B8", margin: "0 0 2px" }}>{ex.name}</p>
+                      <p style={{ fontSize: "11px", color: "#334155", margin: 0 }}>{ex.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p style={{ fontSize: "14px", fontWeight: 600, color: "#E2E8F0", margin: "0 0 2px" }}>{ex.name}</p>
-                    <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>{ex.desc}</p>
-                  </div>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#475569", background: "rgba(100,116,139,0.1)", border: "1px solid rgba(100,116,139,0.2)", borderRadius: "6px", padding: "3px 8px", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>Próximamente</span>
                 </div>
-                <span style={{ fontSize: "10px", fontWeight: 700, color: "#F59E0B", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "6px", padding: "3px 8px", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>Próximamente</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </>
         )}
 

@@ -60,7 +60,7 @@ const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   ],
 };
 
-const ROLES_CON_CONFIGURACION = ["admin", "empresa", "contador"];
+const ROLES_CON_CONFIGURACION = ["admin", "empresa", "contador", "personal"];
 
 const roleTokens: Record<string, {
   label:          string;
