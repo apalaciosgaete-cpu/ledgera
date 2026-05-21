@@ -468,43 +468,64 @@ export default function LandingPage() {
                 question: "¿Cómo declaro al SII?",
                 detail:
                   "La normativa chilena exige declarar ganancias por venta de criptomonedas. El proceso manual es confuso, tedioso y propenso a errores.",
+                href: "/blog/como-declarar-criptomonedas-sii-chile",
               },
               {
                 question: "¿Cuánto pagué de impuestos por mis cripto?",
                 detail:
                   "Sin un motor FIFO correcto es imposible conocer tu base imponible real. Cada venta afecta el costo de las siguientes.",
+                href: "/blog/metodo-fifo-criptomonedas-chile",
               },
               {
                 question: "¿Mis cálculos son correctos?",
                 detail:
                   "Un error en la valorización puede significar multas o pagos en exceso. Necesitas trazabilidad y auditoría en cada número.",
+                href: "/blog/fiscalizacion-sii-criptomonedas",
               },
             ].map((item) => (
-              <div
+              <Link
                 key={item.question}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  borderRadius: "14px",
-                  padding: "2rem",
-                }}
+                href={item.href}
+                style={{ textDecoration: "none" }}
               >
-                <h3
+                <div
                   style={{
-                    fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-                    fontSize: "19px",
-                    fontWeight: 700,
-                    color: "#F1F5F9",
-                    margin: "0 0 14px",
-                    lineHeight: 1.3,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.09)",
+                    borderRadius: "14px",
+                    padding: "2rem",
+                    cursor: "pointer",
+                    transition: "border-color 0.2s, background 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.07)";
+                    (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.18)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)";
+                    (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.09)";
                   }}
                 >
-                  {item.question}
-                </h3>
-                <p style={{ fontSize: "15px", color: "#94A3B8", margin: 0, lineHeight: 1.65 }}>
-                  {item.detail}
-                </p>
-              </div>
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+                      fontSize: "19px",
+                      fontWeight: 700,
+                      color: "#F1F5F9",
+                      margin: "0 0 14px",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {item.question}
+                  </h3>
+                  <p style={{ fontSize: "15px", color: "#94A3B8", margin: "0 0 16px", lineHeight: 1.65 }}>
+                    {item.detail}
+                  </p>
+                  <span style={{ fontSize: "13px", color: "#4ADE80", fontWeight: 600 }}>
+                    Leer artículo →
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
