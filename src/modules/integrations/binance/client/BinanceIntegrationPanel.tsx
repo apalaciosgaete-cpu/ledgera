@@ -151,6 +151,7 @@ export function BinanceIntegrationPanel() {
   const [apiKey,        setApiKey]        = useState("");
   const [apiSecret,     setApiSecret]     = useState("");
   const [showSecret,    setShowSecret]    = useState(false);
+  const [showCredentials, setShowCredentials] = useState(false);
   const [connecting,    setConnecting]    = useState(false);
   const [testing,       setTesting]       = useState(false);
   const [syncing,       setSyncing]       = useState(false);
@@ -285,76 +286,80 @@ export function BinanceIntegrationPanel() {
     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
 
       {/* ── Header del panel ── */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1rem 1.25rem" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "0.875rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#F0B90B", fontFamily: fonts.body, letterSpacing: "-0.02em" }}>
-              BN
-            </div>
-            <div>
-              <p style={{ fontSize: "15px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 2px" }}>Binance</p>
-              <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Spot — API Read-Only</p>
-            </div>
+      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "0.875rem 1.25rem" }}>
+
+        {/* Fila de identidad siempre visible */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ width: "38px", height: "38px", borderRadius: "9px", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#F0B90B", fontFamily: fonts.body, flexShrink: 0 }}>
+            BN
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: "14px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 1px" }}>Binance</p>
+            <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>
+              Spot — API Read-Only
+              {isConnected && conn?.apiKeyHint && <span style={{ color: "#334155" }}> · clave …{conn.apiKeyHint}</span>}
+            </p>
           </div>
           <StatusBadge status={conn?.status ?? "disconnected"} />
+          {isConnected && (
+            <button
+              type="button"
+              onClick={() => { setShowCredentials(v => !v); setMsg(null); }}
+              style={{ padding: "6px 12px", borderRadius: "7px", border: "1px solid rgba(255,255,255,0.12)", background: showCredentials ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)", color: showCredentials ? "#F87171" : "#64748B", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", flexShrink: 0 }}
+            >
+              {showCredentials ? "Cancelar" : "Actualizar claves"}
+            </button>
+          )}
         </div>
 
-        {msg && <Alert type={msg.type} message={msg.text} />}
+        {msg && <div style={{ marginTop: "0.625rem" }}><Alert type={msg.type} message={msg.text} /></div>}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1rem" }}>
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "#94A3B8", display: "block", marginBottom: "6px" }}>
-              API Key {isConnected && conn?.apiKeyHint && <span style={{ color: "#475569", fontWeight: 400 }}>— guardada (…{conn.apiKeyHint})</span>}
-            </label>
-            <input
-              type="text"
-              value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
-              placeholder={isConnected ? "Nueva API Key (deja vacío para mantener la actual)" : "Pega tu API Key de Binance"}
-              style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "8px", padding: "9px 12px", color: "#0F172A", fontSize: "13px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box" }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "#94A3B8", display: "block", marginBottom: "6px" }}>
-              API Secret {isConnected && <span style={{ color: "#475569", fontWeight: 400 }}> — cifrado, no se muestra</span>}
-            </label>
-            <div style={{ position: "relative" }}>
+        {/* Formulario — solo visible cuando no está conectado o el usuario quiere actualizar */}
+        {(!isConnected || showCredentials) && (
+          <div style={{ marginTop: "0.875rem", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: 600, color: "#64748B", display: "block", marginBottom: "5px" }}>API Key</label>
               <input
-                type={showSecret ? "text" : "password"}
-                value={apiSecret}
-                onChange={e => setApiSecret(e.target.value)}
-                placeholder={isConnected ? "Nuevo API Secret (deja vacío para mantener el actual)" : "Pega tu API Secret de Binance"}
-                style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "8px", padding: "9px 40px 9px 12px", color: "#0F172A", fontSize: "13px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box" }}
+                type="text"
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                placeholder={isConnected ? "Nueva API Key (vacío = mantener actual)" : "Pega tu API Key de Binance"}
+                style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "7px", padding: "8px 11px", color: "#0F172A", fontSize: "12px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box" }}
               />
+            </div>
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: 600, color: "#64748B", display: "block", marginBottom: "5px" }}>API Secret</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showSecret ? "text" : "password"}
+                  value={apiSecret}
+                  onChange={e => setApiSecret(e.target.value)}
+                  placeholder={isConnected ? "Nuevo API Secret (vacío = mantener actual)" : "Pega tu API Secret de Binance"}
+                  style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "7px", padding: "8px 36px 8px 11px", color: "#0F172A", fontSize: "12px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box" }}
+                />
+                <button type="button" onClick={() => setShowSecret(v => !v)} style={{ position: "absolute", right: "9px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 0 }}>
+                  {showSecret
+                    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  }
+                </button>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
+              <p style={{ fontSize: "10px", color: "#334155", margin: 0, lineHeight: 1.5 }}>
+                Solo lectura · AES-256 · el Secret no puede recuperarse.
+              </p>
               <button
                 type="button"
-                onClick={() => setShowSecret(v => !v)}
-                style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 0 }}
+                onClick={handleConnect}
+                disabled={connecting || (!apiKey.trim() && !apiSecret.trim())}
+                style={{ padding: "7px 16px", borderRadius: "8px", border: "none", background: connecting || (!apiKey.trim() && !apiSecret.trim()) ? "rgba(255,255,255,0.06)" : "#16A34A", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: connecting || (!apiKey.trim() && !apiSecret.trim()) ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", flexShrink: 0, opacity: (!apiKey.trim() && !apiSecret.trim()) ? 0.4 : 1 }}
               >
-                {showSecret
-                  ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                }
+                {connecting ? "Conectando..." : isConnected ? "Actualizar credenciales" : "Conectar Binance"}
               </button>
             </div>
           </div>
-        </div>
-
-        <p style={{ fontSize: "11px", color: "#334155", margin: "0 0 0.625rem", lineHeight: 1.5 }}>
-          Crea las claves en Binance con permisos <strong style={{ color: "#64748B" }}>solo lectura</strong>. Nunca habilites trading ni retiros. El Secret se cifra con AES-256 y no puede recuperarse desde aquí.
-        </p>
-
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <ActionButton
-            onClick={handleConnect}
-            loading={connecting}
-            loadingLabel="Conectando..."
-            label={isConnected ? "Actualizar credenciales" : "Conectar Binance"}
-            disabled={!apiKey.trim() && !apiSecret.trim()}
-          />
-        </div>
-
+        )}
       </div>
 
       {/* ── Sincronización ── */}
@@ -362,8 +367,12 @@ export function BinanceIntegrationPanel() {
         <>
           <style>{`
             @keyframes pulse-green {
-              0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
-              50%       { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+              0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.6); }
+              50%       { box-shadow: 0 0 0 5px rgba(22,163,74,0); }
+            }
+            @keyframes dot-blink {
+              0%, 100% { opacity: 1; }
+              50%       { opacity: 0.25; }
             }
           `}</style>
           <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "0.625rem 1.25rem" }}>
@@ -374,6 +383,9 @@ export function BinanceIntegrationPanel() {
               {/* Indicador de estado */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  {syncing && (
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22C55E", display: "inline-block", flexShrink: 0, animation: "dot-blink 1s ease-in-out infinite" }} />
+                  )}
                   <span style={{ fontSize: "12px", fontWeight: 600, color: "#94A3B8", whiteSpace: "nowrap" }}>Sincronización</span>
                   <span style={{ fontSize: "12px", color: "#475569", whiteSpace: "nowrap" }}>
                     {conn?.lastSyncAt
@@ -470,9 +482,9 @@ export function BinanceIntegrationPanel() {
               type="button"
               onClick={loadImports}
               disabled={loadingImports}
-              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#64748B", fontSize: "12px", padding: "6px 12px", cursor: loadingImports ? "not-allowed" : "pointer", fontFamily: fonts.body }}
+              style={{ padding: "6px 14px", borderRadius: "7px", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: loadingImports ? "#475569" : "#94A3B8", fontSize: "11px", fontWeight: 600, cursor: loadingImports ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap" }}
             >
-              {loadingImports ? "Cargando..." : "Actualizar"}
+              {loadingImports ? "Cargando..." : "↺ Actualizar"}
             </button>
           </div>
 
