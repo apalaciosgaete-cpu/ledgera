@@ -6,7 +6,7 @@ import Logo from "@/components/brand/Logo";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
 
-export default function TerminosPage() {
+export default function CookiesPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -87,163 +87,220 @@ export default function TerminosPage() {
               lineHeight: 1.15,
             }}
           >
-            Términos y Condiciones
+            Política de Cookies
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
             Última actualización: 8 de mayo de 2026 · Versión 1.0
           </p>
         </div>
 
-        <LegalSection title="1. Identificación del prestador">
+        <LegalSection title="1. ¿Qué son las cookies?">
           <p>
-            <strong style={{ color: "#e2e8f0" }}>Ledgera</strong> (en adelante, "la Plataforma") es
-            un servicio de software como servicio (SaaS) operado por{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ledgera SpA</strong>, empresa constituida en Chile,
-            con domicilio en la Región Metropolitana, correo de contacto:{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
-              admin@ledgera.cl
-            </a>
-            .
+            Las cookies son pequeños archivos de texto que un sitio web almacena en el navegador del
+            Usuario cuando este lo visita. Permiten que el sitio recuerde información sobre su visita
+            para mejorar la experiencia de uso.
           </p>
           <p>
-            La Plataforma está diseñada para asistir a personas naturales y jurídicas en la gestión,
-            clasificación y reporte de operaciones con activos digitales (criptomonedas) frente al
-            Servicio de Impuestos Internos (SII) de Chile.
+            Ledgera utiliza cookies y tecnologías similares (como localStorage y tokens de sesión)
+            para garantizar el correcto funcionamiento de la Plataforma.
           </p>
         </LegalSection>
 
-        <LegalSection title="2. Aceptación de los términos">
+        <LegalSection title="2. Tipos de cookies que utilizamos">
+          <CookieTable
+            type="Estrictamente necesarias"
+            color="#22c55e"
+            description="Imprescindibles para el funcionamiento de la Plataforma. Sin ellas, el servicio no puede prestarse correctamente."
+            examples={[
+              {
+                nombre: "session_token",
+                finalidad: "Mantener la sesión autenticada del Usuario",
+                duracion: "Sesión / 30 días",
+                tipo: "Propia",
+              },
+              {
+                nombre: "csrf_token",
+                finalidad: "Protección contra ataques CSRF",
+                duracion: "Sesión",
+                tipo: "Propia",
+              },
+            ]}
+          />
+
+          <CookieTable
+            type="Funcionales"
+            color="#818cf8"
+            description="Permiten recordar preferencias del Usuario para personalizar la experiencia."
+            examples={[
+              {
+                nombre: "ledgera-theme",
+                finalidad: "Preferencias de visualización",
+                duracion: "1 año",
+                tipo: "Propia",
+              },
+              {
+                nombre: "ledgera-period",
+                finalidad: "Período tributario seleccionado",
+                duracion: "Sesión",
+                tipo: "Propia",
+              },
+            ]}
+          />
+
+          <CookieTable
+            type="Analíticas"
+            color="#f59e0b"
+            description="Recogen información anónima sobre cómo los usuarios interactúan con la Plataforma."
+            examples={[
+              {
+                nombre: "Analítica interna",
+                finalidad: "Métricas de uso agregadas y anónimas (sin PII)",
+                duracion: "Variable",
+                tipo: "Propia",
+              },
+            ]}
+          />
+
+          <div
+            style={{
+              background: "rgba(99,102,241,0.06)",
+              border: "1px solid rgba(99,102,241,0.15)",
+              borderRadius: "10px",
+              padding: "1rem 1.2rem",
+            }}
+          >
+            <p style={{ color: "#a5b4fc", fontSize: "0.88rem", margin: 0 }}>
+              ℹ️{" "}
+              <strong style={{ color: "#c7d2fe" }}>
+                Ledgera NO utiliza cookies de publicidad
+              </strong>{" "}
+              ni comparte datos de comportamiento con redes publicitarias de terceros.
+            </p>
+          </div>
+        </LegalSection>
+
+        <LegalSection title="3. Cookies de terceros">
           <p>
-            Al registrarse, acceder o utilizar cualquier función de Ledgera, el Usuario declara haber
-            leído, comprendido y aceptado en su totalidad los presentes Términos y Condiciones, así
-            como la{" "}
-            <Link href="/privacidad" style={{ color: "#818cf8" }}>
-              Política de Privacidad
-            </Link>{" "}
-            y la{" "}
-            <Link href="/cookies" style={{ color: "#818cf8" }}>
-              Política de Cookies
-            </Link>
-            .
+            Algunos proveedores utilizados por la Plataforma pueden instalar cookies propias:
           </p>
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "0.85rem",
+                color: "#94a3b8",
+              }}
+            >
+              <thead>
+                <tr>
+                  {["Proveedor", "Finalidad", "Política de privacidad"].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        textAlign: "left",
+                        padding: "0.6rem 0.8rem",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        color: "#cbd5e1",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {
+                    proveedor: "Cloudflare",
+                    finalidad: "Seguridad, CDN, protección DDoS",
+                    url: "https://www.cloudflare.com/privacypolicy/",
+                  },
+                  {
+                    proveedor: "Vercel",
+                    finalidad: "Hosting y despliegue de la aplicación",
+                    url: "https://vercel.com/legal/privacy-policy",
+                  },
+                  {
+                    proveedor: "MercadoPago",
+                    finalidad: "Procesamiento de pagos",
+                    url: "https://www.mercadopago.cl/ayuda/privacidad_615",
+                  },
+                ].map((row, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                    <td style={{ padding: "0.6rem 0.8rem", color: "#e2e8f0", fontWeight: 500 }}>
+                      {row.proveedor}
+                    </td>
+                    <td style={{ padding: "0.6rem 0.8rem" }}>{row.finalidad}</td>
+                    <td style={{ padding: "0.6rem 0.8rem" }}>
+                      <a
+                        href={row.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#818cf8" }}
+                      >
+                        Ver política →
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </LegalSection>
+
+        <LegalSection title="4. Gestión y control de cookies">
           <p>
-            Si no está de acuerdo con alguna de las condiciones, deberá abstenerse de utilizar la
+            Puede gestionar, bloquear o eliminar las cookies desde la configuración de su navegador:
+          </p>
+          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            {[
+              { name: "Google Chrome", url: "https://support.google.com/chrome/answer/95647" },
+              { name: "Mozilla Firefox", url: "https://support.mozilla.org/es/kb/habilitar-y-deshabilitar-cookies-sitios-web" },
+              { name: "Safari", url: "https://support.apple.com/es-cl/guide/safari/sfri11471/mac" },
+              { name: "Microsoft Edge", url: "https://support.microsoft.com/es-es/microsoft-edge/eliminar-las-cookies-en-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" },
+            ].map((b) => (
+              <li key={b.name}>
+                <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ color: "#818cf8" }}>
+                  {b.name} →
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p>
+            <strong style={{ color: "#e2e8f0" }}>Atención:</strong> deshabilitar las cookies
+            estrictamente necesarias impedirá el inicio de sesión y el funcionamiento correcto de la
             Plataforma.
           </p>
         </LegalSection>
 
-        <LegalSection title="3. Descripción del servicio">
-          <p>Ledgera ofrece las siguientes funcionalidades principales:</p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>Importación y clasificación de movimientos de activos digitales mediante CSV o integración automática.</li>
-            <li>Aplicación del método FIFO (First In, First Out) para el cálculo del costo tributario según instrucciones del SII.</li>
-            <li>Generación de reportes de ganancias y pérdidas de capital para declaración de impuestos.</li>
-            <li>Panel de control tributario con indicadores de riesgo, PnL y alertas accionables.</li>
-            <li>Auditoría inmutable de eventos tributarios y cierres de período.</li>
-            <li>Motor de conversión FX basado en datos del Banco Central de Chile (BCCh).</li>
-          </ul>
+        <LegalSection title="5. Consentimiento">
           <p>
-            Ledgera es una{" "}
-            <strong style={{ color: "#e2e8f0" }}>herramienta de asistencia tributaria</strong> y no
-            reemplaza la asesoría profesional de un contador, abogado o asesor tributario habilitado.
+            Al utilizar Ledgera, el Usuario acepta el uso de las cookies descritas en esta Política.
+            El consentimiento se obtiene como parte de la aceptación de los{" "}
+            <Link href="/terminos" style={{ color: "#818cf8" }}>
+              Términos y Condiciones
+            </Link>
+            .
           </p>
         </LegalSection>
 
-        <LegalSection title="4. Registro y cuenta de usuario">
-          <p>El acceso a las funciones avanzadas requiere la creación de una cuenta. El Usuario se compromete a:</p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>Proporcionar información veraz, actualizada y completa durante el registro.</li>
-            <li>Mantener la confidencialidad de sus credenciales de acceso.</li>
-            <li>Notificar de inmediato a Ledgera ante cualquier uso no autorizado de su cuenta.</li>
-            <li>Ser el único responsable de todas las actividades realizadas bajo su cuenta.</li>
-          </ul>
+        <LegalSection title="6. Modificaciones">
           <p>
-            Ledgera se reserva el derecho de suspender o cancelar cuentas que incumplan estos
-            Términos, presenten información falsa o realicen un uso fraudulento de la Plataforma.
+            Esta Política podrá ser actualizada cuando se incorporen nuevas tecnologías o proveedores.
+            Los cambios significativos serán notificados al correo electrónico registrado.
           </p>
         </LegalSection>
 
-        <LegalSection title="5. Planes, precios y facturación">
+        <LegalSection title="7. Contacto">
           <p>
-            Ledgera ofrece distintos planes de suscripción, cuyos precios y características se
-            detallan en la página de precios de la Plataforma. Los montos se expresan en pesos
-            chilenos (CLP) e incluyen IVA cuando corresponda.
-          </p>
-          <p>
-            El cobro se realiza de forma anticipada al inicio de cada período (mensual o anual). La
-            falta de pago habilita a Ledgera a restringir el acceso al servicio sin previo aviso.
-          </p>
-          <p>
-            Se podrá solicitar reembolso dentro de los primeros{" "}
-            <strong style={{ color: "#e2e8f0" }}>7 días corridos</strong> desde la contratación del
-            plan, siempre que no se hayan generado reportes tributarios durante ese período.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="6. Uso aceptable">
-          <p>El Usuario se compromete a NO utilizar la Plataforma para:</p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>Ingresar datos falsos, manipulados o que induzcan a error en las declaraciones tributarias.</li>
-            <li>Evadir, eludir o defraudar al SII u otras autoridades fiscales.</li>
-            <li>Actividades relacionadas con lavado de activos, financiamiento del terrorismo o cualquier actividad ilícita.</li>
-            <li>Realizar ingeniería inversa, descompilar o intentar acceder al código fuente de la Plataforma.</li>
-            <li>Revender, sublicenciar o ceder el acceso a terceros sin autorización expresa de Ledgera.</li>
-          </ul>
-        </LegalSection>
-
-        <LegalSection title="7. Responsabilidad y limitaciones">
-          <p>
-            Ledgera realiza sus mejores esfuerzos para mantener la Plataforma operativa, segura y
-            actualizada conforme a la normativa SII vigente. Sin embargo,{" "}
-            <strong style={{ color: "#e2e8f0" }}>no garantiza</strong>:
-          </p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>Que los cálculos generados sean aceptados sin observaciones por el SII en todos los casos.</li>
-            <li>La disponibilidad ininterrumpida del servicio.</li>
-            <li>Que los tipos de cambio FX provistos por el BCCh correspondan exactamente a los exigidos en una fiscalización específica.</li>
-          </ul>
-          <p>
-            La responsabilidad máxima de Ledgera frente al Usuario no podrá exceder el monto
-            equivalente a los pagos realizados en los últimos 3 meses anteriores al evento que genera
-            el daño.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="8. Propiedad intelectual">
-          <p>
-            Todos los derechos de propiedad intelectual sobre la Plataforma, incluyendo diseño,
-            código, algoritmos, marca, logotipos y contenidos, son de titularidad exclusiva de
-            Ledgera SpA y están protegidos por la legislación chilena e internacional aplicable.
-          </p>
-          <p>
-            El Usuario recibe una licencia limitada, no exclusiva e intransferible para usar la
-            Plataforma durante la vigencia de su suscripción.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="9. Modificaciones">
-          <p>
-            Ledgera podrá modificar estos Términos en cualquier momento. Los cambios serán notificados
-            al correo registrado con al menos{" "}
-            <strong style={{ color: "#e2e8f0" }}>10 días de anticipación</strong> antes de su entrada
-            en vigor.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="10. Ley aplicable y jurisdicción">
-          <p>
-            Los presentes Términos se rigen por las leyes de la República de Chile. Cualquier
-            controversia será sometida a la jurisdicción de los Tribunales Ordinarios de Justicia de
-            Santiago, Chile.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="11. Contacto">
-          <p>
-            Para consultas:{" "}
+            Consultas sobre cookies:{" "}
             <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
               admin@ledgera.cl
             </a>
+            .
           </p>
         </LegalSection>
 
@@ -260,11 +317,11 @@ export default function TerminosPage() {
           }}
         >
           <span style={{ color: "#64748b", fontSize: "0.85rem", alignSelf: "center" }}>Ver también:</span>
+          <Link href="/terminos" style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}>
+            Términos y Condiciones →
+          </Link>
           <Link href="/privacidad" style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}>
             Política de Privacidad →
-          </Link>
-          <Link href="/cookies" style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}>
-            Política de Cookies →
           </Link>
         </div>
       </main>
@@ -301,7 +358,7 @@ export default function TerminosPage() {
                 <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Contacto</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>admin@ledgera.cl</a>
-                  <a href="https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number" target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>WhatsApp soporte</a>
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>WhatsApp soporte</a>
                 </div>
               </div>
             </div>
@@ -360,5 +417,103 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
         {children}
       </div>
     </section>
+  );
+}
+
+type CookieRow = {
+  nombre: string;
+  finalidad: string;
+  duracion: string;
+  tipo: string;
+};
+
+function CookieTable({
+  type,
+  color,
+  description,
+  examples,
+}: {
+  type: string;
+  color: string;
+  description: string;
+  examples: CookieRow[];
+}) {
+  return (
+    <div
+      style={{
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: "10px",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "0.8rem 1.2rem",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.6rem",
+        }}
+      >
+        <span
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            background: color,
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "0.9rem" }}>{type}</span>
+      </div>
+      <div style={{ padding: "0.8rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.85rem" }}>{description}</p>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table
+          style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", color: "#94a3b8" }}
+        >
+          <thead>
+            <tr>
+              {["Cookie / Tecnología", "Finalidad", "Duración", "Tipo"].map((h) => (
+                <th
+                  key={h}
+                  style={{
+                    textAlign: "left",
+                    padding: "0.5rem 1rem",
+                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                    color: "#cbd5e1",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {examples.map((row, i) => (
+              <tr key={i}>
+                <td
+                  style={{
+                    padding: "0.5rem 1rem",
+                    color: "#e2e8f0",
+                    fontFamily: "monospace",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  {row.nombre}
+                </td>
+                <td style={{ padding: "0.5rem 1rem" }}>{row.finalidad}</td>
+                <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>{row.duracion}</td>
+                <td style={{ padding: "0.5rem 1rem" }}>{row.tipo}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

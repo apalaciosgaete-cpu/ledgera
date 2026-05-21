@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
+import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "LEDGERA",
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <CookieBanner />
       </body>
     </html>
   );

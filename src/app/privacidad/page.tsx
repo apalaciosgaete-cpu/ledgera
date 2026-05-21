@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
 
-const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
+const WHATSAPP_URL =
+  "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
 
-export default function CookiesPage() {
+export default function PrivacidadPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -18,7 +19,8 @@ export default function CookiesPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #0a0a0f 100%)",
+        background:
+          "linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #0a0a0f 100%)",
         color: "#e2e8f0",
         fontFamily: "'Inter', sans-serif",
       }}
@@ -38,7 +40,10 @@ export default function CookiesPage() {
           zIndex: 50,
         }}
       >
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+        <Link
+          href="/"
+          style={{ textDecoration: "none", display: "flex", alignItems: "center" }}
+        >
           <Logo />
         </Link>
         <Link
@@ -59,6 +64,7 @@ export default function CookiesPage() {
       </nav>
 
       <main style={{ maxWidth: "860px", margin: "0 auto", padding: "4rem 2rem 6rem" }}>
+        {/* ENCABEZADO */}
         <div style={{ marginBottom: "3rem" }}>
           <div
             style={{
@@ -87,224 +93,692 @@ export default function CookiesPage() {
               lineHeight: 1.15,
             }}
           >
-            Política de Cookies
+            Política de Privacidad
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-            Última actualización: 8 de mayo de 2026 · Versión 1.0
+            Última actualización: 8 de mayo de 2026 · Versión 2.0
           </p>
         </div>
 
-        <LegalSection title="1. ¿Qué son las cookies?">
-          <p>
-            Las cookies son pequeños archivos de texto que un sitio web almacena en el navegador del
-            Usuario cuando este lo visita. Permiten que el sitio recuerde información sobre su visita
-            para mejorar la experiencia de uso.
-          </p>
-          <p>
-            Ledgera utiliza cookies y tecnologías similares (como localStorage y tokens de sesión)
-            para garantizar el correcto funcionamiento de la Plataforma.
-          </p>
-        </LegalSection>
+        {/* AVISO NORMATIVO */}
+        <InfoBox color="indigo">
+          La presente Política regula el tratamiento de datos personales efectuado por{" "}
+          <strong style={{ color: "#c7d2fe" }}>Ledgera SpA</strong> de conformidad con la{" "}
+          <strong style={{ color: "#c7d2fe" }}>Ley N° 21.719</strong> de Protección de
+          Datos Personales de Chile, el{" "}
+          <strong style={{ color: "#c7d2fe" }}>Código Civil</strong>, la{" "}
+          <strong style={{ color: "#c7d2fe" }}>Ley N° 19.496</strong> de Protección al
+          Consumidor y demás normativa aplicable. Forma parte integrante de los{" "}
+          <Link href="/terminos" style={{ color: "#818cf8" }}>
+            Términos y Condiciones
+          </Link>{" "}
+          de Ledgera.
+        </InfoBox>
 
-        <LegalSection title="2. Tipos de cookies que utilizamos">
-          <CookieTable
-            type="Estrictamente necesarias"
-            color="#22c55e"
-            description="Imprescindibles para el funcionamiento de la Plataforma. Sin ellas, el servicio no puede prestarse correctamente."
-            examples={[
-              {
-                nombre: "next-auth.session-token",
-                finalidad: "Mantener la sesión autenticada del Usuario",
-                duracion: "Sesión / 30 días",
-                tipo: "Propia",
-              },
-              {
-                nombre: "next-auth.csrf-token",
-                finalidad: "Protección contra ataques CSRF",
-                duracion: "Sesión",
-                tipo: "Propia",
-              },
-              {
-                nombre: "next-auth.callback-url",
-                finalidad: "Redirigir al Usuario tras el inicio de sesión",
-                duracion: "Sesión",
-                tipo: "Propia",
-              },
-            ]}
-          />
-
-          <CookieTable
-            type="Funcionales"
-            color="#818cf8"
-            description="Permiten recordar preferencias del Usuario para personalizar la experiencia."
-            examples={[
-              {
-                nombre: "ledgera-theme",
-                finalidad: "Preferencias de visualización",
-                duracion: "1 año",
-                tipo: "Propia",
-              },
-              {
-                nombre: "ledgera-period",
-                finalidad: "Período tributario seleccionado",
-                duracion: "Sesión",
-                tipo: "Propia",
-              },
-            ]}
-          />
-
-          <CookieTable
-            type="Analíticas"
-            color="#f59e0b"
-            description="Recogen información anónima sobre cómo los usuarios interactúan con la Plataforma."
-            examples={[
-              {
-                nombre: "Analítica interna",
-                finalidad: "Métricas de uso agregadas y anónimas (sin PII)",
-                duracion: "Variable",
-                tipo: "Propia",
-              },
-            ]}
-          />
-
-          <div
+        {/* ÍNDICE */}
+        <div
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "10px",
+            padding: "1.4rem 1.6rem",
+            marginBottom: "3rem",
+          }}
+        >
+          <p
             style={{
-              background: "rgba(99,102,241,0.06)",
-              border: "1px solid rgba(99,102,241,0.15)",
-              borderRadius: "10px",
-              padding: "1rem 1.2rem",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "#475569",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              margin: "0 0 1rem",
             }}
           >
-            <p style={{ color: "#a5b4fc", fontSize: "0.88rem", margin: 0 }}>
-              ℹ️{" "}
-              <strong style={{ color: "#c7d2fe" }}>
-                Ledgera NO utiliza cookies de publicidad
-              </strong>{" "}
-              ni comparte datos de comportamiento con redes publicitarias de terceros.
-            </p>
-          </div>
-        </LegalSection>
-
-        <LegalSection title="3. Cookies de terceros">
-          <p>
-            Algunos proveedores utilizados por la Plataforma pueden instalar cookies propias:
+            Contenido
           </p>
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "0.85rem",
-                color: "#94a3b8",
-              }}
-            >
-              <thead>
-                <tr>
-                  {["Proveedor", "Finalidad", "Política de privacidad"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "0.6rem 0.8rem",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        color: "#cbd5e1",
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  {
-                    proveedor: "Cloudflare",
-                    finalidad: "Seguridad, CDN, protección DDoS",
-                    url: "https://www.cloudflare.com/privacypolicy/",
-                  },
-                  {
-                    proveedor: "Vercel",
-                    finalidad: "Hosting y despliegue de la aplicación",
-                    url: "https://vercel.com/legal/privacy-policy",
-                  },
-                ].map((row, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
-                    <td style={{ padding: "0.6rem 0.8rem", color: "#e2e8f0", fontWeight: 500 }}>
-                      {row.proveedor}
-                    </td>
-                    <td style={{ padding: "0.6rem 0.8rem" }}>{row.finalidad}</td>
-                    <td style={{ padding: "0.6rem 0.8rem" }}>
-                      <a
-                        href={row.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "#818cf8" }}
-                      >
-                        Ver política →
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </LegalSection>
-
-        <LegalSection title="4. Gestión y control de cookies">
-          <p>
-            Puede gestionar, bloquear o eliminar las cookies desde la configuración de su navegador:
-          </p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          <ol
+            style={{
+              paddingLeft: "1.2rem",
+              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.35rem",
+              fontSize: "0.88rem",
+              color: "#64748b",
+            }}
+          >
             {[
-              { name: "Google Chrome", url: "https://support.google.com/chrome/answer/95647" },
-              { name: "Mozilla Firefox", url: "https://support.mozilla.org/es/kb/habilitar-y-deshabilitar-cookies-sitios-web" },
-              { name: "Safari", url: "https://support.apple.com/es-cl/guide/safari/sfri11471/mac" },
-              { name: "Microsoft Edge", url: "https://support.microsoft.com/es-es/microsoft-edge/eliminar-las-cookies-en-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" },
-            ].map((b) => (
-              <li key={b.name}>
-                <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ color: "#818cf8" }}>
-                  {b.name} →
-                </a>
+              "Responsable del tratamiento y Encargado de Protección de Datos",
+              "Principios rectores — Ley N° 21.719",
+              "Datos personales que tratamos",
+              "Finalidad y base jurídica del tratamiento",
+              "Decisiones automatizadas e indicadores de riesgo",
+              "Conservación de los datos",
+              "Destinatarios y transferencias internacionales",
+              "Derechos del titular",
+              "Retiro del consentimiento",
+              "Seguridad de los datos",
+              "Menores de edad",
+              "Relación con la Política de Cookies",
+              "Modificaciones",
+              "Contacto y reclamaciones",
+            ].map((item, i) => (
+              <li key={i} style={{ color: "#818cf8" }}>
+                {item}
               </li>
             ))}
-          </ul>
-          <p>
-            <strong style={{ color: "#e2e8f0" }}>Atención:</strong> deshabilitar las cookies
-            estrictamente necesarias impedirá el inicio de sesión y el funcionamiento correcto de la
-            Plataforma.
-          </p>
-        </LegalSection>
+          </ol>
+        </div>
 
-        <LegalSection title="5. Consentimiento">
-          <p>
-            Al utilizar Ledgera, el Usuario acepta el uso de las cookies descritas en esta Política.
-            El consentimiento se obtiene como parte de la aceptación de los{" "}
-            <Link href="/terminos" style={{ color: "#818cf8" }}>
-              Términos y Condiciones
-            </Link>
-            .
-          </p>
-        </LegalSection>
+        {/* SECCIONES */}
 
-        <LegalSection title="6. Modificaciones">
+        <LegalSection title="1. Responsable del tratamiento y Encargado de Protección de Datos">
           <p>
-            Esta Política podrá ser actualizada cuando se incorporen nuevas tecnologías o proveedores.
-            Los cambios significativos serán notificados al correo electrónico registrado.
+            El <strong style={{ color: "#e2e8f0" }}>responsable del tratamiento</strong> de
+            sus datos personales es:
           </p>
-        </LegalSection>
-
-        <LegalSection title="7. Contacto">
-          <p>
-            Consultas sobre cookies:{" "}
+          <InfoBox color="indigo">
+            <strong style={{ color: "#c7d2fe" }}>Ledgera SpA</strong>
+            {"  ·  "}
+            Domicilio: Región Metropolitana, Chile
+            {"  ·  "}
+            Correo:{" "}
             <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
               admin@ledgera.cl
             </a>
-            .
+          </InfoBox>
+          <p>
+            Conforme a la{" "}
+            <strong style={{ color: "#e2e8f0" }}>Ley N° 21.719</strong>, Ledgera SpA ha
+            designado un{" "}
+            <strong style={{ color: "#e2e8f0" }}>
+              Encargado de Protección de Datos (EPD)
+            </strong>{" "}
+            responsable de velar por el cumplimiento de esta Política y de atender las
+            solicitudes de los titulares. Puede contactarlo en:
+          </p>
+          <InfoBox color="indigo">
+            <strong style={{ color: "#c7d2fe" }}>EPD — Ledgera SpA</strong>
+            {"  ·  "}
+            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+              admin@ledgera.cl
+            </a>
+            {"  ·  "}
+            Asunto: "Protección de datos"
+          </InfoBox>
+        </LegalSection>
+
+        <LegalSection title="2. Principios rectores — Ley N° 21.719">
+          <p>
+            El tratamiento de datos personales realizado por Ledgera se rige por los
+            siguientes principios establecidos en la Ley N° 21.719:
+          </p>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
+          >
+            {[
+              {
+                nombre: "Licitud",
+                desc: "Todo tratamiento cuenta con una base jurídica válida.",
+              },
+              {
+                nombre: "Finalidad",
+                desc: "Los datos se recogen para fines determinados, explícitos y legítimos, y no se tratan de manera incompatible con dichos fines.",
+              },
+              {
+                nombre: "Proporcionalidad",
+                desc: "Solo se tratan los datos estrictamente necesarios para la finalidad declarada.",
+              },
+              {
+                nombre: "Calidad",
+                desc: "Los datos deben ser exactos y, cuando sea necesario, actualizados.",
+              },
+              {
+                nombre: "Seguridad",
+                desc: "Se aplican medidas técnicas y organizativas adecuadas para proteger los datos.",
+              },
+              {
+                nombre: "Transparencia",
+                desc: "El titular es informado de manera clara sobre el tratamiento de sus datos.",
+              },
+            ].map((p) => (
+              <div
+                key={p.nombre}
+                style={{
+                  display: "flex",
+                  gap: "0.8rem",
+                  alignItems: "flex-start",
+                }}
+              >
+                <span
+                  style={{
+                    background: "rgba(99,102,241,0.15)",
+                    color: "#a5b4fc",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    padding: "0.15rem 0.6rem",
+                    borderRadius: "999px",
+                    whiteSpace: "nowrap",
+                    marginTop: "0.15rem",
+                    flexShrink: 0,
+                  }}
+                >
+                  {p.nombre}
+                </span>
+                <span style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7 }}>
+                  {p.desc}
+                </span>
+              </div>
+            ))}
+          </div>
+        </LegalSection>
+
+        <LegalSection title="3. Datos personales que tratamos">
+          <p>
+            Ledgera trata las siguientes categorías de datos personales, según la fuente de
+            obtención:
+          </p>
+          <DataTable
+            headers={["Categoría", "Datos específicos", "Origen"]}
+            rows={[
+              [
+                "Identificación",
+                "Nombre completo, correo electrónico, RUT (opcional)",
+                "Proporcionado por el Usuario al registrarse",
+              ],
+              [
+                "Acceso y seguridad",
+                "Contraseña (hash bcrypt, nunca en texto plano), token de sesión, historial de inicio de sesión, intentos fallidos",
+                "Generado automáticamente al autenticarse",
+              ],
+              [
+                "Tributarios y financieros",
+                "Movimientos de activos digitales, montos, fechas, exchanges de origen, cálculos FIFO, PnL por período",
+                "Importados por el Usuario (CSV o integración con exchange)",
+              ],
+              [
+                "Uso de la plataforma",
+                "Páginas visitadas, funciones utilizadas, acciones realizadas, log de auditoría interno",
+                "Generado automáticamente durante el uso",
+              ],
+              [
+                "Técnicos y de red",
+                "Dirección IP, tipo de navegador, sistema operativo, zona horaria",
+                "Recogido automáticamente por razones de seguridad y diagnóstico",
+              ],
+              [
+                "Facturación",
+                "Estado de suscripción, plan contratado, historial de pagos. Ledgera NO almacena datos de tarjetas.",
+                "MercadoPago notifica el resultado; Ledgera recibe solo la confirmación",
+              ],
+            ]}
+          />
+          <InfoBox color="indigo">
+            Ledgera{" "}
+            <strong style={{ color: "#c7d2fe" }}>no recopila datos sensibles</strong> en los
+            términos del Art. 4 de la Ley N° 21.719 (datos de salud, origen racial o
+            étnico, opiniones políticas, creencias religiosas, datos biométricos, etc.).
+          </InfoBox>
+        </LegalSection>
+
+        <LegalSection title="4. Finalidad y base jurídica del tratamiento">
+          <p>
+            Cada tratamiento que realiza Ledgera cuenta con una base jurídica específica
+            conforme a los Arts. 8 y siguientes de la Ley N° 21.719:
+          </p>
+          <DataTable
+            headers={["Finalidad", "Base jurídica (Ley 21.719)"]}
+            rows={[
+              [
+                "Prestar el servicio de gestión tributaria de activos digitales contratado",
+                "Ejecución del contrato — Art. 8 letra b)",
+              ],
+              [
+                "Autenticación, control de acceso y prevención del fraude",
+                "Ejecución del contrato + Interés legítimo — Art. 8 letras b) y f)",
+              ],
+              [
+                "Facturación, cobro de suscripciones y gestión de reembolsos",
+                "Ejecución del contrato — Art. 8 letra b)",
+              ],
+              [
+                "Notificaciones del servicio: alertas tributarias, actualizaciones, cambios en Términos",
+                "Ejecución del contrato — Art. 8 letra b)",
+              ],
+              [
+                "Cumplimiento de obligaciones legales ante SII, UAF u otras autoridades",
+                "Obligación legal — Art. 8 letra c)",
+              ],
+              [
+                "Mejora del servicio mediante análisis estadísticos anónimos y agregados",
+                "Interés legítimo — Art. 8 letra f)",
+              ],
+              [
+                "Comunicaciones de marketing y novedades (opcionales)",
+                "Consentimiento expreso y revocable — Art. 8 letra a)",
+              ],
+            ]}
+          />
+          <p>
+            Los datos tributarios del Usuario{" "}
+            <strong style={{ color: "#e2e8f0" }}>
+              no se utilizan con fines publicitarios
+            </strong>{" "}
+            ni se comparten con terceros para ese propósito.
           </p>
         </LegalSection>
 
+        <LegalSection title="5. Decisiones automatizadas e indicadores de riesgo">
+          <p>
+            En cumplimiento del{" "}
+            <strong style={{ color: "#e2e8f0" }}>Art. 16 de la Ley N° 21.719</strong>,
+            Ledgera informa que la Plataforma genera de forma automatizada los siguientes
+            análisis basados en los datos del Usuario:
+          </p>
+          <ul
+            style={{
+              paddingLeft: "1.5rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+            }}
+          >
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Indicadores de riesgo tributario:</strong>{" "}
+              calculados a partir del volumen de operaciones, consistencia de registros y
+              brechas detectadas entre períodos.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Alertas accionables:</strong> notificaciones
+              automáticas sobre inconsistencias, operaciones sin clasificar o aproximación
+              al cierre de período tributario.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Cálculo FIFO automatizado:</strong>{" "}
+              determinación del costo tributario de cada activo aplicando el método First In,
+              First Out conforme a la Circular SII N° 31/2021.
+            </li>
+          </ul>
+          <InfoBox color="amber">
+            <strong style={{ color: "#fcd34d" }}>Importante:</strong> Estas decisiones
+            automatizadas son herramientas de{" "}
+            <strong style={{ color: "#fcd34d" }}>asistencia informativa</strong> y no
+            producen efectos jurídicos vinculantes sobre el Usuario. El Usuario conserva
+            el control total de sus declaraciones ante el SII. Si desea impugnar o revisar
+            cualquier cálculo automatizado, puede hacerlo directamente dentro de la
+            Plataforma o contactando al EPD.
+          </InfoBox>
+        </LegalSection>
+
+        <LegalSection title="6. Conservación de los datos">
+          <p>
+            Los datos personales se conservan durante la vigencia de la suscripción y por un
+            período adicional de{" "}
+            <strong style={{ color: "#e2e8f0" }}>5 años</strong> desde la cancelación de la
+            cuenta, conforme al plazo de prescripción tributaria ordinaria establecido en el{" "}
+            <strong style={{ color: "#e2e8f0" }}>Art. 200 del Código Tributario</strong>.
+            Este plazo puede extenderse a{" "}
+            <strong style={{ color: "#e2e8f0" }}>6 años</strong> cuando corresponda aplicar
+            la prescripción extraordinaria del mismo artículo.
+          </p>
+          <DataTable
+            headers={["Categoría de dato", "Plazo de conservación", "Fundamento"]}
+            rows={[
+              ["Datos de identificación y acceso", "Vigencia + 5 años", "Prescripción tributaria ordinaria"],
+              ["Datos tributarios y financieros", "Vigencia + 5/6 años", "Art. 200 Código Tributario"],
+              ["Logs de auditoría", "Vigencia + 5 años (solo lectura)", "Integridad del registro inmutable"],
+              ["Datos técnicos y de red", "12 meses desde su generación", "Interés legítimo en seguridad"],
+              ["Datos de facturación", "Vigencia + 7 años", "Ley N° 18.045 y normativa contable"],
+            ]}
+          />
+          <p>
+            Transcurridos los plazos indicados, los datos se eliminan de forma segura o se
+            anonimizan de manera permanente, salvo que una obligación legal exija conservarlos
+            por un período mayor.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="7. Destinatarios y transferencias internacionales">
+          <p>
+            Ledgera puede compartir datos con los siguientes proveedores en la medida
+            estrictamente necesaria para prestar el servicio:
+          </p>
+          <DataTable
+            headers={["Proveedor", "Rol", "País", "Base de la transferencia internacional"]}
+            rows={[
+              [
+                "Vercel Inc.",
+                "Encargado del tratamiento — Hosting y despliegue",
+                "EE.UU.",
+                "Cláusulas contractuales tipo + Data Processing Agreement (DPA) suscrito con Vercel",
+              ],
+              [
+                "Cloudflare Inc.",
+                "Encargado del tratamiento — CDN, seguridad y protección DDoS",
+                "EE.UU.",
+                "Cláusulas contractuales tipo + DPA suscrito con Cloudflare",
+              ],
+              [
+                "MercadoPago S.A.",
+                "Responsable independiente — Procesamiento de pagos",
+                "Chile / Argentina",
+                "No aplica transferencia internacional. Rige su propia política de privacidad.",
+              ],
+              [
+                "Autoridades competentes (SII, UAF, tribunales)",
+                "Receptor legal",
+                "Chile",
+                "Obligación legal — Art. 8 letra c) Ley 21.719",
+              ],
+            ]}
+          />
+          <InfoBox color="amber">
+            <strong style={{ color: "#fcd34d" }}>Transferencias internacionales:</strong>{" "}
+            Los datos transferidos a Vercel y Cloudflare (ambos radicados en EE.UU.) se
+            amparan en{" "}
+            <strong style={{ color: "#fcd34d" }}>
+              Acuerdos de Procesamiento de Datos (DPA)
+            </strong>{" "}
+            que incluyen cláusulas contractuales tipo equivalentes a las exigidas por el{" "}
+            <strong style={{ color: "#fcd34d" }}>Art. 27 de la Ley N° 21.719</strong> como
+            garantía adecuada para la transferencia internacional. Ledgera no transfiere
+            datos a países sin nivel de protección adecuado sin contar con dichas garantías.
+          </InfoBox>
+          <p>
+            Ledgera{" "}
+            <strong style={{ color: "#e2e8f0" }}>no vende, arrienda ni cede</strong> datos
+            personales a terceros con fines comerciales o publicitarios.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="8. Derechos del titular">
+          <p>
+            Conforme a la{" "}
+            <strong style={{ color: "#e2e8f0" }}>Ley N° 21.719</strong>, el Usuario tiene
+            los siguientes derechos sobre sus datos personales, con los plazos de respuesta
+            que la ley establece para cada uno:
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+            {[
+              {
+                derecho: "Acceso",
+                arts: "Art. 13",
+                desc: "Conocer qué datos personales tratamos, con qué finalidad y obtener una copia.",
+                plazo: "30 días corridos",
+                color: "#818cf8",
+              },
+              {
+                derecho: "Rectificación",
+                arts: "Art. 14",
+                desc: "Corregir datos inexactos, incompletos o desactualizados.",
+                plazo: "5 días hábiles",
+                color: "#22c55e",
+              },
+              {
+                derecho: "Supresión",
+                arts: "Art. 15",
+                desc: "Solicitar la eliminación de datos cuando ya no sean necesarios, salvo obligación legal de conservarlos.",
+                plazo: "5 días hábiles",
+                color: "#22c55e",
+              },
+              {
+                derecho: "Oposición",
+                arts: "Art. 16",
+                desc: "Oponerse al tratamiento basado en interés legítimo o revocar el consentimiento otorgado.",
+                plazo: "5 días hábiles",
+                color: "#22c55e",
+              },
+              {
+                derecho: "Portabilidad",
+                arts: "Art. 17",
+                desc: "Recibir sus datos en formato estructurado, de uso común y legible por máquina (CSV o JSON).",
+                plazo: "30 días corridos",
+                color: "#818cf8",
+              },
+              {
+                derecho: "Limitación",
+                arts: "Art. 18",
+                desc: "Solicitar la suspensión del tratamiento mientras se verifica una reclamación o impugnación.",
+                plazo: "5 días hábiles",
+                color: "#22c55e",
+              },
+              {
+                derecho: "Impugnar decisiones automatizadas",
+                arts: "Art. 16 bis",
+                desc: "Solicitar revisión humana de cualquier indicador de riesgo o cálculo automatizado que le afecte.",
+                plazo: "10 días hábiles",
+                color: "#f59e0b",
+              },
+            ].map((d) => (
+              <div
+                key={d.derecho}
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: "10px",
+                  padding: "0.9rem 1.1rem",
+                  display: "flex",
+                  gap: "1rem",
+                  alignItems: "flex-start",
+                }}
+              >
+                <div style={{ flexShrink: 0, minWidth: "130px" }}>
+                  <span
+                    style={{
+                      display: "block",
+                      color: d.color,
+                      fontWeight: 700,
+                      fontSize: "0.88rem",
+                    }}
+                  >
+                    {d.derecho}
+                  </span>
+                  <span style={{ color: "#475569", fontSize: "0.75rem" }}>{d.arts}</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 0.35rem", color: "#94a3b8", fontSize: "0.87rem", lineHeight: 1.6 }}>
+                    {d.desc}
+                  </p>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#64748b",
+                      background: "rgba(255,255,255,0.04)",
+                      padding: "0.1rem 0.5rem",
+                      borderRadius: "999px",
+                    }}
+                  >
+                    Plazo de respuesta: {d.plazo}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p>
+            Para ejercer cualquiera de estos derechos, envíe una solicitud escrita a{" "}
+            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+              admin@ledgera.cl
+            </a>{" "}
+            con asunto <em>"Ejercicio de derechos — Ley 21.719"</em>, indicando el derecho
+            que desea ejercer y adjuntando copia de su documento de identidad.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="9. Retiro del consentimiento">
+          <p>
+            Cuando el tratamiento de datos se base en el{" "}
+            <strong style={{ color: "#e2e8f0" }}>consentimiento del Usuario</strong> (por
+            ejemplo, comunicaciones de marketing opcionales), este podrá retirarlo en
+            cualquier momento sin que ello afecte a la licitud del tratamiento previo.
+          </p>
+          <p>
+            El retiro del consentimiento puede ejercerse:
+          </p>
+          <ul
+            style={{
+              paddingLeft: "1.5rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+            }}
+          >
+            <li>
+              Mediante el enlace de baja incluido en cualquier correo electrónico de
+              marketing enviado por Ledgera.
+            </li>
+            <li>
+              Enviando una solicitud a{" "}
+              <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+                admin@ledgera.cl
+              </a>{" "}
+              con asunto <em>"Retiro de consentimiento"</em>.
+            </li>
+            <li>
+              Desde la configuración de notificaciones dentro de la Plataforma (cuando
+              esta función esté disponible).
+            </li>
+          </ul>
+          <InfoBox color="amber">
+            <strong style={{ color: "#fcd34d" }}>Importante:</strong> El retiro del
+            consentimiento para el tratamiento necesario para la ejecución del contrato
+            (autenticación, cálculos FIFO, facturación) equivale a la resolución del contrato
+            de servicios, por lo que implicará la cancelación de la cuenta.
+          </InfoBox>
+        </LegalSection>
+
+        <LegalSection title="10. Seguridad de los datos">
+          <p>
+            En cumplimiento del{" "}
+            <strong style={{ color: "#e2e8f0" }}>Art. 11 de la Ley N° 21.719</strong>,
+            Ledgera implementa las siguientes medidas técnicas y organizativas:
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+            {[
+              { label: "Cifrado en tránsito", desc: "TLS 1.3 en todas las comunicaciones entre el Usuario y la Plataforma." },
+              { label: "Contraseñas", desc: "Almacenadas con hash bcrypt. Nunca se guardan en texto plano ni se transmiten." },
+              { label: "Sesiones", desc: "Tokens de corta duración con renovación automática y revocación inmediata al cerrar sesión." },
+              { label: "Doble factor (2FA)", desc: "Disponible para todos los usuarios. Recomendado para cuentas con datos tributarios." },
+              { label: "Control de acceso interno", desc: "Acceso a datos de producción restringido al equipo mínimo necesario, con trazabilidad." },
+              { label: "Auditoría inmutable", desc: "Registro inalterable de eventos sensibles dentro de la Plataforma." },
+              { label: "Proveedores certificados", desc: "Vercel y Cloudflare cuentan con certificaciones SOC 2 Type II e ISO 27001." },
+            ].map((m) => (
+              <div
+                key={m.label}
+                style={{ display: "flex", gap: "0.8rem", alignItems: "flex-start" }}
+              >
+                <span
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: "#22c55e",
+                    marginTop: "0.6rem",
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7 }}>
+                  <strong style={{ color: "#e2e8f0" }}>{m.label}:</strong> {m.desc}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p>
+            En caso de producirse una brecha de seguridad que pueda afectar los derechos del
+            Usuario, Ledgera lo notificará en el plazo y forma exigidos por el{" "}
+            <strong style={{ color: "#e2e8f0" }}>Art. 11 de la Ley N° 21.719</strong>, y
+            adoptará las medidas correctivas de forma inmediata.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="11. Menores de edad">
+          <p>
+            La Plataforma está destinada exclusivamente a personas naturales mayores de{" "}
+            <strong style={{ color: "#e2e8f0" }}>18 años</strong> y a personas jurídicas
+            debidamente representadas. Ledgera no recopila conscientemente datos de menores
+            de edad sin consentimiento parental.
+          </p>
+          <p>
+            Si detectamos que un menor de 18 años ha proporcionado datos personales sin
+            autorización de su representante legal, procederemos a eliminarlos de forma
+            inmediata y a cancelar la cuenta asociada, en cumplimiento del{" "}
+            <strong style={{ color: "#e2e8f0" }}>Art. 16 de la Ley N° 21.719</strong>.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="12. Relación con la Política de Cookies">
+          <p>
+            Las cookies y tecnologías similares utilizadas por Ledgera implican el
+            tratamiento de datos personales (dirección IP, identificadores de sesión,
+            preferencias) y forman parte del sistema de privacidad descrito en esta Política.
+          </p>
+          <p>
+            La información detallada sobre los tipos de cookies utilizadas, su finalidad,
+            duración y los proveedores que las instalan se encuentra en la{" "}
+            <Link href="/cookies" style={{ color: "#818cf8" }}>
+              Política de Cookies
+            </Link>
+            , que complementa y debe leerse junto con la presente Política de Privacidad.
+          </p>
+          <InfoBox color="indigo">
+            Las cookies estrictamente necesarias (sesión y seguridad) se tratan bajo la base
+            jurídica de{" "}
+            <strong style={{ color: "#c7d2fe" }}>ejecución del contrato</strong>. Las cookies
+            analíticas opcionales requieren{" "}
+            <strong style={{ color: "#c7d2fe" }}>consentimiento expreso</strong>, revocable
+            en cualquier momento desde la configuración del navegador.
+          </InfoBox>
+        </LegalSection>
+
+        <LegalSection title="13. Modificaciones">
+          <p>
+            Ledgera podrá actualizar esta Política para reflejar cambios en la normativa,
+            en los proveedores o en las funcionalidades de la Plataforma.
+          </p>
+          <p>
+            Los cambios significativos serán notificados al correo electrónico registrado
+            con al menos{" "}
+            <strong style={{ color: "#e2e8f0" }}>10 días hábiles de anticipación</strong>.
+            Continuando con el uso de la Plataforma tras ese plazo, el Usuario manifiesta
+            su aceptación de la nueva versión.
+          </p>
+          <p>
+            Si el Usuario no acepta los cambios, podrá resolver el contrato conforme a lo
+            dispuesto en los{" "}
+            <Link href="/terminos" style={{ color: "#818cf8" }}>
+              Términos y Condiciones
+            </Link>{" "}
+            sección 12.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="14. Contacto y reclamaciones">
+          <p>
+            Para consultas, solicitudes de ejercicio de derechos o reporte de incidentes de
+            seguridad:
+          </p>
+          <InfoBox color="indigo">
+            <strong style={{ color: "#c7d2fe" }}>EPD — Ledgera SpA</strong>
+            {"  ·  "}
+            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+              admin@ledgera.cl
+            </a>
+            {"  ·  "}
+            Asunto: "Protección de datos"
+          </InfoBox>
+          <p>
+            Si considera que su solicitud no fue atendida de forma satisfactoria, tiene
+            derecho a presentar una reclamación ante la{" "}
+            <strong style={{ color: "#e2e8f0" }}>
+              Agencia de Protección de Datos Personales
+            </strong>{" "}
+            (autoridad de control establecida por la Ley N° 21.719) o, en forma transitoria
+            mientras dicha institución completa su constitución, ante el{" "}
+            <strong style={{ color: "#e2e8f0" }}>Consejo para la Transparencia</strong>.
+          </p>
+        </LegalSection>
+
+        {/* VER TAMBIÉN */}
         <div
           style={{
             marginTop: "3rem",
@@ -317,30 +791,64 @@ export default function CookiesPage() {
             gap: "1rem",
           }}
         >
-          <span style={{ color: "#64748b", fontSize: "0.85rem", alignSelf: "center" }}>Ver también:</span>
-          <Link href="/terminos" style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}>
+          <span style={{ color: "#64748b", fontSize: "0.85rem", alignSelf: "center" }}>
+            Ver también:
+          </span>
+          <Link
+            href="/terminos"
+            style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}
+          >
             Términos y Condiciones →
           </Link>
-          <Link href="/privacidad" style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}>
-            Política de Privacidad →
+          <Link
+            href="/cookies"
+            style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}
+          >
+            Política de Cookies →
           </Link>
         </div>
       </main>
 
-      <footer style={{ background: "#040C13", padding: "3rem 2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      {/* FOOTER */}
+      <footer
+        style={{
+          background: "#040C13",
+          padding: "3rem 2.5rem",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "2rem", marginBottom: "2rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "2rem",
+              marginBottom: "2rem",
+            }}
+          >
             <div>
               <div style={{ marginBottom: "12px" }}>
                 <Logo variant="light" size="sm" showSubtitle />
               </div>
-              <p style={{ fontSize: "13px", color: "#475569", margin: 0, maxWidth: "260px", lineHeight: 1.6 }}>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#475569",
+                  margin: 0,
+                  maxWidth: "260px",
+                  lineHeight: 1.6,
+                }}
+              >
                 Software tributario especializado en criptomonedas para el mercado chileno.
               </p>
             </div>
             <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap" }}>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Producto</p>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                  Producto
+                </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <Link href="/register" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Comenzar gratis</Link>
                   <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Iniciar sesión</Link>
@@ -348,7 +856,9 @@ export default function CookiesPage() {
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Legal</p>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                  Legal
+                </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Términos y condiciones</Link>
                   <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de privacidad</Link>
@@ -356,31 +866,86 @@ export default function CookiesPage() {
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Contacto</p>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                  Contacto
+                </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>admin@ledgera.cl</a>
-                  <a href="https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number" target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>WhatsApp soporte</a>
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>WhatsApp soporte</a>
                 </div>
               </div>
             </div>
           </div>
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-            <span style={{ fontSize: "12px", color: "#334155" }}>© {new Date().getFullYear()} Ledgera · Chile · Ley 21.719 protección de datos</span>
+          <div
+            style={{
+              borderTop: "1px solid rgba(255,255,255,0.04)",
+              paddingTop: "1.5rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "1rem",
+            }}
+          >
+            <span style={{ fontSize: "12px", color: "#334155" }}>
+              © {new Date().getFullYear()} Ledgera SpA · Chile · Ley 21.719 protección de datos
+            </span>
             <span style={{ fontSize: "12px", color: "#334155" }}>ledgera.cl</span>
           </div>
         </div>
       </footer>
 
       {showScrollTop && (
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Volver arriba"
-          style={{ position: "fixed", bottom: "92px", right: "28px", width: "44px", height: "44px", borderRadius: "50%", background: "rgba(10,31,46,0.92)", border: "1px solid rgba(255,255,255,0.14)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 998, backdropFilter: "blur(8px)" }}>
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Volver arriba"
+          style={{
+            position: "fixed",
+            bottom: "92px",
+            right: "28px",
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: "rgba(10,31,46,0.92)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 998,
+            backdropFilter: "blur(8px)",
+          }}
+        >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M9 13V5M5 9l4-4 4 4" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M9 13V5M5 9l4-4 4 4"
+              stroke="#94A3B8"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
       )}
-      <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
-        style={{ position: "fixed", bottom: "28px", right: "28px", width: "52px", height: "52px", borderRadius: "50%", background: "#16A34A", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", zIndex: 999 }}>
+      <a
+        href={WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: "fixed",
+          bottom: "28px",
+          right: "28px",
+          width: "52px",
+          height: "52px",
+          borderRadius: "50%",
+          background: "#16A34A",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          textDecoration: "none",
+          zIndex: 999,
+        }}
+      >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="#ffffff">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
         </svg>
@@ -421,100 +986,98 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
   );
 }
 
-type CookieRow = {
-  nombre: string;
-  finalidad: string;
-  duracion: string;
-  tipo: string;
-};
-
-function CookieTable({
-  type,
-  color,
-  description,
-  examples,
+function InfoBox({
+  children,
+  color = "indigo",
 }: {
-  type: string;
-  color: string;
-  description: string;
-  examples: CookieRow[];
+  children: React.ReactNode;
+  color?: "indigo" | "amber" | "red";
 }) {
+  const palette = {
+    indigo: { bg: "rgba(99,102,241,0.06)", border: "rgba(99,102,241,0.15)", text: "#a5b4fc" },
+    amber: { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.18)", text: "#fcd34d" },
+    red: { bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.18)", text: "#fca5a5" },
+  };
+  const p = palette[color];
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: p.bg,
+        border: `1px solid ${p.border}`,
         borderRadius: "10px",
-        overflow: "hidden",
+        padding: "0.9rem 1.2rem",
       }}
     >
-      <div
+      <p style={{ color: p.text, fontSize: "0.88rem", margin: 0, lineHeight: 1.7 }}>
+        {children}
+      </p>
+    </div>
+  );
+}
+
+function DataTable({
+  headers,
+  rows,
+}: {
+  headers: string[];
+  rows: string[][];
+}) {
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table
         style={{
-          padding: "0.8rem 1.2rem",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.6rem",
+          width: "100%",
+          borderCollapse: "collapse",
+          fontSize: "0.84rem",
+          color: "#94a3b8",
         }}
       >
-        <span
-          style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            background: color,
-            flexShrink: 0,
-          }}
-        />
-        <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "0.9rem" }}>{type}</span>
-      </div>
-      <div style={{ padding: "0.8rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.85rem" }}>{description}</p>
-      </div>
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", color: "#94a3b8" }}
-        >
-          <thead>
-            <tr>
-              {["Cookie / Tecnología", "Finalidad", "Duración", "Tipo"].map((h) => (
-                <th
-                  key={h}
+        <thead>
+          <tr>
+            {headers.map((h) => (
+              <th
+                key={h}
+                style={{
+                  textAlign: "left",
+                  padding: "0.6rem 0.8rem",
+                  borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  color: "#cbd5e1",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr
+              key={i}
+              style={{
+                background:
+                  i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent",
+              }}
+            >
+              {row.map((cell, j) => (
+                <td
+                  key={j}
                   style={{
-                    textAlign: "left",
-                    padding: "0.5rem 1rem",
-                    borderBottom: "1px solid rgba(255,255,255,0.06)",
-                    color: "#cbd5e1",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
+                    padding: "0.6rem 0.8rem",
+                    color: j === 0 ? "#e2e8f0" : "#94a3b8",
+                    fontWeight: j === 0 ? 500 : 400,
+                    verticalAlign: "top",
+                    lineHeight: 1.6,
                   }}
                 >
-                  {h}
-                </th>
+                  {cell}
+                </td>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {examples.map((row, i) => (
-              <tr key={i}>
-                <td
-                  style={{
-                    padding: "0.5rem 1rem",
-                    color: "#e2e8f0",
-                    fontFamily: "monospace",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  {row.nombre}
-                </td>
-                <td style={{ padding: "0.5rem 1rem" }}>{row.finalidad}</td>
-                <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>{row.duracion}</td>
-                <td style={{ padding: "0.5rem 1rem" }}>{row.tipo}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
