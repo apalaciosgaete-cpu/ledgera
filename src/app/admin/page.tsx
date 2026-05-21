@@ -674,7 +674,7 @@ export default function AdminPage() {
             <h2 style={{ fontFamily: fonts.display, fontSize: "16px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 4px" }}>Medios de pago</h2>
             <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>Métodos disponibles para cobro de suscripciones.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px" }}>
             {[
               {
                 name:   "Facturación manual",
@@ -686,31 +686,13 @@ export default function AdminPage() {
                 border: "rgba(22,163,74,0.2)",
               },
               {
-                name:   "Webpay Plus",
-                desc:   "Transbank Chile. Tarjetas de débito y crédito nacionales.",
-                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-                status: "Próximamente",
-                color:  colors.warning,
-                bg:     "rgba(245,158,11,0.08)",
-                border: "rgba(245,158,11,0.2)",
-              },
-              {
-                name:   "Transferencia bancaria",
-                desc:   "Pago manual por transferencia. Admin confirma y activa la cuenta.",
-                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-                status: "Próximamente",
-                color:  colors.warning,
-                bg:     "rgba(245,158,11,0.08)",
-                border: "rgba(245,158,11,0.2)",
-              },
-              {
-                name:   "PayPal",
-                desc:   "Pagos internacionales en USD. Para clientes fuera de Chile.",
-                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>,
-                status: "Próximamente",
-                color:  colors.textMuted,
-                bg:     colors.surfaceAlt,
-                border: colors.border,
+                name:   "MercadoPago",
+                desc:   "Pagos con tarjeta de crédito, débito y medios locales. Procesador activo para suscripciones.",
+                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>,
+                status: "Activo",
+                color:  colors.accent,
+                bg:     "rgba(22,163,74,0.08)",
+                border: "rgba(22,163,74,0.2)",
               },
             ].map(method => (
               <div key={method.name} style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
