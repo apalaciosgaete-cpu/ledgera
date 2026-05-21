@@ -17,7 +17,8 @@
       "Bash(vercel env *)",
       "Bash(xargs grep -l \"planes\")",
       "Bash(xargs wc -l)",
-      "Bash(git restore *)"
+      "Bash(git restore *)",
+      "Bash(git commit *)"
     ]
   }
 }
