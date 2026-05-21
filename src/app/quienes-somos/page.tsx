@@ -7,7 +7,7 @@ const WHATSAPP_URL =
   "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
 
 const NAV_LINKS = [
-  { label: "Cómo funciona", href: "/bienvenida#como-funciona" },
+  { label: "Cómo funciona", href: "/como-funciona" },
   { label: "Planes", href: "/planes" },
   { label: "Preguntas", href: "/preguntas" },
   { label: "Blog", href: "/blog" },

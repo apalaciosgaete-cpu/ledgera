@@ -36,7 +36,7 @@ type Plan = {
 
 const NAV_LINKS = [
   { label: "Quiénes somos", href: "/bienvenida#quienes-somos" },
-  { label: "Cómo funciona", href: "/bienvenida#como-funciona" },
+  { label: "Cómo funciona", href: "/como-funciona" },
   { label: "Planes", href: "/planes" },
   { label: "Preguntas", href: "/preguntas" },
   { label: "Blog", href: "/blog" },

@@ -379,7 +379,7 @@ export default function LandingPage() {
         <div className="hidden sm:flex" style={{ alignItems: "center", gap: "4px" }}>
           {[
             { label: "Quiénes somos", href: "/quienes-somos" },
-            { label: "Cómo funciona", href: "#como-funciona" },
+            { label: "Cómo funciona", href: "/como-funciona" },
             { label: "Planes",        href: "/planes" },
             { label: "Preguntas",     href: "/preguntas" },
             { label: "Blog",          href: "/blog" },
@@ -418,7 +418,7 @@ export default function LandingPage() {
         <div className="flex sm:hidden" style={{ flexDirection: "column", background: "rgba(10,31,46,0.97)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.5rem", gap: "4px", position: "sticky", top: "68px", zIndex: 99 }}>
           {[
             { label: "Quiénes somos", href: "/quienes-somos" },
-            { label: "Cómo funciona", href: "#como-funciona" },
+            { label: "Cómo funciona", href: "/como-funciona" },
             { label: "Planes",        href: "/planes" },
             { label: "Preguntas",     href: "/preguntas" },
             { label: "Blog",          href: "/blog" },

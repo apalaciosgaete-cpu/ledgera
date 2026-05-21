@@ -47,6 +47,7 @@ export default function proxy(req: NextRequest) {
     "/register",
     "/planes",
     "/quienes-somos",
+    "/como-funciona",
     "/preguntas",
     "/blog",
     "/api/login",
