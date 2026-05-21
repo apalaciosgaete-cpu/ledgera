@@ -303,7 +303,7 @@ export default function LandingPage() {
       name: "Contador",
       monthly: 14990,
       annual: 149900,
-      description: "Para gestión de múltiples clientes",
+      description: "Múltiples clientes",
       highlight: false,
       cta: "Empezar ahora",
       href: "/register",
