@@ -63,6 +63,18 @@ export async function setSyncFinished(
   });
 }
 
+export async function setSyncReset(connectionId: string) {
+  return prisma.exchangeConnection.update({
+    where: { id: connectionId },
+    data:  {
+      syncStatus:     "IDLE",
+      syncFinishedAt: new Date(),
+      lastSyncStatus: "ERROR",
+      lastSyncError:  "Sync reiniciado manualmente",
+    },
+  });
+}
+
 export async function setSyncFailed(
   connectionId: string,
   message: string,

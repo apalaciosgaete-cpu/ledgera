@@ -28,6 +28,12 @@ function getSymbolLimit(): number {
   return Number.isFinite(val) && val > 0 ? Math.min(val, BINANCE_SPOT_PAIRS.length) : 35;
 }
 
+// Max ventanas de tiempo (≈días) por símbolo por ejecución. Evita timeouts en Vercel.
+function getWindowLimit(): number {
+  const val = Number(process.env.BINANCE_SYNC_WINDOW_LIMIT ?? "999");
+  return Number.isFinite(val) && val > 0 ? val : 999;
+}
+
 export type SyncOutput = {
   result:     SyncResult;
   checkpoint: SyncCheckpoint;
@@ -46,6 +52,7 @@ export async function syncBinance(
 
   const defaultStartMs = getStartMs();
   const symbolLimit    = getSymbolLimit();
+  const windowLimit    = getWindowLimit();
   const pairs          = BINANCE_SPOT_PAIRS.slice(0, symbolLimit);
 
   const symbolStats: Record<string, SymbolSyncStats> = {};
@@ -63,7 +70,9 @@ export async function syncBinance(
     const stats: SymbolSyncStats = { imported: 0, skipped: 0, failed: false };
 
     try {
+      let windows = 0;
       for await (const { batch, windowStart, windowEnd } of fetchAllTradesWindowed(pair, startMs, apiKey, apiSecret)) {
+        if (windows >= windowLimit) break;
         for (const raw of batch) {
           const normalized = normalizeTrade(raw);
           const { isNew }  = await upsertImportRecord(
@@ -77,6 +86,7 @@ export async function syncBinance(
         }
         // Avanza checkpoint al final de la ventana procesada
         checkpoint[pair] = new Date(windowEnd + 1).toISOString();
+        windows++;
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -112,7 +122,9 @@ export async function syncBinance(
   const depositStats: SymbolSyncStats = { imported: 0, skipped: 0, failed: false };
 
   try {
+    let depWindows = 0;
     for await (const { batch, windowEnd } of fetchAllDepositsWindowed(depositStartMs, apiKey, apiSecret)) {
+      if (depWindows >= windowLimit) break;
       for (const raw of batch) {
         const normalized = normalizeDeposit(raw);
         const { isNew }  = await upsertImportRecord(
@@ -125,6 +137,7 @@ export async function syncBinance(
         isNew ? depositStats.imported++ : depositStats.skipped++;
       }
       checkpoint["deposits"] = new Date(windowEnd + 1).toISOString();
+      depWindows++;
     }
   } catch (err) {
     depositStats.failed = true;
@@ -152,7 +165,9 @@ export async function syncBinance(
   const withdrawStats: SymbolSyncStats = { imported: 0, skipped: 0, failed: false };
 
   try {
+    let wdWindows = 0;
     for await (const { batch, windowEnd } of fetchAllWithdrawalsWindowed(withdrawStartMs, apiKey, apiSecret)) {
+      if (wdWindows >= windowLimit) break;
       for (const raw of batch) {
         const normalized = normalizeWithdraw(raw);
         const { isNew }  = await upsertImportRecord(
@@ -165,6 +180,7 @@ export async function syncBinance(
         isNew ? withdrawStats.imported++ : withdrawStats.skipped++;
       }
       checkpoint["withdrawals"] = new Date(windowEnd + 1).toISOString();
+      wdWindows++;
     }
   } catch (err) {
     withdrawStats.failed = true;

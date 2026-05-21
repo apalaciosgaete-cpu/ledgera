@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     return ok({
       connected:      true,
       status:         conn.status,
+      syncStatus:     conn.syncStatus,
       lastSyncAt:     conn.lastSyncAt,
       lastSyncStatus: conn.lastSyncStatus,
       lastSyncError:  conn.lastSyncError,

@@ -9,6 +9,7 @@ import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 type ConnectionStatus = {
   connected:       boolean;
   status?:         string;
+  syncStatus?:     string | null;
   lastSyncAt?:     string | null;
   lastSyncStatus?: string | null;
   lastSyncError?:  string | null;
@@ -160,6 +161,7 @@ export function BinanceIntegrationPanel() {
   const [syncing,       setSyncing]       = useState(false);
   const [testResult,    setTestResult]    = useState<TestResult | null>(null);
   const [syncResult,    setSyncResult]    = useState<SyncResult | null>(null);
+  const [resetting,     setResetting]     = useState(false);
   const [imports,       setImports]       = useState<ImportRecord[]>([]);
   const [loadingImports,setLoadingImports]= useState(false);
   const [confirmingId,  setConfirmingId]  = useState<string | null>(null);
@@ -231,6 +233,21 @@ export function BinanceIntegrationPanel() {
     }
   }
 
+  async function handleReset() {
+    setResetting(true); setMsg(null);
+    try {
+      await httpClient("/api/integrations/binance/sync/reset", {
+        method: "POST", auth: true, body: {},
+      });
+      setMsg({ type: "success", text: "Sincronización reiniciada. Ya puedes volver a sincronizar." });
+      await loadStatus();
+    } catch (e) {
+      setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al reiniciar." });
+    } finally {
+      setResetting(false);
+    }
+  }
+
   async function handleSync() {
     setSyncing(true); setMsg(null); setSyncResult(null);
     try {
@@ -283,7 +300,8 @@ export function BinanceIntegrationPanel() {
     );
   }
 
-  const isConnected = conn?.connected && conn.status === "ACTIVE";
+  const isConnected   = conn?.connected && conn.status === "ACTIVE";
+  const isSyncStuck   = conn?.syncStatus === "RUNNING" && !syncing;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -395,6 +413,11 @@ export function BinanceIntegrationPanel() {
                       ? `${new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })} · ${conn.lastSyncStatus === "OK" ? "✓" : "⚠"}`
                       : "Nunca sincronizado"}
                   </span>
+                  {isSyncStuck && (
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#F87171", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "5px", padding: "1px 7px", whiteSpace: "nowrap" }}>
+                      Atascada — reiniciar
+                    </span>
+                  )}
                   {(conn?.pendingCount ?? 0) > 0 && (
                     <span style={{ fontSize: "11px", fontWeight: 700, color: "#F0B90B", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.2)", borderRadius: "5px", padding: "1px 7px", whiteSpace: "nowrap" }}>
                       {conn?.pendingCount} pendientes
@@ -408,12 +431,24 @@ export function BinanceIntegrationPanel() {
                 )}
               </div>
 
+              {/* Botón reset — solo visible cuando sync está atascado */}
+              {isSyncStuck && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={resetting}
+                  style={{ padding: "7px 14px", borderRadius: "8px", border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "12px", fontWeight: 600, cursor: resetting ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", flexShrink: 0 }}
+                >
+                  {resetting ? "Reiniciando..." : "Reiniciar sync"}
+                </button>
+              )}
+
               {/* Botón Probar conexión */}
               <button
                 type="button"
                 onClick={handleTest}
-                disabled={testing || syncing}
-                style={{ padding: "7px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: testing ? "#475569" : "#94A3B8", fontSize: "12px", fontWeight: 600, cursor: testing || syncing ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", flexShrink: 0 }}
+                disabled={testing || syncing || isSyncStuck}
+                style={{ padding: "7px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: testing ? "#475569" : "#94A3B8", fontSize: "12px", fontWeight: 600, cursor: testing || syncing || isSyncStuck ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", flexShrink: 0, opacity: isSyncStuck ? 0.4 : 1 }}
               >
                 {testing ? "Verificando..." : "Probar conexión"}
               </button>
@@ -422,24 +457,24 @@ export function BinanceIntegrationPanel() {
               <button
                 type="button"
                 onClick={handleSync}
-                disabled={syncing || testing}
+                disabled={syncing || testing || isSyncStuck}
                 style={{
                   padding: "7px 16px",
                   borderRadius: "8px",
                   border: "none",
-                  background: syncing ? "#16A34A" : "#16A34A",
+                  background: "#16A34A",
                   color: "#fff",
                   fontSize: "12px",
                   fontWeight: 700,
-                  cursor: syncing || testing ? "not-allowed" : "pointer",
+                  cursor: syncing || testing || isSyncStuck ? "not-allowed" : "pointer",
                   fontFamily: fonts.body,
                   whiteSpace: "nowrap",
                   flexShrink: 0,
                   animation: syncing ? "pulse-green 1.2s ease-in-out infinite" : "none",
-                  opacity: testing ? 0.5 : 1,
+                  opacity: testing || isSyncStuck ? 0.5 : 1,
                 }}
               >
-                {syncing ? "Sincronizando..." : "Sincronizar"}
+                {syncing ? "Sincronizando..." : isSyncStuck ? "En curso..." : "Sincronizar"}
               </button>
             </div>
 
