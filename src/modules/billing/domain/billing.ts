@@ -1,8 +1,6 @@
 export type BillingProvider =
   | "MERCADOPAGO"
   | "KHIPU"
-  | "STRIPE"
-  | "PADDLE"
   | "MANUAL";
 
 export type BillingPlan =
@@ -10,10 +8,7 @@ export type BillingPlan =
   | "PROFESIONAL"
   | "EMPRESA";
 
-export type BillingInterval =
-  | "MONTHLY"
-  | "YEARLY"
-  | "ONE_TIME";
+export type BillingInterval = "MONTHLY";
 
 export type BillingCurrency =
   | "CLP"

@@ -31,6 +31,8 @@ export type KhipuPaymentResponse = {
   notification_token?: string;
 };
 
+const KHIPU_BASE = "https://khipu.com/api/2.0";
+
 function getKhipuReceiverId(): string {
   const receiverId = process.env.KHIPU_RECEIVER_ID?.trim();
 
@@ -41,17 +43,15 @@ function getKhipuReceiverId(): string {
   return receiverId;
 }
 
-function getKhipuSecret(): string {
-  const secret = process.env.KHIPU_SECRET?.trim();
+function getKhipuApiKey(): string {
+  const apiKey = process.env.KHIPU_SECRET?.trim();
 
-  if (!secret) {
+  if (!apiKey) {
     throw new Error("KHIPU_SECRET no está configurado.");
   }
 
-  return secret;
+  return apiKey;
 }
-
-const KHIPU_BASE = "https://khipu.com/api/2.0";
 
 function buildFormBody(
   input: Record<string, string | number | boolean | null | undefined>,
@@ -60,51 +60,25 @@ function buildFormBody(
 
   Object.entries(input).forEach(([key, value]) => {
     if (value === null || value === undefined) return;
+
     body.set(key, String(value));
   });
 
   return body;
 }
 
-function buildKhipuAuthHeader(
-  method: string,
-  url: string,
-  params: URLSearchParams,
-  receiverId: string,
-  secret: string,
-): string {
-  const sortedEntries = [...params.entries()].sort(([a], [b]) => a.localeCompare(b));
-  const queryString = new URLSearchParams(sortedEntries).toString();
-
-  const toSign = `${method.toUpperCase()}&${encodeURIComponent(url)}&${encodeURIComponent(queryString)}`;
-
-  const signature = crypto
-    .createHmac("sha256", secret)
-    .update(toSign)
-    .digest("hex");
-
-  return `${receiverId}:${signature}`;
-}
-
 async function khipuRequest<T>(
   path: string,
-  method: string,
-  params: URLSearchParams,
-  receiverId: string,
-  secret: string,
+  options: RequestInit,
 ): Promise<T> {
-  const url = `${KHIPU_BASE}${path}`;
-  const isGet = method.toUpperCase() === "GET";
+  const apiKey = getKhipuApiKey();
 
-  const authorization = buildKhipuAuthHeader(method, url, params, receiverId, secret);
-
-  const response = await fetch(url, {
-    method,
+  const response = await fetch(`${KHIPU_BASE}${path}`, {
+    ...options,
     headers: {
-      Authorization: authorization,
-      ...(!isGet && { "Content-Type": "application/x-www-form-urlencoded" }),
+      "x-api-key": apiKey,
+      ...(options.headers ?? {}),
     },
-    body: isGet ? undefined : params,
     cache: "no-store",
   });
 
@@ -123,7 +97,6 @@ export async function createKhipuPayment(
   input: KhipuCreatePaymentInput,
 ): Promise<KhipuCreatePaymentResponse> {
   const receiverId = getKhipuReceiverId();
-  const secret = getKhipuSecret();
 
   const body = buildFormBody({
     receiver_id: receiverId,
@@ -137,29 +110,23 @@ export async function createKhipuPayment(
     payer_email: input.payerEmail,
   });
 
-  return khipuRequest<KhipuCreatePaymentResponse>(
-    "/payments",
-    "POST",
+  return khipuRequest<KhipuCreatePaymentResponse>("/payments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
     body,
-    receiverId,
-    secret,
-  );
+  });
 }
 
 export async function getKhipuPayment(
   paymentId: string,
 ): Promise<KhipuPaymentResponse> {
-  const receiverId = getKhipuReceiverId();
-  const secret = getKhipuSecret();
-
-  const body = new URLSearchParams();
-
   return khipuRequest<KhipuPaymentResponse>(
     `/payments/${encodeURIComponent(paymentId)}`,
-    "GET",
-    body,
-    receiverId,
-    secret,
+    {
+      method: "GET",
+    },
   );
 }
 
@@ -171,12 +138,16 @@ export function verifyKhipuNotificationToken(input: {
     return false;
   }
 
-  const secret = getKhipuSecret();
+  const apiKey = getKhipuApiKey();
 
   const expected = crypto
-    .createHmac("sha256", secret)
+    .createHmac("sha256", apiKey)
     .update(input.paymentId)
     .digest("hex");
+
+  if (expected.length !== input.notificationToken.length) {
+    return false;
+  }
 
   return crypto.timingSafeEqual(
     Buffer.from(expected),
