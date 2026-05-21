@@ -73,24 +73,23 @@ function buildKhipuAuthHeader(
   receiverId: string,
   secret: string,
 ): string {
-  const sortedEntries = [...params.entries()].sort(([a], [b]) =>
-    a.localeCompare(b),
+  // Encode each key and value individually with encodeURIComponent (= PHP rawurlencode)
+  const encoded = [...params.entries()].map(
+    ([k, v]) => [encodeURIComponent(k), encodeURIComponent(v)] as const,
   );
 
-  // Raw key=value concatenation (no inner encoding) — Khipu decodes the form
-  // body before signing, so we must sign the decoded values, not the encoded ones.
-  const rawParams = sortedEntries.map(([k, v]) => `${k}=${v}`).join("&");
+  // Sort by encoded key
+  encoded.sort(([a], [b]) => a.localeCompare(b));
 
-  const toSign = [
-    method.toUpperCase(),
-    encodeURIComponent(url),
-    encodeURIComponent(rawParams),
-  ].join("&");
+  // Format: METHOD&rawurlencode(url)&key1=val1&key2=val2...
+  // Params are appended individually — NOT outer-encoded as a block
+  let toSign = `${method.toUpperCase()}&${encodeURIComponent(url)}`;
+  for (const [k, v] of encoded) {
+    toSign += `&${k}=${v}`;
+  }
 
-  // Khipu's "Llave" is a hex string representing binary key bytes
-  const keyBytes = Buffer.from(secret, "hex");
   const signature = crypto
-    .createHmac("sha256", keyBytes)
+    .createHmac("sha256", secret)
     .update(toSign)
     .digest("hex");
 
