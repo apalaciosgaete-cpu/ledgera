@@ -53,6 +53,13 @@ export async function POST(request: NextRequest) {
 
     if (!apiKey || !apiSecret) return fail("API Key y Secret son obligatorios.", 400);
 
+    // Valida que ENCRYPTION_KEY esté configurada antes de llamar a Binance
+    const encKey = process.env.ENCRYPTION_KEY;
+    if (!encKey || encKey.length !== 64) {
+      console.error("[binance/connect] ENCRYPTION_KEY ausente o inválida en entorno.");
+      return fail("Error de configuración del servidor: ENCRYPTION_KEY no está configurada correctamente.", 500);
+    }
+
     // Valida credenciales contra Binance antes de guardar
     try {
       await fetchAccountInfo(apiKey, apiSecret);
