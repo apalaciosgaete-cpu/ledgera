@@ -85,17 +85,20 @@ function buildKhipuAuthHeader(
     encodeURIComponent(queryString),
   ].join("&");
 
-  console.log("[khipu:auth] method     =", method.toUpperCase());
-  console.log("[khipu:auth] url        =", url);
-  console.log("[khipu:auth] queryString=", queryString);
-  console.log("[khipu:auth] toSign     =", toSign);
-
   const signature = crypto
     .createHmac("sha256", secret)
     .update(toSign)
     .digest("hex");
 
-  console.log("[khipu:auth] signature  =", signature);
+  console.log("[khipu:auth]", JSON.stringify({
+    method: method.toUpperCase(),
+    url,
+    queryString,
+    toSign,
+    signature,
+    receiverId,
+    secretLen: secret.length,
+  }));
 
   return `${receiverId}:${signature}`;
 }
