@@ -26,12 +26,32 @@ type TestResult = {
 };
 
 type SyncResult = {
-  imported:      number;
-  skipped:       number;
-  autoConfirmed: number;
-  pendingReview: number;
-  taxRebuilt:    boolean;
-  errors:        string[];
+  imported:        number;
+  skipped:         number;
+  autoConfirmed:   number;
+  pendingReview:   number;
+  taxRebuilt:      boolean;
+  errors:          string[];
+  allPeriodsSynced?: boolean;
+  periodResults?:  Array<{ year: number; month: number; imported: number; status: string }>;
+};
+
+type SyncPeriod = {
+  id:            string;
+  year:          number;
+  month:         number;
+  status:        string;
+  importedCount: number;
+  errorCount:    number;
+  finishedAt:    string | null;
+};
+
+type CalendarData = {
+  periods:        SyncPeriod[];
+  totalPending:   number;
+  totalCompleted: number;
+  totalFailed:    number;
+  nextPeriod:     { year: number; month: number } | null;
 };
 
 type ImportRecord = {
@@ -147,6 +167,79 @@ function ActionButton({
   );
 }
 
+// ── Sync Calendar ─────────────────────────────────────────────────────────────
+
+const MONTH_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const MONTH_NAME: Record<number, string> = {
+  1:"enero",2:"febrero",3:"marzo",4:"abril",5:"mayo",6:"junio",
+  7:"julio",8:"agosto",9:"septiembre",10:"octubre",11:"noviembre",12:"diciembre",
+};
+
+function pillStyle(p: SyncPeriod): { bg: string; border: string; labelColor: string; value: string } {
+  switch (p.status) {
+    case "COMPLETED":
+      return {
+        bg: "rgba(22,163,74,0.12)", border: "rgba(22,163,74,0.25)", labelColor: "#4ADE80",
+        value: p.importedCount > 0 ? (p.importedCount > 99 ? "99+" : String(p.importedCount)) : "✓",
+      };
+    case "EMPTY":
+      return { bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)", labelColor: "#334155", value: "—" };
+    case "FAILED":
+      return { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", labelColor: "#F87171", value: "✗" };
+    case "RUNNING":
+      return { bg: "rgba(240,185,11,0.08)", border: "rgba(240,185,11,0.25)", labelColor: "#F0B90B", value: "…" };
+    default:
+      return { bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)", labelColor: "#475569", value: "○" };
+  }
+}
+
+function MonthPill({ label, period }: { label: string; period?: SyncPeriod }) {
+  if (!period) {
+    return (
+      <span title={label} style={{ width: "34px", height: "40px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: "5px", border: "1px dashed rgba(255,255,255,0.04)", flexShrink: 0 }}>
+        <span style={{ fontSize: "9px", color: "#1e293b" }}>{label}</span>
+      </span>
+    );
+  }
+  const s = pillStyle(period);
+  const title = `${label}: ${period.status}${period.importedCount > 0 ? ` · ${period.importedCount} operaciones` : ""}`;
+  return (
+    <span title={title} style={{ width: "34px", height: "40px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", borderRadius: "5px", background: s.bg, border: `1px solid ${s.border}`, flexShrink: 0 }}>
+      <span style={{ fontSize: "9px", color: "#64748B", lineHeight: 1 }}>{label}</span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: s.labelColor, lineHeight: 1 }}>{s.value}</span>
+    </span>
+  );
+}
+
+function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
+  const byYear = new Map<number, Map<number, SyncPeriod>>();
+  for (const p of periods) {
+    if (!byYear.has(p.year)) byYear.set(p.year, new Map());
+    byYear.get(p.year)!.set(p.month, p);
+  }
+  const years = [...byYear.keys()].sort((a, b) => a - b);
+
+  if (years.length === 0) {
+    return <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Sin períodos inicializados. Presiona Sincronizar para comenzar.</p>;
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      {years.map(year => {
+        const monthMap = byYear.get(year)!;
+        return (
+          <div key={year} style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", minWidth: "34px", textAlign: "right", flexShrink: 0 }}>{year}</span>
+            {MONTH_ABBR.map((label, i) => (
+              <MonthPill key={i} label={label} period={monthMap.get(i + 1)} />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Main Panel ────────────────────────────────────────────────────────────────
 
 export function BinanceIntegrationPanel() {
@@ -162,6 +255,8 @@ export function BinanceIntegrationPanel() {
   const [testResult,    setTestResult]    = useState<TestResult | null>(null);
   const [syncResult,    setSyncResult]    = useState<SyncResult | null>(null);
   const [resetting,     setResetting]     = useState(false);
+  const [calendar,      setCalendar]      = useState<CalendarData | null>(null);
+  const [loadingCal,    setLoadingCal]    = useState(false);
   const [imports,       setImports]       = useState<ImportRecord[]>([]);
   const [loadingImports,setLoadingImports]= useState(false);
   const [confirmingId,  setConfirmingId]  = useState<string | null>(null);
@@ -180,6 +275,18 @@ export function BinanceIntegrationPanel() {
     }
   }, []);
 
+  const loadCalendar = useCallback(async () => {
+    setLoadingCal(true);
+    try {
+      const res = await httpClient<ApiResponse<CalendarData>>("/api/integrations/binance/sync/calendar", { auth: true });
+      setCalendar(res.data);
+    } catch {
+      // calendar is optional — don't crash if unavailable
+    } finally {
+      setLoadingCal(false);
+    }
+  }, []);
+
   const loadImports = useCallback(async () => {
     setLoadingImports(true);
     try {
@@ -194,8 +301,11 @@ export function BinanceIntegrationPanel() {
 
   useEffect(() => { void loadStatus(); }, [loadStatus]);
   useEffect(() => {
-    if (conn?.connected && (conn.pendingCount ?? 0) > 0) loadImports();
-  }, [conn, loadImports]);
+    if (conn?.connected && conn.status === "ACTIVE") {
+      void loadCalendar();
+      if ((conn.pendingCount ?? 0) > 0) loadImports();
+    }
+  }, [conn, loadCalendar, loadImports]);
 
   async function handleConnect() {
     if (!apiKey.trim() || !apiSecret.trim()) {
@@ -260,6 +370,7 @@ export function BinanceIntegrationPanel() {
         text: res.message,
       });
       await loadStatus();
+      await loadCalendar();
       await loadImports();
     } catch (e) {
       setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error durante la sincronización." });
@@ -539,6 +650,38 @@ export function BinanceIntegrationPanel() {
             )}
           </div>
         </>
+      )}
+
+      {/* ── Calendario de sincronización ── */}
+      {isConnected && (calendar || loadingCal) && (
+        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "0.875rem 1.25rem" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "0.75rem" }}>
+            <div>
+              <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 2px" }}>Cobertura de sincronización</h4>
+              {calendar && (
+                <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>
+                  {calendar.totalCompleted} completados
+                  {calendar.totalPending > 0 && <span style={{ color: "#F59E0B" }}> · {calendar.totalPending} pendientes</span>}
+                  {calendar.totalFailed  > 0 && <span style={{ color: "#F87171" }}> · {calendar.totalFailed} fallidos</span>}
+                </p>
+              )}
+            </div>
+            {calendar?.nextPeriod && (
+              <span style={{ fontSize: "11px", color: "#64748B", whiteSpace: "nowrap", flexShrink: 0 }}>
+                Siguiente: <strong style={{ color: "#94A3B8" }}>{MONTH_NAME[calendar.nextPeriod.month]} {calendar.nextPeriod.year}</strong>
+              </span>
+            )}
+            {calendar && !calendar.nextPeriod && calendar.periods.length > 0 && (
+              <span style={{ fontSize: "11px", color: "#4ADE80", whiteSpace: "nowrap", flexShrink: 0 }}>Historial al día ✓</span>
+            )}
+          </div>
+
+          {loadingCal && !calendar ? (
+            <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Cargando cobertura...</p>
+          ) : calendar ? (
+            <SyncCalendarGrid periods={calendar.periods} />
+          ) : null}
+        </div>
       )}
 
       {/* ── Importaciones pendientes ── */}

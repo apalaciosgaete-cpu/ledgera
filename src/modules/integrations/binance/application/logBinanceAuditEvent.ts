@@ -42,6 +42,12 @@ export type BinanceAuditMetadata = {
     skipped:  number;
     errors:   number;
   };
+  // Period-based sync fields
+  periods?:        string[];
+  imported?:       number;
+  skipped?:        number;
+  errors?:         number;
+  periodResults?:  Array<{ year: number; month: number; imported: number; status: string }>;
 };
 
 export async function logBinanceAuditEvent(

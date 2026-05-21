@@ -455,6 +455,7 @@ model users {
   exchangeImportRecords   ExchangeImportRecord[]
   taxLedgerEntries        TaxLedgerEntry[]
   annualTaxSummaries      AnnualTaxSummary[]
+  exchangeSyncPeriods     ExchangeSyncPeriod[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -505,7 +506,8 @@ model ExchangeConnection {
   updatedAt       DateTime  @updatedAt
 
   user    users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  imports ExchangeImportRecord[]
+  imports     ExchangeImportRecord[]
+  syncPeriods ExchangeSyncPeriod[]
 
   @@unique([userId, provider])
   @@index([userId])
@@ -542,4 +544,34 @@ model ExchangeImportRecord {
   @@index([provider])
   @@index([normalizedEventType])
   @@map("exchange_import_records")
+}
+
+model ExchangeSyncPeriod {
+  id            String    @id @default(cuid())
+  userId        String
+  connectionId  String
+  provider      String
+
+  year          Int
+  month         Int
+
+  status        String    @default("PENDING")
+
+  importedCount Int       @default(0)
+  errorCount    Int       @default(0)
+
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  lastError     String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user       users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection ExchangeConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, year, month])
+  @@index([userId, year])
+  @@index([userId, provider, status])
+  @@map("exchange_sync_periods")
 }

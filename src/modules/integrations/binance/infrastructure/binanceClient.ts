@@ -96,16 +96,17 @@ export type DepositWindow  = { batch: BinanceDepositRaw[];  windowStart: number;
 export type WithdrawWindow = { batch: BinanceWithdrawRaw[]; windowStart: number; windowEnd: number };
 
 export async function* fetchAllTradesWindowed(
-  symbol: string,
-  startMs: number,
-  apiKey: string,
+  symbol:   string,
+  startMs:  number,
+  apiKey:   string,
   apiSecret: string,
+  endMs?:   number,
 ): AsyncGenerator<TradeWindow> {
-  const now = Date.now();
+  const ceiling = endMs !== undefined ? Math.min(endMs, Date.now()) : Date.now();
   let cursor = startMs;
 
-  while (cursor < now) {
-    const windowEnd = Math.min(cursor + MS_24H - 1, now);
+  while (cursor < ceiling) {
+    const windowEnd = Math.min(cursor + MS_24H - 1, ceiling);
     const batch     = await fetchTradesForSymbol(symbol, cursor, windowEnd, apiKey, apiSecret);
     yield { batch, windowStart: cursor, windowEnd };
     cursor = windowEnd + 1;
@@ -113,15 +114,16 @@ export async function* fetchAllTradesWindowed(
 }
 
 export async function* fetchAllDepositsWindowed(
-  startMs: number,
-  apiKey: string,
+  startMs:  number,
+  apiKey:   string,
   apiSecret: string,
+  endMs?:   number,
 ): AsyncGenerator<DepositWindow> {
-  const now = Date.now();
+  const ceiling = endMs !== undefined ? Math.min(endMs, Date.now()) : Date.now();
   let cursor = startMs;
 
-  while (cursor < now) {
-    const windowEnd = Math.min(cursor + MS_90D - 1, now);
+  while (cursor < ceiling) {
+    const windowEnd = Math.min(cursor + MS_90D - 1, ceiling);
     const batch     = await fetchDeposits(cursor, windowEnd, apiKey, apiSecret);
     yield { batch, windowStart: cursor, windowEnd };
     cursor = windowEnd + 1;
@@ -129,15 +131,16 @@ export async function* fetchAllDepositsWindowed(
 }
 
 export async function* fetchAllWithdrawalsWindowed(
-  startMs: number,
-  apiKey: string,
+  startMs:  number,
+  apiKey:   string,
   apiSecret: string,
+  endMs?:   number,
 ): AsyncGenerator<WithdrawWindow> {
-  const now = Date.now();
+  const ceiling = endMs !== undefined ? Math.min(endMs, Date.now()) : Date.now();
   let cursor = startMs;
 
-  while (cursor < now) {
-    const windowEnd = Math.min(cursor + MS_90D - 1, now);
+  while (cursor < ceiling) {
+    const windowEnd = Math.min(cursor + MS_90D - 1, ceiling);
     const batch     = await fetchWithdrawals(cursor, windowEnd, apiKey, apiSecret);
     yield { batch, windowStart: cursor, windowEnd };
     cursor = windowEnd + 1;
