@@ -1,8 +1,4 @@
-import {
-  PaymentsApi,
-  Configuration,
-  PaymentCreateRequest,
-} from "khipu";
+import crypto from "crypto";
 
 type KhipuCreatePaymentInput = {
   subject: string;
@@ -35,6 +31,8 @@ export type KhipuPaymentResponse = {
   notification_token?: string;
 };
 
+const KHIPU_BASE = "https://khipu.com/api/2.0";
+
 function getKhipuReceiverId(): string {
   const value = process.env.KHIPU_RECEIVER_ID?.trim();
 
@@ -45,7 +43,7 @@ function getKhipuReceiverId(): string {
   return value;
 }
 
-function getKhipuApiKey(): string {
+function getKhipuSecret(): string {
   const value = process.env.KHIPU_SECRET?.trim();
 
   if (!value) {
@@ -55,46 +53,149 @@ function getKhipuApiKey(): string {
   return value;
 }
 
-function createPaymentsApi(): PaymentsApi {
-  const config = new Configuration({
-    apiKey: `Bearer ${getKhipuApiKey()}`,
+function buildFormBody(
+  input: Record<string, string | number | boolean | null | undefined>,
+): URLSearchParams {
+  const body = new URLSearchParams();
+
+  Object.entries(input).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+    body.set(key, String(value));
   });
 
-  return new PaymentsApi(config);
+  return body;
+}
+
+function buildKhipuAuthHeader(
+  method: string,
+  url: string,
+  params: URLSearchParams,
+  receiverId: string,
+  secret: string,
+): string {
+  const sortedEntries = [...params.entries()].sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+
+  // URLSearchParams.toString() encodes spaces as +, igual que Python urllib.parse.urlencode
+  const queryString = new URLSearchParams(sortedEntries).toString();
+
+  const toSign = [
+    method.toUpperCase(),
+    encodeURIComponent(url),
+    encodeURIComponent(queryString),
+  ].join("&");
+
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(toSign)
+    .digest("hex");
+
+  return `${receiverId}:${signature}`;
+}
+
+async function khipuRequest<T>(
+  path: string,
+  method: string,
+  params: URLSearchParams,
+  receiverId: string,
+  secret: string,
+): Promise<T> {
+  const url = `${KHIPU_BASE}${path}`;
+  const isGet = method.toUpperCase() === "GET";
+
+  const authorization = buildKhipuAuthHeader(
+    method,
+    url,
+    params,
+    receiverId,
+    secret,
+  );
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      Authorization: authorization,
+      ...(!isGet && { "Content-Type": "application/x-www-form-urlencoded" }),
+    },
+    body: isGet ? undefined : params,
+    cache: "no-store",
+  });
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      `Khipu API error ${response.status}: ${JSON.stringify(payload)}`,
+    );
+  }
+
+  return payload as T;
 }
 
 export async function createKhipuPayment(
   input: KhipuCreatePaymentInput,
 ): Promise<KhipuCreatePaymentResponse> {
-  const api = createPaymentsApi();
+  const receiverId = getKhipuReceiverId();
+  const secret = getKhipuSecret();
 
-  const request: PaymentCreateRequest = {
-    receiverId: Number(getKhipuReceiverId()),
+  const body = buildFormBody({
+    receiver_id: receiverId,
     subject: input.subject,
     amount: input.amount,
     currency: input.currency,
-    transactionId: input.transactionId,
-    returnUrl: input.returnUrl,
-    cancelUrl: input.cancelUrl,
-    notifyUrl: input.notifyUrl,
-    payerEmail: input.payerEmail ?? undefined,
-  };
+    transaction_id: input.transactionId,
+    return_url: input.returnUrl,
+    cancel_url: input.cancelUrl,
+    notify_url: input.notifyUrl,
+    payer_email: input.payerEmail,
+  });
 
-  const response = await api.paymentsPost(request);
-
-  return response.data as KhipuCreatePaymentResponse;
+  return khipuRequest<KhipuCreatePaymentResponse>(
+    "/payments",
+    "POST",
+    body,
+    receiverId,
+    secret,
+  );
 }
 
 export async function getKhipuPayment(
   paymentId: string,
 ): Promise<KhipuPaymentResponse> {
-  const api = createPaymentsApi();
+  const receiverId = getKhipuReceiverId();
+  const secret = getKhipuSecret();
 
-  const response = await api.paymentsPaymentIdGet(paymentId);
-
-  return response.data as KhipuPaymentResponse;
+  return khipuRequest<KhipuPaymentResponse>(
+    `/payments/${encodeURIComponent(paymentId)}`,
+    "GET",
+    new URLSearchParams(),
+    receiverId,
+    secret,
+  );
 }
 
-export function verifyKhipuNotificationToken(): boolean {
-  return true;
+export function verifyKhipuNotificationToken(input: {
+  paymentId?: string | null;
+  notificationToken?: string | null;
+}): boolean {
+  if (!input.paymentId || !input.notificationToken) {
+    return false;
+  }
+
+  const secret = getKhipuSecret();
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(input.paymentId)
+    .digest("hex");
+
+  if (expected.length !== input.notificationToken.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expected),
+    Buffer.from(input.notificationToken),
+  );
 }
