@@ -118,42 +118,43 @@ export default function PreguntasPage() {
       }}
     >
       {/* Nav */}
-      <nav
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          background: "rgba(10,31,46,0.94)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          padding: "0 2.5rem",
-          height: "68px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(7,21,32,0.92)", backdropFilter: "blur(16px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 2rem" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/bienvenida" style={{ textDecoration: "none" }}>
             <Logo variant="light" size="lg" showSubtitle />
           </Link>
-          <Link
-            href="/bienvenida"
-            style={{ fontSize: "14px", color: "#64748B", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M13 8H3M7 4L3 8l4 4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Inicio
-          </Link>
+          <nav style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            {[
+              { label: "Quiénes somos", href: "/quienes-somos" },
+              { label: "Cómo funciona", href: "/como-funciona" },
+              { label: "Planes",        href: "/planes" },
+              { label: "Preguntas",     href: "/preguntas" },
+              { label: "Blog",          href: "/blog" },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                style={{
+                  fontSize: "14px",
+                  fontWeight: item.href === "/preguntas" ? 600 : 500,
+                  color: item.href === "/preguntas" ? "#4ADE80" : "#94A3B8",
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link href="/login" style={{ marginLeft: "8px", fontSize: "14px", fontWeight: 600, color: "#E2E8F0", padding: "8px 18px", borderRadius: "9px", border: "1px solid rgba(255,255,255,0.12)", textDecoration: "none" }}>
+              Iniciar sesión
+            </Link>
+            <Link href="/register" style={{ marginLeft: "6px", fontSize: "14px", fontWeight: 700, color: "#fff", padding: "8px 18px", borderRadius: "9px", background: "#16A34A", textDecoration: "none" }}>
+              Crear cuenta
+            </Link>
+          </nav>
         </div>
-        <Link
-          href="/register"
-          style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", textDecoration: "none", padding: "8px 18px", borderRadius: "8px", background: "#16A34A" }}
-        >
-          Comenzar gratis
-        </Link>
-      </nav>
+      </header>
 
       {/* Header */}
       <section style={{ padding: "5rem 2rem 3.5rem", background: "#071520", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>

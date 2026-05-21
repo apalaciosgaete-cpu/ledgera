@@ -9,6 +9,7 @@ const WHATSAPP_URL =
 
 const NAV_LINKS = [
   { label: "Quiénes somos", href: "/quienes-somos" },
+  { label: "Cómo funciona", href: "/como-funciona" },
   { label: "Planes", href: "/planes" },
   { label: "Preguntas", href: "/preguntas" },
   { label: "Blog", href: "/blog" },
@@ -34,7 +35,7 @@ export default function ComoFuncionaPage() {
           </Link>
           <nav style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             {NAV_LINKS.map((item) => (
-              <Link key={item.label} href={item.href} style={{ fontSize: "14px", fontWeight: 500, color: "#94A3B8", padding: "6px 14px", borderRadius: "8px", textDecoration: "none" }}>
+              <Link key={item.label} href={item.href} style={{ fontSize: "14px", fontWeight: item.href === "/como-funciona" ? 600 : 500, color: item.href === "/como-funciona" ? "#4ADE80" : "#94A3B8", padding: "6px 14px", borderRadius: "8px", textDecoration: "none" }}>
                 {item.label}
               </Link>
             ))}

@@ -8,6 +8,7 @@ const WHATSAPP_URL =
   "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
 
 const NAV_LINKS = [
+  { label: "Quiénes somos", href: "/quienes-somos" },
   { label: "Cómo funciona", href: "/como-funciona" },
   { label: "Planes", href: "/planes" },
   { label: "Preguntas", href: "/preguntas" },
@@ -37,7 +38,7 @@ export default function QuienesSomosPage() {
               <Link
                 key={item.label}
                 href={item.href}
-                style={{ fontSize: "14px", fontWeight: 500, color: "#94A3B8", padding: "6px 14px", borderRadius: "8px", textDecoration: "none" }}
+                style={{ fontSize: "14px", fontWeight: item.href === "/quienes-somos" ? 600 : 500, color: item.href === "/quienes-somos" ? "#4ADE80" : "#94A3B8", padding: "6px 14px", borderRadius: "8px", textDecoration: "none" }}
               >
                 {item.label}
               </Link>
