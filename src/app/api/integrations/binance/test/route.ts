@@ -5,6 +5,7 @@ import { enforceCsrfProtection } from "@/modules/security/application/csrfProtec
 import { findConnectionByUser } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
 import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
 import { fetchAccountInfo } from "@/modules/integrations/binance/infrastructure/binanceClient";
+import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 
 export async function POST(request: NextRequest) {
   const csrf = enforceCsrfProtection(request);
@@ -20,15 +21,38 @@ export async function POST(request: NextRequest) {
     const apiKey    = decryptSecret(conn.apiKey);
     const apiSecret = decryptSecret(conn.apiSecret);
 
-    const account = await fetchAccountInfo(apiKey, apiSecret);
+    let account;
+    try {
+      account = await fetchAccountInfo(apiKey, apiSecret);
+    } catch (e) {
+      await logBinanceAuditEvent(request, "BINANCE_CONNECTION_TESTED", auth.user.id, auth.user.email, {
+        provider:     "BINANCE",
+        status:       "FAILED",
+        connectionId: conn.id,
+        error:        e instanceof Error ? e.message : "Error desconocido",
+      });
+      throw e;
+    }
+
+    const balancesWithFunds = account.balances.filter(b => parseFloat(b.free) > 0).length;
+
+    await logBinanceAuditEvent(request, "BINANCE_CONNECTION_TESTED", auth.user.id, auth.user.email, {
+      provider:          "BINANCE",
+      status:            "SUCCESS",
+      connectionId:      conn.id,
+      accountType:       account.accountType,
+      canTrade:          account.canTrade,
+      permissionsCount:  account.permissions.length,
+      balancesWithFunds,
+    });
 
     return ok(
       {
-        canTrade:    account.canTrade,
-        canDeposit:  account.canDeposit,
-        accountType: account.accountType,
-        permissions: account.permissions,
-        balancesCount: account.balances.filter(b => parseFloat(b.free) > 0).length,
+        canTrade:      account.canTrade,
+        canDeposit:    account.canDeposit,
+        accountType:   account.accountType,
+        permissions:   account.permissions,
+        balancesCount: balancesWithFunds,
       },
       "Conexión con Binance verificada correctamente.",
     );

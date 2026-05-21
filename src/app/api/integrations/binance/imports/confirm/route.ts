@@ -8,6 +8,8 @@ import {
   rejectImport,
 } from "@/modules/integrations/binance/infrastructure/exchangeImportRepository";
 import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
+import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
+import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 import type { NormalizedImportRecord } from "@/modules/integrations/binance/domain/binanceTypes";
 
 type ConfirmBody = {
@@ -44,6 +46,13 @@ export async function POST(request: NextRequest) {
 
     if (action === "REJECT") {
       await rejectImport(recordId, auth.user.id);
+      await logBinanceAuditEvent(request, "BINANCE_IMPORT_REJECTED", auth.user.id, auth.user.email, {
+        provider:        "BINANCE",
+        status:          "SUCCESS",
+        importRecordId:  recordId,
+        externalId:      record.externalId,
+        externalType:    record.externalType,
+      });
       return ok({ recordId, status: "REJECTED" }, "Registro rechazado.");
     }
 
@@ -53,12 +62,27 @@ export async function POST(request: NextRequest) {
     // Solo BUY/SELL van al motor tributario; DEPOSIT/WITHDRAW se confirman sin movimiento
     if (normalized.movementType === "DEPOSIT" || normalized.movementType === "WITHDRAW") {
       await confirmImport(recordId, auth.user.id, "N/A-" + recordId);
+      await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
+        provider:       "BINANCE",
+        status:         "SUCCESS",
+        importRecordId: recordId,
+        externalId:     record.externalId,
+        externalType:   record.externalType,
+      });
       return ok({ recordId, status: "CONFIRMED" }, "Registro confirmado (no tributario).");
     }
 
     try {
       await assertPeriodOpen(normalized.occurredAt, auth.user.id);
     } catch (err) {
+      await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
+        provider:       "BINANCE",
+        status:         "FAILED",
+        importRecordId: recordId,
+        externalId:     record.externalId,
+        externalType:   record.externalType,
+        error:          err instanceof Error ? err.message : "Período cerrado",
+      });
       return fail(
         err instanceof Error ? err.message : "El período tributario está cerrado.",
         409,
@@ -67,23 +91,37 @@ export async function POST(request: NextRequest) {
 
     const movement = await prisma.portfolioMovement.create({
       data: {
-        userId:    auth.user.id,
-        type:      normalized.movementType,
-        symbol:    normalized.symbol,
-        quantity:  normalized.quantity,
-        priceUsd:  normalized.priceUsd,
-        feeUsd:    normalized.feeUsd,
+        userId:     auth.user.id,
+        type:       normalized.movementType,
+        symbol:     normalized.symbol,
+        quantity:   normalized.quantity,
+        priceUsd:   normalized.priceUsd,
+        feeUsd:     normalized.feeUsd,
         executedAt: normalized.occurredAt,
-        source:    "BINANCE",
+        source:     "BINANCE",
         externalId: normalized.externalId,
       },
     });
 
     await confirmImport(recordId, auth.user.id, movement.id);
 
+    const rebuild = await rebuildTaxEvents(auth.user.id);
+    if (!rebuild.ok) {
+      return fail("Movimiento creado, pero falló la reconstrucción de eventos tributarios.", 500);
+    }
+
+    await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
+      provider:       "BINANCE",
+      status:         "SUCCESS",
+      importRecordId: recordId,
+      externalId:     record.externalId,
+      externalType:   record.externalType,
+      connectionId:   record.connectionId,
+    });
+
     return ok(
-      { recordId, status: "CONFIRMED", movementId: movement.id },
-      "Movimiento creado correctamente.",
+      { recordId, status: "CONFIRMED", movementId: movement.id, taxEventsRebuilt: true },
+      "Movimiento creado y eventos tributarios reconstruidos.",
       201,
     );
   } catch (error) {

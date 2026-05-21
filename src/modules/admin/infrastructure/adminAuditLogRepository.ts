@@ -6,7 +6,14 @@ export type AdminAuditAction =
   | "USER_SUBSCRIPTION_UPDATED"
   | "USER_SUSPENDED"
   | "USER_REACTIVATED"
-  | "USER_DELETED";
+  | "USER_DELETED"
+  | "BINANCE_CONNECTED"
+  | "BINANCE_CONNECTION_TESTED"
+  | "BINANCE_SYNC_STARTED"
+  | "BINANCE_SYNC_COMPLETED"
+  | "BINANCE_SYNC_FAILED"
+  | "BINANCE_IMPORT_CONFIRMED"
+  | "BINANCE_IMPORT_REJECTED";
 
 export type AdminAuditLogRow = {
   id: string;
@@ -33,8 +40,9 @@ type CreateAdminAuditLogInput = {
 };
 
 type ListAdminAuditLogsInput = {
-  limit?: number;
-  action?: string | null;
+  limit?:        number;
+  action?:       string | null;
+  actionPrefix?: string | null;
 };
 
 export function getAuditRequestContext(request: Request) {
@@ -69,8 +77,14 @@ export async function listAdminAuditLogs(
 ): Promise<AdminAuditLogRow[]> {
   const limit = Math.min(Math.max(input.limit ?? 100, 1), 250);
 
+  const where = input.action
+    ? { action: input.action }
+    : input.actionPrefix
+      ? { action: { startsWith: input.actionPrefix } }
+      : undefined;
+
   const logs = await prisma.adminAuditLog.findMany({
-    where: input.action ? { action: input.action } : undefined,
+    where,
     orderBy: { createdAt: "desc" },
     take: limit,
   });

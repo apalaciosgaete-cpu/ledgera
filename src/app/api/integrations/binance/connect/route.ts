@@ -9,6 +9,7 @@ import {
   upsertConnection,
 } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
 import { countPendingImports } from "@/modules/integrations/binance/infrastructure/exchangeImportRepository";
+import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -56,6 +57,11 @@ export async function POST(request: NextRequest) {
     try {
       await fetchAccountInfo(apiKey, apiSecret);
     } catch {
+      await logBinanceAuditEvent(request, "BINANCE_CONNECTED", auth.user.id, auth.user.email, {
+        provider: "BINANCE",
+        status:   "FAILED",
+        error:    "Credenciales inválidas o sin permisos de lectura.",
+      });
       return fail("Credenciales inválidas o sin permisos de lectura en Binance.", 422);
     }
 
@@ -67,6 +73,13 @@ export async function POST(request: NextRequest) {
       provider:  "BINANCE",
       apiKey:    encryptedKey,
       apiSecret: encryptedSecret,
+    });
+
+    await logBinanceAuditEvent(request, "BINANCE_CONNECTED", auth.user.id, auth.user.email, {
+      provider:     "BINANCE",
+      status:       "SUCCESS",
+      connectionId: connection.id,
+      apiKeyHint:   apiKey.slice(-4),
     });
 
     return ok(
