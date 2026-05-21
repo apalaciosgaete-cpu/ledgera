@@ -353,70 +353,100 @@ export function BinanceIntegrationPanel() {
             label={isConnected ? "Actualizar credenciales" : "Conectar Binance"}
             disabled={!apiKey.trim() && !apiSecret.trim()}
           />
-          {isConnected && (
-            <ActionButton
-              onClick={handleTest}
-              loading={testing}
-              loadingLabel="Verificando..."
-              label="Probar conexión"
-              variant="secondary"
-            />
-          )}
         </div>
 
-        {testResult && (
-          <div style={{ marginTop: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "0.75rem 1rem", fontSize: "12px", color: "#94A3B8" }}>
-            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-              <span>Tipo: <strong style={{ color: "#CBD5E1" }}>{testResult.accountType}</strong></span>
-              <span>Trading: <strong style={{ color: testResult.canTrade ? "#4ADE80" : "#F87171" }}>{testResult.canTrade ? "✓" : "✗"}</strong></span>
-              <span>Depósito: <strong style={{ color: testResult.canDeposit ? "#4ADE80" : "#F87171" }}>{testResult.canDeposit ? "✓" : "✗"}</strong></span>
-              <span>Activos con saldo: <strong style={{ color: "#CBD5E1" }}>{testResult.balancesCount}</strong></span>
-              <span>Permisos: <strong style={{ color: "#CBD5E1" }}>{testResult.permissions.join(", ")}</strong></span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Sincronización ── */}
       {isConnected && (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1.25rem 1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-            <div>
-              <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 4px" }}>Sincronización</h4>
-              <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>
-                {conn?.lastSyncAt
-                  ? `Última sync: ${new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })} — ${conn.lastSyncStatus === "OK" ? "✓ exitosa" : "⚠ con errores"}`
-                  : "Nunca sincronizado"}
-                {(conn?.pendingCount ?? 0) > 0 && (
-                  <span style={{ marginLeft: "12px", color: "#F0B90B", fontWeight: 600 }}>
-                    {conn?.pendingCount} registros pendientes
+        <>
+          <style>{`
+            @keyframes pulse-green {
+              0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
+              50%       { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+            }
+          `}</style>
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "0.875rem 1.25rem" }}>
+
+            {/* Fila única: estado + botones */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+
+              {/* Indicador de estado */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#94A3B8", whiteSpace: "nowrap" }}>Sincronización</span>
+                  <span style={{ fontSize: "12px", color: "#475569", whiteSpace: "nowrap" }}>
+                    {conn?.lastSyncAt
+                      ? `${new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })} · ${conn.lastSyncStatus === "OK" ? "✓" : "⚠"}`
+                      : "Nunca sincronizado"}
                   </span>
+                  {(conn?.pendingCount ?? 0) > 0 && (
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#F0B90B", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.2)", borderRadius: "5px", padding: "1px 7px", whiteSpace: "nowrap" }}>
+                      {conn?.pendingCount} pendientes
+                    </span>
+                  )}
+                  {syncResult && (
+                    <span style={{ fontSize: "11px", color: "#64748B", whiteSpace: "nowrap" }}>
+                      · <strong style={{ color: "#4ADE80" }}>{syncResult.imported}</strong> nuevos
+                      · <strong style={{ color: "#64748B" }}>{syncResult.skipped}</strong> ya existentes
+                      {syncResult.errors.length > 0 && <> · <strong style={{ color: "#F87171" }}>{syncResult.errors.length}</strong> errores</>}
+                    </span>
+                  )}
+                </div>
+                {conn?.lastSyncError && (
+                  <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#F87171" }}>
+                    Error: {conn.lastSyncError}
+                  </p>
                 )}
-              </p>
+              </div>
+
+              {/* Botón Probar conexión */}
+              <button
+                type="button"
+                onClick={handleTest}
+                disabled={testing || syncing}
+                style={{ padding: "7px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: testing ? "#475569" : "#94A3B8", fontSize: "12px", fontWeight: 600, cursor: testing || syncing ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", flexShrink: 0 }}
+              >
+                {testing ? "Verificando..." : "Probar conexión"}
+              </button>
+
+              {/* Botón Sincronizar — verde parpadeante cuando está activo */}
+              <button
+                type="button"
+                onClick={handleSync}
+                disabled={syncing || testing}
+                style={{
+                  padding: "7px 16px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: syncing ? "#16A34A" : "#16A34A",
+                  color: "#fff",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: syncing || testing ? "not-allowed" : "pointer",
+                  fontFamily: fonts.body,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  animation: syncing ? "pulse-green 1.2s ease-in-out infinite" : "none",
+                  opacity: testing ? 0.5 : 1,
+                }}
+              >
+                {syncing ? "Sincronizando..." : "Sincronizar"}
+              </button>
             </div>
-            <ActionButton
-              onClick={handleSync}
-              loading={syncing}
-              loadingLabel="Sincronizando..."
-              label="Sincronizar ahora"
-              variant="secondary"
-            />
+
+            {/* Resultado de test — bajo la fila */}
+            {testResult && (
+              <div style={{ marginTop: "0.625rem", paddingTop: "0.625rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: "1.25rem", fontSize: "11px", color: "#94A3B8", flexWrap: "wrap" }}>
+                <span>Tipo: <strong style={{ color: "#CBD5E1" }}>{testResult.accountType}</strong></span>
+                <span>Trading: <strong style={{ color: testResult.canTrade ? "#4ADE80" : "#F87171" }}>{testResult.canTrade ? "✓" : "✗"}</strong></span>
+                <span>Depósito: <strong style={{ color: testResult.canDeposit ? "#4ADE80" : "#F87171" }}>{testResult.canDeposit ? "✓" : "✗"}</strong></span>
+                <span>Activos con saldo: <strong style={{ color: "#CBD5E1" }}>{testResult.balancesCount}</strong></span>
+                <span>Permisos: <strong style={{ color: "#CBD5E1" }}>{testResult.permissions.join(", ")}</strong></span>
+              </div>
+            )}
           </div>
-
-          {conn?.lastSyncError && (
-            <div style={{ marginTop: "0.75rem", fontSize: "12px", color: "#F87171", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: "6px", padding: "8px 12px" }}>
-              Último error: {conn.lastSyncError}
-            </div>
-          )}
-
-          {syncResult && (
-            <div style={{ marginTop: "0.75rem", display: "flex", gap: "1.5rem", fontSize: "12px", color: "#94A3B8", flexWrap: "wrap" }}>
-              <span>Nuevos: <strong style={{ color: "#4ADE80" }}>{syncResult.imported}</strong></span>
-              <span>Ya existentes: <strong style={{ color: "#64748B" }}>{syncResult.skipped}</strong></span>
-              {syncResult.errors.length > 0 && <span>Errores: <strong style={{ color: "#F87171" }}>{syncResult.errors.length}</strong></span>}
-            </div>
-          )}
-        </div>
+        </>
       )}
 
       {/* ── Importaciones pendientes ── */}

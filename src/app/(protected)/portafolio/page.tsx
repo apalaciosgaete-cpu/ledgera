@@ -838,7 +838,7 @@ export default function PortafolioPage() {
               fontFamily: "var(--font-body)",
             }}
           >
-            {showForm ? "Cancelar" : "+ Nuevo movimiento"}
+            {showForm ? "Cancelar" : "Movimiento manual"}
           </button>
         </div>
       </div>
