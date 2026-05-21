@@ -352,7 +352,7 @@ export default function LandingPage() {
     <main
       style={{
         fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-        background: "#0A1F2E",
+        background: "linear-gradient(180deg, #040C13 0%, #071B28 12%, #0A2235 30%, #071520 52%, #0B2132 70%, #071520 85%, #040C13 100%)",
         color: "#F1F5F9",
         overflowX: "hidden",
       }}
@@ -444,7 +444,7 @@ export default function LandingPage() {
       <HeroCarousel />
 
       {/* ── El problema ────────────────────────────────────────────────────── */}
-      <section style={{ padding: "5rem 2rem", background: "#071520" }}>
+      <section style={{ padding: "5rem 2rem", background: "transparent" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <h2 style={{ ...h2Style, maxWidth: "700px", margin: "0 auto 1rem" }}>
@@ -535,7 +535,7 @@ export default function LandingPage() {
       {/* ── Puente problema → solución ─────────────────────────────────────── */}
       <div
         style={{
-          background: "linear-gradient(to bottom, #071520, #0A1F2E)",
+          background: "transparent",
           padding: "1.5rem 2rem",
           textAlign: "center",
         }}
@@ -561,7 +561,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── La solución ────────────────────────────────────────────────────── */}
-      <section style={{ padding: "5rem 2rem", background: "#0A1F2E" }}>
+      <section style={{ padding: "5rem 2rem", background: "transparent" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <h2 style={{ ...h2Style, maxWidth: "700px", margin: "0 auto 1rem" }}>
@@ -677,7 +677,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Cómo funciona ──────────────────────────────────────────────────── */}
-      <section id="como-funciona" style={{ padding: "5rem 2rem", background: "#071520" }}>
+      <section id="como-funciona" style={{ padding: "5rem 2rem", background: "transparent" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2 style={{ ...h2Style, maxWidth: "600px", margin: "0 auto 1rem" }}>
@@ -850,7 +850,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Prueba social ──────────────────────────────────────────────────── */}
-      <section style={{ padding: "4rem 2rem", background: "#071520" }}>
+      <section style={{ padding: "4rem 2rem", background: "transparent" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           {/* Stats */}
           <div
@@ -1000,7 +1000,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Precios ────────────────────────────────────────────────────────── */}
-      <section style={{ padding: "5rem 2rem", background: "#0A1F2E" }}>
+      <section style={{ padding: "5rem 2rem", background: "transparent" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2 style={{ ...h2Style, margin: "0 auto 2rem" }}>Simple y transparente</h2>
@@ -1203,7 +1203,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Ledgera hoy ────────────────────────────────────────────────────── */}
-      <section id="faq" style={{ padding: "4rem 2rem", background: "#071520" }}>
+      <section id="faq" style={{ padding: "4rem 2rem", background: "transparent" }}>
         <div style={{ maxWidth: "860px", margin: "0 auto" }}>
           <p style={{ fontSize: "12px", fontWeight: 700, color: "#4ADE80", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 2rem", textAlign: "center" }}>
             Ledgera hoy
@@ -1236,7 +1236,7 @@ export default function LandingPage() {
 
       {/* ── CTA Final ──────────────────────────────────────────────────────── */}
       <section
-        style={{ padding: "5rem 2rem", background: "#0A1F2E", textAlign: "center" }}
+        style={{ padding: "5rem 2rem", background: "transparent", textAlign: "center" }}
       >
         <h2
           style={{
