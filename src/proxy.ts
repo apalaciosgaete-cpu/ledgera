@@ -53,7 +53,6 @@ export default function proxy(req: NextRequest) {
     "/api/users",
     "/api/billing/health",
     "/api/billing/mercadopago/webhook",
-    "/api/billing/khipu/webhook",
     "/verify",
     "/api/verify",
   ];

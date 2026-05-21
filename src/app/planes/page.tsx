@@ -10,6 +10,7 @@ import {
 
 import { Logo } from "@/components/brand/Logo";
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
+
 import { BillingPaymentStatusBanner } from "@/components/billing/BillingPaymentStatusBanner";
 import { useAuth } from "@/modules/identity/client/authContext";
 
@@ -416,7 +417,7 @@ function PlanesContent() {
           }}
         >
           Elige el plan que se adapte a tu operación. Puedes pagar con
-          Mercado Pago o transferencia bancaria vía Khipu.
+          tarjeta, débito o saldo vía Mercado Pago.
         </p>
 
         <div
@@ -689,47 +690,26 @@ function PlanesContent() {
                       {isAuthenticated ? "Ir al panel" : plan.cta}
                     </Link>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <BillingCheckoutButton
-                        provider="MERCADOPAGO"
-                        plan={resolvePaidPlan(plan.key)}
-                        style={{
-                          padding: "13px 20px",
-                          borderRadius: "9px",
-                          background: plan.highlight
-                            ? "#16A34A"
-                            : "rgba(255,255,255,0.06)",
-                          border: plan.highlight
-                            ? "none"
-                            : "1px solid rgba(255,255,255,0.1)",
-                          color: plan.highlight ? "#ffffff" : "#E2E8F0",
-                          fontSize: "14px",
-                          fontWeight: 700,
-                          fontFamily:
-                            "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-                        }}
-                      >
-                        Pagar con Mercado Pago
-                      </BillingCheckoutButton>
-
-                      <BillingCheckoutButton
-                        provider="KHIPU"
-                        plan={resolvePaidPlan(plan.key)}
-                        style={{
-                          padding: "11px 20px",
-                          borderRadius: "9px",
-                          background: "transparent",
-                          border: "1px solid rgba(255,255,255,0.12)",
-                          color: "#94A3B8",
-                          fontSize: "13px",
-                          fontWeight: 600,
-                          fontFamily:
-                            "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-                        }}
-                      >
-                        Pagar por transferencia Khipu
-                      </BillingCheckoutButton>
-                    </div>
+                    <BillingCheckoutButton
+                      plan={resolvePaidPlan(plan.key)}
+                      style={{
+                        padding: "13px 20px",
+                        borderRadius: "9px",
+                        background: plan.highlight
+                          ? "#16A34A"
+                          : "rgba(255,255,255,0.06)",
+                        border: plan.highlight
+                          ? "none"
+                          : "1px solid rgba(255,255,255,0.1)",
+                        color: plan.highlight ? "#ffffff" : "#E2E8F0",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        fontFamily:
+                          "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+                      }}
+                    >
+                      Pagar con Mercado Pago
+                    </BillingCheckoutButton>
                   )}
                 </div>
               </div>
@@ -756,12 +736,8 @@ function PlanesContent() {
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {[
               {
-                q: "¿Puedo pagar con transferencia?",
-                a: "Sí. Khipu permite iniciar pagos por transferencia bancaria desde bancos chilenos.",
-              },
-              {
                 q: "¿Puedo pagar con tarjeta?",
-                a: "Sí. Mercado Pago permite pagar con tarjetas y medios disponibles en su checkout.",
+                a: "Sí. Mercado Pago permite pagar con tarjetas, débito y otros medios disponibles en su checkout.",
               },
               {
                 q: "¿Cuándo se activa el plan?",
@@ -908,7 +884,7 @@ function PlanesContent() {
             </p>
 
             <p style={{ fontSize: "12px", color: "#334155", margin: 0 }}>
-              Pagos integrados con Mercado Pago y Khipu.
+              Pagos integrados con Mercado Pago.
             </p>
           </div>
         </div>

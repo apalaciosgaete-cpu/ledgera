@@ -1,6 +1,5 @@
 export type BillingProvider =
   | "MERCADOPAGO"
-  | "KHIPU"
   | "MANUAL";
 
 export type BillingPlan =

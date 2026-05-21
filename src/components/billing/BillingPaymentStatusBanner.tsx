@@ -60,7 +60,7 @@ function getBannerCopy(input: {
   return {
     title: "Pago no completado",
     message:
-      "La operación no fue completada. Puedes intentarlo nuevamente con Mercado Pago o Khipu.",
+      "La operación no fue completada. Puedes intentarlo nuevamente con Mercado Pago.",
     tone: "failure",
   };
 }

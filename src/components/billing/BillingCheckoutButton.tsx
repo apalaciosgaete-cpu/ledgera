@@ -7,12 +7,10 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import {
   createBillingCheckout,
   type BillingCheckoutPlan,
-  type BillingProvider,
 } from "@/modules/billing/client/billingClient";
 import { isHttpClientError } from "@/shared/http/httpClient";
 
 type BillingCheckoutButtonProps = {
-  provider: BillingProvider;
   plan: BillingCheckoutPlan;
   children: React.ReactNode;
   disabled?: boolean;
@@ -40,7 +38,6 @@ function resolveErrorMessage(error: unknown): string {
 }
 
 export function BillingCheckoutButton({
-  provider,
   plan,
   children,
   disabled = false,
@@ -59,17 +56,12 @@ export function BillingCheckoutButton({
       sessionStorage.setItem(
         "pendingCheckout",
         JSON.stringify({
-          provider,
           plan,
           billing: "monthly",
         }),
       );
 
-      router.push(
-        `/register?plan=${encodeURIComponent(
-          plan,
-        )}&provider=${encodeURIComponent(provider)}`,
-      );
+      router.push(`/register?plan=${encodeURIComponent(plan)}`);
 
       return;
     }
@@ -77,10 +69,7 @@ export function BillingCheckoutButton({
     setLoading(true);
 
     try {
-      const url = await createBillingCheckout({
-        provider,
-        plan,
-      });
+      const url = await createBillingCheckout(plan);
 
       window.location.href = url;
     } catch (error) {
