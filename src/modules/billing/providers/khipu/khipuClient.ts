@@ -87,8 +87,10 @@ function buildKhipuAuthHeader(
     encodeURIComponent(rawParams),
   ].join("&");
 
+  // Khipu's "Llave" is a hex string representing binary key bytes
+  const keyBytes = Buffer.from(secret, "hex");
   const signature = crypto
-    .createHmac("sha256", secret)
+    .createHmac("sha256", keyBytes)
     .update(toSign)
     .digest("hex");
 
