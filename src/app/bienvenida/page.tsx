@@ -387,6 +387,7 @@ export default function LandingPage() {
             <Link key={item.label} href={item.href}
               onMouseEnter={() => setHoveredNav(item.label)}
               onMouseLeave={() => setHoveredNav(null)}
+              onClick={item.href.startsWith("#") ? (e) => { e.preventDefault(); document.getElementById(item.href.slice(1))?.scrollIntoView({ behavior: "smooth" }); } : undefined}
               style={{ fontSize: "14px", fontWeight: 500, color: hoveredNav === item.label ? "#F1F5F9" : "#94A3B8", textDecoration: "none", padding: "8px 14px", borderRadius: "8px", background: hoveredNav === item.label ? "rgba(255,255,255,0.06)" : "transparent", transition: "all 0.15s ease" }}>
               {item.label}
             </Link>
@@ -422,7 +423,7 @@ export default function LandingPage() {
             { label: "Preguntas",     href: "/preguntas" },
             { label: "Blog",          href: "/blog" },
           ].map((item) => (
-            <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+            <Link key={item.label} href={item.href} onClick={item.href.startsWith("#") ? (e) => { e.preventDefault(); setMobileMenuOpen(false); document.getElementById(item.href.slice(1))?.scrollIntoView({ behavior: "smooth" }); } : () => setMobileMenuOpen(false)}
               style={{ fontSize: "14px", fontWeight: 500, color: "#94A3B8", textDecoration: "none", padding: "10px 0" }}>
               {item.label}
             </Link>
