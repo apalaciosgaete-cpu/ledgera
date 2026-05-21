@@ -13,7 +13,9 @@ export type AdminAuditAction =
   | "BINANCE_SYNC_COMPLETED"
   | "BINANCE_SYNC_FAILED"
   | "BINANCE_IMPORT_CONFIRMED"
-  | "BINANCE_IMPORT_REJECTED";
+  | "BINANCE_IMPORT_REJECTED"
+  | "TAX_LEDGER_REBUILT"
+  | "ANNUAL_SUMMARY_REBUILT";
 
 export type AdminAuditLogRow = {
   id: string;

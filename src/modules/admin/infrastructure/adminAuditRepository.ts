@@ -15,6 +15,8 @@ export type AdminAuditLogDto = {
 
 export type ListAdminAuditLogsInput = {
   limit?: number;
+  action?: string;
+  actionPrefix?: string;
 };
 
 function parseMetadata(value: string | null): unknown {
@@ -31,7 +33,14 @@ export async function listAdminAuditLogs(
 ): Promise<AdminAuditLogDto[]> {
   const limit = Math.min(Math.max(input.limit ?? 100, 1), 250);
 
+  const where = input.action
+    ? { action: input.action }
+    : input.actionPrefix
+      ? { action: { startsWith: input.actionPrefix } }
+      : undefined;
+
   const logs = await prisma.adminAuditLog.findMany({
+    where,
     orderBy: { createdAt: "desc" },
     take: limit,
   });

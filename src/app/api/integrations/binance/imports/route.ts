@@ -9,7 +9,21 @@ export async function GET(request: NextRequest) {
 
   try {
     const records = await listPendingImports(auth.user.id, "BINANCE");
-    return ok(records, `${records.length} registros pendientes de confirmación.`);
+
+    const shaped = records.map((r) => ({
+      id:                  r.id,
+      externalId:          r.externalId,
+      externalType:        r.externalType,
+      normalizedJson:      r.normalizedJson,
+      normalizedEventType: r.normalizedEventType,
+      taxTreatment:        r.taxTreatment,
+      inventoryEffect:     r.inventoryEffect,
+      economicEffect:      r.economicEffect,
+      status:              r.status,
+      occurredAt:          r.occurredAt.toISOString(),
+    }));
+
+    return ok(shaped, `${shaped.length} registros pendientes o en revisión.`);
   } catch (error) {
     return serverError(error);
   }

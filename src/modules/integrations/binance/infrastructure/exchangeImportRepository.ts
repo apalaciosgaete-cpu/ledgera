@@ -19,12 +19,16 @@ export async function upsertImportRecord(
       userId,
       connectionId,
       provider,
-      externalId:    raw.externalId,
-      externalType:  raw.externalType,
+      externalId:          raw.externalId,
+      externalType:        raw.externalType,
       rawPayload,
-      normalizedJson: JSON.stringify(raw),
-      status:        "PENDING",
-      occurredAt:    raw.occurredAt,
+      normalizedJson:      JSON.stringify(raw),
+      normalizedEventType: raw.normalizedEventType,
+      taxTreatment:        raw.taxTreatment,
+      inventoryEffect:     raw.inventoryEffect,
+      economicEffect:      raw.economicEffect,
+      status:              "PENDING",
+      occurredAt:          raw.occurredAt,
     },
   });
 
@@ -35,7 +39,7 @@ export async function listPendingImports(userId: string, provider?: string) {
   return prisma.exchangeImportRecord.findMany({
     where: {
       userId,
-      status: "PENDING",
+      status: { in: ["PENDING", "REVIEW"] },
       ...(provider ? { provider } : {}),
     },
     orderBy: { occurredAt: "asc" },
@@ -60,8 +64,15 @@ export async function rejectImport(recordId: string, userId: string) {
   });
 }
 
+export async function markImportAsReview(recordId: string, userId: string) {
+  return prisma.exchangeImportRecord.update({
+    where: { id: recordId, userId },
+    data:  { status: "REVIEW" },
+  });
+}
+
 export async function countPendingImports(userId: string): Promise<number> {
   return prisma.exchangeImportRecord.count({
-    where: { userId, status: "PENDING" },
+    where: { userId, status: { in: ["PENDING", "REVIEW"] } },
   });
 }

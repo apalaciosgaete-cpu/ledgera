@@ -23,22 +23,38 @@ export async function upsertConnection(data: {
       status:    "ACTIVE",
     },
     update: {
-      apiKey:    data.apiKey,
-      apiSecret: data.apiSecret,
-      status:    "ACTIVE",
-      lastSyncError:  null,
+      apiKey:        data.apiKey,
+      apiSecret:     data.apiSecret,
+      status:        "ACTIVE",
+      syncStatus:    "IDLE",
+      lastSyncError: null,
       lastSyncStatus: null,
     },
   });
 }
 
-export async function updateSyncSuccess(
+// ── Sync lock ──────────────────────────────────────────────────────────────
+
+export async function setSyncRunning(connectionId: string) {
+  return prisma.exchangeConnection.update({
+    where: { id: connectionId },
+    data:  {
+      syncStatus:    "RUNNING",
+      syncStartedAt: new Date(),
+      syncFinishedAt: null,
+    },
+  });
+}
+
+export async function setSyncFinished(
   connectionId: string,
   checkpoint: SyncCheckpoint,
 ) {
   return prisma.exchangeConnection.update({
     where: { id: connectionId },
     data:  {
+      syncStatus:     "IDLE",
+      syncFinishedAt: new Date(),
       lastSyncAt:     new Date(),
       lastSyncStatus: "OK",
       lastSyncError:  null,
@@ -47,16 +63,35 @@ export async function updateSyncSuccess(
   });
 }
 
-export async function updateSyncError(connectionId: string, message: string) {
+export async function setSyncFailed(
+  connectionId: string,
+  message: string,
+  checkpoint?: SyncCheckpoint,
+) {
   return prisma.exchangeConnection.update({
     where: { id: connectionId },
     data:  {
+      syncStatus:     "FAILED",
+      syncFinishedAt: new Date(),
       lastSyncAt:     new Date(),
       lastSyncStatus: "ERROR",
-      lastSyncError:  message,
-      status:         "ERROR",
+      lastSyncError:  message.slice(0, 500),
+      ...(checkpoint ? { syncCheckpoint: JSON.stringify(checkpoint) } : {}),
     },
   });
+}
+
+// ── Legacy — kept for compatibility, delegates to new functions ────────────
+
+export async function updateSyncSuccess(
+  connectionId: string,
+  checkpoint: SyncCheckpoint,
+) {
+  return setSyncFinished(connectionId, checkpoint);
+}
+
+export async function updateSyncError(connectionId: string, message: string) {
+  return setSyncFailed(connectionId, message);
 }
 
 export async function deleteConnection(userId: string, provider: string) {

@@ -4,6 +4,7 @@ import { TAX_ENGINE_METADATA } from "@/modules/tax/domain/taxEngineVersion";
 import { resolveTaxCategory } from "@/modules/tax/domain/resolveTaxCategory";
 import { createTaxPeriodSnapshot } from "@/modules/tax/infrastructure/taxPeriodSnapshotRepository";
 import { round, normalizeSymbol } from "@/shared/utils/math";
+import { generateTaxLedger } from "./generateTaxLedger";
 
 interface InventoryLot {
   quantity:    number;
@@ -56,10 +57,11 @@ interface RebuildResult {
   ok:      boolean;
   message: string;
   data?: {
-    totalMovements:   number;
-    totalEvents:      number;
-    warnings:         Array<{ movementId: string; symbol: string; message: string }>;
-    taxEngineVersion: string;
+    totalMovements:    number;
+    totalEvents:       number;
+    taxLedgerEntries:  number;
+    warnings:          Array<{ movementId: string; symbol: string; message: string }>;
+    taxEngineVersion:  string;
   };
   error?: unknown;
 }
@@ -319,12 +321,16 @@ export async function rebuildTaxEvents(userId: string): Promise<RebuildResult> {
       }).catch(() => { /* campo puede no existir */ });
     }
 
+    // ── Ledger tributario chileno ──────────────────────────────────────────
+    const { created: taxLedgerEntries } = await generateTaxLedger(userId);
+
     return {
       ok:      true,
       message: "Eventos tributarios reconstruidos correctamente",
       data: {
         totalMovements:   movements.length,
         totalEvents:      events.length,
+        taxLedgerEntries,
         warnings,
         taxEngineVersion: TAX_ENGINE_METADATA.version,
       },

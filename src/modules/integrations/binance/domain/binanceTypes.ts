@@ -65,22 +65,41 @@ export type BinanceAccountInfo = {
 };
 
 export type NormalizedImportRecord = {
-  externalId:    string;
-  externalType:  "TRADE" | "DEPOSIT" | "WITHDRAW";
-  movementType:  "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
-  symbol:        string;
-  quantity:      number;
-  priceUsd:      number;
-  feeUsd:        number;
-  occurredAt:    Date;
+  externalId:          string;
+  externalType:        "TRADE" | "DEPOSIT" | "WITHDRAW";
+  movementType:        "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
+  symbol:              string;
+  quantity:            number;
+  priceUsd:            number;
+  feeUsd:              number;
+  occurredAt:          Date;
+  // Tax normalization — clasificación tributaria chilena
+  normalizedEventType: string;
+  taxTreatment:        string;
+  inventoryEffect:     string;
+  economicEffect:      string;
 };
 
 export type SyncCheckpoint = Record<string, string>;
 
+export type SymbolSyncStats = {
+  imported: number;
+  skipped:  number;
+  failed:   boolean;
+};
+
+export type FirstSyncFailure = {
+  symbol:      string;
+  windowStart: string;
+  windowEnd:   string;
+};
+
 export type SyncResult = {
-  imported:  number;
-  skipped:   number;
-  errors:    string[];
+  imported:     number;
+  skipped:      number;
+  errors:       string[];
+  symbolStats:  Record<string, SymbolSyncStats>;
+  firstFailure: FirstSyncFailure | null;
 };
 
 export const BINANCE_BASE_URL  = "https://api.binance.com";

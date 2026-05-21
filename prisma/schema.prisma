@@ -24,9 +24,10 @@ model PortfolioMovement {
   source                  String    @default("MANUAL")
   externalId              String?
 
-  user         users                  @relation(fields: [userId], references: [id])
-  taxEvent     TaxEvent?
-  importRecord ExchangeImportRecord?
+  user             users                  @relation(fields: [userId], references: [id])
+  taxEvent         TaxEvent?
+  importRecord     ExchangeImportRecord?
+  taxLedgerEntries TaxLedgerEntry[]
 
   @@index([userId])
   @@index([executedAt])
@@ -58,8 +59,9 @@ model TaxEvent {
   executedAt           DateTime
   taxYear              Int      @default(0)
 
-  user     users             @relation(fields: [userId], references: [id])
-  movement PortfolioMovement @relation(fields: [movementId], references: [id])
+  user             users             @relation(fields: [userId], references: [id])
+  movement         PortfolioMovement @relation(fields: [movementId], references: [id])
+  taxLedgerEntries TaxLedgerEntry[]
 
   @@index([userId])
   @@index([taxYear])
@@ -67,6 +69,69 @@ model TaxEvent {
   @@index([userId, taxYear])
   @@index([userId, executedAt])
   @@map("tax_events")
+}
+
+model TaxLedgerEntry {
+  id                String   @id @default(cuid())
+  userId            String
+
+  movementId        String?
+  taxEventId        String?
+
+  taxYear           Int
+  taxMonth          Int
+
+  ledgerType        String
+  ledgerCategory    String
+
+  assetSymbol       String
+  quantity          Float
+
+  proceedsClp       Float    @default(0)
+  costBasisClp      Float    @default(0)
+  realizedGainClp   Float    @default(0)
+
+  taxTreatment      String
+  siiClassification String
+
+  source            String   @default("SYSTEM")
+  createdAt         DateTime @default(now())
+
+  user      users              @relation(fields: [userId], references: [id])
+  taxEvent  TaxEvent?          @relation(fields: [taxEventId], references: [id])
+  movement  PortfolioMovement? @relation(fields: [movementId], references: [id])
+
+  @@index([userId, taxYear])
+  @@index([taxTreatment])
+  @@index([siiClassification])
+  @@map("tax_ledger_entries")
+}
+
+model AnnualTaxSummary {
+  id                    String   @id @default(cuid())
+  userId                String
+  taxYear               Int
+
+  grossProceedsClp      Float    @default(0)
+  costBasisClp          Float    @default(0)
+  realizedGainClp       Float    @default(0)
+  realizedLossClp       Float    @default(0)
+  netTaxableGainClp     Float    @default(0)
+
+  reviewCount           Int      @default(0)
+  taxableEventCount     Int      @default(0)
+
+  preliminaryTaxBaseClp Float    @default(0)
+  source                String   @default("SYSTEM")
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@unique([userId, taxYear])
+  @@index([taxYear])
+  @@map("annual_tax_summaries")
 }
 
 model ReportValidation {
@@ -388,6 +453,8 @@ model users {
   billingPayments         BillingPayment[]
   exchangeConnections     ExchangeConnection[]
   exchangeImportRecords   ExchangeImportRecord[]
+  taxLedgerEntries        TaxLedgerEntry[]
+  annualTaxSummaries      AnnualTaxSummary[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -427,6 +494,9 @@ model ExchangeConnection {
   apiKey          String
   apiSecret       String
   status          String    @default("ACTIVE")
+  syncStatus      String?
+  syncStartedAt   DateTime?
+  syncFinishedAt  DateTime?
   lastSyncAt      DateTime?
   lastSyncStatus  String?
   lastSyncError   String?
@@ -450,12 +520,16 @@ model ExchangeImportRecord {
   provider       String
   externalId     String
   externalType   String
-  rawPayload     String
-  normalizedJson String?
-  status         String    @default("PENDING")
-  movementId     String?   @unique
-  occurredAt     DateTime
-  createdAt      DateTime  @default(now())
+  rawPayload          String
+  normalizedJson      String?
+  normalizedEventType String?
+  taxTreatment        String?
+  inventoryEffect     String?
+  economicEffect      String?
+  status              String    @default("PENDING")
+  movementId          String?   @unique
+  occurredAt          DateTime
+  createdAt           DateTime  @default(now())
 
   user       users               @relation(fields: [userId], references: [id], onDelete: Cascade)
   connection ExchangeConnection  @relation(fields: [connectionId], references: [id], onDelete: Cascade)
@@ -466,5 +540,6 @@ model ExchangeImportRecord {
   @@index([connectionId])
   @@index([status])
   @@index([provider])
+  @@index([normalizedEventType])
   @@map("exchange_import_records")
 }

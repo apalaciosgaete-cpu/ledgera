@@ -33,7 +33,15 @@ export type BinanceAuditMetadata = {
     skipped:  number;
     errors:   number;
   };
-  error?: string;
+  error?:             string;
+  failedSymbol?:      string;
+  failedWindowStart?: string;
+  failedWindowEnd?:   string;
+  partialStats?: {
+    imported: number;
+    skipped:  number;
+    errors:   number;
+  };
 };
 
 export async function logBinanceAuditEvent(

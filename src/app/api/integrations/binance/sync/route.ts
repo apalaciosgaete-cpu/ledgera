@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
-import { findConnectionByUser } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
+import {
+  findConnectionByUser,
+  setSyncFailed,
+  setSyncFinished,
+  setSyncRunning,
+} from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
 import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
 import { syncBinance } from "@/modules/integrations/binance/application/syncBinance";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
+
+function getStaleSyncMinutes(): number {
+  const val = Number(process.env.BINANCE_STALE_SYNC_MINUTES ?? "30");
+  return Number.isFinite(val) && val > 0 ? val : 30;
+}
 
 export async function POST(request: NextRequest) {
   const csrf = enforceCsrfProtection(request);
@@ -19,6 +29,23 @@ export async function POST(request: NextRequest) {
     if (!conn) return fail("No hay conexión con Binance configurada.", 404);
     if (conn.status === "REVOKED") return fail("La conexión ha sido revocada.", 403);
 
+    // ── Bloqueo doble sync ─────────────────────────────────────────────
+    if (conn.syncStatus === "RUNNING") {
+      const staleMs   = getStaleSyncMinutes() * 60 * 1000;
+      const startedAt = conn.syncStartedAt?.getTime() ?? 0;
+
+      if (Date.now() - startedAt < staleMs) {
+        return fail(
+          "Ya hay una sincronización en curso. Espera a que finalice o intenta en unos minutos.",
+          409,
+        );
+      }
+      // Sync abandonada (stale) — se permite recovery
+    }
+
+    // ── Marcar RUNNING ─────────────────────────────────────────────────
+    await setSyncRunning(conn.id);
+
     await logBinanceAuditEvent(request, "BINANCE_SYNC_STARTED", auth.user.id, auth.user.email, {
       provider:     "BINANCE",
       status:       "SUCCESS",
@@ -28,9 +55,10 @@ export async function POST(request: NextRequest) {
     const apiKey    = decryptSecret(conn.apiKey);
     const apiSecret = decryptSecret(conn.apiSecret);
 
-    let result;
+    let output: Awaited<ReturnType<typeof syncBinance>>;
+
     try {
-      result = await syncBinance(
+      output = await syncBinance(
         auth.user.id,
         conn.id,
         apiKey,
@@ -38,16 +66,39 @@ export async function POST(request: NextRequest) {
         conn.syncCheckpoint,
       );
     } catch (e) {
+      // Error inesperado en el sync — marcar FAILED sin actualizar checkpoint
+      await setSyncFailed(conn.id, e instanceof Error ? e.message : "Error desconocido");
+
       await logBinanceAuditEvent(request, "BINANCE_SYNC_FAILED", auth.user.id, auth.user.email, {
         provider:     "BINANCE",
         status:       "FAILED",
         connectionId: conn.id,
         error:        e instanceof Error ? e.message : "Error desconocido",
       });
+
       throw e;
     }
 
+    const { result, checkpoint } = output;
     const hasFailed = result.errors.length > 0;
+
+    // ── Persiste checkpoint y estado final ────────────────────────────
+    if (hasFailed) {
+      await setSyncFailed(
+        conn.id,
+        result.errors.slice(0, 3).join(" | "),
+        checkpoint,
+      );
+    } else {
+      await setSyncFinished(conn.id, checkpoint);
+    }
+
+    // ── Auditoría con metadata enriquecida ────────────────────────────
+    const partialStats = {
+      imported: result.imported,
+      skipped:  result.skipped,
+      errors:   result.errors.length,
+    };
 
     await logBinanceAuditEvent(
       request,
@@ -58,11 +109,15 @@ export async function POST(request: NextRequest) {
         provider:     "BINANCE",
         status:       hasFailed ? "FAILED" : "SUCCESS",
         connectionId: conn.id,
-        stats: {
-          imported: result.imported,
-          skipped:  result.skipped,
-          errors:   result.errors.length,
-        },
+        stats:        partialStats,
+        ...(hasFailed && result.firstFailure
+          ? {
+              failedSymbol:     result.firstFailure.symbol,
+              failedWindowStart: result.firstFailure.windowStart,
+              failedWindowEnd:   result.firstFailure.windowEnd,
+              partialStats,
+            }
+          : {}),
         ...(hasFailed ? { error: result.errors.slice(0, 3).join(" | ") } : {}),
       },
     );
@@ -71,7 +126,15 @@ export async function POST(request: NextRequest) {
       ? `Sincronización parcial: ${result.imported} nuevos, ${result.errors.length} errores.`
       : `Sincronización completada: ${result.imported} nuevos, ${result.skipped} ya existentes.`;
 
-    return ok(result, message);
+    return ok(
+      {
+        imported:    result.imported,
+        skipped:     result.skipped,
+        errors:      result.errors,
+        symbolStats: result.symbolStats,
+      },
+      message,
+    );
   } catch (error) {
     return serverError(error);
   }

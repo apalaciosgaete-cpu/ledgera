@@ -5,6 +5,7 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import {
   confirmImport,
+  markImportAsReview,
   rejectImport,
 } from "@/modules/integrations/binance/infrastructure/exchangeImportRepository";
 import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
@@ -13,7 +14,7 @@ import { logBinanceAuditEvent } from "@/modules/integrations/binance/application
 import type { NormalizedImportRecord } from "@/modules/integrations/binance/domain/binanceTypes";
 
 type ConfirmBody = {
-  action:   "CONFIRM" | "REJECT";
+  action:   "CONFIRM" | "REJECT" | "REVIEW";
   recordId: string;
 };
 
@@ -29,8 +30,8 @@ export async function POST(request: NextRequest) {
     const { action, recordId } = body;
 
     if (!recordId) return fail("recordId es obligatorio.", 400);
-    if (action !== "CONFIRM" && action !== "REJECT") {
-      return fail("action debe ser CONFIRM o REJECT.", 400);
+    if (action !== "CONFIRM" && action !== "REJECT" && action !== "REVIEW") {
+      return fail("action debe ser CONFIRM, REJECT o REVIEW.", 400);
     }
 
     const record = await prisma.exchangeImportRecord.findUnique({
@@ -40,26 +41,47 @@ export async function POST(request: NextRequest) {
     if (!record || record.userId !== auth.user.id) {
       return fail("Registro no encontrado.", 404);
     }
-    if (record.status !== "PENDING") {
+    if (record.status === "CONFIRMED" || record.status === "REJECTED") {
       return fail("El registro ya fue procesado.", 409);
     }
 
+    // ── REVIEW: marcar para revisión manual ───────────────────────────────
+    if (action === "REVIEW") {
+      await markImportAsReview(recordId, auth.user.id);
+      return ok({ recordId, status: "REVIEW" }, "Registro marcado para revisión manual.");
+    }
+
+    // ── REJECT ────────────────────────────────────────────────────────────
     if (action === "REJECT") {
       await rejectImport(recordId, auth.user.id);
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_REJECTED", auth.user.id, auth.user.email, {
-        provider:        "BINANCE",
-        status:          "SUCCESS",
-        importRecordId:  recordId,
-        externalId:      record.externalId,
-        externalType:    record.externalType,
+        provider:       "BINANCE",
+        status:         "SUCCESS",
+        importRecordId: recordId,
+        externalId:     record.externalId,
+        externalType:   record.externalType,
       });
       return ok({ recordId, status: "REJECTED" }, "Registro rechazado.");
     }
 
-    // ── CONFIRM: crear movimiento en portfolio_movements ───────────────────
+    // ── CONFIRM ───────────────────────────────────────────────────────────
+
+    // Gate tributario: eventos con taxTreatment o inventoryEffect = REVIEW
+    // no pueden entrar al motor sin decisión explícita.
+    const taxTreatment   = record.taxTreatment   ?? "REVIEW";
+    const inventoryEffect = record.inventoryEffect ?? "REVIEW";
+
+    if (taxTreatment === "REVIEW" || inventoryEffect === "REVIEW") {
+      return fail(
+        `El evento "${record.normalizedEventType ?? record.externalType}" requiere revisión manual antes de confirmar. ` +
+        `Usa "Marcar para revisión" para diferirlo o "Rechazar" para descartarlo.`,
+        422,
+      );
+    }
+
     const normalized = JSON.parse(record.normalizedJson ?? "{}") as NormalizedImportRecord;
 
-    // Solo BUY/SELL van al motor tributario; DEPOSIT/WITHDRAW se confirman sin movimiento
+    // DEPOSIT/WITHDRAW: confirmar sin crear movimiento en el motor FIFO
     if (normalized.movementType === "DEPOSIT" || normalized.movementType === "WITHDRAW") {
       await confirmImport(recordId, auth.user.id, "N/A-" + recordId);
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
@@ -72,6 +94,7 @@ export async function POST(request: NextRequest) {
       return ok({ recordId, status: "CONFIRMED" }, "Registro confirmado (no tributario).");
     }
 
+    // BUY/SELL: verificar período abierto
     try {
       await assertPeriodOpen(normalized.occurredAt, auth.user.id);
     } catch (err) {

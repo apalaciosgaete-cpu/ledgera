@@ -3,10 +3,6 @@ import {
   fetchAllTradesWindowed,
   fetchAllWithdrawalsWindowed,
 } from "../infrastructure/binanceClient";
-import {
-  updateSyncError,
-  updateSyncSuccess,
-} from "../infrastructure/exchangeConnectionRepository";
 import { upsertImportRecord } from "../infrastructure/exchangeImportRepository";
 import {
   normalizeDeposit,
@@ -15,114 +11,181 @@ import {
 } from "./normalizeBinanceTrade";
 import {
   BINANCE_SPOT_PAIRS,
+  type FirstSyncFailure,
+  type SymbolSyncStats,
   type SyncCheckpoint,
   type SyncResult,
 } from "../domain/binanceTypes";
 
-// Fecha de inicio por defecto: 1 enero 2018 (inicio de los exchanges masivos)
-const DEFAULT_START_MS = new Date("2018-01-01").getTime();
+function getStartMs(): number {
+  const raw = process.env.BINANCE_SYNC_START_DATE ?? "2024-01-01";
+  const ms  = new Date(raw).getTime();
+  return Number.isFinite(ms) ? ms : new Date("2024-01-01").getTime();
+}
+
+function getSymbolLimit(): number {
+  const val = Number(process.env.BINANCE_SYNC_SYMBOL_LIMIT ?? "35");
+  return Number.isFinite(val) && val > 0 ? Math.min(val, BINANCE_SPOT_PAIRS.length) : 35;
+}
+
+export type SyncOutput = {
+  result:     SyncResult;
+  checkpoint: SyncCheckpoint;
+};
 
 export async function syncBinance(
-  userId:       string,
-  connectionId: string,
-  apiKey:       string,
-  apiSecret:    string,
+  userId:         string,
+  connectionId:   string,
+  apiKey:         string,
+  apiSecret:      string,
   checkpointJson: string | null,
-): Promise<SyncResult> {
+): Promise<SyncOutput> {
   const checkpoint: SyncCheckpoint = checkpointJson
     ? (JSON.parse(checkpointJson) as SyncCheckpoint)
     : {};
 
-  const result: SyncResult = { imported: 0, skipped: 0, errors: [] };
+  const defaultStartMs = getStartMs();
+  const symbolLimit    = getSymbolLimit();
+  const pairs          = BINANCE_SPOT_PAIRS.slice(0, symbolLimit);
 
-  // ── 1. Trades por símbolo en ventanas de 24h ───────────────────────────────
-  for (const pair of BINANCE_SPOT_PAIRS) {
+  const symbolStats: Record<string, SymbolSyncStats> = {};
+  let firstFailure: FirstSyncFailure | null = null;
+  let imported = 0;
+  let skipped  = 0;
+  const errors: string[] = [];
+
+  // ── 1. Trades por símbolo en ventanas de 24h ───────────────────────────
+  for (const pair of pairs) {
     const startMs = checkpoint[pair]
       ? new Date(checkpoint[pair]).getTime()
-      : DEFAULT_START_MS;
+      : defaultStartMs;
+
+    const stats: SymbolSyncStats = { imported: 0, skipped: 0, failed: false };
 
     try {
-      for await (const batch of fetchAllTradesWindowed(pair, startMs, apiKey, apiSecret)) {
+      for await (const { batch, windowStart, windowEnd } of fetchAllTradesWindowed(pair, startMs, apiKey, apiSecret)) {
         for (const raw of batch) {
           const normalized = normalizeTrade(raw);
-          const { isNew } = await upsertImportRecord(
+          const { isNew }  = await upsertImportRecord(
             userId,
             connectionId,
             "BINANCE",
             normalized,
             JSON.stringify(raw),
           );
-          isNew ? result.imported++ : result.skipped++;
+          isNew ? stats.imported++ : stats.skipped++;
         }
-        // Actualiza checkpoint al trade más reciente del lote
-        const latestMs = Math.max(...batch.map(t => t.time));
-        checkpoint[pair] = new Date(latestMs + 1).toISOString();
+        // Avanza checkpoint al final de la ventana procesada
+        checkpoint[pair] = new Date(windowEnd + 1).toISOString();
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      // Ignora "Invalid symbol" — el par simplemente no fue operado
-      if (!msg.includes("-1121")) {
-        result.errors.push(`${pair}: ${msg}`);
+
+      // Ignora "Invalid symbol" — el par simplemente no fue operado en esta cuenta
+      if (msg.includes("-1121")) {
+        symbolStats[pair] = stats;
+        continue;
+      }
+
+      stats.failed = true;
+      errors.push(`${pair}: ${msg}`);
+
+      if (!firstFailure) {
+        firstFailure = {
+          symbol:      pair,
+          windowStart: checkpoint[pair] ?? new Date(defaultStartMs).toISOString(),
+          windowEnd:   new Date().toISOString(),
+        };
       }
     }
+
+    imported += stats.imported;
+    skipped  += stats.skipped;
+    symbolStats[pair] = stats;
   }
 
-  // ── 2. Depósitos en ventanas de 90 días ────────────────────────────────────
-  const depositStart = checkpoint["deposits"]
+  // ── 2. Depósitos en ventanas de 90 días ───────────────────────────────
+  const depositStartMs = checkpoint["deposits"]
     ? new Date(checkpoint["deposits"]).getTime()
-    : DEFAULT_START_MS;
+    : defaultStartMs;
+
+  const depositStats: SymbolSyncStats = { imported: 0, skipped: 0, failed: false };
 
   try {
-    for await (const batch of fetchAllDepositsWindowed(depositStart, apiKey, apiSecret)) {
+    for await (const { batch, windowEnd } of fetchAllDepositsWindowed(depositStartMs, apiKey, apiSecret)) {
       for (const raw of batch) {
         const normalized = normalizeDeposit(raw);
-        const { isNew } = await upsertImportRecord(
+        const { isNew }  = await upsertImportRecord(
           userId,
           connectionId,
           "BINANCE",
           normalized,
           JSON.stringify(raw),
         );
-        isNew ? result.imported++ : result.skipped++;
+        isNew ? depositStats.imported++ : depositStats.skipped++;
       }
-      const latestMs = Math.max(...batch.map(d => d.insertTime));
-      checkpoint["deposits"] = new Date(latestMs + 1).toISOString();
+      checkpoint["deposits"] = new Date(windowEnd + 1).toISOString();
     }
   } catch (err) {
-    result.errors.push(`deposits: ${err instanceof Error ? err.message : String(err)}`);
+    depositStats.failed = true;
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`deposits: ${msg}`);
+
+    if (!firstFailure) {
+      firstFailure = {
+        symbol:      "deposits",
+        windowStart: checkpoint["deposits"] ?? new Date(defaultStartMs).toISOString(),
+        windowEnd:   new Date().toISOString(),
+      };
+    }
   }
 
-  // ── 3. Retiros en ventanas de 90 días ─────────────────────────────────────
-  const withdrawStart = checkpoint["withdrawals"]
+  imported += depositStats.imported;
+  skipped  += depositStats.skipped;
+  symbolStats["deposits"] = depositStats;
+
+  // ── 3. Retiros en ventanas de 90 días ─────────────────────────────────
+  const withdrawStartMs = checkpoint["withdrawals"]
     ? new Date(checkpoint["withdrawals"]).getTime()
-    : DEFAULT_START_MS;
+    : defaultStartMs;
+
+  const withdrawStats: SymbolSyncStats = { imported: 0, skipped: 0, failed: false };
 
   try {
-    for await (const batch of fetchAllWithdrawalsWindowed(withdrawStart, apiKey, apiSecret)) {
+    for await (const { batch, windowEnd } of fetchAllWithdrawalsWindowed(withdrawStartMs, apiKey, apiSecret)) {
       for (const raw of batch) {
         const normalized = normalizeWithdraw(raw);
-        const { isNew } = await upsertImportRecord(
+        const { isNew }  = await upsertImportRecord(
           userId,
           connectionId,
           "BINANCE",
           normalized,
           JSON.stringify(raw),
         );
-        isNew ? result.imported++ : result.skipped++;
+        isNew ? withdrawStats.imported++ : withdrawStats.skipped++;
       }
-      const latestMs = Math.max(...batch.map(w => new Date(w.applyTime).getTime()));
-      checkpoint["withdrawals"] = new Date(latestMs + 1).toISOString();
+      checkpoint["withdrawals"] = new Date(windowEnd + 1).toISOString();
     }
   } catch (err) {
-    result.errors.push(`withdrawals: ${err instanceof Error ? err.message : String(err)}`);
+    withdrawStats.failed = true;
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`withdrawals: ${msg}`);
+
+    if (!firstFailure) {
+      firstFailure = {
+        symbol:      "withdrawals",
+        windowStart: checkpoint["withdrawals"] ?? new Date(defaultStartMs).toISOString(),
+        windowEnd:   new Date().toISOString(),
+      };
+    }
   }
 
-  // ── 4. Persiste checkpoint y estado ──────────────────────────────────────
-  if (result.errors.length === 0) {
-    await updateSyncSuccess(connectionId, checkpoint);
-  } else {
-    await updateSyncError(connectionId, result.errors.join(" | "));
-  }
+  imported += withdrawStats.imported;
+  skipped  += withdrawStats.skipped;
+  symbolStats["withdrawals"] = withdrawStats;
 
-  return result;
+  return {
+    result: { imported, skipped, errors, symbolStats, firstFailure },
+    checkpoint,
+  };
 }

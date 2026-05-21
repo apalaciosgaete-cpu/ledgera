@@ -9,18 +9,25 @@ import {
 } from "../domain/binanceTypes";
 import { buildSignedParams } from "./binanceSigner";
 
+function getTimeoutMs(): number {
+  const val = Number(process.env.BINANCE_REQUEST_TIMEOUT_MS ?? "15000");
+  return Number.isFinite(val) && val > 0 ? val : 15_000;
+}
+
 async function binanceFetch<T>(
   path: string,
   params: Record<string, string | number>,
   apiKey: string,
   apiSecret: string,
 ): Promise<T> {
-  const qs  = buildSignedParams(params, apiSecret);
-  const url = `${BINANCE_BASE_URL}${path}?${qs}`;
+  const qs     = buildSignedParams(params, apiSecret);
+  const url    = `${BINANCE_BASE_URL}${path}?${qs}`;
+  const signal = AbortSignal.timeout(getTimeoutMs());
 
   const res = await fetch(url, {
     headers: { "X-MBX-APIKEY": apiKey },
     cache:   "no-store",
+    signal,
   });
 
   if (!res.ok) {
@@ -35,7 +42,7 @@ export async function fetchAccountInfo(
   apiKey: string,
   apiSecret: string,
 ): Promise<BinanceAccountInfo> {
-  return binanceFetch<BinanceAccountInfo>("/api/v3/account", {}, apiKey, apiSecret);
+  return binanceFetch<BinanceAccountInfo>("/api/v3/account", { recvWindow: 10000 }, apiKey, apiSecret);
 }
 
 export async function fetchTradesForSymbol(
@@ -81,37 +88,42 @@ export async function fetchWithdrawals(
   );
 }
 
-// Itera en ventanas de 24h desde startMs hasta ahora
+// ── Windowed generators ────────────────────────────────────────────────────
+// Each yield includes the window boundaries so callers can track failures.
+
+export type TradeWindow    = { batch: BinanceTradeRaw[];    windowStart: number; windowEnd: number };
+export type DepositWindow  = { batch: BinanceDepositRaw[];  windowStart: number; windowEnd: number };
+export type WithdrawWindow = { batch: BinanceWithdrawRaw[]; windowStart: number; windowEnd: number };
+
 export async function* fetchAllTradesWindowed(
   symbol: string,
   startMs: number,
   apiKey: string,
   apiSecret: string,
-): AsyncGenerator<BinanceTradeRaw[]> {
+): AsyncGenerator<TradeWindow> {
   const now = Date.now();
   let cursor = startMs;
 
   while (cursor < now) {
     const windowEnd = Math.min(cursor + MS_24H - 1, now);
-    const batch = await fetchTradesForSymbol(symbol, cursor, windowEnd, apiKey, apiSecret);
-    if (batch.length > 0) yield batch;
+    const batch     = await fetchTradesForSymbol(symbol, cursor, windowEnd, apiKey, apiSecret);
+    yield { batch, windowStart: cursor, windowEnd };
     cursor = windowEnd + 1;
   }
 }
 
-// Itera en ventanas de 90 días desde startMs hasta ahora
 export async function* fetchAllDepositsWindowed(
   startMs: number,
   apiKey: string,
   apiSecret: string,
-): AsyncGenerator<BinanceDepositRaw[]> {
+): AsyncGenerator<DepositWindow> {
   const now = Date.now();
   let cursor = startMs;
 
   while (cursor < now) {
     const windowEnd = Math.min(cursor + MS_90D - 1, now);
-    const batch = await fetchDeposits(cursor, windowEnd, apiKey, apiSecret);
-    if (batch.length > 0) yield batch;
+    const batch     = await fetchDeposits(cursor, windowEnd, apiKey, apiSecret);
+    yield { batch, windowStart: cursor, windowEnd };
     cursor = windowEnd + 1;
   }
 }
@@ -120,14 +132,14 @@ export async function* fetchAllWithdrawalsWindowed(
   startMs: number,
   apiKey: string,
   apiSecret: string,
-): AsyncGenerator<BinanceWithdrawRaw[]> {
+): AsyncGenerator<WithdrawWindow> {
   const now = Date.now();
   let cursor = startMs;
 
   while (cursor < now) {
     const windowEnd = Math.min(cursor + MS_90D - 1, now);
-    const batch = await fetchWithdrawals(cursor, windowEnd, apiKey, apiSecret);
-    if (batch.length > 0) yield batch;
+    const batch     = await fetchWithdrawals(cursor, windowEnd, apiKey, apiSecret);
+    yield { batch, windowStart: cursor, windowEnd };
     cursor = windowEnd + 1;
   }
 }

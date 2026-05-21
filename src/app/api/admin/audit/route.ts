@@ -48,9 +48,11 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const limit = resolveLimit(searchParams.get("limit"));
+    const limit        = resolveLimit(searchParams.get("limit"));
+    const actionPrefix = searchParams.get("actionPrefix") ?? undefined;
+    const action       = searchParams.get("action") ?? undefined;
 
-    const logs = await listAdminAuditLogs({ limit });
+    const logs = await listAdminAuditLogs({ limit, actionPrefix, action });
 
     return NextResponse.json({
       ok: true,

@@ -4,16 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 import { fonts } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type ConnectionStatus = {
-  connected:      boolean;
-  status?:        string;
-  lastSyncAt?:    string | null;
+  connected:       boolean;
+  status?:         string;
+  lastSyncAt?:     string | null;
   lastSyncStatus?: string | null;
-  lastSyncError?: string | null;
-  pendingCount?:  number;
-  apiKeyHint?:    string;
+  lastSyncError?:  string | null;
+  pendingCount?:   number;
+  apiKeyHint?:     string;
 };
 
 type TestResult = {
@@ -31,12 +31,16 @@ type SyncResult = {
 };
 
 type ImportRecord = {
-  id:            string;
-  externalId:    string;
-  externalType:  string;
-  normalizedJson: string;
-  occurredAt:    string;
-  status:        string;
+  id:                  string;
+  externalId:          string;
+  externalType:        string;
+  normalizedJson:      string | null;
+  normalizedEventType: string | null;
+  taxTreatment:        string | null;
+  inventoryEffect:     string | null;
+  economicEffect:      string | null;
+  status:              string;
+  occurredAt:          string;
 };
 
 type NormalizedJson = {
@@ -49,14 +53,46 @@ type NormalizedJson = {
 
 type ApiResponse<T> = { ok: boolean; message: string; data: T };
 
-// ── Sub-components ───────────────────────────────────────────────────────────
+// ── Tax classification helpers ────────────────────────────────────────────────
+
+function needsManualReview(record: ImportRecord): boolean {
+  return record.taxTreatment === "REVIEW" || record.inventoryEffect === "REVIEW";
+}
+
+function eventTypeBadge(type: string | null): { bg: string; color: string } {
+  const map: Record<string, { bg: string; color: string }> = {
+    SPOT_BUY:          { bg: "rgba(22,163,74,0.12)",   color: "#4ADE80" },
+    SPOT_SELL:         { bg: "rgba(239,68,68,0.12)",   color: "#F87171" },
+    EXTERNAL_DEPOSIT:  { bg: "rgba(96,165,250,0.12)",  color: "#93C5FD" },
+    EXTERNAL_WITHDRAW: { bg: "rgba(96,165,250,0.12)",  color: "#93C5FD" },
+    STAKING_REWARD:    { bg: "rgba(167,139,250,0.12)", color: "#A78BFA" },
+    EARN_REWARD:       { bg: "rgba(167,139,250,0.12)", color: "#A78BFA" },
+    DUST_CONVERSION:   { bg: "rgba(245,158,11,0.12)",  color: "#FCD34D" },
+    CONVERT:           { bg: "rgba(245,158,11,0.12)",  color: "#FCD34D" },
+  };
+  return map[type ?? ""] ?? { bg: "rgba(100,116,139,0.12)", color: "#64748B" };
+}
+
+function taxTreatmentBadge(tt: string | null): { bg: string; color: string; label: string } {
+  const map: Record<string, { bg: string; color: string; label: string }> = {
+    ACQUISITION: { bg: "rgba(22,163,74,0.1)",   color: "#4ADE80", label: "Adquisición" },
+    DISPOSAL:    { bg: "rgba(239,68,68,0.1)",   color: "#F87171", label: "Enajenación"  },
+    INCOME:      { bg: "rgba(167,139,250,0.1)", color: "#A78BFA", label: "Renta"        },
+    EXPENSE:     { bg: "rgba(245,158,11,0.1)",  color: "#FCD34D", label: "Gasto"        },
+    NEUTRAL:     { bg: "rgba(100,116,139,0.1)", color: "#64748B", label: "Neutro"       },
+    REVIEW:      { bg: "rgba(245,158,11,0.1)",  color: "#F59E0B", label: "⚠ Revisar"   },
+  };
+  return map[tt ?? "REVIEW"] ?? map["REVIEW"]!;
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, { bg: string; color: string; border: string; label: string }> = {
-    ACTIVE:       { bg: "rgba(22,163,74,0.12)",  color: "#4ADE80", border: "rgba(22,163,74,0.25)",  label: "Conectado" },
-    ERROR:        { bg: "rgba(239,68,68,0.12)",  color: "#F87171", border: "rgba(239,68,68,0.25)",  label: "Error" },
-    REVOKED:      { bg: "rgba(100,116,139,0.12)",color: "#64748B", border: "rgba(100,116,139,0.2)", label: "Revocado" },
-    disconnected: { bg: "rgba(100,116,139,0.12)",color: "#64748B", border: "rgba(100,116,139,0.2)", label: "No conectado" },
+    ACTIVE:       { bg: "rgba(22,163,74,0.12)",   color: "#4ADE80", border: "rgba(22,163,74,0.25)",   label: "Conectado"    },
+    ERROR:        { bg: "rgba(239,68,68,0.12)",   color: "#F87171", border: "rgba(239,68,68,0.25)",   label: "Error"        },
+    REVOKED:      { bg: "rgba(100,116,139,0.12)", color: "#64748B", border: "rgba(100,116,139,0.2)",  label: "Revocado"     },
+    disconnected: { bg: "rgba(100,116,139,0.12)", color: "#64748B", border: "rgba(100,116,139,0.2)",  label: "No conectado" },
   };
   const s = styles[status] ?? styles.disconnected;
   return (
@@ -68,10 +104,10 @@ function StatusBadge({ status }: { status: string }) {
 
 function Alert({ type, message }: { type: "success" | "error" | "warn" | "info"; message: string }) {
   const map = {
-    success: { bg: "rgba(22,163,74,0.06)",   border: "rgba(22,163,74,0.2)",   color: "#4ADE80" },
-    error:   { bg: "rgba(239,68,68,0.06)",   border: "rgba(239,68,68,0.2)",   color: "#F87171" },
-    warn:    { bg: "rgba(245,158,11,0.06)",  border: "rgba(245,158,11,0.2)",  color: "#FCD34D" },
-    info:    { bg: "rgba(96,165,250,0.06)",  border: "rgba(96,165,250,0.2)",  color: "#93C5FD" },
+    success: { bg: "rgba(22,163,74,0.06)",  border: "rgba(22,163,74,0.2)",  color: "#4ADE80" },
+    error:   { bg: "rgba(239,68,68,0.06)",  border: "rgba(239,68,68,0.2)",  color: "#F87171" },
+    warn:    { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.2)", color: "#FCD34D" },
+    info:    { bg: "rgba(96,165,250,0.06)", border: "rgba(96,165,250,0.2)", color: "#93C5FD" },
   };
   const s = map[type];
   return (
@@ -89,8 +125,8 @@ function ActionButton({
 }) {
   const bg = loading || disabled
     ? "rgba(255,255,255,0.06)"
-    : variant === "primary"   ? "#16A34A"
-    : variant === "danger"    ? "rgba(239,68,68,0.12)"
+    : variant === "primary" ? "#16A34A"
+    : variant === "danger"  ? "rgba(239,68,68,0.12)"
     : "rgba(255,255,255,0.06)";
   const color = variant === "danger" ? "#F87171" : variant === "primary" ? "#fff" : "#94A3B8";
   const border = variant === "danger" ? "1px solid rgba(239,68,68,0.3)" : "none";
@@ -110,27 +146,21 @@ function ActionButton({
 // ── Main Panel ────────────────────────────────────────────────────────────────
 
 export function BinanceIntegrationPanel() {
-  const [conn,         setConn]         = useState<ConnectionStatus | null>(null);
-  const [loadingConn,  setLoadingConn]  = useState(true);
-
-  const [apiKey,    setApiKey]    = useState("");
-  const [apiSecret, setApiSecret] = useState("");
-  const [showSecret, setShowSecret] = useState(false);
-
-  const [connecting, setConnecting] = useState(false);
-  const [testing,    setTesting]    = useState(false);
-  const [syncing,    setSyncing]    = useState(false);
-
-  const [testResult, setTestResult] = useState<TestResult | null>(null);
-  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
-
+  const [conn,          setConn]          = useState<ConnectionStatus | null>(null);
+  const [loadingConn,   setLoadingConn]   = useState(true);
+  const [apiKey,        setApiKey]        = useState("");
+  const [apiSecret,     setApiSecret]     = useState("");
+  const [showSecret,    setShowSecret]    = useState(false);
+  const [connecting,    setConnecting]    = useState(false);
+  const [testing,       setTesting]       = useState(false);
+  const [syncing,       setSyncing]       = useState(false);
+  const [testResult,    setTestResult]    = useState<TestResult | null>(null);
+  const [syncResult,    setSyncResult]    = useState<SyncResult | null>(null);
   const [imports,       setImports]       = useState<ImportRecord[]>([]);
-  const [loadingImports,setLoadingImports] = useState(false);
+  const [loadingImports,setLoadingImports]= useState(false);
   const [confirmingId,  setConfirmingId]  = useState<string | null>(null);
+  const [msg,           setMsg]           = useState<{ type: "success" | "error" | "warn" | "info"; text: string } | null>(null);
 
-  const [msg,   setMsg]   = useState<{ type: "success" | "error" | "warn" | "info"; text: string } | null>(null);
-
-  // ── Inicializar CSRF y cargar estado ────────────────────────────────────────
   const loadStatus = useCallback(async () => {
     setLoadingConn(true);
     try {
@@ -161,7 +191,6 @@ export function BinanceIntegrationPanel() {
     if (conn?.connected && (conn.pendingCount ?? 0) > 0) loadImports();
   }, [conn, loadImports]);
 
-  // ── Conectar ────────────────────────────────────────────────────────────────
   async function handleConnect() {
     if (!apiKey.trim() || !apiSecret.trim()) {
       setMsg({ type: "warn", text: "Ingresa API Key y API Secret." });
@@ -183,7 +212,6 @@ export function BinanceIntegrationPanel() {
     }
   }
 
-  // ── Probar conexión ─────────────────────────────────────────────────────────
   async function handleTest() {
     setTesting(true); setMsg(null); setTestResult(null);
     try {
@@ -199,7 +227,6 @@ export function BinanceIntegrationPanel() {
     }
   }
 
-  // ── Sincronizar ─────────────────────────────────────────────────────────────
   async function handleSync() {
     setSyncing(true); setMsg(null); setSyncResult(null);
     try {
@@ -220,15 +247,21 @@ export function BinanceIntegrationPanel() {
     }
   }
 
-  // ── Confirmar / Rechazar importación ────────────────────────────────────────
-  async function handleImportAction(recordId: string, action: "CONFIRM" | "REJECT") {
-    setConfirmingId(recordId);
+  async function handleImportAction(recordId: string, action: "CONFIRM" | "REJECT" | "REVIEW") {
+    setConfirmingId(recordId); setMsg(null);
     try {
       await httpClient("/api/integrations/binance/imports/confirm", {
         method: "POST", auth: true, body: { recordId, action },
       });
-      setImports(prev => prev.filter(r => r.id !== recordId));
-      setConn(prev => prev ? { ...prev, pendingCount: Math.max(0, (prev.pendingCount ?? 1) - 1) } : prev);
+
+      if (action === "REVIEW") {
+        // Actualiza el status en la lista — el registro queda visible como REVIEW
+        setImports(prev => prev.map(r => r.id === recordId ? { ...r, status: "REVIEW" } : r));
+      } else {
+        // CONFIRM o REJECT: sale de la lista
+        setImports(prev => prev.filter(r => r.id !== recordId));
+        setConn(prev => prev ? { ...prev, pendingCount: Math.max(0, (prev.pendingCount ?? 1) - 1) } : prev);
+      }
     } catch (e) {
       setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al procesar el registro." });
     } finally {
@@ -236,7 +269,6 @@ export function BinanceIntegrationPanel() {
     }
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
   if (loadingConn) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "2rem", color: "#475569", fontSize: "13px" }}>
@@ -269,7 +301,6 @@ export function BinanceIntegrationPanel() {
 
         {msg && <Alert type={msg.type} message={msg.text} />}
 
-        {/* ── Formulario de credenciales ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1rem" }}>
           <div>
             <label style={{ fontSize: "12px", fontWeight: 600, color: "#94A3B8", display: "block", marginBottom: "6px" }}>
@@ -286,8 +317,7 @@ export function BinanceIntegrationPanel() {
 
           <div>
             <label style={{ fontSize: "12px", fontWeight: 600, color: "#94A3B8", display: "block", marginBottom: "6px" }}>
-              API Secret
-              {isConnected && <span style={{ color: "#475569", fontWeight: 400 }}> — cifrado, no se muestra</span>}
+              API Secret {isConnected && <span style={{ color: "#475569", fontWeight: 400 }}> — cifrado, no se muestra</span>}
             </label>
             <div style={{ position: "relative" }}>
               <input
@@ -311,12 +341,10 @@ export function BinanceIntegrationPanel() {
           </div>
         </div>
 
-        {/* Aviso de seguridad */}
         <p style={{ fontSize: "11px", color: "#334155", margin: "0 0 1rem", lineHeight: 1.5 }}>
           Crea las claves en Binance con permisos <strong style={{ color: "#64748B" }}>solo lectura</strong>. Nunca habilites trading ni retiros. El Secret se cifra con AES-256 y no puede recuperarse desde aquí.
         </p>
 
-        {/* Botones */}
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <ActionButton
             onClick={handleConnect}
@@ -336,7 +364,6 @@ export function BinanceIntegrationPanel() {
           )}
         </div>
 
-        {/* Resultado del test */}
         {testResult && (
           <div style={{ marginTop: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "0.75rem 1rem", fontSize: "12px", color: "#94A3B8" }}>
             <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
@@ -350,7 +377,7 @@ export function BinanceIntegrationPanel() {
         )}
       </div>
 
-      {/* ── Sincronización (solo si conectado) ── */}
+      {/* ── Sincronización ── */}
       {isConnected && (
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1.25rem 1.5rem" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
@@ -362,7 +389,7 @@ export function BinanceIntegrationPanel() {
                   : "Nunca sincronizado"}
                 {(conn?.pendingCount ?? 0) > 0 && (
                   <span style={{ marginLeft: "12px", color: "#F0B90B", fontWeight: 600 }}>
-                    {conn?.pendingCount} registros pendientes de confirmación
+                    {conn?.pendingCount} registros pendientes
                   </span>
                 )}
               </p>
@@ -405,7 +432,9 @@ export function BinanceIntegrationPanel() {
                   </span>
                 )}
               </h4>
-              <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>Revisa y confirma cada operación antes de que entre al motor tributario.</p>
+              <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>
+                Revisa la clasificación tributaria antes de confirmar. Eventos en ⚠ requieren revisión manual.
+              </p>
             </div>
             <button
               type="button"
@@ -430,7 +459,7 @@ export function BinanceIntegrationPanel() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                 <thead>
                   <tr>
-                    {["Tipo", "Símbolo", "Cantidad", "Precio USD", "Fee USD", "Fecha", "Acciones"].map(h => (
+                    {["Evento", "Símbolo", "Cantidad", "Precio USD", "Tratamiento", "Fecha", "Acciones"].map(h => (
                       <th key={h} style={{ textAlign: "left", padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#64748B", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
@@ -438,35 +467,77 @@ export function BinanceIntegrationPanel() {
                 <tbody>
                   {imports.map((record, i) => {
                     let norm: NormalizedJson = { movementType: record.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
-                    try { norm = JSON.parse(record.normalizedJson) as NormalizedJson; } catch { /* noop */ }
+                    try { norm = JSON.parse(record.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
+
                     const isProcessing = confirmingId === record.id;
-                    const typeColor = norm.movementType === "BUY" ? "#4ADE80" : norm.movementType === "SELL" ? "#F87171" : "#93C5FD";
+                    const isReview     = record.status === "REVIEW";
+                    const cannotConfirm = needsManualReview(record);
+                    const evBadge      = eventTypeBadge(record.normalizedEventType);
+                    const ttBadge      = taxTreatmentBadge(record.taxTreatment);
+
+                    const rowBg = isReview
+                      ? "rgba(245,158,11,0.04)"
+                      : i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent";
 
                     return (
-                      <tr key={record.id} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                      <tr key={record.id} style={{ background: rowBg, borderLeft: isReview ? "2px solid rgba(245,158,11,0.4)" : "2px solid transparent" }}>
+
+                        {/* Evento */}
                         <td style={{ padding: "10px 16px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: typeColor, background: `${typeColor}18`, border: `1px solid ${typeColor}30`, borderRadius: "4px", padding: "2px 7px" }}>
-                            {norm.movementType}
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: evBadge.color, background: evBadge.bg, border: `1px solid ${evBadge.color}30`, borderRadius: "4px", padding: "2px 7px", display: "inline-block", whiteSpace: "nowrap" }}>
+                            {record.normalizedEventType ?? norm.movementType}
                           </span>
+                          {isReview && (
+                            <span style={{ marginLeft: "6px", fontSize: "10px", color: "#F59E0B", fontWeight: 600 }}>EN REVISIÓN</span>
+                          )}
                         </td>
+
+                        {/* Símbolo */}
                         <td style={{ padding: "10px 16px", color: "#CBD5E1", fontWeight: 600 }}>{norm.symbol}</td>
-                        <td style={{ padding: "10px 16px", color: "#94A3B8", fontFamily: "monospace" }}>{norm.quantity.toFixed(8).replace(/\.?0+$/, "")}</td>
-                        <td style={{ padding: "10px 16px", color: "#94A3B8", fontFamily: "monospace" }}>{norm.priceUsd > 0 ? `$${norm.priceUsd.toFixed(2)}` : "—"}</td>
-                        <td style={{ padding: "10px 16px", color: "#64748B", fontFamily: "monospace" }}>{norm.feeUsd > 0 ? `$${norm.feeUsd.toFixed(4)}` : "—"}</td>
+
+                        {/* Cantidad */}
+                        <td style={{ padding: "10px 16px", color: "#94A3B8", fontFamily: "monospace" }}>
+                          {norm.quantity > 0 ? norm.quantity.toFixed(8).replace(/\.?0+$/, "") : "—"}
+                        </td>
+
+                        {/* Precio USD */}
+                        <td style={{ padding: "10px 16px", color: "#94A3B8", fontFamily: "monospace" }}>
+                          {norm.priceUsd > 0 ? `$${norm.priceUsd.toFixed(2)}` : "—"}
+                        </td>
+
+                        {/* Tratamiento tributario */}
+                        <td style={{ padding: "10px 16px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 600, color: ttBadge.color, background: ttBadge.bg, borderRadius: "4px", padding: "2px 7px", display: "inline-block", whiteSpace: "nowrap" }}>
+                            {ttBadge.label}
+                          </span>
+                          {record.inventoryEffect && record.inventoryEffect !== "NEUTRAL" && (
+                            <div style={{ fontSize: "10px", color: "#475569", marginTop: "2px" }}>
+                              inventario: {record.inventoryEffect === "ADD" ? "+ADD" : record.inventoryEffect === "REMOVE" ? "-REMOVE" : record.inventoryEffect}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Fecha */}
                         <td style={{ padding: "10px 16px", color: "#64748B", whiteSpace: "nowrap" }}>
                           {new Date(record.occurredAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}
                         </td>
+
+                        {/* Acciones */}
                         <td style={{ padding: "10px 16px" }}>
-                          <div style={{ display: "flex", gap: "6px" }}>
+                          <div style={{ display: "flex", gap: "5px" }}>
+
+                            {/* CONFIRMAR */}
                             <button
                               type="button"
-                              onClick={() => handleImportAction(record.id, "CONFIRM")}
-                              disabled={isProcessing}
-                              title="Confirmar — entra al motor tributario"
-                              style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(22,163,74,0.3)", background: "rgba(22,163,74,0.08)", color: "#4ADE80", fontSize: "12px", fontWeight: 600, cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}
+                              onClick={() => !cannotConfirm && handleImportAction(record.id, "CONFIRM")}
+                              disabled={isProcessing || cannotConfirm}
+                              title={cannotConfirm ? `Requiere revisión manual (${record.taxTreatment ?? "REVIEW"})` : "Confirmar — entra al motor tributario"}
+                              style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(22,163,74,0.3)", background: cannotConfirm ? "rgba(255,255,255,0.04)" : "rgba(22,163,74,0.08)", color: cannotConfirm ? "#334155" : "#4ADE80", fontSize: "12px", fontWeight: 600, cursor: isProcessing || cannotConfirm ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}
                             >
                               ✓
                             </button>
+
+                            {/* RECHAZAR */}
                             <button
                               type="button"
                               onClick={() => handleImportAction(record.id, "REJECT")}
@@ -476,6 +547,19 @@ export function BinanceIntegrationPanel() {
                             >
                               ✗
                             </button>
+
+                            {/* REVISAR — solo para PENDING (no para REVIEW) */}
+                            {record.status === "PENDING" && (
+                              <button
+                                type="button"
+                                onClick={() => handleImportAction(record.id, "REVIEW")}
+                                disabled={isProcessing}
+                                title="Marcar para revisión manual — queda pendiente"
+                                style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.08)", color: "#FCD34D", fontSize: "12px", fontWeight: 600, cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}
+                              >
+                                ?
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -483,6 +567,14 @@ export function BinanceIntegrationPanel() {
                   })}
                 </tbody>
               </table>
+
+              {/* Leyenda */}
+              <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: "16px", fontSize: "11px", color: "#334155" }}>
+                <span><span style={{ color: "#4ADE80" }}>✓</span> Confirmar</span>
+                <span><span style={{ color: "#F87171" }}>✗</span> Rechazar</span>
+                <span><span style={{ color: "#FCD34D" }}>?</span> Marcar revisión</span>
+                <span style={{ color: "#F59E0B" }}>⚠ Revisar = no puede confirmarse sin análisis manual</span>
+              </div>
             </div>
           )}
         </div>

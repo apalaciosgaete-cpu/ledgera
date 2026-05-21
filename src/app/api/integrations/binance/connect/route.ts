@@ -56,13 +56,15 @@ export async function POST(request: NextRequest) {
     // Valida credenciales contra Binance antes de guardar
     try {
       await fetchAccountInfo(apiKey, apiSecret);
-    } catch {
+    } catch (binanceError) {
+      const detail = binanceError instanceof Error ? binanceError.message : String(binanceError);
+      console.error("[binance/connect] fetchAccountInfo failed:", detail);
       await logBinanceAuditEvent(request, "BINANCE_CONNECTED", auth.user.id, auth.user.email, {
         provider: "BINANCE",
         status:   "FAILED",
-        error:    "Credenciales inválidas o sin permisos de lectura.",
+        error:    detail,
       });
-      return fail("Credenciales inválidas o sin permisos de lectura en Binance.", 422);
+      return fail(`Credenciales inválidas o sin permisos de lectura en Binance. Detalle: ${detail}`, 422);
     }
 
     const encryptedKey    = encryptSecret(apiKey);
