@@ -115,62 +115,6 @@ export default function PrivacidadPage() {
           de Ledgera.
         </InfoBox>
 
-        {/* ÍNDICE */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: "10px",
-            padding: "1.4rem 1.6rem",
-            marginBottom: "3rem",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "0.78rem",
-              fontWeight: 700,
-              color: "#475569",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              margin: "0 0 1rem",
-            }}
-          >
-            Contenido
-          </p>
-          <ol
-            style={{
-              paddingLeft: "1.2rem",
-              margin: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.35rem",
-              fontSize: "0.88rem",
-              color: "#64748b",
-            }}
-          >
-            {[
-              "Responsable del tratamiento y Encargado de Protección de Datos",
-              "Principios rectores — Ley N° 21.719",
-              "Datos personales que tratamos",
-              "Finalidad y base jurídica del tratamiento",
-              "Decisiones automatizadas e indicadores de riesgo",
-              "Conservación de los datos",
-              "Destinatarios y transferencias internacionales",
-              "Derechos del titular",
-              "Retiro del consentimiento",
-              "Seguridad de los datos",
-              "Menores de edad",
-              "Relación con la Política de Cookies",
-              "Modificaciones",
-              "Contacto y reclamaciones",
-            ].map((item, i) => (
-              <li key={i} style={{ color: "#818cf8" }}>
-                {item}
-              </li>
-            ))}
-          </ol>
-        </div>
-
         {/* SECCIONES */}
 
         <LegalSection title="1. Responsable del tratamiento y Encargado de Protección de Datos">

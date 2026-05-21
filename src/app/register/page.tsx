@@ -55,6 +55,7 @@ function RegisterForm() {
   const [role, setRole] = useState<Role>("personal");
   const [accordionOpen, setAccordionOpen] = useState(false);
 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -82,6 +83,11 @@ function RegisterForm() {
     event.preventDefault();
 
     setErrorMessage("");
+
+    if (!acceptedTerms) {
+      setErrorMessage("Debes aceptar los Términos y Condiciones para continuar.");
+      return;
+    }
 
     if (password.length < 8) {
       setErrorMessage("La contraseña debe tener al menos 8 caracteres.");
@@ -491,6 +497,62 @@ function RegisterForm() {
               )}
             </div>
 
+            {/* ACEPTACIÓN DE TÉRMINOS */}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px",
+                cursor: "pointer",
+                padding: "12px",
+                borderRadius: "8px",
+                border: acceptedTerms
+                  ? `1px solid rgba(22,163,74,0.35)`
+                  : `0.5px solid ${colors.borderDark}`,
+                background: acceptedTerms
+                  ? "rgba(22,163,74,0.05)"
+                  : "transparent",
+                transition: "all 0.15s",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  marginTop: "1px",
+                  flexShrink: 0,
+                  accentColor: colors.accent,
+                  cursor: "pointer",
+                }}
+              />
+              <span style={{ fontSize: "12px", color: "#94A3B8", lineHeight: 1.55 }}>
+                He leído y acepto los{" "}
+                <a
+                  href="/terminos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ color: colors.accent, textDecoration: "none", fontWeight: 600 }}
+                >
+                  Términos y Condiciones
+                </a>{" "}
+                y la{" "}
+                <a
+                  href="/privacidad"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ color: colors.accent, textDecoration: "none", fontWeight: 600 }}
+                >
+                  Política de Privacidad
+                </a>
+                . Entiendo que sin esta aceptación no puedo acceder al servicio.
+              </span>
+            </label>
+
             {errorMessage && (
               <p
                 style={{
@@ -509,20 +571,24 @@ function RegisterForm() {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !acceptedTerms}
               style={{
                 width: "100%",
                 padding: "13px",
-                background: submitting ? colors.accentHover : colors.accent,
+                background: !acceptedTerms
+                  ? "#1e3a2f"
+                  : submitting
+                    ? colors.accentHover
+                    : colors.accent,
                 border: "none",
                 borderRadius: "8px",
-                color: "#fff",
+                color: !acceptedTerms ? "#4a7a5a" : "#fff",
                 fontSize: "14px",
                 fontWeight: 600,
                 fontFamily: fonts.body,
-                cursor: submitting ? "not-allowed" : "pointer",
+                cursor: submitting || !acceptedTerms ? "not-allowed" : "pointer",
                 marginTop: "4px",
-                transition: "background 0.15s ease",
+                transition: "all 0.15s ease",
               }}
             >
               {submitting ? "Creando cuenta..." : "Crear cuenta"}
