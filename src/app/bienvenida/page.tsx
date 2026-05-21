@@ -378,7 +378,7 @@ export default function LandingPage() {
         {/* Desktop nav */}
         <div className="hidden sm:flex" style={{ alignItems: "center", gap: "4px" }}>
           {[
-            { label: "Quiénes somos", href: "#quienes-somos" },
+            { label: "Quiénes somos", href: "/quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
             { label: "Planes",        href: "/planes" },
             { label: "Preguntas",     href: "/preguntas" },
@@ -416,7 +416,7 @@ export default function LandingPage() {
       {mobileMenuOpen && (
         <div className="flex sm:hidden" style={{ flexDirection: "column", background: "rgba(10,31,46,0.97)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.5rem", gap: "4px", position: "sticky", top: "68px", zIndex: 99 }}>
           {[
-            { label: "Quiénes somos", href: "#quienes-somos" },
+            { label: "Quiénes somos", href: "/quienes-somos" },
             { label: "Cómo funciona", href: "#como-funciona" },
             { label: "Planes",        href: "/planes" },
             { label: "Preguntas",     href: "/preguntas" },
@@ -845,84 +845,6 @@ export default function LandingPage() {
               </svg>
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* ── Quiénes somos ──────────────────────────────────────────────────── */}
-      <section id="quienes-somos" style={{ padding: "5rem 2rem", background: "#0A1F2E" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-
-          {/* Header */}
-          <div style={{ maxWidth: "680px", marginBottom: "4rem" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.22)", borderRadius: "100px", padding: "4px 16px", marginBottom: "1.25rem" }}>
-              <span style={{ fontSize: "12px", fontWeight: 700, color: "#4ADE80", letterSpacing: "0.04em" }}>Quiénes somos</span>
-            </div>
-            <h2 style={{ ...h2Style, margin: "0 0 1.25rem" }}>
-              Nacimos para resolver un problema real
-            </h2>
-            <p style={{ fontSize: "17px", color: "#94A3B8", lineHeight: 1.7, margin: 0 }}>
-              Ledgera surgió de la frustración de inversores chilenos que enfrentaban la normativa del SII sin ninguna herramienta local. Planillas Excel, cálculos manuales y la incertidumbre de saber si el número era correcto. Decidimos construir la solución que nos hubiera gustado tener.
-            </p>
-          </div>
-
-          {/* Misión + origen en 2 columnas */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "3rem" }}>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", padding: "2rem" }}>
-              <div style={{ width: 44, height: 44, borderRadius: "10px", background: "rgba(22,163,74,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-                </svg>
-              </div>
-              <h3 style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)", fontSize: "18px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 10px" }}>Nuestra misión</h3>
-              <p style={{ fontSize: "15px", color: "#94A3B8", margin: 0, lineHeight: 1.7 }}>
-                Que cualquier persona en Chile pueda declarar sus criptomonedas correctamente al SII, sin necesitar ser contador ni experto tributario. Cumplimiento accesible para todos.
-              </p>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", padding: "2rem" }}>
-              <div style={{ width: 44, height: 44, borderRadius: "10px", background: "rgba(124,58,237,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              </div>
-              <h3 style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)", fontSize: "18px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 10px" }}>Para quién</h3>
-              <p style={{ fontSize: "15px", color: "#94A3B8", margin: 0, lineHeight: 1.7 }}>
-                Inversores individuales, contadores que gestionan clientes cripto y empresas con operaciones en criptoactivos. Tres perfiles, una sola plataforma adaptada a cada necesidad.
-              </p>
-            </div>
-          </div>
-
-          {/* 3 pilares */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-            {[
-              {
-                label: "Precisión",
-                detail: "Motor FIFO determinista con tipo de cambio BCCh oficial. Cada cálculo es auditable y reproducible. No hay margen para errores en tu declaración.",
-                color: "#16A34A",
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-              },
-              {
-                label: "Transparencia",
-                detail: "Reportes verificables públicamente con hash SHA-256 y QR. Cualquiera puede confirmar que tu declaración no fue alterada.",
-                color: "#0EA5E9",
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-              },
-              {
-                label: "Privacidad",
-                detail: "Cumplimos la Ley 21.719 de protección de datos de Chile. Tu información financiera viaja encriptada y nunca se comparte con terceros.",
-                color: "#F59E0B",
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-              },
-            ].map((p) => (
-              <div key={p.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "14px", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ width: 40, height: 40, borderRadius: "9px", background: `${p.color}14`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {p.icon}
-                </div>
-                <div style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)", fontSize: "16px", fontWeight: 700, color: "#F1F5F9" }}>{p.label}</div>
-                <p style={{ fontSize: "14px", color: "#94A3B8", margin: 0, lineHeight: 1.65 }}>{p.detail}</p>
-              </div>
-            ))}
-          </div>
-
         </div>
       </section>
 
