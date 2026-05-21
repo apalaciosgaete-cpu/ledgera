@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
-
-export const metadata: Metadata = {
-  title: "Quiénes somos · Ledgera",
-  description:
-    "Conoce la misión, visión y valores de Ledgera: la plataforma chilena para declarar criptomonedas al SII con precisión y trazabilidad.",
-};
 
 const h2Style = {
   fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
@@ -30,42 +25,6 @@ const NAV_LINKS = [
   { label: "Planes", href: "/planes" },
   { label: "Preguntas", href: "/preguntas" },
   { label: "Blog", href: "/blog" },
-];
-
-const PILLARS = [
-  {
-    label: "Precisión",
-    detail:
-      "Motor FIFO determinista con tipo de cambio BCCh oficial. Cada cálculo es auditable y reproducible. No hay margen para errores en tu declaración.",
-    color: "#16A34A",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-      </svg>
-    ),
-  },
-  {
-    label: "Transparencia",
-    detail:
-      "Reportes verificables con hash SHA-256 y QR. Cualquiera puede confirmar que tu declaración no fue alterada.",
-    color: "#0EA5E9",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Privacidad",
-    detail:
-      "Cumplimos la Ley 21.719 de protección de datos de Chile. Tu información financiera viaja encriptada y nunca se comparte con terceros.",
-    color: "#F59E0B",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-      </svg>
-    ),
-  },
 ];
 
 export default function QuienesSomosPage() {
@@ -185,7 +144,38 @@ export default function QuienesSomosPage() {
 
           {/* Pilares */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-            {PILLARS.map((p) => (
+            {[
+              {
+                label: "Precisión",
+                detail: "Motor FIFO determinista con tipo de cambio BCCh oficial. Cada cálculo es auditable y reproducible. No hay margen para errores en tu declaración.",
+                color: "#16A34A",
+                icon: (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                ),
+              },
+              {
+                label: "Transparencia",
+                detail: "Reportes verificables con hash SHA-256 y QR. Cualquiera puede confirmar que tu declaración no fue alterada.",
+                color: "#0EA5E9",
+                icon: (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                ),
+              },
+              {
+                label: "Privacidad",
+                detail: "Cumplimos la Ley 21.719 de protección de datos de Chile. Tu información financiera viaja encriptada y nunca se comparte con terceros.",
+                color: "#F59E0B",
+                icon: (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                ),
+              },
+            ].map((p) => (
               <div key={p.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "14px", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ width: 40, height: 40, borderRadius: "9px", background: `${p.color}14`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {p.icon}
@@ -219,10 +209,10 @@ export default function QuienesSomosPage() {
         </div>
       </section>
 
-      {/* ── Footer mínimo ───────────────────────────────────────────────────── */}
+      {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer style={{ padding: "2rem", borderTop: "1px solid rgba(255,255,255,0.06)", textAlign: "center" }}>
         <p style={{ fontSize: "13px", color: "#475569", margin: 0 }}>
-          © {new Date().getFullYear()} Ledgera · Todos los derechos reservados ·{" "}
+          © 2025 Ledgera · Todos los derechos reservados ·{" "}
           <Link href="/bienvenida" style={{ color: "#475569" }}>Volver al inicio</Link>
         </p>
       </footer>
