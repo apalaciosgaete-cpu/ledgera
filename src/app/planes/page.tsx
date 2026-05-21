@@ -844,6 +844,17 @@ function PlanesContent() {
               </div>
 
               <div>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                  Legal
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Términos y condiciones</Link>
+                  <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de privacidad</Link>
+                  <Link href="/cookies" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de cookies</Link>
+                </div>
+              </div>
+
+              <div>
                 <p
                   style={{
                     fontSize: "11px",
@@ -862,7 +873,7 @@ function PlanesContent() {
                     admin@ledgera.cl
                   </a>
                   <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    WhatsApp
+                    WhatsApp soporte
                   </a>
                 </div>
               </div>
