@@ -708,7 +708,7 @@ function PlanesContent() {
                           "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
                       }}
                     >
-                      Pagar con Mercado Pago
+                      {plan.cta}
                     </BillingCheckoutButton>
                   )}
                 </div>
