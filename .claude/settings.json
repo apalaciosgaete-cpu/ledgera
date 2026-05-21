@@ -14,7 +14,10 @@
       "Bash(rm -rf \"src/app/api/stripe\")",
       "Bash(rm -f \"src/lib/stripe.ts\")",
       "Bash(npx prisma *)",
-      "Bash(vercel env *)"
+      "Bash(vercel env *)",
+      "Bash(xargs grep -l \"planes\")",
+      "Bash(xargs wc -l)",
+      "Bash(git restore *)"
     ]
   }
 }
