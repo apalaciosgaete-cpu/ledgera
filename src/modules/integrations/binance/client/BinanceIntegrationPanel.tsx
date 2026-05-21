@@ -25,9 +25,12 @@ type TestResult = {
 };
 
 type SyncResult = {
-  imported: number;
-  skipped:  number;
-  errors:   string[];
+  imported:      number;
+  skipped:       number;
+  autoConfirmed: number;
+  pendingReview: number;
+  taxRebuilt:    boolean;
+  errors:        string[];
 };
 
 type ImportRecord = {
@@ -397,13 +400,6 @@ export function BinanceIntegrationPanel() {
                       {conn?.pendingCount} pendientes
                     </span>
                   )}
-                  {syncResult && (
-                    <span style={{ fontSize: "11px", color: "#64748B", whiteSpace: "nowrap" }}>
-                      · <strong style={{ color: "#4ADE80" }}>{syncResult.imported}</strong> nuevos
-                      · <strong style={{ color: "#64748B" }}>{syncResult.skipped}</strong> ya existentes
-                      {syncResult.errors.length > 0 && <> · <strong style={{ color: "#F87171" }}>{syncResult.errors.length}</strong> errores</>}
-                    </span>
-                  )}
                 </div>
                 {conn?.lastSyncError && (
                   <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#F87171" }}>
@@ -455,6 +451,55 @@ export function BinanceIntegrationPanel() {
                 <span>Depósito: <strong style={{ color: testResult.canDeposit ? "#4ADE80" : "#F87171" }}>{testResult.canDeposit ? "✓" : "✗"}</strong></span>
                 <span>Activos con saldo: <strong style={{ color: "#CBD5E1" }}>{testResult.balancesCount}</strong></span>
                 <span>Permisos: <strong style={{ color: "#CBD5E1" }}>{testResult.permissions.join(", ")}</strong></span>
+              </div>
+            )}
+
+            {/* Resultado de sync — bloque expandido */}
+            {syncResult && !syncing && (
+              <div style={{ marginTop: "0.625rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+
+                {/* Resumen narrativo */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "3px", marginBottom: "0.625rem" }}>
+                  {syncResult.autoConfirmed > 0 && (
+                    <p style={{ margin: 0, fontSize: "12px", color: "#4ADE80" }}>
+                      <strong>{syncResult.autoConfirmed}</strong> {syncResult.autoConfirmed === 1 ? "operación fue incorporada" : "operaciones fueron incorporadas"} automáticamente al portafolio.
+                    </p>
+                  )}
+                  {syncResult.pendingReview > 0 && (
+                    <p style={{ margin: 0, fontSize: "12px", color: "#F59E0B" }}>
+                      <strong>{syncResult.pendingReview}</strong> {syncResult.pendingReview === 1 ? "operación quedó pendiente" : "operaciones quedaron pendientes"} de revisión manual.
+                    </p>
+                  )}
+                  {syncResult.autoConfirmed === 0 && syncResult.pendingReview === 0 && syncResult.imported === 0 && (
+                    <p style={{ margin: 0, fontSize: "12px", color: "#64748B" }}>Sin nuevas operaciones desde la última sincronización.</p>
+                  )}
+                </div>
+
+                {/* Métricas en fila */}
+                <div style={{ display: "flex", gap: "1.25rem", fontSize: "11px", color: "#64748B", flexWrap: "wrap" }}>
+                  <span>Importados: <strong style={{ color: "#CBD5E1" }}>{syncResult.imported}</strong></span>
+                  <span>Auto-confirmados: <strong style={{ color: "#4ADE80" }}>{syncResult.autoConfirmed}</strong></span>
+                  <span>En revisión: <strong style={{ color: "#F59E0B" }}>{syncResult.pendingReview}</strong></span>
+                  <span>Omitidos: <strong style={{ color: "#64748B" }}>{syncResult.skipped}</strong></span>
+                  {syncResult.errors.length > 0 && (
+                    <span>Errores: <strong style={{ color: "#F87171" }}>{syncResult.errors.length}</strong></span>
+                  )}
+                  {syncResult.taxRebuilt && (
+                    <span style={{ color: "#A78BFA" }}>Motor tributario recalculado ✓</span>
+                  )}
+                </div>
+
+                {/* Lista de errores si los hay */}
+                {syncResult.errors.length > 0 && (
+                  <div style={{ marginTop: "0.5rem", padding: "8px 10px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: "7px" }}>
+                    {syncResult.errors.slice(0, 3).map((e, i) => (
+                      <p key={i} style={{ margin: i > 0 ? "4px 0 0" : 0, fontSize: "11px", color: "#F87171" }}>{e}</p>
+                    ))}
+                    {syncResult.errors.length > 3 && (
+                      <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#64748B" }}>…y {syncResult.errors.length - 3} errores más.</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
