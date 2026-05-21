@@ -77,13 +77,14 @@ function buildKhipuAuthHeader(
     a.localeCompare(b),
   );
 
-  // URLSearchParams.toString() encodes spaces as +, igual que Python urllib.parse.urlencode
-  const queryString = new URLSearchParams(sortedEntries).toString();
+  // Raw key=value concatenation (no inner encoding) — Khipu decodes the form
+  // body before signing, so we must sign the decoded values, not the encoded ones.
+  const rawParams = sortedEntries.map(([k, v]) => `${k}=${v}`).join("&");
 
   const toSign = [
     method.toUpperCase(),
     encodeURIComponent(url),
-    encodeURIComponent(queryString),
+    encodeURIComponent(rawParams),
   ].join("&");
 
   const signature = crypto
