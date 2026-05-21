@@ -282,11 +282,11 @@ export function BinanceIntegrationPanel() {
   const isConnected = conn?.connected && conn.status === "ACTIVE";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
 
       {/* ── Header del panel ── */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1.25rem 1.5rem" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "1.25rem" }}>
+      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1rem 1.25rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "0.875rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#F0B90B", fontFamily: fonts.body, letterSpacing: "-0.02em" }}>
               BN
@@ -341,7 +341,7 @@ export function BinanceIntegrationPanel() {
           </div>
         </div>
 
-        <p style={{ fontSize: "11px", color: "#334155", margin: "0 0 1rem", lineHeight: 1.5 }}>
+        <p style={{ fontSize: "11px", color: "#334155", margin: "0 0 0.625rem", lineHeight: 1.5 }}>
           Crea las claves en Binance con permisos <strong style={{ color: "#64748B" }}>solo lectura</strong>. Nunca habilites trading ni retiros. El Secret se cifra con AES-256 y no puede recuperarse desde aquí.
         </p>
 
@@ -366,7 +366,7 @@ export function BinanceIntegrationPanel() {
               50%       { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
             }
           `}</style>
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "0.875rem 1.25rem" }}>
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "0.625rem 1.25rem" }}>
 
             {/* Fila única: estado + botones */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
