@@ -7,7 +7,7 @@ import { BinanceSyncDrawer } from "@/modules/integrations/binance/client/Binance
 
 interface Movement {
   id: string;
-  type: "BUY" | "SELL";
+  type: "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
   symbol: string;
   quantity: number;
   priceUsd: number;
@@ -16,6 +16,11 @@ interface Movement {
   deletedAt: string | null;
   deletedReason: string | null;
   suggestedTaxCategory: string;
+}
+
+interface FxRate {
+  usdToClp: number;
+  source: string;
 }
 
 interface FormState {
@@ -91,6 +96,15 @@ function formatNumber(value: number, decimals = 8) {
   }).format(value);
 }
 
+function formatClp(value: number) {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 function parseCsv(text: string): CsvRow[] {
   const lines = text.trim().split("\n");
   if (lines.length < 2) return [];
@@ -143,6 +157,30 @@ const cellStyle: React.CSSProperties = {
   verticalAlign: "middle",
   whiteSpace: "nowrap",
 };
+
+// ─── CoinLogo ─────────────────────────────────────────────────────────────────
+
+function CoinLogo({ symbol, size = 24 }: { symbol: string; size?: number }) {
+  const [error, setError] = useState(false);
+  const sym = symbol.toLowerCase().replace(/usdt$|usdc$|busd$|fdusd$/, "");
+  if (error) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: "50%", background: "#E2E8F0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size < 20 ? "7px" : "9px", fontWeight: 700, color: "#64748B", flexShrink: 0 }}>
+        {symbol.slice(0, 3)}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons/128/color/${sym}.png`}
+      alt={symbol}
+      width={size}
+      height={size}
+      onError={() => setError(true)}
+      style={{ borderRadius: "50%", flexShrink: 0 }}
+    />
+  );
+}
 
 // ─── StatCard ─────────────────────────────────────────────────────────────────
 
@@ -627,6 +665,7 @@ export default function PortafolioPage() {
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [fx, setFx] = useState<FxRate | null>(null);
 
   const [showBinance, setShowBinance] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -658,6 +697,10 @@ export default function PortafolioPage() {
 
   useEffect(() => {
     fetchMovements();
+    fetch("/api/portfolio")
+      .then(r => r.json())
+      .then(j => { if (j.ok && j.data?.fx) setFx(j.data.fx); })
+      .catch(() => {});
   }, []);
 
   function updateForm(field: keyof FormState, value: string) {
@@ -756,6 +799,8 @@ export default function PortafolioPage() {
   const sells = active.filter((m) => m.type === "SELL");
   const totalInvested = buys.reduce((acc, m) => acc + m.quantity * m.priceUsd + m.feeUsd, 0);
   const totalProceeds = sells.reduce((acc, m) => acc + (m.quantity * m.priceUsd - m.feeUsd), 0);
+  const uniqueAssets = new Set(active.map((m) => m.symbol)).size;
+  const totalInvestedClp = fx ? totalInvested * fx.usdToClp : null;
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
@@ -868,12 +913,14 @@ export default function PortafolioPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px", marginBottom: "1.5rem" }}>
-        <StatCard label="Movimientos activos" value={String(active.length)} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: "10px", marginBottom: "1.5rem" }}>
         <StatCard label="Compras (BUY)" value={String(buys.length)} />
         <StatCard label="Ventas (SELL)" value={String(sells.length)} />
         <StatCard label="Total invertido" value={formatUsd(totalInvested)} highlight />
         <StatCard label="Total recibido" value={formatUsd(totalProceeds)} />
+        <StatCard label="Dólar hoy" value={fx ? formatClp(fx.usdToClp) : "—"} />
+        <StatCard label="Total inv. CLP" value={totalInvestedClp !== null ? formatClp(totalInvestedClp) : "—"} highlight />
+        <StatCard label="Activos únicos" value={String(uniqueAssets)} />
       </div>
 
       {/* Sección importar CSV */}
@@ -1000,7 +1047,7 @@ export default function PortafolioPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr>
-                {["Fecha", "Tipo", "Símbolo", "Cantidad", "Precio USD", "Fee USD", "Total USD", "Estado", ""].map((col) => (
+                {["Fecha", "Tipo", "Símbolo", "Cantidad", "Precio USD", "Fee USD", "Total USD", "Total CLP", "Estado", ""].map((col) => (
                   <th key={col} style={{ padding: "0.625rem 0.75rem", textAlign: "left", fontSize: "0.6875rem", fontWeight: 600, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
                     {col}
                   </th>
@@ -1012,21 +1059,36 @@ export default function PortafolioPage() {
                 const isAnulado = Boolean(m.deletedAt);
                 const isAnulando = anularId === m.id;
                 const totalUsd = m.quantity * m.priceUsd;
+                const totalClp = fx ? totalUsd * fx.usdToClp : null;
+
+                const typeMeta: Record<string, { label: string; bg: string; color: string }> = {
+                  BUY:      { label: "COMPRA",   bg: "rgba(22,163,74,0.1)",   color: "#16A34A" },
+                  SELL:     { label: "VENTA",    bg: "rgba(220,38,38,0.1)",   color: "#DC2626" },
+                  DEPOSIT:  { label: "DEPÓSITO", bg: "rgba(59,130,246,0.1)",  color: "#3B82F6" },
+                  WITHDRAW: { label: "RETIRO",   bg: "rgba(245,158,11,0.1)",  color: "#D97706" },
+                };
+                const tm = typeMeta[m.type] ?? typeMeta.BUY;
 
                 return (
                   <React.Fragment key={m.id}>
                     <tr style={{ opacity: isAnulado ? 0.45 : 1, borderBottom: isAnulando ? "none" : "1px solid #F1F5F9" }}>
                       <td style={cellStyle}>{formatDate(m.executedAt)}</td>
                       <td style={cellStyle}>
-                        <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, background: m.type === "BUY" ? "rgba(22,163,74,0.1)" : "rgba(220,38,38,0.1)", color: m.type === "BUY" ? "#16A34A" : "#DC2626" }}>
-                          {m.type === "BUY" ? "COMPRA" : "VENTA"}
+                        <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, background: tm.bg, color: tm.color }}>
+                          {tm.label}
                         </span>
                       </td>
-                      <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D", fontFamily: "var(--font-display)" }}>{m.symbol}</td>
+                      <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <CoinLogo symbol={m.symbol} size={22} />
+                          <span style={{ fontFamily: "var(--font-display)" }}>{m.symbol}</span>
+                        </div>
+                      </td>
                       <td style={cellStyle}>{formatNumber(m.quantity, 8)}</td>
-                      <td style={cellStyle}>{formatUsd(m.priceUsd)}</td>
+                      <td style={cellStyle}>{m.priceUsd > 0 ? formatUsd(m.priceUsd) : "—"}</td>
                       <td style={cellStyle}>{formatUsd(m.feeUsd)}</td>
-                      <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D" }}>{formatUsd(totalUsd)}</td>
+                      <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D" }}>{totalUsd > 0 ? formatUsd(totalUsd) : "—"}</td>
+                      <td style={{ ...cellStyle, color: "#475569" }}>{totalClp !== null && totalClp > 0 ? formatClp(totalClp) : "—"}</td>
                       <td style={cellStyle}>
                         {isAnulado ? (
                           <span style={{ color: "#94A3B8", fontSize: "0.75rem" }}>Anulado</span>
@@ -1048,7 +1110,7 @@ export default function PortafolioPage() {
 
                     {isAnulando && (
                       <tr>
-                        <td colSpan={9} style={{ padding: "0.75rem", background: "rgba(220,38,38,0.04)", borderBottom: "1px solid #F1F5F9" }}>
+                        <td colSpan={10} style={{ padding: "0.75rem", background: "rgba(220,38,38,0.04)", borderBottom: "1px solid #F1F5F9" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                             <input
                               type="text"
