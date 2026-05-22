@@ -60,13 +60,14 @@ export async function fetchAccountInfo(
 export async function fetchTradesForSymbol(
   symbol: string,
   startTime: number,
-  endTime: number,
   apiKey: string,
   apiSecret: string,
 ): Promise<BinanceTradeRaw[]> {
+  // endTime is intentionally omitted: Binance rejects windows > 24h (-1127).
+  // Passing only startTime returns up to 1000 trades from that point forward.
   return binanceFetch<BinanceTradeRaw[]>(
     "/api/v3/myTrades",
-    { symbol, startTime, endTime, limit: 1000 },
+    { symbol, startTime, limit: 1000 },
     apiKey,
     apiSecret,
   );
@@ -117,14 +118,21 @@ export async function* fetchAllTradesWindowed(
   const ceiling = endMs !== undefined ? Math.min(endMs, Date.now()) : Date.now();
   let   cursor  = startMs;
 
-  // One request covering the full time range, paginating only if ≥1000 results returned.
-  // Previous 24h-sub-window approach caused 86 pairs × 31 windows × 300ms = 800s timeouts.
+  // endTime is NOT sent to Binance: the API rejects windows > 24h (-1127).
+  // Without endTime, Binance returns up to 1000 trades from cursor forward.
+  // We filter by ceiling locally and paginate only if exactly 1000 returned.
   while (cursor <= ceiling) {
-    const batch = await fetchTradesForSymbol(symbol, cursor, ceiling, apiKey, apiSecret);
-    if (batch.length === 0) break;
-    yield { batch, windowStart: cursor, windowEnd: ceiling };
-    if (batch.length < 1000) break;
-    cursor = batch[batch.length - 1].time + 1;
+    const raw = await fetchTradesForSymbol(symbol, cursor, apiKey, apiSecret);
+    if (raw.length === 0) break;
+
+    const batch = raw.filter(t => t.time <= ceiling);
+    if (batch.length > 0) {
+      yield { batch, windowStart: cursor, windowEnd: ceiling };
+    }
+
+    // If all 1000 results are within ceiling, there may be more — paginate.
+    if (raw.length < 1000 || raw[raw.length - 1].time > ceiling) break;
+    cursor = raw[raw.length - 1].time + 1;
   }
 }
 
