@@ -816,7 +816,7 @@ export default function PortafolioPage() {
               gap: "7px",
             }}
           >
-            <img src="/binance-logo.svg" alt="" width="18" height="18" aria-hidden="true" />
+            <img src="/binance-symbol.svg" alt="" width="20" height="20" aria-hidden="true" />
             Binance
           </button>
 
