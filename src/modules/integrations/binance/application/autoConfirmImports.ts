@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { confirmImport } from "../infrastructure/exchangeImportRepository";
+import { fetchHistoricalCryptoPrice } from "./fetchHistoricalCryptoPrice";
 
 // Eventos que se auto-confirman sin intervención manual.
 const AUTO_CONFIRM_TYPES = new Set([
@@ -70,10 +71,13 @@ export async function autoConfirmImports(
       const normalized = JSON.parse(record.normalizedJson ?? "{}") as ParsedNormalized;
 
       // ── Crear movimiento de portafolio ──
-      // DEPOSIT/WITHDRAW: trazabilidad patrimonial, priceUsd=0 (no evento tributario)
-      // SPOT_BUY/SPOT_SELL: afectan costo y PnL
       const occurredAt = new Date(normalized.occurredAt);
       const isTransfer = eventType === "EXTERNAL_DEPOSIT" || eventType === "EXTERNAL_WITHDRAW";
+
+      // Para depósitos y retiros: obtener precio histórico desde Binance público
+      const priceUsd = isTransfer
+        ? await fetchHistoricalCryptoPrice(normalized.symbol, occurredAt)
+        : normalized.priceUsd;
 
       const movement = await prisma.portfolioMovement.create({
         data: {
@@ -81,7 +85,7 @@ export async function autoConfirmImports(
           type:       normalized.movementType,
           symbol:     normalized.symbol,
           quantity:   normalized.quantity,
-          priceUsd:   isTransfer ? 0 : normalized.priceUsd,
+          priceUsd,
           feeUsd:     normalized.feeUsd,
           executedAt: occurredAt,
           source:     "BINANCE",

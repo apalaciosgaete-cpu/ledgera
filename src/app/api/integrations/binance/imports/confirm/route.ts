@@ -12,6 +12,7 @@ import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 import type { NormalizedImportRecord } from "@/modules/integrations/binance/domain/binanceTypes";
+import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/application/fetchHistoricalCryptoPrice";
 
 type ConfirmBody = {
   action:   "CONFIRM" | "REJECT" | "REVIEW";
@@ -81,15 +82,19 @@ export async function POST(request: NextRequest) {
 
     const normalized = JSON.parse(record.normalizedJson ?? "{}") as NormalizedImportRecord;
 
-    // DEPOSIT/WITHDRAW: trazabilidad patrimonial, priceUsd=0 (no evento tributario)
+    // DEPOSIT/WITHDRAW: precio histórico desde Binance público en la fecha del evento
     if (normalized.movementType === "DEPOSIT" || normalized.movementType === "WITHDRAW") {
+      const historicalPrice = await fetchHistoricalCryptoPrice(
+        normalized.symbol,
+        new Date(normalized.occurredAt),
+      );
       const transferMovement = await prisma.portfolioMovement.create({
         data: {
           userId:     auth.user.id,
           type:       normalized.movementType,
           symbol:     normalized.symbol,
           quantity:   normalized.quantity,
-          priceUsd:   0,
+          priceUsd:   historicalPrice,
           feeUsd:     normalized.feeUsd,
           executedAt: normalized.occurredAt,
           source:     "BINANCE",
