@@ -73,7 +73,7 @@ function pillStyle(p: SyncPeriod) {
   switch (p.status) {
     case "COMPLETED": return { bg: "rgba(22,163,74,0.12)", border: "rgba(22,163,74,0.25)", color: "#4ADE80", value: p.importedCount > 0 ? (p.importedCount > 99 ? "99+" : String(p.importedCount)) : "✓" };
     case "EMPTY":     return { bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)", color: "#334155", value: "—" };
-    case "FAILED":    return { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", color: "#F87171", value: "✗" };
+    case "FAILED":    return { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", color: "#F87171", value: "!" };
     case "RUNNING":   return { bg: "rgba(240,185,11,0.08)", border: "rgba(240,185,11,0.25)", color: "#F0B90B", value: "…" };
     default:          return { bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)", color: "#475569", value: "○" };
   }
@@ -90,7 +90,7 @@ function MonthPill({ label, period, onClick, syncing }: { label: string; period?
   return (
     <span
       onClick={onClick}
-      title={`${label}: ${period.status}${period.importedCount > 0 ? ` · ${period.importedCount} op.` : ""}${onClick ? " — clic para re-sincronizar" : ""}`}
+      title={`${label}: ${period.status === "FAILED" ? "Error de sync — clic para reintentar" : period.status}${period.importedCount > 0 ? ` · ${period.importedCount} op.` : ""}${onClick && period.status !== "FAILED" ? " — clic para re-sincronizar" : ""}`}
       style={{ width: "32px", height: "38px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", borderRadius: "5px", background: isLoading ? "rgba(240,185,11,0.15)" : s.bg, border: `1px solid ${isLoading ? "rgba(240,185,11,0.5)" : s.border}`, flexShrink: 0, cursor: onClick ? "pointer" : "default", transition: "opacity 0.15s" }}
     >
       <span style={{ fontSize: "9px", color: "#64748B", lineHeight: 1 }}>{label}</span>
@@ -116,7 +116,7 @@ function YearSummaryBadges({ monthMap, maxMonth }: { monthMap?: Map<number, Sync
     <span style={{ display: "flex", gap: "6px", fontSize: "10px" }}>
       {done   > 0 && <span style={{ color: "#4ADE80" }}>{done}✓</span>}
       {pending > 0 && <span style={{ color: "#F59E0B" }}>{pending}○</span>}
-      {failed  > 0 && <span style={{ color: "#F87171" }}>{failed}✗</span>}
+      {failed  > 0 && <span title="Meses con error de sync — haz clic para reintentar" style={{ color: "#F87171" }}>{failed}!</span>}
       {done === 0 && pending === 0 && failed === 0 && <span style={{ color: "#1e293b" }}>vacío</span>}
     </span>
   );
@@ -294,7 +294,7 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (conn?.connected && conn.status === "ACTIVE") {
       void loadCalendar();
-      if ((conn.pendingCount ?? 0) > 0) void loadImports();
+      void loadImports(); // siempre cargar — pendingCount puede estar desactualizado
     }
   }, [conn, loadCalendar, loadImports]);
 
@@ -500,8 +500,9 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                       )}
                       {calendar.totalFailed > 0 && (
                         <button type="button" onClick={() => setShowPendingList(v => !v)}
+                          title="Meses donde el sync falló — NO son validaciones, son errores de API"
                           style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: fonts.body }}>
-                          <span style={{ color: "#F87171", textDecoration: "underline", fontSize: "11px" }}> · {calendar.totalFailed} fallidos</span>
+                          <span style={{ color: "#F87171", textDecoration: "underline", fontSize: "11px" }}> · {calendar.totalFailed} con error</span>
                         </button>
                       )}
                     </span>
