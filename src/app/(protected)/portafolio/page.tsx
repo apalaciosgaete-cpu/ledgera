@@ -927,7 +927,6 @@ export default function PortafolioPage() {
         <StatCard label="Total invertido" value={formatUsd(totalInvested)} highlight />
         <StatCard label="Dólar hoy" value={fx ? formatClp(fx.usdToClp) : "—"} />
         <StatCard label="Total CLP" value={totalInvestedClp !== null ? formatClp(totalInvestedClp) : "—"} highlight />
-        <StatCard label="Activos únicos" value={String(uniqueAssets)} />
       </div>
 
       {/* Sección importar CSV */}
