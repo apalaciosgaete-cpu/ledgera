@@ -1,5 +1,4 @@
 import {
-  fetchAccountInfo,
   fetchAllDepositsWindowed,
   fetchAllTradesWindowed,
   fetchAllWithdrawalsWindowed,
@@ -12,48 +11,33 @@ import {
 } from "./normalizeBinanceTrade";
 import { BINANCE_SPOT_PAIRS } from "../domain/binanceTypes";
 
-const STABLECOIN_ASSETS = new Set(["USDT", "USDC", "BUSD", "FDUSD", "TUSD", "DAI", "USDP"]);
-const DYNAMIC_QUOTES    = ["USDT", "USDC", "BUSD", "FDUSD", "BTC"];
+// Maximum pair checks per month-sync to stay within Vercel 60s timeout.
+// Budget: 60s / ~500ms per call ≈ 120 calls − 2 (deposits/withdrawals) = ~90 pairs.
+const MAX_PAIRS = 88;
 
-// Build pair list from:
-// 1. Current account balances (non-zero, non-stablecoin assets)
-// 2. Coins discovered during deposit/withdrawal sync for this period
-// 3. Static BINANCE_SPOT_PAIRS as fallback coverage
-async function buildPairList(
-  apiKey:          string,
-  apiSecret:       string,
-  discoveredCoins: Set<string>,
-): Promise<string[]> {
+const STABLECOIN_ASSETS = new Set(["USDT", "USDC", "BUSD", "FDUSD", "TUSD", "DAI", "USDP"]);
+
+// Build pair list from coins seen in this period's deposits/withdrawals
+// merged with the static BINANCE_SPOT_PAIRS.
+// Dynamic coins only get a USDT pair (most liquid/common) to keep overhead minimal.
+function buildPairList(discoveredCoins: Set<string>): string[] {
   const seen  = new Set<string>();
   const pairs: string[] = [];
 
-  function addPairsForAsset(asset: string) {
-    const a = asset.toUpperCase();
-    if (STABLECOIN_ASSETS.has(a)) return;
-    for (const q of DYNAMIC_QUOTES) {
-      const pair = `${a}${q}`;
-      if (!seen.has(pair)) { seen.add(pair); pairs.push(pair); }
-    }
+  // Dynamic pairs first — coins active in this specific period take priority.
+  for (const coin of discoveredCoins) {
+    const a = coin.toUpperCase();
+    if (STABLECOIN_ASSETS.has(a)) continue;
+    const pair = `${a}USDT`;
+    if (!seen.has(pair)) { seen.add(pair); pairs.push(pair); }
   }
 
-  // Coins seen in deposits/withdrawals this period — most reliable source
-  for (const coin of discoveredCoins) addPairsForAsset(coin);
-
-  // Current account balances — catches coins still held
-  try {
-    const info = await fetchAccountInfo(apiKey, apiSecret);
-    for (const { asset, free, locked } of info.balances) {
-      if (parseFloat(free) + parseFloat(locked) <= 0) continue;
-      addPairsForAsset(asset);
-    }
-  } catch { /* fall back to discovered + static */ }
-
-  // Static list as broad coverage fallback
+  // Static list covers broad historical coverage.
   for (const p of BINANCE_SPOT_PAIRS) {
     if (!seen.has(p)) { seen.add(p); pairs.push(p); }
   }
 
-  return pairs;
+  return pairs.slice(0, MAX_PAIRS);
 }
 
 export type MonthSyncResult = {
@@ -110,8 +94,8 @@ export async function syncBinanceMonth(
     errors.push(`withdrawals: ${err instanceof Error ? err.message : String(err)}`);
   }
 
-  // ── 3. Lista de pares extendida (balances + coins del período + estáticos) ─
-  const pairs = await buildPairList(apiKey, apiSecret, discoveredCoins);
+  // ── 3. Lista de pares (coins del período + estáticos, cap MAX_PAIRS) ───────
+  const pairs = buildPairList(discoveredCoins);
 
   // ── 4. Trades por símbolo ─────────────────────────────────────────────────
   for (const pair of pairs) {
