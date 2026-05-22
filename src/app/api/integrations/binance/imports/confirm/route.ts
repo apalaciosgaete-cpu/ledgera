@@ -81,9 +81,22 @@ export async function POST(request: NextRequest) {
 
     const normalized = JSON.parse(record.normalizedJson ?? "{}") as NormalizedImportRecord;
 
-    // DEPOSIT/WITHDRAW: confirmar sin crear movimiento en el motor FIFO
+    // DEPOSIT/WITHDRAW: trazabilidad patrimonial, priceUsd=0 (no evento tributario)
     if (normalized.movementType === "DEPOSIT" || normalized.movementType === "WITHDRAW") {
-      await confirmImport(recordId, auth.user.id, null);
+      const transferMovement = await prisma.portfolioMovement.create({
+        data: {
+          userId:     auth.user.id,
+          type:       normalized.movementType,
+          symbol:     normalized.symbol,
+          quantity:   normalized.quantity,
+          priceUsd:   0,
+          feeUsd:     normalized.feeUsd,
+          executedAt: normalized.occurredAt,
+          source:     "BINANCE",
+          externalId: normalized.externalId,
+        },
+      });
+      await confirmImport(recordId, auth.user.id, transferMovement.id);
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
         provider:       "BINANCE",
         status:         "SUCCESS",
@@ -91,7 +104,7 @@ export async function POST(request: NextRequest) {
         externalId:     record.externalId,
         externalType:   record.externalType,
       });
-      return ok({ recordId, status: "CONFIRMED" }, "Registro confirmado (no tributario).");
+      return ok({ recordId, status: "CONFIRMED", movementId: transferMovement.id }, "Registro confirmado (trazabilidad patrimonial).");
     }
 
     // BUY/SELL: verificar período abierto

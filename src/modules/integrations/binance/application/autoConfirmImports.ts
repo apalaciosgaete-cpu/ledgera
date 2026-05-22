@@ -69,15 +69,11 @@ export async function autoConfirmImports(
 
       const normalized = JSON.parse(record.normalizedJson ?? "{}") as ParsedNormalized;
 
-      // ── Depósitos y retiros: confirmar sin movimiento de portafolio ──
-      if (eventType === "EXTERNAL_DEPOSIT" || eventType === "EXTERNAL_WITHDRAW") {
-        await confirmImport(record.id, userId, null);
-        confirmed++;
-        continue;
-      }
-
-      // ── SPOT_BUY / SPOT_SELL: crear movimiento en portafolio ──
+      // ── Crear movimiento de portafolio ──
+      // DEPOSIT/WITHDRAW: trazabilidad patrimonial, priceUsd=0 (no evento tributario)
+      // SPOT_BUY/SPOT_SELL: afectan costo y PnL
       const occurredAt = new Date(normalized.occurredAt);
+      const isTransfer = eventType === "EXTERNAL_DEPOSIT" || eventType === "EXTERNAL_WITHDRAW";
 
       const movement = await prisma.portfolioMovement.create({
         data: {
@@ -85,7 +81,7 @@ export async function autoConfirmImports(
           type:       normalized.movementType,
           symbol:     normalized.symbol,
           quantity:   normalized.quantity,
-          priceUsd:   normalized.priceUsd,
+          priceUsd:   isTransfer ? 0 : normalized.priceUsd,
           feeUsd:     normalized.feeUsd,
           executedAt: occurredAt,
           source:     "BINANCE",
