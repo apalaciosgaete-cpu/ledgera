@@ -12,7 +12,7 @@ import {
 import { BINANCE_SPOT_PAIRS } from "../domain/binanceTypes";
 
 function getSymbolLimit(): number {
-  const val = Number(process.env.BINANCE_SYNC_SYMBOL_LIMIT ?? "35");
+  const val = Number(process.env.BINANCE_SYNC_SYMBOL_LIMIT ?? "100");
   return Number.isFinite(val) && val > 0 ? Math.min(val, BINANCE_SPOT_PAIRS.length) : 35;
 }
 

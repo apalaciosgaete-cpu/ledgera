@@ -104,6 +104,7 @@ export type SyncResult = {
 
 export const BINANCE_BASE_URL  = "https://api.binance.com";
 export const BINANCE_SPOT_PAIRS = [
+  // ── USDT (principal) ──────────────────────────────────────────────────────
   "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
   "ADAUSDT", "DOGEUSDT", "DOTUSDT", "AVAXUSDT", "LTCUSDT",
   "LINKUSDT", "MATICUSDT", "ATOMUSDT", "UNIUSDT", "AAVEUSDT",
@@ -111,6 +112,25 @@ export const BINANCE_SPOT_PAIRS = [
   "VETUSDT", "FTMUSDT", "SANDUSDT", "MANAUSDT", "AXSUSDT",
   "GALAUSDT", "CHZUSDT", "ENJUSDT", "ZILUSDT", "BATUSDT",
   "ETCUSDT", "BCHUSDT", "FILUSDT", "ICPUSDT", "THETAUSDT",
+  "OPUSDT", "ARBUSDT", "APTUSDT", "SUIUSDT", "SEIUSDT",
+
+  // ── USDC ─────────────────────────────────────────────────────────────────
+  "BTCUSDC", "ETHUSDC", "SOLUSDC", "BNBUSDC", "XRPUSDC",
+  "ADAUSDC", "DOGEUSDC", "AVAXUSDC", "LTCUSDC", "LINKUSDC",
+  "DOTUSDC", "ATOMUSDC", "BCHUSDC", "ETCUSDC", "OPUSDC",
+  "ARBUSDC", "APTUSDC", "SUIUSDC",
+
+  // ── FDUSD (reemplazó BUSD en 2023) ───────────────────────────────────────
+  "BTCFDUSD", "ETHFDUSD", "SOLFDUSD", "BNBFDUSD", "XRPFDUSD",
+  "ADAFDUSD", "DOGEFDUSD", "AVAXFDUSD",
+
+  // ── BUSD (histórico, Binance lo descontinuó en 2023) ─────────────────────
+  "BTCBUSD", "ETHBUSD", "BNBBUSD", "SOLBUSD", "XRPBUSD",
+  "ADABUSD", "DOGEBUSD", "DOTBUSD", "AVAXBUSD", "LTCBUSD",
+
+  // ── Pares BTC (cruzados) ──────────────────────────────────────────────────
+  "ETHBTC", "BNBBTC", "SOLBTC", "XRPBTC", "ADABTC",
+  "DOTBTC", "LINKBTC", "LTCBTC", "BCHBTC", "ETCBTC",
 ];
 
 export const MS_24H  = 24  * 60 * 60 * 1000;
