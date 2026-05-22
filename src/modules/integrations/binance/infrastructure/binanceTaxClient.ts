@@ -36,3 +36,51 @@ export async function validateBinanceTaxCredentials(
   await binanceTaxFetch("/api/v3/account", { recvWindow: 10000 }, apiKey, apiSecret);
   return true;
 }
+
+type ProbeResult = {
+  path:    string;
+  ok:      boolean;
+  status?: number;
+  sample?: unknown;
+  error?:  string;
+};
+
+const TAX_ENDPOINT_CANDIDATES = [
+  "/sapi/v1/tax/query",
+  "/sapi/v1/tax/transactions",
+  "/sapi/v1/tax/report",
+  "/sapi/v1/accountSnapshot",
+  "/sapi/v1/capital/deposit/hisrec",
+  "/sapi/v1/capital/withdraw/history",
+] as const;
+
+export async function probeBinanceTaxApi(
+  apiKey:    string,
+  apiSecret: string,
+): Promise<ProbeResult[]> {
+  const results: ProbeResult[] = [];
+
+  for (const path of TAX_ENDPOINT_CANDIDATES) {
+    try {
+      const data = await binanceTaxFetch<unknown>(
+        path,
+        { recvWindow: 10000 },
+        apiKey,
+        apiSecret,
+      );
+      results.push({ path, ok: true, sample: data });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // Extract HTTP status from error message if present ("→ 400:", "→ 403:", etc.)
+      const statusMatch = /→ (\d{3})/.exec(msg);
+      results.push({
+        path,
+        ok:     false,
+        status: statusMatch ? Number(statusMatch[1]) : undefined,
+        error:  msg,
+      });
+    }
+  }
+
+  return results;
+}
