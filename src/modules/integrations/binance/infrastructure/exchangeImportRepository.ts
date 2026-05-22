@@ -49,7 +49,7 @@ export async function listPendingImports(userId: string, provider?: string) {
 export async function confirmImport(
   recordId:   string,
   userId:     string,
-  movementId: string,
+  movementId: string | null,
 ) {
   return prisma.exchangeImportRecord.update({
     where: { id: recordId, userId },

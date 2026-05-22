@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     // DEPOSIT/WITHDRAW: confirmar sin crear movimiento en el motor FIFO
     if (normalized.movementType === "DEPOSIT" || normalized.movementType === "WITHDRAW") {
-      await confirmImport(recordId, auth.user.id, "N/A-" + recordId);
+      await confirmImport(recordId, auth.user.id, null);
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
         provider:       "BINANCE",
         status:         "SUCCESS",

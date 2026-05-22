@@ -71,7 +71,7 @@ export async function autoConfirmImports(
 
       // ── Depósitos y retiros: confirmar sin movimiento de portafolio ──
       if (eventType === "EXTERNAL_DEPOSIT" || eventType === "EXTERNAL_WITHDRAW") {
-        await confirmImport(record.id, userId, `N/A-${record.id}`);
+        await confirmImport(record.id, userId, null);
         confirmed++;
         continue;
       }
