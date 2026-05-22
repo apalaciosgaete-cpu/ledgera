@@ -239,7 +239,7 @@ function evBadgeStyle(type: string | null) {
 
 // ── Main drawer ────────────────────────────────────────────────────────────────
 
-export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
+export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => void; onSyncComplete?: () => void }) {
   const [conn,           setConn]           = useState<ConnectionStatus | null>(null);
   const [loadingConn,    setLoadingConn]    = useState(true);
   const [syncing,        setSyncing]        = useState(false);
@@ -309,6 +309,7 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
       await loadStatus();
       await loadCalendar();
       await loadImports();
+      if (res.data.autoConfirmed > 0) onSyncComplete?.();
     } catch (e) {
       setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error durante la sincronización." });
     } finally {
@@ -339,6 +340,7 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
       await httpClient("/api/portfolio/backfill-prices", { method: "POST", auth: true, body: {} }).catch(() => {});
       await loadCalendar();
       await loadImports();
+      if (res.data.autoConfirmed > 0) onSyncComplete?.();
     } catch (e) {
       setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al sincronizar el mes." });
     } finally {

@@ -1142,7 +1142,7 @@ export default function PortafolioPage() {
         </div>
       )}
 
-      {showBinance && <BinanceSyncDrawer onClose={() => setShowBinance(false)} />}
+      {showBinance && <BinanceSyncDrawer onClose={() => setShowBinance(false)} onSyncComplete={fetchMovements} />}
     </div>
   );
 }
