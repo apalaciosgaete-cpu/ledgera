@@ -9,6 +9,7 @@ export type BinanceAuditAction = Extract<
   AdminAuditAction,
   | "BINANCE_CONNECTED"
   | "BINANCE_CONNECTION_TESTED"
+  | "BINANCE_TAX_CONNECTED"
   | "BINANCE_SYNC_STARTED"
   | "BINANCE_SYNC_COMPLETED"
   | "BINANCE_SYNC_FAILED"
@@ -17,7 +18,7 @@ export type BinanceAuditAction = Extract<
 >;
 
 export type BinanceAuditMetadata = {
-  provider:        "BINANCE";
+  provider:        "BINANCE" | "BINANCE_TAX";
   status:          "SUCCESS" | "FAILED";
   connectionId?:   string;
   importRecordId?: string;
