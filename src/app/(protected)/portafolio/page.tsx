@@ -1084,8 +1084,8 @@ export default function PortafolioPage() {
                           {tm.label}
                         </span>
                       </td>
-                      <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D" }}>
-                        <CoinLogo symbol={m.symbol} size={28} />
+                      <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D", fontFamily: "var(--font-display)" }}>
+                        {m.symbol}
                       </td>
                       <td style={cellStyle}>{formatNumber(m.quantity, 8)}</td>
                       <td style={cellStyle}>{m.priceUsd > 0 ? formatUsd(m.priceUsd) : "—"}</td>
