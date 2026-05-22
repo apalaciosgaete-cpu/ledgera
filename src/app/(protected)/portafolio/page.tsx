@@ -794,12 +794,18 @@ export default function PortafolioPage() {
     }
   }
 
-  const active = movements.filter((m) => !m.deletedAt);
-  const buys = active.filter((m) => m.type === "BUY");
-  const sells = active.filter((m) => m.type === "SELL");
-  const totalInvested = buys.reduce((acc, m) => acc + m.quantity * m.priceUsd + m.feeUsd, 0);
+  const active      = movements.filter((m) => !m.deletedAt);
+  const buys        = active.filter((m) => m.type === "BUY");
+  const sells       = active.filter((m) => m.type === "SELL");
+  const deposits    = active.filter((m) => m.type === "DEPOSIT");
+  const withdrawals = active.filter((m) => m.type === "WITHDRAW");
+
+  // Total invertido = compras + depósitos (valor histórico en fecha de entrada)
+  const totalInvested = [...buys, ...deposits].reduce(
+    (acc, m) => acc + m.quantity * m.priceUsd + m.feeUsd, 0,
+  );
   const totalProceeds = sells.reduce((acc, m) => acc + (m.quantity * m.priceUsd - m.feeUsd), 0);
-  const uniqueAssets = new Set(active.map((m) => m.symbol)).size;
+  const uniqueAssets  = new Set(active.map((m) => m.symbol)).size;
   const totalInvestedClp = fx ? totalInvested * fx.usdToClp : null;
 
   // ── Loading ────────────────────────────────────────────────────────────────
@@ -915,9 +921,10 @@ export default function PortafolioPage() {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: "10px", marginBottom: "1.5rem" }}>
         <StatCard label="Compras" value={String(buys.length)} />
+        <StatCard label="Depósitos" value={String(deposits.length)} />
         <StatCard label="Ventas" value={String(sells.length)} />
+        <StatCard label="Retiros" value={String(withdrawals.length)} />
         <StatCard label="Total invertido" value={formatUsd(totalInvested)} highlight />
-        <StatCard label="Total recibido" value={formatUsd(totalProceeds)} />
         <StatCard label="Dólar hoy" value={fx ? formatClp(fx.usdToClp) : "—"} />
         <StatCard label="Total CLP" value={totalInvestedClp !== null ? formatClp(totalInvestedClp) : "—"} highlight />
         <StatCard label="Activos únicos" value={String(uniqueAssets)} />
