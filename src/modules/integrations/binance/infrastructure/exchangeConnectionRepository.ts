@@ -68,9 +68,8 @@ export async function setSyncReset(connectionId: string) {
     where: { id: connectionId },
     data:  {
       syncStatus:     "IDLE",
-      syncFinishedAt: new Date(),
-      lastSyncStatus: "ERROR",
-      lastSyncError:  "Sync reiniciado manualmente",
+      syncStartedAt:  null,
+      lastSyncError:  null,
     },
   });
 }
