@@ -238,6 +238,8 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
       const res = await httpClient<ApiResponse<SyncResult>>("/api/integrations/binance/sync", { method: "POST", auth: true, body: {} });
       setSyncResult(res.data);
       setMsg({ type: res.data.errors.length > 0 ? "warn" : "success", text: res.message });
+      // Actualizar precios históricos de depósitos/retiros con priceUsd=0
+      await httpClient("/api/portfolio/backfill-prices", { method: "POST", auth: true, body: {} }).catch(() => {});
       await loadStatus();
       await loadCalendar();
       await loadImports();
