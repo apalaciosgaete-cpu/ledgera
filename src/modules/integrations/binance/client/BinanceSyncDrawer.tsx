@@ -553,7 +553,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
                     </div>
                   </div>
                   {!taxConn?.connected && !loadingTaxConn && (
-                    <a href="/configuracion" style={{ display: "inline-flex", marginTop: "8px", fontSize: "12px", color: "#F0B90B", textDecoration: "none", fontWeight: 700 }}>
+                    <a href="/integrations/binance/tax" style={{ display: "inline-flex", marginTop: "8px", fontSize: "12px", color: "#F0B90B", textDecoration: "none", fontWeight: 700 }}>
                       Conectar API tributaria →
                     </a>
                   )}
