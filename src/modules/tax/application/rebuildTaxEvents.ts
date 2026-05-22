@@ -241,8 +241,15 @@ export async function rebuildTaxEvents(userId: string): Promise<RebuildResult> {
       if (!Number.isFinite(priceUsd) || priceUsd < 0)  continue;
       if (!Number.isFinite(feeUsd)   || feeUsd   < 0)  continue;
 
-      if (type === "BUY") {
+      if (type === "BUY" || type === "DEPOSIT") {
+        // DEPOSIT: costo desconocido → priceUsd=0 (base conservadora, sin PnL declarado)
         addBuyLot({ inventory, symbol, quantity, priceUsd, feeUsd });
+        continue;
+      }
+
+      if (type === "WITHDRAW") {
+        // Retiro externo: reduce inventario sin generar evento tributario
+        consumeFifoLots({ inventory, symbol, quantity });
         continue;
       }
 
