@@ -398,7 +398,9 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                 {loadingCal && !calendar ? (
                   <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Cargando cobertura...</p>
                 ) : calendar ? (
-                  <SyncCalendarGrid periods={calendar.periods} />
+                  <div style={{ maxHeight: "220px", overflowY: "auto" }}>
+                    <SyncCalendarGrid periods={calendar.periods} />
+                  </div>
                 ) : null}
               </div>
 
