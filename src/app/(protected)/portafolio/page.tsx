@@ -802,9 +802,9 @@ export default function PortafolioPage() {
           <button
             onClick={() => setShowBinance(true)}
             style={{
-              background: "rgba(240,185,11,0.1)",
-              color: "#F0B90B",
-              border: "1px solid rgba(240,185,11,0.3)",
+              background: "#1E2026",
+              color: "#F3BA2F",
+              border: "none",
               borderRadius: "10px",
               padding: "0.625rem 1.25rem",
               fontSize: "0.875rem",
@@ -813,7 +813,7 @@ export default function PortafolioPage() {
               fontFamily: "var(--font-body)",
               display: "flex",
               alignItems: "center",
-              gap: "7px",
+              gap: "8px",
             }}
           >
             <img src="/binance-symbol.svg" alt="" width="20" height="20" aria-hidden="true" />
