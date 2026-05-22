@@ -397,21 +397,24 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
           <button type="button" onClick={onClose} style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer", fontSize: "18px", lineHeight: 1, padding: "4px", flexShrink: 0 }}>✕</button>
         </div>
 
-        {/* Body */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {/* Body — panel superior (sync+calendario) + panel inferior (validación, siempre visible) */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
           {loadingConn ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569", fontSize: "13px", padding: "2rem 0" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px", color: "#475569", fontSize: "13px", padding: "2rem 1.25rem" }}>
               <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.1)", borderTop: "2px solid #F0B90B", borderRadius: "50%", animation: "bn-spin 0.8s linear infinite" }} />
               Verificando conexión...
             </div>
           ) : !isConnected ? (
-            <div style={{ padding: "2rem 0", textAlign: "center" }}>
-              <p style={{ color: "#475569", fontSize: "13px", margin: "0 0 8px" }}>Sin conexión con Binance.</p>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 1.25rem", textAlign: "center", gap: "8px" }}>
+              <p style={{ color: "#475569", fontSize: "13px", margin: 0 }}>Sin conexión con Binance.</p>
               <a href="/configuracion" style={{ fontSize: "12px", color: "#4ADE80" }}>Configurar credenciales →</a>
             </div>
           ) : (
             <>
+              {/* ── Panel superior: controles + calendario (max 55% alto) ──── */}
+              <div style={{ flex: "0 0 auto", maxHeight: "55%", overflowY: "auto", padding: "0.75rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+
               {/* Alerta */}
               {msg && (
                 <div style={{ fontSize: "12px", color: msg.type === "success" ? "#4ADE80" : msg.type === "error" ? "#F87171" : msg.type === "warn" ? "#FCD34D" : "#93C5FD", background: msg.type === "success" ? "rgba(22,163,74,0.06)" : msg.type === "error" ? "rgba(239,68,68,0.06)" : msg.type === "warn" ? "rgba(245,158,11,0.06)" : "rgba(96,165,250,0.06)", border: `1px solid ${msg.type === "success" ? "rgba(22,163,74,0.2)" : msg.type === "error" ? "rgba(239,68,68,0.2)" : msg.type === "warn" ? "rgba(245,158,11,0.2)" : "rgba(96,165,250,0.2)"}`, borderRadius: "8px", padding: "10px 14px" }}>
@@ -559,151 +562,123 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                 ) : null}
               </div>
 
-              {/* Excepciones — solo eventos que requieren decisión humana */}
-              {((conn.pendingCount ?? 0) > 0 || imports.length > 0) && (
-                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", overflow: "hidden", position: "relative" }}>
+              </div>{/* /panel superior */}
 
-                  {/* Panel de detalle — overlay dentro de la sección */}
-                  {selectedImport && (() => {
-                    let norm: NormalizedJson = { movementType: selectedImport.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
-                    try { norm = JSON.parse(selectedImport.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
-                    const ev  = evBadgeStyle(selectedImport.normalizedEventType);
-                    const tt  = taxTreatmentLabel(selectedImport.taxTreatment);
-                    const reason = reviewReason(selectedImport);
-                    return (
-                      <div style={{ position: "absolute", inset: 0, background: "#0F172A", zIndex: 5, display: "flex", flexDirection: "column", borderRadius: "10px" }}>
-                        <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: "10px" }}>
-                          <button type="button" onClick={() => setSelectedImport(null)}
-                            style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer", fontSize: "13px", padding: 0, fontFamily: fonts.body }}>
-                            ← Volver
-                          </button>
-                          <span style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Detalle del evento</span>
+              {/* ── Panel inferior: validación manual (siempre visible) ──────── */}
+              <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
+
+                {/* Overlay de detalle */}
+                {selectedImport && (() => {
+                  let norm: NormalizedJson = { movementType: selectedImport.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
+                  try { norm = JSON.parse(selectedImport.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
+                  const ev     = evBadgeStyle(selectedImport.normalizedEventType);
+                  const tt     = taxTreatmentLabel(selectedImport.taxTreatment);
+                  const reason = reviewReason(selectedImport);
+                  return (
+                    <div style={{ position: "absolute", inset: 0, background: "#0F172A", zIndex: 5, display: "flex", flexDirection: "column" }}>
+                      <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+                        <button type="button" onClick={() => setSelectedImport(null)} style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer", fontSize: "13px", padding: 0, fontFamily: fonts.body }}>← Volver</button>
+                        <span style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Detalle del evento</span>
+                      </div>
+                      <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: ev.color, background: ev.bg, border: `1px solid ${ev.color}30`, borderRadius: "4px", padding: "3px 8px" }}>{selectedImport.normalizedEventType ?? selectedImport.externalType}</span>
+                          <span style={{ fontSize: "15px", fontWeight: 700, color: "#F1F5F9" }}>{norm.symbol}</span>
+                          <span style={{ fontSize: "12px", color: "#64748B" }}>{new Date(selectedImport.occurredAt).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" })}</span>
                         </div>
-                        <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-
-                          {/* Evento + símbolo */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: ev.color, background: ev.bg, border: `1px solid ${ev.color}30`, borderRadius: "4px", padding: "3px 8px" }}>
-                              {selectedImport.normalizedEventType ?? selectedImport.externalType}
-                            </span>
-                            <span style={{ fontSize: "15px", fontWeight: 700, color: "#F1F5F9" }}>{norm.symbol}</span>
-                            <span style={{ fontSize: "12px", color: "#64748B" }}>
-                              {new Date(selectedImport.occurredAt).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" })}
-                            </span>
-                          </div>
-
-                          {/* Datos del movimiento */}
-                          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "6px" }}>
-                            {[
-                              ["Cantidad",   norm.quantity > 0 ? norm.quantity.toFixed(8).replace(/\.?0+$/, "") : "—"],
-                              ["Precio USD", norm.priceUsd > 0 ? `$${norm.priceUsd.toFixed(2)}` : "—"],
-                              ["Fee USD",    norm.feeUsd > 0   ? `$${norm.feeUsd.toFixed(4)}`   : "$0"],
-                              ["Fuente",     "Binance · " + (selectedImport.externalType)],
-                              ["ID externo", selectedImport.externalId],
-                            ].map(([label, value]) => (
-                              <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
-                                <span style={{ fontSize: "11px", color: "#475569" }}>{label}</span>
-                                <span style={{ fontSize: "11px", color: "#94A3B8", fontFamily: "monospace", textAlign: "right", wordBreak: "break-all" }}>{value}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Clasificación LEDGERA */}
-                          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <p style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>Clasificación LEDGERA</p>
-                            {[
-                              ["Tratamiento tributario", <span style={{ color: tt.color, fontWeight: 600 }}>{tt.label}</span>],
-                              ["Efecto inventario FIFO", selectedImport.inventoryEffect ?? "—"],
-                              ["Efecto económico",       selectedImport.economicEffect  ?? "—"],
-                            ].map(([label, value]) => (
-                              <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-                                <span style={{ fontSize: "11px", color: "#475569" }}>{label}</span>
-                                <span style={{ fontSize: "11px", color: "#94A3B8" }}>{value}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Razón de revisión */}
-                          <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "8px", padding: "0.75rem" }}>
-                            <p style={{ fontSize: "11px", fontWeight: 700, color: "#F59E0B", margin: "0 0 4px" }}>⚠ Razón de revisión</p>
-                            <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>{reason}</p>
-                          </div>
-
-                          {/* Acciones */}
-                          <div style={{ display: "flex", gap: "8px", paddingTop: "4px" }}>
-                            <button type="button"
-                              onClick={() => { void handleImportAction(selectedImport.id, "CONFIRM"); setSelectedImport(null); }}
-                              disabled={selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW"}
-                              style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(22,163,74,0.3)", background: "rgba(22,163,74,0.08)", color: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "#334155" : "#4ADE80", fontSize: "12px", fontWeight: 600, cursor: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
-                              ✓ Confirmar
-                            </button>
-                            <button type="button"
-                              onClick={() => { void handleImportAction(selectedImport.id, "REJECT"); setSelectedImport(null); }}
-                              style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}>
-                              ✗ Rechazar
-                            </button>
-                          </div>
+                        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {[
+                            ["Cantidad",   norm.quantity > 0 ? norm.quantity.toFixed(8).replace(/\.?0+$/, "") : "—"],
+                            ["Precio USD", norm.priceUsd > 0 ? `$${norm.priceUsd.toFixed(2)}` : "—"],
+                            ["Fee USD",    norm.feeUsd > 0   ? `$${norm.feeUsd.toFixed(4)}`   : "$0"],
+                            ["Fuente",     "Binance · " + selectedImport.externalType],
+                            ["ID externo", selectedImport.externalId],
+                          ].map(([label, value]) => (
+                            <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                              <span style={{ fontSize: "11px", color: "#475569" }}>{label}</span>
+                              <span style={{ fontSize: "11px", color: "#94A3B8", fontFamily: "monospace", textAlign: "right", wordBreak: "break-all" }}>{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <p style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>Clasificación LEDGERA</p>
+                          {[
+                            ["Tratamiento tributario", <span key="tt" style={{ color: tt.color, fontWeight: 600 }}>{tt.label}</span>],
+                            ["Efecto inventario FIFO", selectedImport.inventoryEffect ?? "—"],
+                            ["Efecto económico",       selectedImport.economicEffect  ?? "—"],
+                          ].map(([label, value]) => (
+                            <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                              <span style={{ fontSize: "11px", color: "#475569" }}>{label}</span>
+                              <span style={{ fontSize: "11px", color: "#94A3B8" }}>{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "8px", padding: "0.75rem" }}>
+                          <p style={{ fontSize: "11px", fontWeight: 700, color: "#F59E0B", margin: "0 0 4px" }}>⚠ Razón de revisión</p>
+                          <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>{reason}</p>
+                        </div>
+                        <div style={{ display: "flex", gap: "8px", paddingTop: "4px" }}>
+                          <button type="button" onClick={() => { void handleImportAction(selectedImport.id, "CONFIRM"); setSelectedImport(null); }}
+                            disabled={selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW"}
+                            style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(22,163,74,0.3)", background: "rgba(22,163,74,0.08)", color: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "#334155" : "#4ADE80", fontSize: "12px", fontWeight: 600, cursor: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+                            ✓ Confirmar
+                          </button>
+                          <button type="button" onClick={() => { void handleImportAction(selectedImport.id, "REJECT"); setSelectedImport(null); }}
+                            style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}>
+                            ✗ Rechazar
+                          </button>
                         </div>
                       </div>
-                    );
-                  })()}
-
-                  <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div>
-                      <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                        Excepciones
-                        {imports.length > 0 && <span style={{ marginLeft: "6px", fontSize: "11px", fontWeight: 700, color: "#F0B90B", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.2)", borderRadius: "4px", padding: "1px 6px" }}>{imports.length}</span>}
-                      </h4>
-                      <p style={{ fontSize: "11px", color: "#334155", margin: 0 }}>Eventos que no pudieron clasificarse automáticamente.</p>
                     </div>
-                    <button type="button" onClick={loadImports} disabled={loadingImports}
-                      style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#64748B", fontSize: "11px", cursor: loadingImports ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
-                      {loadingImports ? "..." : "↺"}
-                    </button>
-                  </div>
+                  );
+                })()}
 
+                {/* Header del panel de validación */}
+                <div style={{ padding: "0.625rem 1.25rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                  <div>
+                    <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", margin: "0 0 1px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      Validación manual
+                      {imports.length > 0 && <span style={{ marginLeft: "6px", fontSize: "11px", fontWeight: 700, color: "#F0B90B", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.2)", borderRadius: "4px", padding: "1px 6px" }}>{imports.length}</span>}
+                    </h4>
+                    <p style={{ fontSize: "10px", color: "#334155", margin: 0 }}>Eventos que requieren tu decisión antes de ingresar al motor.</p>
+                  </div>
+                  <button type="button" onClick={loadImports} disabled={loadingImports}
+                    style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#64748B", fontSize: "11px", cursor: loadingImports ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+                    {loadingImports ? "..." : "↺"}
+                  </button>
+                </div>
+
+                {/* Lista de eventos a validar */}
+                <div style={{ flex: 1, overflowY: "auto" }}>
                   {loadingImports ? (
                     <div style={{ padding: "1.5rem", textAlign: "center", color: "#475569", fontSize: "12px" }}>Cargando...</div>
                   ) : imports.length === 0 ? (
-                    <div style={{ padding: "1.5rem", textAlign: "center", color: "#334155", fontSize: "12px" }}>Sin excepciones — todo fue clasificado automáticamente.</div>
+                    <div style={{ padding: "1.5rem", textAlign: "center", color: "#334155", fontSize: "12px" }}>Sin eventos pendientes — todo fue clasificado automáticamente.</div>
                   ) : (
-                    <div style={{ maxHeight: "280px", overflowY: "auto" }}>
-                      {imports.map((record) => {
-                        let norm: NormalizedJson = { movementType: record.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
-                        try { norm = JSON.parse(record.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
-                        const isProcessing  = confirmingId === record.id;
-                        const cannotConfirm = record.taxTreatment === "REVIEW" || record.inventoryEffect === "REVIEW";
-                        const ev = evBadgeStyle(record.normalizedEventType);
-                        return (
-                          <div key={record.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 1rem", borderBottom: "1px solid rgba(255,255,255,0.04)", flexWrap: "wrap" }}>
-                            <span style={{ fontSize: "10px", fontWeight: 700, color: ev.color, background: ev.bg, border: `1px solid ${ev.color}30`, borderRadius: "4px", padding: "2px 6px", whiteSpace: "nowrap", flexShrink: 0 }}>
-                              {record.normalizedEventType ?? record.externalType}
-                            </span>
-                            <span style={{ fontSize: "12px", color: "#CBD5E1", fontWeight: 600, flexShrink: 0 }}>{norm.symbol}</span>
-                            <span style={{ fontSize: "11px", color: "#64748B", fontFamily: "monospace", flexShrink: 0 }}>
-                              {norm.quantity > 0 ? norm.quantity.toFixed(6).replace(/\.?0+$/, "") : "—"}
-                            </span>
-                            <span style={{ flex: 1, fontSize: "11px", color: "#475569", whiteSpace: "nowrap" }}>
-                              {new Date(record.occurredAt).toLocaleDateString("es-CL", { dateStyle: "short" })}
-                            </span>
-                            <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-                              {/* Detalle */}
-                              <button type="button" onClick={() => setSelectedImport(record)} title="Ver detalle tributario"
-                                style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(255,255,255,0.04)", color: "#94A3B8", fontSize: "11px", cursor: "pointer" }}>?</button>
-                              {/* Confirmar */}
-                              <button type="button" onClick={() => !cannotConfirm && handleImportAction(record.id, "CONFIRM")} disabled={isProcessing || cannotConfirm} title={cannotConfirm ? "Ver detalle para decidir" : "Confirmar"}
-                                style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(22,163,74,0.3)", background: cannotConfirm ? "rgba(255,255,255,0.03)" : "rgba(22,163,74,0.08)", color: cannotConfirm ? "#334155" : "#4ADE80", fontSize: "11px", cursor: isProcessing || cannotConfirm ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✓</button>
-                              {/* Rechazar */}
-                              <button type="button" onClick={() => handleImportAction(record.id, "REJECT")} disabled={isProcessing} title="Rechazar"
-                                style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "11px", cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✗</button>
-                            </div>
+                    imports.map((record) => {
+                      let norm: NormalizedJson = { movementType: record.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
+                      try { norm = JSON.parse(record.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
+                      const isProcessing  = confirmingId === record.id;
+                      const cannotConfirm = record.taxTreatment === "REVIEW" || record.inventoryEffect === "REVIEW";
+                      const ev = evBadgeStyle(record.normalizedEventType);
+                      return (
+                        <div key={record.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 1.25rem", borderBottom: "1px solid rgba(255,255,255,0.04)", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: ev.color, background: ev.bg, border: `1px solid ${ev.color}30`, borderRadius: "4px", padding: "2px 6px", whiteSpace: "nowrap", flexShrink: 0 }}>{record.normalizedEventType ?? record.externalType}</span>
+                          <span style={{ fontSize: "12px", color: "#CBD5E1", fontWeight: 600, flexShrink: 0 }}>{norm.symbol}</span>
+                          <span style={{ fontSize: "11px", color: "#64748B", fontFamily: "monospace", flexShrink: 0 }}>{norm.quantity > 0 ? norm.quantity.toFixed(6).replace(/\.?0+$/, "") : "—"}</span>
+                          <span style={{ flex: 1, fontSize: "11px", color: "#475569", whiteSpace: "nowrap" }}>{new Date(record.occurredAt).toLocaleDateString("es-CL", { dateStyle: "short" })}</span>
+                          <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                            <button type="button" onClick={() => setSelectedImport(record)} title="Ver detalle" style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(255,255,255,0.04)", color: "#94A3B8", fontSize: "11px", cursor: "pointer" }}>?</button>
+                            <button type="button" onClick={() => !cannotConfirm && void handleImportAction(record.id, "CONFIRM")} disabled={isProcessing || cannotConfirm} title={cannotConfirm ? "Ver detalle" : "Confirmar"} style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(22,163,74,0.3)", background: cannotConfirm ? "rgba(255,255,255,0.03)" : "rgba(22,163,74,0.08)", color: cannotConfirm ? "#334155" : "#4ADE80", fontSize: "11px", cursor: isProcessing || cannotConfirm ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✓</button>
+                            <button type="button" onClick={() => void handleImportAction(record.id, "REJECT")} disabled={isProcessing} title="Rechazar" style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "11px", cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✗</button>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
-              )}
+
+              </div>{/* /panel inferior */}
             </>
           )}
         </div>
