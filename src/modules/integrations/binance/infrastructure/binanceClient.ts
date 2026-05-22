@@ -14,6 +14,15 @@ function getTimeoutMs(): number {
   return Number.isFinite(val) && val > 0 ? val : 15_000;
 }
 
+function getApiDelayMs(): number {
+  const val = Number(process.env.BINANCE_API_DELAY_MS ?? "300");
+  return Number.isFinite(val) && val >= 0 ? val : 300;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function binanceFetch<T>(
   path: string,
   params: Record<string, string | number>,
@@ -32,10 +41,13 @@ async function binanceFetch<T>(
 
   if (!res.ok) {
     const body = await res.text();
+    await sleep(getApiDelayMs());
     throw new Error(`Binance ${path} → ${res.status}: ${body}`);
   }
 
-  return res.json() as Promise<T>;
+  const data = await res.json() as T;
+  await sleep(getApiDelayMs());
+  return data;
 }
 
 export async function fetchAccountInfo(
