@@ -914,12 +914,12 @@ export default function PortafolioPage() {
 
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: "10px", marginBottom: "1.5rem" }}>
-        <StatCard label="Compras (BUY)" value={String(buys.length)} />
-        <StatCard label="Ventas (SELL)" value={String(sells.length)} />
+        <StatCard label="Compras" value={String(buys.length)} />
+        <StatCard label="Ventas" value={String(sells.length)} />
         <StatCard label="Total invertido" value={formatUsd(totalInvested)} highlight />
         <StatCard label="Total recibido" value={formatUsd(totalProceeds)} />
         <StatCard label="Dólar hoy" value={fx ? formatClp(fx.usdToClp) : "—"} />
-        <StatCard label="Total inv. CLP" value={totalInvestedClp !== null ? formatClp(totalInvestedClp) : "—"} highlight />
+        <StatCard label="Total CLP" value={totalInvestedClp !== null ? formatClp(totalInvestedClp) : "—"} highlight />
         <StatCard label="Activos únicos" value={String(uniqueAssets)} />
       </div>
 
@@ -1079,10 +1079,7 @@ export default function PortafolioPage() {
                         </span>
                       </td>
                       <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <CoinLogo symbol={m.symbol} size={22} />
-                          <span style={{ fontFamily: "var(--font-display)" }}>{m.symbol}</span>
-                        </div>
+                        <CoinLogo symbol={m.symbol} size={28} />
                       </td>
                       <td style={cellStyle}>{formatNumber(m.quantity, 8)}</td>
                       <td style={cellStyle}>{m.priceUsd > 0 ? formatUsd(m.priceUsd) : "—"}</td>
