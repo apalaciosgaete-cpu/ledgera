@@ -86,6 +86,14 @@ export async function setPeriodFailed(id: string, error: string, importedCount =
   });
 }
 
+export async function resetAllPeriods(userId: string, provider: string): Promise<number> {
+  const { count } = await prisma.exchangeSyncPeriod.updateMany({
+    where: { userId, provider },
+    data:  { status: "PENDING", importedCount: 0, errorCount: 0, finishedAt: null, lastError: null },
+  });
+  return count;
+}
+
 export async function getSyncCalendar(userId: string, provider: string): Promise<SyncCalendar> {
   const periods = await prisma.exchangeSyncPeriod.findMany({
     where:   { userId, provider },

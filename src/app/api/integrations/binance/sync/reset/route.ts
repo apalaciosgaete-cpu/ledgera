@@ -3,6 +3,7 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { findConnectionByUser, setSyncReset } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
+import { resetAllPeriods } from "@/modules/integrations/binance/infrastructure/exchangeSyncPeriodRepository";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 
 export async function POST(request: NextRequest) {
@@ -17,15 +18,16 @@ export async function POST(request: NextRequest) {
     if (!conn) return fail("No hay conexión con Binance configurada.", 404);
 
     await setSyncReset(conn.id);
+    const periodsReset = await resetAllPeriods(auth.user.id, "BINANCE");
 
     await logBinanceAuditEvent(request, "BINANCE_SYNC_FAILED", auth.user.id, auth.user.email, {
       provider:     "BINANCE",
       status:       "FAILED",
       connectionId: conn.id,
-      error:        "Sync reiniciado manualmente por el usuario",
+      error:        `Sync reiniciado manualmente por el usuario (${periodsReset} períodos a PENDING)`,
     });
 
-    return ok({ syncStatus: "IDLE" }, "Sincronización reiniciada. Ya puedes volver a sincronizar.");
+    return ok({ syncStatus: "IDLE", periodsReset }, "Sincronización reiniciada. Todos los períodos vuelven a PENDING.");
   } catch (error) {
     return serverError(error);
   }
