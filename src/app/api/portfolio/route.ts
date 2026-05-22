@@ -20,7 +20,7 @@ type RawPortfolioMovement = {
 };
 
 function normalizeMovementType(value: string): PortfolioMovementType | null {
-  if (value === "BUY" || value === "SELL") return value;
+  if (value === "BUY" || value === "SELL" || value === "DEPOSIT" || value === "WITHDRAW") return value;
   return null;
 }
 

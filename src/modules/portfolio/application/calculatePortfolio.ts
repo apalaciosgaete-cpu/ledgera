@@ -2,7 +2,7 @@ import { round, normalizeSymbol as sharedNormalizeSymbol } from "@/shared/utils/
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 
-export type PortfolioMovementType = "BUY" | "SELL";
+export type PortfolioMovementType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
 
 export interface PortfolioMovement {
   id: string;
@@ -78,7 +78,7 @@ async function convertUsdToClp(amountUsd: number): Promise<number> {
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function normalizeMovementType(type: string): PortfolioMovementType | null {
-  if (type === "BUY" || type === "SELL") return type;
+  if (type === "BUY" || type === "SELL" || type === "DEPOSIT" || type === "WITHDRAW") return type;
   return null;
 }
 
@@ -127,7 +127,14 @@ export async function calculatePortfolio(
       continue;
     }
 
-    // SELL
+    // DEPOSIT: suma cantidad sin base de costo (transferencia externa, priceUsd=0)
+    if (type === "DEPOSIT") {
+      current.quantity += quantity;
+      positionsMap.set(symbol, current);
+      continue;
+    }
+
+    // SELL / WITHDRAW: reducen posición proporcionalmente (WITHDRAW sin PnL tributario)
     if (current.quantity <= 0) {
       positionsMap.set(symbol, current);
       continue;
