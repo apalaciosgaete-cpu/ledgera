@@ -816,12 +816,12 @@ export default function PortafolioPage() {
               gap: "7px",
             }}
           >
-            <svg width="15" height="15" viewBox="0 0 32 32" fill="#F0B90B" aria-hidden="true">
-              <polygon points="16,9 23,16 16,23 9,16" />
-              <polygon points="16,2 19.5,5.5 16,9 12.5,5.5" />
-              <polygon points="23,16 26.5,12.5 30,16 26.5,19.5" />
-              <polygon points="12.5,26.5 16,23 19.5,26.5 16,30" />
-              <polygon points="2,16 5.5,12.5 9,16 5.5,19.5" />
+            <svg width="18" height="18" viewBox="0 0 32 32" fill="#F0B90B" aria-hidden="true">
+              <polygon points="16,8 24,16 16,24 8,16" />
+              <polygon points="16,0 20,4 16,8 12,4" />
+              <polygon points="24,16 28,12 32,16 28,20" />
+              <polygon points="12,28 16,24 20,28 16,32" />
+              <polygon points="0,16 4,12 8,16 4,20" />
             </svg>
             Binance
           </button>
