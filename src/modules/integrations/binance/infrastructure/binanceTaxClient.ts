@@ -199,3 +199,92 @@ export async function probeAllProducts(
 
   return results;
 }
+
+// ── Monthly scan ───────────────────────────────────────────────────────────────
+
+export type BinanceTaxScanProduct = {
+  product: string;
+  path:    string;
+  ok:      boolean;
+  status:  number | null;
+  count:   number;
+  sample:  unknown;
+  error:   string | null;
+};
+
+function monthRangeUtc(year: number, month: number): { startTime: number; endTime: number } {
+  const startTime = Date.UTC(year, month - 1, 1, 0, 0, 0, 0);
+  const endTime   = Date.UTC(year, month,     1, 0, 0, 0, 0) - 1;
+  return { startTime, endTime };
+}
+
+function countRows(body: unknown): { count: number; sample: unknown } {
+  if (!body) return { count: 0, sample: null };
+
+  if (Array.isArray(body)) {
+    return { count: body.length, sample: body[0] ?? null };
+  }
+
+  if (typeof body === "object" && body !== null) {
+    const b = body as Record<string, unknown>;
+
+    for (const key of ["data", "rows", "list", "result", "records"]) {
+      const value = b[key];
+      if (Array.isArray(value)) {
+        return { count: value.length, sample: value[0] ?? null };
+      }
+    }
+
+    if (typeof b.total === "number") {
+      return { count: b.total, sample: body };
+    }
+
+    return { count: 0, sample: body };
+  }
+
+  return { count: 0, sample: body };
+}
+
+export async function scanBinanceTaxProductsByMonth(
+  apiKey:    string,
+  apiSecret: string,
+  year:      number,
+  month:     number,
+): Promise<BinanceTaxScanProduct[]> {
+  const { startTime, endTime } = monthRangeUtc(year, month);
+
+  const specs: ProductProbeSpec[] = [
+    { product: "Spot Trades BTCUSDT",    path: "/api/v3/myTrades",                                    params: { symbol: "BTCUSDT",     startTime, endTime, limit: 1000 } },
+    { product: "Spot Trades XRPUSDT",    path: "/api/v3/myTrades",                                    params: { symbol: "XRPUSDT",     startTime, endTime, limit: 1000 } },
+    { product: "Convert",                path: "/sapi/v1/convert/tradeFlow",                           params: {                        startTime, endTime, limit: 1000 } },
+    { product: "Pay",                    path: "/sapi/v1/pay/transactions",                            params: {                        startTime, endTime, limit: 100  } },
+    { product: "Earn Flexible Rewards",  path: "/sapi/v1/simple-earn/flexible/history/rewardsRecord", params: { type: "REWARDS",       startTime, endTime, size:  100  } },
+    { product: "Earn Locked Rewards",    path: "/sapi/v1/simple-earn/locked/history/rewardsRecord",   params: {                        startTime, endTime, size:  100  } },
+    { product: "P2P BUY",               path: "/sapi/v1/c2c/orderMatch/listUserOrderHistory",         params: { tradeType: "BUY",      startTime, endTime              } },
+    { product: "P2P SELL",              path: "/sapi/v1/c2c/orderMatch/listUserOrderHistory",         params: { tradeType: "SELL",     startTime, endTime              } },
+    { product: "Distribution",           path: "/sapi/v1/asset/assetDividend",                        params: {                        startTime, endTime, limit: 500  } },
+    { product: "Transfers",              path: "/sapi/v1/asset/transfer",                              params: { type: "MAIN_UMFUTURE", startTime, endTime, size:  100  } },
+    { product: "Deposits",               path: "/sapi/v1/capital/deposit/hisrec",                     params: {                        startTime, endTime              } },
+    { product: "Withdrawals",            path: "/sapi/v1/capital/withdraw/history",                   params: {                        startTime, endTime              } },
+  ];
+
+  const results: BinanceTaxScanProduct[] = [];
+
+  for (const spec of specs) {
+    const { status, body } = await rawFetch(spec.path, spec.params, apiKey, apiSecret);
+    const ok               = status === 200;
+    const { count, sample } = ok ? countRows(body) : { count: 0, sample: null };
+
+    results.push({
+      product: spec.product,
+      path:    spec.path,
+      ok,
+      status:  status === 0 ? null : status,
+      count,
+      sample,
+      error:   ok ? null : extractError(status, body),
+    });
+  }
+
+  return results;
+}
