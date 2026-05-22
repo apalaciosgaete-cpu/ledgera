@@ -102,11 +102,11 @@ function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
   const years = [...byYear.keys()].sort((a, b) => a - b);
   if (years.length === 0) return <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Presiona Sincronizar para inicializar la cobertura.</p>;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px", overflowX: "auto" }}>
       {years.map(year => {
         const monthMap = byYear.get(year)!;
         return (
-          <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+          <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap", minWidth: "max-content" }}>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", minWidth: "32px", textAlign: "right", flexShrink: 0 }}>{year}</span>
             {MONTH_ABBR.map((label, i) => <MonthPill key={i} label={label} period={monthMap.get(i + 1)} />)}
           </div>
