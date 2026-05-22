@@ -17,6 +17,15 @@ type ConnectionStatus = {
   apiKeyHint?:     string;
 };
 
+type TaxConnectionStatus = {
+  connected:      boolean;
+  status?:        string;
+  lastSyncAt?:    string | null;
+  lastSyncStatus?: string | null;
+  lastSyncError?: string | null;
+  apiKeyHint?:    string;
+};
+
 type SyncResult = {
   imported:        number;
   skipped:         number;
@@ -271,6 +280,8 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
   const [overrideForm,   setOverrideForm]   = useState({ movementType: "BUY", priceUsd: "", feeUsd: "0" });
   const [selectedMonth,  setSelectedMonth]  = useState<{ year: number; month: number } | null>(null);
   const [syncingMonth,   setSyncingMonth]   = useState<{ year: number; month: number } | null>(null);
+  const [taxConn,        setTaxConn]        = useState<TaxConnectionStatus | null>(null);
+  const [loadingTaxConn, setLoadingTaxConn] = useState(false);
   const [msg,            setMsg]            = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
 
   // Pending imports keyed by "year-month"
@@ -328,13 +339,26 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
     }
   }, []);
 
+  const loadTaxStatus = useCallback(async () => {
+    setLoadingTaxConn(true);
+    try {
+      const res = await httpClient<ApiResponse<TaxConnectionStatus>>("/api/integrations/binance/tax/connect", { auth: true });
+      setTaxConn(res.data);
+    } catch {
+      setTaxConn({ connected: false });
+    } finally {
+      setLoadingTaxConn(false);
+    }
+  }, []);
+
   useEffect(() => { void loadStatus(); }, [loadStatus]);
   useEffect(() => {
     if (conn?.connected && conn.status === "ACTIVE") {
       void loadCalendar();
       void loadImports();
+      void loadTaxStatus();
     }
-  }, [conn, loadCalendar, loadImports]);
+  }, [conn, loadCalendar, loadImports, loadTaxStatus]);
 
   async function handleSync() {
     setSyncing(true); setMsg(null); setSyncResult(null);
@@ -503,6 +527,36 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
                     </span>
                   )}
                   {!conn.lastSyncAt && <span style={{ fontSize: "11px", color: "#334155" }}>Nunca sincronizado</span>}
+                </div>
+
+                {/* APIs Binance */}
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", padding: "0.75rem 1rem" }}>
+                  <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>APIs Binance</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "12px", color: "#CBD5E1", fontWeight: 700 }}>API Spot</p>
+                        <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>Balances, depósitos/retiros y Spot parcial.</p>
+                      </div>
+                      <span style={{ fontSize: "11px", color: isConnected ? "#4ADE80" : "#64748B", fontWeight: 700, flexShrink: 0 }}>
+                        {isConnected ? "Conectada" : "No conectada"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "12px", color: "#CBD5E1", fontWeight: 700 }}>API Tributaria</p>
+                        <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>Historial tributario multi-año de Binance.</p>
+                      </div>
+                      <span style={{ fontSize: "11px", color: taxConn?.connected ? "#4ADE80" : "#F59E0B", fontWeight: 700, flexShrink: 0 }}>
+                        {loadingTaxConn ? "Verificando..." : taxConn?.connected ? "Conectada" : "Pendiente"}
+                      </span>
+                    </div>
+                  </div>
+                  {!taxConn?.connected && !loadingTaxConn && (
+                    <a href="/configuracion" style={{ display: "inline-flex", marginTop: "8px", fontSize: "12px", color: "#F0B90B", textDecoration: "none", fontWeight: 700 }}>
+                      Conectar API tributaria →
+                    </a>
+                  )}
                 </div>
 
                 {/* Controles de sync */}
