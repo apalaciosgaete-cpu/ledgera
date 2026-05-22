@@ -8,12 +8,18 @@ export default function ImportPage() {
         <p className="text-sm text-gray-500 mb-4">
           Registra compras y ventas manualmente. Cada movimiento alimenta el sistema contable y tributario.
         </p>
-
-        <a
-          href="/import/manual"
-          className="inline-block px-4 py-2 rounded-lg bg-black text-white"
-        >
+        <a href="/import/manual" className="inline-block px-4 py-2 rounded-lg bg-black text-white">
           Ir a ingreso manual
+        </a>
+      </div>
+
+      <div className="border rounded-xl p-4">
+        <h2 className="text-lg font-medium mb-2">Importar archivo Binance (CSV)</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Sube tu historial de Binance en CSV: trades, depósitos y retiros. Los registros se clasifican automáticamente y alimentan el portafolio.
+        </p>
+        <a href="/import/binance" className="inline-block px-4 py-2 rounded-lg bg-black text-white">
+          Importar archivo Binance
         </a>
       </div>
     </section>
