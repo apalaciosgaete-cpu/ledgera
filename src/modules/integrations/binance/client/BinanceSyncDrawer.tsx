@@ -79,24 +79,35 @@ function pillStyle(p: SyncPeriod) {
   }
 }
 
-function MonthPill({ label, period }: { label: string; period?: SyncPeriod }) {
+function MonthPill({ label, period, onClick, syncing }: { label: string; period?: SyncPeriod; onClick?: () => void; syncing?: boolean }) {
   if (!period) return (
     <span title={label} style={{ width: "32px", height: "38px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: "5px", border: "1px dashed rgba(255,255,255,0.04)", flexShrink: 0 }}>
       <span style={{ fontSize: "9px", color: "#1e293b" }}>{label}</span>
     </span>
   );
   const s = pillStyle(period);
+  const isLoading = syncing;
   return (
-    <span title={`${label}: ${period.status}${period.importedCount > 0 ? ` · ${period.importedCount} op.` : ""}`} style={{ width: "32px", height: "38px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", borderRadius: "5px", background: s.bg, border: `1px solid ${s.border}`, flexShrink: 0 }}>
+    <span
+      onClick={onClick}
+      title={`${label}: ${period.status}${period.importedCount > 0 ? ` · ${period.importedCount} op.` : ""}${onClick ? " — clic para re-sincronizar" : ""}`}
+      style={{ width: "32px", height: "38px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", borderRadius: "5px", background: isLoading ? "rgba(240,185,11,0.15)" : s.bg, border: `1px solid ${isLoading ? "rgba(240,185,11,0.5)" : s.border}`, flexShrink: 0, cursor: onClick ? "pointer" : "default", transition: "opacity 0.15s" }}
+    >
       <span style={{ fontSize: "9px", color: "#64748B", lineHeight: 1 }}>{label}</span>
-      <span style={{ fontSize: "10px", fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: isLoading ? "#F0B90B" : s.color, lineHeight: 1, animation: isLoading ? "bn-blink 1s ease-in-out infinite" : "none" }}>
+        {isLoading ? "…" : s.value}
+      </span>
     </span>
   );
 }
 
 const CALENDAR_START_YEAR = 2018;
 
-function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
+function SyncCalendarGrid({ periods, onSyncMonth, syncingMonth }: {
+  periods: SyncPeriod[];
+  onSyncMonth?: (year: number, month: number) => void;
+  syncingMonth?: { year: number; month: number } | null;
+}) {
   const byYear = new Map<number, Map<number, SyncPeriod>>();
   for (const p of periods) {
     if (!byYear.has(p.year)) byYear.set(p.year, new Map());
@@ -111,8 +122,8 @@ function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       {years.map(year => {
-        const monthMap  = byYear.get(year);
-        const maxMonth  = year === currentYear ? currentMonth : 12;
+        const monthMap = byYear.get(year);
+        const maxMonth = year === currentYear ? currentMonth : 12;
         return (
           <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap" }}>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", minWidth: "32px", textAlign: "right", flexShrink: 0 }}>{year}</span>
@@ -123,7 +134,16 @@ function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
                   <span style={{ fontSize: "9px", color: "#1e293b" }}>{label}</span>
                 </span>
               );
-              return <MonthPill key={i} label={label} period={monthMap?.get(month)} />;
+              const isSyncing = syncingMonth?.year === year && syncingMonth?.month === month;
+              return (
+                <MonthPill
+                  key={i}
+                  label={label}
+                  period={monthMap?.get(month)}
+                  onClick={onSyncMonth ? () => onSyncMonth(year, month) : undefined}
+                  syncing={isSyncing}
+                />
+              );
             })}
           </div>
         );
@@ -187,6 +207,7 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
   const [loadingImports, setLoadingImports] = useState(false);
   const [confirmingId,   setConfirmingId]   = useState<string | null>(null);
   const [selectedImport, setSelectedImport] = useState<ImportRecord | null>(null);
+  const [syncingMonth,   setSyncingMonth]   = useState<{ year: number; month: number } | null>(null);
   const [msg,            setMsg]            = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
 
   const loadStatus = useCallback(async () => {
@@ -261,6 +282,22 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
       setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al reiniciar." });
     } finally {
       setResetting(false);
+    }
+  }
+
+  async function handleSyncMonth(year: number, month: number) {
+    if (syncing || syncingMonth) return;
+    setSyncingMonth({ year, month }); setMsg(null);
+    try {
+      const res = await httpClient<ApiResponse<SyncResult>>("/api/integrations/binance/sync", { method: "POST", auth: true, body: { year, month } });
+      setMsg({ type: res.data.errors.length > 0 ? "warn" : "success", text: `${MONTH_NAME[month]} ${year}: ${res.message}` });
+      await httpClient("/api/portfolio/backfill-prices", { method: "POST", auth: true, body: {} }).catch(() => {});
+      await loadCalendar();
+      await loadImports();
+    } catch (e) {
+      setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al sincronizar el mes." });
+    } finally {
+      setSyncingMonth(null);
     }
   }
 
@@ -416,7 +453,11 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                   <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Cargando cobertura...</p>
                 ) : calendar ? (
                   <div style={{ maxHeight: "220px", overflowY: "auto" }}>
-                    <SyncCalendarGrid periods={calendar.periods} />
+                    <SyncCalendarGrid
+                    periods={calendar.periods}
+                    onSyncMonth={!syncing ? handleSyncMonth : undefined}
+                    syncingMonth={syncingMonth}
+                  />
                   </div>
                 ) : null}
               </div>

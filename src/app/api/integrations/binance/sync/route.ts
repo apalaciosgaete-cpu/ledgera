@@ -18,6 +18,7 @@ import {
   setPeriodFailed,
   setPeriodRunning,
 } from "@/modules/integrations/binance/infrastructure/exchangeSyncPeriodRepository";
+import { prisma } from "@/lib/prisma";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 import { autoConfirmImports } from "@/modules/integrations/binance/application/autoConfirmImports";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
@@ -70,18 +71,34 @@ export async function POST(request: NextRequest) {
     const apiSecret = decryptSecret(conn.apiSecret);
 
     // ── Inicializar períodos mensuales desde fecha de inicio hasta hoy ──
-    const startDate    = getStartDate();
-    const today        = new Date();
+    const startDate = getStartDate();
+    const today     = new Date();
     await ensurePeriodsExist(auth.user.id, conn.id, "BINANCE", startDate, today);
 
-    // ── Obtener próximos períodos pendientes o fallidos ─────────────────
-    const monthsPerRun = getMonthsPerRun();
-    const periods      = await getNextPendingPeriods(auth.user.id, "BINANCE", monthsPerRun);
+    // ── Selección de períodos: específico o secuencial ─────────────────
+    const body        = await request.json().catch(() => ({})) as { year?: number; month?: number };
+    const forceYear   = typeof body.year  === "number" ? body.year  : null;
+    const forceMonth  = typeof body.month === "number" ? body.month : null;
+
+    let periods;
+    if (forceYear && forceMonth) {
+      // Forzar un mes específico (reset a PENDING para re-sincronizar)
+      const specific = await prisma.exchangeSyncPeriod.findFirst({
+        where: { userId: auth.user.id, provider: "BINANCE", year: forceYear, month: forceMonth },
+      });
+      if (!specific) return fail("Período no encontrado.", 404);
+      await prisma.exchangeSyncPeriod.update({
+        where: { id: specific.id },
+        data:  { status: "PENDING", importedCount: 0, finishedAt: null, lastError: null },
+      });
+      periods = [{ ...specific, status: "PENDING" as const }];
+    } else {
+      const monthsPerRun = getMonthsPerRun();
+      periods = await getNextPendingPeriods(auth.user.id, "BINANCE", monthsPerRun);
+    }
 
     if (periods.length === 0) {
-      if (conn.syncStatus === "RUNNING") {
-        await setSyncFinished(conn.id, {});
-      }
+      if (conn.syncStatus === "RUNNING") await setSyncFinished(conn.id, {});
       return ok(
         { imported: 0, skipped: 0, autoConfirmed: 0, pendingReview: 0, errors: [], taxRebuilt: false, allPeriodsSynced: true },
         "Todo el historial está sincronizado. No hay períodos pendientes.",
