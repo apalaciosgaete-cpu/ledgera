@@ -288,3 +288,62 @@ export async function scanBinanceTaxProductsByMonth(
 
   return results;
 }
+
+// ── Typed transfer fetchers ────────────────────────────────────────────────────
+
+export type BinanceTaxDeposit = {
+  id:           string;
+  amount:       string;
+  coin:         string;
+  network:      string;
+  status:       number;
+  address:      string;
+  addressTag?:  string;
+  txId:         string;
+  insertTime:   number;
+  transferType: number;
+};
+
+export type BinanceTaxWithdrawal = {
+  id:             string;
+  amount:         string;
+  transactionFee: string;
+  coin:           string;
+  status:         number;
+  address:        string;
+  txId:           string;
+  applyTime:      string;
+  network:        string;
+};
+
+export async function fetchTaxDeposits(
+  apiKey:    string,
+  apiSecret: string,
+  startTime: number,
+  endTime:   number,
+): Promise<BinanceTaxDeposit[]> {
+  const { status, body } = await rawFetch(
+    "/sapi/v1/capital/deposit/hisrec",
+    { startTime, endTime },
+    apiKey,
+    apiSecret,
+  );
+  if (status !== 200) throw new Error(extractError(status, body) ?? `HTTP ${status}`);
+  return Array.isArray(body) ? (body as BinanceTaxDeposit[]) : [];
+}
+
+export async function fetchTaxWithdrawals(
+  apiKey:    string,
+  apiSecret: string,
+  startTime: number,
+  endTime:   number,
+): Promise<BinanceTaxWithdrawal[]> {
+  const { status, body } = await rawFetch(
+    "/sapi/v1/capital/withdraw/history",
+    { startTime, endTime },
+    apiKey,
+    apiSecret,
+  );
+  if (status !== 200) throw new Error(extractError(status, body) ?? `HTTP ${status}`);
+  return Array.isArray(body) ? (body as BinanceTaxWithdrawal[]) : [];
+}
