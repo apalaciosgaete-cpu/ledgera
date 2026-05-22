@@ -103,6 +103,25 @@ function MonthPill({ label, period, onClick, syncing }: { label: string; period?
 
 const CALENDAR_START_YEAR = 2018;
 
+function YearSummaryBadges({ monthMap, maxMonth }: { monthMap?: Map<number, SyncPeriod>; maxMonth: number }) {
+  if (!monthMap) return <span style={{ fontSize: "10px", color: "#1e293b" }}>sin datos</span>;
+  let done = 0, pending = 0, failed = 0;
+  for (let m = 1; m <= maxMonth; m++) {
+    const s = monthMap.get(m)?.status;
+    if (s === "COMPLETED" || s === "EMPTY") done++;
+    else if (s === "FAILED") failed++;
+    else if (s === "PENDING") pending++;
+  }
+  return (
+    <span style={{ display: "flex", gap: "6px", fontSize: "10px" }}>
+      {done   > 0 && <span style={{ color: "#4ADE80" }}>{done}✓</span>}
+      {pending > 0 && <span style={{ color: "#F59E0B" }}>{pending}○</span>}
+      {failed  > 0 && <span style={{ color: "#F87171" }}>{failed}✗</span>}
+      {done === 0 && pending === 0 && failed === 0 && <span style={{ color: "#1e293b" }}>vacío</span>}
+    </span>
+  );
+}
+
 function SyncCalendarGrid({ periods, onSyncMonth, syncingMonth }: {
   periods: SyncPeriod[];
   onSyncMonth?: (year: number, month: number) => void;
@@ -119,32 +138,57 @@ function SyncCalendarGrid({ periods, onSyncMonth, syncingMonth }: {
   const years: number[] = [];
   for (let y = currentYear; y >= CALENDAR_START_YEAR; y--) years.push(y);
 
+  const [expandedYears, setExpandedYears] = useState<Set<number>>(
+    () => new Set([currentYear, currentYear - 1]),
+  );
+
+  function toggleYear(y: number) {
+    setExpandedYears(prev => {
+      const next = new Set(prev);
+      next.has(y) ? next.delete(y) : next.add(y);
+      return next;
+    });
+  }
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
       {years.map(year => {
-        const monthMap = byYear.get(year);
-        const maxMonth = year === currentYear ? currentMonth : 12;
+        const monthMap  = byYear.get(year);
+        const maxMonth  = year === currentYear ? currentMonth : 12;
+        const expanded  = expandedYears.has(year);
         return (
-          <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", minWidth: "32px", textAlign: "right", flexShrink: 0 }}>{year}</span>
-            {MONTH_ABBR.map((label, i) => {
-              const month = i + 1;
-              if (month > maxMonth) return (
-                <span key={i} style={{ width: "32px", height: "38px", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "9px", color: "#1e293b" }}>{label}</span>
-                </span>
-              );
-              const isSyncing = syncingMonth?.year === year && syncingMonth?.month === month;
-              return (
-                <MonthPill
-                  key={i}
-                  label={label}
-                  period={monthMap?.get(month)}
-                  onClick={onSyncMonth ? () => onSyncMonth(year, month) : undefined}
-                  syncing={isSyncing}
-                />
-              );
-            })}
+          <div key={year}>
+            {/* Year header — click to toggle */}
+            <button type="button" onClick={() => toggleYear(year)}
+              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", background: "none", border: "none", padding: "4px 0", cursor: "pointer", textAlign: "left" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: expanded ? "#94A3B8" : "#475569", minWidth: "32px", textAlign: "right", flexShrink: 0 }}>{year}</span>
+              {!expanded && <YearSummaryBadges monthMap={monthMap} maxMonth={maxMonth} />}
+              <span style={{ marginLeft: "auto", fontSize: "9px", color: "#334155", flexShrink: 0 }}>{expanded ? "▲" : "▼"}</span>
+            </button>
+
+            {/* Month pills — only when expanded */}
+            {expanded && (
+              <div style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap", paddingLeft: "40px", paddingBottom: "4px" }}>
+                {MONTH_ABBR.map((label, i) => {
+                  const month = i + 1;
+                  if (month > maxMonth) return (
+                    <span key={i} style={{ width: "32px", height: "38px", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontSize: "9px", color: "#1e293b" }}>{label}</span>
+                    </span>
+                  );
+                  const isSyncing = syncingMonth?.year === year && syncingMonth?.month === month;
+                  return (
+                    <MonthPill
+                      key={i}
+                      label={label}
+                      period={monthMap?.get(month)}
+                      onClick={onSyncMonth ? () => onSyncMonth(year, month) : undefined}
+                      syncing={isSyncing}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}
@@ -464,7 +508,7 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                   <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Cargando cobertura...</p>
                 ) : calendar ? (
                   <>
-                    <div style={{ maxHeight: "220px", overflowY: "auto" }}>
+                    <div style={{ maxHeight: "260px", overflowY: "auto" }}>
                       <SyncCalendarGrid
                         periods={calendar.periods}
                         onSyncMonth={!syncing ? handleSyncMonth : undefined}
