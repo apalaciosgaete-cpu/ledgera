@@ -811,8 +811,18 @@ export default function PortafolioPage() {
               fontWeight: 600,
               cursor: "pointer",
               fontFamily: "var(--font-body)",
+              display: "flex",
+              alignItems: "center",
+              gap: "7px",
             }}
           >
+            <svg width="15" height="15" viewBox="0 0 32 32" fill="#F0B90B" aria-hidden="true">
+              <polygon points="16,4 20,8 16,12 12,8" />
+              <polygon points="4,16 8,12 12,16 8,20" />
+              <polygon points="20,16 16,12 12,16 16,20" />
+              <polygon points="28,16 24,12 20,16 24,20" />
+              <polygon points="16,20 20,24 16,28 12,24" />
+            </svg>
             Binance
           </button>
 
