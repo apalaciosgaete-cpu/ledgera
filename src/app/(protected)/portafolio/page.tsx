@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { BinanceSyncDrawer } from "@/modules/integrations/binance/client/BinanceSyncDrawer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -627,6 +628,7 @@ export default function PortafolioPage() {
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
 
+  const [showBinance, setShowBinance] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -796,6 +798,24 @@ export default function PortafolioPage() {
         </div>
 
         <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+          {/* Botón Binance */}
+          <button
+            onClick={() => setShowBinance(true)}
+            style={{
+              background: "rgba(240,185,11,0.1)",
+              color: "#F0B90B",
+              border: "1px solid rgba(240,185,11,0.3)",
+              borderRadius: "10px",
+              padding: "0.625rem 1.25rem",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            Binance
+          </button>
+
           {/* Botón importar CSV */}
           <button
             onClick={() => {
@@ -1052,6 +1072,8 @@ export default function PortafolioPage() {
           </table>
         </div>
       )}
+
+      {showBinance && <BinanceSyncDrawer onClose={() => setShowBinance(false)} />}
     </div>
   );
 }

@@ -1,0 +1,449 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { fonts } from "@/styles/tokens";
+import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+type ConnectionStatus = {
+  connected:       boolean;
+  status?:         string;
+  syncStatus?:     string | null;
+  lastSyncAt?:     string | null;
+  lastSyncStatus?: string | null;
+  lastSyncError?:  string | null;
+  pendingCount?:   number;
+  apiKeyHint?:     string;
+};
+
+type SyncResult = {
+  imported:        number;
+  skipped:         number;
+  autoConfirmed:   number;
+  pendingReview:   number;
+  taxRebuilt:      boolean;
+  errors:          string[];
+  allPeriodsSynced?: boolean;
+};
+
+type SyncPeriod = {
+  id:            string;
+  year:          number;
+  month:         number;
+  status:        string;
+  importedCount: number;
+  errorCount:    number;
+  finishedAt:    string | null;
+};
+
+type CalendarData = {
+  periods:        SyncPeriod[];
+  totalPending:   number;
+  totalCompleted: number;
+  totalFailed:    number;
+  nextPeriod:     { year: number; month: number } | null;
+};
+
+type ImportRecord = {
+  id:                  string;
+  externalId:          string;
+  externalType:        string;
+  normalizedJson:      string | null;
+  normalizedEventType: string | null;
+  taxTreatment:        string | null;
+  inventoryEffect:     string | null;
+  status:              string;
+  occurredAt:          string;
+};
+
+type NormalizedJson = { movementType: string; symbol: string; quantity: number; priceUsd: number; feeUsd: number };
+type ApiResponse<T> = { ok: boolean; message: string; data: T };
+
+// ── Calendar components ────────────────────────────────────────────────────────
+
+const MONTH_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const MONTH_NAME: Record<number, string> = {
+  1:"enero",2:"febrero",3:"marzo",4:"abril",5:"mayo",6:"junio",
+  7:"julio",8:"agosto",9:"septiembre",10:"octubre",11:"noviembre",12:"diciembre",
+};
+
+function pillStyle(p: SyncPeriod) {
+  switch (p.status) {
+    case "COMPLETED": return { bg: "rgba(22,163,74,0.12)", border: "rgba(22,163,74,0.25)", color: "#4ADE80", value: p.importedCount > 0 ? (p.importedCount > 99 ? "99+" : String(p.importedCount)) : "✓" };
+    case "EMPTY":     return { bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)", color: "#334155", value: "—" };
+    case "FAILED":    return { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", color: "#F87171", value: "✗" };
+    case "RUNNING":   return { bg: "rgba(240,185,11,0.08)", border: "rgba(240,185,11,0.25)", color: "#F0B90B", value: "…" };
+    default:          return { bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)", color: "#475569", value: "○" };
+  }
+}
+
+function MonthPill({ label, period }: { label: string; period?: SyncPeriod }) {
+  if (!period) return (
+    <span title={label} style={{ width: "32px", height: "38px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: "5px", border: "1px dashed rgba(255,255,255,0.04)", flexShrink: 0 }}>
+      <span style={{ fontSize: "9px", color: "#1e293b" }}>{label}</span>
+    </span>
+  );
+  const s = pillStyle(period);
+  return (
+    <span title={`${label}: ${period.status}${period.importedCount > 0 ? ` · ${period.importedCount} op.` : ""}`} style={{ width: "32px", height: "38px", display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", borderRadius: "5px", background: s.bg, border: `1px solid ${s.border}`, flexShrink: 0 }}>
+      <span style={{ fontSize: "9px", color: "#64748B", lineHeight: 1 }}>{label}</span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</span>
+    </span>
+  );
+}
+
+function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
+  const byYear = new Map<number, Map<number, SyncPeriod>>();
+  for (const p of periods) {
+    if (!byYear.has(p.year)) byYear.set(p.year, new Map());
+    byYear.get(p.year)!.set(p.month, p);
+  }
+  const years = [...byYear.keys()].sort((a, b) => a - b);
+  if (years.length === 0) return <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Presiona Sincronizar para inicializar la cobertura.</p>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      {years.map(year => {
+        const monthMap = byYear.get(year)!;
+        return (
+          <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", minWidth: "32px", textAlign: "right", flexShrink: 0 }}>{year}</span>
+            {MONTH_ABBR.map((label, i) => <MonthPill key={i} label={label} period={monthMap.get(i + 1)} />)}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function needsManualReview(r: ImportRecord) {
+  return r.taxTreatment === "REVIEW" || r.inventoryEffect === "REVIEW";
+}
+
+function evBadgeStyle(type: string | null) {
+  const map: Record<string, { bg: string; color: string }> = {
+    SPOT_BUY:          { bg: "rgba(22,163,74,0.12)",   color: "#4ADE80" },
+    SPOT_SELL:         { bg: "rgba(239,68,68,0.12)",   color: "#F87171" },
+    EXTERNAL_DEPOSIT:  { bg: "rgba(96,165,250,0.12)",  color: "#93C5FD" },
+    EXTERNAL_WITHDRAW: { bg: "rgba(96,165,250,0.12)",  color: "#93C5FD" },
+    STAKING_REWARD:    { bg: "rgba(167,139,250,0.12)", color: "#A78BFA" },
+    DUST_CONVERSION:   { bg: "rgba(245,158,11,0.12)",  color: "#FCD34D" },
+    CONVERT:           { bg: "rgba(245,158,11,0.12)",  color: "#FCD34D" },
+  };
+  return map[type ?? ""] ?? { bg: "rgba(100,116,139,0.12)", color: "#64748B" };
+}
+
+// ── Main drawer ────────────────────────────────────────────────────────────────
+
+export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
+  const [conn,           setConn]           = useState<ConnectionStatus | null>(null);
+  const [loadingConn,    setLoadingConn]    = useState(true);
+  const [syncing,        setSyncing]        = useState(false);
+  const [resetting,      setResetting]      = useState(false);
+  const [syncResult,     setSyncResult]     = useState<SyncResult | null>(null);
+  const [calendar,       setCalendar]       = useState<CalendarData | null>(null);
+  const [loadingCal,     setLoadingCal]     = useState(false);
+  const [imports,        setImports]        = useState<ImportRecord[]>([]);
+  const [loadingImports, setLoadingImports] = useState(false);
+  const [confirmingId,   setConfirmingId]   = useState<string | null>(null);
+  const [msg,            setMsg]            = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
+
+  const loadStatus = useCallback(async () => {
+    setLoadingConn(true);
+    try {
+      await httpClient("/api/csrf");
+      const res = await httpClient<ApiResponse<ConnectionStatus>>("/api/integrations/binance/connect", { auth: true });
+      setConn(res.data);
+    } catch {
+      setConn({ connected: false });
+    } finally {
+      setLoadingConn(false);
+    }
+  }, []);
+
+  const loadCalendar = useCallback(async () => {
+    setLoadingCal(true);
+    try {
+      const res = await httpClient<ApiResponse<CalendarData>>("/api/integrations/binance/sync/calendar", { auth: true });
+      setCalendar(res.data);
+    } catch { /* calendar is optional */ } finally {
+      setLoadingCal(false);
+    }
+  }, []);
+
+  const loadImports = useCallback(async () => {
+    setLoadingImports(true);
+    try {
+      const res = await httpClient<ApiResponse<ImportRecord[]>>("/api/integrations/binance/imports", { auth: true });
+      setImports(res.data ?? []);
+    } catch {
+      setImports([]);
+    } finally {
+      setLoadingImports(false);
+    }
+  }, []);
+
+  useEffect(() => { void loadStatus(); }, [loadStatus]);
+  useEffect(() => {
+    if (conn?.connected && conn.status === "ACTIVE") {
+      void loadCalendar();
+      if ((conn.pendingCount ?? 0) > 0) void loadImports();
+    }
+  }, [conn, loadCalendar, loadImports]);
+
+  async function handleSync() {
+    setSyncing(true); setMsg(null); setSyncResult(null);
+    try {
+      const res = await httpClient<ApiResponse<SyncResult>>("/api/integrations/binance/sync", { method: "POST", auth: true, body: {} });
+      setSyncResult(res.data);
+      setMsg({ type: res.data.errors.length > 0 ? "warn" : "success", text: res.message });
+      await loadStatus();
+      await loadCalendar();
+      await loadImports();
+    } catch (e) {
+      setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error durante la sincronización." });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleReset() {
+    setResetting(true); setMsg(null);
+    try {
+      await httpClient("/api/integrations/binance/sync/reset", { method: "POST", auth: true, body: {} });
+      setMsg({ type: "success", text: "Sincronización reiniciada. Ya puedes volver a sincronizar." });
+      await loadStatus();
+    } catch (e) {
+      setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al reiniciar." });
+    } finally {
+      setResetting(false);
+    }
+  }
+
+  async function handleImportAction(recordId: string, action: "CONFIRM" | "REJECT" | "REVIEW") {
+    setConfirmingId(recordId); setMsg(null);
+    try {
+      await httpClient("/api/integrations/binance/imports/confirm", { method: "POST", auth: true, body: { recordId, action } });
+      if (action === "REVIEW") {
+        setImports(prev => prev.map(r => r.id === recordId ? { ...r, status: "REVIEW" } : r));
+      } else {
+        setImports(prev => prev.filter(r => r.id !== recordId));
+        setConn(prev => prev ? { ...prev, pendingCount: Math.max(0, (prev.pendingCount ?? 1) - 1) } : prev);
+      }
+    } catch (e) {
+      setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al procesar el registro." });
+    } finally {
+      setConfirmingId(null);
+    }
+  }
+
+  const isConnected = conn?.connected && conn.status === "ACTIVE";
+  const isSyncStuck = conn?.syncStatus === "RUNNING" && !syncing;
+
+  return (
+    <>
+      <style>{`
+        @keyframes bn-spin { to { transform: rotate(360deg); } }
+        @keyframes bn-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.6); } 50% { box-shadow: 0 0 0 5px rgba(22,163,74,0); } }
+        @keyframes bn-blink { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+      `}</style>
+
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 900 }} />
+
+      {/* Drawer */}
+      <div style={{ position: "fixed", top: 0, right: 0, width: "500px", maxWidth: "100vw", height: "100vh", background: "#0F172A", zIndex: 901, display: "flex", flexDirection: "column", boxShadow: "-8px 0 32px rgba(0,0,0,0.4)" }}>
+
+        {/* Header */}
+        <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+          <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#F0B90B", fontFamily: fonts.body, flexShrink: 0 }}>
+            BN
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: "14px", fontWeight: 700, color: "#F1F5F9", margin: 0 }}>Binance</p>
+            <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>Sincronización de operaciones</p>
+          </div>
+          {conn && (
+            <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "6px", background: isConnected ? "rgba(22,163,74,0.12)" : "rgba(100,116,139,0.12)", color: isConnected ? "#4ADE80" : "#64748B", border: `1px solid ${isConnected ? "rgba(22,163,74,0.25)" : "rgba(100,116,139,0.2)"}`, whiteSpace: "nowrap" }}>
+              {isConnected ? "Conectado" : "No conectado"}
+            </span>
+          )}
+          <button type="button" onClick={onClose} style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer", fontSize: "18px", lineHeight: 1, padding: "4px", flexShrink: 0 }}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+
+          {loadingConn ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569", fontSize: "13px", padding: "2rem 0" }}>
+              <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.1)", borderTop: "2px solid #F0B90B", borderRadius: "50%", animation: "bn-spin 0.8s linear infinite" }} />
+              Verificando conexión...
+            </div>
+          ) : !isConnected ? (
+            <div style={{ padding: "2rem 0", textAlign: "center" }}>
+              <p style={{ color: "#475569", fontSize: "13px", margin: "0 0 8px" }}>Sin conexión con Binance.</p>
+              <a href="/configuracion" style={{ fontSize: "12px", color: "#4ADE80" }}>Configurar credenciales →</a>
+            </div>
+          ) : (
+            <>
+              {/* Alerta */}
+              {msg && (
+                <div style={{ fontSize: "12px", color: msg.type === "success" ? "#4ADE80" : msg.type === "error" ? "#F87171" : msg.type === "warn" ? "#FCD34D" : "#93C5FD", background: msg.type === "success" ? "rgba(22,163,74,0.06)" : msg.type === "error" ? "rgba(239,68,68,0.06)" : msg.type === "warn" ? "rgba(245,158,11,0.06)" : "rgba(96,165,250,0.06)", border: `1px solid ${msg.type === "success" ? "rgba(22,163,74,0.2)" : msg.type === "error" ? "rgba(239,68,68,0.2)" : msg.type === "warn" ? "rgba(245,158,11,0.2)" : "rgba(96,165,250,0.2)"}`, borderRadius: "8px", padding: "10px 14px" }}>
+                  {msg.text}
+                </div>
+              )}
+
+              {/* Info línea */}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                {conn.apiKeyHint && <span style={{ fontSize: "11px", color: "#334155" }}>Clave …{conn.apiKeyHint}</span>}
+                {conn.lastSyncAt && (
+                  <span style={{ fontSize: "11px", color: "#475569" }}>
+                    Última sync: {new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}
+                    {" "}{conn.lastSyncStatus === "OK" ? "✓" : "⚠"}
+                  </span>
+                )}
+                {!conn.lastSyncAt && <span style={{ fontSize: "11px", color: "#334155" }}>Nunca sincronizado</span>}
+              </div>
+
+              {/* Controles de sync */}
+              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", padding: "0.75rem 1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+
+                  {syncing && <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22C55E", display: "inline-block", flexShrink: 0, animation: "bn-blink 1s ease-in-out infinite" }} />}
+
+                  <span style={{ flex: 1, fontSize: "12px", color: "#64748B" }}>
+                    {isSyncStuck ? <span style={{ color: "#F87171", fontWeight: 600 }}>Sync atascada</span>
+                     : calendar?.nextPeriod ? <span>Siguiente: <strong style={{ color: "#94A3B8" }}>{MONTH_NAME[calendar.nextPeriod.month]} {calendar.nextPeriod.year}</strong></span>
+                     : calendar && calendar.periods.length > 0 && !calendar.nextPeriod ? <span style={{ color: "#4ADE80" }}>Historial al día ✓</span>
+                     : <span>Listo para sincronizar</span>}
+                  </span>
+
+                  {isSyncStuck && (
+                    <button type="button" onClick={handleReset} disabled={resetting}
+                      style={{ padding: "6px 12px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "11px", fontWeight: 600, cursor: resetting ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap" }}>
+                      {resetting ? "Reiniciando..." : "Reiniciar sync"}
+                    </button>
+                  )}
+
+                  <button type="button" onClick={handleSync} disabled={syncing || isSyncStuck}
+                    style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: syncing || isSyncStuck ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", animation: syncing ? "bn-pulse 1.2s ease-in-out infinite" : "none", opacity: isSyncStuck ? 0.5 : 1 }}>
+                    {syncing ? "Sincronizando..." : isSyncStuck ? "En curso..." : "Sincronizar"}
+                  </button>
+                </div>
+
+                {conn.lastSyncError && <p style={{ margin: "6px 0 0", fontSize: "11px", color: "#F87171" }}>Error: {conn.lastSyncError}</p>}
+
+                {/* Resultado de sync */}
+                {syncResult && !syncing && (
+                  <div style={{ marginTop: "0.625rem", paddingTop: "0.625rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    {syncResult.allPeriodsSynced ? (
+                      <p style={{ margin: 0, fontSize: "12px", color: "#4ADE80" }}>Todo el historial está sincronizado.</p>
+                    ) : (
+                      <>
+                        {syncResult.autoConfirmed > 0 && <p style={{ margin: "0 0 2px", fontSize: "12px", color: "#4ADE80" }}><strong>{syncResult.autoConfirmed}</strong> {syncResult.autoConfirmed === 1 ? "operación incorporada" : "operaciones incorporadas"} al portafolio.</p>}
+                        {syncResult.pendingReview > 0 && <p style={{ margin: "0 0 2px", fontSize: "12px", color: "#F59E0B" }}><strong>{syncResult.pendingReview}</strong> {syncResult.pendingReview === 1 ? "operación pendiente" : "operaciones pendientes"} de revisión.</p>}
+                        {syncResult.autoConfirmed === 0 && syncResult.pendingReview === 0 && syncResult.imported === 0 && <p style={{ margin: 0, fontSize: "12px", color: "#64748B" }}>Sin nuevas operaciones en este período.</p>}
+                        <div style={{ display: "flex", gap: "1rem", fontSize: "11px", color: "#64748B", flexWrap: "wrap", marginTop: "4px" }}>
+                          <span>Importados: <strong style={{ color: "#CBD5E1" }}>{syncResult.imported}</strong></span>
+                          <span>Auto-confirmados: <strong style={{ color: "#4ADE80" }}>{syncResult.autoConfirmed}</strong></span>
+                          <span>En revisión: <strong style={{ color: "#F59E0B" }}>{syncResult.pendingReview}</strong></span>
+                          <span>Omitidos: <strong>{syncResult.skipped}</strong></span>
+                          {syncResult.errors.length > 0 && <span>Errores: <strong style={{ color: "#F87171" }}>{syncResult.errors.length}</strong></span>}
+                          {syncResult.taxRebuilt && <span style={{ color: "#A78BFA" }}>Motor recalculado ✓</span>}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Calendario */}
+              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", padding: "0.75rem 1rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.625rem" }}>
+                  <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", margin: 0, textTransform: "uppercase", letterSpacing: "0.06em" }}>Cobertura</h4>
+                  {calendar && (
+                    <span style={{ fontSize: "11px", color: "#475569" }}>
+                      {calendar.totalCompleted} completados
+                      {calendar.totalPending > 0 && <span style={{ color: "#F59E0B" }}> · {calendar.totalPending} pendientes</span>}
+                      {calendar.totalFailed  > 0 && <span style={{ color: "#F87171" }}> · {calendar.totalFailed} fallidos</span>}
+                    </span>
+                  )}
+                </div>
+                {loadingCal && !calendar ? (
+                  <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Cargando cobertura...</p>
+                ) : calendar ? (
+                  <SyncCalendarGrid periods={calendar.periods} />
+                ) : null}
+              </div>
+
+              {/* Importaciones pendientes */}
+              {((conn.pendingCount ?? 0) > 0 || imports.length > 0) && (
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", overflow: "hidden" }}>
+                  <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                        Revisión manual
+                        {imports.length > 0 && <span style={{ marginLeft: "6px", fontSize: "11px", fontWeight: 700, color: "#F0B90B", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.2)", borderRadius: "4px", padding: "1px 6px" }}>{imports.length}</span>}
+                      </h4>
+                      <p style={{ fontSize: "11px", color: "#334155", margin: 0 }}>Eventos que requieren confirmación manual.</p>
+                    </div>
+                    <button type="button" onClick={loadImports} disabled={loadingImports}
+                      style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#64748B", fontSize: "11px", cursor: loadingImports ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+                      {loadingImports ? "..." : "↺"}
+                    </button>
+                  </div>
+
+                  {loadingImports ? (
+                    <div style={{ padding: "1.5rem", textAlign: "center", color: "#475569", fontSize: "12px" }}>Cargando...</div>
+                  ) : imports.length === 0 ? (
+                    <div style={{ padding: "1.5rem", textAlign: "center", color: "#334155", fontSize: "12px" }}>Sin pendientes de revisión.</div>
+                  ) : (
+                    <div style={{ maxHeight: "280px", overflowY: "auto" }}>
+                      {imports.map((record) => {
+                        let norm: NormalizedJson = { movementType: record.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
+                        try { norm = JSON.parse(record.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
+                        const isProcessing = confirmingId === record.id;
+                        const cannotConfirm = needsManualReview(record);
+                        const ev = evBadgeStyle(record.normalizedEventType);
+                        return (
+                          <div key={record.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 1rem", borderBottom: "1px solid rgba(255,255,255,0.04)", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: "10px", fontWeight: 700, color: ev.color, background: ev.bg, border: `1px solid ${ev.color}30`, borderRadius: "4px", padding: "2px 6px", whiteSpace: "nowrap", flexShrink: 0 }}>
+                              {record.normalizedEventType ?? record.externalType}
+                            </span>
+                            <span style={{ fontSize: "12px", color: "#CBD5E1", fontWeight: 600, flexShrink: 0 }}>{norm.symbol}</span>
+                            <span style={{ fontSize: "11px", color: "#64748B", fontFamily: "monospace", flexShrink: 0 }}>
+                              {norm.quantity > 0 ? norm.quantity.toFixed(6).replace(/\.?0+$/, "") : "—"}
+                            </span>
+                            <span style={{ flex: 1, fontSize: "11px", color: "#475569", whiteSpace: "nowrap" }}>
+                              {new Date(record.occurredAt).toLocaleDateString("es-CL", { dateStyle: "short" })}
+                            </span>
+                            <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                              <button type="button" onClick={() => !cannotConfirm && handleImportAction(record.id, "CONFIRM")} disabled={isProcessing || cannotConfirm} title={cannotConfirm ? "Requiere revisión manual" : "Confirmar"}
+                                style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(22,163,74,0.3)", background: cannotConfirm ? "rgba(255,255,255,0.03)" : "rgba(22,163,74,0.08)", color: cannotConfirm ? "#334155" : "#4ADE80", fontSize: "11px", cursor: isProcessing || cannotConfirm ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✓</button>
+                              <button type="button" onClick={() => handleImportAction(record.id, "REJECT")} disabled={isProcessing} title="Rechazar"
+                                style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "11px", cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✗</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "0.75rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <a href="/configuracion" style={{ fontSize: "12px", color: "#475569", textDecoration: "none" }}>
+            Configurar credenciales →
+          </a>
+          <span style={{ fontSize: "11px", color: "#1e293b" }}>Spot · API Read-Only</span>
+        </div>
+      </div>
+    </>
+  );
+}
