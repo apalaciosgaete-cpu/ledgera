@@ -251,6 +251,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
   const [loadingImports, setLoadingImports] = useState(false);
   const [confirmingId,   setConfirmingId]   = useState<string | null>(null);
   const [selectedImport, setSelectedImport] = useState<ImportRecord | null>(null);
+  const [overrideForm,   setOverrideForm]   = useState<{ movementType: string; priceUsd: string; feeUsd: string }>({ movementType: "BUY", priceUsd: "", feeUsd: "0" });
   const [syncingMonth,    setSyncingMonth]   = useState<{ year: number; month: number } | null>(null);
   const [showPendingList, setShowPendingList] = useState(false);
   const [msg,             setMsg]            = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
@@ -348,10 +349,17 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
     }
   }
 
-  async function handleImportAction(recordId: string, action: "CONFIRM" | "REJECT" | "REVIEW") {
+  async function handleImportAction(
+    recordId: string,
+    action:   "CONFIRM" | "REJECT" | "REVIEW",
+    override?: { movementType: string; priceUsd: number; feeUsd: number },
+  ) {
     setConfirmingId(recordId); setMsg(null);
     try {
-      await httpClient("/api/integrations/binance/imports/confirm", { method: "POST", auth: true, body: { recordId, action } });
+      await httpClient("/api/integrations/binance/imports/confirm", {
+        method: "POST", auth: true,
+        body:   override ? { recordId, action, override } : { recordId, action },
+      });
       if (action === "REVIEW") {
         setImports(prev => prev.map(r => r.id === recordId ? { ...r, status: "REVIEW" } : r));
       } else {
@@ -574,9 +582,13 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
                 {selectedImport && (() => {
                   let norm: NormalizedJson = { movementType: selectedImport.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
                   try { norm = JSON.parse(selectedImport.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
-                  const ev     = evBadgeStyle(selectedImport.normalizedEventType);
-                  const tt     = taxTreatmentLabel(selectedImport.taxTreatment);
-                  const reason = reviewReason(selectedImport);
+                  const ev          = evBadgeStyle(selectedImport.normalizedEventType);
+                  const tt          = taxTreatmentLabel(selectedImport.taxTreatment);
+                  const reason      = reviewReason(selectedImport);
+                  const needsReview = selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW";
+                  const overridePriceValid = !needsReview || (overrideForm.priceUsd !== "" && Number(overrideForm.priceUsd) >= 0);
+                  const inputBase = { width: "100%", padding: "5px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.06)", color: "#F1F5F9", fontSize: "12px", fontFamily: fonts.body, boxSizing: "border-box" as const, outline: "none" };
+
                   return (
                     <div style={{ position: "absolute", inset: 0, background: "#0F172A", zIndex: 5, display: "flex", flexDirection: "column" }}>
                       <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
@@ -620,14 +632,60 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
                           <p style={{ fontSize: "11px", fontWeight: 700, color: "#F59E0B", margin: "0 0 4px" }}>⚠ Razón de revisión</p>
                           <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>{reason}</p>
                         </div>
+
+                        {/* Formulario de resolución — solo visible cuando el evento requiere revisión */}
+                        {needsReview && (
+                          <div style={{ background: "rgba(96,165,250,0.06)", border: "1px solid rgba(96,165,250,0.2)", borderRadius: "8px", padding: "0.875rem" }}>
+                            <p style={{ fontSize: "11px", fontWeight: 700, color: "#93C5FD", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Resolver manualmente</p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              <div>
+                                <p style={{ fontSize: "10px", color: "#64748B", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo de movimiento</p>
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                  {(["BUY","SELL","DEPOSIT","WITHDRAW"] as const).map(t => (
+                                    <button key={t} type="button"
+                                      onClick={() => setOverrideForm(f => ({ ...f, movementType: t }))}
+                                      style={{ flex: 1, padding: "5px 4px", borderRadius: "5px", border: `1px solid ${overrideForm.movementType === t ? "rgba(96,165,250,0.5)" : "rgba(255,255,255,0.08)"}`, background: overrideForm.movementType === t ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.03)", color: overrideForm.movementType === t ? "#93C5FD" : "#475569", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body }}>
+                                      {t}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                                <div>
+                                  <p style={{ fontSize: "10px", color: "#64748B", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Precio USD</p>
+                                  <input type="number" min="0" step="any" placeholder={norm.priceUsd > 0 ? norm.priceUsd.toFixed(2) : "0.00"} value={overrideForm.priceUsd} onChange={e => setOverrideForm(f => ({ ...f, priceUsd: e.target.value }))} style={inputBase} />
+                                </div>
+                                <div>
+                                  <p style={{ fontSize: "10px", color: "#64748B", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Fee USD</p>
+                                  <input type="number" min="0" step="any" placeholder="0.00" value={overrideForm.feeUsd} onChange={e => setOverrideForm(f => ({ ...f, feeUsd: e.target.value }))} style={inputBase} />
+                                </div>
+                              </div>
+                            </div>
+                            <button type="button"
+                              disabled={!overridePriceValid || confirmingId === selectedImport.id}
+                              onClick={() => {
+                                void handleImportAction(selectedImport.id, "CONFIRM", {
+                                  movementType: overrideForm.movementType,
+                                  priceUsd:     Number(overrideForm.priceUsd || norm.priceUsd),
+                                  feeUsd:       Number(overrideForm.feeUsd || 0),
+                                });
+                                setSelectedImport(null);
+                              }}
+                              style={{ marginTop: "10px", width: "100%", padding: "8px", borderRadius: "7px", border: "1px solid rgba(96,165,250,0.3)", background: overridePriceValid ? "rgba(96,165,250,0.12)" : "rgba(255,255,255,0.03)", color: overridePriceValid ? "#93C5FD" : "#334155", fontSize: "12px", fontWeight: 600, cursor: overridePriceValid ? "pointer" : "not-allowed", fontFamily: fonts.body }}>
+                              {confirmingId === selectedImport.id ? "Confirmando..." : "✓ Confirmar con ajustes"}
+                            </button>
+                          </div>
+                        )}
+
                         <div style={{ display: "flex", gap: "8px", paddingTop: "4px" }}>
-                          <button type="button" onClick={() => { void handleImportAction(selectedImport.id, "CONFIRM"); setSelectedImport(null); }}
-                            disabled={selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW"}
-                            style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(22,163,74,0.3)", background: "rgba(22,163,74,0.08)", color: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "#334155" : "#4ADE80", fontSize: "12px", fontWeight: 600, cursor: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
-                            ✓ Confirmar
-                          </button>
+                          {!needsReview && (
+                            <button type="button" onClick={() => { void handleImportAction(selectedImport.id, "CONFIRM"); setSelectedImport(null); }}
+                              style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(22,163,74,0.3)", background: "rgba(22,163,74,0.08)", color: "#4ADE80", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}>
+                              ✓ Confirmar
+                            </button>
+                          )}
                           <button type="button" onClick={() => { void handleImportAction(selectedImport.id, "REJECT"); setSelectedImport(null); }}
-                            style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}>
+                            style={{ flex: needsReview ? undefined : 1, width: needsReview ? "100%" : undefined, padding: "8px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}>
                             ✗ Rechazar
                           </button>
                         </div>
@@ -671,7 +729,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: { onClose: () => 
                           <span style={{ fontSize: "11px", color: "#64748B", fontFamily: "monospace", flexShrink: 0 }}>{norm.quantity > 0 ? norm.quantity.toFixed(6).replace(/\.?0+$/, "") : "—"}</span>
                           <span style={{ flex: 1, fontSize: "11px", color: "#475569", whiteSpace: "nowrap" }}>{new Date(record.occurredAt).toLocaleDateString("es-CL", { dateStyle: "short" })}</span>
                           <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-                            <button type="button" onClick={() => setSelectedImport(record)} title="Ver detalle" style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(255,255,255,0.04)", color: "#94A3B8", fontSize: "11px", cursor: "pointer" }}>?</button>
+                            <button type="button" onClick={() => { setSelectedImport(record); setOverrideForm({ movementType: "BUY", priceUsd: "", feeUsd: "0" }); }} title="Ver detalle" style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(255,255,255,0.04)", color: "#94A3B8", fontSize: "11px", cursor: "pointer" }}>?</button>
                             <button type="button" onClick={() => !cannotConfirm && void handleImportAction(record.id, "CONFIRM")} disabled={isProcessing || cannotConfirm} title={cannotConfirm ? "Ver detalle" : "Confirmar"} style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(22,163,74,0.3)", background: cannotConfirm ? "rgba(255,255,255,0.03)" : "rgba(22,163,74,0.08)", color: cannotConfirm ? "#334155" : "#4ADE80", fontSize: "11px", cursor: isProcessing || cannotConfirm ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✓</button>
                             <button type="button" onClick={() => void handleImportAction(record.id, "REJECT")} disabled={isProcessing} title="Rechazar" style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "11px", cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✗</button>
                           </div>

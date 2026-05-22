@@ -17,6 +17,11 @@ import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/appli
 type ConfirmBody = {
   action:   "CONFIRM" | "REJECT" | "REVIEW";
   recordId: string;
+  override?: {
+    movementType?: "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
+    priceUsd?:     number;
+    feeUsd?:       number;
+  };
 };
 
 export async function POST(request: NextRequest) {
@@ -28,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as ConfirmBody;
-    const { action, recordId } = body;
+    const { action, recordId, override } = body;
 
     if (!recordId) return fail("recordId es obligatorio.", 400);
     if (action !== "CONFIRM" && action !== "REJECT" && action !== "REVIEW") {
@@ -67,20 +72,26 @@ export async function POST(request: NextRequest) {
 
     // ── CONFIRM ───────────────────────────────────────────────────────────
 
-    // Gate tributario: eventos con taxTreatment o inventoryEffect = REVIEW
-    // no pueden entrar al motor sin decisión explícita.
-    const taxTreatment   = record.taxTreatment   ?? "REVIEW";
+    const taxTreatment    = record.taxTreatment   ?? "REVIEW";
     const inventoryEffect = record.inventoryEffect ?? "REVIEW";
+    const needsReview     = taxTreatment === "REVIEW" || inventoryEffect === "REVIEW";
 
-    if (taxTreatment === "REVIEW" || inventoryEffect === "REVIEW") {
+    // Gate tributario: si el evento requiere revisión, solo puede pasar si el
+    // usuario provee override explícito (movementType + priceUsd).
+    if (needsReview && (!override?.movementType || override.priceUsd === undefined)) {
       return fail(
         `El evento "${record.normalizedEventType ?? record.externalType}" requiere revisión manual antes de confirmar. ` +
-        `Usa "Marcar para revisión" para diferirlo o "Rechazar" para descartarlo.`,
+        `Proporciona tipo, precio y fee para confirmarlo con ajustes.`,
         422,
       );
     }
 
     const normalized = JSON.parse(record.normalizedJson ?? "{}") as NormalizedImportRecord;
+
+    // Aplicar overrides cuando el usuario resolvió manualmente el evento REVIEW
+    if (override?.movementType) normalized.movementType = override.movementType;
+    if (override?.priceUsd !== undefined && override.priceUsd >= 0) normalized.priceUsd = override.priceUsd;
+    if (override?.feeUsd   !== undefined && override.feeUsd   >= 0) normalized.feeUsd   = override.feeUsd;
 
     // DEPOSIT/WITHDRAW: precio histórico desde Binance público en la fecha del evento
     if (normalized.movementType === "DEPOSIT" || normalized.movementType === "WITHDRAW") {
