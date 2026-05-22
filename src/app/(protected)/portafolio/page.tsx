@@ -816,13 +816,7 @@ export default function PortafolioPage() {
               gap: "7px",
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 32 32" fill="#F0B90B" aria-hidden="true">
-              <polygon points="16,8 24,16 16,24 8,16" />
-              <polygon points="16,0 20,4 16,8 12,4" />
-              <polygon points="24,16 28,12 32,16 28,20" />
-              <polygon points="12,28 16,24 20,28 16,32" />
-              <polygon points="0,16 4,12 8,16 4,20" />
-            </svg>
+            <img src="/binance-logo.svg" alt="" width="18" height="18" aria-hidden="true" />
             Binance
           </button>
 
