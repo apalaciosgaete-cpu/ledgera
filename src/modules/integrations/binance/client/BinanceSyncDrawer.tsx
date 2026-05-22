@@ -102,11 +102,11 @@ function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
   const years = [...byYear.keys()].sort((a, b) => a - b);
   if (years.length === 0) return <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Presiona Sincronizar para inicializar la cobertura.</p>;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", overflowX: "auto" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       {years.map(year => {
         const monthMap = byYear.get(year)!;
         return (
-          <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap", minWidth: "max-content" }}>
+          <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap" }}>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", minWidth: "32px", textAlign: "right", flexShrink: 0 }}>{year}</span>
             {MONTH_ABBR.map((label, i) => <MonthPill key={i} label={label} period={monthMap.get(i + 1)} />)}
           </div>
@@ -254,7 +254,7 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 900 }} />
 
       {/* Drawer */}
-      <div style={{ position: "fixed", top: 0, right: 0, width: "500px", maxWidth: "100vw", height: "100vh", background: "#0F172A", zIndex: 901, display: "flex", flexDirection: "column", boxShadow: "-8px 0 32px rgba(0,0,0,0.4)" }}>
+      <div style={{ position: "fixed", top: 0, right: 0, width: "580px", maxWidth: "100vw", height: "100vh", background: "#0F172A", zIndex: 901, display: "flex", flexDirection: "column", boxShadow: "-8px 0 32px rgba(0,0,0,0.4)" }}>
 
         {/* Header */}
         <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
