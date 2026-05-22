@@ -6,12 +6,20 @@ import type {
 } from "../domain/binanceTypes";
 import { classifyBinanceEvent } from "../domain/taxNormalization";
 
+const STABLECOIN_QUOTES = ["USDT", "USDC", "BUSD", "TUSD", "DAI", "FDUSD"];
+
 function baseAsset(symbol: string): string {
-  const stablecoins = ["USDT", "USDC", "BUSD", "TUSD", "DAI", "FDUSD"];
-  for (const stable of stablecoins) {
+  for (const stable of STABLECOIN_QUOTES) {
     if (symbol.endsWith(stable)) return symbol.slice(0, -stable.length);
   }
   return symbol.slice(0, -3);
+}
+
+function quoteAsset(symbol: string): string {
+  for (const stable of STABLECOIN_QUOTES) {
+    if (symbol.endsWith(stable)) return stable;
+  }
+  return "BTC";
 }
 
 export function normalizeTrade(raw: BinanceTradeRaw): NormalizedImportRecord {
@@ -33,6 +41,7 @@ export function normalizeTrade(raw: BinanceTradeRaw): NormalizedImportRecord {
     priceUsd,
     feeUsd,
     occurredAt:          new Date(raw.time),
+    quoteAsset:          quoteAsset(raw.symbol),
     normalizedEventType: tax.normalizedEventType,
     taxTreatment:        tax.taxTreatment,
     inventoryEffect:     tax.inventoryEffect,

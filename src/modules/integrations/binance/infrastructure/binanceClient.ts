@@ -108,20 +108,23 @@ export type DepositWindow  = { batch: BinanceDepositRaw[];  windowStart: number;
 export type WithdrawWindow = { batch: BinanceWithdrawRaw[]; windowStart: number; windowEnd: number };
 
 export async function* fetchAllTradesWindowed(
-  symbol:   string,
-  startMs:  number,
-  apiKey:   string,
+  symbol:    string,
+  startMs:   number,
+  apiKey:    string,
   apiSecret: string,
-  endMs?:   number,
+  endMs?:    number,
 ): AsyncGenerator<TradeWindow> {
   const ceiling = endMs !== undefined ? Math.min(endMs, Date.now()) : Date.now();
-  let cursor = startMs;
+  let   cursor  = startMs;
 
-  while (cursor < ceiling) {
-    const windowEnd = Math.min(cursor + MS_24H - 1, ceiling);
-    const batch     = await fetchTradesForSymbol(symbol, cursor, windowEnd, apiKey, apiSecret);
-    yield { batch, windowStart: cursor, windowEnd };
-    cursor = windowEnd + 1;
+  // One request covering the full time range, paginating only if ≥1000 results returned.
+  // Previous 24h-sub-window approach caused 86 pairs × 31 windows × 300ms = 800s timeouts.
+  while (cursor <= ceiling) {
+    const batch = await fetchTradesForSymbol(symbol, cursor, ceiling, apiKey, apiSecret);
+    if (batch.length === 0) break;
+    yield { batch, windowStart: cursor, windowEnd: ceiling };
+    if (batch.length < 1000) break;
+    cursor = batch[batch.length - 1].time + 1;
   }
 }
 

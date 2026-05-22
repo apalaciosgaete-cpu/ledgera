@@ -18,6 +18,7 @@ type ParsedNormalized = {
   priceUsd:     number;
   feeUsd:       number;
   occurredAt:   string;
+  quoteAsset?:  string;
 };
 
 export type AutoConfirmResult = {
@@ -71,11 +72,13 @@ export async function autoConfirmImports(
       const normalized = JSON.parse(record.normalizedJson ?? "{}") as ParsedNormalized;
 
       // ── Crear movimiento de portafolio ──
-      const occurredAt = new Date(normalized.occurredAt);
-      const isTransfer = eventType === "EXTERNAL_DEPOSIT" || eventType === "EXTERNAL_WITHDRAW";
+      const occurredAt  = new Date(normalized.occurredAt);
+      const isTransfer  = eventType === "EXTERNAL_DEPOSIT" || eventType === "EXTERNAL_WITHDRAW";
+      const isBtcQuoted = !isTransfer && normalized.quoteAsset === "BTC";
 
-      // Para depósitos y retiros: obtener precio histórico desde Binance público
-      const priceUsd = isTransfer
+      // Depósitos/retiros → precio histórico desde klines públicos.
+      // Pares BTC-cotizados (ETHBTC, SOLBTC…) → precio en BTC, no USD → convertir.
+      const priceUsd = (isTransfer || isBtcQuoted)
         ? await fetchHistoricalCryptoPrice(normalized.symbol, occurredAt)
         : normalized.priceUsd;
 

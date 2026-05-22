@@ -207,8 +207,9 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
   const [loadingImports, setLoadingImports] = useState(false);
   const [confirmingId,   setConfirmingId]   = useState<string | null>(null);
   const [selectedImport, setSelectedImport] = useState<ImportRecord | null>(null);
-  const [syncingMonth,   setSyncingMonth]   = useState<{ year: number; month: number } | null>(null);
-  const [msg,            setMsg]            = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
+  const [syncingMonth,    setSyncingMonth]   = useState<{ year: number; month: number } | null>(null);
+  const [showPendingList, setShowPendingList] = useState(false);
+  const [msg,             setMsg]            = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
 
   const loadStatus = useCallback(async () => {
     setLoadingConn(true);
@@ -444,21 +445,73 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                   {calendar && (
                     <span style={{ fontSize: "11px", color: "#475569" }}>
                       {calendar.totalCompleted} completados
-                      {calendar.totalPending > 0 && <span style={{ color: "#F59E0B" }}> · {calendar.totalPending} pendientes</span>}
-                      {calendar.totalFailed  > 0 && <span style={{ color: "#F87171" }}> · {calendar.totalFailed} fallidos</span>}
+                      {calendar.totalPending > 0 && (
+                        <button type="button" onClick={() => setShowPendingList(v => !v)}
+                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: fonts.body }}>
+                          <span style={{ color: "#F59E0B", textDecoration: "underline", fontSize: "11px" }}> · {calendar.totalPending} pendientes</span>
+                        </button>
+                      )}
+                      {calendar.totalFailed > 0 && (
+                        <button type="button" onClick={() => setShowPendingList(v => !v)}
+                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: fonts.body }}>
+                          <span style={{ color: "#F87171", textDecoration: "underline", fontSize: "11px" }}> · {calendar.totalFailed} fallidos</span>
+                        </button>
+                      )}
                     </span>
                   )}
                 </div>
                 {loadingCal && !calendar ? (
                   <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Cargando cobertura...</p>
                 ) : calendar ? (
-                  <div style={{ maxHeight: "220px", overflowY: "auto" }}>
-                    <SyncCalendarGrid
-                    periods={calendar.periods}
-                    onSyncMonth={!syncing ? handleSyncMonth : undefined}
-                    syncingMonth={syncingMonth}
-                  />
-                  </div>
+                  <>
+                    <div style={{ maxHeight: "220px", overflowY: "auto" }}>
+                      <SyncCalendarGrid
+                        periods={calendar.periods}
+                        onSyncMonth={!syncing ? handleSyncMonth : undefined}
+                        syncingMonth={syncingMonth}
+                      />
+                    </div>
+
+                    {/* Lista de meses pendientes/fallidos */}
+                    {showPendingList && (() => {
+                      const pending = calendar.periods.filter(p => p.status === "PENDING" || p.status === "FAILED");
+                      if (pending.length === 0) return null;
+                      return (
+                        <div style={{ marginTop: "10px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "10px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                              Meses pendientes ({pending.length})
+                            </span>
+                            <button type="button" onClick={() => setShowPendingList(false)}
+                              style={{ background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: "12px", fontFamily: fonts.body }}>
+                              Cerrar ✕
+                            </button>
+                          </div>
+                          <div style={{ maxHeight: "180px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px" }}>
+                            {pending.sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month).map(p => {
+                              const isSyncing = syncingMonth?.year === p.year && syncingMonth?.month === p.month;
+                              return (
+                                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", borderRadius: "7px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                  <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: 600, minWidth: "80px" }}>
+                                    {MONTH_NAME[p.month]?.charAt(0).toUpperCase()}{MONTH_NAME[p.month]?.slice(1)} {p.year}
+                                  </span>
+                                  <span style={{ flex: 1, fontSize: "11px", color: p.status === "FAILED" ? "#F87171" : "#F59E0B" }}>
+                                    {p.status === "FAILED" ? `✗ Falló${p.errorCount > 0 ? ` (${p.errorCount} errores)` : ""}` : "○ Pendiente"}
+                                  </span>
+                                  <button type="button"
+                                    onClick={() => handleSyncMonth(p.year, p.month)}
+                                    disabled={!!syncingMonth || syncing}
+                                    style={{ padding: "4px 10px", borderRadius: "5px", border: "1px solid rgba(22,163,74,0.3)", background: "rgba(22,163,74,0.08)", color: isSyncing ? "#F0B90B" : "#4ADE80", fontSize: "11px", fontWeight: 600, cursor: syncingMonth || syncing ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap" }}>
+                                    {isSyncing ? "…" : "Sincronizar"}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
                 ) : null}
               </div>
 

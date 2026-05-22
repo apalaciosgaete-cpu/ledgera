@@ -73,6 +73,7 @@ export type NormalizedImportRecord = {
   priceUsd:            number;
   feeUsd:              number;
   occurredAt:          Date;
+  quoteAsset?:         string;  // e.g. "USDT", "BTC" — used to detect non-USD-quoted trades
   // Tax normalization — clasificación tributaria chilena
   normalizedEventType: string;
   taxTreatment:        string;
