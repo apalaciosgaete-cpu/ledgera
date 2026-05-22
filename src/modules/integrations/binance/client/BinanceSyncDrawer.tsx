@@ -237,8 +237,9 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
     setResetting(true); setMsg(null);
     try {
       await httpClient("/api/integrations/binance/sync/reset", { method: "POST", auth: true, body: {} });
-      setMsg({ type: "success", text: "Sincronización reiniciada. Ya puedes volver a sincronizar." });
+      setMsg({ type: "success", text: "Historial reiniciado. Todos los períodos vuelven a PENDING." });
       await loadStatus();
+      await loadCalendar();
     } catch (e) {
       setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al reiniciar." });
     } finally {
@@ -344,12 +345,11 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                      : <span>Listo para sincronizar</span>}
                   </span>
 
-                  {isSyncStuck && (
-                    <button type="button" onClick={handleReset} disabled={resetting}
-                      style={{ padding: "6px 12px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "11px", fontWeight: 600, cursor: resetting ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap" }}>
-                      {resetting ? "Reiniciando..." : "Reiniciar sync"}
-                    </button>
-                  )}
+                  <button type="button" onClick={handleReset} disabled={resetting || syncing}
+                    title="Devuelve todos los períodos a PENDING para re-consultar el historial completo"
+                    style={{ padding: "6px 10px", borderRadius: "7px", border: "1px solid rgba(100,116,139,0.25)", background: "rgba(255,255,255,0.03)", color: "#475569", fontSize: "11px", cursor: resetting || syncing ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap" }}>
+                    {resetting ? "Reiniciando..." : "↺ Resetear"}
+                  </button>
 
                   <button type="button" onClick={handleSync} disabled={syncing || isSyncStuck}
                     style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: syncing || isSyncStuck ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap", animation: syncing ? "bn-pulse 1.2s ease-in-out infinite" : "none", opacity: isSyncStuck ? 0.5 : 1 }}>
