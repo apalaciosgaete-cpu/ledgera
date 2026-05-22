@@ -94,22 +94,37 @@ function MonthPill({ label, period }: { label: string; period?: SyncPeriod }) {
   );
 }
 
+const CALENDAR_START_YEAR = 2018;
+
 function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
   const byYear = new Map<number, Map<number, SyncPeriod>>();
   for (const p of periods) {
     if (!byYear.has(p.year)) byYear.set(p.year, new Map());
     byYear.get(p.year)!.set(p.month, p);
   }
-  const years = [...byYear.keys()].sort((a, b) => b - a);
-  if (years.length === 0) return <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Presiona Sincronizar para inicializar la cobertura.</p>;
+
+  const currentYear  = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  const years: number[] = [];
+  for (let y = currentYear; y >= CALENDAR_START_YEAR; y--) years.push(y);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       {years.map(year => {
-        const monthMap = byYear.get(year)!;
+        const monthMap  = byYear.get(year);
+        const maxMonth  = year === currentYear ? currentMonth : 12;
         return (
           <div key={year} style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap" }}>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", minWidth: "32px", textAlign: "right", flexShrink: 0 }}>{year}</span>
-            {MONTH_ABBR.map((label, i) => <MonthPill key={i} label={label} period={monthMap.get(i + 1)} />)}
+            {MONTH_ABBR.map((label, i) => {
+              const month = i + 1;
+              if (month > maxMonth) return (
+                <span key={i} style={{ width: "32px", height: "38px", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: "9px", color: "#1e293b" }}>{label}</span>
+                </span>
+              );
+              return <MonthPill key={i} label={label} period={monthMap?.get(month)} />;
+            })}
           </div>
         );
       })}
