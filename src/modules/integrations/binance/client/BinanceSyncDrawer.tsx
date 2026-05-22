@@ -100,7 +100,7 @@ function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
     if (!byYear.has(p.year)) byYear.set(p.year, new Map());
     byYear.get(p.year)!.set(p.month, p);
   }
-  const years = [...byYear.keys()].sort((a, b) => a - b);
+  const years = [...byYear.keys()].sort((a, b) => b - a);
   if (years.length === 0) return <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>Presiona Sincronizar para inicializar la cobertura.</p>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>

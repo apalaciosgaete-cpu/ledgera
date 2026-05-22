@@ -31,9 +31,9 @@ function getStaleSyncMinutes(): number {
 }
 
 function getStartDate(): Date {
-  const raw = process.env.BINANCE_SYNC_START_DATE ?? "2024-01-01";
+  const raw = process.env.BINANCE_SYNC_START_DATE ?? "2018-01-01";
   const d   = new Date(raw);
-  return isNaN(d.getTime()) ? new Date("2024-01-01") : d;
+  return isNaN(d.getTime()) ? new Date("2018-01-01") : d;
 }
 
 function getMonthsPerRun(): number {
