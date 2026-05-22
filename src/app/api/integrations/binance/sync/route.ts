@@ -169,26 +169,25 @@ export async function POST(request: NextRequest) {
     );
 
     // ── Auto-confirmación de eventos seguros ──────────────────────────
+    // Corre siempre: puede haber PENDING de ciclos anteriores sin procesar.
     let autoConfirm = { confirmed: 0, skippedReview: 0, errors: [] as string[] };
     let taxRebuilt  = false;
 
-    if (totalImported > 0 || totalSkipped > 0) {
-      try {
-        autoConfirm = await autoConfirmImports(auth.user.id);
+    try {
+      autoConfirm = await autoConfirmImports(auth.user.id);
 
-        if (autoConfirm.confirmed > 0) {
-          const rebuild = await rebuildTaxEvents(auth.user.id);
-          taxRebuilt = rebuild.ok;
-          if (taxRebuilt) {
-            await generateAnnualTaxSummary(auth.user.id);
-          }
+      if (autoConfirm.confirmed > 0) {
+        const rebuild = await rebuildTaxEvents(auth.user.id);
+        taxRebuilt = rebuild.ok;
+        if (taxRebuilt) {
+          await generateAnnualTaxSummary(auth.user.id);
         }
-      } catch (autoErr) {
-        console.error("[sync] auto-confirm error:", autoErr);
-        autoConfirm.errors.push(
-          autoErr instanceof Error ? autoErr.message : "Error en auto-confirmación",
-        );
       }
+    } catch (autoErr) {
+      console.error("[sync] auto-confirm error:", autoErr);
+      autoConfirm.errors.push(
+        autoErr instanceof Error ? autoErr.message : "Error en auto-confirmación",
+      );
     }
 
     const combinedErrors = [...allErrors, ...autoConfirm.errors];

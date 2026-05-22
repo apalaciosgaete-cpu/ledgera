@@ -53,6 +53,7 @@ type ImportRecord = {
   normalizedEventType: string | null;
   taxTreatment:        string | null;
   inventoryEffect:     string | null;
+  economicEffect:      string | null;
   status:              string;
   occurredAt:          string;
 };
@@ -118,8 +119,30 @@ function SyncCalendarGrid({ periods }: { periods: SyncPeriod[] }) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function needsManualReview(r: ImportRecord) {
-  return r.taxTreatment === "REVIEW" || r.inventoryEffect === "REVIEW";
+function reviewReason(r: ImportRecord): string {
+  const ev = r.normalizedEventType ?? "UNKNOWN";
+  if (ev === "UNKNOWN")          return "Tipo de evento no reconocido por LEDGERA.";
+  if (ev === "DUST_CONVERSION")  return "Conversión de polvo: involucra múltiples activos simultáneos.";
+  if (ev === "CONVERT")          return "Conversión equivale a venta + compra simultánea — requiere asignar precio justo a cada tramo.";
+  if (ev === "STAKING_REWARD")   return "Renta por staking: tratamiento bajo normativa SII requiere revisión.";
+  if (ev === "EARN_REWARD")      return "Renta por Earn/Launchpool: clasificación tributaria pendiente.";
+  if (ev === "P2P")              return "Operación P2P: requiere verificar precio de mercado en la fecha.";
+  if (ev === "FUNDING")          return "Funding fee de futuros: tratamiento como gasto financiero.";
+  if (r.taxTreatment === "REVIEW")   return "El tratamiento tributario de este evento es ambiguo.";
+  if (r.inventoryEffect === "REVIEW") return "El impacto en inventario FIFO no puede determinarse automáticamente.";
+  return "Evento marcado para revisión manual.";
+}
+
+function taxTreatmentLabel(tt: string | null): { label: string; color: string } {
+  const map: Record<string, { label: string; color: string }> = {
+    ACQUISITION: { label: "Adquisición",  color: "#4ADE80" },
+    DISPOSAL:    { label: "Enajenación",  color: "#F87171" },
+    INCOME:      { label: "Renta",        color: "#A78BFA" },
+    EXPENSE:     { label: "Gasto",        color: "#FCD34D" },
+    NEUTRAL:     { label: "Neutro",       color: "#64748B" },
+    REVIEW:      { label: "⚠ Revisar",   color: "#F59E0B" },
+  };
+  return map[tt ?? "REVIEW"] ?? map["REVIEW"]!;
 }
 
 function evBadgeStyle(type: string | null) {
@@ -148,6 +171,7 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
   const [imports,        setImports]        = useState<ImportRecord[]>([]);
   const [loadingImports, setLoadingImports] = useState(false);
   const [confirmingId,   setConfirmingId]   = useState<string | null>(null);
+  const [selectedImport, setSelectedImport] = useState<ImportRecord | null>(null);
   const [msg,            setMsg]            = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
 
   const loadStatus = useCallback(async () => {
@@ -378,16 +402,102 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                 ) : null}
               </div>
 
-              {/* Importaciones pendientes */}
+              {/* Excepciones — solo eventos que requieren decisión humana */}
               {((conn.pendingCount ?? 0) > 0 || imports.length > 0) && (
-                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", overflow: "hidden" }}>
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", overflow: "hidden", position: "relative" }}>
+
+                  {/* Panel de detalle — overlay dentro de la sección */}
+                  {selectedImport && (() => {
+                    let norm: NormalizedJson = { movementType: selectedImport.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
+                    try { norm = JSON.parse(selectedImport.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
+                    const ev  = evBadgeStyle(selectedImport.normalizedEventType);
+                    const tt  = taxTreatmentLabel(selectedImport.taxTreatment);
+                    const reason = reviewReason(selectedImport);
+                    return (
+                      <div style={{ position: "absolute", inset: 0, background: "#0F172A", zIndex: 5, display: "flex", flexDirection: "column", borderRadius: "10px" }}>
+                        <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: "10px" }}>
+                          <button type="button" onClick={() => setSelectedImport(null)}
+                            style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer", fontSize: "13px", padding: 0, fontFamily: fonts.body }}>
+                            ← Volver
+                          </button>
+                          <span style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Detalle del evento</span>
+                        </div>
+                        <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+
+                          {/* Evento + símbolo */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: ev.color, background: ev.bg, border: `1px solid ${ev.color}30`, borderRadius: "4px", padding: "3px 8px" }}>
+                              {selectedImport.normalizedEventType ?? selectedImport.externalType}
+                            </span>
+                            <span style={{ fontSize: "15px", fontWeight: 700, color: "#F1F5F9" }}>{norm.symbol}</span>
+                            <span style={{ fontSize: "12px", color: "#64748B" }}>
+                              {new Date(selectedImport.occurredAt).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" })}
+                            </span>
+                          </div>
+
+                          {/* Datos del movimiento */}
+                          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                            {[
+                              ["Cantidad",   norm.quantity > 0 ? norm.quantity.toFixed(8).replace(/\.?0+$/, "") : "—"],
+                              ["Precio USD", norm.priceUsd > 0 ? `$${norm.priceUsd.toFixed(2)}` : "—"],
+                              ["Fee USD",    norm.feeUsd > 0   ? `$${norm.feeUsd.toFixed(4)}`   : "$0"],
+                              ["Fuente",     "Binance · " + (selectedImport.externalType)],
+                              ["ID externo", selectedImport.externalId],
+                            ].map(([label, value]) => (
+                              <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                                <span style={{ fontSize: "11px", color: "#475569" }}>{label}</span>
+                                <span style={{ fontSize: "11px", color: "#94A3B8", fontFamily: "monospace", textAlign: "right", wordBreak: "break-all" }}>{value}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Clasificación LEDGERA */}
+                          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <p style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>Clasificación LEDGERA</p>
+                            {[
+                              ["Tratamiento tributario", <span style={{ color: tt.color, fontWeight: 600 }}>{tt.label}</span>],
+                              ["Efecto inventario FIFO", selectedImport.inventoryEffect ?? "—"],
+                              ["Efecto económico",       selectedImport.economicEffect  ?? "—"],
+                            ].map(([label, value]) => (
+                              <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontSize: "11px", color: "#475569" }}>{label}</span>
+                                <span style={{ fontSize: "11px", color: "#94A3B8" }}>{value}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Razón de revisión */}
+                          <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "8px", padding: "0.75rem" }}>
+                            <p style={{ fontSize: "11px", fontWeight: 700, color: "#F59E0B", margin: "0 0 4px" }}>⚠ Razón de revisión</p>
+                            <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>{reason}</p>
+                          </div>
+
+                          {/* Acciones */}
+                          <div style={{ display: "flex", gap: "8px", paddingTop: "4px" }}>
+                            <button type="button"
+                              onClick={() => { void handleImportAction(selectedImport.id, "CONFIRM"); setSelectedImport(null); }}
+                              disabled={selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW"}
+                              style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(22,163,74,0.3)", background: "rgba(22,163,74,0.08)", color: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "#334155" : "#4ADE80", fontSize: "12px", fontWeight: 600, cursor: (selectedImport.taxTreatment === "REVIEW" || selectedImport.inventoryEffect === "REVIEW") ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+                              ✓ Confirmar
+                            </button>
+                            <button type="button"
+                              onClick={() => { void handleImportAction(selectedImport.id, "REJECT"); setSelectedImport(null); }}
+                              style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}>
+                              ✗ Rechazar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div>
                       <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#94A3B8", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                        Revisión manual
+                        Excepciones
                         {imports.length > 0 && <span style={{ marginLeft: "6px", fontSize: "11px", fontWeight: 700, color: "#F0B90B", background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.2)", borderRadius: "4px", padding: "1px 6px" }}>{imports.length}</span>}
                       </h4>
-                      <p style={{ fontSize: "11px", color: "#334155", margin: 0 }}>Eventos que requieren confirmación manual.</p>
+                      <p style={{ fontSize: "11px", color: "#334155", margin: 0 }}>Eventos que no pudieron clasificarse automáticamente.</p>
                     </div>
                     <button type="button" onClick={loadImports} disabled={loadingImports}
                       style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#64748B", fontSize: "11px", cursor: loadingImports ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
@@ -398,14 +508,14 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                   {loadingImports ? (
                     <div style={{ padding: "1.5rem", textAlign: "center", color: "#475569", fontSize: "12px" }}>Cargando...</div>
                   ) : imports.length === 0 ? (
-                    <div style={{ padding: "1.5rem", textAlign: "center", color: "#334155", fontSize: "12px" }}>Sin pendientes de revisión.</div>
+                    <div style={{ padding: "1.5rem", textAlign: "center", color: "#334155", fontSize: "12px" }}>Sin excepciones — todo fue clasificado automáticamente.</div>
                   ) : (
                     <div style={{ maxHeight: "280px", overflowY: "auto" }}>
                       {imports.map((record) => {
                         let norm: NormalizedJson = { movementType: record.externalType, symbol: "—", quantity: 0, priceUsd: 0, feeUsd: 0 };
                         try { norm = JSON.parse(record.normalizedJson ?? "{}") as NormalizedJson; } catch { /* noop */ }
-                        const isProcessing = confirmingId === record.id;
-                        const cannotConfirm = needsManualReview(record);
+                        const isProcessing  = confirmingId === record.id;
+                        const cannotConfirm = record.taxTreatment === "REVIEW" || record.inventoryEffect === "REVIEW";
                         const ev = evBadgeStyle(record.normalizedEventType);
                         return (
                           <div key={record.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 1rem", borderBottom: "1px solid rgba(255,255,255,0.04)", flexWrap: "wrap" }}>
@@ -420,8 +530,13 @@ export function BinanceSyncDrawer({ onClose }: { onClose: () => void }) {
                               {new Date(record.occurredAt).toLocaleDateString("es-CL", { dateStyle: "short" })}
                             </span>
                             <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-                              <button type="button" onClick={() => !cannotConfirm && handleImportAction(record.id, "CONFIRM")} disabled={isProcessing || cannotConfirm} title={cannotConfirm ? "Requiere revisión manual" : "Confirmar"}
+                              {/* Detalle */}
+                              <button type="button" onClick={() => setSelectedImport(record)} title="Ver detalle tributario"
+                                style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(255,255,255,0.04)", color: "#94A3B8", fontSize: "11px", cursor: "pointer" }}>?</button>
+                              {/* Confirmar */}
+                              <button type="button" onClick={() => !cannotConfirm && handleImportAction(record.id, "CONFIRM")} disabled={isProcessing || cannotConfirm} title={cannotConfirm ? "Ver detalle para decidir" : "Confirmar"}
                                 style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(22,163,74,0.3)", background: cannotConfirm ? "rgba(255,255,255,0.03)" : "rgba(22,163,74,0.08)", color: cannotConfirm ? "#334155" : "#4ADE80", fontSize: "11px", cursor: isProcessing || cannotConfirm ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✓</button>
+                              {/* Rechazar */}
                               <button type="button" onClick={() => handleImportAction(record.id, "REJECT")} disabled={isProcessing} title="Rechazar"
                                 style={{ padding: "4px 8px", borderRadius: "5px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#F87171", fontSize: "11px", cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}>✗</button>
                             </div>

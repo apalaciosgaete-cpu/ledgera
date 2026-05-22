@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { confirmImport } from "../infrastructure/exchangeImportRepository";
-import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
 
 // Eventos que se auto-confirman sin intervención manual.
 const AUTO_CONFIRM_TYPES = new Set([
@@ -10,17 +9,6 @@ const AUTO_CONFIRM_TYPES = new Set([
   "EXTERNAL_WITHDRAW",
 ]);
 
-// Eventos que siempre quedan para revisión manual.
-const MANUAL_REVIEW_TYPES = new Set([
-  "DUST_CONVERSION",
-  "CONVERT",
-  "STAKING_REWARD",
-  "EARN_REWARD",
-  "P2P",
-  "FUNDING",
-  "UNKNOWN",
-]);
-
 type ParsedNormalized = {
   externalId:   string;
   movementType: string;
@@ -28,7 +16,7 @@ type ParsedNormalized = {
   quantity:     number;
   priceUsd:     number;
   feeUsd:       number;
-  occurredAt:   string; // ISO string when deserialized from JSON
+  occurredAt:   string;
 };
 
 export type AutoConfirmResult = {
@@ -38,15 +26,15 @@ export type AutoConfirmResult = {
 };
 
 /**
- * Auto-confirma las importaciones PENDING de Binance que son clasificables
- * de forma segura sin intervención del usuario.
+ * Auto-confirma las importaciones PENDING de Binance.
  *
- * Reglas:
- *   SPOT_BUY / SPOT_SELL   → crea PortfolioMovement + confirma
- *   EXTERNAL_DEPOSIT/WITHDRAW → confirma sin movimiento (neutral)
- *   REVIEW / UNKNOWN / DUST → queda en cola para revisión manual
+ * SPOT_BUY / SPOT_SELL        → crea PortfolioMovement + CONFIRMED
+ * EXTERNAL_DEPOSIT/WITHDRAW   → CONFIRMED sin movimiento (neutral)
+ * Todo lo demás               → REVIEW (aparece en tabla de excepciones)
  *
- * rebuildTaxEvents NO se llama aquí — el caller lo hace una sola vez al final.
+ * Sin assertPeriodOpen: la importación histórica debe funcionar
+ * independientemente del estado de cierre tributario del período.
+ * rebuildTaxEvents NO se llama aquí — el caller lo hace al final.
  */
 export async function autoConfirmImports(
   userId: string,
@@ -64,18 +52,17 @@ export async function autoConfirmImports(
     try {
       const eventType = record.normalizedEventType ?? "UNKNOWN";
 
-      // Requiere revisión manual explícita
+      // Requiere revisión manual → marcar REVIEW en DB para que aparezca
+      // en la tabla de excepciones, no mezclado con pendientes transitorios.
       if (
-        MANUAL_REVIEW_TYPES.has(eventType) ||
-        record.taxTreatment   === "REVIEW"  ||
+        !AUTO_CONFIRM_TYPES.has(eventType) ||
+        record.taxTreatment    === "REVIEW" ||
         record.inventoryEffect === "REVIEW"
       ) {
-        skippedReview++;
-        continue;
-      }
-
-      // No está en la lista de auto-confirmables
-      if (!AUTO_CONFIRM_TYPES.has(eventType)) {
+        await prisma.exchangeImportRecord.update({
+          where: { id: record.id },
+          data:  { status: "REVIEW" },
+        });
         skippedReview++;
         continue;
       }
@@ -90,16 +77,7 @@ export async function autoConfirmImports(
       }
 
       // ── SPOT_BUY / SPOT_SELL: crear movimiento en portafolio ──
-
-      // Verificar que el período tributario esté abierto
       const occurredAt = new Date(normalized.occurredAt);
-      try {
-        await assertPeriodOpen(occurredAt, userId);
-      } catch {
-        // Período cerrado — dejar en PENDING para revisión
-        skippedReview++;
-        continue;
-      }
 
       const movement = await prisma.portfolioMovement.create({
         data: {
