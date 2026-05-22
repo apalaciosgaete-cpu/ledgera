@@ -1,4 +1,5 @@
 import {
+  fetchAccountInfo,
   fetchAllDepositsWindowed,
   fetchAllTradesWindowed,
   fetchAllWithdrawalsWindowed,
@@ -11,9 +12,28 @@ import {
 } from "./normalizeBinanceTrade";
 import { BINANCE_SPOT_PAIRS } from "../domain/binanceTypes";
 
-function getSymbolLimit(): number {
-  const val = Number(process.env.BINANCE_SYNC_SYMBOL_LIMIT ?? "100");
-  return Number.isFinite(val) && val > 0 ? Math.min(val, BINANCE_SPOT_PAIRS.length) : 35;
+const STABLECOIN_ASSETS = new Set(["USDT", "USDC", "BUSD", "FDUSD", "TUSD", "DAI", "USDP"]);
+const DYNAMIC_QUOTES    = ["USDT", "USDC", "BUSD", "FDUSD", "BTC"];
+
+// Build pair list from current account balances merged with the static list.
+// Non-zero balance assets generate candidate pairs for all major quote assets.
+// Invalid pairs are already handled gracefully (-1121 → silently skipped).
+async function buildPairList(apiKey: string, apiSecret: string): Promise<string[]> {
+  const seen  = new Set(BINANCE_SPOT_PAIRS);
+  const pairs = [...BINANCE_SPOT_PAIRS];
+  try {
+    const info = await fetchAccountInfo(apiKey, apiSecret);
+    for (const { asset, free, locked } of info.balances) {
+      const a = asset.toUpperCase();
+      if (STABLECOIN_ASSETS.has(a)) continue;
+      if (parseFloat(free) + parseFloat(locked) <= 0) continue;
+      for (const q of DYNAMIC_QUOTES) {
+        const pair = `${a}${q}`;
+        if (!seen.has(pair)) { seen.add(pair); pairs.push(pair); }
+      }
+    }
+  } catch { /* fall back to static list */ }
+  return pairs;
 }
 
 export type MonthSyncResult = {
@@ -37,7 +57,7 @@ export async function syncBinanceMonth(
     return { imported: 0, skipped: 0, errors: [] };
   }
 
-  const pairs = BINANCE_SPOT_PAIRS.slice(0, getSymbolLimit());
+  const pairs = await buildPairList(apiKey, apiSecret);
 
   let imported = 0;
   let skipped  = 0;
@@ -48,7 +68,7 @@ export async function syncBinanceMonth(
     try {
       for await (const { batch } of fetchAllTradesWindowed(pair, startMs, apiKey, apiSecret, endMs)) {
         for (const raw of batch) {
-          const normalized = normalizeTrade(raw);
+          const normalized = await normalizeTrade(raw);
           const { isNew }  = await upsertImportRecord(userId, connectionId, "BINANCE", normalized, JSON.stringify(raw));
           isNew ? imported++ : skipped++;
         }

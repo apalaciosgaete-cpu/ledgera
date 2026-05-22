@@ -5,8 +5,21 @@ import type {
   NormalizedImportRecord,
 } from "../domain/binanceTypes";
 import { classifyBinanceEvent } from "../domain/taxNormalization";
+import { fetchHistoricalCryptoPrice } from "./fetchHistoricalCryptoPrice";
 
 const STABLECOIN_QUOTES = ["USDT", "USDC", "BUSD", "TUSD", "DAI", "FDUSD"];
+
+// Keyed by `${asset}_${hourTimestamp}` — historical prices never change.
+const _priceCache = new Map<string, number>();
+
+async function historicalUsd(asset: string, date: Date): Promise<number> {
+  const hourTs = Math.floor(date.getTime() / 3_600_000) * 3_600_000;
+  const key    = `${asset}_${hourTs}`;
+  if (_priceCache.has(key)) return _priceCache.get(key)!;
+  const price = await fetchHistoricalCryptoPrice(asset, new Date(hourTs));
+  _priceCache.set(key, price);
+  return price;
+}
 
 function baseAsset(symbol: string): string {
   for (const stable of STABLECOIN_QUOTES) {
@@ -22,13 +35,31 @@ function quoteAsset(symbol: string): string {
   return "BTC";
 }
 
-export function normalizeTrade(raw: BinanceTradeRaw): NormalizedImportRecord {
+export async function normalizeTrade(raw: BinanceTradeRaw): Promise<NormalizedImportRecord> {
   const movementType = raw.isBuyer ? "BUY" : "SELL";
-  const priceUsd     = parseFloat(raw.price);
   const qty          = parseFloat(raw.qty);
-  const feeUsd       = raw.commissionAsset === "USDT"
-    ? parseFloat(raw.commission)
-    : 0;
+  const commission   = parseFloat(raw.commission);
+  const tradeDate    = new Date(raw.time);
+  const quote        = quoteAsset(raw.symbol);
+
+  // For BTC-quoted pairs (e.g. ETHBTC) the raw price is in BTC, not USD.
+  let priceUsd = parseFloat(raw.price);
+  if (quote === "BTC") {
+    const btcUsd = await historicalUsd("BTC", tradeDate);
+    priceUsd = priceUsd * btcUsd;
+  }
+
+  // Convert commission to USD regardless of which asset Binance charged.
+  let feeUsd = 0;
+  if (commission > 0) {
+    const commAsset = raw.commissionAsset.toUpperCase();
+    if (STABLECOIN_QUOTES.includes(commAsset)) {
+      feeUsd = commission;
+    } else {
+      const assetUsd = await historicalUsd(commAsset, tradeDate);
+      feeUsd = commission * assetUsd;
+    }
+  }
 
   const tax = classifyBinanceEvent("TRADE", movementType);
 
@@ -40,8 +71,8 @@ export function normalizeTrade(raw: BinanceTradeRaw): NormalizedImportRecord {
     quantity:            qty,
     priceUsd,
     feeUsd,
-    occurredAt:          new Date(raw.time),
-    quoteAsset:          quoteAsset(raw.symbol),
+    occurredAt:          tradeDate,
+    quoteAsset:          quote,
     normalizedEventType: tax.normalizedEventType,
     taxTreatment:        tax.taxTreatment,
     inventoryEffect:     tax.inventoryEffect,

@@ -1,4 +1,5 @@
 import {
+  fetchAccountInfo,
   fetchAllDepositsWindowed,
   fetchAllTradesWindowed,
   fetchAllWithdrawalsWindowed,
@@ -16,6 +17,32 @@ import {
   type SyncCheckpoint,
   type SyncResult,
 } from "../domain/binanceTypes";
+
+const STABLECOIN_ASSETS = new Set(["USDT", "USDC", "BUSD", "FDUSD", "TUSD", "DAI", "USDP"]);
+const DYNAMIC_QUOTES    = ["USDT", "USDC", "BUSD", "FDUSD", "BTC"];
+
+// Prepend dynamic pairs from non-zero balances so they're synced first.
+async function buildPairList(apiKey: string, apiSecret: string, limit: number): Promise<string[]> {
+  const dynamic: string[] = [];
+  const seen = new Set<string>();
+  try {
+    const info = await fetchAccountInfo(apiKey, apiSecret);
+    for (const { asset, free, locked } of info.balances) {
+      const a = asset.toUpperCase();
+      if (STABLECOIN_ASSETS.has(a)) continue;
+      if (parseFloat(free) + parseFloat(locked) <= 0) continue;
+      for (const q of DYNAMIC_QUOTES) {
+        const pair = `${a}${q}`;
+        if (!seen.has(pair)) { seen.add(pair); dynamic.push(pair); }
+      }
+    }
+  } catch { /* fall back to static list only */ }
+  const merged: string[] = [...dynamic];
+  for (const p of BINANCE_SPOT_PAIRS) {
+    if (!seen.has(p)) { seen.add(p); merged.push(p); }
+  }
+  return merged.slice(0, limit);
+}
 
 function getStartMs(): number {
   const raw = process.env.BINANCE_SYNC_START_DATE ?? "2024-01-01";
@@ -53,7 +80,7 @@ export async function syncBinance(
   const defaultStartMs = getStartMs();
   const symbolLimit    = getSymbolLimit();
   const windowLimit    = getWindowLimit();
-  const pairs          = BINANCE_SPOT_PAIRS.slice(0, symbolLimit);
+  const pairs          = await buildPairList(apiKey, apiSecret, symbolLimit);
 
   const symbolStats: Record<string, SymbolSyncStats> = {};
   let firstFailure: FirstSyncFailure | null = null;
@@ -74,7 +101,7 @@ export async function syncBinance(
       for await (const { batch, windowStart, windowEnd } of fetchAllTradesWindowed(pair, startMs, apiKey, apiSecret)) {
         if (windows >= windowLimit) break;
         for (const raw of batch) {
-          const normalized = normalizeTrade(raw);
+          const normalized = await normalizeTrade(raw);
           const { isNew }  = await upsertImportRecord(
             userId,
             connectionId,
