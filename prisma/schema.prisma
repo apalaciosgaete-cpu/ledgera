@@ -33,6 +33,10 @@ model PortfolioMovement {
   @@index([executedAt])
   @@index([userId, executedAt])
   @@index([source])
+  @@index([type])
+  @@index([symbol])
+  @@index([userId, type])
+  @@index([userId, symbol])
   @@map("portfolio_movements")
 }
 
