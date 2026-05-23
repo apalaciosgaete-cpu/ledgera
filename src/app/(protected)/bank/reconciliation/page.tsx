@@ -99,11 +99,12 @@ function StateBadge({ state }: { state: RowState }) {
 
 // ── Action button ─────────────────────────────────────────────────────────────
 function ActionBtn({
-  label, onClick, variant,
+  label, onClick, variant, disabled = false,
 }: {
-  label:   string;
-  onClick: () => void;
-  variant: "accept" | "ignore" | "review";
+  label:    string;
+  onClick:  () => void;
+  variant:  "accept" | "ignore" | "review";
+  disabled?: boolean;
 }) {
   const [hover, setHover] = useState(false);
   const styles = {
@@ -115,7 +116,8 @@ function ActionBtn({
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
+      disabled={disabled}
+      onMouseEnter={() => !disabled && setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
         padding:      "5px 12px",
@@ -123,9 +125,10 @@ function ActionBtn({
         fontSize:     "12px",
         fontWeight:   500,
         border:       "none",
-        cursor:       "pointer",
-        background:   hover ? s.hoverBg : s.base,
-        color:        hover ? s.hoverText : s.text,
+        cursor:       disabled ? "not-allowed" : "pointer",
+        opacity:      disabled ? 0.5 : 1,
+        background:   hover && !disabled ? s.hoverBg : s.base,
+        color:        hover && !disabled ? s.hoverText : s.text,
         transition:   "all 0.15s ease",
         whiteSpace:   "nowrap",
       }}
@@ -156,6 +159,7 @@ export default function ReconciliationPage() {
   const [rowStates,   setRowStates]   = useState<Record<string, RowState>>({});
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState<string | null>(null);
+  const [acting,      setActing]      = useState<string | null>(null);
 
   const fetchSuggestions = useCallback(async () => {
     setLoading(true);
@@ -178,8 +182,43 @@ export default function ReconciliationPage() {
 
   useEffect(() => { void fetchSuggestions(); }, [fetchSuggestions]);
 
-  function setState(bankMovementId: string, state: RowState) {
+  function setRowState(bankMovementId: string, state: RowState) {
     setRowStates(prev => ({ ...prev, [bankMovementId]: state }));
+  }
+
+  async function handleAccept(s: Suggestion) {
+    setActing(s.bankMovementId);
+    try {
+      const res = await fetch("/api/bank/reconciliation/confirm", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          bankMovementId:      s.bankMovementId,
+          portfolioMovementId: s.portfolioMovementId,
+          confidence:          s.confidence,
+          reason:              s.reason,
+        }),
+      });
+      const json = await res.json() as ApiResponse<unknown>;
+      if (json.ok) setRowState(s.bankMovementId, "accepted");
+    } finally {
+      setActing(null);
+    }
+  }
+
+  async function handleIgnore(bankMovementId: string) {
+    setActing(bankMovementId);
+    try {
+      const res = await fetch("/api/bank/reconciliation/reject", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ bankMovementId }),
+      });
+      const json = await res.json() as ApiResponse<unknown>;
+      if (json.ok) setRowState(bankMovementId, "ignored");
+    } finally {
+      setActing(null);
+    }
   }
 
   // Summary counts (computed from local state)
@@ -344,12 +383,29 @@ export default function ReconciliationPage() {
                       <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
                         <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", flexWrap: "wrap" }}>
                           {state !== "accepted" && (
-                            <ActionBtn label="Aceptar" onClick={() => setState(s.bankMovementId, "accepted")} variant="accept" />
+                            <ActionBtn
+                              label="Aceptar"
+                              onClick={() => void handleAccept(s)}
+                              variant="accept"
+                              disabled={acting === s.bankMovementId}
+                            />
                           )}
                           {state !== "review" && state !== "accepted" && (
-                            <ActionBtn label="Revisar" onClick={() => setState(s.bankMovementId, "review")} variant="review" />
+                            <ActionBtn
+                              label="Revisar"
+                              onClick={() => setRowState(s.bankMovementId, "review")}
+                              variant="review"
+                              disabled={acting === s.bankMovementId}
+                            />
                           )}
-                          <ActionBtn label="Ignorar" onClick={() => setState(s.bankMovementId, "ignored")} variant="ignore" />
+                          {state !== "ignored" && state !== "accepted" && (
+                            <ActionBtn
+                              label="Ignorar"
+                              onClick={() => void handleIgnore(s.bankMovementId)}
+                              variant="ignore"
+                              disabled={acting === s.bankMovementId}
+                            />
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -368,7 +424,7 @@ export default function ReconciliationPage() {
             gap:       "16px",
           }}>
             <span>{suggestions.length} sugerencia{suggestions.length !== 1 ? "s" : ""} encontradas</span>
-            {counts.accepted > 0 && <span style={{ color: "#16A34A" }}>· {counts.accepted} aceptadas (sin guardar)</span>}
+            {counts.accepted > 0 && <span style={{ color: "#16A34A" }}>· {counts.accepted} conciliadas</span>}
             {counts.review > 0   && <span style={{ color: "#D97706" }}>· {counts.review} en revisión</span>}
           </div>
         </div>
