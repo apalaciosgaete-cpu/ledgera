@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
   try {
-    const records = await listPendingImports(auth.user.id, "BINANCE");
+    const records = await listPendingImports(auth.user.id, ["BINANCE", "BINANCE_TAX"]);
 
     const shaped = records.map((r) => ({
       id:                  r.id,

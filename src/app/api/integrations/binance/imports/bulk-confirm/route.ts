@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
             priceUsd,
             feeUsd:     normalized.feeUsd,
             executedAt: occurredAt,
-            source:     "BINANCE",
+            source:     record.provider,
             externalId: normalized.externalId,
           },
         });

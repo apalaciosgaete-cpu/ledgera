@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     if (action === "REJECT") {
       await rejectImport(recordId, auth.user.id);
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_REJECTED", auth.user.id, auth.user.email, {
-        provider:       "BINANCE",
+        provider:       record.provider as "BINANCE" | "BINANCE_TAX",
         status:         "SUCCESS",
         importRecordId: recordId,
         externalId:     record.externalId,
@@ -108,13 +108,13 @@ export async function POST(request: NextRequest) {
           priceUsd:   historicalPrice,
           feeUsd:     normalized.feeUsd,
           executedAt: normalized.occurredAt,
-          source:     "BINANCE",
+          source:     record.provider,
           externalId: normalized.externalId,
         },
       });
       await confirmImport(recordId, auth.user.id, transferMovement.id);
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
-        provider:       "BINANCE",
+        provider:       record.provider as "BINANCE" | "BINANCE_TAX",
         status:         "SUCCESS",
         importRecordId: recordId,
         externalId:     record.externalId,
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         priceUsd:   normalized.priceUsd,
         feeUsd:     normalized.feeUsd,
         executedAt: normalized.occurredAt,
-        source:     "BINANCE",
+        source:     record.provider,
         externalId: normalized.externalId,
       },
     });
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     }
 
     await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
-      provider:       "BINANCE",
+      provider:       record.provider as "BINANCE" | "BINANCE_TAX",
       status:         "SUCCESS",
       importRecordId: recordId,
       externalId:     record.externalId,

@@ -35,12 +35,12 @@ export async function upsertImportRecord(
   return { isNew: true };
 }
 
-export async function listPendingImports(userId: string, provider?: string) {
+export async function listPendingImports(userId: string, providers?: string[]) {
   return prisma.exchangeImportRecord.findMany({
     where: {
       userId,
       status: { in: ["PENDING", "REVIEW"] },
-      ...(provider ? { provider } : {}),
+      ...(providers && providers.length > 0 ? { provider: { in: providers } } : {}),
     },
     orderBy: { occurredAt: "asc" },
   });
