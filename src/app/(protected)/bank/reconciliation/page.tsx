@@ -59,8 +59,20 @@ type BankMovement = {
   updatedAt:   string;
 };
 
+type AuditLog = {
+  id:                  string;
+  userId:              string;
+  action:              string;
+  bankMovementId:      string;
+  portfolioMovementId: string | null;
+  confidence:          number | null;
+  reason:              string | null;
+  metadata:            string | null;
+  createdAt:           string;
+};
+
 type RowState = "pending" | "accepted" | "review" | "ignored";
-type Tab      = "suggestions" | "matched" | "ignored";
+type Tab      = "suggestions" | "matched" | "ignored" | "audit";
 
 type ApiResponse<T> = { ok: boolean; message: string; data: T };
 
@@ -310,6 +322,10 @@ export default function ReconciliationPage() {
   const [ignored,      setIgnored]      = useState<BankMovement[]>([]);
   const [ignLoading,   setIgnLoading]   = useState(false);
 
+  // Audit tab
+  const [auditLogs,    setAuditLogs]    = useState<AuditLog[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+
   // ── Loaders ─────────────────────────────────────────────────────────────────
   const loadSuggestions = useCallback(async () => {
     setSugLoading(true);
@@ -400,10 +416,25 @@ export default function ReconciliationPage() {
     setIgnLoading(false);
   }
 
+  async function loadAuditLogs() {
+    setAuditLoading(true);
+    const token = getSessionToken();
+    const response = await fetch("/api/bank/reconciliation/audit", {
+      credentials: "include",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    const payload = await response.json() as ApiResponse<{ logs: AuditLog[]; total: number }>;
+    if (response.ok && payload.ok) {
+      setAuditLogs(payload.data.logs);
+    }
+    setAuditLoading(false);
+  }
+
   useEffect(() => {
     if (activeTab === "suggestions") void loadSuggestions();
     if (activeTab === "matched")     void loadMatched();
     if (activeTab === "ignored")     void loadIgnored();
+    if (activeTab === "audit")       void loadAuditLogs();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, loadSuggestions]);
 
@@ -523,6 +554,17 @@ export default function ReconciliationPage() {
           }`}
         >
           Ignorados
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("audit")}
+          className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+            activeTab === "audit"
+              ? "bg-slate-900 text-white"
+              : "text-slate-500 hover:bg-slate-50"
+          }`}
+        >
+          Auditoría
         </button>
       </div>
 
@@ -672,6 +714,65 @@ export default function ReconciliationPage() {
               )}
               <MatchedView matches={matched} onUnmatch={unmatchRecord} actionLoadingId={actionLoadingId} />
             </>
+      )}
+
+      {/* ── Auditoría ── */}
+      {activeTab === "audit" && (
+        auditLoading ? (
+          <div style={{
+            background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+            padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "14px",
+          }}>
+            Cargando auditoría…
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <table className="w-full min-w-225 text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-4 py-3 text-left">Fecha</th>
+                  <th className="px-4 py-3 text-left">Acción</th>
+                  <th className="px-4 py-3 text-left">Movimiento banco</th>
+                  <th className="px-4 py-3 text-left">Movimiento crypto</th>
+                  <th className="px-4 py-3 text-left">Confianza</th>
+                  <th className="px-4 py-3 text-left">Motivo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {auditLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                      No hay eventos de auditoría.
+                    </td>
+                  </tr>
+                ) : (
+                  auditLogs.map(log => (
+                    <tr key={log.id}>
+                      <td className="px-4 py-3 text-slate-500">
+                        {new Date(log.createdAt).toLocaleString("es-CL")}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-slate-900">
+                        {log.action}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {log.bankMovementId}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {log.portfolioMovementId ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {log.confidence !== null ? `${Math.round(log.confidence * 100)}%` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {log.reason ?? "—"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
 
       {/* ── Ignorados ── */}
