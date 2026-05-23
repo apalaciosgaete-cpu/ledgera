@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fonts } from "@/styles/tokens";
 import { httpClient } from "@/shared/http/httpClient";
 
@@ -164,6 +164,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
   const [loadingTaxConn, setLoadingTaxConn] = useState(false);
   const [msg,            setMsg]            = useState<{ type: "success"|"error"|"info"; text: string } | null>(null);
   const [visibleYear,    setVisibleYear]    = useState(() => new Date().getFullYear());
+  const targetYearRef = useRef(new Date().getFullYear());
 
   const currentYear  = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -251,8 +252,15 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
     }
   }, [conn, loadCalendar, loadImports, loadTaxStatus]);
 
+  // Restaura el año visible cada vez que llegan nuevos datos — evita que
+  // re-renders causados por setCalendar/setAllImports sobreescriban la selección.
+  useEffect(() => {
+    setVisibleYear(targetYearRef.current);
+  }, [calendar, allImports]);
+
   async function handleClickMonth(year: number, month: number) {
     if (syncingMonth) return;
+    targetYearRef.current = year;
     setVisibleYear(year);
     setSyncingMonth({ year, month });
     setLastSyncedMonth(null);
@@ -290,9 +298,11 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
       if (parts.length === 0) setMsg({ type: "error", text: "Error al sincronizar." });
     }
 
-    await Promise.all([loadCalendar(), loadImports(), loadStatus()]);
+    // No llamar loadStatus() aquí: cambia conn → dispara useEffect([conn]) →
+    // loadCalendar/loadImports corren de nuevo en background compitiendo con
+    // el setVisibleYear que sigue. La conexión no cambia durante un sync.
+    await Promise.all([loadCalendar(), loadImports()]);
 
-    setVisibleYear(year);
     setLastSyncedMonth({ year, month });
     setSyncingMonth(null);
     if (parts.length > 0) onSyncComplete?.();
@@ -356,14 +366,14 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                   <button
                     type="button"
-                    onClick={() => setVisibleYear(y => Math.max(CALENDAR_START_YEAR, y - 1))}
+                    onClick={() => { const y = Math.max(CALENDAR_START_YEAR, visibleYear - 1); targetYearRef.current = y; setVisibleYear(y); }}
                     disabled={visibleYear <= CALENDAR_START_YEAR}
                     style={{ background: "none", border: "none", color: visibleYear <= CALENDAR_START_YEAR ? "#1e293b" : "#64748B", cursor: visibleYear <= CALENDAR_START_YEAR ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
                   >‹</button>
                   <span style={{ fontSize: "16px", fontWeight: 700, color: "#CBD5E1" }}>{visibleYear}</span>
                   <button
                     type="button"
-                    onClick={() => setVisibleYear(y => Math.min(currentYear, y + 1))}
+                    onClick={() => { const y = Math.min(currentYear, visibleYear + 1); targetYearRef.current = y; setVisibleYear(y); }}
                     disabled={visibleYear >= currentYear}
                     style={{ background: "none", border: "none", color: visibleYear >= currentYear ? "#1e293b" : "#64748B", cursor: visibleYear >= currentYear ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
                   >›</button>
