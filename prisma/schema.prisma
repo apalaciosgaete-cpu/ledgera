@@ -460,6 +460,8 @@ model users {
   taxLedgerEntries        TaxLedgerEntry[]
   annualTaxSummaries      AnnualTaxSummary[]
   exchangeSyncPeriods     ExchangeSyncPeriod[]
+  bankMovements           BankMovement[]
+  bankCsvTemplates        BankCsvTemplate[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -578,4 +580,48 @@ model ExchangeSyncPeriod {
   @@index([userId, year])
   @@index([userId, provider, status])
   @@map("exchange_sync_periods")
+}
+
+model BankMovement {
+  id          String   @id @default(cuid())
+  userId      String
+  source      String   @default("BANK_CSV")
+  bankName    String?
+  externalId  String?
+  occurredAt  DateTime
+  description String
+  amountClp   Float
+  direction   String
+  balanceClp  Float?
+  status      String   @default("IMPORTED")
+  rawJson     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId, occurredAt])
+  @@index([userId, direction])
+  @@index([userId, status])
+  @@unique([userId, externalId])
+  @@map("bank_movements")
+}
+
+model BankCsvTemplate {
+  id         String   @id @default(cuid())
+  userId     String
+  bankName   String
+  colDate    String
+  colDesc    String
+  colAmount  String?
+  colDebit   String?
+  colCredit  String?
+  colBalance String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@unique([userId, bankName])
+  @@map("bank_csv_templates")
 }
