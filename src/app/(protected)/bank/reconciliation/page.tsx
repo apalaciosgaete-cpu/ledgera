@@ -48,6 +48,17 @@ type MatchedRecord = {
   reason:     string | null;
 };
 
+type BankMovement = {
+  id:          string;
+  bankName:    string | null;
+  occurredAt:  string;
+  description: string;
+  amountClp:   number;
+  direction:   string;
+  status:      string;
+  updatedAt:   string;
+};
+
 type RowState = "pending" | "accepted" | "review" | "ignored";
 type Tab      = "suggestions" | "matched" | "ignored";
 
@@ -271,6 +282,10 @@ export default function ReconciliationPage() {
   const [matched,      setMatched]      = useState<MatchedRecord[]>([]);
   const [matchLoading, setMatchLoading] = useState(false);
 
+  // Ignored tab
+  const [ignored,      setIgnored]      = useState<BankMovement[]>([]);
+  const [ignLoading,   setIgnLoading]   = useState(false);
+
   // ── Loaders ─────────────────────────────────────────────────────────────────
   const loadSuggestions = useCallback(async () => {
     setSugLoading(true);
@@ -310,9 +325,24 @@ export default function ReconciliationPage() {
     setMatchLoading(false);
   }
 
+  async function loadIgnored() {
+    setIgnLoading(true);
+    const token = getSessionToken();
+    const response = await fetch("/api/bank/reconciliation/ignored", {
+      credentials: "include",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    const payload = await response.json() as ApiResponse<{ ignored: BankMovement[]; total: number }>;
+    if (response.ok && payload.ok) {
+      setIgnored(payload.data.ignored);
+    }
+    setIgnLoading(false);
+  }
+
   useEffect(() => {
     if (activeTab === "suggestions") void loadSuggestions();
     if (activeTab === "matched")     void loadMatched();
+    if (activeTab === "ignored")     void loadIgnored();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, loadSuggestions]);
 
@@ -575,17 +605,72 @@ export default function ReconciliationPage() {
 
       {/* ── Ignorados ── */}
       {activeTab === "ignored" && (
-        <div style={{
-          background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
-          padding: "64px 24px", textAlign: "center",
-        }}>
-          <div style={{ fontSize: "14px", fontWeight: 600, color: "#0F2A3D", marginBottom: "6px" }}>
-            Próximamente
+        ignLoading ? (
+          <div style={{
+            background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+            padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "14px",
+          }}>
+            Cargando movimientos ignorados…
           </div>
-          <div style={{ fontSize: "13px", color: "#94A3B8" }}>
-            El endpoint <code style={{ background: "#F1F5F9", padding: "1px 6px", borderRadius: "4px" }}>/api/bank/reconciliation/ignored</code> está pendiente.
+        ) : ignored.length === 0 ? (
+          <div style={{
+            background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+            padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "13px",
+          }}>
+            No hay movimientos ignorados.
           </div>
-        </div>
+        ) : (
+          <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" }}>
+                    {["Banco", "Descripción", "Monto", "Fecha", "Estado"].map(col => (
+                      <th key={col} style={{
+                        padding: "12px 16px", textAlign: "left",
+                        fontWeight: 600, color: "#475569", fontSize: "12px", whiteSpace: "nowrap",
+                      }}>
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {ignored.map(m => (
+                    <tr key={m.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <span style={{ fontSize: "12px", color: "#64748B" }}>{m.bankName ?? "—"}</span>
+                      </td>
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <span style={{ fontSize: "13px", color: "#0F2A3D" }}>{truncate(m.description)}</span>
+                      </td>
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 700, color: "#DC2626" }}>
+                          -{formatClp(m.amountClp)}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px", verticalAlign: "top", color: "#64748B", fontSize: "12px" }}>
+                        {formatDate(m.occurredAt)}
+                      </td>
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center",
+                          padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 500,
+                          background: "#FEE2E2", color: "#991B1B", border: "1px solid #FECACA",
+                        }}>
+                          Ignorado
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ padding: "12px 16px", borderTop: "1px solid #F1F5F9", fontSize: "12px", color: "#94A3B8" }}>
+              {ignored.length} movimiento{ignored.length !== 1 ? "s" : ""} ignorado{ignored.length !== 1 ? "s" : ""}
+            </div>
+          </div>
+        )
       )}
     </div>
   );
