@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { BankMatchSuggestion } from "../domain/bankMatchingTypes";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-const KEYWORDS       = ["BINANCE", "CRYPTO", "P2P"];
+const KEYWORDS       = ["BINANCE", "CRYPTO", "P2P", "BIFROST"];
 const BINANCE_SOURCES = ["BINANCE", "BINANCE_TAX"];
 const WINDOW_DAYS    = 3;
 
