@@ -59,16 +59,29 @@ type BankMovement = {
   updatedAt:   string;
 };
 
-type AuditLog = {
-  id:                  string;
-  userId:              string;
-  action:              string;
-  bankMovementId:      string;
-  portfolioMovementId: string | null;
-  confidence:          number | null;
-  reason:              string | null;
-  metadata:            string | null;
-  createdAt:           string;
+type EnrichedAuditLog = {
+  id:         string;
+  action:     string;
+  confidence: number | null;
+  reason:     string | null;
+  createdAt:  string;
+  bankMovement: {
+    id:          string;
+    bankName:    string | null;
+    occurredAt:  string;
+    description: string;
+    amountClp:   number;
+    direction:   string;
+  } | null;
+  portfolioMovement: {
+    id:         string;
+    type:       string;
+    symbol:     string;
+    quantity:   number;
+    priceUsd:   number;
+    executedAt: string;
+    source:     string | null;
+  } | null;
 };
 
 type RowState = "pending" | "accepted" | "review" | "ignored";
@@ -323,7 +336,7 @@ export default function ReconciliationPage() {
   const [ignLoading,   setIgnLoading]   = useState(false);
 
   // Audit tab
-  const [auditLogs,    setAuditLogs]    = useState<AuditLog[]>([]);
+  const [auditLogs,    setAuditLogs]    = useState<EnrichedAuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
 
   // ── Loaders ─────────────────────────────────────────────────────────────────
@@ -423,7 +436,7 @@ export default function ReconciliationPage() {
       credentials: "include",
       headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     });
-    const payload = await response.json() as ApiResponse<{ logs: AuditLog[]; total: number }>;
+    const payload = await response.json() as ApiResponse<{ logs: EnrichedAuditLog[]; total: number }>;
     if (response.ok && payload.ok) {
       setAuditLogs(payload.data.logs);
     }
@@ -732,8 +745,8 @@ export default function ReconciliationPage() {
                 <tr>
                   <th className="px-4 py-3 text-left">Fecha</th>
                   <th className="px-4 py-3 text-left">Acción</th>
-                  <th className="px-4 py-3 text-left">Movimiento banco</th>
-                  <th className="px-4 py-3 text-left">Movimiento crypto</th>
+                  <th className="px-4 py-3 text-left">Banco</th>
+                  <th className="px-4 py-3 text-left">Crypto</th>
                   <th className="px-4 py-3 text-left">Confianza</th>
                   <th className="px-4 py-3 text-left">Motivo</th>
                 </tr>
@@ -748,22 +761,64 @@ export default function ReconciliationPage() {
                 ) : (
                   auditLogs.map(log => (
                     <tr key={log.id}>
-                      <td className="px-4 py-3 text-slate-500">
+                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
                         {new Date(log.createdAt).toLocaleString("es-CL")}
                       </td>
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        {log.action}
+                      <td className="px-4 py-3">
+                        <span style={{
+                          display: "inline-flex", alignItems: "center",
+                          padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600,
+                          background: log.action === "MATCH_CONFIRMED" ? "#DCFCE7"
+                                    : log.action === "MATCH_REJECTED"  ? "#FEE2E2"
+                                    : "#FEF3C7",
+                          color:     log.action === "MATCH_CONFIRMED" ? "#166534"
+                                    : log.action === "MATCH_REJECTED"  ? "#991B1B"
+                                    : "#92400E",
+                        }}>
+                          {log.action}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-500">
-                        {log.bankMovementId}
+                      <td className="px-4 py-3 text-slate-600">
+                        {log.bankMovement ? (
+                          <div>
+                            <div style={{ fontSize: "12px", fontWeight: 600, color: "#0F2A3D" }}>
+                              {log.bankMovement.bankName
+                                ? `${log.bankMovement.bankName} · `
+                                : ""}{truncate(log.bankMovement.description, 28)}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#DC2626", fontWeight: 700 }}>
+                              -{formatClp(log.bankMovement.amountClp)}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "#94A3B8" }}>
+                              {formatDate(log.bankMovement.occurredAt)}
+                            </div>
+                          </div>
+                        ) : <span className="text-slate-400">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">
-                        {log.portfolioMovementId ?? "—"}
+                      <td className="px-4 py-3 text-slate-600">
+                        {log.portfolioMovement ? (
+                          <div>
+                            <div style={{ fontSize: "12px", fontWeight: 600, color: "#0F2A3D" }}>
+                              {log.portfolioMovement.symbol}{" "}
+                              <span style={{ fontSize: "11px", fontWeight: 500, color: "#1D4ED8" }}>
+                                {log.portfolioMovement.type}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#64748B" }}>
+                              {log.portfolioMovement.source ?? "—"}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "#94A3B8" }}>
+                              {formatDate(log.portfolioMovement.executedAt)}
+                            </div>
+                          </div>
+                        ) : <span className="text-slate-400">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">
-                        {log.confidence !== null ? `${Math.round(log.confidence * 100)}%` : "—"}
+                      <td className="px-4 py-3">
+                        {log.confidence !== null
+                          ? <ConfidenceBadge confidence={log.confidence} />
+                          : <span className="text-slate-400">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">
+                      <td className="px-4 py-3 text-slate-500" style={{ fontSize: "12px", maxWidth: "160px" }}>
                         {log.reason ?? "—"}
                       </td>
                     </tr>
