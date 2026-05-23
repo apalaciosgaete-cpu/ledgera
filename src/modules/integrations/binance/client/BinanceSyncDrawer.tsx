@@ -163,7 +163,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
   const [taxConn,        setTaxConn]        = useState<TaxConnectionStatus | null>(null);
   const [loadingTaxConn, setLoadingTaxConn] = useState(false);
   const [msg,            setMsg]            = useState<{ type: "success"|"error"|"info"; text: string } | null>(null);
-  const [displayYear,    setDisplayYear]    = useState(() => new Date().getFullYear());
+  const [visibleYear,    setVisibleYear]    = useState(() => new Date().getFullYear());
 
   const currentYear  = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -253,6 +253,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
 
   async function handleClickMonth(year: number, month: number) {
     if (syncingMonth) return;
+    setVisibleYear(year);
     setSyncingMonth({ year, month });
     setLastSyncedMonth(null);
     setMsg(null);
@@ -291,6 +292,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
 
     await Promise.all([loadCalendar(), loadImports(), loadStatus()]);
 
+    setVisibleYear(year);
     setLastSyncedMonth({ year, month });
     setSyncingMonth(null);
     if (parts.length > 0) onSyncComplete?.();
@@ -354,16 +356,16 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                   <button
                     type="button"
-                    onClick={() => setDisplayYear(y => Math.max(CALENDAR_START_YEAR, y - 1))}
-                    disabled={displayYear <= CALENDAR_START_YEAR}
-                    style={{ background: "none", border: "none", color: displayYear <= CALENDAR_START_YEAR ? "#1e293b" : "#64748B", cursor: displayYear <= CALENDAR_START_YEAR ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
+                    onClick={() => setVisibleYear(y => Math.max(CALENDAR_START_YEAR, y - 1))}
+                    disabled={visibleYear <= CALENDAR_START_YEAR}
+                    style={{ background: "none", border: "none", color: visibleYear <= CALENDAR_START_YEAR ? "#1e293b" : "#64748B", cursor: visibleYear <= CALENDAR_START_YEAR ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
                   >‹</button>
-                  <span style={{ fontSize: "16px", fontWeight: 700, color: "#CBD5E1" }}>{displayYear}</span>
+                  <span style={{ fontSize: "16px", fontWeight: 700, color: "#CBD5E1" }}>{visibleYear}</span>
                   <button
                     type="button"
-                    onClick={() => setDisplayYear(y => Math.min(currentYear, y + 1))}
-                    disabled={displayYear >= currentYear}
-                    style={{ background: "none", border: "none", color: displayYear >= currentYear ? "#1e293b" : "#64748B", cursor: displayYear >= currentYear ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
+                    onClick={() => setVisibleYear(y => Math.min(currentYear, y + 1))}
+                    disabled={visibleYear >= currentYear}
+                    style={{ background: "none", border: "none", color: visibleYear >= currentYear ? "#1e293b" : "#64748B", cursor: visibleYear >= currentYear ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
                   >›</button>
                 </div>
 
@@ -371,10 +373,10 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                   {MONTH_ABBR.map((lbl, i) => {
                     const month    = i + 1;
-                    const isFuture = displayYear === currentYear && month > currentMonth;
-                    const isSyncing= syncingMonth?.year === displayYear && syncingMonth?.month === month;
-                    const isLast   = lastSyncedMonth?.year === displayYear && lastSyncedMonth?.month === month && !isSyncing;
-                    const key      = `${displayYear}-${month}`;
+                    const isFuture = visibleYear === currentYear && month > currentMonth;
+                    const isSyncing= syncingMonth?.year === visibleYear && syncingMonth?.month === month;
+                    const isLast   = lastSyncedMonth?.year === visibleYear && lastSyncedMonth?.month === month && !isSyncing;
+                    const key      = `${visibleYear}-${month}`;
                     const dots     = dotsByMonth.get(key) ?? { tax: "none" as const, spot: "none" as const, total: 0 };
                     return (
                       <MonthPill
@@ -382,7 +384,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
                         label={lbl}
                         period={periodsByKey.get(key)}
                         dots={dots}
-                        onClick={() => handleClickMonth(displayYear, month)}
+                        onClick={() => handleClickMonth(visibleYear, month)}
                         syncing={isSyncing}
                         future={isFuture}
                         lastSynced={isLast}
