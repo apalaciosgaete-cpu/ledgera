@@ -9,9 +9,9 @@ type Suggestion = {
   confidence:          number;
   reason:              string;
   bank: {
-    occurredAt:   string;
-    description:  string;
-    amountClp:    number;
+    occurredAt:  string;
+    description: string;
+    amountClp:   number;
   };
   crypto: {
     occurredAt: string;
@@ -22,6 +22,8 @@ type Suggestion = {
     source:     string | null;
   };
 };
+
+type RowState = "pending" | "accepted" | "review" | "ignored";
 
 type ApiResponse<T> = { ok: boolean; message: string; data: T };
 
@@ -42,37 +44,16 @@ function formatDate(iso: string): string {
   });
 }
 
-function confidenceBadge(conf: number): { bg: string; color: string; border: string } {
-  if (conf > 0.85)  return { bg: "#DCFCE7", color: "#166534", border: "#BBF7D0" };
-  if (conf >= 0.60) return { bg: "#FEF3C7", color: "#92400E", border: "#FDE68A" };
-  return               { bg: "#F1F5F9", color: "#475569", border: "#E2E8F0" };
-}
-
-function truncate(s: string, n = 32): string {
+function truncate(s: string, n = 34): string {
   return s.length > n ? s.slice(0, n) + "…" : s;
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-function SummaryCard({
-  label, value, accent,
-}: { label: string; value: number; accent: string }) {
-  return (
-    <div style={{
-      background:   "#ffffff",
-      borderRadius: "12px",
-      border:       "1px solid #E2E8F0",
-      padding:      "20px 24px",
-    }}>
-      <div style={{ fontSize: "26px", fontWeight: 700, color: accent, lineHeight: 1 }}>
-        {value}
-      </div>
-      <div style={{ fontSize: "13px", color: "#64748B", marginTop: "6px" }}>{label}</div>
-    </div>
-  );
-}
-
+// ── Confidence badge ──────────────────────────────────────────────────────────
 function ConfidenceBadge({ confidence }: { confidence: number }) {
-  const s = confidenceBadge(confidence);
+  let bg = "#F1F5F9", color = "#475569", border = "#E2E8F0";
+  if (confidence > 0.85) { bg = "#DCFCE7"; color = "#166534"; border = "#BBF7D0"; }
+  else if (confidence >= 0.60) { bg = "#FEF3C7"; color = "#92400E"; border = "#FDE68A"; }
+
   return (
     <span style={{
       display:      "inline-flex",
@@ -80,38 +61,60 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
       padding:      "3px 10px",
       borderRadius: "20px",
       fontSize:     "13px",
-      fontWeight:   600,
-      background:   s.bg,
-      color:        s.color,
-      border:       `1px solid ${s.border}`,
+      fontWeight:   700,
+      background:   bg,
+      color,
+      border:       `1px solid ${border}`,
     }}>
       {Math.round(confidence * 100)}%
     </span>
   );
 }
 
-function ActionButton({
-  label, onClick, disabled, variant,
+// ── Row state badge ───────────────────────────────────────────────────────────
+function StateBadge({ state }: { state: RowState }) {
+  const map: Record<RowState, { label: string; bg: string; color: string; border: string }> = {
+    pending:  { label: "Pendiente",    bg: "#F1F5F9", color: "#475569", border: "#E2E8F0" },
+    accepted: { label: "Aceptado",     bg: "#DCFCE7", color: "#166534", border: "#BBF7D0" },
+    review:   { label: "En revisión",  bg: "#FEF3C7", color: "#92400E", border: "#FDE68A" },
+    ignored:  { label: "Ignorado",     bg: "#FEE2E2", color: "#991B1B", border: "#FECACA" },
+  };
+  const s = map[state];
+  return (
+    <span style={{
+      display:      "inline-flex",
+      alignItems:   "center",
+      padding:      "3px 10px",
+      borderRadius: "20px",
+      fontSize:     "12px",
+      fontWeight:   500,
+      background:   s.bg,
+      color:        s.color,
+      border:       `1px solid ${s.border}`,
+    }}>
+      {s.label}
+    </span>
+  );
+}
+
+// ── Action button ─────────────────────────────────────────────────────────────
+function ActionBtn({
+  label, onClick, variant,
 }: {
-  label:    string;
-  onClick:  () => void;
-  disabled: boolean;
-  variant:  "confirm" | "reject" | "review";
+  label:   string;
+  onClick: () => void;
+  variant: "accept" | "ignore" | "review";
 }) {
   const [hover, setHover] = useState(false);
-
-  const styles: Record<string, { base: string; baseText: string; hover: string; hoverText: string }> = {
-    confirm: { base: "#DCFCE7", baseText: "#166534", hover: "#16A34A", hoverText: "#ffffff" },
-    reject:  { base: "#FEE2E2", baseText: "#991B1B", hover: "#DC2626", hoverText: "#ffffff" },
-    review:  { base: "#F1F5F9", baseText: "#475569", hover: "#E2E8F0", hoverText: "#0F2A3D" },
+  const styles = {
+    accept: { base: "#DCFCE7", text: "#166534", hoverBg: "#16A34A", hoverText: "#fff" },
+    ignore: { base: "#FEE2E2", text: "#991B1B", hoverBg: "#DC2626", hoverText: "#fff" },
+    review: { base: "#F1F5F9", text: "#475569", hoverBg: "#E2E8F0", hoverText: "#0F2A3D" },
   };
-
   const s = styles[variant];
-
   return (
     <button
       onClick={onClick}
-      disabled={disabled}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -120,10 +123,9 @@ function ActionButton({
         fontSize:     "12px",
         fontWeight:   500,
         border:       "none",
-        cursor:       disabled ? "not-allowed" : "pointer",
-        opacity:      disabled ? 0.5 : 1,
-        background:   hover && !disabled ? s.hover : s.base,
-        color:        hover && !disabled ? s.hoverText : s.baseText,
+        cursor:       "pointer",
+        background:   hover ? s.hoverBg : s.base,
+        color:        hover ? s.hoverText : s.text,
         transition:   "all 0.15s ease",
         whiteSpace:   "nowrap",
       }}
@@ -133,189 +135,65 @@ function ActionButton({
   );
 }
 
-function SuggestionRow({
-  suggestion, isActing, isReviewed, onConfirm, onReject, onReview,
-}: {
-  suggestion:  Suggestion;
-  isActing:    boolean;
-  isReviewed:  boolean;
-  onConfirm:   () => void;
-  onReject:    () => void;
-  onReview:    () => void;
-}) {
-  const { bank, crypto, confidence, reason } = suggestion;
-
+// ── Summary card ──────────────────────────────────────────────────────────────
+function SummaryCard({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
-    <tr style={{ borderBottom: "1px solid #F1F5F9" }}>
-      {/* Banco */}
-      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: "#0F2A3D", marginBottom: "2px" }}>
-          {truncate(bank.description)}
-        </div>
-        <div style={{ fontSize: "15px", fontWeight: 700, color: "#DC2626" }}>
-          -{formatClp(bank.amountClp)}
-        </div>
-        <div style={{ fontSize: "12px", color: "#94A3B8", marginTop: "2px" }}>
-          {formatDate(bank.occurredAt)}
-        </div>
-      </td>
-
-      {/* Crypto */}
-      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
-          <span style={{ fontSize: "13px", fontWeight: 700, color: "#0F2A3D" }}>{crypto.symbol}</span>
-          <span style={{
-            fontSize:     "11px",
-            fontWeight:   600,
-            padding:      "1px 6px",
-            borderRadius: "4px",
-            background:   "#EFF6FF",
-            color:        "#1D4ED8",
-          }}>
-            {crypto.type}
-          </span>
-        </div>
-        <div style={{ fontSize: "12px", color: "#64748B" }}>{crypto.source ?? "—"}</div>
-        <div style={{ fontSize: "12px", color: "#94A3B8", marginTop: "2px" }}>
-          {formatDate(crypto.occurredAt)}
-        </div>
-        <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "2px" }}>
-          {crypto.quantity} × ${crypto.priceUsd.toLocaleString("en-US", { maximumFractionDigits: 4 })}
-        </div>
-      </td>
-
-      {/* Confidence */}
-      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-        <ConfidenceBadge confidence={confidence} />
-        <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "4px", maxWidth: "160px", lineHeight: 1.4 }}>
-          {reason}
-        </div>
-      </td>
-
-      {/* Estado */}
-      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-        {isReviewed ? (
-          <span style={{
-            display:      "inline-flex",
-            alignItems:   "center",
-            padding:      "3px 10px",
-            borderRadius: "20px",
-            fontSize:     "12px",
-            fontWeight:   500,
-            background:   "#FEF3C7",
-            color:        "#92400E",
-            border:       "1px solid #FDE68A",
-          }}>
-            En revisión
-          </span>
-        ) : (
-          <span style={{
-            display:      "inline-flex",
-            alignItems:   "center",
-            padding:      "3px 10px",
-            borderRadius: "20px",
-            fontSize:     "12px",
-            fontWeight:   500,
-            background:   "#F1F5F9",
-            color:        "#475569",
-            border:       "1px solid #E2E8F0",
-          }}>
-            Pendiente
-          </span>
-        )}
-      </td>
-
-      {/* Acción */}
-      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          <ActionButton label="Aceptar"  onClick={onConfirm} disabled={isActing} variant="confirm" />
-          <ActionButton label="Rechazar" onClick={onReject}  disabled={isActing} variant="reject" />
-          {!isReviewed && (
-            <ActionButton label="Revisar"  onClick={onReview}  disabled={isActing} variant="review" />
-          )}
-        </div>
-      </td>
-    </tr>
+    <div style={{
+      background:   "#ffffff",
+      borderRadius: "12px",
+      border:       "1px solid #E2E8F0",
+      padding:      "20px 24px",
+    }}>
+      <div style={{ fontSize: "28px", fontWeight: 700, color: accent, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: "13px", color: "#64748B", marginTop: "6px" }}>{label}</div>
+    </div>
   );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function ReconciliationPage() {
-  const [suggestions,  setSuggestions]  = useState<Suggestion[]>([]);
-  const [matchedCount, setMatchedCount] = useState(0);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState<string | null>(null);
-  const [acting,       setActing]       = useState<string | null>(null);
-  const [reviewedIds,  setReviewedIds]  = useState<Set<string>>(new Set());
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [rowStates,   setRowStates]   = useState<Record<string, RowState>>({});
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchSuggestions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [sugRes, matchRes] = await Promise.all([
-        fetch("/api/bank/match/binance", { method: "POST" }),
-        fetch("/api/bank/movements?status=MATCHED&limit=1"),
-      ]);
-
-      const sugData  = await sugRes.json()  as ApiResponse<{ suggestions: Suggestion[]; total: number }>;
-      const matchData = await matchRes.json() as ApiResponse<{ total: number }>;
-
-      if (sugData.ok)   setSuggestions(sugData.data.suggestions ?? []);
-      if (matchData.ok) setMatchedCount(matchData.data.total ?? 0);
+      const res  = await fetch("/api/bank/match/binance", { method: "POST" });
+      const json = await res.json() as ApiResponse<{ suggestions: Suggestion[]; total: number }>;
+      if (json.ok) {
+        setSuggestions(json.data.suggestions ?? []);
+        setRowStates({});
+      } else {
+        setError(json.message ?? "Error al cargar sugerencias.");
+      }
     } catch {
-      setError("No se pudieron cargar las sugerencias.");
+      setError("No se pudo conectar con el servidor.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { void fetchData(); }, [fetchData]);
+  useEffect(() => { void fetchSuggestions(); }, [fetchSuggestions]);
 
-  async function handleConfirm(s: Suggestion) {
-    setActing(s.bankMovementId);
-    try {
-      const res = await fetch("/api/bank/reconciliation/confirm", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          bankMovementId:      s.bankMovementId,
-          portfolioMovementId: s.portfolioMovementId,
-          confidence:          s.confidence,
-          reason:              s.reason,
-        }),
-      });
-      if (res.ok) {
-        setSuggestions(prev => prev.filter(x => x.bankMovementId !== s.bankMovementId));
-        setMatchedCount(prev => prev + 1);
-      }
-    } finally {
-      setActing(null);
-    }
+  function setState(bankMovementId: string, state: RowState) {
+    setRowStates(prev => ({ ...prev, [bankMovementId]: state }));
   }
 
-  async function handleReject(s: Suggestion) {
-    setActing(s.bankMovementId);
-    try {
-      const res = await fetch("/api/bank/reconciliation/reject", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ bankMovementId: s.bankMovementId }),
-      });
-      if (res.ok) {
-        setSuggestions(prev => prev.filter(x => x.bankMovementId !== s.bankMovementId));
-      }
-    } finally {
-      setActing(null);
-    }
-  }
+  // Summary counts (computed from local state)
+  const counts = suggestions.reduce(
+    (acc, s) => {
+      const st = rowStates[s.bankMovementId] ?? "pending";
+      acc[st]++;
+      return acc;
+    },
+    { pending: 0, accepted: 0, review: 0, ignored: 0 } as Record<RowState, number>,
+  );
 
-  function handleReview(bankMovementId: string) {
-    setReviewedIds(prev => new Set([...prev, bankMovementId]));
-  }
-
-  const highConf = suggestions.filter(s => s.confidence > 0.85).length;
-  const midConf  = suggestions.filter(s => s.confidence >= 0.60 && s.confidence <= 0.85).length;
-  const pending  = suggestions.length;
+  // Visible rows: hide ignored ones
+  const visible = suggestions.filter(s => (rowStates[s.bankMovementId] ?? "pending") !== "ignored");
 
   return (
     <div>
@@ -336,103 +214,162 @@ export default function ReconciliationPage() {
         gap:                 "16px",
         marginBottom:        "28px",
       }}>
-        <SummaryCard label="Pendientes"      value={pending}      accent="#0F2A3D" />
-        <SummaryCard label="Alta confianza"  value={highConf}     accent="#16A34A" />
-        <SummaryCard label="Revisión manual" value={midConf}      accent="#D97706" />
-        <SummaryCard label="Conciliados"     value={matchedCount} accent="#64748B" />
+        <SummaryCard label="Pendientes"      value={counts.pending}  accent="#0F2A3D" />
+        <SummaryCard
+          label="Alta confianza"
+          value={suggestions.filter(s => s.confidence > 0.85).length}
+          accent="#16A34A"
+        />
+        <SummaryCard
+          label="Revisión manual"
+          value={suggestions.filter(s => s.confidence >= 0.60 && s.confidence <= 0.85).length}
+          accent="#D97706"
+        />
+        <SummaryCard label="Conciliados"     value={counts.accepted} accent="#64748B" />
       </div>
 
       {/* Content */}
       {loading ? (
         <div style={{
-          background:   "#ffffff",
-          borderRadius: "12px",
-          border:       "1px solid #E2E8F0",
-          padding:      "64px 24px",
-          textAlign:    "center",
-          color:        "#94A3B8",
-          fontSize:     "14px",
+          background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+          padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "14px",
         }}>
           Analizando movimientos…
         </div>
       ) : error ? (
         <div style={{
-          background:   "#FEF2F2",
-          borderRadius: "12px",
-          border:       "1px solid #FECACA",
-          padding:      "24px",
-          color:        "#991B1B",
-          fontSize:     "14px",
+          background: "#FEF2F2", borderRadius: "12px", border: "1px solid #FECACA",
+          padding: "24px", color: "#991B1B", fontSize: "14px",
         }}>
           {error}
         </div>
       ) : suggestions.length === 0 ? (
         <div style={{
-          background:   "#ffffff",
-          borderRadius: "12px",
-          border:       "1px solid #E2E8F0",
-          padding:      "64px 24px",
-          textAlign:    "center",
+          background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+          padding: "64px 24px", textAlign: "center",
         }}>
           <div style={{ fontSize: "32px", marginBottom: "12px" }}>✓</div>
           <div style={{ fontSize: "15px", fontWeight: 600, color: "#0F2A3D", marginBottom: "4px" }}>
             Sin sugerencias pendientes
           </div>
           <div style={{ fontSize: "13px", color: "#94A3B8" }}>
-            No hay egresos bancarios que coincidan con movimientos Binance en el rango de ±3 días.
+            No hay egresos bancarios que coincidan con actividad Binance en ±3 días.
           </div>
         </div>
       ) : (
-        <div style={{
-          background:   "#ffffff",
-          borderRadius: "12px",
-          border:       "1px solid #E2E8F0",
-          overflow:     "hidden",
-        }}>
+        <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" }}>
-                  {["Banco", "Crypto", "Confidence", "Estado", "Acción"].map(col => (
-                    <th
-                      key={col}
-                      style={{
-                        padding:    "12px 16px",
-                        textAlign:  col === "Acción" ? "right" : "left",
-                        fontWeight: 600,
-                        color:      "#475569",
-                        fontSize:   "12px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                  {["Banco", "Crypto", "Confidence", "Estado", "Acción"].map((col, i) => (
+                    <th key={col} style={{
+                      padding:    "12px 16px",
+                      textAlign:  i === 4 ? "right" : "left",
+                      fontWeight: 600,
+                      color:      "#475569",
+                      fontSize:   "12px",
+                      whiteSpace: "nowrap",
+                    }}>
                       {col}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {suggestions.map(s => (
-                  <SuggestionRow
-                    key={`${s.bankMovementId}-${s.portfolioMovementId}`}
-                    suggestion={s}
-                    isActing={acting === s.bankMovementId}
-                    isReviewed={reviewedIds.has(s.bankMovementId)}
-                    onConfirm={() => void handleConfirm(s)}
-                    onReject={() => void handleReject(s)}
-                    onReview={() => handleReview(s.bankMovementId)}
-                  />
-                ))}
+                {visible.map(s => {
+                  const state = rowStates[s.bankMovementId] ?? "pending";
+                  return (
+                    <tr
+                      key={`${s.bankMovementId}-${s.portfolioMovementId}`}
+                      style={{
+                        borderBottom: "1px solid #F1F5F9",
+                        background:   state === "accepted" ? "#F0FDF4" : state === "review" ? "#FFFBEB" : "transparent",
+                        transition:   "background 0.2s ease",
+                      }}
+                    >
+                      {/* Banco */}
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#0F2A3D", marginBottom: "3px" }}>
+                          {truncate(s.bank.description)}
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: 700, color: "#DC2626" }}>
+                          -{formatClp(s.bank.amountClp)}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#94A3B8", marginTop: "3px" }}>
+                          {formatDate(s.bank.occurredAt)}
+                        </div>
+                      </td>
+
+                      {/* Crypto */}
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                          <span style={{ fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>
+                            {s.crypto.symbol}
+                          </span>
+                          <span style={{
+                            fontSize: "11px", fontWeight: 600, padding: "1px 6px",
+                            borderRadius: "4px", background: "#EFF6FF", color: "#1D4ED8",
+                          }}>
+                            {s.crypto.type}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#64748B" }}>{s.crypto.source ?? "—"}</div>
+                        <div style={{ fontSize: "12px", color: "#94A3B8", marginTop: "3px" }}>
+                          {formatDate(s.crypto.occurredAt)}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "2px" }}>
+                          {s.crypto.quantity.toLocaleString("en-US", { maximumFractionDigits: 6 })}
+                          {" × $"}{s.crypto.priceUsd.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                        </div>
+                      </td>
+
+                      {/* Confidence */}
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <ConfidenceBadge confidence={s.confidence} />
+                        <div style={{
+                          fontSize: "11px", color: "#94A3B8", marginTop: "5px",
+                          maxWidth: "180px", lineHeight: 1.5,
+                        }}>
+                          {s.reason}
+                        </div>
+                      </td>
+
+                      {/* Estado */}
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <StateBadge state={state} />
+                      </td>
+
+                      {/* Acción */}
+                      <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
+                        <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                          {state !== "accepted" && (
+                            <ActionBtn label="Aceptar" onClick={() => setState(s.bankMovementId, "accepted")} variant="accept" />
+                          )}
+                          {state !== "review" && state !== "accepted" && (
+                            <ActionBtn label="Revisar" onClick={() => setState(s.bankMovementId, "review")} variant="review" />
+                          )}
+                          <ActionBtn label="Ignorar" onClick={() => setState(s.bankMovementId, "ignored")} variant="ignore" />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           <div style={{
-            padding:      "12px 16px",
-            borderTop:    "1px solid #F1F5F9",
-            fontSize:     "12px",
-            color:        "#94A3B8",
+            padding:   "12px 16px",
+            borderTop: "1px solid #F1F5F9",
+            fontSize:  "12px",
+            color:     "#94A3B8",
+            display:   "flex",
+            gap:       "16px",
           }}>
-            {suggestions.length} sugerencia{suggestions.length !== 1 ? "s" : ""} · confianza mínima 40%
+            <span>{suggestions.length} sugerencia{suggestions.length !== 1 ? "s" : ""} encontradas</span>
+            {counts.accepted > 0 && <span style={{ color: "#16A34A" }}>· {counts.accepted} aceptadas (sin guardar)</span>}
+            {counts.review > 0   && <span style={{ color: "#D97706" }}>· {counts.review} en revisión</span>}
           </div>
         </div>
       )}
