@@ -63,26 +63,28 @@ function amountScore(
 
   const diffPct = Math.abs(bankAmountClp - estimatedClp) / bankAmountClp;
 
-  const rate = Math.round(usdClp);
+  const diffRounded      = Math.round(diffPct * 100);
+  const estimatedRounded = Math.round(estimatedClp);
+  const usdClpRounded    = Math.round(usdClp);
 
   if (diffPct <= 0.05) {
     return {
       score: 0.3,
-      reason: `Monto compatible dentro de 5% usando USD/CLP ${rate}`,
+      reason: `Monto compatible dentro de 5% (${diffRounded}%) · estimado CLP ${estimatedRounded} usando USD/CLP ${usdClpRounded}`,
     };
   }
 
   if (diffPct <= 0.1) {
     return {
       score: 0.2,
-      reason: `Monto compatible dentro de 10% usando USD/CLP ${rate}`,
+      reason: `Monto compatible dentro de 10% (${diffRounded}%) · estimado CLP ${estimatedRounded} usando USD/CLP ${usdClpRounded}`,
     };
   }
 
   if (diffPct <= 0.2) {
     return {
       score: 0.1,
-      reason: `Monto compatible dentro de 20% usando USD/CLP ${rate}`,
+      reason: `Monto compatible dentro de 20% (${diffRounded}%) · estimado CLP ${estimatedRounded} usando USD/CLP ${usdClpRounded}`,
     };
   }
 
