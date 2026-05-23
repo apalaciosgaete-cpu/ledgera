@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { BankMatchSuggestion } from "../domain/bankMatchingTypes";
 
 const KEYWORDS = ["BINANCE", "P2P", "CRYPTO", "BIFROST"];
+const DEFAULT_USD_CLP = Number(process.env.USD_TO_CLP_RATE ?? "950");
 
 function addDays(date: Date, days: number): Date {
   const copy = new Date(date);
@@ -43,6 +44,43 @@ function dateScore(bankDate: Date, cryptoDate: Date): { score: number; reason: s
 function typeScore(type: string): { score: number; reason?: string } {
   if (type === "BUY" || type === "DEPOSIT") {
     return { score: 0.1, reason: `Movimiento crypto tipo ${type}` };
+  }
+
+  return { score: 0 };
+}
+
+function amountScore(
+  bankAmountClp: number,
+  cryptoQuantity: number,
+  cryptoPriceUsd: number,
+): { score: number; reason?: string } {
+  const estimatedClp = cryptoQuantity * cryptoPriceUsd * DEFAULT_USD_CLP;
+
+  if (!Number.isFinite(estimatedClp) || estimatedClp <= 0 || bankAmountClp <= 0) {
+    return { score: 0 };
+  }
+
+  const diffPct = Math.abs(bankAmountClp - estimatedClp) / bankAmountClp;
+
+  if (diffPct <= 0.05) {
+    return {
+      score: 0.3,
+      reason: `Monto compatible dentro de 5% (${Math.round(diffPct * 100)}%)`,
+    };
+  }
+
+  if (diffPct <= 0.1) {
+    return {
+      score: 0.2,
+      reason: `Monto compatible dentro de 10% (${Math.round(diffPct * 100)}%)`,
+    };
+  }
+
+  if (diffPct <= 0.2) {
+    return {
+      score: 0.1,
+      reason: `Monto compatible dentro de 20% (${Math.round(diffPct * 100)}%)`,
+    };
   }
 
   return { score: 0 };
@@ -102,7 +140,13 @@ export async function suggestBankBinanceMatches(userId: string): Promise<BankMat
       const type = typeScore(crypto.type);
       if (type.reason) reasons.push(type.reason);
 
-      const confidence = Math.min(1, keyword.score + date.score + type.score);
+      const amount = amountScore(bank.amountClp, crypto.quantity, crypto.priceUsd);
+      if (amount.reason) reasons.push(amount.reason);
+
+      const confidence = Math.min(
+        1,
+        keyword.score + date.score + type.score + amount.score,
+      );
 
       if (confidence >= 0.4) {
         suggestions.push({
