@@ -74,8 +74,8 @@ const MONTH_NAME: Record<number, string> = {
   1:"enero",2:"febrero",3:"marzo",4:"abril",5:"mayo",6:"junio",
   7:"julio",8:"agosto",9:"septiembre",10:"octubre",11:"noviembre",12:"diciembre",
 };
-const CALENDAR_START_YEAR  = 2018;
-const YEAR_STORAGE_KEY     = "ledgera.binance.visibleYear";
+const CALENDAR_START_YEAR = 2018;
+const YEAR_STORAGE_KEY    = "ledgera.binance.visibleYear";
 
 function readStoredYear(): number {
   if (typeof window === "undefined") return new Date().getFullYear();
@@ -85,9 +85,7 @@ function readStoredYear(): number {
 }
 
 function writeStoredYear(year: number) {
-  if (typeof window !== "undefined") {
-    window.sessionStorage.setItem(YEAR_STORAGE_KEY, String(year));
-  }
+  if (typeof window !== "undefined") window.sessionStorage.setItem(YEAR_STORAGE_KEY, String(year));
 }
 
 // ── Month dots ────────────────────────────────────────────────────────────────
@@ -117,16 +115,17 @@ function MonthPill({ label, period, dots, onClick, syncing, future, lastSynced }
   let border    = "#E2E8F0";
   let textColor = "#334155";
 
-  if      (future)      { bg = "transparent";              border = "#F1F5F9";                textColor = "#CBD5E1";  }
-  else if (syncing)     { bg = "rgba(240,185,11,0.08)";    border = "rgba(240,185,11,0.5)";   textColor = "#B45309";  }
-  else if (lastSynced)  { bg = "rgba(22,163,74,0.08)";     border = "rgba(22,163,74,0.4)";    textColor = "#16A34A";  }
-  else if (hasPending)  { bg = "rgba(245,158,11,0.06)";    border = "rgba(245,158,11,0.35)";  textColor = "#D97706";  }
-  else if (isCompleted) { bg = "rgba(22,163,74,0.05)";     border = "rgba(22,163,74,0.2)";    textColor = "#475569";  }
-  else if (hasFailed)   { bg = "rgba(239,68,68,0.05)";     border = "rgba(239,68,68,0.2)";    textColor = "#DC2626";  }
+  if      (future)      { bg = "transparent";                 border = "#F1F5F9";                textColor = "#CBD5E1"; }
+  else if (syncing)     { bg = "rgba(240,185,11,0.08)";       border = "rgba(240,185,11,0.5)";   textColor = "#B45309"; }
+  else if (lastSynced)  { bg = "rgba(22,163,74,0.08)";        border = "rgba(22,163,74,0.4)";    textColor = "#16A34A"; }
+  else if (hasPending)  { bg = "rgba(245,158,11,0.06)";       border = "rgba(245,158,11,0.35)";  textColor = "#D97706"; }
+  else if (isCompleted) { bg = "rgba(22,163,74,0.05)";        border = "rgba(22,163,74,0.2)";    textColor = "#475569"; }
+  else if (hasFailed)   { bg = "rgba(239,68,68,0.05)";        border = "rgba(239,68,68,0.2)";    textColor = "#DC2626"; }
 
+  // d1 = Tax, d2 = Spot, d3 = Pendiente
   const d1 = dots.tax  === "pending" ? "#F59E0B" : isCompleted ? "#22C55E" : "#CBD5E1";
-  const d2 = dots.spot === "done"    ? "#22C55E" : dots.spot === "failed" ? "#F87171" : "#CBD5E1";
-  const d3 = hasPending ? "#F59E0B"  : isCompleted ? "#22C55E" : "#CBD5E1";
+  const d2 = dots.spot === "done"    ? "#22C55E" : dots.spot === "failed"  ? "#F87171" : "#CBD5E1";
+  const d3 = hasPending              ? "#F59E0B" : isCompleted             ? "#22C55E" : "#CBD5E1";
 
   return (
     <button
@@ -137,7 +136,7 @@ function MonthPill({ label, period, dots, onClick, syncing, future, lastSynced }
       style={{
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         gap: "8px", padding: "14px 8px", borderRadius: "10px",
-        background: syncing ? "rgba(240,185,11,0.15)" : bg,
+        background: syncing ? "rgba(240,185,11,0.12)" : bg,
         border: `1px solid ${syncing ? "rgba(240,185,11,0.6)" : border}`,
         cursor: future ? "default" : "pointer",
         transition: "background 0.15s, border-color 0.15s",
@@ -236,8 +235,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
     }
   }, [conn, loadCalendar, loadImports, loadTaxStatus]);
 
-  // Restaura el año desde sessionStorage tras cada recarga de datos.
-  // Necesario porque loadStatus() → setConn() puede disparar recargas en cadena.
+  // Restaura el año desde sessionStorage tras cada recarga (sobrevive remount).
   useEffect(() => {
     setVisibleYear(readStoredYear());
   }, [calendar, allImports]);
@@ -293,14 +291,14 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
           { method: "POST", auth: true, body: { year, month } },
         );
         if (res.data.imported > 0) {
-          const dep = res.data.deposits    > 0 ? `${res.data.deposits} dep` : "";
+          const dep = res.data.deposits    > 0 ? `${res.data.deposits} dep`  : "";
           const ret = res.data.withdrawals > 0 ? `${res.data.withdrawals} ret` : "";
           parts.push(`Tax: ${[dep, ret].filter(Boolean).join(" · ")}`);
         }
       } catch { /* continue */ }
     }
 
-    // 2. Spot sync (await + catch — no bloquea bulk-confirm)
+    // 2. Spot sync (non-blocking — no detiene bulk-confirm si hay timeout)
     try {
       const res = await httpClient<ApiResponse<SyncResult>>(
         "/api/integrations/binance/sync",
@@ -322,8 +320,8 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
       }
     } catch { /* silent */ }
 
-    const label = `${(MONTH_NAME[month] ?? "").charAt(0).toUpperCase()}${(MONTH_NAME[month] ?? "").slice(1)} ${year}`;
-    setMsg({ type: "success", text: `${label}: ${parts.join(" · ")}.` });
+    const monthLabel = `${(MONTH_NAME[month] ?? "").charAt(0).toUpperCase()}${(MONTH_NAME[month] ?? "").slice(1)} ${year}`;
+    setMsg({ type: "success", text: `${monthLabel}: ${parts.join(" · ")}.` });
 
     await Promise.all([loadCalendar(), loadImports(), loadStatus()]);
     keepVisibleYear(year);
@@ -344,14 +342,18 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
       `}</style>
 
       {/* Backdrop */}
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 900 }} />
+      <div
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, background: "rgba(15,42,61,0.35)", zIndex: 900 }}
+      />
 
       {/* Drawer panel */}
       <div style={{
         position: "fixed", top: 0, right: 0, width: "520px", maxWidth: "100vw",
         height: "100vh", background: "#FFFFFF", zIndex: 901,
         display: "flex", flexDirection: "column",
-        boxShadow: "-8px 0 40px rgba(15,42,61,0.15)",
+        boxShadow: "-8px 0 40px rgba(15,42,61,0.12)",
+        fontFamily: fonts.body,
       }}>
 
         {/* Header */}
@@ -359,10 +361,12 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
           padding: "1.125rem 1.25rem",
           borderBottom: "1px solid #E2E8F0",
           display: "flex", alignItems: "center", gap: "12px", flexShrink: 0,
+          background: "#FFFFFF",
         }}>
+          {/* BN logo */}
           <div style={{
             width: "38px", height: "38px", borderRadius: "10px",
-            background: "rgba(240,185,11,0.12)", border: "1px solid rgba(240,185,11,0.28)",
+            background: "rgba(240,185,11,0.1)", border: "1px solid rgba(240,185,11,0.3)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: "11px", fontWeight: 800, color: "#F0B90B",
             fontFamily: fonts.body, flexShrink: 0, letterSpacing: "0.02em",
@@ -375,10 +379,10 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
 
           {!loadingConn && conn && (
             <span style={{
-              fontSize: "11px", fontWeight: 700, padding: "4px 12px", borderRadius: "6px",
-              background:  isConnected ? "rgba(22,163,74,0.1)"    : "#F1F5F9",
-              color:       isConnected ? "#16A34A"                 : "#64748B",
-              border: `1px solid ${isConnected ? "rgba(22,163,74,0.3)" : "#E2E8F0"}`,
+              fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px",
+              background:  isConnected ? "rgba(22,163,74,0.08)" : "#F1F5F9",
+              color:       isConnected ? "#16A34A"               : "#64748B",
+              border:     `1px solid ${isConnected ? "rgba(22,163,74,0.25)" : "#E2E8F0"}`,
               whiteSpace: "nowrap",
             }}>
               {isConnected ? "Conectado" : "No conectado"}
@@ -386,59 +390,115 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
           )}
 
           <button
-            type="button" onClick={onClose}
-            style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: "20px", lineHeight: 1, padding: "4px", flexShrink: 0 }}
+            type="button"
+            onClick={onClose}
+            style={{
+              background: "none", border: "none", color: "#94A3B8",
+              cursor: "pointer", fontSize: "20px", lineHeight: 1,
+              padding: "4px", flexShrink: 0,
+            }}
           >✕</button>
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div style={{
+          flex: 1, overflowY: "auto", padding: "1.25rem",
+          display: "flex", flexDirection: "column", gap: "1rem",
+          background: "#FAFBFC",
+        }}>
 
-          {/* Loading */}
+          {/* Cargando conexión */}
           {loadingConn && (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#64748B", fontSize: "13px", padding: "2rem 0" }}>
-              <div style={{ width: "16px", height: "16px", border: "2px solid #E2E8F0", borderTop: "2px solid #F0B90B", borderRadius: "50%", animation: "bn-spin 0.8s linear infinite", flexShrink: 0 }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#94A3B8", fontSize: "13px", padding: "2rem 0" }}>
+              <div style={{
+                width: "16px", height: "16px",
+                border: "2px solid #E2E8F0", borderTop: "2px solid #F0B90B",
+                borderRadius: "50%", animation: "bn-spin 0.8s linear infinite", flexShrink: 0,
+              }} />
               Verificando conexión...
             </div>
           )}
 
-          {/* Not connected */}
+          {/* Sin conexión */}
           {!loadingConn && !isConnected && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, textAlign: "center", gap: "8px" }}>
-              <p style={{ color: "#64748B", fontSize: "13px", margin: 0 }}>Sin conexión con Binance.</p>
-              <a href="/configuracion?s=integraciones" style={{ fontSize: "12px", color: "#16A34A" }}>
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center",
+              justifyContent: "center", flex: 1, textAlign: "center", gap: "10px",
+              padding: "3rem 0",
+            }}>
+              <div style={{
+                width: "48px", height: "48px", borderRadius: "12px",
+                background: "#F1F5F9", border: "1px solid #E2E8F0",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "22px",
+              }}>🔗</div>
+              <p style={{ color: "#64748B", fontSize: "14px", margin: 0, fontWeight: 500 }}>
+                Sin conexión con Binance
+              </p>
+              <p style={{ color: "#94A3B8", fontSize: "12px", margin: 0 }}>
+                Configura tus credenciales para sincronizar operaciones.
+              </p>
+              <a
+                href="/configuracion?s=integraciones"
+                style={{
+                  fontSize: "13px", fontWeight: 600, color: "#16A34A",
+                  textDecoration: "none", padding: "8px 16px",
+                  background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)",
+                  borderRadius: "8px", marginTop: "4px",
+                }}
+              >
                 Configurar credenciales →
               </a>
             </div>
           )}
 
-          {/* Connected — operational view */}
+          {/* Vista operacional — conectado */}
           {!loadingConn && isConnected && (
             <>
-              {/* Section title */}
-              <div>
-                <p style={{ fontSize: "15px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 2px" }}>Sincronización de operaciones</p>
-                <p style={{ fontSize: "12px", color: "#64748B", margin: 0 }}>Selecciona un mes para importar y confirmar operaciones.</p>
+              {/* Título sección */}
+              <div style={{ background: "#FFFFFF", borderRadius: "10px", border: "1px solid #E2E8F0", padding: "14px 16px" }}>
+                <p style={{ fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 2px" }}>
+                  Sincronización de operaciones
+                </p>
+                <p style={{ fontSize: "12px", color: "#64748B", margin: 0 }}>
+                  Selecciona un mes para importar y confirmar operaciones.
+                </p>
               </div>
 
-              {/* Year navigation */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              {/* Navegación de año */}
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                background: "#FFFFFF", borderRadius: "10px", border: "1px solid #E2E8F0",
+                padding: "10px 16px",
+              }}>
                 <button
                   type="button"
                   onClick={() => keepVisibleYear(Math.max(CALENDAR_START_YEAR, visibleYear - 1))}
                   disabled={visibleYear <= CALENDAR_START_YEAR}
-                  style={{ background: "none", border: "none", fontSize: "18px", padding: "4px 12px", cursor: visibleYear <= CALENDAR_START_YEAR ? "default" : "pointer", color: visibleYear <= CALENDAR_START_YEAR ? "#CBD5E1" : "#475569", fontFamily: fonts.body }}
+                  style={{
+                    background: "none", border: "none", fontSize: "18px",
+                    padding: "4px 12px", cursor: visibleYear <= CALENDAR_START_YEAR ? "default" : "pointer",
+                    color: visibleYear <= CALENDAR_START_YEAR ? "#CBD5E1" : "#475569",
+                    fontFamily: fonts.body,
+                  }}
                 >‹</button>
+
                 <span style={{ fontSize: "16px", fontWeight: 700, color: "#0F2A3D" }}>{visibleYear}</span>
+
                 <button
                   type="button"
                   onClick={() => keepVisibleYear(Math.min(currentYear, visibleYear + 1))}
                   disabled={visibleYear >= currentYear}
-                  style={{ background: "none", border: "none", fontSize: "18px", padding: "4px 12px", cursor: visibleYear >= currentYear ? "default" : "pointer", color: visibleYear >= currentYear ? "#CBD5E1" : "#475569", fontFamily: fonts.body }}
+                  style={{
+                    background: "none", border: "none", fontSize: "18px",
+                    padding: "4px 12px", cursor: visibleYear >= currentYear ? "default" : "pointer",
+                    color: visibleYear >= currentYear ? "#CBD5E1" : "#475569",
+                    fontFamily: fonts.body,
+                  }}
                 >›</button>
               </div>
 
-              {/* Month grid */}
+              {/* Grid de meses */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                 {MONTH_ABBR.map((lbl, i) => {
                   const month     = i + 1;
@@ -462,35 +522,39 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
                 })}
               </div>
 
-              {/* Dots legend */}
-              <div style={{ display: "flex", gap: "14px", fontSize: "10px", color: "#94A3B8", alignItems: "center" }}>
+              {/* Leyenda dots */}
+              <div style={{ display: "flex", gap: "16px", fontSize: "11px", color: "#94A3B8", alignItems: "center", paddingLeft: "2px" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />Tax
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
+                  Tax
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#22C55E", display: "inline-block" }} />Spot
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22C55E", display: "inline-block" }} />
+                  Spot
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />Pendiente
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
+                  Pendiente
                 </span>
               </div>
 
-              {/* Result message */}
+              {/* Mensaje resultado de sync */}
               {msg && (
                 <div style={{
-                  fontSize: "12px", lineHeight: 1.5, borderRadius: "8px", padding: "10px 14px",
+                  fontSize: "12px", lineHeight: 1.6, borderRadius: "8px", padding: "10px 14px",
                   color:      msg.type === "success" ? "#16A34A"  : msg.type === "error" ? "#DC2626" : "#2563EB",
-                  background: msg.type === "success" ? "rgba(22,163,74,0.06)"  : msg.type === "error" ? "rgba(239,68,68,0.06)" : "rgba(37,99,235,0.06)",
-                  border:    `1px solid ${msg.type === "success" ? "rgba(22,163,74,0.2)" : msg.type === "error" ? "rgba(239,68,68,0.2)" : "rgba(37,99,235,0.2)"}`,
+                  background: msg.type === "success" ? "rgba(22,163,74,0.06)"    : msg.type === "error" ? "rgba(239,68,68,0.06)"    : "rgba(37,99,235,0.06)",
+                  border:    `1px solid ${msg.type === "success"  ? "rgba(22,163,74,0.2)"    : msg.type === "error" ? "rgba(239,68,68,0.2)"    : "rgba(37,99,235,0.2)"}`,
                 }}>
                   {msg.text}
                 </div>
               )}
 
-              {/* Last sync status */}
+              {/* Última sincronización */}
               {conn?.lastSyncAt && (
                 <p style={{ fontSize: "11px", color: "#94A3B8", margin: 0 }}>
-                  Última sync: {new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}
+                  Última sync:{" "}
+                  {new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}
                   {" "}{conn.lastSyncStatus === "OK" ? "✓" : "⚠"}
                 </p>
               )}
