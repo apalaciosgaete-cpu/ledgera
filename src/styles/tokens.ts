@@ -11,7 +11,7 @@ export const colors = {
   danger:        "#EF4444",
   dangerHover:   "#DC2626",
   dangerMuted:   "rgba(239, 68, 68, 0.15)",
-  bgApp:         "#F6F8FA",
+  bgApp:         "#E8EEF5",
   surface:       "#FFFFFF",
   surfaceAlt:    "#F8FAFC",
   surfaceDark:   "#13364F",

@@ -390,7 +390,7 @@ export default function PanelPage() {
         `}</style>
       )}
 
-      <div style={{ padding: "2rem", maxWidth: "960px", margin: "0 auto", fontFamily: "var(--font-body)" }}>
+      <div style={{ maxWidth: "1100px", fontFamily: "var(--font-body)" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "1.75rem" }}>
