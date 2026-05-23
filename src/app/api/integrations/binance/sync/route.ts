@@ -140,10 +140,16 @@ export async function POST(request: NextRequest) {
 
         const periodTotal = result.imported + result.skipped;
 
-        if (result.errors.length > 0) {
-          await setPeriodFailed(period.id, result.errors.slice(0, 3).join(" | "), periodTotal);
+        if (result.errors.length > 0 && periodTotal === 0) {
+          // Zero imports + errors → fallo real
+          await setPeriodFailed(period.id, result.errors.slice(0, 3).join(" | "), 0);
           allErrors.push(...result.errors.map(e => `${MONTH_ES[period.month]} ${period.year}: ${e}`));
-          periodResults.push({ year: period.year, month: period.month, imported: periodTotal, status: "FAILED" });
+          periodResults.push({ year: period.year, month: period.month, imported: 0, status: "FAILED" });
+        } else if (result.errors.length > 0 && periodTotal > 0) {
+          // Datos importados + algunos pares fallaron → completado parcial (no bloquea el mes)
+          await setPeriodCompleted(period.id, periodTotal);
+          allErrors.push(...result.errors.map(e => `${MONTH_ES[period.month]} ${period.year}: ${e}`));
+          periodResults.push({ year: period.year, month: period.month, imported: periodTotal, status: "COMPLETED" });
         } else if (periodTotal === 0) {
           await setPeriodEmpty(period.id);
           periodResults.push({ year: period.year, month: period.month, imported: 0, status: "EMPTY" });

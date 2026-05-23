@@ -155,6 +155,11 @@ function MonthPill({ label, period, dots, onClick, syncing, future, lastSynced }
           <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: d3 }} />
         </span>
       )}
+      {!future && !syncing && period && period.importedCount > 0 && (
+        <span style={{ fontSize: "9px", color: textColor, opacity: 0.7, lineHeight: 1, fontWeight: 500 }}>
+          {period.importedCount}
+        </span>
+      )}
     </button>
   );
 }
