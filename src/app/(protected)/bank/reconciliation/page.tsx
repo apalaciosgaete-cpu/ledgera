@@ -167,8 +167,37 @@ function SummaryCard({ label, value, accent }: { label: string; value: number; a
   );
 }
 
+// ── Unmatch button ────────────────────────────────────────────────────────────
+function UnmatchBtn({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick} disabled={disabled}
+      onMouseEnter={() => !disabled && setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        padding: "5px 12px", borderRadius: "7px", fontSize: "12px",
+        fontWeight: 500, border: "none",
+        cursor:     disabled ? "not-allowed" : "pointer",
+        opacity:    disabled ? 0.5 : 1,
+        background: hover && !disabled ? "#7C3AED" : "#EDE9FE",
+        color:      hover && !disabled ? "#ffffff"  : "#5B21B6",
+        transition: "all 0.15s ease", whiteSpace: "nowrap",
+      }}
+    >
+      {disabled ? "Deshaciendo…" : "Deshacer"}
+    </button>
+  );
+}
+
 // ── Matched view ──────────────────────────────────────────────────────────────
-function MatchedView({ matches }: { matches: MatchedRecord[] }) {
+function MatchedView({
+  matches, onUnmatch, unmatchingId,
+}: {
+  matches:      MatchedRecord[];
+  onUnmatch:    (bankMovementId: string) => void;
+  unmatchingId: string | null;
+}) {
   if (matches.length === 0) {
     return (
       <div style={{
@@ -185,9 +214,9 @@ function MatchedView({ matches }: { matches: MatchedRecord[] }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" }}>
-              {["Banco", "Crypto", "Confidence", "Conciliado"].map(col => (
+              {["Banco", "Crypto", "Confidence", "Conciliado", "Acción"].map((col, i) => (
                 <th key={col} style={{
-                  padding: "12px 16px", textAlign: "left",
+                  padding: "12px 16px", textAlign: i === 4 ? "right" : "left",
                   fontWeight: 600, color: "#475569", fontSize: "12px", whiteSpace: "nowrap",
                 }}>
                   {col}
@@ -255,6 +284,12 @@ function MatchedView({ matches }: { matches: MatchedRecord[] }) {
                     </div>
                   )}
                 </td>
+                <td style={{ padding: "14px 16px", verticalAlign: "top", textAlign: "right" }}>
+                  <UnmatchBtn
+                    onClick={() => onUnmatch(m.bankMovement.id)}
+                    disabled={unmatchingId === m.bankMovement.id}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -279,8 +314,9 @@ export default function ReconciliationPage() {
   const [acting,      setActing]      = useState<string | null>(null);
 
   // Matched tab
-  const [matched,      setMatched]      = useState<MatchedRecord[]>([]);
-  const [matchLoading, setMatchLoading] = useState(false);
+  const [matched,       setMatched]       = useState<MatchedRecord[]>([]);
+  const [matchLoading,  setMatchLoading]  = useState(false);
+  const [unmatchingId,  setUnmatchingId]  = useState<string | null>(null);
 
   // Ignored tab
   const [ignored,      setIgnored]      = useState<BankMovement[]>([]);
@@ -323,6 +359,28 @@ export default function ReconciliationPage() {
       setMatched(payload.data.matches);
     }
     setMatchLoading(false);
+  }
+
+  async function handleUnmatch(bankMovementId: string) {
+    setUnmatchingId(bankMovementId);
+    try {
+      const token = getSessionToken();
+      const res   = await fetch("/api/bank/reconciliation/unmatch", {
+        method:      "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ bankMovementId }),
+      });
+      const json = await res.json() as ApiResponse<unknown>;
+      if (json.ok) {
+        setMatched(prev => prev.filter(m => m.bankMovement.id !== bankMovementId));
+      }
+    } finally {
+      setUnmatchingId(null);
+    }
   }
 
   async function loadIgnored() {
@@ -600,7 +658,7 @@ export default function ReconciliationPage() {
             }}>
               Cargando conciliaciones…
             </div>
-          : <MatchedView matches={matched} />
+          : <MatchedView matches={matched} onUnmatch={handleUnmatch} unmatchingId={unmatchingId} />
       )}
 
       {/* ── Ignorados ── */}
