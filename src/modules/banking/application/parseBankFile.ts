@@ -1,4 +1,4 @@
-import type { ParsedBankRow, ColMapping, BankDirection, ParseBankFileResult, BankFileType } from "../domain/bankTypes";
+import type { ParsedBankMovement, ColMapping, BankMovementDirection, ParseBankFileResult, BankFileType } from "../domain/bankTypes";
 
 // ── Utilidades compartidas ────────────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ export function autoDetectMapping(headers: string[]): Partial<ColMapping> {
 function inferDirection(
   row: Record<string, string>,
   mapping: ColMapping,
-): { amount: number; direction: BankDirection } | null {
+): { amount: number; direction: BankMovementDirection } | null {
   if (mapping.colDebit && mapping.colCredit) {
     const credit = parseChileanAmount(row[mapping.colCredit] ?? "");
     const debit  = parseChileanAmount(row[mapping.colDebit]  ?? "");
@@ -80,8 +80,8 @@ function rowsFromMatrix(
   headers: string[],
   dataRows: string[][],
   mapping: ColMapping,
-): { rows: ParsedBankRow[]; errors: string[] } {
-  const rows: ParsedBankRow[] = [];
+): { rows: ParsedBankMovement[]; errors: string[] } {
+  const rows: ParsedBankMovement[] = [];
   const errors: string[] = [];
 
   for (let i = 0; i < dataRows.length; i++) {
@@ -106,7 +106,7 @@ function rowsFromMatrix(
       amountClp:   parsed.amount,
       direction:   parsed.direction,
       balanceClp:  balanceClp ?? null,
-      rawJson:     JSON.stringify(row),
+      raw:         row as Record<string, unknown>,
     });
   }
 
@@ -178,7 +178,7 @@ export async function parsePdf(buffer: Buffer): Promise<ParseBankFileResult> {
     const text     = data.text;
 
     // Heurística: detectar filas con fecha al inicio de línea
-    const rows: ParsedBankRow[] = [];
+    const rows: ParsedBankMovement[] = [];
     const errors: string[] = [];
 
     const lines = text.split(/\n/).map((l: string) => l.trim()).filter(Boolean);
@@ -203,7 +203,7 @@ export async function parsePdf(buffer: Buffer): Promise<ParseBankFileResult> {
         amountClp:   amount,
         direction:   "INFLOW",  // PDF sin columnas separadas: requiere revisión manual
         balanceClp:  null,
-        rawJson:     JSON.stringify({ raw: line }),
+        raw:         { line } as Record<string, unknown>,
       });
     }
 

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { ParsedBankRow, BankFileType } from "../domain/bankTypes";
+import type { ParsedBankMovement, BankFileType } from "../domain/bankTypes";
 import crypto from "crypto";
 
 export interface ImportResult {
@@ -17,7 +17,7 @@ export async function importBankMovements(
   fileName:    string,
   fileType:    BankFileType,
   fileBuffer:  Buffer,
-  rows:        ParsedBankRow[],
+  rows:        ParsedBankMovement[],
   parseErrors: string[],
   needsReview: boolean,
 ): Promise<ImportResult> {
@@ -77,7 +77,7 @@ export async function importBankMovements(
         amountClp:   row.amountClp,
         direction:   row.direction,
         balanceClp:  row.balanceClp ?? null,
-        rawJson:     row.rawJson,
+        rawJson:     JSON.stringify(row.raw),
         status:      needsReview ? "IMPORTED" : "IMPORTED",
       },
     });

@@ -1,22 +1,23 @@
-export type BankDirection       = "INFLOW" | "OUTFLOW";
-export type BankMovementStatus  = "IMPORTED" | "REVIEWED" | "IGNORED";
-export type BankFileType        = "CSV" | "XLSX" | "PDF";
-export type BankUploadStatus    = "IMPORTED" | "PARTIAL" | "FAILED" | "REVIEW";
+export type BankMovementDirection = "INFLOW" | "OUTFLOW";
 
-export interface ParsedBankRow {
+export type ParsedBankMovement = {
   occurredAt:  Date;
   description: string;
   amountClp:   number;
-  direction:   BankDirection;
-  balanceClp:  number | null;
-  rawJson:     string;
-}
+  direction:   BankMovementDirection;
+  balanceClp?: number | null;
+  raw:         Record<string, unknown>;
+};
+
+// ── Internal helpers (not exported to external consumers) ─────────────────────
+export type BankFileType     = "CSV" | "XLSX" | "PDF";
+export type BankUploadStatus = "IMPORTED" | "PARTIAL" | "FAILED" | "REVIEW";
 
 export interface ParseBankFileResult {
-  rows:         ParsedBankRow[];
-  errors:       string[];
-  fileType:     BankFileType;
-  needsReview:  boolean;
+  rows:        ParsedBankMovement[];
+  errors:      string[];
+  fileType:    BankFileType;
+  needsReview: boolean;
 }
 
 export interface ColMapping {
