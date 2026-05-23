@@ -461,6 +461,7 @@ model users {
   annualTaxSummaries      AnnualTaxSummary[]
   exchangeSyncPeriods     ExchangeSyncPeriod[]
   bankMovements           BankMovement[]
+  bankFileUploads         BankFileUpload[]
   bankCsvTemplates        BankCsvTemplate[]
 
   @@index([email], map: "idx_users_email")
@@ -582,10 +583,34 @@ model ExchangeSyncPeriod {
   @@map("exchange_sync_periods")
 }
 
+model BankFileUpload {
+  id           String   @id @default(cuid())
+  userId       String
+  bankName     String?
+  fileName     String
+  fileType     String
+  fileHash     String
+  status       String   @default("IMPORTED")
+  totalRows    Int      @default(0)
+  importedRows Int      @default(0)
+  errorRows    Int      @default(0)
+  rawJson      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user      users          @relation(fields: [userId], references: [id])
+  movements BankMovement[]
+
+  @@index([userId, createdAt])
+  @@unique([userId, fileHash])
+  @@map("bank_file_uploads")
+}
+
 model BankMovement {
   id          String   @id @default(cuid())
   userId      String
-  source      String   @default("BANK_CSV")
+  uploadId    String?
+  source      String   @default("BANK_FILE")
   bankName    String?
   externalId  String?
   occurredAt  DateTime
@@ -598,11 +623,13 @@ model BankMovement {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user users @relation(fields: [userId], references: [id])
+  user   users           @relation(fields: [userId], references: [id])
+  upload BankFileUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
 
   @@index([userId, occurredAt])
   @@index([userId, direction])
   @@index([userId, status])
+  @@index([userId, bankName])
   @@unique([userId, externalId])
   @@map("bank_movements")
 }
