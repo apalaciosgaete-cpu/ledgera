@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { colors, fonts } from "@/styles/tokens";
 import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
@@ -332,8 +333,12 @@ export default function ConfiguracionPage() {
   const { user } = useAuth();
   const role = (user as { role?: string })?.role ?? "personal";
   const SECTIONS = ALL_SECTIONS.filter(s => s.roles.includes(role));
+  const searchParams = useSearchParams();
 
-  const [section, setSection]           = useState<Section>(SECTIONS[0]?.key ?? "empresa");
+  const [section, setSection] = useState<Section>(() => {
+    const s = searchParams.get("s");
+    return (s && ALL_SECTIONS.some(sec => sec.key === s) ? s : SECTIONS[0]?.key ?? "empresa") as Section;
+  });
   const [settings, setSettings]         = useState<SettingsMap>({});
   const [draft, setDraft]               = useState<SettingsMap>({});
   const [loading, setLoading]           = useState(true);

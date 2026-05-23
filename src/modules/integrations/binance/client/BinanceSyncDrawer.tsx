@@ -377,7 +377,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
           ) : !isConnected ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, textAlign: "center", gap: "8px" }}>
               <p style={{ color: "#475569", fontSize: "13px", margin: 0 }}>Sin conexión con Binance.</p>
-              <a href="/configuracion" style={{ fontSize: "12px", color: "#4ADE80" }}>Configurar credenciales →</a>
+              <a href="/configuracion?s=integraciones" style={{ fontSize: "12px", color: "#4ADE80" }}>Configurar credenciales →</a>
             </div>
           ) : (
             <>
