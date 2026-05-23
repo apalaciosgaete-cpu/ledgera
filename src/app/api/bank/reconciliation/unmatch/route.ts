@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
-import { logReconciliationAudit } from "@/modules/banking/application/logReconciliationAudit";
+import { logBankReconciliationAudit } from "@/modules/banking/application/logBankReconciliationAudit";
 
 type Body = {
   bankMovementId?: string;
@@ -36,8 +36,6 @@ export async function POST(request: NextRequest) {
       return fail("Solo se puede deshacer una conciliación confirmada.", 409);
     }
 
-    const previousPortfolioMovementId = movement.matchedPortfolioMovementId;
-
     const updated = await prisma.bankMovement.update({
       where: { id: movement.id },
       data: {
@@ -49,14 +47,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await logReconciliationAudit({
+    await logBankReconciliationAudit({
       userId:              auth.user.id,
       action:              "MATCH_UNMATCHED",
       bankMovementId:      updated.id,
-      portfolioMovementId: previousPortfolioMovementId,
+      portfolioMovementId: movement.matchedPortfolioMovementId,
       confidence:          movement.matchedConfidence,
       reason:              movement.matchedReason,
-      metadata:            { previousStatus: "MATCHED", revertedAt: new Date().toISOString() },
     });
 
     return ok(

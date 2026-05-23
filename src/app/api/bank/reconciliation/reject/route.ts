@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
-import { logReconciliationAudit } from "@/modules/banking/application/logReconciliationAudit";
+import { logBankReconciliationAudit } from "@/modules/banking/application/logBankReconciliationAudit";
 
 type RejectBody = {
   bankMovementId?: string;
@@ -47,10 +47,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await logReconciliationAudit({
+    await logBankReconciliationAudit({
       userId:         auth.user.id,
       action:         "MATCH_REJECTED",
       bankMovementId: updated.id,
+      reason:         "Sugerencia ignorada por usuario",
     });
 
     return ok(
