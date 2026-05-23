@@ -47,7 +47,7 @@ const EXCHANGES = [
 function Toggle({ value, onChange, disabled }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
     <button type="button" onClick={() => !disabled && onChange(!value)}
-      style={{ width: "44px", height: "24px", borderRadius: "12px", border: "none", cursor: disabled ? "not-allowed" : "pointer", background: value ? "#16A34A" : "rgba(255,255,255,0.12)", position: "relative", transition: "background 0.2s ease", flexShrink: 0, opacity: disabled ? 0.5 : 1, padding: 0 }}>
+      style={{ width: "44px", height: "24px", borderRadius: "12px", border: "none", cursor: disabled ? "not-allowed" : "pointer", background: value ? "#16A34A" : "#CBD5E1", position: "relative", transition: "background 0.2s ease", flexShrink: 0, opacity: disabled ? 0.5 : 1, padding: 0 }}>
       <div style={{ position: "absolute", top: "3px", left: value ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#ffffff", transition: "left 0.2s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
     </button>
   );
@@ -55,10 +55,10 @@ function Toggle({ value, onChange, disabled }: { value: boolean; onChange: (v: b
 
 function ToggleRow({ label, hint, value, onChange, badge, disabled }: { label: string; hint: string; value: boolean; onChange: (v: boolean) => void; badge?: string; disabled?: boolean }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.5rem", padding: "1rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.5rem", padding: "1rem 0", borderBottom: "1px solid #E2E8F0" }}>
       <div style={{ flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "#E2E8F0" }}>{label}</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "#0F172A" }}>{label}</span>
           {badge && <span style={{ fontSize: "9px", fontWeight: 700, color: "#F59E0B", background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.06em", textTransform: "uppercase" }}>{badge}</span>}
         </div>
         <span style={{ fontSize: "12px", color: "#475569", lineHeight: 1.5 }}>{hint}</span>
@@ -71,7 +71,7 @@ function ToggleRow({ label, hint, value, onChange, badge, disabled }: { label: s
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      <label style={{ fontSize: "13px", fontWeight: 600, color: "#CBD5E1" }}>{label}</label>
+      <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569" }}>{label}</label>
       {hint && <span style={{ fontSize: "11px", color: "#475569", lineHeight: 1.4 }}>{hint}</span>}
       {children}
     </div>
@@ -97,9 +97,9 @@ function SelectInput({ value, onChange, options }: { value: string; onChange: (v
 
 function SectionCard({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
+    <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1.25rem" }}>
-        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 4px" }}>{title}</h3>
+        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>{title}</h3>
         <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>{description}</p>
       </div>
       {children}
@@ -109,10 +109,10 @@ function SectionCard({ title, description, children }: { title: string; descript
 
 function SaveBar({ onSave, saving, saved, onReset, error }: { onSave: () => void; saving: boolean; saved: boolean; onReset: () => void; error?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px", paddingTop: "1.5rem", marginTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px", paddingTop: "1.5rem", marginTop: "0.5rem", borderTop: "1px solid #E2E8F0" }}>
       {saved && <span style={{ fontSize: "13px", color: "#4ADE80", display: "flex", alignItems: "center", gap: "6px" }}><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#4ADE80" strokeWidth="1.2" /><path d="M5 8l2 2 4-4" stroke="#4ADE80" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>Guardado correctamente</span>}
       {error && <span style={{ fontSize: "13px", color: "#EF4444" }}>{error}</span>}
-      <button type="button" onClick={onReset} disabled={saving} style={{ padding: "9px 16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#64748B", fontSize: "13px", fontWeight: 500, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>Descartar</button>
+      <button type="button" onClick={onReset} disabled={saving} style={{ padding: "9px 16px", borderRadius: "8px", border: "1px solid #E2E8F0", background: "transparent", color: "#64748B", fontSize: "13px", fontWeight: 500, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>Descartar</button>
       <button type="button" onClick={onSave} disabled={saving} style={{ padding: "9px 20px", borderRadius: "8px", border: "none", background: saving ? "#15803D" : "#16A34A", color: "#ffffff", fontSize: "13px", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
         {saving ? "Guardando..." : "Guardar cambios"}
       </button>
@@ -202,10 +202,10 @@ function TwoFAPanel() {
   }
 
   return (
-    <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
+    <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "1.25rem" }}>
         <div>
-          <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 4px" }}>
+          <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>
             Autenticación en dos factores (2FA)
           </h3>
           <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>
@@ -239,21 +239,21 @@ function TwoFAPanel() {
       {/* ESTADO: setup — mostrar QR */}
       {step === "setup" && qrCode && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-            <p style={{ fontSize: "13px", color: "#CBD5E1", margin: 0, textAlign: "center" }}>
-              Escanea este código QR con <strong style={{ color: "#F1F5F9" }}>Google Authenticator</strong> u otra app TOTP
+          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+            <p style={{ fontSize: "13px", color: "#475569", margin: 0, textAlign: "center" }}>
+              Escanea este código QR con <strong style={{ color: "#0F2A3D" }}>Google Authenticator</strong> u otra app TOTP
             </p>
             {/* QR Code */}
             <img src={qrCode} alt="QR 2FA" style={{ width: "180px", height: "180px", borderRadius: "8px", background: "#fff", padding: "8px" }} />
             {/* Clave manual */}
             <div style={{ width: "100%", background: "rgba(0,0,0,0.2)", borderRadius: "6px", padding: "8px 12px", textAlign: "center" }}>
               <p style={{ fontSize: "11px", color: "#64748B", margin: "0 0 4px" }}>Clave manual (si no puedes escanear)</p>
-              <code style={{ fontSize: "13px", color: "#CBD5E1", letterSpacing: "0.1em", wordBreak: "break-all" }}>{secret}</code>
+              <code style={{ fontSize: "13px", color: "#475569", letterSpacing: "0.1em", wordBreak: "break-all" }}>{secret}</code>
             </div>
           </div>
 
           <div>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#CBD5E1", display: "block", marginBottom: "6px" }}>
+            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>
               Ingresa el código de 6 dígitos para confirmar
             </label>
             <input
@@ -273,7 +273,7 @@ function TwoFAPanel() {
               {loading ? "Verificando..." : "Confirmar y activar"}
             </button>
             <button type="button" onClick={() => { setStep("idle"); setCode(""); setError(""); }}
-              style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#64748B", fontSize: "13px", cursor: "pointer", fontFamily: fonts.body }}>
+              style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid #E2E8F0", background: "transparent", color: "#64748B", fontSize: "13px", cursor: "pointer", fontFamily: fonts.body }}>
               Cancelar
             </button>
           </div>
@@ -318,7 +318,7 @@ function TwoFAPanel() {
               {loading ? "Desactivando..." : "Confirmar desactivación"}
             </button>
             <button type="button" onClick={() => { setStep("active"); setCode(""); setError(""); }}
-              style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#64748B", fontSize: "13px", cursor: "pointer", fontFamily: fonts.body }}>
+              style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid #E2E8F0", background: "transparent", color: "#64748B", fontSize: "13px", cursor: "pointer", fontFamily: fonts.body }}>
               Cancelar
             </button>
           </div>
@@ -418,7 +418,7 @@ export default function ConfiguracionPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", flexDirection: "column", gap: "12px" }}>
-        <div style={{ width: "32px", height: "32px", border: "2px solid rgba(255,255,255,0.1)", borderTop: "2px solid #16A34A", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <div style={{ width: "32px", height: "32px", border: "2px solid #E2E8F0", borderTop: "2px solid #16A34A", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <span style={{ color: "#475569", fontSize: "13px" }}>Cargando configuración...</span>
       </div>
@@ -429,7 +429,7 @@ export default function ConfiguracionPage() {
     <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
 
       {/* Sidebar */}
-      <aside style={{ width: "220px", flexShrink: 0, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "8px", position: "sticky", top: "92px" }}>
+      <aside style={{ width: "220px", flexShrink: 0, background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "8px", position: "sticky", top: "92px" }}>
         <p style={{ fontSize: "10px", fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "0.1em", padding: "8px 10px 4px", margin: 0 }}>Configuración</p>
         {SECTIONS.map(s => (
           <button key={s.key} type="button" onClick={() => setSection(s.key)}
@@ -446,7 +446,7 @@ export default function ConfiguracionPage() {
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ marginBottom: "1.5rem" }}>
-          <h2 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 4px" }}>{SECTIONS.find(s => s.key === section)?.label}</h2>
+          <h2 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>{SECTIONS.find(s => s.key === section)?.label}</h2>
           <p style={{ fontSize: "13px", color: "#475569", margin: 0 }}>{SECTIONS.find(s => s.key === section)?.description}</p>
         </div>
 
@@ -558,7 +558,7 @@ export default function ConfiguracionPage() {
             <div style={{ marginTop: "1.5rem" }}>
               <p style={{ fontSize: "11px", fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.75rem" }}>Próximamente</p>
               {EXCHANGES.filter(ex => ex.name !== "Binance").map(ex => (
-                <div key={ex.name} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "1rem", opacity: 0.6 }}>
+                <div key={ex.name} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "1rem", opacity: 0.6 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div style={{ width: "34px", height: "34px", borderRadius: "8px", background: `${ex.color}18`, border: `1px solid ${ex.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: ex.color, fontFamily: fonts.display, flexShrink: 0 }}>
                       {ex.name.slice(0, 2).toUpperCase()}
@@ -577,13 +577,13 @@ export default function ConfiguracionPage() {
 
         {/* AUDITORÍA */}
         {section === "auditoria" && (
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", overflow: "hidden" }}>
-            <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", overflow: "hidden" }}>
+            <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid #E2E8F0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#F1F5F9", margin: "0 0 2px" }}>Registro de cambios</h3>
+                <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 2px" }}>Registro de cambios</h3>
                 <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>Cada modificación queda registrada con actor, valores y timestamp.</p>
               </div>
-              <button type="button" onClick={loadAudit} disabled={auditLoading} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#64748B", fontSize: "12px", padding: "6px 12px", cursor: auditLoading ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+              <button type="button" onClick={loadAudit} disabled={auditLoading} style={{ background: "transparent", border: "1px solid #E2E8F0", borderRadius: "6px", color: "#64748B", fontSize: "12px", padding: "6px 12px", cursor: auditLoading ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
                 {auditLoading ? "Cargando..." : "Actualizar"}
               </button>
             </div>
@@ -595,12 +595,12 @@ export default function ConfiguracionPage() {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                   <thead>
-                    <tr>{["Parámetro", "Valor anterior", "Valor nuevo", "Actor", "Fecha"].map(h => <th key={h} style={{ textAlign: "left", padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#64748B", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>)}</tr>
+                    <tr>{["Parámetro", "Valor anterior", "Valor nuevo", "Actor", "Fecha"].map(h => <th key={h} style={{ textAlign: "left", padding: "10px 16px", borderBottom: "1px solid #E2E8F0", color: "#64748B", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     {audit.map((entry, i) => (
-                      <tr key={entry.id} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
-                        <td style={{ padding: "10px 16px", color: "#CBD5E1", fontFamily: "monospace", fontSize: "11px" }}>{entry.settingKey}</td>
+                      <tr key={entry.id} style={{ background: i % 2 === 0 ? "#F8FAFC" : "transparent" }}>
+                        <td style={{ padding: "10px 16px", color: "#475569", fontFamily: "monospace", fontSize: "11px" }}>{entry.settingKey}</td>
                         <td style={{ padding: "10px 16px", color: "#EF4444" }}>{entry.oldValue ?? "—"}</td>
                         <td style={{ padding: "10px 16px", color: "#4ADE80" }}>{entry.newValue}</td>
                         <td style={{ padding: "10px 16px", color: "#94A3B8" }}>{entry.actorEmail ?? "sistema"}</td>
