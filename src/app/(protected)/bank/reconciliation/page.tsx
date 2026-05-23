@@ -81,6 +81,12 @@ function truncate(s: string, n = 34): string {
   return s.length > n ? s.slice(0, n) + "…" : s;
 }
 
+function readCsrfCookie(): string {
+  if (typeof document === "undefined") return "";
+  const m = document.cookie.split("; ").find(c => c.startsWith("ledgera_csrf="));
+  return m ? decodeURIComponent(m.split("=")[1] ?? "") : "";
+}
+
 // ── Confidence badge ──────────────────────────────────────────────────────────
 function ConfidenceBadge({ confidence }: { confidence: number | null }) {
   if (confidence === null) return null;
@@ -167,36 +173,13 @@ function SummaryCard({ label, value, accent }: { label: string; value: number; a
   );
 }
 
-// ── Unmatch button ────────────────────────────────────────────────────────────
-function UnmatchBtn({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
-  const [hover, setHover] = useState(false);
-  return (
-    <button
-      onClick={onClick} disabled={disabled}
-      onMouseEnter={() => !disabled && setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        padding: "5px 12px", borderRadius: "7px", fontSize: "12px",
-        fontWeight: 500, border: "none",
-        cursor:     disabled ? "not-allowed" : "pointer",
-        opacity:    disabled ? 0.5 : 1,
-        background: hover && !disabled ? "#7C3AED" : "#EDE9FE",
-        color:      hover && !disabled ? "#ffffff"  : "#5B21B6",
-        transition: "all 0.15s ease", whiteSpace: "nowrap",
-      }}
-    >
-      {disabled ? "Deshaciendo…" : "Deshacer"}
-    </button>
-  );
-}
-
 // ── Matched view ──────────────────────────────────────────────────────────────
 function MatchedView({
-  matches, onUnmatch, unmatchingId,
+  matches, onUnmatch, actionLoadingId,
 }: {
-  matches:      MatchedRecord[];
-  onUnmatch:    (bankMovementId: string) => void;
-  unmatchingId: string | null;
+  matches:         MatchedRecord[];
+  onUnmatch:       (record: MatchedRecord) => void;
+  actionLoadingId: string | null;
 }) {
   if (matches.length === 0) {
     return (
@@ -285,10 +268,14 @@ function MatchedView({
                   )}
                 </td>
                 <td style={{ padding: "14px 16px", verticalAlign: "top", textAlign: "right" }}>
-                  <UnmatchBtn
-                    onClick={() => onUnmatch(m.bankMovement.id)}
-                    disabled={unmatchingId === m.bankMovement.id}
-                  />
+                  <button
+                    type="button"
+                    disabled={actionLoadingId === m.bankMovement.id}
+                    onClick={() => onUnmatch(m)}
+                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 disabled:opacity-40"
+                  >
+                    {actionLoadingId === m.bankMovement.id ? "..." : "Deshacer"}
+                  </button>
                 </td>
               </tr>
             ))}
@@ -314,9 +301,10 @@ export default function ReconciliationPage() {
   const [acting,      setActing]      = useState<string | null>(null);
 
   // Matched tab
-  const [matched,       setMatched]       = useState<MatchedRecord[]>([]);
-  const [matchLoading,  setMatchLoading]  = useState(false);
-  const [unmatchingId,  setUnmatchingId]  = useState<string | null>(null);
+  const [matched,          setMatched]          = useState<MatchedRecord[]>([]);
+  const [matchLoading,     setMatchLoading]     = useState(false);
+  const [actionLoadingId,  setActionLoadingId]  = useState<string | null>(null);
+  const [error,            setError]            = useState<string | null>(null);
 
   // Ignored tab
   const [ignored,      setIgnored]      = useState<BankMovement[]>([]);
@@ -361,25 +349,40 @@ export default function ReconciliationPage() {
     setMatchLoading(false);
   }
 
-  async function handleUnmatch(bankMovementId: string) {
-    setUnmatchingId(bankMovementId);
+  async function unmatchRecord(record: MatchedRecord) {
+    setActionLoadingId(record.bankMovement.id);
+    setError(null);
+
     try {
+      await fetch("/api/csrf", { credentials: "include", cache: "no-store" });
+
       const token = getSessionToken();
-      const res   = await fetch("/api/bank/reconciliation/unmatch", {
+
+      const response = await fetch("/api/bank/reconciliation/unmatch", {
         method:      "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":    "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "x-ledgera-csrf": readCsrfCookie(),
         },
-        body: JSON.stringify({ bankMovementId }),
+        body: JSON.stringify({ bankMovementId: record.bankMovement.id }),
       });
-      const json = await res.json() as ApiResponse<unknown>;
-      if (json.ok) {
-        setMatched(prev => prev.filter(m => m.bankMovement.id !== bankMovementId));
+
+      const payload = (await response.json()) as ApiResponse<unknown>;
+
+      if (!response.ok || !payload.ok) {
+        setError(payload.message || "No fue posible deshacer la conciliación.");
+        return;
       }
+
+      setMatched(current =>
+        current.filter(item => item.bankMovement.id !== record.bankMovement.id),
+      );
+    } catch {
+      setError("Error de red al deshacer conciliación.");
     } finally {
-      setUnmatchingId(null);
+      setActionLoadingId(null);
     }
   }
 
@@ -658,7 +661,17 @@ export default function ReconciliationPage() {
             }}>
               Cargando conciliaciones…
             </div>
-          : <MatchedView matches={matched} onUnmatch={handleUnmatch} unmatchingId={unmatchingId} />
+          : <>
+              {error && (
+                <div style={{
+                  background: "#FEF2F2", borderRadius: "10px", border: "1px solid #FECACA",
+                  padding: "12px 16px", marginBottom: "12px", fontSize: "13px", color: "#991B1B",
+                }}>
+                  {error}
+                </div>
+              )}
+              <MatchedView matches={matched} onUnmatch={unmatchRecord} actionLoadingId={actionLoadingId} />
+            </>
       )}
 
       {/* ── Ignorados ── */}
