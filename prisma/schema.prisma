@@ -623,6 +623,11 @@ model BankMovement {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  matchedPortfolioMovementId String?
+  matchedConfidence          Float?
+  matchedAt                  DateTime?
+  matchedReason              String?
+
   user   users           @relation(fields: [userId], references: [id])
   upload BankFileUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
 
@@ -630,6 +635,7 @@ model BankMovement {
   @@index([userId, direction])
   @@index([userId, status])
   @@index([userId, bankName])
+  @@index([userId, matchedPortfolioMovementId])
   @@unique([userId, externalId])
   @@map("bank_movements")
 }
