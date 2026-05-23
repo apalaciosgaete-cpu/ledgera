@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
       id:                  r.id,
       externalId:          r.externalId,
       externalType:        r.externalType,
+      provider:            r.provider,
       normalizedJson:      r.normalizedJson,
       normalizedEventType: r.normalizedEventType,
       taxTreatment:        r.taxTreatment,
