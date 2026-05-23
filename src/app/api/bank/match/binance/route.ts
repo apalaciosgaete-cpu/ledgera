@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
-import { matchBinanceMovements } from "@/modules/banking/application/matchBinanceMovements";
+import { suggestBankBinanceMatches } from "@/modules/banking/application/suggestBankBinanceMatches";
 
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
   try {
-    const body          = await request.json().catch(() => ({})) as { onlyUnmatched?: boolean };
-    const onlyUnmatched = body.onlyUnmatched !== false; // default true
-
-    const suggestions = await matchBinanceMovements(auth.user.id, onlyUnmatched);
+    const suggestions = await suggestBankBinanceMatches(auth.user.id);
 
     return ok(
       { suggestions },
