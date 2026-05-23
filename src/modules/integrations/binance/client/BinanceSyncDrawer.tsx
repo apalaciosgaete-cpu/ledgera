@@ -34,6 +34,13 @@ type TaxImportResult = {
   withdrawals: number;
 };
 
+type BulkConfirmResult = {
+  confirmed:    number;
+  skippedReview: number;
+  taxRebuilt:   boolean;
+  errors:       string[];
+};
+
 type SyncPeriod = {
   id:            string;
   year:          number;
@@ -287,25 +294,27 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
         "/api/integrations/binance/sync",
         { method: "POST", auth: true, body: { year, month } },
       );
-      const label = `${(MONTH_NAME[month] ?? "").charAt(0).toUpperCase()}${(MONTH_NAME[month] ?? "").slice(1)} ${year}`;
-      const spot  = res.data.autoConfirmed > 0
-        ? `${res.data.autoConfirmed} confirmados automáticamente`
-        : `${res.data.imported} descargados, ${res.data.autoConfirmed} confirmados automáticamente`;
-      parts.push(spot);
-      const fullMsg = `${(MONTH_NAME[month] ?? "").charAt(0).toUpperCase()}${(MONTH_NAME[month] ?? "").slice(1)} ${year}: Sincronización completa (${MONTH_ABBR[month - 1]} ${year}): ${spot}.`;
-      setMsg({ type: "success", text: fullMsg });
+      parts.push(`Spot: ${res.data.imported} descargados, ${res.data.autoConfirmed} confirmados`);
     } catch {
-      if (parts.length === 0) setMsg({ type: "error", text: "Error al sincronizar." });
+      parts.push("Spot: no completado por timeout");
     }
 
-    // No llamar loadStatus() aquí: cambia conn → dispara useEffect([conn]) →
-    // loadCalendar/loadImports corren de nuevo en background compitiendo con
-    // el setVisibleYear que sigue. La conexión no cambia durante un sync.
-    await Promise.all([loadCalendar(), loadImports()]);
+    try {
+      const bulk = await httpClient<ApiResponse<BulkConfirmResult>>(
+        "/api/integrations/binance/imports/bulk-confirm",
+        { method: "POST", auth: true, body: { year, month } },
+      );
+      parts.push(`Confirmados: ${bulk.data.confirmed}`);
+    } catch { /* silent */ }
+
+    const monthLabel = `${(MONTH_NAME[month] ?? "").charAt(0).toUpperCase()}${(MONTH_NAME[month] ?? "").slice(1)} ${year}`;
+    setMsg({ type: "success", text: `${monthLabel}: ${parts.join(" · ")}.` });
+
+    await Promise.all([loadCalendar(), loadImports(), loadStatus()]);
 
     setLastSyncedMonth({ year, month });
     setSyncingMonth(null);
-    if (parts.length > 0) onSyncComplete?.();
+    onSyncComplete?.();
   }
 
   const isConnected = conn?.connected && conn.status === "ACTIVE";

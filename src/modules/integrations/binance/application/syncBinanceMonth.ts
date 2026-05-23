@@ -12,8 +12,9 @@ import {
 import { BINANCE_SPOT_PAIRS } from "../domain/binanceTypes";
 
 // Maximum pair checks per month-sync to stay within Vercel 60s timeout.
-// Budget: 60s / ~500ms per call ≈ 120 calls − 2 (deposits/withdrawals) = ~90 pairs.
 const MAX_PAIRS = 88;
+// Pairs fetched in parallel per batch. Binance allows ~10 req/s (6000 weight/min, 10/req).
+const PAIR_BATCH_SIZE = 8;
 
 const STABLECOIN_ASSETS = new Set(["USDT", "USDC", "BUSD", "FDUSD", "TUSD", "DAI", "USDP"]);
 
@@ -97,8 +98,8 @@ export async function syncBinanceMonth(
   // ── 3. Lista de pares (coins del período + estáticos, cap MAX_PAIRS) ───────
   const pairs = buildPairList(discoveredCoins);
 
-  // ── 4. Trades por símbolo ─────────────────────────────────────────────────
-  for (const pair of pairs) {
+  // ── 4. Trades por símbolo — en lotes paralelos ───────────────────────────
+  async function syncPair(pair: string): Promise<void> {
     try {
       for await (const { batch } of fetchAllTradesWindowed(pair, startMs, apiKey, apiSecret, endMs)) {
         for (const raw of batch) {
@@ -109,9 +110,12 @@ export async function syncBinanceMonth(
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("-1121")) continue;
-      errors.push(`${pair}: ${msg}`);
+      if (!msg.includes("-1121")) errors.push(`${pair}: ${msg}`);
     }
+  }
+
+  for (let i = 0; i < pairs.length; i += PAIR_BATCH_SIZE) {
+    await Promise.all(pairs.slice(i, i + PAIR_BATCH_SIZE).map(syncPair));
   }
 
   return { imported, skipped, errors };
