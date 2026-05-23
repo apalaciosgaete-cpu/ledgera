@@ -1,28 +1,30 @@
 import { prisma } from "@/lib/prisma";
 
-export type MatchedEntry = {
+export type MatchedRecord = {
   bankMovement: {
     id:          string;
+    bankName:    string | null;
+    occurredAt:  string;
     description: string;
     amountClp:   number;
-    occurredAt:  string;
-    bankName:    string | null;
+    direction:   string;
+    status:      string;
   };
   portfolioMovement: {
     id:         string;
-    symbol:     string;
     type:       string;
+    symbol:     string;
     quantity:   number;
     priceUsd:   number;
     executedAt: string;
     source:     string | null;
-  };
+  } | null;
   confidence: number | null;
   matchedAt:  string | null;
   reason:     string | null;
 };
 
-export async function getMatchedMovements(userId: string): Promise<MatchedEntry[]> {
+export async function getMatchedMovements(userId: string): Promise<MatchedRecord[]> {
   const bankMovements = await prisma.bankMovement.findMany({
     where: {
       userId,
@@ -45,29 +47,30 @@ export async function getMatchedMovements(userId: string): Promise<MatchedEntry[
 
   const byId = new Map(portfolioMovements.map(p => [p.id, p]));
 
-  return bankMovements.flatMap(bank => {
-    const portfolio = byId.get(bank.matchedPortfolioMovementId!);
-    if (!portfolio) return [];
-    return [{
+  return bankMovements.map(bank => {
+    const portfolio = byId.get(bank.matchedPortfolioMovementId!) ?? null;
+    return {
       bankMovement: {
         id:          bank.id,
+        bankName:    bank.bankName ?? null,
+        occurredAt:  bank.occurredAt.toISOString(),
         description: bank.description,
         amountClp:   bank.amountClp,
-        occurredAt:  bank.occurredAt.toISOString(),
-        bankName:    bank.bankName ?? null,
+        direction:   bank.direction,
+        status:      bank.status,
       },
-      portfolioMovement: {
+      portfolioMovement: portfolio ? {
         id:         portfolio.id,
-        symbol:     portfolio.symbol,
         type:       portfolio.type,
+        symbol:     portfolio.symbol,
         quantity:   portfolio.quantity,
         priceUsd:   portfolio.priceUsd,
         executedAt: portfolio.executedAt.toISOString(),
         source:     portfolio.source ?? null,
-      },
+      } : null,
       confidence: bank.matchedConfidence ?? null,
       matchedAt:  bank.matchedAt?.toISOString() ?? null,
       reason:     bank.matchedReason ?? null,
-    }];
+    };
   });
 }

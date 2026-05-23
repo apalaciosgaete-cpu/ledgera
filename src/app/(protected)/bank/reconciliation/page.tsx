@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { getSessionToken } from "@/modules/identity/client/authStorage";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Suggestion = {
@@ -23,35 +24,28 @@ type Suggestion = {
   };
 };
 
-type MatchedEntry = {
+type MatchedRecord = {
   bankMovement: {
     id:          string;
+    bankName:    string | null;
+    occurredAt:  string;
     description: string;
     amountClp:   number;
-    occurredAt:  string;
-    bankName:    string | null;
+    direction:   string;
+    status:      string;
   };
   portfolioMovement: {
     id:         string;
-    symbol:     string;
     type:       string;
+    symbol:     string;
     quantity:   number;
     priceUsd:   number;
     executedAt: string;
     source:     string | null;
-  };
+  } | null;
   confidence: number | null;
   matchedAt:  string | null;
   reason:     string | null;
-};
-
-type IgnoredMovement = {
-  id:          string;
-  description: string;
-  amountClp:   number;
-  occurredAt:  string;
-  bankName:    string | null;
-  status:      string;
 };
 
 type RowState = "pending" | "accepted" | "review" | "ignored";
@@ -162,71 +156,17 @@ function SummaryCard({ label, value, accent }: { label: string; value: number; a
   );
 }
 
-// ── Tab bar ───────────────────────────────────────────────────────────────────
-function TabBar({
-  active, onChange, counts,
-}: {
-  active: Tab;
-  onChange: (t: Tab) => void;
-  counts: { suggestions: number; matched: number; ignored: number };
-}) {
-  const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: "suggestions", label: "Sugerencias", count: counts.suggestions },
-    { id: "matched",     label: "Conciliados", count: counts.matched },
-    { id: "ignored",     label: "Ignorados",   count: counts.ignored },
-  ];
-  return (
-    <div style={{
-      display: "flex", gap: "4px", marginBottom: "20px",
-      borderBottom: "1px solid #E2E8F0", paddingBottom: "0",
-    }}>
-      {tabs.map(t => (
-        <button
-          key={t.id}
-          onClick={() => onChange(t.id)}
-          style={{
-            padding: "10px 18px", border: "none", background: "transparent",
-            cursor: "pointer", fontSize: "14px", fontWeight: active === t.id ? 600 : 400,
-            color: active === t.id ? "#0F2A3D" : "#64748B",
-            borderBottom: active === t.id ? "2px solid #0F2A3D" : "2px solid transparent",
-            transition: "all 0.15s ease",
-            display: "flex", alignItems: "center", gap: "6px",
-            marginBottom: "-1px",
-          }}
-        >
-          {t.label}
-          {t.count > 0 && (
-            <span style={{
-              fontSize: "11px", fontWeight: 600, padding: "1px 6px",
-              borderRadius: "10px",
-              background: active === t.id ? "#0F2A3D" : "#E2E8F0",
-              color:      active === t.id ? "#ffffff" : "#64748B",
-            }}>
-              {t.count}
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-function EmptyState({ message }: { message: string }) {
-  return (
-    <div style={{
-      background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
-      padding: "64px 24px", textAlign: "center",
-    }}>
-      <div style={{ fontSize: "13px", color: "#94A3B8" }}>{message}</div>
-    </div>
-  );
-}
-
 // ── Matched view ──────────────────────────────────────────────────────────────
-function MatchedView({ matches }: { matches: MatchedEntry[] }) {
+function MatchedView({ matches }: { matches: MatchedRecord[] }) {
   if (matches.length === 0) {
-    return <EmptyState message="No hay conciliaciones confirmadas aún." />;
+    return (
+      <div style={{
+        background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+        padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "13px",
+      }}>
+        No hay conciliaciones confirmadas aún.
+      </div>
+    );
   }
   return (
     <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
@@ -264,23 +204,29 @@ function MatchedView({ matches }: { matches: MatchedEntry[] }) {
                   </div>
                 </td>
                 <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
-                    <span style={{ fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>{m.portfolioMovement.symbol}</span>
-                    <span style={{
-                      fontSize: "11px", fontWeight: 600, padding: "1px 6px",
-                      borderRadius: "4px", background: "#EFF6FF", color: "#1D4ED8",
-                    }}>
-                      {m.portfolioMovement.type}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#64748B" }}>{m.portfolioMovement.source ?? "—"}</div>
-                  <div style={{ fontSize: "12px", color: "#94A3B8", marginTop: "2px" }}>
-                    {formatDate(m.portfolioMovement.executedAt)}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "2px" }}>
-                    {m.portfolioMovement.quantity.toLocaleString("en-US", { maximumFractionDigits: 6 })}
-                    {" × $"}{m.portfolioMovement.priceUsd.toLocaleString("en-US", { maximumFractionDigits: 2 })}
-                  </div>
+                  {m.portfolioMovement ? (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>{m.portfolioMovement.symbol}</span>
+                        <span style={{
+                          fontSize: "11px", fontWeight: 600, padding: "1px 6px",
+                          borderRadius: "4px", background: "#EFF6FF", color: "#1D4ED8",
+                        }}>
+                          {m.portfolioMovement.type}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#64748B" }}>{m.portfolioMovement.source ?? "—"}</div>
+                      <div style={{ fontSize: "12px", color: "#94A3B8", marginTop: "2px" }}>
+                        {formatDate(m.portfolioMovement.executedAt)}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#94A3B8", marginTop: "2px" }}>
+                        {m.portfolioMovement.quantity.toLocaleString("en-US", { maximumFractionDigits: 6 })}
+                        {" × $"}{m.portfolioMovement.priceUsd.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                      </div>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: "12px", color: "#94A3B8" }}>Movimiento eliminado</span>
+                  )}
                 </td>
                 <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
                   <ConfidenceBadge confidence={m.confidence} />
@@ -310,94 +256,32 @@ function MatchedView({ matches }: { matches: MatchedEntry[] }) {
   );
 }
 
-// ── Ignored view ──────────────────────────────────────────────────────────────
-function IgnoredView({ movements }: { movements: IgnoredMovement[] }) {
-  if (movements.length === 0) {
-    return <EmptyState message="No hay movimientos ignorados." />;
-  }
-  return (
-    <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" }}>
-              {["Descripción", "Monto", "Fecha", "Estado"].map(col => (
-                <th key={col} style={{
-                  padding: "12px 16px", textAlign: "left",
-                  fontWeight: 600, color: "#475569", fontSize: "12px", whiteSpace: "nowrap",
-                }}>
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {movements.map(m => (
-              <tr key={m.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-                  {m.bankName && (
-                    <div style={{ fontSize: "11px", fontWeight: 600, color: "#94A3B8", marginBottom: "2px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                      {m.bankName}
-                    </div>
-                  )}
-                  <div style={{ fontSize: "13px", color: "#0F2A3D" }}>{truncate(m.description)}</div>
-                </td>
-                <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#DC2626" }}>
-                    -{formatClp(m.amountClp)}
-                  </span>
-                </td>
-                <td style={{ padding: "14px 16px", verticalAlign: "top", color: "#64748B" }}>
-                  {formatDate(m.occurredAt)}
-                </td>
-                <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-                  <span style={{
-                    display: "inline-flex", alignItems: "center",
-                    padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 500,
-                    background: "#FEE2E2", color: "#991B1B", border: "1px solid #FECACA",
-                  }}>
-                    Ignorado
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ padding: "12px 16px", borderTop: "1px solid #F1F5F9", fontSize: "12px", color: "#94A3B8" }}>
-        {movements.length} movimiento{movements.length !== 1 ? "s" : ""} ignorado{movements.length !== 1 ? "s" : ""}
-      </div>
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function ReconciliationPage() {
-  const [activeTab,    setActiveTab]    = useState<Tab>("suggestions");
+  const [activeTab,  setActiveTab]  = useState<Tab>("suggestions");
 
-  // Suggestions tab state
-  const [suggestions,  setSuggestions]  = useState<Suggestion[]>([]);
-  const [rowStates,    setRowStates]    = useState<Record<string, RowState>>({});
-  const [sugLoading,   setSugLoading]   = useState(true);
-  const [sugError,     setSugError]     = useState<string | null>(null);
-  const [acting,       setActing]       = useState<string | null>(null);
+  // Suggestions tab
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [rowStates,   setRowStates]   = useState<Record<string, RowState>>({});
+  const [sugLoading,  setSugLoading]  = useState(true);
+  const [sugError,    setSugError]    = useState<string | null>(null);
+  const [acting,      setActing]      = useState<string | null>(null);
 
-  // Matched tab state
-  const [matches,      setMatches]      = useState<MatchedEntry[]>([]);
+  // Matched tab
+  const [matched,      setMatched]      = useState<MatchedRecord[]>([]);
   const [matchLoading, setMatchLoading] = useState(false);
-  const [matchFetched, setMatchFetched] = useState(false);
 
-  // Ignored tab state
-  const [ignoredList,  setIgnoredList]  = useState<IgnoredMovement[]>([]);
-  const [ignLoading,   setIgnLoading]   = useState(false);
-  const [ignFetched,   setIgnFetched]   = useState(false);
-
-  // ── Fetch suggestions on mount ──────────────────────────────────────────────
-  const fetchSuggestions = useCallback(async () => {
+  // ── Loaders ─────────────────────────────────────────────────────────────────
+  const loadSuggestions = useCallback(async () => {
     setSugLoading(true);
     setSugError(null);
+    const token = getSessionToken();
     try {
-      const res  = await fetch("/api/bank/match/binance", { method: "POST" });
+      const res  = await fetch("/api/bank/match/binance", {
+        method:      "POST",
+        credentials: "include",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
       const json = await res.json() as ApiResponse<{ suggestions: Suggestion[] }>;
       if (json.ok) {
         setSuggestions(json.data.suggestions ?? []);
@@ -412,31 +296,27 @@ export default function ReconciliationPage() {
     }
   }, []);
 
-  useEffect(() => { void fetchSuggestions(); }, [fetchSuggestions]);
+  async function loadMatched() {
+    setMatchLoading(true);
+    const token = getSessionToken();
+    const response = await fetch("/api/bank/reconciliation/matched", {
+      credentials: "include",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    const payload = await response.json() as ApiResponse<{ matches: MatchedRecord[]; total: number }>;
+    if (response.ok && payload.ok) {
+      setMatched(payload.data.matches);
+    }
+    setMatchLoading(false);
+  }
 
-  // ── Lazy-fetch on tab switch ────────────────────────────────────────────────
   useEffect(() => {
-    if (activeTab === "matched" && !matchFetched) {
-      setMatchLoading(true);
-      setMatchFetched(true);
-      fetch("/api/bank/reconciliation/matched")
-        .then(r => r.json() as Promise<ApiResponse<{ matches: MatchedEntry[] }>>)
-        .then(json => { if (json.ok) setMatches(json.data.matches ?? []); })
-        .catch(() => {})
-        .finally(() => setMatchLoading(false));
-    }
-    if (activeTab === "ignored" && !ignFetched) {
-      setIgnLoading(true);
-      setIgnFetched(true);
-      fetch("/api/bank/movements?status=IGNORED&limit=200")
-        .then(r => r.json() as Promise<ApiResponse<{ movements: IgnoredMovement[] }>>)
-        .then(json => { if (json.ok) setIgnoredList(json.data.movements ?? []); })
-        .catch(() => {})
-        .finally(() => setIgnLoading(false));
-    }
-  }, [activeTab, matchFetched, ignFetched]);
+    if (activeTab === "suggestions") void loadSuggestions();
+    if (activeTab === "matched")     void loadMatched();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, loadSuggestions]);
 
-  // ── Row state helpers ───────────────────────────────────────────────────────
+  // ── Row actions ──────────────────────────────────────────────────────────────
   function setRowState(bankMovementId: string, state: RowState) {
     setRowStates(prev => ({ ...prev, [bankMovementId]: state }));
   }
@@ -444,8 +324,14 @@ export default function ReconciliationPage() {
   async function handleAccept(s: Suggestion) {
     setActing(s.bankMovementId);
     try {
-      const res  = await fetch("/api/bank/reconciliation/confirm", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const token = getSessionToken();
+      const res   = await fetch("/api/bank/reconciliation/confirm", {
+        method:      "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           bankMovementId:      s.bankMovementId,
           portfolioMovementId: s.portfolioMovementId,
@@ -454,10 +340,7 @@ export default function ReconciliationPage() {
         }),
       });
       const json = await res.json() as ApiResponse<unknown>;
-      if (json.ok) {
-        setRowState(s.bankMovementId, "accepted");
-        setMatchFetched(false); // invalidate matched cache
-      }
+      if (json.ok) setRowState(s.bankMovementId, "accepted");
     } finally {
       setActing(null);
     }
@@ -466,21 +349,24 @@ export default function ReconciliationPage() {
   async function handleIgnore(bankMovementId: string) {
     setActing(bankMovementId);
     try {
-      const res  = await fetch("/api/bank/reconciliation/reject", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const token = getSessionToken();
+      const res   = await fetch("/api/bank/reconciliation/reject", {
+        method:      "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ bankMovementId }),
       });
       const json = await res.json() as ApiResponse<unknown>;
-      if (json.ok) {
-        setRowState(bankMovementId, "ignored");
-        setIgnFetched(false); // invalidate ignored cache
-      }
+      if (json.ok) setRowState(bankMovementId, "ignored");
     } finally {
       setActing(null);
     }
   }
 
-  // ── Summary counts ──────────────────────────────────────────────────────────
+  // ── Summary counts ───────────────────────────────────────────────────────────
   const counts = suggestions.reduce(
     (acc, s) => { acc[rowStates[s.bankMovementId] ?? "pending"]++; return acc; },
     { pending: 0, accepted: 0, review: 0, ignored: 0 } as Record<RowState, number>,
@@ -488,13 +374,7 @@ export default function ReconciliationPage() {
   const pendingCount = counts.pending + counts.review;
   const visible      = suggestions.filter(s => (rowStates[s.bankMovementId] ?? "pending") !== "ignored");
 
-  const tabCounts = {
-    suggestions: pendingCount,
-    matched:     matches.length,
-    ignored:     ignoredList.length,
-  };
-
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div>
       {/* Header */}
@@ -512,20 +392,50 @@ export default function ReconciliationPage() {
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
         gap: "16px", marginBottom: "28px",
       }}>
-        <SummaryCard label="Pendientes"      value={pendingCount}  accent="#0F2A3D" />
-        <SummaryCard
-          label="Alta confianza"
-          value={suggestions.filter(s => s.confidence > 0.85).length}
-          accent="#16A34A"
-        />
-        <SummaryCard label="Conciliados" value={counts.accepted + matches.length} accent="#16A34A" />
-        <SummaryCard label="Ignorados"   value={counts.ignored  + ignoredList.length} accent="#DC2626" />
+        <SummaryCard label="Pendientes"     value={pendingCount}                                              accent="#0F2A3D" />
+        <SummaryCard label="Alta confianza" value={suggestions.filter(s => s.confidence > 0.85).length}      accent="#16A34A" />
+        <SummaryCard label="Conciliados"    value={counts.accepted + matched.length}                          accent="#16A34A" />
+        <SummaryCard label="Ignorados"      value={counts.ignored}                                            accent="#DC2626" />
       </div>
 
       {/* Tabs */}
-      <TabBar active={activeTab} onChange={setActiveTab} counts={tabCounts} />
+      <div className="flex gap-2 rounded-2xl border border-slate-200 bg-white p-2" style={{ marginBottom: "20px" }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab("suggestions")}
+          className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+            activeTab === "suggestions"
+              ? "bg-slate-900 text-white"
+              : "text-slate-500 hover:bg-slate-50"
+          }`}
+        >
+          Sugerencias
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("matched")}
+          className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+            activeTab === "matched"
+              ? "bg-slate-900 text-white"
+              : "text-slate-500 hover:bg-slate-50"
+          }`}
+        >
+          Conciliados
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("ignored")}
+          className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+            activeTab === "ignored"
+              ? "bg-slate-900 text-white"
+              : "text-slate-500 hover:bg-slate-50"
+          }`}
+        >
+          Ignorados
+        </button>
+      </div>
 
-      {/* ── Sugerencias tab ── */}
+      {/* ── Sugerencias ── */}
       {activeTab === "suggestions" && (
         sugLoading ? (
           <div style={{
@@ -542,7 +452,14 @@ export default function ReconciliationPage() {
             {sugError}
           </div>
         ) : suggestions.length === 0 ? (
-          <EmptyState message="No hay egresos bancarios que coincidan con actividad Binance en ±3 días." />
+          <div style={{
+            background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+            padding: "64px 24px", textAlign: "center",
+          }}>
+            <div style={{ fontSize: "13px", color: "#94A3B8" }}>
+              No hay egresos bancarios que coincidan con actividad Binance en ±3 días.
+            </div>
+          </div>
         ) : (
           <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
             <div style={{ overflowX: "auto" }}>
@@ -644,18 +561,31 @@ export default function ReconciliationPage() {
         )
       )}
 
-      {/* ── Conciliados tab ── */}
+      {/* ── Conciliados ── */}
       {activeTab === "matched" && (
         matchLoading
-          ? <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0", padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "14px" }}>Cargando conciliaciones…</div>
-          : <MatchedView matches={matches} />
+          ? <div style={{
+              background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+              padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "14px",
+            }}>
+              Cargando conciliaciones…
+            </div>
+          : <MatchedView matches={matched} />
       )}
 
-      {/* ── Ignorados tab ── */}
+      {/* ── Ignorados ── */}
       {activeTab === "ignored" && (
-        ignLoading
-          ? <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0", padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "14px" }}>Cargando movimientos ignorados…</div>
-          : <IgnoredView movements={ignoredList} />
+        <div style={{
+          background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+          padding: "64px 24px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: "#0F2A3D", marginBottom: "6px" }}>
+            Próximamente
+          </div>
+          <div style={{ fontSize: "13px", color: "#94A3B8" }}>
+            El endpoint <code style={{ background: "#F1F5F9", padding: "1px 6px", borderRadius: "4px" }}>/api/bank/reconciliation/ignored</code> está pendiente.
+          </div>
+        </div>
       )}
     </div>
   );
