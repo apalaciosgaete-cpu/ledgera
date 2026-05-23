@@ -1,25 +1,15 @@
 export type BankMovementDirection = "INFLOW" | "OUTFLOW";
 
 export type ParsedBankMovement = {
-  occurredAt:  Date;
+  occurredAt: Date;
   description: string;
-  amountClp:   number;
-  direction:   BankMovementDirection;
+  amountClp: number;
+  direction: BankMovementDirection;
   balanceClp?: number | null;
-  raw:         Record<string, unknown>;
+  raw: Record<string, unknown>;
 };
 
-// ── Internal helpers (not exported to external consumers) ─────────────────────
-export type BankFileType     = "CSV" | "XLSX" | "PDF";
-export type BankUploadStatus = "IMPORTED" | "PARTIAL" | "FAILED" | "REVIEW";
-
-export interface ParseBankFileResult {
-  rows:        ParsedBankMovement[];
-  errors:      string[];
-  fileType:    BankFileType;
-  needsReview: boolean;
-}
-
+// Used by CSV template persistence and legacy UI
 export interface ColMapping {
   colDate:    string;
   colDesc:    string;
