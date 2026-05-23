@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { findConnectionByUser } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
 import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
 import { importBinanceTaxTransfers } from "@/modules/integrations/binance/application/importBinanceTaxTransfers";
@@ -9,6 +10,9 @@ import { BINANCE_TAX_PROVIDER } from "@/modules/integrations/binance/domain/bina
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
+  const csrf = enforceCsrfProtection(request);
+  if (csrf) return csrf;
+
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 

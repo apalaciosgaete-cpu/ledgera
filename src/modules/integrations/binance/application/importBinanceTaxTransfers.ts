@@ -7,18 +7,33 @@ import {
 import type { NormalizedImportRecord } from "../domain/binanceTypes";
 import { classifyBinanceEvent } from "../domain/taxNormalization";
 import { upsertImportRecord } from "../infrastructure/exchangeImportRepository";
+import { fetchHistoricalCryptoPrice } from "./fetchHistoricalCryptoPrice";
 
-function normalizeDeposit(d: BinanceTaxDeposit): NormalizedImportRecord {
-  const tax = classifyBinanceEvent("DEPOSIT", "DEPOSIT");
+const _priceCache = new Map<string, number>();
+
+async function historicalUsd(symbol: string, date: Date): Promise<number> {
+  const hourTs = Math.floor(date.getTime() / 3_600_000) * 3_600_000;
+  const key    = `${symbol}_${hourTs}`;
+  if (_priceCache.has(key)) return _priceCache.get(key)!;
+  const price = await fetchHistoricalCryptoPrice(symbol, new Date(hourTs));
+  _priceCache.set(key, price);
+  return price;
+}
+
+async function normalizeDeposit(d: BinanceTaxDeposit): Promise<NormalizedImportRecord> {
+  const tax        = classifyBinanceEvent("DEPOSIT", "DEPOSIT");
+  const occurredAt = new Date(d.insertTime);
+  const priceUsd   = await historicalUsd(d.coin, occurredAt);
+
   return {
     externalId:          `TAX-DEPOSIT-${d.id}`,
-    externalType:        "DEPOSIT",
+    externalType:        "TAX_DEPOSIT",
     movementType:        "DEPOSIT",
     symbol:              d.coin,
     quantity:            Number(d.amount),
-    priceUsd:            0,
+    priceUsd,
     feeUsd:              0,
-    occurredAt:          new Date(d.insertTime),
+    occurredAt,
     normalizedEventType: tax.normalizedEventType,
     taxTreatment:        tax.taxTreatment,
     inventoryEffect:     tax.inventoryEffect,
@@ -26,17 +41,21 @@ function normalizeDeposit(d: BinanceTaxDeposit): NormalizedImportRecord {
   };
 }
 
-function normalizeWithdrawal(w: BinanceTaxWithdrawal): NormalizedImportRecord {
-  const tax = classifyBinanceEvent("WITHDRAW", "WITHDRAW");
+async function normalizeWithdrawal(w: BinanceTaxWithdrawal): Promise<NormalizedImportRecord> {
+  const tax        = classifyBinanceEvent("WITHDRAW", "WITHDRAW");
+  const occurredAt = new Date(w.applyTime.replace(" ", "T") + "Z");
+  const priceUsd   = await historicalUsd(w.coin, occurredAt);
+  const feeUsd     = Number(w.transactionFee) * priceUsd;
+
   return {
     externalId:          `TAX-WITHDRAW-${w.id}`,
-    externalType:        "WITHDRAW",
+    externalType:        "TAX_WITHDRAW",
     movementType:        "WITHDRAW",
     symbol:              w.coin,
     quantity:            Number(w.amount),
-    priceUsd:            0,
-    feeUsd:              Number(w.transactionFee),
-    occurredAt:          new Date(w.applyTime.replace(" ", "T") + "Z"),
+    priceUsd,
+    feeUsd,
+    occurredAt,
     normalizedEventType: tax.normalizedEventType,
     taxTreatment:        tax.taxTreatment,
     inventoryEffect:     tax.inventoryEffect,
@@ -74,14 +93,14 @@ export async function importBinanceTaxTransfers(
   let withdrawals = 0;
 
   for (const d of rawDeposits) {
-    const rec = normalizeDeposit(d);
+    const rec = await normalizeDeposit(d);
     const { isNew } = await upsertImportRecord(userId, connectionId, provider, rec, JSON.stringify(d));
     if (isNew) { imported++; deposits++;    }
     else       { skipped++;                 }
   }
 
   for (const w of rawWithdrawals) {
-    const rec = normalizeWithdrawal(w);
+    const rec = await normalizeWithdrawal(w);
     const { isNew } = await upsertImportRecord(userId, connectionId, provider, rec, JSON.stringify(w));
     if (isNew) { imported++; withdrawals++; }
     else       { skipped++;                 }

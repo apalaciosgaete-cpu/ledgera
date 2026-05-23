@@ -66,7 +66,7 @@ export type BinanceAccountInfo = {
 
 export type NormalizedImportRecord = {
   externalId:          string;
-  externalType:        "TRADE" | "DEPOSIT" | "WITHDRAW";
+  externalType:        "TRADE" | "DEPOSIT" | "WITHDRAW" | "TAX_DEPOSIT" | "TAX_WITHDRAW";
   movementType:        "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
   symbol:              string;
   quantity:            number;
