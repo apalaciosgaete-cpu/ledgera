@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { logReconciliationAudit } from "@/modules/banking/application/logReconciliationAudit";
 
 type ConfirmBody = {
   bankMovementId?:      string;
@@ -60,6 +61,15 @@ export async function POST(request: NextRequest) {
         matchedAt:                  new Date(),
         matchedReason:              reason,
       },
+    });
+
+    await logReconciliationAudit({
+      userId:              auth.user.id,
+      action:              "MATCH_CONFIRMED",
+      bankMovementId:      updated.id,
+      portfolioMovementId: portfolioMovement.id,
+      confidence,
+      reason,
     });
 
     return ok(

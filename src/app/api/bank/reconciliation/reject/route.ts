@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { logReconciliationAudit } from "@/modules/banking/application/logReconciliationAudit";
 
 type RejectBody = {
   bankMovementId?: string;
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
   try {
-    const body         = (await request.json()) as RejectBody;
+    const body           = (await request.json()) as RejectBody;
     const bankMovementId = body.bankMovementId?.trim();
 
     if (!bankMovementId) {
@@ -44,6 +45,12 @@ export async function POST(request: NextRequest) {
         matchedAt:                  null,
         matchedReason:              null,
       },
+    });
+
+    await logReconciliationAudit({
+      userId:         auth.user.id,
+      action:         "MATCH_REJECTED",
+      bankMovementId: updated.id,
     });
 
     return ok(

@@ -640,6 +640,23 @@ model BankMovement {
   @@map("bank_movements")
 }
 
+model BankReconciliationAuditLog {
+  id                  String   @id @default(cuid())
+  userId              String
+  action              String
+  bankMovementId      String
+  portfolioMovementId String?
+  confidence          Float?
+  reason              String?
+  metadata            String?
+  createdAt           DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([bankMovementId])
+  @@index([portfolioMovementId])
+  @@map("bank_reconciliation_audit_logs")
+}
+
 model BankCsvTemplate {
   id         String   @id @default(cuid())
   userId     String
