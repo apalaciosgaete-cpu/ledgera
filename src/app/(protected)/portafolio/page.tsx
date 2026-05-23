@@ -659,12 +659,8 @@ export default function PortafolioPage() {
                           {tm.label}
                         </span>
                       </td>
-                      <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <CoinLogo symbol={m.symbol} size={20} />
-                          <span style={{ fontFamily: "var(--font-display)" }}>{m.symbol}</span>
-                          <span style={{ fontSize: "0.75rem", color: "#94A3B8", fontWeight: 400, fontFamily: "var(--font-body)" }}>{formatNumber(m.quantity, 6)}</span>
-                        </div>
+                      <td style={{ ...cellStyle, fontWeight: 700, color: "#0F2A3D", fontFamily: "var(--font-display)" }}>
+                        {m.symbol}
                       </td>
                       <td style={{ ...cellStyle, fontSize: "0.75rem", color: "#64748B" }}>{formatNumber(m.quantity, 8)}</td>
                       <td style={{ ...cellStyle, fontWeight: 600, color: "#0F2A3D" }}>{totalUsd > 0 ? formatUsd(totalUsd) : "—"}</td>
