@@ -77,6 +77,7 @@ const MONTH_NAME: Record<number, string> = {
   7:"julio",8:"agosto",9:"septiembre",10:"octubre",11:"noviembre",12:"diciembre",
 };
 const CALENDAR_START_YEAR = 2018;
+const BINANCE_VISIBLE_YEAR_KEY = "ledgera.binance.visibleYear";
 
 // ── Month dots ─────────────────────────────────────────────────────────────────
 
@@ -171,11 +172,21 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
   const [loadingTaxConn, setLoadingTaxConn] = useState(false);
   const [msg,            setMsg]            = useState<{ type: "success"|"error"|"info"; text: string } | null>(null);
   const targetYearRef = useRef<number>(new Date().getFullYear());
-  const [visibleYear,    setVisibleYear]    = useState(() => targetYearRef.current);
+  const [visibleYear, setVisibleYear] = useState(() => {
+    if (typeof window === "undefined") return new Date().getFullYear();
+    const stored = Number(window.sessionStorage.getItem(BINANCE_VISIBLE_YEAR_KEY));
+    if (Number.isInteger(stored) && stored >= CALENDAR_START_YEAR && stored <= new Date().getFullYear()) {
+      return stored;
+    }
+    return new Date().getFullYear();
+  });
 
   function keepVisibleYear(year: number) {
     targetYearRef.current = year;
     setVisibleYear(year);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(BINANCE_VISIBLE_YEAR_KEY, String(year));
+    }
   }
 
   const currentYear  = new Date().getFullYear();
@@ -315,10 +326,9 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
     setMsg({ type: "success", text: `${monthLabel}: ${parts.join(" · ")}.` });
 
     await Promise.all([loadCalendar(), loadImports(), loadStatus()]);
-    keepVisibleYear(year);
-
     setLastSyncedMonth({ year, month });
     setSyncingMonth(null);
+    keepVisibleYear(year);
     onSyncComplete?.();
   }
 
