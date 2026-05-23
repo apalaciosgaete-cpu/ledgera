@@ -170,8 +170,13 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
   const [taxConn,        setTaxConn]        = useState<TaxConnectionStatus | null>(null);
   const [loadingTaxConn, setLoadingTaxConn] = useState(false);
   const [msg,            setMsg]            = useState<{ type: "success"|"error"|"info"; text: string } | null>(null);
-  const [visibleYear,    setVisibleYear]    = useState(() => new Date().getFullYear());
-  const targetYearRef = useRef(new Date().getFullYear());
+  const targetYearRef = useRef<number>(new Date().getFullYear());
+  const [visibleYear,    setVisibleYear]    = useState(() => targetYearRef.current);
+
+  function keepVisibleYear(year: number) {
+    targetYearRef.current = year;
+    setVisibleYear(year);
+  }
 
   const currentYear  = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -267,8 +272,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
 
   async function handleClickMonth(year: number, month: number) {
     if (syncingMonth) return;
-    targetYearRef.current = year;
-    setVisibleYear(year);
+    keepVisibleYear(year);
     setSyncingMonth({ year, month });
     setLastSyncedMonth(null);
     setMsg(null);
@@ -311,6 +315,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
     setMsg({ type: "success", text: `${monthLabel}: ${parts.join(" · ")}.` });
 
     await Promise.all([loadCalendar(), loadImports(), loadStatus()]);
+    keepVisibleYear(year);
 
     setLastSyncedMonth({ year, month });
     setSyncingMonth(null);
@@ -375,14 +380,14 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                   <button
                     type="button"
-                    onClick={() => { const y = Math.max(CALENDAR_START_YEAR, visibleYear - 1); targetYearRef.current = y; setVisibleYear(y); }}
+                    onClick={() => keepVisibleYear(Math.max(CALENDAR_START_YEAR, visibleYear - 1))}
                     disabled={visibleYear <= CALENDAR_START_YEAR}
                     style={{ background: "none", border: "none", color: visibleYear <= CALENDAR_START_YEAR ? "#1e293b" : "#64748B", cursor: visibleYear <= CALENDAR_START_YEAR ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
                   >‹</button>
                   <span style={{ fontSize: "16px", fontWeight: 700, color: "#CBD5E1" }}>{visibleYear}</span>
                   <button
                     type="button"
-                    onClick={() => { const y = Math.min(currentYear, visibleYear + 1); targetYearRef.current = y; setVisibleYear(y); }}
+                    onClick={() => keepVisibleYear(Math.min(currentYear, visibleYear + 1))}
                     disabled={visibleYear >= currentYear}
                     style={{ background: "none", border: "none", color: visibleYear >= currentYear ? "#1e293b" : "#64748B", cursor: visibleYear >= currentYear ? "default" : "pointer", fontSize: "16px", padding: "4px 10px", fontFamily: fonts.body }}
                   >›</button>
