@@ -455,44 +455,14 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
               )}
 
               {/* Status line */}
-              {(conn.apiKeyHint ?? conn.lastSyncAt) && (
+              {conn.lastSyncAt && (
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                  {conn.apiKeyHint && <span style={{ fontSize: "11px", color: "#334155" }}>Clave …{conn.apiKeyHint}</span>}
-                  {conn.lastSyncAt && (
-                    <span style={{ fontSize: "11px", color: "#334155" }}>
-                      Última sync: {new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}
-                      {" "}{conn.lastSyncStatus === "OK" ? "✓" : "⚠"}
-                    </span>
-                  )}
+                  <span style={{ fontSize: "11px", color: "#334155" }}>
+                    Última sync: {new Date(conn.lastSyncAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}
+                    {" "}{conn.lastSyncStatus === "OK" ? "✓" : "⚠"}
+                  </span>
                 </div>
               )}
-
-              {/* APIs Binance */}
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", padding: "0.75rem 1rem", marginTop: "auto" }}>
-                <h4 style={{ fontSize: "11px", fontWeight: 700, color: "#64748B", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>APIs Binance</h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
-                    <div>
-                      <p style={{ margin: 0, fontSize: "13px", color: "#CBD5E1", fontWeight: 600 }}>API Spot</p>
-                      <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#475569" }}>Balances, depósitos/retiros y Spot parcial.</p>
-                    </div>
-                    <span style={{ fontSize: "12px", color: "#4ADE80", fontWeight: 700, flexShrink: 0 }}>Conectada</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
-                    <div>
-                      <p style={{ margin: 0, fontSize: "13px", color: "#CBD5E1", fontWeight: 600 }}>API Tributaria</p>
-                      <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#475569" }}>Historial tributario multi-año de Binance.</p>
-                    </div>
-                    {loadingTaxConn ? (
-                      <span style={{ fontSize: "12px", color: "#475569", flexShrink: 0 }}>…</span>
-                    ) : taxConn?.connected ? (
-                      <span style={{ fontSize: "12px", color: "#4ADE80", fontWeight: 700, flexShrink: 0 }}>Conectada</span>
-                    ) : (
-                      <a href="/integrations/binance/tax" style={{ fontSize: "12px", color: "#F59E0B", fontWeight: 700, textDecoration: "none", flexShrink: 0 }}>Conectar →</a>
-                    )}
-                  </div>
-                </div>
-              </div>
             </>
           )}
         </div>
