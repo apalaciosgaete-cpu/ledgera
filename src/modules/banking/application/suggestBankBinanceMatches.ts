@@ -91,18 +91,25 @@ function amountScore(
   return { score: 0 };
 }
 
-export async function suggestBankBinanceMatches(userId: string): Promise<BankMatchSuggestion[]> {
+export type MatchFilters = {
+  minConfidence?: number;
+  source?:        string;
+  type?:          string;
+};
+
+export async function suggestBankBinanceMatches(
+  userId:  string,
+  filters: MatchFilters = {},
+): Promise<BankMatchSuggestion[]> {
+  const minConfidence = filters.minConfidence ?? 0.6;
+
   const bankMovements = await prisma.bankMovement.findMany({
     where: {
       userId,
       direction: "OUTFLOW",
-      status: {
-        in: ["IMPORTED", "REVIEW"],
-      },
+      status: { in: ["IMPORTED", "REVIEW"] },
     },
-    orderBy: {
-      occurredAt: "desc",
-    },
+    orderBy: { occurredAt: "desc" },
     take: 500,
   });
 
@@ -110,27 +117,18 @@ export async function suggestBankBinanceMatches(userId: string): Promise<BankMat
 
   for (const bank of bankMovements) {
     const usdClp = await resolveUsdClpRate(bank.occurredAt);
-    const from = addDays(bank.occurredAt, -3);
-    const to = addDays(bank.occurredAt, 3);
+    const from   = addDays(bank.occurredAt, -3);
+    const to     = addDays(bank.occurredAt,  3);
 
     const cryptoMovements = await prisma.portfolioMovement.findMany({
       where: {
         userId,
-        source: {
-          in: ["BINANCE", "BINANCE_TAX"],
-        },
-        type: {
-          in: ["BUY", "DEPOSIT"],
-        },
-        executedAt: {
-          gte: from,
-          lte: to,
-        },
-        deletedAt: null,
+        source:     filters.source ? filters.source : { in: ["BINANCE", "BINANCE_TAX"] },
+        type:       filters.type   ? filters.type   : { in: ["BUY", "DEPOSIT"] },
+        executedAt: { gte: from, lte: to },
+        deletedAt:  null,
       },
-      orderBy: {
-        executedAt: "asc",
-      },
+      orderBy: { executedAt: "asc" },
       take: 20,
     });
 
@@ -154,24 +152,24 @@ export async function suggestBankBinanceMatches(userId: string): Promise<BankMat
         keyword.score + date.score + type.score + amount.score,
       );
 
-      if (confidence >= 0.4) {
+      if (confidence >= minConfidence) {
         suggestions.push({
-          bankMovementId: bank.id,
+          bankMovementId:      bank.id,
           portfolioMovementId: crypto.id,
           confidence,
           reason: reasons.join(" · "),
           bank: {
-            occurredAt: bank.occurredAt.toISOString(),
+            occurredAt:  bank.occurredAt.toISOString(),
             description: bank.description,
-            amountClp: bank.amountClp,
+            amountClp:   bank.amountClp,
           },
           crypto: {
             occurredAt: crypto.executedAt.toISOString(),
-            type: crypto.type,
-            symbol: crypto.symbol,
-            quantity: crypto.quantity,
-            priceUsd: crypto.priceUsd,
-            source: crypto.source,
+            type:       crypto.type,
+            symbol:     crypto.symbol,
+            quantity:   crypto.quantity,
+            priceUsd:   crypto.priceUsd,
+            source:     crypto.source,
           },
         });
       }

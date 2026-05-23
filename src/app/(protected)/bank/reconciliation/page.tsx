@@ -335,11 +335,16 @@ export default function ReconciliationPage() {
   const [activeTab,  setActiveTab]  = useState<Tab>("suggestions");
 
   // Suggestions tab
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [rowStates,   setRowStates]   = useState<Record<string, RowState>>({});
-  const [sugLoading,  setSugLoading]  = useState(true);
-  const [sugError,    setSugError]    = useState<string | null>(null);
-  const [acting,      setActing]      = useState<string | null>(null);
+  const [suggestions,    setSuggestions]    = useState<Suggestion[]>([]);
+  const [rowStates,      setRowStates]      = useState<Record<string, RowState>>({});
+  const [sugLoading,     setSugLoading]     = useState(true);
+  const [sugError,       setSugError]       = useState<string | null>(null);
+  const [acting,         setActing]         = useState<string | null>(null);
+
+  // Suggestion filters
+  const [minConfidence,  setMinConfidence]  = useState(0.6);
+  const [filterSource,   setFilterSource]   = useState("");
+  const [filterType,     setFilterType]     = useState("");
 
   // Matched tab
   const [matched,          setMatched]          = useState<MatchedRecord[]>([]);
@@ -364,7 +369,15 @@ export default function ReconciliationPage() {
       const res  = await fetch("/api/bank/match/binance", {
         method:      "POST",
         credentials: "include",
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          minConfidence,
+          ...(filterSource ? { source: filterSource } : {}),
+          ...(filterType   ? { type:   filterType   } : {}),
+        }),
       });
       const json = await res.json() as ApiResponse<{ suggestions: Suggestion[] }>;
       if (json.ok) {
@@ -378,7 +391,7 @@ export default function ReconciliationPage() {
     } finally {
       setSugLoading(false);
     }
-  }, []);
+  }, [minConfidence, filterSource, filterType]);
 
   async function loadMatched() {
     setMatchLoading(true);
@@ -599,7 +612,63 @@ export default function ReconciliationPage() {
 
       {/* ── Sugerencias ── */}
       {activeTab === "suggestions" && (
-        sugLoading ? (
+        <>
+        {/* Filter bar */}
+        <div style={{
+          display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center",
+          background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
+          padding: "14px 20px", marginBottom: "16px", fontSize: "13px",
+        }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "#475569", fontWeight: 500 }}>
+            Confianza mínima
+            <select
+              value={String(minConfidence)}
+              onChange={e => setMinConfidence(Number(e.target.value))}
+              style={{
+                padding: "4px 8px", borderRadius: "6px", border: "1px solid #E2E8F0",
+                fontSize: "13px", color: "#0F2A3D", background: "#F8FAFC", cursor: "pointer",
+              }}
+            >
+              {[0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map(v => (
+                <option key={v} value={v}>{Math.round(v * 100)}%</option>
+              ))}
+            </select>
+          </label>
+
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "#475569", fontWeight: 500 }}>
+            Origen
+            <select
+              value={filterSource}
+              onChange={e => setFilterSource(e.target.value)}
+              style={{
+                padding: "4px 8px", borderRadius: "6px", border: "1px solid #E2E8F0",
+                fontSize: "13px", color: "#0F2A3D", background: "#F8FAFC", cursor: "pointer",
+              }}
+            >
+              <option value="">Todos</option>
+              <option value="BINANCE">BINANCE</option>
+              <option value="BINANCE_TAX">BINANCE_TAX</option>
+            </select>
+          </label>
+
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "#475569", fontWeight: 500 }}>
+            Tipo
+            <select
+              value={filterType}
+              onChange={e => setFilterType(e.target.value)}
+              style={{
+                padding: "4px 8px", borderRadius: "6px", border: "1px solid #E2E8F0",
+                fontSize: "13px", color: "#0F2A3D", background: "#F8FAFC", cursor: "pointer",
+              }}
+            >
+              <option value="">Todos</option>
+              <option value="BUY">BUY</option>
+              <option value="DEPOSIT">DEPOSIT</option>
+            </select>
+          </label>
+        </div>
+
+        {sugLoading ? (
           <div style={{
             background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
             padding: "64px 24px", textAlign: "center", color: "#94A3B8", fontSize: "14px",
@@ -721,6 +790,7 @@ export default function ReconciliationPage() {
             </div>
           </div>
         )
+        }</>
       )}
 
       {/* ── Conciliados ── */}
