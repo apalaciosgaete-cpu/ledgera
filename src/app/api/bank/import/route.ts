@@ -25,31 +25,29 @@ export async function POST(request: NextRequest) {
     const buffer   = Buffer.from(await file.arrayBuffer());
     const fileName = file.name;
 
-    const { fileHash, rows, rawPreview } = await parseBankFile(fileName, buffer);
-
-    const isPdf      = fileName.toLowerCase().endsWith(".pdf");
-    const needsReview = isPdf;
+    const { fileHash, rows, errorRows, rawPreview } = await parseBankFile(fileName, buffer);
 
     const result = await importBankMovements(
       auth.user.id,
       bankName,
       fileName,
       fileHash,
-      buffer,
       rows,
-      needsReview,
+      errorRows,
     );
 
     return ok(
       {
         uploadId:     result.uploadId,
+        duplicate:    result.duplicate,
         totalRows:    result.totalRows,
         importedRows: result.importedRows,
-        skippedRows:  result.skippedRows,
-        needsReview:  result.needsReview,
+        errorRows:    result.errorRows,
         preview:      rawPreview,
       },
-      `${result.importedRows} movimientos importados.`,
+      result.duplicate
+        ? "Este archivo ya fue importado anteriormente."
+        : `${result.importedRows} movimientos importados.`,
       201,
     );
   } catch (error) {

@@ -1,7 +1,43 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useState } from "react";
 import { getSessionToken } from "@/modules/identity/client/authStorage";
+
+type ImportResult = {
+  uploadId:     string;
+  duplicate:    boolean;
+  totalRows:    number;
+  importedRows: number;
+  errorRows:    number;
+};
+
+type ApiResponse<T> = {
+  ok:      boolean;
+  message: string;
+  data:    T;
+};
+
+// ── Preview row shape returned by the API ─────────────────────────────────────
+type PreviewRow = {
+  occurredAt:  string;
+  description: string;
+  amountClp:   number;
+  direction:   "INFLOW" | "OUTFLOW";
+};
+
+type ImportData = ImportResult & { preview: PreviewRow[] };
+
+// ── Bancos ────────────────────────────────────────────────────────────────────
+const BANKS = [
+  "Banco de Chile",
+  "Santander",
+  "BCI",
+  "Scotiabank",
+  "Falabella",
+  "MercadoPago",
+  "Tenpo",
+  "Otro",
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function readCsrfCookie(): string {
@@ -18,71 +54,44 @@ function fmtClp(n: number): string {
   }).format(n);
 }
 
-function fmtDate(raw: string | Date): string {
-  return new Date(raw).toLocaleDateString("es-CL", {
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-CL", {
     day:   "2-digit",
     month: "short",
     year:  "numeric",
   });
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-interface PreviewRow {
-  occurredAt:  string;
-  description: string;
-  amountClp:   number;
-  direction:   "INFLOW" | "OUTFLOW";
-  balanceClp:  number | null;
+function fileIcon(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase();
+  if (ext === "pdf")             return "📕";
+  if (ext === "xlsx" || ext === "xls") return "📗";
+  return "📄";
 }
 
-interface ImportResult {
-  uploadId:     string;
-  totalRows:    number;
-  importedRows: number;
-  skippedRows:  number;
-  needsReview:  boolean;
-  preview:      PreviewRow[];
-}
-
-// ── Bancos disponibles ────────────────────────────────────────────────────────
-const BANKS = [
-  "Banco de Chile",
-  "Santander",
-  "BCI",
-  "Scotiabank",
-  "Falabella",
-  "MercadoPago",
-  "Tenpo",
-  "Otro",
-];
-
-// ── Componente ────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function BankImportPage() {
-  const fileRef = useRef<HTMLInputElement>(null);
-
   const [bankName, setBankName] = useState("Santander");
   const [file,     setFile]     = useState<File | null>(null);
   const [loading,  setLoading]  = useState(false);
-  const [result,   setResult]   = useState<ImportResult | null>(null);
+  const [result,   setResult]   = useState<ImportData | null>(null);
   const [error,    setError]    = useState<string | null>(null);
 
-  // ── File handlers ─────────────────────────────────────────────────────────
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
     setFile(f);
     setResult(null);
     setError(null);
-  }, []);
+  }
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     const f = e.dataTransfer.files[0] ?? null;
     setFile(f);
     setResult(null);
     setError(null);
-  }, []);
+  }
 
-  // ── Import ────────────────────────────────────────────────────────────────
   async function handleImport() {
     if (!file) return;
 
@@ -106,7 +115,7 @@ export default function BankImportPage() {
         body: form,
       });
 
-      const json = await res.json() as { ok: boolean; message: string; data: ImportResult };
+      const json = (await res.json()) as ApiResponse<ImportData>;
 
       if (!json.ok) {
         setError(json.message ?? "Error al importar.");
@@ -122,9 +131,7 @@ export default function BankImportPage() {
   }
 
   const canImport = !!file && !loading;
-  const ext       = file?.name.split(".").pop()?.toUpperCase() ?? "";
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight:  "100vh",
@@ -133,7 +140,7 @@ export default function BankImportPage() {
       fontFamily: "var(--font-body, system-ui, sans-serif)",
     }}>
 
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{ maxWidth: "680px", margin: "0 auto 24px" }}>
         <h1 style={{
           fontSize:   "22px",
@@ -149,7 +156,7 @@ export default function BankImportPage() {
         </p>
       </div>
 
-      {/* Card principal */}
+      {/* ── Card principal ──────────────────────────────────────────────────── */}
       <div style={{
         maxWidth:     "680px",
         margin:       "0 auto",
@@ -161,58 +168,34 @@ export default function BankImportPage() {
 
         {/* Selector banco */}
         <div style={{ marginBottom: "22px" }}>
-          <label style={{
-            display:       "block",
-            fontSize:      "12px",
-            fontWeight:    600,
-            color:         "#334155",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            marginBottom:  "8px",
-          }}>
-            Banco
-          </label>
+          <Label>Banco</Label>
           <select
             value={bankName}
             onChange={e => setBankName(e.target.value)}
-            style={{
-              width:        "100%",
-              height:       "42px",
-              border:       "1px solid #E2E8F0",
-              borderRadius: "8px",
-              padding:      "0 14px",
-              fontSize:     "14px",
-              fontWeight:   500,
-              color:        "#0F2A3D",
-              background:   "#F8FAFC",
-              cursor:       "pointer",
-              outline:      "none",
-            }}
+            style={selectStyle}
           >
             {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
 
         {/* Drop zone */}
-        <div
+        <label
           onDragOver={e => e.preventDefault()}
           onDrop={handleDrop}
-          onClick={() => fileRef.current?.click()}
           style={{
-            border:        `2px dashed ${file ? "#16A34A" : "#CBD5E1"}`,
-            borderRadius:  "12px",
-            padding:       "36px 24px",
-            textAlign:     "center",
-            cursor:        "pointer",
-            background:    file ? "rgba(22,163,74,0.03)" : "#F8FAFC",
-            marginBottom:  "22px",
-            transition:    "border-color 0.15s, background 0.15s",
+            display:      "block",
+            border:       `2px dashed ${file ? "#16A34A" : "#CBD5E1"}`,
+            borderRadius: "12px",
+            padding:      "36px 24px",
+            textAlign:    "center",
+            cursor:       "pointer",
+            background:   file ? "rgba(22,163,74,0.03)" : "#F8FAFC",
+            marginBottom: "22px",
+            transition:   "border-color 0.15s",
           }}
         >
           <div style={{ fontSize: "36px", marginBottom: "10px", lineHeight: 1 }}>
-            {file
-              ? (ext === "PDF" ? "📕" : ext === "XLSX" || ext === "XLS" ? "📗" : "📄")
-              : "📂"}
+            {file ? fileIcon(file.name) : "📂"}
           </div>
 
           {file ? (
@@ -221,7 +204,7 @@ export default function BankImportPage() {
                 {file.name}
               </p>
               <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0 }}>
-                {(file.size / 1024).toFixed(1)} KB · {ext}
+                {(file.size / 1024).toFixed(1)} KB · {file.name.split(".").pop()?.toUpperCase()}
               </p>
             </div>
           ) : (
@@ -236,13 +219,12 @@ export default function BankImportPage() {
           )}
 
           <input
-            ref={fileRef}
             type="file"
             accept=".pdf,.xlsx,.xls,.csv,.txt"
             onChange={handleFileChange}
             style={{ display: "none" }}
           />
-        </div>
+        </label>
 
         {/* Error */}
         {error && (
@@ -259,21 +241,21 @@ export default function BankImportPage() {
           </div>
         )}
 
-        {/* Botón importar */}
+        {/* Botón */}
         <button
           onClick={handleImport}
           disabled={!canImport}
           style={{
-            width:        "100%",
-            height:       "44px",
-            background:   canImport ? "#16A34A" : "#E2E8F0",
-            color:        canImport ? "#FFFFFF"  : "#94A3B8",
-            border:       "none",
-            borderRadius: "10px",
-            fontSize:     "14px",
-            fontWeight:   600,
-            cursor:       canImport ? "pointer" : "not-allowed",
-            transition:   "background 0.15s",
+            width:         "100%",
+            height:        "44px",
+            background:    canImport ? "#16A34A" : "#E2E8F0",
+            color:         canImport ? "#FFFFFF"  : "#94A3B8",
+            border:        "none",
+            borderRadius:  "10px",
+            fontSize:      "14px",
+            fontWeight:    600,
+            cursor:        canImport ? "pointer" : "not-allowed",
+            transition:    "background 0.15s",
             letterSpacing: "0.01em",
           }}
         >
@@ -281,7 +263,7 @@ export default function BankImportPage() {
         </button>
       </div>
 
-      {/* Resultado */}
+      {/* ── Resultado ───────────────────────────────────────────────────────── */}
       {result && (
         <div style={{
           maxWidth:     "680px",
@@ -292,45 +274,57 @@ export default function BankImportPage() {
           padding:      "24px 32px",
         }}>
 
+          {/* Duplicate banner */}
+          {result.duplicate && (
+            <div style={{
+              display:      "flex",
+              alignItems:   "center",
+              gap:          "10px",
+              background:   "rgba(99,102,241,0.07)",
+              border:       "1px solid rgba(99,102,241,0.2)",
+              borderRadius: "8px",
+              padding:      "12px 16px",
+              marginBottom: "20px",
+              fontSize:     "13px",
+              color:        "#4F46E5",
+              fontWeight:   500,
+            }}>
+              <span style={{ fontSize: "16px" }}>ℹ️</span>
+              Este archivo ya fue importado anteriormente. No se duplicaron movimientos.
+            </div>
+          )}
+
           {/* Stats */}
           <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-            <Stat
+            <StatChip
               value={result.importedRows}
               label="movimientos importados"
               color="#16A34A"
               bg="rgba(22,163,74,0.08)"
               border="rgba(22,163,74,0.2)"
             />
-            {result.skippedRows > 0 && (
-              <Stat
-                value={result.skippedRows}
-                label="duplicados omitidos"
+            {result.errorRows > 0 && (
+              <StatChip
+                value={result.errorRows}
+                label="filas con errores"
+                color="#DC2626"
+                bg="rgba(220,38,38,0.07)"
+                border="rgba(220,38,38,0.2)"
+              />
+            )}
+            {result.errorRows === 0 && result.importedRows > 0 && (
+              <StatChip
+                value={0}
+                label="errores"
                 color="#94A3B8"
                 bg="#F1F5F9"
                 border="#E2E8F0"
               />
             )}
-            {result.needsReview && (
-              <div style={{
-                background:   "rgba(245,158,11,0.08)",
-                border:       "1px solid rgba(245,158,11,0.3)",
-                borderRadius: "10px",
-                padding:      "12px 20px",
-                display:      "flex",
-                alignItems:   "center",
-                gap:          "8px",
-              }}>
-                <span style={{ fontSize: "18px" }}>⚠️</span>
-                <div>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#B45309", textTransform: "uppercase", letterSpacing: "0.05em" }}>Revisión manual</div>
-                  <div style={{ fontSize: "12px", color: "#64748B" }}>PDF — verificar direcciones</div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Preview table */}
-          {result.preview.length > 0 && (
+          {result.preview && result.preview.length > 0 && (
             <>
               <p style={{
                 fontSize:      "11px",
@@ -339,9 +333,11 @@ export default function BankImportPage() {
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
                 marginBottom:  "10px",
+                marginTop:     0,
               }}>
                 Últimos movimientos detectados
               </p>
+
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                   <thead>
@@ -371,7 +367,7 @@ export default function BankImportPage() {
                         <td style={{
                           padding:      "9px 12px",
                           color:        "#0F2A3D",
-                          maxWidth:     "260px",
+                          maxWidth:     "280px",
                           overflow:     "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace:   "nowrap",
@@ -392,8 +388,10 @@ export default function BankImportPage() {
                             fontWeight:   700,
                             padding:      "3px 9px",
                             borderRadius: "6px",
-                            background:   row.direction === "INFLOW" ? "rgba(22,163,74,0.1)"  : "rgba(220,38,38,0.1)",
-                            color:        row.direction === "INFLOW" ? "#16A34A"               : "#DC2626",
+                            background:   row.direction === "INFLOW"
+                              ? "rgba(22,163,74,0.1)"
+                              : "rgba(220,38,38,0.1)",
+                            color: row.direction === "INFLOW" ? "#16A34A" : "#DC2626",
                           }}>
                             {row.direction === "INFLOW" ? "ABONO" : "CARGO"}
                           </span>
@@ -405,8 +403,14 @@ export default function BankImportPage() {
               </div>
 
               {result.totalRows > result.preview.length && (
-                <p style={{ fontSize: "12px", color: "#94A3B8", textAlign: "center", marginTop: "12px", marginBottom: 0 }}>
-                  Mostrando {result.preview.length} de {result.totalRows} movimientos importados
+                <p style={{
+                  fontSize:   "12px",
+                  color:      "#94A3B8",
+                  textAlign:  "center",
+                  marginTop:  "12px",
+                  marginBottom: 0,
+                }}>
+                  Mostrando {result.preview.length} de {result.totalRows} movimientos
                 </p>
               )}
             </>
@@ -417,8 +421,24 @@ export default function BankImportPage() {
   );
 }
 
-// ── Stat chip ─────────────────────────────────────────────────────────────────
-function Stat({ value, label, color, bg, border }: {
+// ── Sub-components ────────────────────────────────────────────────────────────
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <label style={{
+      display:       "block",
+      fontSize:      "12px",
+      fontWeight:    600,
+      color:         "#334155",
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+      marginBottom:  "8px",
+    }}>
+      {children}
+    </label>
+  );
+}
+
+function StatChip({ value, label, color, bg, border }: {
   value:  number;
   label:  string;
   color:  string;
@@ -438,3 +458,17 @@ function Stat({ value, label, color, bg, border }: {
     </div>
   );
 }
+
+const selectStyle: React.CSSProperties = {
+  width:        "100%",
+  height:       "42px",
+  border:       "1px solid #E2E8F0",
+  borderRadius: "8px",
+  padding:      "0 14px",
+  fontSize:     "14px",
+  fontWeight:   500,
+  color:        "#0F2A3D",
+  background:   "#F8FAFC",
+  cursor:       "pointer",
+  outline:      "none",
+};

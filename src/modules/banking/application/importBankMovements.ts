@@ -1,13 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import type { ParsedBankMovement } from "../domain/bankTypes";
-import crypto from "crypto";
 
 export interface ImportResult {
   uploadId:     string;
+  duplicate:    boolean;
   totalRows:    number;
   importedRows: number;
-  skippedRows:  number;
-  needsReview:  boolean;
+  errorRows:    number;
 }
 
 export async function importBankMovements(
@@ -15,9 +14,8 @@ export async function importBankMovements(
   bankName:    string,
   fileName:    string,
   fileHash:    string,
-  fileBuffer:  Buffer,
   rows:        ParsedBankMovement[],
-  needsReview: boolean,
+  errorRows:   number,
 ): Promise<ImportResult> {
   // Deduplicar por hash de archivo completo
   const existing = await prisma.bankFileUpload.findFirst({
@@ -26,15 +24,17 @@ export async function importBankMovements(
   if (existing) {
     return {
       uploadId:     existing.id,
+      duplicate:    true,
       totalRows:    existing.totalRows,
       importedRows: existing.importedRows,
-      skippedRows:  0,
-      needsReview,
+      errorRows:    existing.errorRows,
     };
   }
 
   const ext      = fileName.split(".").pop()?.toUpperCase() ?? "CSV";
-  const fileType = ["CSV", "XLSX", "XLS", "PDF"].includes(ext) ? ext.replace("XLS", "XLSX") : "CSV";
+  const fileType = ["CSV", "XLSX", "XLS", "PDF"].includes(ext)
+    ? (ext === "XLS" ? "XLSX" : ext)
+    : "CSV";
 
   const upload = await prisma.bankFileUpload.create({
     data: {
@@ -43,15 +43,14 @@ export async function importBankMovements(
       fileName,
       fileType,
       fileHash,
-      status:       needsReview ? "REVIEW" : "IMPORTED",
-      totalRows:    rows.length,
+      status:       "IMPORTED",
+      totalRows:    rows.length + errorRows,
       importedRows: 0,
-      errorRows:    0,
+      errorRows,
     },
   });
 
   let importedRows = 0;
-  let skippedRows  = 0;
 
   for (const row of rows) {
     const externalId = [
@@ -63,8 +62,7 @@ export async function importBankMovements(
     ].join(":");
 
     const dup = await prisma.bankMovement.findFirst({ where: { userId, externalId } });
-
-    if (dup) { skippedRows++; continue; }
+    if (dup) continue;
 
     await prisma.bankMovement.create({
       data: {
@@ -87,8 +85,14 @@ export async function importBankMovements(
 
   await prisma.bankFileUpload.update({
     where: { id: upload.id },
-    data:  { importedRows, status: needsReview ? "REVIEW" : importedRows > 0 ? "IMPORTED" : "PARTIAL" },
+    data:  { importedRows, status: importedRows > 0 ? "IMPORTED" : "PARTIAL" },
   });
 
-  return { uploadId: upload.id, totalRows: rows.length, importedRows, skippedRows, needsReview };
+  return {
+    uploadId:     upload.id,
+    duplicate:    false,
+    totalRows:    rows.length + errorRows,
+    importedRows,
+    errorRows,
+  };
 }

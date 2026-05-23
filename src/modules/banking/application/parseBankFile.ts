@@ -6,8 +6,9 @@ const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string
 import type { ParsedBankMovement } from "../domain/bankTypes";
 
 export type ParsedBankFile = {
-  fileHash: string;
-  rows: ParsedBankMovement[];
+  fileHash:  string;
+  rows:      ParsedBankMovement[];
+  errorRows: number;
   rawPreview: unknown[];
 };
 
@@ -170,6 +171,7 @@ export async function parseBankFile(fileName: string, buffer: Buffer): Promise<P
   return {
     fileHash,
     rows,
+    errorRows:  rawRows.length - rows.length,
     rawPreview: rawRows.slice(0, 20),
   };
 }
