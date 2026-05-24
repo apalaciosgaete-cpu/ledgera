@@ -657,6 +657,19 @@ model BankReconciliationAuditLog {
   @@map("bank_reconciliation_audit_logs")
 }
 
+model BankReconciliationReportValidation {
+  id             String   @id @default(cuid())
+  userId         String
+  validationCode String   @unique
+  contentHash    String
+  reportType     String   @default("BANK_RECONCILIATION")
+  metadata       String?
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("bank_reconciliation_report_validations")
+}
+
 model BankCsvTemplate {
   id         String   @id @default(cuid())
   userId     String
