@@ -152,7 +152,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           justifyContent: "space-between",
           gap:            "24px",
           minWidth:       0,
-          overflow:       "hidden",
+          overflowX:      "hidden",
         }}>
 
           <Link href="/portafolio" style={{ textDecoration: "none", flexShrink: 0 }}>
