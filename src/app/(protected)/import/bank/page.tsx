@@ -109,22 +109,31 @@ export default function BankImportPage() {
         method:      "POST",
         credentials: "include",
         headers: {
-          "Authorization": token ? `Bearer ${token}` : "",
-          "x-csrf-token":  readCsrfCookie(),
+          "Authorization":  token ? `Bearer ${token}` : "",
+          "x-ledgera-csrf": readCsrfCookie(),
         },
         body: form,
       });
 
-      const json = (await res.json()) as ApiResponse<ImportData>;
+      const text = await res.text();
 
-      if (!json.ok) {
-        setError(json.message ?? "Error al importar.");
+      let json: ApiResponse<ImportData> | null = null;
+
+      try {
+        json = JSON.parse(text) as ApiResponse<ImportData>;
+      } catch {
+        setError(`Error HTTP ${res.status}: ${text.slice(0, 300)}`);
+        return;
+      }
+
+      if (!res.ok || !json.ok) {
+        setError(json.message ?? `Error HTTP ${res.status}`);
         return;
       }
 
       setResult(json.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error de red. Verifica tu conexión.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Error desconocido al importar.");
     } finally {
       setLoading(false);
     }
