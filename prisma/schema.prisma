@@ -496,29 +496,23 @@ model sessions {
 }
 
 model ExchangeConnection {
-  id              String    @id @default(cuid())
-  userId          String
-  provider        String
-  apiKey          String
-  apiSecret       String
-  status          String    @default("ACTIVE")
-  syncStatus      String?
-  syncStartedAt   DateTime?
-  syncFinishedAt  DateTime?
-  lastSyncAt      DateTime?
-  lastSyncStatus  String?
-  lastSyncError   String?
-  syncCheckpoint  String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String
+  exchange           String
+  apiKeyEncrypted    String
+  apiSecretEncrypted String
+  status             String
+  permissions        String
+  lastSyncAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  user    users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   imports     ExchangeImportRecord[]
   syncPeriods ExchangeSyncPeriod[]
 
-  @@unique([userId, provider])
+  @@unique([userId, exchange])
   @@index([userId])
-  @@index([provider])
   @@map("exchange_connections")
 }
 
