@@ -39,7 +39,12 @@ function parseClp(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseDate(value: unknown): Date | null {
+function inferYearFromFileName(fileName: string): number | null {
+  const match = /20\d{2}/.exec(fileName);
+  return match ? Number(match[0]) : null;
+}
+
+function parseDate(value: unknown, yearHint?: number | null): Date | null {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
 
   const raw = String(value ?? "").trim();
@@ -51,6 +56,16 @@ function parseDate(value: unknown): Date | null {
     const month = Number(ddmmyyyy[2]);
     const yearRaw = Number(ddmmyyyy[3]);
     const year = yearRaw < 100 ? 2000 + yearRaw : yearRaw;
+    const date = new Date(year, month - 1, day);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  // DD/MM without year — use yearHint or current year
+  const ddmm = /^(\d{1,2})[/-](\d{1,2})$/.exec(raw);
+  if (ddmm) {
+    const day = Number(ddmm[1]);
+    const month = Number(ddmm[2]);
+    const year = yearHint ?? new Date().getFullYear();
     const date = new Date(year, month - 1, day);
     return Number.isNaN(date.getTime()) ? null : date;
   }
@@ -74,9 +89,9 @@ function pick(row: Record<string, unknown>, candidates: string[]): unknown {
   return null;
 }
 
-function normalizeRow(row: Record<string, unknown>): ParsedBankMovement | null {
+function normalizeRow(row: Record<string, unknown>, yearHint?: number | null): ParsedBankMovement | null {
   const dateValue = pick(row, ["fecha", "fecha movimiento", "fecha contable", "date"]);
-  const descriptionValue = pick(row, ["descripcion", "detalle", "glosa", "movimiento", "description"]);
+  const descriptionValue = pick(row, ["descripcion", "descripción", "detalle", "glosa", "movimiento", "description"]);
 
   const charge = parseClp(
     pick(row, [
@@ -103,7 +118,7 @@ function normalizeRow(row: Record<string, unknown>): ParsedBankMovement | null {
   const amount = parseClp(pick(row, ["monto", "importe", "amount"]));
   const balance = parseClp(pick(row, ["saldo", "balance"]));
 
-  const occurredAt = parseDate(dateValue);
+  const occurredAt = parseDate(dateValue, yearHint);
   const description = String(descriptionValue ?? "").trim();
 
   if (!occurredAt || !description) return null;
@@ -150,9 +165,50 @@ function parseXlsx(buffer: Buffer): Record<string, unknown>[] {
 
   if (!firstSheet) return [];
 
-  return XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[firstSheet], {
+  const sheet = workbook.Sheets[firstSheet];
+
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+    header: 1,
     defval: "",
   });
+
+  // Find the real header row (Santander has metadata rows before the actual headers)
+  const headerIndex = matrix.findIndex(
+    (row) =>
+      row.some((cell) => String(cell).trim().toUpperCase() === "FECHA") &&
+      row.some((cell) =>
+        String(cell).trim().toUpperCase().includes("DESCRIPCI"),
+      ),
+  );
+
+  if (headerIndex === -1) {
+    return XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+      defval: "",
+    });
+  }
+
+  const headers = (matrix[headerIndex] as unknown[]).map((cell) =>
+    String(cell).trim(),
+  );
+
+  return matrix
+    .slice(headerIndex + 1)
+    .map((row) => {
+      const record: Record<string, unknown> = {};
+
+      headers.forEach((header, index) => {
+        if (header) record[header] = (row as unknown[])[index] ?? "";
+      });
+
+      return record;
+    })
+    .filter((row) => {
+      const fecha = String(row["FECHA"] ?? "").trim();
+      const descripcion =
+        String(row["DESCRIPCIÓN"] ?? row["DESCRIPCION"] ?? "").trim();
+
+      return Boolean(fecha && descripcion);
+    });
 }
 
 async function parsePdf(buffer: Buffer): Promise<Record<string, unknown>[]> {
@@ -171,6 +227,7 @@ async function parsePdf(buffer: Buffer): Promise<Record<string, unknown>[]> {
 export async function parseBankFile(fileName: string, buffer: Buffer): Promise<ParsedBankFile> {
   const lower = fileName.toLowerCase();
   const fileHash = hashBuffer(buffer);
+  const yearHint = inferYearFromFileName(fileName);
 
   let rawRows: Record<string, unknown>[] = [];
 
@@ -185,7 +242,7 @@ export async function parseBankFile(fileName: string, buffer: Buffer): Promise<P
   }
 
   const rows = rawRows
-    .map(normalizeRow)
+    .map((row) => normalizeRow(row, yearHint))
     .filter((row): row is ParsedBankMovement => row !== null);
 
   return {
