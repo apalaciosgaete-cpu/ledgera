@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 const SALT_ROUNDS = 10;
 
 const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 12;
+const PASSWORD_MAX_LENGTH = 64;
 
 export type PasswordValidationResult = {
   valid: boolean;
@@ -19,7 +19,7 @@ export function validatePasswordComplexity(
   ) {
     return {
       valid: false,
-      message: "La contraseña debe tener entre 8 y 12 caracteres.",
+      message: "La contraseña debe tener entre 8 y 64 caracteres.",
     };
   }
 
