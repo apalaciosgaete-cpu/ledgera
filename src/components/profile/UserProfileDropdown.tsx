@@ -80,7 +80,9 @@ export function UserProfileDropdown({
           country:  res.data.country  ?? "Chile",
         });
       })
-      .catch(() => {});
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "No se pudieron cargar los datos.");
+      });
   }, [open, email]);
 
   useEffect(() => {
@@ -90,8 +92,8 @@ export function UserProfileDropdown({
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
+    if (open) document.addEventListener("click", onClickOutside);
+    return () => document.removeEventListener("click", onClickOutside);
   }, [open]);
 
   async function handleSave(e: React.FormEvent) {
