@@ -48,22 +48,21 @@ function parseDate(value: unknown, yearHint?: number | null): Date | null {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
 
+  // DD/MM without year — only resolve if yearHint is available
+  const ddmm = /^(\d{1,2})[/-](\d{1,2})$/.exec(raw);
+  if (ddmm && yearHint) {
+    const day = Number(ddmm[1]);
+    const month = Number(ddmm[2]);
+    const date = new Date(yearHint, month - 1, day);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
   const ddmmyyyy = /^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/.exec(raw);
   if (ddmmyyyy) {
     const day = Number(ddmmyyyy[1]);
     const month = Number(ddmmyyyy[2]);
     const yearRaw = Number(ddmmyyyy[3]);
     const year = yearRaw < 100 ? 2000 + yearRaw : yearRaw;
-    const date = new Date(year, month - 1, day);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  // DD/MM without year — use yearHint or current year
-  const ddmm = /^(\d{1,2})[/-](\d{1,2})$/.exec(raw);
-  if (ddmm) {
-    const day = Number(ddmm[1]);
-    const month = Number(ddmm[2]);
-    const year = yearHint ?? new Date().getFullYear();
     const date = new Date(year, month - 1, day);
     return Number.isNaN(date.getTime()) ? null : date;
   }
@@ -109,8 +108,10 @@ function normalizeRow(row: Record<string, unknown>, yearHint?: number | null): P
       "haber",
       "deposito",
       "depositos",
+      "depósitos",
       "ingreso",
       "depositos y otros abonos",
+      "depósitos y otros abonos",
     ]),
   );
   const amount = parseClp(pick(row, ["monto", "importe", "amount"]));
@@ -124,13 +125,13 @@ function normalizeRow(row: Record<string, unknown>, yearHint?: number | null): P
   let amountClp: number | null = null;
   let direction: "INFLOW" | "OUTFLOW" | null = null;
 
-  if (charge && charge > 0) {
+  if (charge !== null && charge > 0) {
     amountClp = charge;
     direction = "OUTFLOW";
-  } else if (credit && credit > 0) {
+  } else if (credit !== null && credit > 0) {
     amountClp = credit;
     direction = "INFLOW";
-  } else if (amount !== null) {
+  } else if (amount !== null && amount !== 0) {
     amountClp = Math.abs(amount);
     direction = amount < 0 ? "OUTFLOW" : "INFLOW";
   }
