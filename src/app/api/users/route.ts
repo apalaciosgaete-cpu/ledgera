@@ -10,7 +10,10 @@ import {
   buildSessionExpirationDate,
   generateSessionToken,
 } from "@/modules/identity/application/sessionToken";
-import { hashPassword } from "@/modules/identity/application/password";
+import {
+  hashPassword,
+  validatePasswordComplexity,
+} from "@/modules/identity/application/password";
 import { sanitizeUser } from "@/modules/identity/application/sanitizeUser";
 import { createPortfolio } from "@/modules/portfolio/infrastructure/portfolioRepository";
 import { fail, ok, serverError } from "@/shared/apiResponse";
@@ -63,8 +66,10 @@ export async function POST(request: NextRequest) {
       return fail("Faltan campos obligatorios: email, fullName, password.", 400);
     }
 
-    if (password.length < 8) {
-      return fail("La contraseña debe tener al menos 8 caracteres.", 400);
+    const passwordValidation = validatePasswordComplexity(password);
+
+    if (!passwordValidation.valid) {
+      return fail(passwordValidation.message ?? "Contraseña inválida.", 400);
     }
 
     const existingUser = await getUserByEmail(email);
