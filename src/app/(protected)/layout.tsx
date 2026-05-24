@@ -151,6 +151,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           alignItems:     "center",
           justifyContent: "space-between",
           gap:            "24px",
+          minWidth:       0,
+          overflow:       "hidden",
         }}>
 
           <Link href="/portafolio" style={{ textDecoration: "none", flexShrink: 0 }}>
@@ -263,7 +265,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "32px 24px" }}>
+      <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "32px 24px", minWidth: 0, overflowX: "hidden" }}>
         {children}
       </main>
     </div>

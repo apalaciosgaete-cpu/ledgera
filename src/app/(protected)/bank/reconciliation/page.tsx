@@ -908,6 +908,7 @@ export default function ReconciliationPage() {
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="w-full overflow-x-auto">
             <table className="w-full min-w-225 text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
                 <tr>
@@ -985,6 +986,7 @@ export default function ReconciliationPage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         )
       )}
