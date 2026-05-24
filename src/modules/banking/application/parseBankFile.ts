@@ -1,8 +1,6 @@
 import crypto from "crypto";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
 import type { ParsedBankMovement } from "../domain/bankTypes";
 
 export type ParsedBankFile = {
@@ -212,6 +210,9 @@ function parseXlsx(buffer: Buffer): Record<string, unknown>[] {
 }
 
 async function parsePdf(buffer: Buffer): Promise<Record<string, unknown>[]> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+
   const parsed = await pdfParse(buffer);
   const lines = parsed.text
     .split("\n")

@@ -5,6 +5,7 @@ import { enforceCsrfProtection } from "@/modules/security/application/csrfProtec
 import { parseBankFile } from "@/modules/banking/application/parseBankFile";
 import { importBankMovements } from "@/modules/banking/application/importBankMovements";
 
+export const runtime     = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
