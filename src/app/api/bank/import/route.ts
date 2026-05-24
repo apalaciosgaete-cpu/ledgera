@@ -44,7 +44,12 @@ export async function POST(request: NextRequest) {
         totalRows:    result.totalRows,
         importedRows: result.importedRows,
         errorRows:    result.errorRows,
-        preview:      rawPreview,
+        preview: rows.slice(0, 20).map((row) => ({
+          occurredAt:  row.occurredAt.toISOString(),
+          description: row.description,
+          amountClp:   row.amountClp,
+          direction:   row.direction,
+        })),
       },
       result.duplicate
         ? "Este archivo ya fue importado anteriormente."
