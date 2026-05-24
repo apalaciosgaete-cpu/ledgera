@@ -131,6 +131,10 @@ function movementTypeLabel(type: string): string {
   return labels[type] ?? type;
 }
 
+function downloadExport(type: "matched" | "pending" | "ignored" | "audit") {
+  window.location.href = `/api/bank/reconciliation/export?type=${type}`;
+}
+
 function readCsrfCookie(): string {
   if (typeof document === "undefined") return "";
   const m = document.cookie.split("; ").find(c => c.startsWith("ledgera_csrf="));
@@ -615,6 +619,38 @@ export default function ReconciliationPage() {
             {stats?.suggestions ?? 0}
           </p>
         </div>
+      </div>
+
+      {/* Export buttons */}
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-4" style={{ marginBottom: "20px" }}>
+        <button
+          type="button"
+          onClick={() => downloadExport("matched")}
+          className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Exportar conciliados
+        </button>
+        <button
+          type="button"
+          onClick={() => downloadExport("pending")}
+          className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Exportar pendientes
+        </button>
+        <button
+          type="button"
+          onClick={() => downloadExport("ignored")}
+          className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Exportar ignorados
+        </button>
+        <button
+          type="button"
+          onClick={() => downloadExport("audit")}
+          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+        >
+          Exportar auditoría
+        </button>
       </div>
 
       {/* Tabs */}
