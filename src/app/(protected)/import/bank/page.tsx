@@ -150,7 +150,7 @@ export default function BankImportPage() {
     }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: "680px", margin: "0 auto 24px" }}>
+      <div style={{ maxWidth: "860px", margin: "0 auto 24px" }}>
         <h1 style={{
           fontSize:   "22px",
           fontWeight: 700,
@@ -238,13 +238,13 @@ export default function BankImportPage() {
         {/* Error */}
         {error && (
           <div style={{
-            background:   "rgba(220,38,38,0.07)",
+            background:   "rgba(239,68,68,0.06)",
             border:       "1px solid rgba(220,38,38,0.2)",
             borderRadius: "8px",
             padding:      "12px 16px",
             marginBottom: "18px",
             fontSize:     "13px",
-            color:        "#DC2626",
+            color:        "#EF4444",
           }}>
             {error}
           </div>
@@ -275,7 +275,7 @@ export default function BankImportPage() {
       {/* ── Resultado ───────────────────────────────────────────────────────── */}
       {result && (
         <div style={{
-          maxWidth:     "680px",
+          maxWidth:     "860px",
           margin:       "20px auto 0",
           background:   "#FFFFFF",
           border:       "1px solid #E2E8F0",
@@ -316,9 +316,9 @@ export default function BankImportPage() {
               <StatChip
                 value={result.errorRows}
                 label="filas con errores"
-                color="#DC2626"
-                bg="rgba(220,38,38,0.07)"
-                border="rgba(220,38,38,0.2)"
+                color="#EF4444"
+                bg="rgba(239,68,68,0.06)"
+                border="rgba(239,68,68,0.18)"
               />
             )}
             {result.errorRows === 0 && result.importedRows > 0 && (
@@ -348,12 +348,24 @@ export default function BankImportPage() {
               </p>
 
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <table style={{
+                  width:           "100%",
+                  borderCollapse:  "collapse",
+                  fontSize:        "13px",
+                  tableLayout:     "fixed",
+                  lineHeight:      1.45,
+                }}>
+                  <colgroup>
+                    <col style={{ width: "140px" }} />
+                    <col />
+                    <col style={{ width: "160px" }} />
+                    <col style={{ width: "140px" }} />
+                  </colgroup>
                   <thead>
                     <tr style={{ borderBottom: "2px solid #E2E8F0" }}>
                       {["Fecha", "Descripción", "Monto", "Dirección"].map(h => (
                         <th key={h} style={{
-                          padding:       "8px 12px",
+                          padding:       "14px 18px",
                           textAlign:     "left",
                           fontSize:      "11px",
                           fontWeight:    700,
@@ -369,14 +381,13 @@ export default function BankImportPage() {
                   </thead>
                   <tbody>
                     {result.preview.map((row, i) => (
-                      <tr key={i} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                        <td style={{ padding: "9px 12px", color: "#475569", whiteSpace: "nowrap" }}>
+                      <tr key={i} style={{ borderBottom: "1px solid #F1F5F9", height: "56px" }}>
+                        <td style={{ padding: "14px 18px", color: "#475569", whiteSpace: "nowrap" }}>
                           {fmtDate(row.occurredAt)}
                         </td>
                         <td style={{
-                          padding:      "9px 12px",
+                          padding:      "14px 18px",
                           color:        "#0F2A3D",
-                          maxWidth:     "280px",
                           overflow:     "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace:   "nowrap",
@@ -384,23 +395,23 @@ export default function BankImportPage() {
                           {row.description}
                         </td>
                         <td style={{
-                          padding:    "9px 12px",
+                          padding:    "14px 18px",
                           fontWeight: 600,
-                          color:      row.direction === "INFLOW" ? "#16A34A" : "#DC2626",
+                          color:      row.direction === "INFLOW" ? "#16A34A" : "#EF4444",
                           whiteSpace: "nowrap",
                         }}>
                           {row.direction === "INFLOW" ? "+" : "−"}{fmtClp(row.amountClp)}
                         </td>
-                        <td style={{ padding: "9px 12px" }}>
+                        <td style={{ padding: "14px 18px" }}>
                           <span style={{
                             fontSize:     "11px",
                             fontWeight:   700,
-                            padding:      "3px 9px",
+                            padding:      "3px 10px",
                             borderRadius: "6px",
                             background:   row.direction === "INFLOW"
                               ? "rgba(22,163,74,0.1)"
-                              : "rgba(220,38,38,0.1)",
-                            color: row.direction === "INFLOW" ? "#16A34A" : "#DC2626",
+                              : "rgba(239,68,68,0.08)",
+                            color: row.direction === "INFLOW" ? "#16A34A" : "#EF4444",
                           }}>
                             {row.direction === "INFLOW" ? "ABONO" : "CARGO"}
                           </span>
