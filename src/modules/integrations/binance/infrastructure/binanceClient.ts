@@ -9,6 +9,34 @@ import {
 } from "../domain/binanceTypes";
 import { buildSignedParams } from "./binanceSigner";
 
+// ── Connection & validation types ──────────────────────────────────────────────
+
+type BinanceApiRestrictionsResponse = {
+  ipRestrict:                   boolean;
+  createTime:                   number;
+  enableReading:                boolean;
+  enableSpotAndMarginTrading:   boolean;
+  enableWithdrawals:            boolean;
+  enableInternalTransfer:       boolean;
+  permitsUniversalTransfer:     boolean;
+  enableVanillaOptions:         boolean;
+  enableFutures:                boolean;
+  enablePortfolioMarginTrading: boolean;
+  enableMargin:                 boolean;
+};
+
+export type BinanceValidationResult = {
+  valid:        boolean;
+  error?:       string;
+  binanceCode?: number;
+};
+
+export type BinancePermissionsResult = {
+  readonly:    boolean;
+  permissions: string[];
+  error?:      string;
+};
+
 function getTimeoutMs(): number {
   const val = Number(process.env.BINANCE_REQUEST_TIMEOUT_MS ?? "15000");
   return Number.isFinite(val) && val > 0 ? val : 15_000;
@@ -49,6 +77,76 @@ async function binanceFetch<T>(
   await sleep(getApiDelayMs());
   return data;
 }
+
+// ── Connection & validation ────────────────────────────────────────────────────
+
+export async function getServerTime(): Promise<number> {
+  const res = await fetch(`${BINANCE_BASE_URL}/api/v3/time`);
+  if (!res.ok) throw new Error(`No se pudo contactar Binance: HTTP ${res.status}`);
+  const data = await res.json() as { serverTime: number };
+  return data.serverTime;
+}
+
+export async function validateApiKey(
+  apiKey:    string,
+  apiSecret: string,
+): Promise<BinanceValidationResult> {
+  try {
+    await binanceFetch<BinanceApiRestrictionsResponse>(
+      "/sapi/v1/account/apiRestrictions",
+      {},
+      apiKey,
+      apiSecret,
+    );
+    return { valid: true };
+  } catch (err: unknown) {
+    const e   = err as Error & { binanceCode?: number };
+    const msg = e.message ?? "Error desconocido";
+    const match = /→ \d+: (.*)/.exec(msg);
+    try {
+      const body        = JSON.parse(match?.[1] ?? "{}") as { code?: number; msg?: string };
+      return { valid: false, error: body.msg ?? msg, binanceCode: body.code };
+    } catch {
+      return { valid: false, error: msg };
+    }
+  }
+}
+
+export async function validateReadonlyPermissions(
+  apiKey:    string,
+  apiSecret: string,
+): Promise<BinancePermissionsResult> {
+  let data: BinanceApiRestrictionsResponse;
+
+  try {
+    data = await binanceFetch<BinanceApiRestrictionsResponse>(
+      "/sapi/v1/account/apiRestrictions",
+      {},
+      apiKey,
+      apiSecret,
+    );
+  } catch (err: unknown) {
+    const e = err as Error;
+    return { readonly: false, permissions: [], error: e.message };
+  }
+
+  const permissions: string[] = [];
+  if (data.enableReading)              permissions.push("READ");
+  if (data.enableSpotAndMarginTrading) permissions.push("SPOT_TRADING");
+  if (data.enableWithdrawals)          permissions.push("WITHDRAWALS");
+  if (data.enableFutures)              permissions.push("FUTURES");
+  if (data.enableMargin)               permissions.push("MARGIN");
+  if (data.enableInternalTransfer)     permissions.push("INTERNAL_TRANSFER");
+
+  const readonly =
+    data.enableReading              === true &&
+    data.enableSpotAndMarginTrading === false &&
+    data.enableWithdrawals          === false;
+
+  return { readonly, permissions };
+}
+
+// ── Data fetching ──────────────────────────────────────────────────────────────
 
 export async function fetchAccountInfo(
   apiKey: string,
