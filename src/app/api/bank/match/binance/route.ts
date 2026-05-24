@@ -27,10 +27,13 @@ export async function POST(request: NextRequest) {
       return fail("minConfidence debe estar entre 0 y 1.", 400);
     }
 
+    const source = body.source?.trim();
+    const type   = body.type?.trim();
+
     const suggestions = await suggestBankBinanceMatches(auth.user.id, {
       minConfidence,
-      source: body.source?.trim() || undefined,
-      type:   body.type?.trim()   || undefined,
+      source: source && source !== "ALL" ? source : undefined,
+      type:   type   && type   !== "ALL" ? type   : undefined,
     });
 
     return ok(

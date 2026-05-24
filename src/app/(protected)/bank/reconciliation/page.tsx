@@ -342,9 +342,9 @@ export default function ReconciliationPage() {
   const [acting,         setActing]         = useState<string | null>(null);
 
   // Suggestion filters
-  const [minConfidence,  setMinConfidence]  = useState(0.6);
-  const [filterSource,   setFilterSource]   = useState("");
-  const [filterType,     setFilterType]     = useState("");
+  const [minConfidence, setMinConfidence] = useState(0.6);
+  const [sourceFilter,  setSourceFilter]  = useState<"ALL" | "BINANCE" | "BINANCE_TAX">("ALL");
+  const [typeFilter,    setTypeFilter]    = useState<"ALL" | "BUY" | "DEPOSIT">("ALL");
 
   // Matched tab
   const [matched,          setMatched]          = useState<MatchedRecord[]>([]);
@@ -375,8 +375,8 @@ export default function ReconciliationPage() {
         },
         body: JSON.stringify({
           minConfidence,
-          ...(filterSource ? { source: filterSource } : {}),
-          ...(filterType   ? { type:   filterType   } : {}),
+          source: sourceFilter,
+          type:   typeFilter,
         }),
       });
       const json = await res.json() as ApiResponse<{ suggestions: Suggestion[] }>;
@@ -391,7 +391,7 @@ export default function ReconciliationPage() {
     } finally {
       setSugLoading(false);
     }
-  }, [minConfidence, filterSource, filterType]);
+  }, [minConfidence, sourceFilter, typeFilter]);
 
   async function loadMatched() {
     setMatchLoading(true);
@@ -614,58 +614,49 @@ export default function ReconciliationPage() {
       {activeTab === "suggestions" && (
         <>
         {/* Filter bar */}
-        <div style={{
-          display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center",
-          background: "#ffffff", borderRadius: "12px", border: "1px solid #E2E8F0",
-          padding: "14px 20px", marginBottom: "16px", fontSize: "13px",
-        }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "#475569", fontWeight: 500 }}>
-            Confianza mínima
-            <select
-              value={String(minConfidence)}
-              onChange={e => setMinConfidence(Number(e.target.value))}
-              style={{
-                padding: "4px 8px", borderRadius: "6px", border: "1px solid #E2E8F0",
-                fontSize: "13px", color: "#0F2A3D", background: "#F8FAFC", cursor: "pointer",
-              }}
-            >
-              {[0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map(v => (
-                <option key={v} value={v}>{Math.round(v * 100)}%</option>
-              ))}
-            </select>
-          </label>
+        <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-4" style={{ marginBottom: "16px" }}>
+          <select
+            value={String(minConfidence)}
+            onChange={(event) => setMinConfidence(Number(event.target.value))}
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="0.4">Confianza mínima 40%</option>
+            <option value="0.6">Confianza mínima 60%</option>
+            <option value="0.85">Confianza mínima 85%</option>
+          </select>
 
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "#475569", fontWeight: 500 }}>
-            Origen
-            <select
-              value={filterSource}
-              onChange={e => setFilterSource(e.target.value)}
-              style={{
-                padding: "4px 8px", borderRadius: "6px", border: "1px solid #E2E8F0",
-                fontSize: "13px", color: "#0F2A3D", background: "#F8FAFC", cursor: "pointer",
-              }}
-            >
-              <option value="">Todos</option>
-              <option value="BINANCE">BINANCE</option>
-              <option value="BINANCE_TAX">BINANCE_TAX</option>
-            </select>
-          </label>
+          <select
+            value={sourceFilter}
+            onChange={(event) =>
+              setSourceFilter(event.target.value as "ALL" | "BINANCE" | "BINANCE_TAX")
+            }
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="ALL">Todos los orígenes</option>
+            <option value="BINANCE">Binance Spot</option>
+            <option value="BINANCE_TAX">Binance Tax</option>
+          </select>
 
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "#475569", fontWeight: 500 }}>
-            Tipo
-            <select
-              value={filterType}
-              onChange={e => setFilterType(e.target.value)}
-              style={{
-                padding: "4px 8px", borderRadius: "6px", border: "1px solid #E2E8F0",
-                fontSize: "13px", color: "#0F2A3D", background: "#F8FAFC", cursor: "pointer",
-              }}
-            >
-              <option value="">Todos</option>
-              <option value="BUY">BUY</option>
-              <option value="DEPOSIT">DEPOSIT</option>
-            </select>
-          </label>
+          <select
+            value={typeFilter}
+            onChange={(event) =>
+              setTypeFilter(event.target.value as "ALL" | "BUY" | "DEPOSIT")
+            }
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="ALL">Todos los tipos</option>
+            <option value="BUY">Compras</option>
+            <option value="DEPOSIT">Depósitos</option>
+          </select>
+
+          <button
+            type="button"
+            onClick={() => void loadSuggestions()}
+            disabled={sugLoading}
+            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          >
+            Aplicar filtros
+          </button>
         </div>
 
         {sugLoading ? (
