@@ -422,17 +422,54 @@ export default function BankImportPage() {
                 </table>
               </div>
 
-              {result.totalRows > result.preview.length && (
-                <p style={{
-                  fontSize:   "12px",
-                  color:      "#94A3B8",
-                  textAlign:  "center",
-                  marginTop:  "12px",
-                  marginBottom: 0,
+              <p style={{
+                fontSize:     "12px",
+                color:        "#94A3B8",
+                textAlign:    "center",
+                marginTop:    "14px",
+                marginBottom: "18px",
+              }}>
+                {result.totalRows > result.preview.length
+                  ? `Mostrando ${result.preview.length} de ${result.totalRows} movimientos`
+                  : `${result.totalRows} movimientos importados`}
+              </p>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                <a href="/bank/movements" style={{
+                  display:      "inline-flex",
+                  alignItems:   "center",
+                  gap:          "6px",
+                  height:       "38px",
+                  padding:      "0 18px",
+                  background:   "#F8FAFC",
+                  border:       "1px solid #E2E8F0",
+                  borderRadius: "9px",
+                  fontSize:     "13px",
+                  fontWeight:   600,
+                  color:        "#334155",
+                  textDecoration: "none",
+                  cursor:       "pointer",
                 }}>
-                  Mostrando {result.preview.length} de {result.totalRows} movimientos
-                </p>
-              )}
+                  Ver movimientos bancarios
+                </a>
+                <a href="/bank/reconciliation" style={{
+                  display:      "inline-flex",
+                  alignItems:   "center",
+                  gap:          "6px",
+                  height:       "38px",
+                  padding:      "0 18px",
+                  background:   "#0F2A3D",
+                  border:       "1px solid #0F2A3D",
+                  borderRadius: "9px",
+                  fontSize:     "13px",
+                  fontWeight:   600,
+                  color:        "#FFFFFF",
+                  textDecoration: "none",
+                  cursor:       "pointer",
+                }}>
+                  Conciliar con Binance
+                </a>
+              </div>
             </>
           )}
         </div>
