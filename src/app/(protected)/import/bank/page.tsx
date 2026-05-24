@@ -123,8 +123,8 @@ export default function BankImportPage() {
       }
 
       setResult(json.data);
-    } catch {
-      setError("Error de red. Verifica tu conexión.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error de red. Verifica tu conexión.");
     } finally {
       setLoading(false);
     }

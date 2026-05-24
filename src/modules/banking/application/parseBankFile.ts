@@ -78,8 +78,28 @@ function normalizeRow(row: Record<string, unknown>): ParsedBankMovement | null {
   const dateValue = pick(row, ["fecha", "fecha movimiento", "fecha contable", "date"]);
   const descriptionValue = pick(row, ["descripcion", "detalle", "glosa", "movimiento", "description"]);
 
-  const charge = parseClp(pick(row, ["cargo", "cargos", "debe", "retiro", "egreso"]));
-  const credit = parseClp(pick(row, ["abono", "abonos", "haber", "deposito", "ingreso"]));
+  const charge = parseClp(
+    pick(row, [
+      "cargo",
+      "cargos",
+      "debe",
+      "retiro",
+      "egreso",
+      "cheques y otros cargos",
+    ]),
+  );
+
+  const credit = parseClp(
+    pick(row, [
+      "abono",
+      "abonos",
+      "haber",
+      "deposito",
+      "depositos",
+      "ingreso",
+      "depositos y otros abonos",
+    ]),
+  );
   const amount = parseClp(pick(row, ["monto", "importe", "amount"]));
   const balance = parseClp(pick(row, ["saldo", "balance"]));
 
