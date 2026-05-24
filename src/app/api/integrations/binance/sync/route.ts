@@ -10,7 +10,7 @@ import {
   setSyncFinished,
   setSyncRunning,
 } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
-import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
+import { decryptSecret } from "@/modules/security/application/encryption";
 import { syncBinanceMonth } from "@/modules/integrations/binance/application/syncBinanceMonth";
 import {
   ensurePeriodsExist,
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
     if (conn.status === "REVOKED") return fail("La conexión ha sido revocada.", 403);
 
     // ── Bloqueo doble sync ─────────────────────────────────────────────
-    if (conn.syncStatus === "RUNNING") {
+    if (conn.status === "SYNCING") {
       const staleMs   = getStaleSyncMinutes() * 60 * 1000;
-      const startedAt = conn.syncStartedAt?.getTime() ?? 0;
+      const startedAt = conn.updatedAt?.getTime() ?? 0;
 
       if (Date.now() - startedAt < staleMs) {
         return fail(
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const apiKey    = decryptSecret(conn.apiKey);
-    const apiSecret = decryptSecret(conn.apiSecret);
+    const apiKey    = decryptSecret(conn.apiKeyEncrypted);
+    const apiSecret = decryptSecret(conn.apiSecretEncrypted);
 
     // ── Inicializar períodos mensuales desde fecha de inicio hasta hoy ──
     const startDate = getStartDate();
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (periods.length === 0) {
-      if (conn.syncStatus === "RUNNING") await setSyncFinished(conn.id, {});
+      if (conn.status === "SYNCING") await setSyncFinished(conn.id, {});
       return ok(
         { imported: 0, skipped: 0, autoConfirmed: 0, pendingReview: 0, errors: [], taxRebuilt: false, allPeriodsSynced: true },
         "Todo el historial está sincronizado. No hay períodos pendientes.",

@@ -3,7 +3,7 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { findConnectionByUser } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
-import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
+import { decryptSecret } from "@/modules/security/application/encryption";
 import { importBinanceTaxTransfers } from "@/modules/integrations/binance/application/importBinanceTaxTransfers";
 import { BINANCE_TAX_PROVIDER } from "@/modules/integrations/binance/domain/binanceProviders";
 
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     if (!conn)                    return fail("No hay conexión BINANCE_TAX configurada.", 404);
     if (conn.status === "REVOKED") return fail("La conexión BINANCE_TAX ha sido revocada.", 403);
 
-    const apiKey    = decryptSecret(conn.apiKey);
-    const apiSecret = decryptSecret(conn.apiSecret);
+    const apiKey    = decryptSecret(conn.apiKeyEncrypted);
+    const apiSecret = decryptSecret(conn.apiSecretEncrypted);
 
     const result = await importBinanceTaxTransfers(
       auth.user.id,

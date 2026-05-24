@@ -7,7 +7,7 @@ import { parseBinanceFile } from "@/modules/integrations/binance/application/par
 import { normalizeBinanceFileRow } from "@/modules/integrations/binance/application/normalizeBinanceFileRow";
 import { upsertImportRecord } from "@/modules/integrations/binance/infrastructure/exchangeImportRepository";
 import { findConnectionByUser } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
-import { encryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
+import { encryptSecret } from "@/modules/security/application/encryption";
 import { autoConfirmImports } from "@/modules/integrations/binance/application/autoConfirmImports";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { generateAnnualTaxSummary } from "@/modules/tax/application/generateAnnualTaxSummary";
@@ -21,10 +21,11 @@ async function getOrCreateConnection(userId: string): Promise<string> {
   const placeholder = await prisma.exchangeConnection.create({
     data: {
       userId,
-      provider:  "BINANCE",
-      apiKey:    encryptSecret("FILE_IMPORT"),
-      apiSecret: encryptSecret("FILE_IMPORT"),
-      status:    "FILE_ONLY",
+      exchange:           "BINANCE",
+      apiKeyEncrypted:    encryptSecret("FILE_IMPORT"),
+      apiSecretEncrypted: encryptSecret("FILE_IMPORT"),
+      status:             "FILE_ONLY",
+      permissions:        "[]",
     },
   });
   return placeholder.id;

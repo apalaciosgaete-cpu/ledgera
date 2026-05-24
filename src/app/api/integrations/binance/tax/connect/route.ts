@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
-import { encryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
+import { encryptSecret } from "@/modules/security/application/encryption";
 import {
   findConnectionByUser,
   upsertConnection,
@@ -29,13 +29,10 @@ export async function GET(request: NextRequest) {
 
     return ok(
       {
-        connected:      true,
-        status:         conn.status,
-        syncStatus:     conn.syncStatus,
-        lastSyncAt:     conn.lastSyncAt,
-        lastSyncStatus: conn.lastSyncStatus,
-        lastSyncError:  conn.lastSyncError,
-        apiKeyHint:     conn.apiKey.slice(-8),
+        connected:  true,
+        status:     conn.status,
+        lastSyncAt: conn.lastSyncAt,
+        apiKeyHint: conn.apiKeyEncrypted.slice(-8),
       },
       "API tributaria Binance encontrada.",
     );
@@ -58,14 +55,6 @@ export async function POST(request: NextRequest) {
 
     if (!apiKey || !apiSecret) {
       return fail("API Key y Secret de Tax Report API son obligatorios.", 400);
-    }
-
-    const encKey = process.env.ENCRYPTION_KEY;
-    if (!encKey || encKey.length !== 64) {
-      return fail(
-        "Error de configuración del servidor: ENCRYPTION_KEY no está configurada correctamente.",
-        500,
-      );
     }
 
     try {

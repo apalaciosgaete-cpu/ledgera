@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { findConnectionByUser } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
-import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
+import { decryptSecret } from "@/modules/security/application/encryption";
 import { probeAllProducts } from "@/modules/integrations/binance/infrastructure/binanceTaxClient";
 import { BINANCE_TAX_PROVIDER } from "@/modules/integrations/binance/domain/binanceProviders";
 
@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
       return fail("La conexión BINANCE_TAX ha sido revocada.", 403);
     }
 
-    const apiKey    = decryptSecret(conn.apiKey);
-    const apiSecret = decryptSecret(conn.apiSecret);
+    const apiKey    = decryptSecret(conn.apiKeyEncrypted);
+    const apiSecret = decryptSecret(conn.apiSecretEncrypted);
 
     const products = await probeAllProducts(apiKey, apiSecret);
 

@@ -1,84 +1,87 @@
-import type { BinanceConnectionStatus } from "../domain/BinanceConnection";
+import { encryptSecret } from "@/modules/security/application/encryption";
+import { upsertBinanceConnection } from "@/modules/integrations/binance/infrastructure/connectionRepository";
 import {
   validateApiKey,
   validateReadonlyPermissions,
-} from "../infrastructure/binanceClient";
+} from "@/modules/integrations/binance/infrastructure/binanceClient";
 
-type ConnectInput = {
+import type {
+  BinanceConnection,
+  BinanceConnectionStatus,
+} from "@/modules/integrations/binance/domain/BinanceConnection";
+
+type ConnectBinanceAccountInput = {
   userId:    string;
   apiKey:    string;
   apiSecret: string;
 };
 
-type ConnectSuccess = {
-  ok:         true;
-  status:     "CONNECTED";
+type ConnectBinanceAccountResult = {
+  ok:         boolean;
+  status:     BinanceConnectionStatus;
   message:    string;
-  connection: {
-    provider:    "BINANCE";
-    permissions: string[];
-  };
+  connection: BinanceConnection | null;
 };
-
-type ConnectFailure = {
-  ok:      false;
-  status:  BinanceConnectionStatus;
-  message: string;
-};
-
-export type ConnectBinanceResult = ConnectSuccess | ConnectFailure;
 
 export async function connectBinanceAccount(
-  input: ConnectInput,
-): Promise<ConnectBinanceResult> {
-  const { apiKey, apiSecret } = input;
+  input: ConnectBinanceAccountInput,
+): Promise<ConnectBinanceAccountResult> {
+  const userId    = input.userId.trim();
+  const apiKey    = input.apiKey.trim();
+  const apiSecret = input.apiSecret.trim();
 
-  if (!apiKey || !apiSecret) {
+  if (!userId || !apiKey || !apiSecret) {
     return {
-      ok:      false,
-      status:  "DISCONNECTED",
-      message: "Faltan credenciales obligatorias para conectar Binance.",
+      ok:         false,
+      status:     "DISCONNECTED",
+      message:    "Faltan credenciales obligatorias para conectar Binance.",
+      connection: null,
     };
   }
 
-  const validation = await validateApiKey(apiKey, apiSecret);
+  const apiKeyValidation = await validateApiKey({
+    apiKey,
+    apiSecret,
+  });
 
-  if (!validation.valid) {
-    const isInvalidKey = validation.binanceCode === -2008 || validation.binanceCode === -2014;
+  if (!apiKeyValidation.ok) {
     return {
-      ok:      false,
-      status:  isInvalidKey ? "INVALID_CREDENTIALS" : "ERROR",
-      message: validation.error ?? "Las credenciales no son válidas en Binance.",
+      ok:         false,
+      status:     apiKeyValidation.status ?? "INVALID_CREDENTIALS",
+      message:    apiKeyValidation.message,
+      connection: null,
     };
   }
 
-  const perms = await validateReadonlyPermissions(apiKey, apiSecret);
+  const readonlyValidation = await validateReadonlyPermissions({
+    apiKey,
+    apiSecret,
+  });
 
-  if (perms.error) {
+  if (!readonlyValidation.ok) {
     return {
-      ok:      false,
-      status:  "ERROR",
-      message: perms.error,
+      ok:         false,
+      status:     readonlyValidation.status ?? "READONLY_REQUIRED",
+      message:    readonlyValidation.message,
+      connection: null,
     };
   }
 
-  if (!perms.readonly) {
-    return {
-      ok:      false,
-      status:  "READONLY_REQUIRED",
-      message:
-        "La API key tiene permisos de trading o retiro activos. " +
-        "Por seguridad, Ledgera solo acepta keys de solo lectura.",
-    };
-  }
+  const apiKeyEncrypted    = encryptSecret(apiKey);
+  const apiSecretEncrypted = encryptSecret(apiSecret);
+
+  const connection = await upsertBinanceConnection({
+    userId,
+    apiKeyEncrypted,
+    apiSecretEncrypted,
+    status:      "CONNECTED",
+    permissions: readonlyValidation.permissions,
+  });
 
   return {
-    ok:      true,
-    status:  "CONNECTED",
-    message: "Credenciales válidas. Conexión lista para activarse.",
-    connection: {
-      provider:    "BINANCE",
-      permissions: perms.permissions,
-    },
+    ok:         true,
+    status:     "CONNECTED",
+    message:    "Cuenta Binance conectada correctamente en modo solo lectura.",
+    connection,
   };
 }

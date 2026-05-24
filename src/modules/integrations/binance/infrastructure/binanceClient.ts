@@ -8,8 +8,9 @@ import {
   type BinanceWithdrawRaw,
 } from "../domain/binanceTypes";
 import { buildSignedParams } from "./binanceSigner";
+import type { BinanceConnectionStatus } from "../domain/BinanceConnection";
 
-// ── Connection & validation types ──────────────────────────────────────────────
+// ── Internal ───────────────────────────────────────────────────────────────────
 
 type BinanceApiRestrictionsResponse = {
   ipRestrict:                   boolean;
@@ -25,16 +26,19 @@ type BinanceApiRestrictionsResponse = {
   enableMargin:                 boolean;
 };
 
-export type BinanceValidationResult = {
-  valid:        boolean;
-  error?:       string;
-  binanceCode?: number;
+// ── Public output types ────────────────────────────────────────────────────────
+
+export type ValidateApiKeyResult = {
+  ok:      boolean;
+  status?: BinanceConnectionStatus;
+  message: string;
 };
 
-export type BinancePermissionsResult = {
-  readonly:    boolean;
+export type ValidateReadonlyPermissionsResult = {
+  ok:          boolean;
+  status?:     BinanceConnectionStatus;
+  message:     string;
   permissions: string[];
-  error?:      string;
 };
 
 function getTimeoutMs(): number {
@@ -87,47 +91,52 @@ export async function getServerTime(): Promise<number> {
   return data.serverTime;
 }
 
-export async function validateApiKey(
-  apiKey:    string,
-  apiSecret: string,
-): Promise<BinanceValidationResult> {
+export async function validateApiKey(input: {
+  apiKey:    string;
+  apiSecret: string;
+}): Promise<ValidateApiKeyResult> {
   try {
     await binanceFetch<BinanceApiRestrictionsResponse>(
       "/sapi/v1/account/apiRestrictions",
       {},
-      apiKey,
-      apiSecret,
+      input.apiKey,
+      input.apiSecret,
     );
-    return { valid: true };
+    return { ok: true, message: "API key válida." };
   } catch (err: unknown) {
-    const e   = err as Error & { binanceCode?: number };
-    const msg = e.message ?? "Error desconocido";
+    const e     = err as Error;
+    const msg   = e.message ?? "Error desconocido";
     const match = /→ \d+: (.*)/.exec(msg);
     try {
-      const body        = JSON.parse(match?.[1] ?? "{}") as { code?: number; msg?: string };
-      return { valid: false, error: body.msg ?? msg, binanceCode: body.code };
+      const body = JSON.parse(match?.[1] ?? "{}") as { code?: number; msg?: string };
+      const isInvalidKey = body.code === -2008 || body.code === -2014;
+      return {
+        ok:      false,
+        status:  isInvalidKey ? "INVALID_CREDENTIALS" : "ERROR",
+        message: body.msg ?? msg,
+      };
     } catch {
-      return { valid: false, error: msg };
+      return { ok: false, status: "ERROR", message: msg };
     }
   }
 }
 
-export async function validateReadonlyPermissions(
-  apiKey:    string,
-  apiSecret: string,
-): Promise<BinancePermissionsResult> {
+export async function validateReadonlyPermissions(input: {
+  apiKey:    string;
+  apiSecret: string;
+}): Promise<ValidateReadonlyPermissionsResult> {
   let data: BinanceApiRestrictionsResponse;
 
   try {
     data = await binanceFetch<BinanceApiRestrictionsResponse>(
       "/sapi/v1/account/apiRestrictions",
       {},
-      apiKey,
-      apiSecret,
+      input.apiKey,
+      input.apiSecret,
     );
   } catch (err: unknown) {
     const e = err as Error;
-    return { readonly: false, permissions: [], error: e.message };
+    return { ok: false, status: "ERROR", message: e.message, permissions: [] };
   }
 
   const permissions: string[] = [];
@@ -138,12 +147,27 @@ export async function validateReadonlyPermissions(
   if (data.enableMargin)               permissions.push("MARGIN");
   if (data.enableInternalTransfer)     permissions.push("INTERNAL_TRANSFER");
 
-  const readonly =
+  const isReadonly =
     data.enableReading              === true &&
     data.enableSpotAndMarginTrading === false &&
     data.enableWithdrawals          === false;
 
-  return { readonly, permissions };
+  if (!isReadonly) {
+    return {
+      ok:          false,
+      status:      "READONLY_REQUIRED",
+      message:
+        "La API key tiene permisos de trading o retiro activos. " +
+        "Por seguridad, Ledgera solo acepta keys de solo lectura.",
+      permissions,
+    };
+  }
+
+  return {
+    ok:          true,
+    message:     "Permisos de solo lectura verificados.",
+    permissions,
+  };
 }
 
 // ── Data fetching ──────────────────────────────────────────────────────────────

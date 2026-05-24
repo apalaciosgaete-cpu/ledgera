@@ -3,7 +3,7 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { findConnectionByUser } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";
-import { decryptSecret } from "@/modules/integrations/binance/application/encryptCredentials";
+import { decryptSecret } from "@/modules/security/application/encryption";
 import { fetchAccountInfo } from "@/modules/integrations/binance/infrastructure/binanceClient";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 
@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
     const conn = await findConnectionByUser(auth.user.id, "BINANCE");
     if (!conn) return fail("No hay conexión con Binance configurada.", 404);
 
-    const apiKey    = decryptSecret(conn.apiKey);
-    const apiSecret = decryptSecret(conn.apiSecret);
+    const apiKey    = decryptSecret(conn.apiKeyEncrypted);
+    const apiSecret = decryptSecret(conn.apiSecretEncrypted);
 
     let account;
     try {

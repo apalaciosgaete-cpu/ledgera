@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import type { SyncCheckpoint } from "../domain/binanceTypes";
 
-export async function findConnectionByUser(userId: string, provider: string) {
+export async function findConnectionByUser(userId: string, exchange: string) {
   return prisma.exchangeConnection.findUnique({
-    where: { userId_provider: { userId, provider } },
+    where: { userId_exchange: { userId, exchange } },
   });
 }
 
@@ -14,90 +13,58 @@ export async function upsertConnection(data: {
   apiSecret: string;
 }) {
   return prisma.exchangeConnection.upsert({
-    where:  { userId_provider: { userId: data.userId, provider: data.provider } },
+    where:  { userId_exchange: { userId: data.userId, exchange: data.provider } },
     create: {
-      userId:    data.userId,
-      provider:  data.provider,
-      apiKey:    data.apiKey,
-      apiSecret: data.apiSecret,
-      status:    "ACTIVE",
+      userId:             data.userId,
+      exchange:           data.provider,
+      apiKeyEncrypted:    data.apiKey,
+      apiSecretEncrypted: data.apiSecret,
+      status:             "CONNECTED",
+      permissions:        "[]",
     },
     update: {
-      apiKey:        data.apiKey,
-      apiSecret:     data.apiSecret,
-      status:        "ACTIVE",
-      syncStatus:    "IDLE",
-      lastSyncError: null,
-      lastSyncStatus: null,
+      apiKeyEncrypted:    data.apiKey,
+      apiSecretEncrypted: data.apiSecret,
+      status:             "CONNECTED",
     },
   });
 }
 
-// ── Sync lock ──────────────────────────────────────────────────────────────
+// ── Sync state ─────────────────────────────────────────────────────────────
 
 export async function setSyncRunning(connectionId: string) {
   return prisma.exchangeConnection.update({
     where: { id: connectionId },
-    data:  {
-      syncStatus:    "RUNNING",
-      syncStartedAt: new Date(),
-      syncFinishedAt: null,
-    },
+    data:  { status: "SYNCING" },
   });
 }
 
-export async function setSyncFinished(
-  connectionId: string,
-  checkpoint: SyncCheckpoint,
-) {
+export async function setSyncFinished(connectionId: string, _checkpoint: unknown) {
   return prisma.exchangeConnection.update({
     where: { id: connectionId },
-    data:  {
-      syncStatus:     "IDLE",
-      syncFinishedAt: new Date(),
-      lastSyncAt:     new Date(),
-      lastSyncStatus: "OK",
-      lastSyncError:  null,
-      syncCheckpoint: JSON.stringify(checkpoint),
-    },
+    data:  { status: "CONNECTED", lastSyncAt: new Date() },
   });
 }
 
 export async function setSyncReset(connectionId: string) {
   return prisma.exchangeConnection.update({
     where: { id: connectionId },
-    data:  {
-      syncStatus:     "IDLE",
-      syncStartedAt:  null,
-      lastSyncError:  null,
-    },
+    data:  { status: "CONNECTED" },
   });
 }
 
 export async function setSyncFailed(
   connectionId: string,
-  message: string,
-  checkpoint?: SyncCheckpoint,
+  _message:     string,
+  _checkpoint?: unknown,
 ) {
   return prisma.exchangeConnection.update({
     where: { id: connectionId },
-    data:  {
-      syncStatus:     "FAILED",
-      syncFinishedAt: new Date(),
-      lastSyncAt:     new Date(),
-      lastSyncStatus: "ERROR",
-      lastSyncError:  message.slice(0, 500),
-      ...(checkpoint ? { syncCheckpoint: JSON.stringify(checkpoint) } : {}),
-    },
+    data:  { status: "ERROR", lastSyncAt: new Date() },
   });
 }
 
-// ── Legacy — kept for compatibility, delegates to new functions ────────────
-
-export async function updateSyncSuccess(
-  connectionId: string,
-  checkpoint: SyncCheckpoint,
-) {
+export async function updateSyncSuccess(connectionId: string, checkpoint: unknown) {
   return setSyncFinished(connectionId, checkpoint);
 }
 
@@ -105,8 +72,8 @@ export async function updateSyncError(connectionId: string, message: string) {
   return setSyncFailed(connectionId, message);
 }
 
-export async function deleteConnection(userId: string, provider: string) {
+export async function deleteConnection(userId: string, exchange: string) {
   return prisma.exchangeConnection.delete({
-    where: { userId_provider: { userId, provider } },
+    where: { userId_exchange: { userId, exchange } },
   });
 }
