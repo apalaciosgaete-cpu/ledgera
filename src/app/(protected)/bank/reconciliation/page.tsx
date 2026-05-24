@@ -86,6 +86,15 @@ type AuditLog = {
   } | null;
 };
 
+type ReconciliationStats = {
+  totalBankMovements: number;
+  pending:            number;
+  matched:            number;
+  ignored:            number;
+  review:             number;
+  suggestions:        number;
+};
+
 type RowState = "pending" | "accepted" | "review" | "ignored";
 type Tab      = "suggestions" | "matched" | "ignored" | "audit";
 
@@ -360,6 +369,9 @@ export default function ReconciliationPage() {
   const [auditLogs,    setAuditLogs]    = useState<AuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
 
+  // Stats
+  const [stats, setStats] = useState<ReconciliationStats | null>(null);
+
   // ── Loaders ─────────────────────────────────────────────────────────────────
   const loadSuggestions = useCallback(async () => {
     setSugLoading(true);
@@ -383,6 +395,7 @@ export default function ReconciliationPage() {
       if (json.ok) {
         setSuggestions(json.data.suggestions ?? []);
         setRowStates({});
+        void loadStats();
       } else {
         setSugError(json.message ?? "Error al cargar sugerencias.");
       }
@@ -403,6 +416,7 @@ export default function ReconciliationPage() {
     const payload = await response.json() as ApiResponse<{ matches: MatchedRecord[]; total: number }>;
     if (response.ok && payload.ok) {
       setMatched(payload.data.matches);
+      void loadStats();
     }
     setMatchLoading(false);
   }
@@ -454,8 +468,21 @@ export default function ReconciliationPage() {
     const payload = await response.json() as ApiResponse<{ ignored: BankMovement[]; total: number }>;
     if (response.ok && payload.ok) {
       setIgnored(payload.data.ignored);
+      void loadStats();
     }
     setIgnLoading(false);
+  }
+
+  async function loadStats() {
+    const token = getSessionToken();
+    const response = await fetch("/api/bank/reconciliation/stats", {
+      credentials: "include",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    const payload = await response.json() as ApiResponse<ReconciliationStats>;
+    if (response.ok && payload.ok) {
+      setStats(payload.data);
+    }
   }
 
   async function loadAuditLogs() {
@@ -471,6 +498,11 @@ export default function ReconciliationPage() {
     }
     setAuditLoading(false);
   }
+
+  useEffect(() => {
+    void loadStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (activeTab === "suggestions") void loadSuggestions();
@@ -552,14 +584,37 @@ export default function ReconciliationPage() {
       </div>
 
       {/* Summary cards */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "16px", marginBottom: "28px",
-      }}>
-        <SummaryCard label="Pendientes"     value={pendingCount}                                              accent="#0F2A3D" />
-        <SummaryCard label="Alta confianza" value={suggestions.filter(s => s.confidence > 0.85).length}      accent="#16A34A" />
-        <SummaryCard label="Conciliados"    value={counts.accepted + matched.length}                          accent="#16A34A" />
-        <SummaryCard label="Ignorados"      value={counts.ignored}                                            accent="#DC2626" />
+      <div className="grid gap-4 md:grid-cols-5" style={{ marginBottom: "28px" }}>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs text-slate-400">Banco total</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">
+            {stats?.totalBankMovements ?? 0}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-xs text-amber-600">Pendientes</p>
+          <p className="mt-1 text-2xl font-semibold text-amber-800">
+            {stats?.pending ?? 0}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+          <p className="text-xs text-green-600">Conciliados</p>
+          <p className="mt-1 text-2xl font-semibold text-green-800">
+            {stats?.matched ?? 0}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs text-slate-400">Ignorados</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">
+            {stats?.ignored ?? 0}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <p className="text-xs text-blue-600">Sugerencias</p>
+          <p className="mt-1 text-2xl font-semibold text-blue-800">
+            {stats?.suggestions ?? 0}
+          </p>
+        </div>
       </div>
 
       {/* Tabs */}
