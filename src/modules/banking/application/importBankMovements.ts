@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { ParsedBankMovement } from "../domain/bankTypes";
+import { classifyBankMovement } from "./classifyBankMovement";
 
 export interface ImportResult {
   uploadId:     string;
@@ -64,19 +65,26 @@ export async function importBankMovements(
     const dup = await prisma.bankMovement.findFirst({ where: { userId, externalId } });
     if (dup) continue;
 
+    const { bankCategory, categoryReason } = classifyBankMovement(
+      row.description,
+      row.direction as "INFLOW" | "OUTFLOW",
+    );
+
     await prisma.bankMovement.create({
       data: {
         userId,
-        uploadId:    upload.id,
-        bankName:    bankName || null,
+        uploadId:      upload.id,
+        bankName:      bankName || null,
         externalId,
-        occurredAt:  row.occurredAt,
-        description: row.description,
-        amountClp:   row.amountClp,
-        direction:   row.direction,
-        balanceClp:  row.balanceClp ?? null,
-        rawJson:     JSON.stringify(row.raw),
-        status:      "IMPORTED",
+        occurredAt:    row.occurredAt,
+        description:   row.description,
+        amountClp:     row.amountClp,
+        direction:     row.direction,
+        balanceClp:    row.balanceClp ?? null,
+        rawJson:       JSON.stringify(row.raw),
+        status:        "IMPORTED",
+        bankCategory,
+        categoryReason,
       },
     });
 

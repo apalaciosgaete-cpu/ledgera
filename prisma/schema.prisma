@@ -623,6 +623,9 @@ model BankMovement {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  bankCategory   String?
+  categoryReason String?
+
   matchedPortfolioMovementId String?
   matchedConfidence          Float?
   matchedAt                  DateTime?
