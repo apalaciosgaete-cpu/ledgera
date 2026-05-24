@@ -166,7 +166,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             flex:           1,
             justifyContent: "center",
             minWidth:       0,
-            overflow:       "hidden",
           }}>
             {navItems.map(item => {
               const active = isActive(item.href);
