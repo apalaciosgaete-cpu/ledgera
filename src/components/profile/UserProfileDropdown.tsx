@@ -85,7 +85,8 @@ export function UserProfileDropdown({
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (panelRef.current && !panelRef.current.contains(target)) {
         setOpen(false);
       }
     }
@@ -130,7 +131,13 @@ export function UserProfileDropdown({
     <div ref={panelRef} style={{ position: "relative" }}>
       {/* Pill trigger */}
       <button
-        onClick={() => setOpen(v => !v)}
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(v => !v);
+        }}
         style={{
           display:        "flex",
           alignItems:     "center",
