@@ -1,14 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { getSessionToken } from "@/modules/identity/client/authStorage";
 
-type ImportResult = {
-  uploadId:     string;
-  duplicate:    boolean;
-  totalRows:    number;
-  importedRows: number;
-  errorRows:    number;
+type ImportData = {
+  uploadId: string;
 };
 
 type ApiResponse<T> = {
@@ -16,16 +13,6 @@ type ApiResponse<T> = {
   message: string;
   data:    T;
 };
-
-// ── Preview row shape returned by the API ─────────────────────────────────────
-type PreviewRow = {
-  occurredAt:  string;
-  description: string;
-  amountClp:   number;
-  direction:   "INFLOW" | "OUTFLOW";
-};
-
-type ImportData = ImportResult & { preview: PreviewRow[] };
 
 // ── Bancos ────────────────────────────────────────────────────────────────────
 const BANKS = [
@@ -46,22 +33,6 @@ function readCsrfCookie(): string {
   return m ? decodeURIComponent(m.split("=")[1] ?? "") : "";
 }
 
-function fmtClp(n: number): string {
-  return new Intl.NumberFormat("es-CL", {
-    style:                 "currency",
-    currency:              "CLP",
-    minimumFractionDigits: 0,
-  }).format(n);
-}
-
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-CL", {
-    day:   "2-digit",
-    month: "short",
-    year:  "numeric",
-  });
-}
-
 function fileIcon(name: string): string {
   const ext = name.split(".").pop()?.toLowerCase();
   if (ext === "pdf")             return "📕";
@@ -71,16 +42,17 @@ function fileIcon(name: string): string {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function BankImportPage() {
+  const router = useRouter();
+
   const [bankName, setBankName] = useState("Santander");
   const [file,     setFile]     = useState<File | null>(null);
   const [loading,  setLoading]  = useState(false);
-  const [result,   setResult]   = useState<ImportData | null>(null);
   const [error,    setError]    = useState<string | null>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
     setFile(f);
-    setResult(null);
+    setError(null);
     setError(null);
   }
 
@@ -88,7 +60,7 @@ export default function BankImportPage() {
     e.preventDefault();
     const f = e.dataTransfer.files[0] ?? null;
     setFile(f);
-    setResult(null);
+    setError(null);
     setError(null);
   }
 
@@ -97,7 +69,7 @@ export default function BankImportPage() {
 
     setLoading(true);
     setError(null);
-    setResult(null);
+    setError(null);
 
     try {
       const form = new FormData();
@@ -131,7 +103,7 @@ export default function BankImportPage() {
         return;
       }
 
-      setResult(json.data);
+      router.push(`/bank/uploads/${json.data.uploadId}`);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error desconocido al importar.");
     } finally {
@@ -272,213 +244,10 @@ export default function BankImportPage() {
         </button>
       </div>
 
-      {/* ── Resultado ───────────────────────────────────────────────────────── */}
-      {result && (
-        <div style={{
-          maxWidth:     "860px",
-          margin:       "20px auto 0",
-          background:   "#FFFFFF",
-          border:       "1px solid #E2E8F0",
-          borderRadius: "14px",
-          padding:      "24px 32px",
-        }}>
-
-          {/* Duplicate banner */}
-          {result.duplicate && (
-            <div style={{
-              display:      "flex",
-              alignItems:   "center",
-              gap:          "10px",
-              background:   "rgba(99,102,241,0.07)",
-              border:       "1px solid rgba(99,102,241,0.2)",
-              borderRadius: "8px",
-              padding:      "12px 16px",
-              marginBottom: "20px",
-              fontSize:     "13px",
-              color:        "#4F46E5",
-              fontWeight:   500,
-            }}>
-              <span style={{ fontSize: "16px" }}>ℹ️</span>
-              Este archivo ya fue importado anteriormente. No se duplicaron movimientos.
-            </div>
-          )}
-
-          {/* Stats */}
-          <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-            <StatChip
-              value={result.importedRows}
-              label="movimientos importados"
-              color="#16A34A"
-              bg="rgba(22,163,74,0.08)"
-              border="rgba(22,163,74,0.2)"
-            />
-            {result.errorRows > 0 && (
-              <StatChip
-                value={result.errorRows}
-                label="filas con errores"
-                color="#EF4444"
-                bg="rgba(239,68,68,0.06)"
-                border="rgba(239,68,68,0.18)"
-              />
-            )}
-            {result.errorRows === 0 && result.importedRows > 0 && (
-              <StatChip
-                value={0}
-                label="errores"
-                color="#94A3B8"
-                bg="#F1F5F9"
-                border="#E2E8F0"
-              />
-            )}
-          </div>
-
-          {/* Preview table */}
-          {result.preview && result.preview.length > 0 && (
-            <>
-              <p style={{
-                fontSize:      "11px",
-                fontWeight:    700,
-                color:         "#94A3B8",
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-                marginBottom:  "10px",
-                marginTop:     0,
-              }}>
-                Últimos movimientos detectados
-              </p>
-
-              <div style={{ overflowX: "auto" }}>
-                <table style={{
-                  width:           "100%",
-                  borderCollapse:  "collapse",
-                  fontSize:        "13px",
-                  tableLayout:     "fixed",
-                  lineHeight:      1.45,
-                }}>
-                  <colgroup>
-                    <col style={{ width: "140px" }} />
-                    <col />
-                    <col style={{ width: "160px" }} />
-                    <col style={{ width: "140px" }} />
-                  </colgroup>
-                  <thead>
-                    <tr style={{ borderBottom: "2px solid #E2E8F0" }}>
-                      {["Fecha", "Descripción", "Monto", "Dirección"].map(h => (
-                        <th key={h} style={{
-                          padding:       "14px 18px",
-                          textAlign:     "left",
-                          fontSize:      "11px",
-                          fontWeight:    700,
-                          color:         "#64748B",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                          whiteSpace:    "nowrap",
-                        }}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.preview.map((row, i) => (
-                      <tr key={i} style={{ borderBottom: "1px solid #F1F5F9", height: "56px" }}>
-                        <td style={{ padding: "14px 18px", color: "#475569", whiteSpace: "nowrap" }}>
-                          {fmtDate(row.occurredAt)}
-                        </td>
-                        <td style={{
-                          padding:      "14px 18px",
-                          color:        "#0F2A3D",
-                          overflow:     "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace:   "nowrap",
-                        }}>
-                          {row.description}
-                        </td>
-                        <td style={{
-                          padding:    "14px 18px",
-                          fontWeight: 600,
-                          color:      row.direction === "INFLOW" ? "#16A34A" : "#EF4444",
-                          whiteSpace: "nowrap",
-                        }}>
-                          {row.direction === "INFLOW" ? "+" : "−"}{fmtClp(row.amountClp)}
-                        </td>
-                        <td style={{ padding: "14px 18px" }}>
-                          <span style={{
-                            fontSize:     "11px",
-                            fontWeight:   700,
-                            padding:      "3px 10px",
-                            borderRadius: "6px",
-                            background:   row.direction === "INFLOW"
-                              ? "rgba(22,163,74,0.1)"
-                              : "rgba(239,68,68,0.08)",
-                            color: row.direction === "INFLOW" ? "#16A34A" : "#EF4444",
-                          }}>
-                            {row.direction === "INFLOW" ? "ABONO" : "CARGO"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <p style={{
-                fontSize:     "12px",
-                color:        "#94A3B8",
-                textAlign:    "center",
-                marginTop:    "14px",
-                marginBottom: "18px",
-              }}>
-                {result.totalRows > result.preview.length
-                  ? `Mostrando ${result.preview.length} de ${result.totalRows} movimientos`
-                  : `${result.totalRows} movimientos importados`}
-              </p>
-
-              <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-                <a href="/bank/movements" style={{
-                  display:      "inline-flex",
-                  alignItems:   "center",
-                  gap:          "6px",
-                  height:       "38px",
-                  padding:      "0 18px",
-                  background:   "#F8FAFC",
-                  border:       "1px solid #E2E8F0",
-                  borderRadius: "9px",
-                  fontSize:     "13px",
-                  fontWeight:   600,
-                  color:        "#334155",
-                  textDecoration: "none",
-                  cursor:       "pointer",
-                }}>
-                  Ver movimientos bancarios
-                </a>
-                <a href="/bank/reconciliation" style={{
-                  display:      "inline-flex",
-                  alignItems:   "center",
-                  gap:          "6px",
-                  height:       "38px",
-                  padding:      "0 18px",
-                  background:   "#0F2A3D",
-                  border:       "1px solid #0F2A3D",
-                  borderRadius: "9px",
-                  fontSize:     "13px",
-                  fontWeight:   600,
-                  color:        "#FFFFFF",
-                  textDecoration: "none",
-                  cursor:       "pointer",
-                }}>
-                  Conciliar con Binance
-                </a>
-              </div>
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <label style={{
@@ -492,27 +261,6 @@ function Label({ children }: { children: React.ReactNode }) {
     }}>
       {children}
     </label>
-  );
-}
-
-function StatChip({ value, label, color, bg, border }: {
-  value:  number;
-  label:  string;
-  color:  string;
-  bg:     string;
-  border: string;
-}) {
-  return (
-    <div style={{
-      background:   bg,
-      border:       `1px solid ${border}`,
-      borderRadius: "10px",
-      padding:      "12px 20px",
-      minWidth:     "120px",
-    }}>
-      <div style={{ fontSize: "26px", fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: "12px", color: "#64748B", marginTop: "3px" }}>{label}</div>
-    </div>
   );
 }
 
