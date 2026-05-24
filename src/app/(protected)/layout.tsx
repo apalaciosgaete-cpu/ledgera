@@ -141,6 +141,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
         top:          0,
         zIndex:       50,
         height:       "64px",
+        overflowX:    "clip",
       }}>
         <div style={{
           maxWidth:       "1400px",
@@ -152,7 +153,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           justifyContent: "space-between",
           gap:            "24px",
           minWidth:       0,
-          overflowX:      "hidden",
         }}>
 
           <Link href="/portafolio" style={{ textDecoration: "none", flexShrink: 0 }}>
