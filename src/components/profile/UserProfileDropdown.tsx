@@ -157,10 +157,10 @@ export function UserProfileDropdown({
             {initials}
           </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div className="hidden xl:flex" style={{ flexDirection: "column", gap: "4px", minWidth: 0 }}>
           <span style={{
             fontSize: "12px", fontWeight: 500, color: "#E2E8F0", lineHeight: 1,
-            maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {email}
           </span>

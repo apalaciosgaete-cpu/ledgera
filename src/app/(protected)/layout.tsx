@@ -165,6 +165,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             gap:            "4px",
             flex:           1,
             justifyContent: "center",
+            minWidth:       0,
+            overflow:       "hidden",
           }}>
             {navItems.map(item => {
               const active = isActive(item.href);
@@ -195,7 +197,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: 0 }}>
 
             {showConfig && (
               <Link
@@ -248,6 +250,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                 justifyContent: "center",
                 width:          "34px",
                 height:         "34px",
+                minWidth:       "34px",
                 borderRadius:   "9px",
                 background:     logoutHover ? "rgba(239,68,68,0.12)" : "transparent",
                 border:         "1px solid rgba(255,255,255,0.08)",
