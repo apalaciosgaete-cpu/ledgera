@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSessionToken } from "@/modules/identity/client/authStorage";
+import { BankTabs } from "@/components/bank/BankTabs";
 
 type ImportData = {
   uploadId: string;
@@ -120,6 +121,11 @@ export default function BankImportPage() {
       padding:    "40px 24px",
       fontFamily: "var(--font-body, system-ui, sans-serif)",
     }}>
+
+      {/* ── Subnav ─────────────────────────────────────────────────────────── */}
+      <div style={{ maxWidth: "860px", margin: "0 auto" }}>
+        <BankTabs />
+      </div>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{ maxWidth: "860px", margin: "0 auto 24px" }}>

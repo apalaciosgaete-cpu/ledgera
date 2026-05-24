@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getSessionToken } from "@/modules/identity/client/authStorage";
+import { BankTabs } from "@/components/bank/BankTabs";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Suggestion = {
@@ -577,6 +578,8 @@ export default function ReconciliationPage() {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div>
+      <BankTabs />
+
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
         <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#0F2A3D", margin: 0 }}>

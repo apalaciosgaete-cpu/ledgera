@@ -31,40 +31,36 @@ function LogoutIcon() {
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   personal: [
-    { href: "/portafolio",          label: "Portafolio" },
-    { href: "/panel",               label: "Panel" },
-    { href: "/tributario",          label: "Tributario" },
-    { href: "/import/bank",         label: "Banco" },
-    { href: "/bank/reconciliation", label: "Conciliación" },
-    { href: "/planes",              label: "Planes" },
+    { href: "/portafolio",  label: "Portafolio" },
+    { href: "/import/bank", label: "Banco" },
+    { href: "/panel",       label: "Panel" },
+    { href: "/tributario",  label: "Tributario" },
+    { href: "/planes",      label: "Planes" },
   ],
   contador: [
-    { href: "/portafolio",          label: "Portafolio" },
-    { href: "/panel",               label: "Panel" },
-    { href: "/tributario",          label: "Tributario" },
-    { href: "/import/bank",         label: "Banco" },
-    { href: "/bank/reconciliation", label: "Conciliación" },
-    { href: "/auditoria",           label: "Auditoría" },
-    { href: "/planes",              label: "Planes" },
+    { href: "/portafolio",  label: "Portafolio" },
+    { href: "/import/bank", label: "Banco" },
+    { href: "/panel",       label: "Panel" },
+    { href: "/tributario",  label: "Tributario" },
+    { href: "/auditoria",   label: "Auditoría" },
+    { href: "/planes",      label: "Planes" },
   ],
   empresa: [
-    { href: "/portafolio",          label: "Portafolio" },
-    { href: "/panel",               label: "Panel" },
-    { href: "/tributario",          label: "Tributario" },
-    { href: "/import/bank",         label: "Banco" },
-    { href: "/bank/reconciliation", label: "Conciliación" },
-    { href: "/auditoria",           label: "Auditoría" },
-    { href: "/planes",              label: "Planes" },
+    { href: "/portafolio",  label: "Portafolio" },
+    { href: "/import/bank", label: "Banco" },
+    { href: "/panel",       label: "Panel" },
+    { href: "/tributario",  label: "Tributario" },
+    { href: "/auditoria",   label: "Auditoría" },
+    { href: "/planes",      label: "Planes" },
   ],
   admin: [
-    { href: "/portafolio",          label: "Portafolio" },
-    { href: "/panel",               label: "Panel" },
-    { href: "/tributario",          label: "Tributario" },
-    { href: "/import/bank",         label: "Banco" },
-    { href: "/bank/reconciliation", label: "Conciliación" },
-    { href: "/auditoria",           label: "Auditoría" },
-    { href: "/planes",              label: "Planes" },
-    { href: "/admin",               label: "Admin" },
+    { href: "/portafolio",  label: "Portafolio" },
+    { href: "/import/bank", label: "Banco" },
+    { href: "/panel",       label: "Panel" },
+    { href: "/tributario",  label: "Tributario" },
+    { href: "/auditoria",   label: "Auditoría" },
+    { href: "/planes",      label: "Planes" },
+    { href: "/admin",       label: "Admin" },
   ],
 };
 
@@ -128,6 +124,9 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   }
 
   function isActive(href: string) {
+    if (href === "/import/bank") {
+      return pathname.startsWith("/import/bank") || pathname.startsWith("/bank/");
+    }
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
