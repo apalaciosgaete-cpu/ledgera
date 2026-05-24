@@ -1,61 +1,44 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError } from "@/shared/apiResponse";
 
-export const runtime = "nodejs";
-
-type RouteContext = {
-  params: Promise<{ code: string }>;
+type Params = {
+  params: Promise<{
+    code: string;
+  }>;
 };
 
-function formatDate(value: Date): string {
-  return new Intl.DateTimeFormat("es-CL", {
-    year:   "numeric",
-    month:  "2-digit",
-    day:    "2-digit",
-    hour:   "2-digit",
-    minute: "2-digit",
-  }).format(value);
-}
-
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(_request: NextRequest, context: Params) {
   try {
     const { code } = await context.params;
+    const validationCode = code.trim().toUpperCase();
 
-    if (!code || code.length < 4) {
-      return NextResponse.json(
-        { ok: false, message: "Código de verificación inválido.", data: null },
-        { status: 400 },
-      );
+    if (!validationCode) {
+      return fail("Código de verificación requerido.", 400);
     }
 
-    const record = await prisma.bankReconciliationReportValidation.findUnique({
-      where: { validationCode: code.toUpperCase() },
-    });
-
-    if (!record) {
-      return NextResponse.json(
-        { ok: false, message: "Reporte no encontrado o código inválido.", data: null },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      ok:      true,
-      message: "Reporte de conciliación verificado correctamente.",
-      data: {
-        validationCode: record.validationCode,
-        contentHash:    record.contentHash,
-        reportType:     record.reportType,
-        isValid:        true,
-        issuedAt:       record.createdAt.toISOString(),
-        issuedAtLabel:  formatDate(record.createdAt),
+    const validation = await prisma.bankReconciliationReportValidation.findUnique({
+      where: {
+        validationCode,
       },
     });
-  } catch (error) {
-    console.error("[verify/bank-reconciliation]", error);
-    return NextResponse.json(
-      { ok: false, message: "No fue posible verificar el reporte.", data: null },
-      { status: 500 },
+
+    if (!validation) {
+      return fail("Documento no encontrado o código inválido.", 404);
+    }
+
+    return ok(
+      {
+        valid: true,
+        reportType:     validation.reportType,
+        validationCode: validation.validationCode,
+        contentHash:    validation.contentHash,
+        createdAt:      validation.createdAt.toISOString(),
+        metadata:       validation.metadata ? JSON.parse(validation.metadata) : null,
+      },
+      "Documento verificado correctamente.",
     );
+  } catch (error) {
+    return serverError(error);
   }
 }
