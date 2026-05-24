@@ -3,13 +3,14 @@ import PDFDocument from "pdfkit";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, serverError } from "@/shared/apiResponse";
-import { createBankReportValidation } from "@/modules/banking/application/createBankReportValidation";
+import {
+  createBankReconciliationValidation,
+  hashReportContent,
+} from "@/modules/banking/application/createBankReconciliationValidation";
 
-export const runtime  = "nodejs";
-export const dynamic  = "force-dynamic";
+export const runtime     = "nodejs";
+export const dynamic     = "force-dynamic";
 export const maxDuration = 60;
-
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://ledgera.cl").replace(/\/$/, "");
 
 function formatClp(value: number): string {
   return new Intl.NumberFormat("es-CL", {
@@ -29,18 +30,60 @@ function writeLine(doc: PDFKit.PDFDocument, label: string, value: string) {
   doc.font("Helvetica").text(value);
 }
 
-type BuildPdfInput = {
-  userId:            string;
-  stats:             { total: number; matched: number; pending: number; ignored: number; review: number };
-  matchedMovements:  Awaited<ReturnType<typeof prisma.bankMovement.findMany>>;
-  portfolioById:     Map<string, Awaited<ReturnType<typeof prisma.portfolioMovement.findMany>>[number]>;
-  validation:        { validationCode: string; contentHash: string; createdAt: Date };
-};
+async function buildPdf(userId: string): Promise<Buffer> {
+  // ── Fetch data ──────────────────────────────────────────────────────────────
+  const [total, matched, pending, ignored, review, matchedMovements] = await Promise.all([
+    prisma.bankMovement.count({ where: { userId } }),
+    prisma.bankMovement.count({ where: { userId, status: "MATCHED" } }),
+    prisma.bankMovement.count({ where: { userId, status: "IMPORTED" } }),
+    prisma.bankMovement.count({ where: { userId, status: "IGNORED" } }),
+    prisma.bankMovement.count({ where: { userId, status: "REVIEW" } }),
+    prisma.bankMovement.findMany({
+      where:   { userId, status: "MATCHED", matchedPortfolioMovementId: { not: null } },
+      orderBy: { occurredAt: "desc" },
+      take:    200,
+    }),
+  ]);
 
-async function buildPdf(input: BuildPdfInput): Promise<Buffer> {
-  const { stats, matchedMovements, portfolioById, validation } = input;
-  const verificationUrl = `${APP_URL}/verify/bank-reconciliation/${validation.validationCode}`;
+  const portfolioIds = matchedMovements
+    .map((m) => m.matchedPortfolioMovementId)
+    .filter((id): id is string => Boolean(id));
 
+  const portfolioMovements = portfolioIds.length > 0
+    ? await prisma.portfolioMovement.findMany({
+        where: { userId, id: { in: portfolioIds }, deletedAt: null },
+      })
+    : [];
+
+  const portfolioById = new Map(portfolioMovements.map((m) => [m.id, m]));
+
+  // ── Build auditable payload ─────────────────────────────────────────────────
+  const auditPayload = JSON.stringify({
+    generatedAt: new Date().toISOString(),
+    summary: { total, matched, pending, ignored, review },
+    matchedMovements: matchedMovements.map((bank) => ({
+      id:                         bank.id,
+      occurredAt:                 bank.occurredAt.toISOString(),
+      bankName:                   bank.bankName,
+      description:                bank.description,
+      amountClp:                  bank.amountClp,
+      matchedPortfolioMovementId: bank.matchedPortfolioMovementId,
+      matchedConfidence:          bank.matchedConfidence,
+      matchedReason:              bank.matchedReason,
+      matchedAt:                  bank.matchedAt?.toISOString() ?? null,
+    })),
+  });
+
+  // ── Hash + persist validation ───────────────────────────────────────────────
+  const contentHash = hashReportContent(auditPayload);
+
+  const validation = await createBankReconciliationValidation({
+    userId,
+    contentHash,
+    metadata: { total, matched, pending, ignored, review },
+  });
+
+  // ── Generate PDF ────────────────────────────────────────────────────────────
   return new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: "A4" });
     const chunks: Buffer[] = [];
@@ -49,26 +92,24 @@ async function buildPdf(input: BuildPdfInput): Promise<Buffer> {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    // ── Header ────────────────────────────────────────────────────────────────
     doc.font("Helvetica-Bold").fontSize(18).text("LEDGERA", { align: "left" });
     doc.moveDown(0.4);
     doc.fontSize(14).text("Reporte de conciliación financiera");
     doc.moveDown(0.5);
+
     doc.font("Helvetica").fontSize(9).fillColor("#444");
     doc.text(`Generado: ${new Date().toLocaleString("es-CL")}`);
     doc.moveDown();
 
-    // ── Resumen ───────────────────────────────────────────────────────────────
     doc.fillColor("#000").font("Helvetica-Bold").fontSize(12).text("Resumen");
     doc.moveDown(0.4);
     doc.fontSize(10);
-    writeLine(doc, "Movimientos bancarios", String(stats.total));
-    writeLine(doc, "Conciliados",           String(stats.matched));
-    writeLine(doc, "Pendientes",            String(stats.pending));
-    writeLine(doc, "Ignorados",             String(stats.ignored));
-    writeLine(doc, "Revisión",              String(stats.review));
+    writeLine(doc, "Movimientos bancarios", String(total));
+    writeLine(doc, "Conciliados",           String(matched));
+    writeLine(doc, "Pendientes",            String(pending));
+    writeLine(doc, "Ignorados",             String(ignored));
+    writeLine(doc, "Revisión",              String(review));
 
-    // ── Detalle conciliados ───────────────────────────────────────────────────
     doc.moveDown();
     doc.font("Helvetica-Bold").fontSize(12).text("Detalle de conciliaciones");
     doc.moveDown(0.5);
@@ -105,23 +146,16 @@ async function buildPdf(input: BuildPdfInput): Promise<Buffer> {
     }
 
     // ── Footer de verificación ────────────────────────────────────────────────
-    if (doc.y > 680) doc.addPage();
+    doc.moveDown();
 
-    doc.moveDown(1.5);
-    doc
-      .rect(50, doc.y, doc.page.width - 100, 80)
-      .fillAndStroke("#F0FDF4", "#BBF7D0");
+    if (doc.y > 700) doc.addPage();
 
-    const boxY = doc.y + 10;
-    doc.font("Helvetica-Bold").fontSize(9).fillColor("#166534")
-      .text("Documento verificable — LEDGERA", 62, boxY);
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#000").text("Verificación del documento");
+    doc.font("Helvetica").fontSize(8).fillColor("#444");
 
-    doc.font("Helvetica").fontSize(8).fillColor("#374151")
-      .text(`Código de verificación: ${validation.validationCode}`, 62, boxY + 16)
-      .text(`Hash SHA-256: ${validation.contentHash}`, 62, boxY + 28)
-      .text(`Verifica este documento en: ${verificationUrl}`, 62, boxY + 40, {
-        link: verificationUrl, underline: true,
-      });
+    doc.text(`Código de verificación: ${validation.validationCode}`);
+    doc.text(`Hash SHA-256: ${contentHash}`);
+    doc.text(`URL de verificación: https://ledgera.cl/verify/bank-reconciliation/${validation.validationCode}`);
 
     doc.end();
   });
@@ -132,48 +166,7 @@ export async function GET(request: NextRequest) {
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
   try {
-    const userId = auth.user.id;
-
-    // ── Fetch data ────────────────────────────────────────────────────────────
-    const [total, matched, pending, ignored, review, matchedMovements] = await Promise.all([
-      prisma.bankMovement.count({ where: { userId } }),
-      prisma.bankMovement.count({ where: { userId, status: "MATCHED" } }),
-      prisma.bankMovement.count({ where: { userId, status: "IMPORTED" } }),
-      prisma.bankMovement.count({ where: { userId, status: "IGNORED" } }),
-      prisma.bankMovement.count({ where: { userId, status: "REVIEW" } }),
-      prisma.bankMovement.findMany({
-        where:   { userId, status: "MATCHED", matchedPortfolioMovementId: { not: null } },
-        orderBy: { occurredAt: "desc" },
-        take:    200,
-      }),
-    ]);
-
-    const portfolioIds = matchedMovements
-      .map((m) => m.matchedPortfolioMovementId)
-      .filter((id): id is string => Boolean(id));
-
-    const portfolioMovements = portfolioIds.length > 0
-      ? await prisma.portfolioMovement.findMany({
-          where: { userId, id: { in: portfolioIds }, deletedAt: null },
-        })
-      : [];
-
-    const portfolioById = new Map(portfolioMovements.map((m) => [m.id, m]));
-
-    // ── Create validation record (hash of data snapshot) ──────────────────────
-    const validation = await createBankReportValidation({
-      userId,
-      payload: { total, matched, pending, ignored, review, movementCount: matchedMovements.length },
-    });
-
-    // ── Build PDF ─────────────────────────────────────────────────────────────
-    const pdf = await buildPdf({
-      userId,
-      stats:            { total, matched, pending, ignored, review },
-      matchedMovements,
-      portfolioById,
-      validation,
-    });
+    const pdf = await buildPdf(auth.user.id);
 
     return new NextResponse(new Uint8Array(pdf), {
       headers: {
