@@ -115,20 +115,11 @@ export default function BankImportPage() {
   const canImport = !!file && !loading;
 
   return (
-    <div style={{
-      minHeight:  "100vh",
-      background: "#E8EEF5",
-      padding:    "40px 24px",
-      fontFamily: "var(--font-body, system-ui, sans-serif)",
-    }}>
-
-      {/* ── Subnav ─────────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: "860px", margin: "0 auto" }}>
-        <BankTabs />
-      </div>
+    <div>
+      <BankTabs />
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: "860px", margin: "0 auto 24px" }}>
+      <div style={{ marginBottom: "24px" }}>
         <h1 style={{
           fontSize:   "22px",
           fontWeight: 700,
@@ -146,7 +137,6 @@ export default function BankImportPage() {
       {/* ── Card principal ──────────────────────────────────────────────────── */}
       <div style={{
         maxWidth:     "680px",
-        margin:       "0 auto",
         background:   "#FFFFFF",
         border:       "1px solid #E2E8F0",
         borderRadius: "14px",
