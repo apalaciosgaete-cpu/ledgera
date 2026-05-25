@@ -34,6 +34,15 @@ export async function POST(request: NextRequest) {
       result.message,
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+
+    if (message.includes("LEDGERA_ENCRYPTION_KEY")) {
+      return fail(
+        "La clave de cifrado de LEDGERA no está configurada en el servidor. Revisa LEDGERA_ENCRYPTION_KEY en Vercel.",
+        500,
+      );
+    }
+
     return serverError(error);
   }
 }
