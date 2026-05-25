@@ -32,14 +32,14 @@ function LogoutIcon() {
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   personal: [
     { href: "/portafolio", label: "Portafolio" },
-    { href: "/bank",       label: "Banco" },
+    { href: "/import/bank", label: "Banco" },
     { href: "/panel",      label: "Panel" },
     { href: "/tributario", label: "Tributario" },
     { href: "/planes",     label: "Planes" },
   ],
   contador: [
     { href: "/portafolio", label: "Portafolio" },
-    { href: "/bank",       label: "Banco" },
+    { href: "/import/bank", label: "Banco" },
     { href: "/panel",      label: "Panel" },
     { href: "/tributario", label: "Tributario" },
     { href: "/auditoria",  label: "Auditoría" },
@@ -47,7 +47,7 @@ const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   ],
   empresa: [
     { href: "/portafolio", label: "Portafolio" },
-    { href: "/bank",       label: "Banco" },
+    { href: "/import/bank", label: "Banco" },
     { href: "/panel",      label: "Panel" },
     { href: "/tributario", label: "Tributario" },
     { href: "/auditoria",  label: "Auditoría" },
@@ -55,7 +55,7 @@ const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   ],
   admin: [
     { href: "/portafolio", label: "Portafolio" },
-    { href: "/bank",       label: "Banco" },
+    { href: "/import/bank", label: "Banco" },
     { href: "/panel",      label: "Panel" },
     { href: "/tributario", label: "Tributario" },
     { href: "/auditoria",  label: "Auditoría" },
@@ -124,8 +124,11 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   }
 
   function isActive(href: string) {
-    if (href === "/bank") {
-      return pathname === "/bank" || pathname.startsWith("/bank/") || pathname.startsWith("/import/bank");
+    if (href === "/import/bank") {
+      return (
+        pathname.startsWith("/import/bank") ||
+        pathname.startsWith("/bank/")
+      );
     }
     return pathname === href || pathname.startsWith(`${href}/`);
   }
