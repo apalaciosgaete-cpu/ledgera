@@ -32,7 +32,7 @@ type ApiResponse<T> = { ok: boolean; message: string; data: T };
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
 function StatusBadge({ connected, status }: { connected: boolean; status?: string }) {
-  const s = connected && status === "ACTIVE"
+  const s = connected && status === "CONNECTED"
     ? { bg: "rgba(22,163,74,0.10)", color: "#16A34A", border: "rgba(22,163,74,0.25)", label: "Conectada" }
     : { bg: "rgba(100,116,139,0.10)", color: "#64748B", border: "rgba(100,116,139,0.2)", label: "No conectada" };
   return (
@@ -135,9 +135,15 @@ function SpotSection() {
   const loadStatus = useCallback(async () => {
     setLoading(true);
     try {
-      await httpClient("/api/csrf");
-      const res = await httpClient<ApiResponse<SpotStatus>>("/api/integrations/binance/connect", { auth: true });
-      setConn(res.data);
+      const res = await httpClient<ApiResponse<{
+        connected: boolean;
+        connection: { status: string; lastSyncAt: string | null } | null;
+      }>>("/api/integrations/binance/connection", { auth: true });
+      setConn({
+        connected:  res.data.connected,
+        status:     res.data.connection?.status,
+        lastSyncAt: res.data.connection?.lastSyncAt ?? null,
+      });
     } catch {
       setConn({ connected: false });
     } finally {
@@ -147,7 +153,7 @@ function SpotSection() {
 
   useEffect(() => { void loadStatus(); }, [loadStatus]);
 
-  const isConnected = conn?.connected && conn.status === "ACTIVE";
+  const isConnected = conn?.connected && conn.status === "CONNECTED";
 
   async function handleConnect(apiKey: string, apiSecret: string) {
     setSaving(true); setMsg(null); setTestResult(null);

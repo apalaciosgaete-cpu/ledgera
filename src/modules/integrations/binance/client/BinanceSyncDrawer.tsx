@@ -193,9 +193,15 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
   const loadStatus = useCallback(async () => {
     setLoadingConn(true);
     try {
-      await httpClient("/api/csrf");
-      const res = await httpClient<ApiResponse<ConnectionStatus>>("/api/integrations/binance/connect", { auth: true });
-      setConn(res.data);
+      const res = await httpClient<ApiResponse<{
+        connected: boolean;
+        connection: { status: string; lastSyncAt: string | null } | null;
+      }>>("/api/integrations/binance/connection", { auth: true });
+      setConn({
+        connected:  res.data.connected,
+        status:     res.data.connection?.status,
+        lastSyncAt: res.data.connection?.lastSyncAt ?? null,
+      });
     } catch {
       setConn({ connected: false });
     } finally {
@@ -233,7 +239,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
   useEffect(() => { void loadStatus(); }, [loadStatus]);
 
   useEffect(() => {
-    if (conn?.connected && conn.status === "ACTIVE") {
+    if (conn?.connected && conn.status === "CONNECTED") {
       void loadCalendar();
       void loadImports();
       void loadTaxStatus();
@@ -335,7 +341,7 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
     onSyncComplete?.();
   }
 
-  const isConnected = conn?.connected && conn.status === "ACTIVE";
+  const isConnected = conn?.connected && conn.status === "CONNECTED";
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
