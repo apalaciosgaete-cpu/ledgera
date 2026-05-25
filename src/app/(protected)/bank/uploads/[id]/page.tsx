@@ -192,9 +192,10 @@ export default function BankUploadDetailPage() {
       </div>
 
       {/* Actions */}
-      <div style={{ maxWidth: "860px", margin: "0 auto", display: "flex", gap: "10px" }}>
-        <a href="/bank/movements" style={btnSecondary}>Ver todos los movimientos</a>
-        <a href="/bank/reconciliation" style={btnPrimary}>Conciliar con Binance</a>
+      <div style={{ maxWidth: "860px", margin: "0 auto 20px", display: "flex", justifyContent: "flex-end" }}>
+        <a href="/bank/reconciliation" style={btnPrimary}>
+          Revisar coincidencias crypto
+        </a>
       </div>
     </div>
   );
@@ -210,12 +211,6 @@ function StatCard({ value, label, color, bg, border }: {
     </div>
   );
 }
-
-const btnSecondary: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", height: "40px", padding: "0 20px",
-  background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "10px",
-  fontSize: "13px", fontWeight: 600, color: "#334155", textDecoration: "none",
-};
 
 const btnPrimary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", height: "40px", padding: "0 20px",
