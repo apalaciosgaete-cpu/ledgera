@@ -456,6 +456,8 @@ export default function ReconciliationPage() {
       setMatched(current =>
         current.filter(item => item.bankMovement.id !== record.bankMovement.id),
       );
+      await loadStats();
+      await loadSuggestions();
     } catch {
       setError("Error de red al deshacer conciliación.");
     } finally {
@@ -541,7 +543,11 @@ export default function ReconciliationPage() {
         }),
       });
       const json = await res.json() as ApiResponse<unknown>;
-      if (json.ok) setRowState(s.bankMovementId, "accepted");
+      if (json.ok) {
+        setRowState(s.bankMovementId, "accepted");
+        await loadStats();
+        await loadSuggestions();
+      }
     } finally {
       setActing(null);
     }
@@ -561,7 +567,11 @@ export default function ReconciliationPage() {
         body: JSON.stringify({ bankMovementId }),
       });
       const json = await res.json() as ApiResponse<unknown>;
-      if (json.ok) setRowState(bankMovementId, "ignored");
+      if (json.ok) {
+        setRowState(bankMovementId, "ignored");
+        await loadStats();
+        await loadSuggestions();
+      }
     } finally {
       setActing(null);
     }
