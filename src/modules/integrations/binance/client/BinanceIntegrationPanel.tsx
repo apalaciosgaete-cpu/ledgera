@@ -32,7 +32,7 @@ type ApiResponse<T> = { ok: boolean; message: string; data: T };
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
 function StatusBadge({ connected, status }: { connected: boolean; status?: string }) {
-  const s = connected && status === "CONNECTED"
+  const s = connected && (status === "CONNECTED" || status === "ACTIVE")
     ? { bg: "rgba(22,163,74,0.10)", color: "#16A34A", border: "rgba(22,163,74,0.25)", label: "Conectada" }
     : { bg: "rgba(100,116,139,0.10)", color: "#64748B", border: "rgba(100,116,139,0.2)", label: "No conectada" };
   return (
