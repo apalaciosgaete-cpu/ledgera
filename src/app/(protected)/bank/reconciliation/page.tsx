@@ -587,23 +587,44 @@ export default function ReconciliationPage() {
 
   async function handleIgnore(bankMovementId: string) {
     setActing(bankMovementId);
+
     try {
+      await fetch("/api/csrf", { credentials: "include", cache: "no-store" });
+
       const token = getSessionToken();
-      const res   = await fetch("/api/bank/reconciliation/reject", {
+
+      const res = await fetch("/api/bank/reconciliation/reject", {
         method:      "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":    "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "x-ledgera-csrf": readCsrfCookie(),
         },
         body: JSON.stringify({ bankMovementId }),
       });
+
       const json = await res.json() as ApiResponse<unknown>;
+
       if (json.ok) {
+        setSuggestions(current =>
+          current.filter(item => item.bankMovementId !== bankMovementId),
+        );
+
         setRowState(bankMovementId, "ignored");
+
         await loadStats();
-        await loadSuggestions();
+
+        if (activeTab === "ignored") {
+          await loadIgnored();
+        }
+
+        return;
       }
+
+      setSugError(json.message ?? "No se pudo ignorar la sugerencia.");
+    } catch {
+      setSugError("Error de red al ignorar la sugerencia.");
     } finally {
       setActing(null);
     }
