@@ -1,11 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import type { BankMatchSuggestion } from "../domain/bankMatchingTypes";
 import { resolveUsdClpRate } from "@/modules/market/infrastructure/exchangeRate";
-import { autoConfirmBankMatch } from "./autoConfirmBankMatch";
 import { classifyFinancialEvent } from "./classifyFinancialEvent";
 
 const KEYWORDS = ["BINANCE", "P2P", "CRYPTO", "BIFROST"];
-const AUTO_MATCH_THRESHOLD = 0.98;
 
 function addDays(date: Date, days: number): Date {
   const copy = new Date(date);
@@ -128,13 +126,19 @@ export async function suggestBankBinanceMatches(
       status: { in: ["IMPORTED", "REVIEW"] },
     },
     orderBy: { occurredAt: "desc" },
-    take: 500,
+    take: 50,
   });
 
   const suggestions: BankMatchSuggestion[] = [];
+  const fxCache = new Map<string, number>();
 
   for (const bank of bankMovements) {
-    const usdClp = await resolveUsdClpRate(bank.occurredAt);
+    const dateKey = bank.occurredAt.toISOString().slice(0, 10);
+    let usdClp = fxCache.get(dateKey);
+    if (usdClp === undefined) {
+      usdClp = await resolveUsdClpRate(bank.occurredAt);
+      fxCache.set(dateKey, usdClp);
+    }
     const from   = addDays(bank.occurredAt, -3);
     const to     = addDays(bank.occurredAt,  3);
 
@@ -181,39 +185,29 @@ export async function suggestBankBinanceMatches(
       });
 
       if (confidence >= minConfidence) {
-        if (confidence >= AUTO_MATCH_THRESHOLD) {
-          await autoConfirmBankMatch({
-            userId,
-            bankMovementId:      bank.id,
-            portfolioMovementId: crypto.id,
-            confidence,
-            reason: reasons.join(" · "),
-          });
-        } else {
-          suggestions.push({
-            bankMovementId:      bank.id,
-            portfolioMovementId: crypto.id,
-            confidence,
-            reason:     reasons.join(" · "),
-            eventType:  financialEvent.eventType,
-            eventLabel: financialEvent.label,
-            certainty:  financialEvent.certainty,
-            evidence:   financialEvent.evidence,
-            bank: {
-              occurredAt:  bank.occurredAt.toISOString(),
-              description: bank.description,
-              amountClp:   bank.amountClp,
-            },
-            crypto: {
-              occurredAt: crypto.executedAt.toISOString(),
-              type:       crypto.type,
-              symbol:     crypto.symbol,
-              quantity:   crypto.quantity,
-              priceUsd:   crypto.priceUsd,
-              source:     crypto.source,
-            },
-          });
-        }
+        suggestions.push({
+          bankMovementId:      bank.id,
+          portfolioMovementId: crypto.id,
+          confidence,
+          reason:     reasons.join(" · "),
+          eventType:  financialEvent.eventType,
+          eventLabel: financialEvent.label,
+          certainty:  financialEvent.certainty,
+          evidence:   financialEvent.evidence,
+          bank: {
+            occurredAt:  bank.occurredAt.toISOString(),
+            description: bank.description,
+            amountClp:   bank.amountClp,
+          },
+          crypto: {
+            occurredAt: crypto.executedAt.toISOString(),
+            type:       crypto.type,
+            symbol:     crypto.symbol,
+            quantity:   crypto.quantity,
+            priceUsd:   crypto.priceUsd,
+            source:     crypto.source,
+          },
+        });
       }
     }
   }
