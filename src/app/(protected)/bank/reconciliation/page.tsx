@@ -478,7 +478,13 @@ export default function ReconciliationPage() {
         body: JSON.stringify({ bankMovementId: record.bankMovement.id }),
       });
 
-      const payload = (await response.json()) as ApiResponse<unknown>;
+      let payload: ApiResponse<unknown>;
+      try {
+        payload = (await response.json()) as ApiResponse<unknown>;
+      } catch {
+        setError("Respuesta inválida del servidor al deshacer.");
+        return;
+      }
 
       if (!response.ok || !payload.ok) {
         setError(payload.message || "No fue posible deshacer la conciliación.");
@@ -580,7 +586,13 @@ export default function ReconciliationPage() {
         }),
       });
 
-      const json = await res.json() as ApiResponse<unknown>;
+      let json: ApiResponse<unknown>;
+      try {
+        json = await res.json() as ApiResponse<unknown>;
+      } catch {
+        setSugError("Respuesta inválida del servidor al aceptar.");
+        return;
+      }
 
       if (!res.ok || !json.ok) {
         setSugError(json.message ?? "No se pudo aceptar la conciliación.");
@@ -624,7 +636,13 @@ export default function ReconciliationPage() {
         body: JSON.stringify({ bankMovementId }),
       });
 
-      const json = await res.json() as ApiResponse<unknown>;
+      let json: ApiResponse<unknown>;
+      try {
+        json = await res.json() as ApiResponse<unknown>;
+      } catch {
+        setSugError("Respuesta inválida del servidor al ignorar.");
+        return;
+      }
 
       if (json.ok) {
         setSuggestions(current =>
