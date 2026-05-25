@@ -137,6 +137,7 @@ export default function BankImportPage() {
       {/* ── Card principal ──────────────────────────────────────────────────── */}
       <div style={{
         maxWidth:     "680px",
+        margin:       "0 auto",
         background:   "#FFFFFF",
         border:       "1px solid #E2E8F0",
         borderRadius: "14px",
