@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import type { BankMatchSuggestion } from "../domain/bankMatchingTypes";
 import { resolveUsdClpRate } from "@/modules/market/infrastructure/exchangeRate";
+import { autoConfirmBankMatch } from "./autoConfirmBankMatch";
 
 const KEYWORDS = ["BINANCE", "P2P", "CRYPTO", "BIFROST"];
+const AUTO_MATCH_THRESHOLD = 0.98;
 
 function addDays(date: Date, days: number): Date {
   const copy = new Date(date);
@@ -153,25 +155,35 @@ export async function suggestBankBinanceMatches(
       );
 
       if (confidence >= minConfidence) {
-        suggestions.push({
-          bankMovementId:      bank.id,
-          portfolioMovementId: crypto.id,
-          confidence,
-          reason: reasons.join(" · "),
-          bank: {
-            occurredAt:  bank.occurredAt.toISOString(),
-            description: bank.description,
-            amountClp:   bank.amountClp,
-          },
-          crypto: {
-            occurredAt: crypto.executedAt.toISOString(),
-            type:       crypto.type,
-            symbol:     crypto.symbol,
-            quantity:   crypto.quantity,
-            priceUsd:   crypto.priceUsd,
-            source:     crypto.source,
-          },
-        });
+        if (confidence >= AUTO_MATCH_THRESHOLD) {
+          await autoConfirmBankMatch({
+            userId,
+            bankMovementId:      bank.id,
+            portfolioMovementId: crypto.id,
+            confidence,
+            reason: reasons.join(" · "),
+          });
+        } else {
+          suggestions.push({
+            bankMovementId:      bank.id,
+            portfolioMovementId: crypto.id,
+            confidence,
+            reason: reasons.join(" · "),
+            bank: {
+              occurredAt:  bank.occurredAt.toISOString(),
+              description: bank.description,
+              amountClp:   bank.amountClp,
+            },
+            crypto: {
+              occurredAt: crypto.executedAt.toISOString(),
+              type:       crypto.type,
+              symbol:     crypto.symbol,
+              quantity:   crypto.quantity,
+              priceUsd:   crypto.priceUsd,
+              source:     crypto.source,
+            },
+          });
+        }
       }
     }
   }

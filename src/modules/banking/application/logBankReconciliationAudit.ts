@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 type BankReconciliationAuditAction =
   | "MATCH_CONFIRMED"
   | "MATCH_REJECTED"
-  | "MATCH_UNMATCHED";
+  | "MATCH_UNMATCHED"
+  | "AUTO_MATCHED";
 
 type LogBankReconciliationAuditInput = {
   userId:               string;
