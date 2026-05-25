@@ -711,36 +711,60 @@ export default function ReconciliationPage() {
 
       {/* Summary cards */}
       <div className="grid gap-4 md:grid-cols-5" style={{ marginBottom: "28px" }}>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <button
+          type="button"
+          onClick={() => { window.location.href = "/bank/movements"; }}
+          className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:shadow-sm"
+        >
           <p className="text-xs text-slate-400">Banco total</p>
           <p className="mt-1 text-2xl font-semibold text-slate-900">
             {stats?.totalBankMovements ?? 0}
           </p>
-        </div>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("suggestions")}
+          className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:border-amber-300 hover:shadow-sm"
+        >
           <p className="text-xs text-amber-600">Pendientes</p>
           <p className="mt-1 text-2xl font-semibold text-amber-800">
             {stats?.pending ?? 0}
           </p>
-        </div>
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("matched")}
+          className="rounded-2xl border border-green-200 bg-green-50 p-4 text-left transition hover:border-green-300 hover:shadow-sm"
+        >
           <p className="text-xs text-green-600">Conciliados</p>
           <p className="mt-1 text-2xl font-semibold text-green-800">
             {stats?.matched ?? 0}
           </p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("ignored")}
+          className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:shadow-sm"
+        >
           <p className="text-xs text-slate-400">Ignorados</p>
           <p className="mt-1 text-2xl font-semibold text-slate-900">
             {stats?.ignored ?? 0}
           </p>
-        </div>
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("suggestions")}
+          className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-300 hover:shadow-sm"
+        >
           <p className="text-xs text-blue-600">Sugerencias</p>
           <p className="mt-1 text-2xl font-semibold text-blue-800">
             {stats?.suggestions ?? 0}
           </p>
-        </div>
+        </button>
       </div>
 
       {/* Export buttons */}
