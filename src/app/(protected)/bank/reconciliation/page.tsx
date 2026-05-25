@@ -558,14 +558,19 @@ export default function ReconciliationPage() {
 
   async function handleAccept(s: Suggestion) {
     setActing(s.bankMovementId);
+
     try {
+      await fetch("/api/csrf", { credentials: "include", cache: "no-store" });
+
       const token = getSessionToken();
-      const res   = await fetch("/api/bank/reconciliation/confirm", {
+
+      const res = await fetch("/api/bank/reconciliation/confirm", {
         method:      "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":    "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "x-ledgera-csrf": readCsrfCookie(),
         },
         body: JSON.stringify({
           bankMovementId:      s.bankMovementId,
@@ -574,12 +579,27 @@ export default function ReconciliationPage() {
           reason:              s.reason,
         }),
       });
+
       const json = await res.json() as ApiResponse<unknown>;
-      if (json.ok) {
-        setRowState(s.bankMovementId, "accepted");
-        await loadStats();
-        await loadSuggestions();
+
+      if (!res.ok || !json.ok) {
+        setSugError(json.message ?? "No se pudo aceptar la conciliación.");
+        return;
       }
+
+      setSuggestions(current =>
+        current.filter(item => item.bankMovementId !== s.bankMovementId),
+      );
+
+      setRowState(s.bankMovementId, "accepted");
+
+      await loadStats();
+
+      if (activeTab === "matched") {
+        await loadMatched();
+      }
+    } catch {
+      setSugError("Error de red al aceptar la conciliación.");
     } finally {
       setActing(null);
     }
