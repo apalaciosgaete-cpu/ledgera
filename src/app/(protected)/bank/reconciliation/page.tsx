@@ -413,9 +413,11 @@ export default function ReconciliationPage() {
   const loadSuggestions = useCallback(async () => {
     setSugLoading(true);
     setSugError(null);
+
     const token = getSessionToken();
+
     try {
-      const res  = await fetch("/api/bank/match/binance", {
+      const res = await fetch("/api/bank/match/binance", {
         method:      "POST",
         credentials: "include",
         headers: {
@@ -428,16 +430,32 @@ export default function ReconciliationPage() {
           type:   typeFilter,
         }),
       });
-      const json = await res.json() as ApiResponse<{ suggestions: Suggestion[] }>;
-      if (json.ok) {
-        setSuggestions(json.data.suggestions ?? []);
-        setRowStates({});
-        void loadStats();
-      } else {
-        setSugError(json.message ?? "Error al cargar sugerencias.");
+
+      const text = await res.text();
+
+      let json: ApiResponse<{ suggestions: Suggestion[] }>;
+
+      try {
+        json = JSON.parse(text) as ApiResponse<{ suggestions: Suggestion[] }>;
+      } catch {
+        setSugError(`Respuesta inválida del servidor: ${text.slice(0, 300)}`);
+        return;
       }
-    } catch {
-      setSugError("No se pudo conectar con el servidor.");
+
+      if (!res.ok || !json.ok) {
+        setSugError(json.message ?? `Error HTTP ${res.status}`);
+        return;
+      }
+
+      setSuggestions(json.data.suggestions ?? []);
+      setRowStates({});
+      await loadStats();
+    } catch (error) {
+      setSugError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo conectar con el servidor.",
+      );
     } finally {
       setSugLoading(false);
     }
