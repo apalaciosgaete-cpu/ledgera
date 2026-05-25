@@ -4,9 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { href: "/import/bank",         label: "Importar cartola" },
-  { href: "/bank/movements",      label: "Movimientos" },
-  { href: "/bank/reconciliation", label: "Conciliación" },
+  { href: "/import/bank",    label: "Importar cartola" },
+  { href: "/bank/movements", label: "Movimientos" },
 ];
 
 export function BankTabs() {
