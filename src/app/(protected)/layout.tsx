@@ -125,7 +125,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
 
   function isActive(href: string) {
     if (href === "/import/bank") {
-      return pathname.startsWith("/import/bank") || pathname.startsWith("/bank/");
+      return pathname.startsWith("/import/bank") || pathname === "/bank" || pathname.startsWith("/bank/");
     }
     return pathname === href || pathname.startsWith(`${href}/`);
   }
