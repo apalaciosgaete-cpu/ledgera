@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { BankMatchSuggestion } from "../domain/bankMatchingTypes";
 import { resolveUsdClpRate } from "@/modules/market/infrastructure/exchangeRate";
 import { autoConfirmBankMatch } from "./autoConfirmBankMatch";
+import { classifyFinancialEvent } from "./classifyFinancialEvent";
 
 const KEYWORDS = ["BINANCE", "P2P", "CRYPTO", "BIFROST"];
 const AUTO_MATCH_THRESHOLD = 0.98;
@@ -49,6 +50,21 @@ function typeScore(type: string): { score: number; reason?: string } {
   }
 
   return { score: 0 };
+}
+
+function amountDiffPct(
+  bankAmountClp: number,
+  cryptoQuantity: number,
+  cryptoPriceUsd: number,
+  usdClp: number,
+): number | null {
+  const estimatedClp = cryptoQuantity * cryptoPriceUsd * usdClp;
+
+  if (!Number.isFinite(estimatedClp) || estimatedClp <= 0 || bankAmountClp <= 0) {
+    return null;
+  }
+
+  return Math.abs(bankAmountClp - estimatedClp) / bankAmountClp;
 }
 
 function amountScore(
@@ -154,6 +170,16 @@ export async function suggestBankBinanceMatches(
         keyword.score + date.score + type.score + amount.score,
       );
 
+      const financialEvent = classifyFinancialEvent({
+        bankDescription: bank.description,
+        bankDirection:   bank.direction as "INFLOW" | "OUTFLOW",
+        bankAmountClp:   bank.amountClp,
+        cryptoType:      crypto.type,
+        cryptoSource:    crypto.source,
+        amountDiffPct:   amountDiffPct(bank.amountClp, crypto.quantity, crypto.priceUsd, usdClp),
+        dateDiffDays:    daysDiff(bank.occurredAt, crypto.executedAt),
+      });
+
       if (confidence >= minConfidence) {
         if (confidence >= AUTO_MATCH_THRESHOLD) {
           await autoConfirmBankMatch({
@@ -168,7 +194,11 @@ export async function suggestBankBinanceMatches(
             bankMovementId:      bank.id,
             portfolioMovementId: crypto.id,
             confidence,
-            reason: reasons.join(" · "),
+            reason:     reasons.join(" · "),
+            eventType:  financialEvent.eventType,
+            eventLabel: financialEvent.label,
+            certainty:  financialEvent.certainty,
+            evidence:   financialEvent.evidence,
             bank: {
               occurredAt:  bank.occurredAt.toISOString(),
               description: bank.description,
