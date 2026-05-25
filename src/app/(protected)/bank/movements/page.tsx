@@ -1,464 +1,442 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { BankTabs } from "@/components/bank/BankTabs";
 import { getSessionToken } from "@/modules/identity/client/authStorage";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-type Direction = "INFLOW" | "OUTFLOW";
-type Status    = "IMPORTED" | "REVIEWED" | "IGNORED";
-
 type BankMovement = {
-  id:          string;
-  bankName:    string | null;
-  occurredAt:  string;
+  id: string;
+  uploadId: string;
+  bankName: string | null;
+  occurredAt: string;
   description: string;
-  amountClp:   number;
-  direction:   Direction;
-  balanceClp:  number | null;
-  status:      Status;
+  amountClp: number;
+  direction: "INFLOW" | "OUTFLOW";
+  balanceClp: number | null;
+  status: string;
+  bankCategory: string;
+  categoryReason: string | null;
+  matchedPortfolioMovementId: string | null;
+  matchedConfidence: number | null;
+  matchedAt: string | null;
+  matchedReason: string | null;
 };
 
-type MovementsResponse = {
-  movements:  BankMovement[];
-  total:      number;
-  page:       number;
-  totalPages: number;
+type ApiResponse<T> = {
+  ok: boolean;
+  message: string;
+  data: T;
 };
 
-type Filters = {
-  direction: string;
-  status:    string;
-  bankName:  string;
-  q:         string;
+type MovementsPayload = {
+  movements: BankMovement[];
+  total: number;
+  take: number;
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function fmtClp(n: number): string {
+function formatClp(value: number): string {
   return new Intl.NumberFormat("es-CL", {
-    style:                 "currency",
-    currency:              "CLP",
-    minimumFractionDigits: 0,
-  }).format(n);
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-CL", {
-    day:   "2-digit",
-    month: "short",
-    year:  "numeric",
+function formatDate(value: string): string {
+  return new Date(value).toLocaleDateString("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
-async function fetchMovements(
-  filters: Filters,
-  page:    number,
-  limit:   number,
-): Promise<MovementsResponse> {
-  const params = new URLSearchParams();
-  params.set("page",  String(page));
-  params.set("limit", String(limit));
-  if (filters.direction) params.set("direction", filters.direction);
-  if (filters.status)    params.set("status",    filters.status);
-  if (filters.bankName)  params.set("bankName",  filters.bankName);
-  if (filters.q)         params.set("q",         filters.q);
+function statusLabel(status: string): string {
+  const map: Record<string, string> = {
+    IMPORTED: "Importado",
+    REVIEW: "Revisión",
+    MATCHED: "Conciliado",
+    IGNORED: "Ignorado",
+  };
 
-  const token = getSessionToken();
-  const res   = await fetch(`/api/bank/movements?${params.toString()}`, {
-    credentials: "include",
-    headers: { "Authorization": token ? `Bearer ${token}` : "" },
-  });
-  const json = await res.json() as { ok: boolean; data: MovementsResponse };
-  if (!json.ok) throw new Error("Error al cargar movimientos");
-  return json.data;
+  return map[status] ?? status;
 }
 
-// ── Constantes ────────────────────────────────────────────────────────────────
-const LIMIT = 50;
+function directionLabel(direction: string): string {
+  return direction === "INFLOW" ? "Abono" : "Cargo";
+}
 
-const DIRECTION_META: Record<Direction, { label: string; color: string; bg: string }> = {
-  INFLOW:  { label: "ABONO", color: "#16A34A", bg: "rgba(22,163,74,0.1)"  },
-  OUTFLOW: { label: "CARGO", color: "#DC2626", bg: "rgba(220,38,38,0.1)"  },
-};
-
-const STATUS_META: Record<Status, { label: string; color: string; bg: string }> = {
-  IMPORTED: { label: "Importado", color: "#64748B", bg: "#F1F5F9" },
-  REVIEWED: { label: "Revisado",  color: "#2563EB", bg: "rgba(59,130,246,0.1)" },
-  IGNORED:  { label: "Ignorado",  color: "#94A3B8", bg: "#F8FAFC" },
-};
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 export default function BankMovementsPage() {
-  const [filters,  setFilters]  = useState<Filters>({ direction: "", status: "", bankName: "", q: "" });
-  const [draft,    setDraft]    = useState("");
-  const [page,     setPage]     = useState(1);
-  const [data,     setData]     = useState<MovementsResponse | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const load = useCallback(async (f: Filters, p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetchMovements(f, p, LIMIT);
-      setData(res);
-    } catch {
-      setError("No se pudieron cargar los movimientos.");
-    } finally {
-      setLoading(false);
+  const status = searchParams.get("status") ?? "ALL";
+  const direction = searchParams.get("direction") ?? "ALL";
+  const bankName = searchParams.get("bankName") ?? "";
+  const take = searchParams.get("take") ?? "100";
+
+  const [movements, setMovements] = useState<BankMovement[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [bankFilterInput, setBankFilterInput] = useState(bankName);
+
+  const queryString = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (status !== "ALL") params.set("status", status);
+    if (direction !== "ALL") params.set("direction", direction);
+    if (bankName.trim()) params.set("bankName", bankName.trim());
+    if (take !== "100") params.set("take", take);
+
+    return params.toString();
+  }, [status, direction, bankName, take]);
+
+  useEffect(() => {
+    setBankFilterInput(bankName);
+  }, [bankName]);
+
+  useEffect(() => {
+    async function loadMovements() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const token = getSessionToken();
+        const url = queryString
+          ? `/api/bank/movements?${queryString}`
+          : "/api/bank/movements";
+
+        const res = await fetch(url, {
+          credentials: "include",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        const json = (await res.json()) as ApiResponse<MovementsPayload>;
+
+        if (!res.ok || !json.ok) {
+          throw new Error(json.message || "No se pudieron cargar los movimientos.");
+        }
+
+        setMovements(json.data.movements);
+        setTotal(json.data.total);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al cargar movimientos.");
+      } finally {
+        setLoading(false);
+      }
     }
-  }, []);
 
-  useEffect(() => { load(filters, page); }, [filters, page, load]);
+    void loadMovements();
+  }, [queryString]);
 
-  function applyFilter(patch: Partial<Filters>) {
-    const next = { ...filters, ...patch };
-    setFilters(next);
-    setPage(1);
+  function updateFilter(key: string, value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (!value || value === "ALL" || (key === "take" && value === "100")) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+
+    router.push(`/bank/movements${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    applyFilter({ q: draft.trim() });
+  function applyBankNameFilter() {
+    updateFilter("bankName", bankFilterInput.trim());
   }
 
-  const movements = data?.movements ?? [];
-  const total     = data?.total     ?? 0;
-  const totalPages = data?.totalPages ?? 1;
+  function clearFilters() {
+    setBankFilterInput("");
+    router.push("/bank/movements");
+  }
 
   return (
-    <div style={{
-      minHeight:  "100vh",
-      background: "#E8EEF5",
-      padding:    "40px 24px",
-      fontFamily: "var(--font-body, system-ui, sans-serif)",
-    }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+    <div>
+      <BankTabs />
 
-        {/* ── Header ────────────────────────────────────────────────────────── */}
-        <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-          <div>
-            <h1 style={{
-              fontSize:   "22px",
-              fontWeight: 700,
-              color:      "#0F2A3D",
-              margin:     "0 0 4px",
-              fontFamily: "var(--font-display, system-ui, sans-serif)",
-            }}>
-              Movimientos bancarios
-            </h1>
-            <p style={{ fontSize: "14px", color: "#64748B", margin: 0 }}>
-              {loading ? "Cargando…" : `${total.toLocaleString("es-CL")} movimientos`}
-            </p>
-          </div>
-
-          <a href="/import/bank" style={{
-            display:      "inline-flex",
-            alignItems:   "center",
-            gap:          "6px",
-            height:       "38px",
-            padding:      "0 18px",
-            background:   "#16A34A",
-            color:        "#FFFFFF",
-            borderRadius: "8px",
-            fontSize:     "13px",
-            fontWeight:   600,
-            textDecoration: "none",
-          }}>
-            + Importar cartola
-          </a>
-        </div>
-
-        {/* ── Filtros ────────────────────────────────────────────────────────── */}
-        <div style={{
-          background:   "#FFFFFF",
-          border:       "1px solid #E2E8F0",
-          borderRadius: "10px",
-          padding:      "14px 20px",
-          marginBottom: "16px",
-          display:      "flex",
-          gap:          "12px",
-          flexWrap:     "wrap",
-          alignItems:   "center",
-        }}>
-
-          {/* Búsqueda */}
-          <form onSubmit={handleSearch} style={{ display: "flex", gap: "6px", flex: 1, minWidth: "200px" }}>
-            <input
-              type="text"
-              placeholder="Buscar descripción…"
-              value={draft}
-              onChange={e => setDraft(e.target.value)}
-              style={{
-                flex:         1,
-                height:       "36px",
-                border:       "1px solid #E2E8F0",
-                borderRadius: "6px",
-                padding:      "0 12px",
-                fontSize:     "13px",
-                color:        "#0F2A3D",
-                background:   "#F8FAFC",
-                outline:      "none",
-              }}
-            />
-            <button type="submit" style={{
-              height:       "36px",
-              padding:      "0 14px",
-              background:   "#0F2A3D",
-              color:        "#FFF",
-              border:       "none",
-              borderRadius: "6px",
-              fontSize:     "13px",
-              fontWeight:   600,
-              cursor:       "pointer",
-            }}>
-              Buscar
-            </button>
-          </form>
-
-          {/* Dirección */}
-          <FilterSelect
-            value={filters.direction}
-            onChange={v => applyFilter({ direction: v })}
-            options={[
-              { value: "",        label: "Todas las direcciones" },
-              { value: "INFLOW",  label: "Abonos"  },
-              { value: "OUTFLOW", label: "Cargos"  },
-            ]}
-          />
-
-          {/* Estado */}
-          <FilterSelect
-            value={filters.status}
-            onChange={v => applyFilter({ status: v })}
-            options={[
-              { value: "",         label: "Todos los estados" },
-              { value: "IMPORTED", label: "Importado" },
-              { value: "REVIEWED", label: "Revisado"  },
-              { value: "IGNORED",  label: "Ignorado"  },
-            ]}
-          />
-
-          {/* Limpiar */}
-          {(filters.direction || filters.status || filters.bankName || filters.q) && (
-            <button
-              onClick={() => { setFilters({ direction: "", status: "", bankName: "", q: "" }); setDraft(""); setPage(1); }}
-              style={{
-                height:       "36px",
-                padding:      "0 12px",
-                background:   "transparent",
-                color:        "#64748B",
-                border:       "1px solid #E2E8F0",
-                borderRadius: "6px",
-                fontSize:     "12px",
-                cursor:       "pointer",
-              }}
-            >
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-
-        {/* ── Tabla ──────────────────────────────────────────────────────────── */}
-        <div style={{
-          background:   "#FFFFFF",
-          border:       "1px solid #E2E8F0",
-          borderRadius: "12px",
-          overflow:     "hidden",
-        }}>
-
-          {error && (
-            <div style={{ padding: "20px 24px", color: "#DC2626", fontSize: "13px" }}>{error}</div>
-          )}
-
-          {!error && (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid #E2E8F0", background: "#F8FAFC" }}>
-                    {["Fecha", "Banco", "Descripción", "Monto", "Dirección", "Estado"].map(h => (
-                      <th key={h} style={{
-                        padding:       "11px 16px",
-                        textAlign:     "left",
-                        fontSize:      "11px",
-                        fontWeight:    700,
-                        color:         "#64748B",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                        whiteSpace:    "nowrap",
-                      }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {loading && movements.length === 0 && (
-                    <tr>
-                      <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "#94A3B8", fontSize: "13px" }}>
-                        Cargando…
-                      </td>
-                    </tr>
-                  )}
-
-                  {!loading && movements.length === 0 && (
-                    <tr>
-                      <td colSpan={6} style={{ padding: "48px 24px", textAlign: "center" }}>
-                        <div style={{ fontSize: "32px", marginBottom: "10px" }}>🏦</div>
-                        <p style={{ color: "#64748B", fontSize: "14px", margin: "0 0 4px", fontWeight: 500 }}>
-                          Sin movimientos bancarios
-                        </p>
-                        <p style={{ color: "#94A3B8", fontSize: "12px", margin: 0 }}>
-                          {filters.q || filters.direction || filters.status
-                            ? "No hay resultados para los filtros aplicados."
-                            : "Importa una cartola para comenzar."}
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-
-                  {movements.map(m => {
-                    const dir = DIRECTION_META[m.direction] ?? DIRECTION_META.OUTFLOW;
-                    const st  = STATUS_META[m.status]       ?? STATUS_META.IMPORTED;
-                    return (
-                      <tr key={m.id} style={{
-                        borderBottom: "1px solid #F1F5F9",
-                        opacity:      loading ? 0.5 : 1,
-                        transition:   "opacity 0.1s",
-                      }}>
-                        <td style={{ padding: "11px 16px", color: "#475569", whiteSpace: "nowrap" }}>
-                          {fmtDate(m.occurredAt)}
-                        </td>
-                        <td style={{ padding: "11px 16px", color: "#64748B", whiteSpace: "nowrap" }}>
-                          {m.bankName ?? "—"}
-                        </td>
-                        <td style={{
-                          padding:      "11px 16px",
-                          color:        "#0F2A3D",
-                          maxWidth:     "320px",
-                          overflow:     "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace:   "nowrap",
-                        }}>
-                          {m.description}
-                        </td>
-                        <td style={{
-                          padding:    "11px 16px",
-                          fontWeight: 600,
-                          color:      dir.color,
-                          whiteSpace: "nowrap",
-                        }}>
-                          {m.direction === "INFLOW" ? "+" : "−"}{fmtClp(m.amountClp)}
-                        </td>
-                        <td style={{ padding: "11px 16px" }}>
-                          <span style={{
-                            fontSize:     "11px",
-                            fontWeight:   700,
-                            padding:      "3px 9px",
-                            borderRadius: "6px",
-                            background:   dir.bg,
-                            color:        dir.color,
-                          }}>
-                            {dir.label}
-                          </span>
-                        </td>
-                        <td style={{ padding: "11px 16px" }}>
-                          <span style={{
-                            fontSize:     "11px",
-                            fontWeight:   500,
-                            padding:      "3px 9px",
-                            borderRadius: "6px",
-                            background:   st.bg,
-                            color:        st.color,
-                          }}>
-                            {st.label}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* ── Paginación ────────────────────────────────────────────────── */}
-          {totalPages > 1 && (
-            <div style={{
-              borderTop:      "1px solid #E2E8F0",
-              padding:        "14px 20px",
-              display:        "flex",
-              alignItems:     "center",
-              justifyContent: "space-between",
-              gap:            "12px",
-              flexWrap:       "wrap",
-            }}>
-              <span style={{ fontSize: "12px", color: "#64748B" }}>
-                Página {page} de {totalPages} · {total.toLocaleString("es-CL")} registros
-              </span>
-              <div style={{ display: "flex", gap: "6px" }}>
-                <PageBtn label="← Anterior" disabled={page <= 1}         onClick={() => setPage(p => p - 1)} />
-                <PageBtn label="Siguiente →" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} />
-              </div>
-            </div>
-          )}
-        </div>
-
+      <div style={{ marginBottom: "26px" }}>
+        <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "#0F2A3D" }}>
+          Movimientos bancarios
+        </h1>
+        <p style={{ margin: "6px 0 0", fontSize: "14px", color: "#64748B" }}>
+          Listado persistente de movimientos importados desde cartolas bancarias.
+        </p>
       </div>
+
+      <div
+        className="grid gap-3 md:grid-cols-5"
+        style={{
+          marginBottom: "18px",
+          background: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          borderRadius: "14px",
+          padding: "16px",
+        }}
+      >
+        <div>
+          <Label>Estado</Label>
+          <select
+            value={status}
+            onChange={(event) => updateFilter("status", event.target.value)}
+            style={inputStyle}
+          >
+            <option value="ALL">Todos</option>
+            <option value="IMPORTED">Importado</option>
+            <option value="REVIEW">Revisión</option>
+            <option value="MATCHED">Conciliado</option>
+            <option value="IGNORED">Ignorado</option>
+          </select>
+        </div>
+
+        <div>
+          <Label>Dirección</Label>
+          <select
+            value={direction}
+            onChange={(event) => updateFilter("direction", event.target.value)}
+            style={inputStyle}
+          >
+            <option value="ALL">Todas</option>
+            <option value="INFLOW">Abono</option>
+            <option value="OUTFLOW">Cargo</option>
+          </select>
+        </div>
+
+        <div>
+          <Label>Banco</Label>
+          <input
+            value={bankFilterInput}
+            onChange={(event) => setBankFilterInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") applyBankNameFilter();
+            }}
+            placeholder="Ej: Santander"
+            style={inputStyle}
+          />
+        </div>
+
+        <div>
+          <Label>Límite</Label>
+          <select
+            value={take}
+            onChange={(event) => updateFilter("take", event.target.value)}
+            style={inputStyle}
+          >
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="150">150</option>
+            <option value="250">250</option>
+          </select>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "end", gap: "8px" }}>
+          <button type="button" onClick={applyBankNameFilter} style={buttonPrimary}>
+            Filtrar
+          </button>
+          <button type="button" onClick={clearFilters} style={buttonSecondary}>
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: "12px", fontSize: "13px", color: "#64748B" }}>
+        {loading ? "Cargando..." : `${movements.length} de ${total} movimiento${total !== 1 ? "s" : ""}`}
+      </div>
+
+      {error && (
+        <div
+          style={{
+            marginBottom: "16px",
+            padding: "12px 14px",
+            borderRadius: "12px",
+            background: "rgba(239,68,68,0.08)",
+            border: "1px solid rgba(239,68,68,0.22)",
+            color: "#B91C1C",
+            fontSize: "13px",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      <section
+        style={{
+          background: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          borderRadius: "16px",
+          overflow: "hidden",
+        }}
+      >
+        {loading ? (
+          <div style={{ padding: "36px 20px", color: "#94A3B8", fontSize: "14px" }}>
+            Cargando movimientos bancarios…
+          </div>
+        ) : movements.length === 0 ? (
+          <div style={{ padding: "36px 20px", textAlign: "center", color: "#94A3B8", fontSize: "14px" }}>
+            No hay movimientos bancarios para los filtros seleccionados.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+              <thead>
+                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                  {["Fecha", "Banco", "Descripción", "Monto", "Dirección", "Estado", "Conciliación"].map((col) => (
+                    <th
+                      key={col}
+                      style={{
+                        padding: "12px 16px",
+                        textAlign: "left",
+                        color: "#64748B",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {movements.map((movement) => (
+                  <tr key={movement.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                    <td style={tdStyle}>{formatDate(movement.occurredAt)}</td>
+                    <td style={tdStyle}>{movement.bankName ?? "—"}</td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        maxWidth: "320px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                      title={movement.description}
+                    >
+                      {movement.description}
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        fontWeight: 700,
+                        color: movement.direction === "INFLOW" ? "#15803D" : "#B91C1C",
+                      }}
+                    >
+                      {movement.direction === "INFLOW" ? "+" : "-"}
+                      {formatClp(movement.amountClp)}
+                    </td>
+                    <td style={tdStyle}>{directionLabel(movement.direction)}</td>
+                    <td style={tdStyle}>
+                      <Badge label={statusLabel(movement.status)} tone={movement.status} />
+                    </td>
+                    <td style={tdStyle}>
+                      {movement.matchedPortfolioMovementId ? (
+                        <span style={{ color: "#15803D", fontWeight: 700 }}>
+                          {movement.matchedConfidence !== null
+                            ? `${Math.round(movement.matchedConfidence * 100)}%`
+                            : "Conciliado"}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#94A3B8" }}>Sin match</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-function FilterSelect({ value, onChange, options }: {
-  value:   string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
+function Label({ children }: { children: React.ReactNode }) {
   return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
+    <label
       style={{
-        height:       "36px",
-        border:       "1px solid #E2E8F0",
-        borderRadius: "6px",
-        padding:      "0 12px",
-        fontSize:     "13px",
-        color:        "#0F2A3D",
-        background:   "#F8FAFC",
-        cursor:       "pointer",
-        outline:      "none",
+        display: "block",
+        marginBottom: "6px",
+        color: "#64748B",
+        fontSize: "11px",
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
       }}
     >
-      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
+      {children}
+    </label>
   );
 }
 
-function PageBtn({ label, disabled, onClick }: {
-  label:    string;
-  disabled: boolean;
-  onClick:  () => void;
-}) {
+function Badge({ label, tone }: { label: string; tone: string }) {
+  const color =
+    tone === "MATCHED" ? "#15803D" :
+    tone === "IGNORED" ? "#64748B" :
+    tone === "REVIEW" ? "#B45309" :
+    "#2563EB";
+
+  const background =
+    tone === "MATCHED" ? "#F0FDF4" :
+    tone === "IGNORED" ? "#F1F5F9" :
+    tone === "REVIEW" ? "#FFFBEB" :
+    "#EFF6FF";
+
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
+    <span
       style={{
-        height:       "32px",
-        padding:      "0 14px",
-        background:   disabled ? "#F1F5F9" : "#FFFFFF",
-        color:        disabled ? "#CBD5E1" : "#0F2A3D",
-        border:       "1px solid #E2E8F0",
-        borderRadius: "6px",
-        fontSize:     "12px",
-        fontWeight:   500,
-        cursor:       disabled ? "not-allowed" : "pointer",
+        display: "inline-flex",
+        padding: "4px 9px",
+        borderRadius: "999px",
+        background,
+        color,
+        fontSize: "12px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
       }}
     >
       {label}
-    </button>
+    </span>
   );
 }
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  height: "38px",
+  borderRadius: "10px",
+  border: "1px solid #CBD5E1",
+  background: "#FFFFFF",
+  padding: "0 10px",
+  color: "#0F2A3D",
+  fontSize: "13px",
+  outline: "none",
+};
+
+const buttonPrimary: React.CSSProperties = {
+  height: "38px",
+  padding: "0 14px",
+  borderRadius: "10px",
+  border: "1px solid #0F2A3D",
+  background: "#0F2A3D",
+  color: "#FFFFFF",
+  fontSize: "13px",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const buttonSecondary: React.CSSProperties = {
+  height: "38px",
+  padding: "0 14px",
+  borderRadius: "10px",
+  border: "1px solid #CBD5E1",
+  background: "#FFFFFF",
+  color: "#475569",
+  fontSize: "13px",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "13px 16px",
+  color: "#475569",
+  whiteSpace: "nowrap",
+};
