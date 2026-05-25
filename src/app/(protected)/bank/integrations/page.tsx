@@ -71,6 +71,34 @@ export default function BankIntegrationsPage() {
     void loadConnection();
   }, []);
 
+  async function handleDisconnect() {
+    setConnecting(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const token = getSessionToken();
+
+      const res = await fetch("/api/integrations/binance/disconnect", {
+        method:  "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      const json = await res.json() as { ok: boolean; message: string };
+
+      if (!res.ok || !json.ok) {
+        throw new Error(json.message || "No se pudo desconectar Binance.");
+      }
+
+      setMessage(json.message);
+      await loadConnection();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al desconectar Binance.");
+    } finally {
+      setConnecting(false);
+    }
+  }
+
   async function handleConnect(e: React.FormEvent) {
     e.preventDefault();
 
@@ -215,24 +243,46 @@ export default function BankIntegrationsPage() {
               </p>
             )}
 
-            <button
-              type="submit"
-              disabled={connecting}
-              style={{
-                justifySelf:  "flex-start",
-                padding:      "10px 16px",
-                borderRadius: "10px",
-                border:       "none",
-                background:   "#2563EB",
-                color:        "#FFFFFF",
-                fontSize:     "13px",
-                fontWeight:   700,
-                cursor:       connecting ? "wait" : "pointer",
-                opacity:      connecting ? 0.7 : 1,
-              }}
-            >
-              {connecting ? "Conectando..." : connected ? "Actualizar conexión" : "Conectar Binance"}
-            </button>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <button
+                type="submit"
+                disabled={connecting}
+                style={{
+                  padding:      "10px 16px",
+                  borderRadius: "10px",
+                  border:       "none",
+                  background:   "#2563EB",
+                  color:        "#FFFFFF",
+                  fontSize:     "13px",
+                  fontWeight:   700,
+                  cursor:       connecting ? "wait" : "pointer",
+                  opacity:      connecting ? 0.7 : 1,
+                }}
+              >
+                {connecting ? "Conectando..." : connected ? "Actualizar conexión" : "Conectar Binance"}
+              </button>
+
+              {connection && (
+                <button
+                  type="button"
+                  onClick={handleDisconnect}
+                  disabled={connecting}
+                  style={{
+                    padding:      "10px 16px",
+                    borderRadius: "10px",
+                    border:       "1px solid rgba(239,68,68,0.35)",
+                    background:   "rgba(239,68,68,0.12)",
+                    color:        "#FCA5A5",
+                    fontSize:     "13px",
+                    fontWeight:   700,
+                    cursor:       connecting ? "wait" : "pointer",
+                    opacity:      connecting ? 0.7 : 1,
+                  }}
+                >
+                  Desconectar Binance
+                </button>
+              )}
+            </div>
           </form>
         </div>
       </section>

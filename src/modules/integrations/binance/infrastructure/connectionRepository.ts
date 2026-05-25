@@ -1,6 +1,36 @@
 import { prisma } from "@/lib/prisma";
 import type { BinanceConnection } from "@/modules/integrations/binance/domain/BinanceConnection";
 
+type PrismaConnection = {
+  id:                 string;
+  userId:             string;
+  exchange:           string;
+  apiKeyEncrypted:    string;
+  apiSecretEncrypted: string;
+  status:             string;
+  permissions:        string;
+  lastSyncAt:         Date | null;
+  createdAt:          Date;
+  updatedAt:          Date;
+};
+
+function mapExchangeConnectionToBinanceConnection(
+  c: PrismaConnection,
+): BinanceConnection {
+  return {
+    id:                 c.id,
+    userId:             c.userId,
+    exchange:           "BINANCE",
+    apiKeyEncrypted:    c.apiKeyEncrypted,
+    apiSecretEncrypted: c.apiSecretEncrypted,
+    status:             c.status as BinanceConnection["status"],
+    permissions:        JSON.parse(c.permissions) as string[],
+    lastSyncAt:         c.lastSyncAt,
+    createdAt:          c.createdAt,
+    updatedAt:          c.updatedAt,
+  };
+}
+
 type UpsertBinanceConnectionInput = {
   userId:             string;
   apiKeyEncrypted:    string;
@@ -35,18 +65,7 @@ export async function upsertBinanceConnection(
     },
   });
 
-  return {
-    id:                 connection.id,
-    userId:             connection.userId,
-    exchange:           "BINANCE",
-    apiKeyEncrypted:    connection.apiKeyEncrypted,
-    apiSecretEncrypted: connection.apiSecretEncrypted,
-    status:             connection.status as BinanceConnection["status"],
-    permissions:        JSON.parse(connection.permissions) as string[],
-    lastSyncAt:         connection.lastSyncAt,
-    createdAt:          connection.createdAt,
-    updatedAt:          connection.updatedAt,
-  };
+  return mapExchangeConnectionToBinanceConnection(connection);
 }
 
 export async function findBinanceConnection(
@@ -63,16 +82,37 @@ export async function findBinanceConnection(
 
   if (!connection) return null;
 
-  return {
-    id:                 connection.id,
-    userId:             connection.userId,
-    exchange:           "BINANCE",
-    apiKeyEncrypted:    connection.apiKeyEncrypted,
-    apiSecretEncrypted: connection.apiSecretEncrypted,
-    status:             connection.status as BinanceConnection["status"],
-    permissions:        JSON.parse(connection.permissions) as string[],
-    lastSyncAt:         connection.lastSyncAt,
-    createdAt:          connection.createdAt,
-    updatedAt:          connection.updatedAt,
-  };
+  return mapExchangeConnectionToBinanceConnection(connection);
+}
+
+export async function disconnectBinanceConnection(
+  userId: string,
+): Promise<BinanceConnection | null> {
+  const existing = await prisma.exchangeConnection.findUnique({
+    where: {
+      userId_exchange: {
+        userId,
+        exchange: "BINANCE",
+      },
+    },
+  });
+
+  if (!existing) return null;
+
+  const connection = await prisma.exchangeConnection.update({
+    where: {
+      userId_exchange: {
+        userId,
+        exchange: "BINANCE",
+      },
+    },
+    data: {
+      status:             "DISCONNECTED",
+      apiKeyEncrypted:    "",
+      apiSecretEncrypted: "",
+      permissions:        JSON.stringify([]),
+    },
+  });
+
+  return mapExchangeConnectionToBinanceConnection(connection);
 }
