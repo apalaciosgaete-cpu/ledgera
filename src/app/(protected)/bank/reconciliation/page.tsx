@@ -10,6 +10,10 @@ type Suggestion = {
   portfolioMovementId: string;
   confidence:          number;
   reason:              string;
+  eventType:           string;
+  eventLabel:          string;
+  certainty:           "HIGH" | "MEDIUM" | "LOW";
+  evidence:            string[];
   bank: {
     occurredAt:  string;
     description: string;
@@ -156,6 +160,34 @@ function ConfidenceBadge({ confidence }: { confidence: number | null }) {
       background: bg, color, border: `1px solid ${border}`,
     }}>
       {Math.round(confidence * 100)}%
+    </span>
+  );
+}
+
+// ── Certainty badge ───────────────────────────────────────────────────────────
+function CertaintyBadge({ certainty }: { certainty: "HIGH" | "MEDIUM" | "LOW" }) {
+  const map = {
+    HIGH:   { label: "Alta",  bg: "#DCFCE7", color: "#166534", border: "#BBF7D0" },
+    MEDIUM: { label: "Media", bg: "#FEF3C7", color: "#92400E", border: "#FDE68A" },
+    LOW:    { label: "Baja",  bg: "#FEE2E2", color: "#991B1B", border: "#FECACA" },
+  };
+
+  const s = map[certainty];
+
+  return (
+    <span style={{
+      display: "inline-flex",
+      alignItems: "center",
+      padding: "3px 10px",
+      borderRadius: "20px",
+      fontSize: "12px",
+      fontWeight: 700,
+      background: s.bg,
+      color: s.color,
+      border: `1px solid ${s.border}`,
+      whiteSpace: "nowrap",
+    }}>
+      Certeza {s.label}
     </span>
   );
 }
@@ -724,9 +756,9 @@ export default function ReconciliationPage() {
             onChange={(event) => setMinConfidence(Number(event.target.value))}
             className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
           >
-            <option value="0.4">Confianza mínima 40%</option>
-            <option value="0.6">Confianza mínima 60%</option>
-            <option value="0.85">Confianza mínima 85%</option>
+            <option value="0.4">Certeza flexible</option>
+            <option value="0.6">Certeza operativa</option>
+            <option value="0.85">Certeza alta</option>
           </select>
 
           <select
@@ -792,7 +824,7 @@ export default function ReconciliationPage() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" }}>
-                    {["Banco", "Crypto", "Confidence", "Estado", "Acción"].map((col, i) => (
+                    {["Banco", "Crypto", "Evento", "Estado", "Acción"].map((col, i) => (
                       <th key={col} style={{
                         padding: "12px 16px", textAlign: i === 4 ? "right" : "left",
                         fontWeight: 600, color: "#475569", fontSize: "12px", whiteSpace: "nowrap",
@@ -845,12 +877,16 @@ export default function ReconciliationPage() {
                           </div>
                         </td>
                         <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
-                          <ConfidenceBadge confidence={s.confidence} />
-                          <div style={{
-                            fontSize: "11px", color: "#94A3B8", marginTop: "5px",
-                            maxWidth: "180px", lineHeight: 1.5,
-                          }}>
-                            {s.reason}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "240px" }}>
+                            <div style={{ fontSize: "13px", fontWeight: 700, color: "#0F2A3D" }}>
+                              {s.eventLabel}
+                            </div>
+                            <CertaintyBadge certainty={s.certainty} />
+                            {s.evidence.length > 0 && (
+                              <div style={{ fontSize: "11px", color: "#94A3B8", lineHeight: 1.5 }}>
+                                {s.evidence.slice(0, 3).join(" · ")}
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
