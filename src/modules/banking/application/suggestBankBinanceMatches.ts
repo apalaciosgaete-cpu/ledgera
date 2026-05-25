@@ -129,6 +129,35 @@ export async function suggestBankBinanceMatches(
     take: 50,
   });
 
+  if (bankMovements.length === 0) {
+    return [];
+  }
+
+  const minBankDate = bankMovements.reduce(
+    (min, movement) => movement.occurredAt < min ? movement.occurredAt : min,
+    bankMovements[0].occurredAt,
+  );
+
+  const maxBankDate = bankMovements.reduce(
+    (max, movement) => movement.occurredAt > max ? movement.occurredAt : max,
+    bankMovements[0].occurredAt,
+  );
+
+  const cryptoFrom = addDays(minBankDate, -3);
+  const cryptoTo   = addDays(maxBankDate,  3);
+
+  const cryptoMovements = await prisma.portfolioMovement.findMany({
+    where: {
+      userId,
+      source:     filters.source ? filters.source : { in: ["BINANCE", "BINANCE_TAX"] },
+      type:       filters.type   ? filters.type   : { in: ["BUY", "DEPOSIT"] },
+      executedAt: { gte: cryptoFrom, lte: cryptoTo },
+      deletedAt:  null,
+    },
+    orderBy: { executedAt: "asc" },
+    take: 1000,
+  });
+
   const suggestions: BankMatchSuggestion[] = [];
   const fxCache = new Map<string, number>();
 
@@ -139,22 +168,15 @@ export async function suggestBankBinanceMatches(
       usdClp = await resolveUsdClpRate(bank.occurredAt);
       fxCache.set(dateKey, usdClp);
     }
-    const from   = addDays(bank.occurredAt, -3);
-    const to     = addDays(bank.occurredAt,  3);
 
-    const cryptoMovements = await prisma.portfolioMovement.findMany({
-      where: {
-        userId,
-        source:     filters.source ? filters.source : { in: ["BINANCE", "BINANCE_TAX"] },
-        type:       filters.type   ? filters.type   : { in: ["BUY", "DEPOSIT"] },
-        executedAt: { gte: from, lte: to },
-        deletedAt:  null,
-      },
-      orderBy: { executedAt: "asc" },
-      take: 20,
-    });
+    const from = addDays(bank.occurredAt, -3);
+    const to   = addDays(bank.occurredAt,  3);
 
-    for (const crypto of cryptoMovements) {
+    const nearbyCryptoMovements = cryptoMovements.filter(
+      (crypto) => crypto.executedAt >= from && crypto.executedAt <= to,
+    );
+
+    for (const crypto of nearbyCryptoMovements) {
       const reasons: string[] = [];
 
       const keyword = keywordScore(bank.description);
