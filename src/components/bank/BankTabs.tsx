@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/import/bank",         label: "Importar cartola" },
   { href: "/bank/reconciliation", label: "Conciliación" },
+  { href: "/bank/integrations",   label: "Integraciones" },
 ];
 
 export function BankTabs() {
