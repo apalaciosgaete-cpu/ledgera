@@ -11,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     background_color: "#071520",
-    theme_color: "#0A1F2E",
+    theme_color: "#16A34A",
     orientation: "portrait-primary",
     lang: "es-CL",
     categories: ["finance", "business", "productivity"],
@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icon",
         sizes: "512x512",
         type: "image/png",
-        purpose: "any",
+        purpose: "any maskable",
       },
       {
         src: "/apple-icon",
