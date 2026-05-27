@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { blogArticles } from "@/modules/seo/blogArticles";
 
 const baseUrl = "https://ledgera.cl";
 const title = "Blog LEDGERA | Cripto, impuestos y conciliación en Chile";
 const description =
-  "Guías sobre impuestos crypto en Chile, normativa SII, método FIFO, tipo de cambio BCCh, fiscalización y conciliación financiera.";
+  "Guías sobre impuestos crypto en Chile, revisión tributaria, método FIFO, tipo de cambio, fiscalización y conciliación financiera.";
 
 export const metadata: Metadata = {
   title,
@@ -36,69 +37,6 @@ export const metadata: Metadata = {
     images: [`${baseUrl}/opengraph-image`],
   },
 };
-
-const ARTICLES = [
-  {
-    slug: "como-declarar-criptomonedas-sii-chile",
-    title: "Cómo declarar criptomonedas al SII en Chile: guía completa 2025",
-    summary:
-      "Paso a paso para determinar tu ganancia de capital, aplicar el método FIFO y completar correctamente el Formulario 22 de acuerdo a la normativa vigente.",
-    tag: "Declaración",
-    tagColor: "#16A34A",
-    readTime: "8 min",
-    date: "12 de mayo, 2025",
-  },
-  {
-    slug: "metodo-fifo-criptomonedas-chile",
-    title: "El método FIFO y las criptomonedas: por qué el orden importa en tu declaración",
-    summary:
-      "El SII exige calcular el mayor valor usando el costo de adquisición cronológico. Un error en el orden de tus ventas puede significar pagar de más o de menos.",
-    tag: "Motor FIFO",
-    tagColor: "#7C3AED",
-    readTime: "6 min",
-    date: "28 de abril, 2025",
-  },
-  {
-    slug: "fiscalizacion-sii-criptomonedas",
-    title: "¿Qué pasa si el SII me fiscaliza por mis operaciones cripto?",
-    summary:
-      "El SII puede cruzar información de exchanges con tus declaraciones. Conoce qué documentación pedir, cómo responder y por qué la trazabilidad auditada es tu mejor defensa.",
-    tag: "Fiscalización",
-    tagColor: "#F59E0B",
-    readTime: "7 min",
-    date: "15 de abril, 2025",
-  },
-  {
-    slug: "tipo-cambio-bcch-criptomonedas",
-    title: "Tipo de cambio oficial BCCh para valorizar criptomonedas: todo lo que debes saber",
-    summary:
-      "Para convertir tus operaciones en USD a CLP debes usar el tipo de cambio oficial del Banco Central de Chile. Aprende cuándo y cómo se aplica en tu declaración.",
-    tag: "Normativa",
-    tagColor: "#0EA5E9",
-    readTime: "5 min",
-    date: "5 de abril, 2025",
-  },
-  {
-    slug: "diferencia-persona-natural-empresa-cripto",
-    title: "Persona natural vs. empresa: cómo tributan distinto las criptomonedas en Chile",
-    summary:
-      "Las personas naturales declaran mayor valor como renta ocasional; las empresas bajo primera categoría. La distinción cambia el monto, el formulario y los plazos.",
-    tag: "Normativa",
-    tagColor: "#0EA5E9",
-    readTime: "6 min",
-    date: "20 de marzo, 2025",
-  },
-  {
-    slug: "como-importar-historial-binance-buda",
-    title: "Cómo importar tu historial de Binance, Buda u Orionx a Ledgera",
-    summary:
-      "Descarga tu CSV de operaciones desde los principales exchanges chilenos y conviértelo en un portafolio tributario completo en menos de 5 minutos.",
-    tag: "Tutorial",
-    tagColor: "#16A34A",
-    readTime: "4 min",
-    date: "10 de marzo, 2025",
-  },
-];
 
 export default function BlogPage() {
   return (
@@ -218,18 +156,18 @@ export default function BlogPage() {
             lineHeight: 1.1,
           }}
         >
-          Cripto e impuestos en Chile
+          Cripto, impuestos y conciliación en Chile
         </h1>
         <p
           style={{
             fontSize: "17px",
             color: "#94A3B8",
-            maxWidth: "520px",
+            maxWidth: "620px",
             margin: "0 auto",
             lineHeight: 1.65,
           }}
         >
-          Guías prácticas, normativa SII y criterios para ordenar información crypto antes de una revisión tributaria.
+          Guías prácticas para ordenar información crypto antes de una revisión tributaria: movimientos, banco, exchange, FIFO y trazabilidad.
         </p>
       </section>
 
@@ -241,7 +179,7 @@ export default function BlogPage() {
             gap: "24px",
           }}
         >
-          {ARTICLES.map((article) => (
+          {blogArticles.map((article) => (
             <Link
               key={article.slug}
               href={`/blog/${article.slug}`}
@@ -287,7 +225,7 @@ export default function BlogPage() {
                 {article.summary}
               </p>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748B" }}>
-                <span>{article.date}</span>
+                <span>{article.publishedLabel}</span>
                 <span>{article.readTime}</span>
               </div>
             </Link>
