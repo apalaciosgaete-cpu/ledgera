@@ -6,7 +6,9 @@ import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
 
 const baseUrl = "https://ledgera.cl";
-const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+const googleSiteVerification =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
+  "6Iatkj-oi2CtR-GyTina6GNlkzxObGIs6u115Fl064k";
 const defaultTitle = "LEDGERA | Sistema financiero-tributario para crypto en Chile";
 const defaultDescription =
   "Ordena movimientos crypto, concilia banco y exchange, revisa importaciones y prepara información tributaria trazable para Chile.";
@@ -35,13 +37,9 @@ export const metadata: Metadata = {
   creator: "LEDGERA",
   publisher: "LEDGERA",
   category: "finance",
-  ...(googleSiteVerification
-    ? {
-        verification: {
-          google: googleSiteVerification,
-        },
-      }
-    : {}),
+  verification: {
+    google: googleSiteVerification,
+  },
   alternates: {
     canonical: baseUrl,
   },
