@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
+import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
 
 const baseUrl = "https://ledgera.cl";
 const defaultTitle = "LEDGERA | Sistema financiero-tributario para crypto en Chile";
@@ -117,6 +118,7 @@ export default function RootLayout({
           }}
         />
         <AuthProvider>{children}</AuthProvider>
+        <AnalyticsProviders />
         <CookieBanner />
       </body>
     </html>
