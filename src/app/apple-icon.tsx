@@ -2,6 +2,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
+export const alt = "LEDGERA";
 export const size = {
   width: 180,
   height: 180,
@@ -18,33 +19,15 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #071520 0%, #0A1F2E 55%, #14532D 100%)",
+          background: "#16A34A",
+          borderRadius: "40px",
         }}
       >
-        <div
-          style={{
-            width: 116,
-            height: 116,
-            borderRadius: 34,
-            background: "rgba(255, 255, 255, 0.08)",
-            border: "1px solid rgba(255, 255, 255, 0.18)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 72,
-              lineHeight: 1,
-              fontWeight: 900,
-              color: "#FFFFFF",
-              letterSpacing: "-0.08em",
-            }}
-          >
-            L
-          </div>
-        </div>
+        <svg width="124" height="124" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="10" height="28" rx="2" fill="#FFFFFF" />
+          <rect x="8" y="30" width="22" height="10" rx="2" fill="#FFFFFF" />
+          <rect x="26" y="30" width="10" height="10" rx="2" fill="#F59E0B" />
+        </svg>
       </div>
     ),
     size,
