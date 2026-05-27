@@ -26,23 +26,23 @@ export const seoPages = {
     path: "/impuestos-crypto-chile",
     title: "Impuestos crypto en Chile: ordena tus movimientos antes de declarar",
     description:
-      "Organiza movimientos de Binance, revisa importaciones, concilia banco y exchange, y prepara información financiera clara para impuestos crypto en Chile.",
+      "Organiza movimientos crypto, revisa importaciones, concilia banco y exchange, y prepara información financiera clara para revisar impuestos en Chile.",
     keyword: "impuestos crypto chile",
     eyebrow: "Impuestos crypto Chile",
     h1: "Impuestos crypto en Chile: primero ordena tus movimientos",
     intro:
-      "Antes de pensar en declarar criptomonedas, necesitas entender qué compraste, qué vendiste, qué transferiste y qué movimientos realmente corresponden a crypto. LEDGERA ayuda a ordenar ese historial desde Binance y movimientos bancarios para preparar información clara y trazable.",
-    ctaLabel: "Ordenar mis movimientos crypto",
-    ctaHref: "/login",
+      "Antes de pensar en declarar criptomonedas, necesitas entender qué compraste, qué vendiste, qué transferiste y qué movimientos realmente corresponden a actividad crypto. LEDGERA ayuda a ordenar ese historial desde exchange, banco y registros manuales para preparar información clara y trazable.",
+    ctaLabel: "Crear cuenta gratis",
+    ctaHref: "/register",
     sections: [
       {
         heading: "El problema no parte en el impuesto, parte en el desorden",
         body: [
-          "Muchos usuarios llegan al período tributario con capturas, archivos CSV, movimientos bancarios y registros de Binance que no calzan entre sí.",
+          "Muchos usuarios llegan al período tributario con capturas, archivos CSV, movimientos bancarios y registros de exchange que no calzan entre sí.",
           "El problema real es que una transferencia bancaria, un depósito en exchange y una compra de activos pueden quedar separados en distintas fuentes. Sin conciliación, es difícil saber qué ocurrió realmente.",
         ],
         bullets: [
-          "Movimientos duplicados entre Spot y Tax.",
+          "Movimientos duplicados entre distintas fuentes.",
           "Transferencias bancarias sin contexto.",
           "Compras y ventas mezcladas con retiros o depósitos.",
           "Dificultad para explicar el origen de cada movimiento.",
@@ -52,12 +52,12 @@ export const seoPages = {
         heading: "Cómo ayuda LEDGERA",
         body: [
           "LEDGERA no manda todo directo al portafolio. Primero lleva cada importación a una bandeja de revisión, donde puedes confirmar, rechazar o buscar coincidencias con movimientos bancarios.",
-          "Ese flujo reduce errores y permite construir un portafolio más limpio, con información útil para revisión financiera y tributaria.",
+          "Ese flujo reduce errores operacionales y permite construir un portafolio más limpio, con información útil para revisión financiera y tributaria.",
         ],
         bullets: [
-          "Sincroniza Binance.",
           "Revisa importaciones antes de confirmarlas.",
           "Concilia movimientos bancarios con operaciones crypto.",
+          "Separa datos confirmados de datos pendientes.",
           "Genera una base ordenada para análisis tributario.",
         ],
       },
@@ -79,7 +79,7 @@ export const seoPages = {
         href: "/como-declarar-crypto-en-chile",
       },
       {
-        label: "Conciliación Binance y banco",
+        label: "Conciliación exchange y banco",
         href: "/conciliacion-binance-banco",
       },
     ],
@@ -95,8 +95,8 @@ export const seoPages = {
     h1: "Binance e impuestos en Chile: los registros no bastan si no están ordenados",
     intro:
       "Binance puede entregar historial de operaciones, depósitos y retiros. Pero para entender tu situación financiera necesitas conectar esos datos con tus movimientos bancarios y confirmar qué eventos realmente corresponden a compras, ventas o transferencias.",
-    ctaLabel: "Conectar Binance",
-    ctaHref: "/login",
+    ctaLabel: "Crear cuenta gratis",
+    ctaHref: "/register",
     sections: [
       {
         heading: "El historial de Binance no siempre cuenta toda la historia",
@@ -132,7 +132,7 @@ export const seoPages = {
         href: "/impuestos-crypto-chile",
       },
       {
-        label: "Conciliar Binance con banco",
+        label: "Conciliar exchange con banco",
         href: "/conciliacion-binance-banco",
       },
       {
@@ -146,23 +146,23 @@ export const seoPages = {
     path: "/como-declarar-crypto-en-chile",
     title: "Cómo declarar criptomonedas en Chile: empieza por ordenar tu historial",
     description:
-      "Guía práctica para preparar información crypto antes de declarar: movimientos, Binance, banco, portafolio y trazabilidad.",
+      "Guía práctica para preparar información crypto antes de declarar: movimientos, exchange, banco, portafolio y trazabilidad.",
     keyword: "declarar criptomonedas chile",
     eyebrow: "Guía práctica",
     h1: "Cómo declarar criptomonedas en Chile: primero prepara información confiable",
     intro:
       "Declarar criptomonedas no parte llenando formularios. Parte entendiendo tu historial: compras, ventas, depósitos, retiros, transferencias bancarias y movimientos confirmados.",
-    ctaLabel: "Preparar mi historial crypto",
-    ctaHref: "/login",
+    ctaLabel: "Crear cuenta gratis",
+    ctaHref: "/register",
     sections: [
       {
         heading: "Paso 1: reúne tus fuentes",
         body: [
           "El primer paso es tener las fuentes que explican tu actividad: exchange, banco y registros manuales si corresponde.",
-          "Para muchos usuarios, Binance y la cartola bancaria son las dos piezas principales del rompecabezas.",
+          "Para muchos usuarios, el historial de exchange y la cartola bancaria son las dos piezas principales del rompecabezas.",
         ],
         bullets: [
-          "Historial Binance.",
+          "Historial de exchange.",
           "Movimientos bancarios.",
           "Compras y ventas.",
           "Depósitos y retiros.",
@@ -194,7 +194,7 @@ export const seoPages = {
         href: "/binance-impuestos-chile",
       },
       {
-        label: "Conciliación banco y Binance",
+        label: "Conciliación banco y exchange",
         href: "/conciliacion-binance-banco",
       },
     ],
@@ -202,21 +202,21 @@ export const seoPages = {
 
   conciliacionBinanceBanco: {
     path: "/conciliacion-binance-banco",
-    title: "Conciliación Binance y banco: conecta transferencias con movimientos crypto",
+    title: "Conciliación banco y exchange: conecta transferencias con movimientos crypto",
     description:
-      "Concilia movimientos bancarios con operaciones Binance para entender qué transferencias corresponden a compras, ventas, depósitos o retiros crypto.",
+      "Concilia movimientos bancarios con operaciones de exchange para entender qué transferencias corresponden a compras, ventas, depósitos o retiros crypto.",
     keyword: "conciliación binance banco",
     eyebrow: "Conciliación crypto",
-    h1: "Conciliación Binance y banco: entiende qué pasó con tu dinero",
+    h1: "Conciliación banco y exchange: entiende qué pasó con tu dinero",
     intro:
-      "Para muchos usuarios, el problema no es solo Binance. El problema es conectar una transferencia bancaria con el movimiento crypto correspondiente. LEDGERA ordena ambos lados para ayudarte a encontrar coincidencias revisables.",
-    ctaLabel: "Conciliar banco y Binance",
-    ctaHref: "/login",
+      "Para muchos usuarios, el problema no es solo el exchange. El problema es conectar una transferencia bancaria con el movimiento crypto correspondiente. LEDGERA ordena ambos lados para ayudarte a encontrar coincidencias revisables.",
+    ctaLabel: "Crear cuenta gratis",
+    ctaHref: "/register",
     sections: [
       {
-        heading: "El banco muestra dinero, Binance muestra crypto",
+        heading: "El banco muestra dinero, el exchange muestra crypto",
         body: [
-          "Una cartola bancaria puede mostrar transferencias, cargos o abonos. Binance puede mostrar depósitos, compras o retiros. Si esos mundos no se conectan, la trazabilidad queda incompleta.",
+          "Una cartola bancaria puede mostrar transferencias, cargos o abonos. Un exchange puede mostrar depósitos, compras o retiros. Si esos mundos no se conectan, la trazabilidad queda incompleta.",
           "La conciliación permite revisar si una salida bancaria tiene relación con una compra crypto o si un ingreso puede venir desde un retiro o venta.",
         ],
       },
@@ -261,14 +261,14 @@ export const seoPages = {
     path: "/contador-crypto-chile",
     title: "Contador crypto en Chile: entrega información ordenada y trazable",
     description:
-      "Prepara información clara para tu contador: movimientos Binance, banco, portafolio confirmado y trazabilidad crypto.",
+      "Prepara información clara para tu contador: movimientos crypto, banco, portafolio confirmado y trazabilidad financiera.",
     keyword: "contador crypto chile",
     eyebrow: "Para usuarios y contadores",
     h1: "Contador crypto en Chile: no llegues con archivos desordenados",
     intro:
       "Muchos contadores reciben historiales incompletos, Excel mezclados y movimientos difíciles de explicar. LEDGERA ayuda a transformar importaciones crypto y bancarias en información más clara para revisión profesional.",
-    ctaLabel: "Ordenar información para mi contador",
-    ctaHref: "/login",
+    ctaLabel: "Crear cuenta gratis",
+    ctaHref: "/register",
     sections: [
       {
         heading: "El contador necesita trazabilidad, no solo archivos",
@@ -308,7 +308,7 @@ export const seoPages = {
         href: "/como-declarar-crypto-en-chile",
       },
       {
-        label: "Conciliación banco y Binance",
+        label: "Conciliación banco y exchange",
         href: "/conciliacion-binance-banco",
       },
     ],

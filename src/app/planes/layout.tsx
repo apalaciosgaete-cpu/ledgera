@@ -1,0 +1,45 @@
+// src/app/planes/layout.tsx
+import type { Metadata } from "next";
+
+const baseUrl = "https://ledgera.cl";
+const title = "Planes LEDGERA | Precios para ordenar movimientos crypto en Chile";
+const description =
+  "Compara planes LEDGERA para usuarios, contadores y empresas que necesitan ordenar movimientos crypto, conciliación, portafolio y reportes trazables.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: {
+    canonical: `${baseUrl}/planes`,
+  },
+  openGraph: {
+    title,
+    description,
+    url: `${baseUrl}/planes`,
+    siteName: "LEDGERA",
+    locale: "es_CL",
+    type: "website",
+    images: [
+      {
+        url: `${baseUrl}/opengraph-image`,
+        width: 1200,
+        height: 630,
+        alt: "Planes LEDGERA",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [`${baseUrl}/opengraph-image`],
+  },
+};
+
+export default function PlanesLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
+}
