@@ -37,6 +37,22 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit", "pdf-parse"],
   bundlePagesRouterDependencies: true,
 
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "www.ledgera.cl",
+          },
+        ],
+        destination: "https://ledgera.cl/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {
