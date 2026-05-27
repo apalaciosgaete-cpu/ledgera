@@ -55,6 +55,17 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/googlead48e80d7c2d1421.html",
+          destination: "/google-search-console-verification",
+        },
+      ],
+    };
+  },
+
   async headers() {
     return [
       {
