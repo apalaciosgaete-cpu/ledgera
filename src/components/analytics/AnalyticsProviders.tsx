@@ -56,11 +56,18 @@ export default function AnalyticsProviders() {
 
     refreshConsent();
 
+    const intervalId = window.setInterval(refreshConsent, 1000);
+
     window.addEventListener("storage", refreshConsent);
+    window.addEventListener("focus", refreshConsent);
+    window.addEventListener("visibilitychange", refreshConsent);
     window.addEventListener(CONSENT_EVENT, refreshConsent as EventListener);
 
     return () => {
+      window.clearInterval(intervalId);
       window.removeEventListener("storage", refreshConsent);
+      window.removeEventListener("focus", refreshConsent);
+      window.removeEventListener("visibilitychange", refreshConsent);
       window.removeEventListener(CONSENT_EVENT, refreshConsent as EventListener);
     };
   }, []);
