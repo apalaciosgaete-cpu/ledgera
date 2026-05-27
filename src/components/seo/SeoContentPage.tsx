@@ -2,14 +2,32 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import type { SeoPageContent } from "@/modules/seo/seoPageContent";
+import {
+  JsonLd,
+  buildBreadcrumbList,
+  buildSeoWebPageSchema,
+  seoBaseUrl,
+} from "@/modules/seo/structuredData";
 
 type SeoContentPageProps = {
   content: SeoPageContent;
 };
 
 export default function SeoContentPage({ content }: SeoContentPageProps) {
+  const pageUrl = `${seoBaseUrl}${content.path}`;
+
+  const schema = [
+    buildSeoWebPageSchema(content),
+    buildBreadcrumbList([
+      { name: "Inicio", url: seoBaseUrl },
+      { name: content.h1, url: pageUrl },
+    ]),
+  ];
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
+      <JsonLd data={schema} />
+
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071520]/95 backdrop-blur-md">
         <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-6 md:px-10">
           <Link href="/" aria-label="Inicio LEDGERA">
