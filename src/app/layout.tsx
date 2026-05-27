@@ -13,6 +13,10 @@ const defaultTitle = "LEDGERA | Sistema financiero-tributario para crypto en Chi
 const defaultDescription =
   "Ordena movimientos crypto, concilia banco y exchange, revisa importaciones y prepara información tributaria trazable para Chile.";
 
+function safeJsonLd(data: Record<string, unknown>) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   applicationName: "LEDGERA",
@@ -81,21 +85,49 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${baseUrl}/#organization`,
   name: "LEDGERA",
   url: baseUrl,
   email: "admin@ledgera.cl",
-  logo: `${baseUrl}/logo.png`,
+  logo: `${baseUrl}/icon`,
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "admin@ledgera.cl",
+      areaServed: "CL",
+      availableLanguage: ["es-CL", "es"],
+    },
+  ],
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${baseUrl}/#website`,
+  name: "LEDGERA",
+  url: baseUrl,
+  inLanguage: "es-CL",
+  publisher: {
+    "@id": `${baseUrl}/#organization`,
+  },
+  description: defaultDescription,
 };
 
 const softwareSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  "@id": `${baseUrl}/#software`,
   name: "LEDGERA",
   applicationCategory: "FinanceApplication",
   operatingSystem: "Web",
   url: baseUrl,
   description:
     "Sistema financiero-tributario para ordenar movimientos crypto, banco, portafolio, conciliación y base tributaria en Chile.",
+  inLanguage: "es-CL",
+  publisher: {
+    "@id": `${baseUrl}/#organization`,
+  },
   offers: {
     "@type": "Offer",
     priceCurrency: "CLP",
@@ -114,13 +146,19 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
+            __html: safeJsonLd(organizationSchema),
           }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(softwareSchema),
+            __html: safeJsonLd(websiteSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: safeJsonLd(softwareSchema),
           }}
         />
         <AuthProvider>{children}</AuthProvider>
