@@ -181,7 +181,7 @@ function PlanesContent() {
           justifyContent: "space-between",
         }}
       >
-        <Link href="/bienvenida" style={{ textDecoration: "none" }}>
+        <Link href="/" style={{ textDecoration: "none" }}>
           <Logo variant="light" size="lg" showSubtitle />
         </Link>
 

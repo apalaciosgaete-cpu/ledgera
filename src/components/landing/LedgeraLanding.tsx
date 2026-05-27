@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
@@ -141,7 +141,7 @@ const plans: Plan[] = [
     annual: 149900,
     description: "Para revisar información de clientes",
     highlight: false,
-    cta: "Solicitar acceso",
+    cta: "Contactar a LEDGERA",
     href: CONTACT_HREF,
     features: [
       "Todo lo de Personal",
@@ -159,7 +159,7 @@ const plans: Plan[] = [
     annual: 299900,
     description: "Para operación corporativa",
     highlight: false,
-    cta: "Solicitar acceso",
+    cta: "Hablar con LEDGERA",
     href: CONTACT_HREF,
     features: [
       "Todo lo de Contador",
@@ -252,15 +252,12 @@ function HeroCarousel() {
       />
 
       <div
+        className="grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-8 items-center"
         style={{
           ...containerStyle,
           position: "relative",
           zIndex: 1,
           width: "100%",
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
-          gap: "2rem",
-          alignItems: "center",
         }}
       >
         <div>
@@ -370,8 +367,8 @@ function HeroCarousel() {
               color: "#94A3B8",
             }}
           >
-            Importaciones · Banco · Portafolio · Conciliación · Tributario ·
-            Auditoría
+            Importa tus fuentes, concilia banco y exchange, y prepara una base
+            tributaria trazable para Chile.
           </p>
         </div>
 
@@ -436,10 +433,10 @@ function HeroCarousel() {
 
             <div style={{ display: "grid", gap: "0.75rem", marginTop: "1rem" }}>
               {[
-                ["Importaciones", "Exchange, banco o carga manual"],
-                ["Banco", "Movimientos con posible relación crypto"],
-                ["Portafolio", "Solo movimientos confirmados"],
-                ["Tributario", "Base para revisión en Chile"],
+                ["Importar", "Exchange, banco o carga manual"],
+                ["Revisar", "Bandeja de confirmación antes de confirmar"],
+                ["Conciliar", "Banco y crypto en un solo flujo"],
+                ["Preparar", "Base tributaria trazable para Chile"],
               ].map(([title, text]) => (
                 <div
                   key={title}
@@ -479,11 +476,11 @@ export default function LedgeraLanding() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const visiblePlans = useMemo(() => plans, []);
+  const visiblePlans = plans;
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/portfolio");
+      router.push("/portafolio");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -1071,16 +1068,14 @@ export default function LedgeraLanding() {
       <section style={sectionStyle}>
         <div style={containerStyle}>
           <div
+            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] items-center"
             style={{
               borderRadius: "26px",
               border: "1px solid rgba(255,255,255,0.10)",
               background:
                 "linear-gradient(135deg, rgba(22,163,74,0.16), rgba(15,42,61,0.92))",
               padding: "2rem",
-              display: "grid",
-              gridTemplateColumns: "minmax(0,1fr) auto",
               gap: "1.5rem",
-              alignItems: "center",
             }}
           >
             <div>
@@ -1103,13 +1098,14 @@ export default function LedgeraLanding() {
 
             <Link
               href="/register"
+              className="text-center"
               style={{
+                display: "block",
                 borderRadius: "14px",
                 background: "var(--color-accent)",
                 color: "#FFFFFF",
                 padding: "1rem 1.35rem",
                 fontWeight: 900,
-                whiteSpace: "nowrap",
               }}
             >
               Comenzar ahora
@@ -1144,6 +1140,24 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
+      <section style={{ padding: "1.5rem 1.5rem 0" }}>
+        <div style={{ ...containerStyle, textAlign: "center" }}>
+          <p
+            style={{
+              color: "#475569",
+              fontSize: "0.8rem",
+              lineHeight: 1.6,
+              maxWidth: 760,
+              margin: "0 auto",
+            }}
+          >
+            LEDGERA organiza y prepara información financiera-tributaria. No
+            reemplaza la revisión profesional de un contador ni constituye
+            asesoría tributaria personalizada.
+          </p>
+        </div>
+      </section>
+
       <footer
         style={{
           borderTop: "1px solid rgba(255,255,255,0.08)",
@@ -1152,10 +1166,9 @@ export default function LedgeraLanding() {
         }}
       >
         <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,minmax(150px,1fr))]"
           style={{
             ...containerStyle,
-            display: "grid",
-            gridTemplateColumns: "1.4fr repeat(3, minmax(150px, 1fr))",
             gap: "2rem",
           }}
         >

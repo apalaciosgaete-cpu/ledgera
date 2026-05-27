@@ -30,7 +30,7 @@ export default function QuienesSomosPage() {
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(7,21,32,0.92)", backdropFilter: "blur(16px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 2rem" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/bienvenida" style={{ textDecoration: "none" }}>
+          <Link href="/" style={{ textDecoration: "none" }}>
             <Logo variant="light" size="lg" showSubtitle />
           </Link>
           <nav style={{ display: "flex", alignItems: "center", gap: "4px" }}>
