@@ -2,10 +2,39 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 
+const baseUrl = "https://ledgera.cl";
+const title = "Blog LEDGERA | Cripto, impuestos y conciliación en Chile";
+const description =
+  "Guías sobre impuestos crypto en Chile, normativa SII, método FIFO, tipo de cambio BCCh, fiscalización y conciliación financiera.";
+
 export const metadata: Metadata = {
-  title: "Blog · Ledgera",
-  description:
-    "Artículos sobre tributación de criptomonedas en Chile, normativa SII y cumplimiento fiscal para inversores, contadores y empresas.",
+  title,
+  description,
+  alternates: {
+    canonical: `${baseUrl}/blog`,
+  },
+  openGraph: {
+    title,
+    description,
+    url: `${baseUrl}/blog`,
+    siteName: "LEDGERA",
+    locale: "es_CL",
+    type: "website",
+    images: [
+      {
+        url: `${baseUrl}/opengraph-image`,
+        width: 1200,
+        height: 630,
+        alt: "Blog LEDGERA",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [`${baseUrl}/opengraph-image`],
+  },
 };
 
 const ARTICLES = [
@@ -81,7 +110,6 @@ export default function BlogPage() {
         minHeight: "100vh",
       }}
     >
-      {/* Nav */}
       <nav
         style={{
           position: "sticky",
@@ -98,11 +126,11 @@ export default function BlogPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <Link href="/bienvenida" style={{ textDecoration: "none" }}>
+          <Link href="/" style={{ textDecoration: "none" }} aria-label="Inicio LEDGERA">
             <Logo variant="light" size="lg" showSubtitle />
           </Link>
           <Link
-            href="/bienvenida"
+            href="/"
             style={{
               fontSize: "14px",
               color: "#64748B",
@@ -155,7 +183,6 @@ export default function BlogPage() {
         </div>
       </nav>
 
-      {/* Header */}
       <section
         style={{
           padding: "6rem 2rem 4rem",
@@ -202,11 +229,10 @@ export default function BlogPage() {
             lineHeight: 1.65,
           }}
         >
-          Guías prácticas, normativa SII y consejos para declarar tus criptomonedas correctamente.
+          Guías prácticas, normativa SII y criterios para ordenar información crypto antes de una revisión tributaria.
         </p>
       </section>
 
-      {/* Articles grid */}
       <section style={{ padding: "5rem 2rem", maxWidth: "1100px", margin: "0 auto" }}>
         <div
           style={{
@@ -219,182 +245,55 @@ export default function BlogPage() {
             <Link
               key={article.slug}
               href={`/blog/${article.slug}`}
-              style={{ textDecoration: "none", display: "contents" }}
-            >
-            <article
               style={{
+                display: "block",
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "16px",
-                padding: "2rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0",
-                cursor: "pointer",
-                transition: "border-color 0.15s ease",
+                borderRadius: "18px",
+                padding: "1.5rem",
+                textDecoration: "none",
+                transition: "border-color 0.15s ease, transform 0.15s ease",
               }}
             >
               <div
                 style={{
-                  display: "flex",
+                  display: "inline-flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "1.25rem",
+                  gap: "6px",
+                  background: `${article.tagColor}14`,
+                  border: `1px solid ${article.tagColor}30`,
+                  borderRadius: "100px",
+                  padding: "4px 12px",
+                  marginBottom: "1rem",
                 }}
               >
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: article.tagColor,
-                    background: `${article.tagColor}18`,
-                    border: `1px solid ${article.tagColor}30`,
-                    borderRadius: "100px",
-                    padding: "3px 12px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
+                <span style={{ fontSize: "12px", fontWeight: 700, color: article.tagColor }}>
                   {article.tag}
                 </span>
-                <span style={{ fontSize: "12px", color: "#475569" }}>{article.readTime} de lectura</span>
               </div>
-
               <h2
                 style={{
                   fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-                  fontSize: "18px",
+                  fontSize: "20px",
                   fontWeight: 700,
                   color: "#F1F5F9",
-                  margin: "0 0 12px",
+                  margin: "0 0 0.75rem",
                   lineHeight: 1.3,
-                  flex: 1,
                 }}
               >
                 {article.title}
               </h2>
-
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "#94A3B8",
-                  margin: "0 0 1.5rem",
-                  lineHeight: 1.65,
-                }}
-              >
+              <p style={{ fontSize: "14px", color: "#94A3B8", margin: "0 0 1.25rem", lineHeight: 1.65 }}>
                 {article.summary}
               </p>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginTop: "auto",
-                }}
-              >
-                <span style={{ fontSize: "12px", color: "#475569" }}>{article.date}</span>
-                <span
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#4ADE80",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
-                >
-                  Leer artículo
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3 8h10M9 4l4 4-4 4"
-                      stroke="#4ADE80"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748B" }}>
+                <span>{article.date}</span>
+                <span>{article.readTime}</span>
               </div>
-            </article>
             </Link>
           ))}
         </div>
       </section>
-
-      {/* CTA */}
-      <section
-        style={{
-          background: "#071520",
-          padding: "6rem 2rem",
-          textAlign: "center",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-            fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
-            fontWeight: 700,
-            color: "#F1F5F9",
-            letterSpacing: "-0.03em",
-            margin: "0 0 1rem",
-            lineHeight: 1.1,
-          }}
-        >
-          ¿Listo para declarar sin estrés?
-        </h2>
-        <p
-          style={{
-            fontSize: "17px",
-            color: "#94A3B8",
-            margin: "0 0 2rem",
-            lineHeight: 1.65,
-          }}
-        >
-          Crea tu cuenta gratis y empieza a ordenar tus cripto hoy.
-        </p>
-        <Link
-          href="/register"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "13px 28px",
-            borderRadius: "10px",
-            background: "#16A34A",
-            color: "#ffffff",
-            fontSize: "15px",
-            fontWeight: 700,
-            textDecoration: "none",
-          }}
-        >
-          Comenzar gratis
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M3 8h10M9 4l4 4-4 4"
-              stroke="#ffffff"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
-      </section>
-
-      {/* Footer mínimo */}
-      <footer
-        style={{
-          background: "#040C13",
-          padding: "2rem 2.5rem",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          textAlign: "center",
-        }}
-      >
-        <span style={{ fontSize: "12px", color: "#334155" }}>
-          © {new Date().getFullYear()} Ledgera · Chile
-        </span>
-      </footer>
     </main>
   );
 }
