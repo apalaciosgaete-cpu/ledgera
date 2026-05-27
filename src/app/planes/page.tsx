@@ -1,25 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Suspense,
-  useEffect,
-  useState,
-  type CSSProperties,
-} from "react";
+import { Suspense, useEffect, useState, type CSSProperties } from "react";
 
-import { Logo } from "@/components/brand/Logo";
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
-
 import { BillingPaymentStatusBanner } from "@/components/billing/BillingPaymentStatusBanner";
+import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 
 const WHATSAPP_URL =
   "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
 
+const CONTACT_EMAIL = "admin@ledgera.cl";
+
 type PlanKey = "free" | "personal" | "contador" | "empresa";
-type PaidPlanKey = Exclude<PlanKey, "free">;
-type BillingPlan = "PROFESIONAL" | "EMPRESA";
+type BillingCycle = "monthly" | "annual";
+type CheckoutMode = "free" | "checkout" | "contact";
 
 type Plan = {
   key: PlanKey;
@@ -29,6 +25,7 @@ type Plan = {
   description: string;
   highlight: boolean;
   cta: string;
+  checkoutMode: CheckoutMode;
   features: string[];
   disabled: string[];
   note: string | null;
@@ -51,6 +48,7 @@ const plans: Plan[] = [
     description: "Para explorar la plataforma",
     highlight: false,
     cta: "Crear cuenta gratis",
+    checkoutMode: "free",
     features: [
       "Hasta 25 movimientos",
       "Motor FIFO incluido",
@@ -69,6 +67,7 @@ const plans: Plan[] = [
     description: "Para el inversor individual",
     highlight: true,
     cta: "Empezar ahora",
+    checkoutMode: "checkout",
     features: [
       "Movimientos ilimitados",
       "Motor FIFO automático",
@@ -86,7 +85,8 @@ const plans: Plan[] = [
     annual: 149900,
     description: "Múltiples clientes",
     highlight: false,
-    cta: "Empezar ahora",
+    cta: "Hablar con LEDGERA",
+    checkoutMode: "contact",
     features: [
       "Todo lo de Personal",
       "Hasta 5 clientes incluidos",
@@ -104,7 +104,8 @@ const plans: Plan[] = [
     annual: 299900,
     description: "Para operación corporativa",
     highlight: false,
-    cta: "Empezar ahora",
+    cta: "Contactar ventas",
+    checkoutMode: "contact",
     features: [
       "Todo lo de Contador",
       "Clientes ilimitados",
@@ -113,9 +114,16 @@ const plans: Plan[] = [
       "Soporte dedicado",
     ],
     disabled: [],
-    note: null,
+    note: "Plan recomendado para empresas, oficinas contables y operaciones con revisión previa.",
   },
 ];
+
+const pageStyle: CSSProperties = {
+  fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+  background: "#0A1F2E",
+  color: "#F1F5F9",
+  overflowX: "hidden",
+};
 
 const h2Style: CSSProperties = {
   fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
@@ -125,6 +133,34 @@ const h2Style: CSSProperties = {
   letterSpacing: "-0.03em",
   margin: "0 0 1rem",
   lineHeight: 1.1,
+};
+
+const primaryButtonStyle: CSSProperties = {
+  display: "block",
+  textAlign: "center",
+  padding: "13px 20px",
+  borderRadius: "9px",
+  background: "#16A34A",
+  border: "none",
+  color: "#ffffff",
+  fontSize: "14px",
+  fontWeight: 700,
+  fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+  textDecoration: "none",
+};
+
+const secondaryButtonStyle: CSSProperties = {
+  display: "block",
+  textAlign: "center",
+  padding: "13px 20px",
+  borderRadius: "9px",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.1)",
+  color: "#E2E8F0",
+  fontSize: "14px",
+  fontWeight: 700,
+  fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+  textDecoration: "none",
 };
 
 function formatClp(value: number) {
@@ -137,14 +173,208 @@ function formatClp(value: number) {
   }).format(value);
 }
 
-function resolvePaidPlan(planKey: PaidPlanKey): BillingPlan {
-  return planKey === "empresa" ? "EMPRESA" : "PROFESIONAL";
+function buildContactMailto(plan: Plan, billing: BillingCycle) {
+  const billingLabel = billing === "monthly" ? "mensual" : "anual";
+  const subject = encodeURIComponent(`Consulta plan ${plan.name} LEDGERA`);
+  const body = encodeURIComponent(
+    `Hola, quiero información sobre el plan ${plan.name} en modalidad ${billingLabel}.`,
+  );
+
+  return `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+}
+
+function PlanCard({
+  plan,
+  billing,
+  isAuthenticated,
+}: {
+  plan: Plan;
+  billing: BillingCycle;
+  isAuthenticated: boolean;
+}) {
+  const price = billing === "monthly" ? plan.monthly : plan.annual;
+  const ctaStyle = plan.highlight ? primaryButtonStyle : secondaryButtonStyle;
+
+  return (
+    <div style={{ position: "relative" }}>
+      {plan.highlight && (
+        <div
+          style={{
+            position: "absolute",
+            top: "-22px",
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <span
+            style={{
+              background: "#16A34A",
+              color: "#ffffff",
+              fontSize: "11px",
+              fontWeight: 700,
+              padding: "4px 14px",
+              borderRadius: "100px",
+              whiteSpace: "nowrap",
+              letterSpacing: "0.06em",
+            }}
+          >
+            MÁS POPULAR
+          </span>
+        </div>
+      )}
+
+      <div
+        style={{
+          background: plan.highlight ? "rgba(22,163,74,0.08)" : "rgba(255,255,255,0.03)",
+          border: plan.highlight ? "1px solid rgba(22,163,74,0.35)" : "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "14px",
+          padding: "2rem",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        <div style={{ marginBottom: "1.5rem" }}>
+          <h3
+            style={{
+              fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+              fontSize: "19px",
+              fontWeight: 700,
+              color: "#F1F5F9",
+              margin: "0 0 6px",
+            }}
+          >
+            {plan.name}
+          </h3>
+
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#64748B",
+              margin: "0 0 1.25rem",
+              lineHeight: 1.5,
+            }}
+          >
+            {plan.description}
+          </p>
+
+          <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+            <span
+              style={{
+                fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
+                fontSize: "34px",
+                fontWeight: 700,
+                color: "#F1F5F9",
+                lineHeight: 1,
+              }}
+            >
+              {formatClp(price)}
+            </span>
+
+            {plan.monthly > 0 && (
+              <span style={{ fontSize: "13px", color: "#475569" }}>
+                /{billing === "monthly" ? "mes" : "año"}
+              </span>
+            )}
+          </div>
+
+          {billing === "annual" && plan.annual > 0 && (
+            <p
+              style={{
+                fontSize: "12px",
+                color: "#4ADE80",
+                margin: "6px 0 0",
+                fontWeight: 500,
+              }}
+            >
+              Equivale a {formatClp(Math.round(plan.annual / 12))}/mes · 2 meses gratis
+            </p>
+          )}
+        </div>
+
+        <ul
+          style={{
+            margin: "0 0 1rem",
+            padding: 0,
+            listStyle: "none",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            flex: 1,
+          }}
+        >
+          {plan.features.map((feature) => {
+            const isDisabled = plan.disabled.includes(feature);
+
+            return (
+              <li
+                key={feature}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  fontSize: "14px",
+                  color: isDisabled ? "#334155" : "#94A3B8",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  {isDisabled ? (
+                    <line x1="4" y1="8" x2="12" y2="8" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
+                  ) : (
+                    <>
+                      <circle cx="8" cy="8" r="7" stroke="#16A34A" strokeWidth="1.2" />
+                      <path d="M5 8l2 2 4-4" stroke="#16A34A" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </>
+                  )}
+                </svg>
+
+                {feature}
+              </li>
+            );
+          })}
+        </ul>
+
+        {plan.note && (
+          <p
+            style={{
+              fontSize: "11px",
+              color: "#64748B",
+              margin: "0 0 1.25rem",
+              lineHeight: 1.5,
+              padding: "8px 10px",
+              background: "rgba(255,255,255,0.03)",
+              borderRadius: "7px",
+              border: "1px solid rgba(255,255,255,0.05)",
+            }}
+          >
+            {plan.note}
+          </p>
+        )}
+
+        {plan.checkoutMode === "free" ? (
+          <Link href={isAuthenticated ? "/portafolio" : "/register"} style={secondaryButtonStyle}>
+            {isAuthenticated ? "Ir al panel" : plan.cta}
+          </Link>
+        ) : plan.checkoutMode === "checkout" ? (
+          <BillingCheckoutButton plan="PROFESIONAL" style={ctaStyle}>
+            {plan.cta}
+          </BillingCheckoutButton>
+        ) : (
+          <a href={buildContactMailto(plan, billing)} style={secondaryButtonStyle}>
+            {plan.cta}
+          </a>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function PlanesContent() {
   const { isAuthenticated } = useAuth();
 
-  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const [billing, setBilling] = useState<BillingCycle>("monthly");
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -158,14 +388,7 @@ function PlanesContent() {
   }, []);
 
   return (
-    <main
-      style={{
-        fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-        background: "#0A1F2E",
-        color: "#F1F5F9",
-        overflowX: "hidden",
-      }}
-    >
+    <main style={pageStyle}>
       <nav
         style={{
           position: "sticky",
@@ -198,10 +421,7 @@ function PlanesContent() {
                 style={{
                   fontSize: "14px",
                   fontWeight: isActive ? 600 : 500,
-                  color:
-                    isActive || hoveredNav === item.label
-                      ? "#F1F5F9"
-                      : "#94A3B8",
+                  color: isActive || hoveredNav === item.label ? "#F1F5F9" : "#94A3B8",
                   textDecoration: "none",
                   padding: "8px 14px",
                   borderRadius: "8px",
@@ -218,14 +438,7 @@ function PlanesContent() {
             );
           })}
 
-          <div
-            style={{
-              width: 1,
-              height: 20,
-              background: "rgba(255,255,255,0.1)",
-              margin: "0 8px",
-            }}
-          />
+          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)", margin: "0 8px" }} />
 
           <Link
             href="/login"
@@ -238,8 +451,7 @@ function PlanesContent() {
               textDecoration: "none",
               padding: "8px 14px",
               borderRadius: "8px",
-              background:
-                hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent",
+              background: hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent",
               transition: "all 0.15s ease",
             }}
           >
@@ -268,6 +480,7 @@ function PlanesContent() {
         <button
           className="flex sm:hidden"
           onClick={() => setMobileMenuOpen((value) => !value)}
+          aria-label="Abrir menú de navegación"
           style={{
             background: "transparent",
             border: "1px solid rgba(255,255,255,0.12)",
@@ -279,21 +492,11 @@ function PlanesContent() {
         >
           {mobileMenuOpen ? (
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 4l12 12M16 4L4 16"
-                stroke="#94A3B8"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
+              <path d="M4 4l12 12M16 4L4 16" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           ) : (
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M3 5h14M3 10h14M3 15h14"
-                stroke="#94A3B8"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
+              <path d="M3 5h14M3 10h14M3 15h14" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           )}
         </button>
@@ -330,24 +533,12 @@ function PlanesContent() {
             </Link>
           ))}
 
-          <div
-            style={{
-              height: 1,
-              background: "rgba(255,255,255,0.06)",
-              margin: "6px 0",
-            }}
-          />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
           <Link
             href="/login"
             onClick={() => setMobileMenuOpen(false)}
-            style={{
-              fontSize: "15px",
-              fontWeight: 500,
-              color: "#94A3B8",
-              textDecoration: "none",
-              padding: "10px 0",
-            }}
+            style={{ fontSize: "15px", fontWeight: 500, color: "#94A3B8", textDecoration: "none", padding: "10px 0" }}
           >
             Iniciar sesión
           </Link>
@@ -391,14 +582,7 @@ function PlanesContent() {
             marginBottom: "1.5rem",
           }}
         >
-          <span
-            style={{
-              fontSize: "12px",
-              fontWeight: 700,
-              color: "#4ADE80",
-              letterSpacing: "0.04em",
-            }}
-          >
+          <span style={{ fontSize: "12px", fontWeight: 700, color: "#4ADE80", letterSpacing: "0.04em" }}>
             Planes y precios
           </span>
         </div>
@@ -411,13 +595,12 @@ function PlanesContent() {
           style={{
             fontSize: "17px",
             color: "#94A3B8",
-            maxWidth: "520px",
+            maxWidth: "620px",
             margin: "0 auto 2.5rem",
             lineHeight: 1.65,
           }}
         >
-          Elige el plan que se adapte a tu operación. Puedes pagar con
-          tarjeta, débito o saldo vía Mercado Pago.
+          El plan Personal se activa mediante checkout. Los planes Contador y Empresa se coordinan con LEDGERA para validar volumen, soporte y operación antes de activar el servicio.
         </p>
 
         <div
@@ -447,7 +630,7 @@ function PlanesContent() {
                 transition: "all 0.15s ease",
               }}
             >
-              {option === "monthly" ? "Mensual" : "Anual — 1 mes gratis"}
+              {option === "monthly" ? "Mensual" : "Anual — 2 meses gratis"}
             </button>
           ))}
         </div>
@@ -456,14 +639,7 @@ function PlanesContent() {
       <section style={{ padding: "0 2rem 5rem" }}>
         <BillingPaymentStatusBanner />
 
-        <div
-          style={{
-            maxWidth: "1100px",
-            margin: "0 auto",
-            overflowX: "auto",
-            paddingBottom: "4px",
-          }}
-        >
+        <div style={{ maxWidth: "1100px", margin: "0 auto", overflowX: "auto", paddingBottom: "4px" }}>
           <div
             style={{
               display: "grid",
@@ -474,245 +650,7 @@ function PlanesContent() {
             }}
           >
             {plans.map((plan) => (
-              <div key={plan.key} style={{ position: "relative" }}>
-                {plan.highlight && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "-22px",
-                      left: 0,
-                      right: 0,
-                      display: "flex",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        background: "#16A34A",
-                        color: "#ffffff",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        padding: "4px 14px",
-                        borderRadius: "100px",
-                        whiteSpace: "nowrap",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      MÁS POPULAR
-                    </span>
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    background: plan.highlight
-                      ? "rgba(22,163,74,0.08)"
-                      : "rgba(255,255,255,0.03)",
-                    border: plan.highlight
-                      ? "1px solid rgba(22,163,74,0.35)"
-                      : "1px solid rgba(255,255,255,0.07)",
-                    borderRadius: "14px",
-                    padding: "2rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
-                  }}
-                >
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <h3
-                      style={{
-                        fontFamily:
-                          "var(--font-display, 'Space Grotesk', sans-serif)",
-                        fontSize: "19px",
-                        fontWeight: 700,
-                        color: "#F1F5F9",
-                        margin: "0 0 6px",
-                      }}
-                    >
-                      {plan.name}
-                    </h3>
-
-                    <p
-                      style={{
-                        fontSize: "13px",
-                        color: "#64748B",
-                        margin: "0 0 1.25rem",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {plan.description}
-                    </p>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "baseline",
-                        gap: "4px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily:
-                            "var(--font-display, 'Space Grotesk', sans-serif)",
-                          fontSize: "34px",
-                          fontWeight: 700,
-                          color: "#F1F5F9",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {billing === "monthly"
-                          ? formatClp(plan.monthly)
-                          : formatClp(plan.annual)}
-                      </span>
-
-                      {plan.monthly > 0 && (
-                        <span style={{ fontSize: "13px", color: "#475569" }}>
-                          /{billing === "monthly" ? "mes" : "año"}
-                        </span>
-                      )}
-                    </div>
-
-                    {billing === "annual" && plan.annual > 0 && (
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#4ADE80",
-                          margin: "6px 0 0",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Equivale a {formatClp(Math.round(plan.annual / 12))}/mes
-                      </p>
-                    )}
-                  </div>
-
-                  <ul
-                    style={{
-                      margin: "0 0 1rem",
-                      padding: 0,
-                      listStyle: "none",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "10px",
-                      flex: 1,
-                    }}
-                  >
-                    {plan.features.map((feature) => {
-                      const isDisabled = plan.disabled.includes(feature);
-
-                      return (
-                        <li
-                          key={feature}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            fontSize: "14px",
-                            color: isDisabled ? "#334155" : "#94A3B8",
-                          }}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            style={{ flexShrink: 0 }}
-                          >
-                            {isDisabled ? (
-                              <line
-                                x1="4"
-                                y1="8"
-                                x2="12"
-                                y2="8"
-                                stroke="#334155"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                              />
-                            ) : (
-                              <>
-                                <circle
-                                  cx="8"
-                                  cy="8"
-                                  r="7"
-                                  stroke="#16A34A"
-                                  strokeWidth="1.2"
-                                />
-                                <path
-                                  d="M5 8l2 2 4-4"
-                                  stroke="#16A34A"
-                                  strokeWidth="1.2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </>
-                            )}
-                          </svg>
-
-                          {feature}
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  {plan.note && (
-                    <p
-                      style={{
-                        fontSize: "11px",
-                        color: "#475569",
-                        margin: "0 0 1.25rem",
-                        lineHeight: 1.5,
-                        padding: "8px 10px",
-                        background: "rgba(255,255,255,0.03)",
-                        borderRadius: "7px",
-                        border: "1px solid rgba(255,255,255,0.05)",
-                      }}
-                    >
-                      {plan.note}
-                    </p>
-                  )}
-
-                  {plan.key === "free" ? (
-                    <Link
-                      href={isAuthenticated ? "/portafolio" : "/register"}
-                      style={{
-                        display: "block",
-                        textAlign: "center",
-                        padding: "13px 20px",
-                        borderRadius: "9px",
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "#E2E8F0",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        textDecoration: "none",
-                      }}
-                    >
-                      {isAuthenticated ? "Ir al panel" : plan.cta}
-                    </Link>
-                  ) : (
-                    <BillingCheckoutButton
-                      plan={resolvePaidPlan(plan.key)}
-                      style={{
-                        padding: "13px 20px",
-                        borderRadius: "9px",
-                        background: plan.highlight
-                          ? "#16A34A"
-                          : "rgba(255,255,255,0.06)",
-                        border: plan.highlight
-                          ? "none"
-                          : "1px solid rgba(255,255,255,0.1)",
-                        color: plan.highlight ? "#ffffff" : "#E2E8F0",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        fontFamily:
-                          "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-                      }}
-                    >
-                      {plan.cta}
-                    </BillingCheckoutButton>
-                  )}
-                </div>
-              </div>
+              <PlanCard key={plan.key} plan={plan} billing={billing} isAuthenticated={isAuthenticated} />
             ))}
           </div>
         </div>
@@ -737,15 +675,19 @@ function PlanesContent() {
             {[
               {
                 q: "¿Puedo pagar con tarjeta?",
-                a: "Sí. Mercado Pago permite pagar con tarjetas, débito y otros medios disponibles en su checkout.",
+                a: "Sí. El plan Personal puede activarse mediante Mercado Pago con los medios disponibles en su checkout.",
+              },
+              {
+                q: "¿Por qué Contador y Empresa requieren contacto?",
+                a: "Porque pueden requerir revisión de volumen, cantidad de clientes, soporte, configuración y condiciones operativas antes de activar el servicio.",
+              },
+              {
+                q: "¿El anual realmente incluye 2 meses gratis?",
+                a: "Sí. Los precios anuales equivalen aproximadamente a 10 mensualidades, lo que representa 2 meses sin costo frente al pago mensual por 12 meses.",
               },
               {
                 q: "¿Cuándo se activa el plan?",
-                a: "La activación ocurre cuando el proveedor confirma el pago mediante webhook.",
-              },
-              {
-                q: "¿Puedo cambiar de plan después?",
-                a: "Sí. La gestión avanzada de cambios de plan se implementará sobre el mismo módulo de billing.",
+                a: "En el plan Personal, la activación ocurre cuando el proveedor confirma el pago mediante webhook. En planes comerciales, la activación se coordina con LEDGERA.",
               },
             ].map((item) => (
               <div
@@ -759,8 +701,7 @@ function PlanesContent() {
               >
                 <h3
                   style={{
-                    fontFamily:
-                      "var(--font-display, 'Space Grotesk', sans-serif)",
+                    fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
                     fontSize: "15px",
                     fontWeight: 700,
                     color: "#F1F5F9",
@@ -802,15 +743,7 @@ function PlanesContent() {
                 <Logo variant="light" size="sm" showSubtitle />
               </div>
 
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#475569",
-                  margin: 0,
-                  maxWidth: "260px",
-                  lineHeight: 1.6,
-                }}
-              >
+              <p style={{ fontSize: "13px", color: "#475569", margin: 0, maxWidth: "260px", lineHeight: 1.6 }}>
                 Software tributario especializado en criptomonedas para el mercado chileno.
               </p>
             </div>
@@ -844,13 +777,28 @@ function PlanesContent() {
               </div>
 
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                <p
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "#475569",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    margin: "0 0 12px",
+                  }}
+                >
                   Legal
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Términos y condiciones</Link>
-                  <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de privacidad</Link>
-                  <Link href="/cookies" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de cookies</Link>
+                  <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                    Términos y condiciones
+                  </Link>
+                  <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                    Política de privacidad
+                  </Link>
+                  <Link href="/cookies" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                    Política de cookies
+                  </Link>
                 </div>
               </div>
 
@@ -869,8 +817,8 @@ function PlanesContent() {
                 </p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    admin@ledgera.cl
+                  <a href={`mailto:${CONTACT_EMAIL}`} style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                    {CONTACT_EMAIL}
                   </a>
                   <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
                     WhatsApp soporte
@@ -895,7 +843,7 @@ function PlanesContent() {
             </p>
 
             <p style={{ fontSize: "12px", color: "#334155", margin: 0 }}>
-              Pagos integrados con Mercado Pago.
+              Pagos integrados con Mercado Pago para planes habilitados por checkout.
             </p>
           </div>
         </div>
@@ -904,6 +852,7 @@ function PlanesContent() {
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Volver al inicio"
           style={{
             position: "fixed",
             right: "24px",
