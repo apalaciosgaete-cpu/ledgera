@@ -4,6 +4,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { blogArticles, getBlogArticle } from "@/modules/seo/blogArticles";
+import {
+  JsonLd,
+  buildBlogPostingSchema,
+  buildBreadcrumbList,
+} from "@/modules/seo/structuredData";
 
 const baseUrl = "https://ledgera.cl";
 
@@ -77,6 +82,16 @@ export default async function BlogArticlePage({
 
   if (!article) notFound();
 
+  const articleUrl = `${baseUrl}/blog/${article.slug}`;
+  const schema = [
+    buildBlogPostingSchema(article),
+    buildBreadcrumbList([
+      { name: "Inicio", url: baseUrl },
+      { name: "Blog", url: `${baseUrl}/blog` },
+      { name: article.title, url: articleUrl },
+    ]),
+  ];
+
   return (
     <main
       style={{
@@ -86,6 +101,8 @@ export default async function BlogArticlePage({
         minHeight: "100vh",
       }}
     >
+      <JsonLd data={schema} />
+
       <nav
         style={{
           position: "sticky",
