@@ -245,6 +245,7 @@ function TaxSection() {
   const [loading,  setLoading] = useState(true);
   const [showForm, setShowForm]= useState(false);
   const [saving,   setSaving]  = useState(false);
+  const [testing,  setTesting] = useState(false);
   const [msg,      setMsg]     = useState<{ type: "success"|"error"|"warn"|"info"; text: string } | null>(null);
 
   const loadStatus = useCallback(async () => {
@@ -279,6 +280,18 @@ function TaxSection() {
     }
   }
 
+  async function handleTest() {
+    setTesting(true); setMsg(null);
+    try {
+      await httpClient("/api/integrations/binance/tax/test", { method: "POST", auth: true, body: {} });
+      setMsg({ type: "success", text: "Conexión con Tax API verificada correctamente." });
+    } catch (e) {
+      setMsg({ type: "error", text: isHttpClientError(e) ? e.message : "Error al verificar." });
+    } finally {
+      setTesting(false);
+    }
+  }
+
   return (
     <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "0.75rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -309,6 +322,15 @@ function TaxSection() {
         <p style={{ fontSize: "11px", color: "#94A3B8", margin: "0.75rem 0 0", lineHeight: 1.5 }}>
           Crea una API Key en Binance con permiso <strong style={{ color: "#64748B" }}>Tax Report (Read Only)</strong> y conéctala aquí.
         </p>
+      )}
+
+      {isConnected && (
+        <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid #F1F5F9", display: "flex", justifyContent: "flex-end" }}>
+          <button type="button" onClick={handleTest} disabled={testing}
+            style={{ padding: "5px 12px", borderRadius: "7px", border: "1px solid #E2E8F0", background: "#F8FAFC", color: "#475569", fontSize: "11px", fontWeight: 600, cursor: testing ? "not-allowed" : "pointer", fontFamily: fonts.body, whiteSpace: "nowrap" }}>
+            {testing ? "Verificando..." : "Probar conexión"}
+          </button>
+        </div>
       )}
     </div>
   );

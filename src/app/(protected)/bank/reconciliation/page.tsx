@@ -7,7 +7,7 @@ export default function ReconciliationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/bank/movements");
+    router.replace("/importaciones");
   }, [router]);
 
   return null;

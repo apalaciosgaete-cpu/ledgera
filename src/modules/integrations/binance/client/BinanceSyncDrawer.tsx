@@ -67,6 +67,59 @@ type ImportRecord = {
 
 type ApiResponse<T> = { ok: boolean; message: string; data: T };
 
+type DaySummary = {
+  date: string;
+  day: number;
+  taxImports: number;
+  spotImports: number;
+  portfolioMovements: number;
+  bankMovements: number;
+  matched: number;
+  ignored: number;
+  hasActivity: boolean;
+};
+
+type DailyCalendarData = {
+  year: number;
+  month: number;
+  days: DaySummary[];
+};
+
+type DailySuggestion = {
+  bankMovementId: string;
+  portfolioMovementId: string | null;
+  exchangeExternalId: string;
+  exchangeProvider: string;
+  confidence: number;
+  eventLabel: string;
+  certainty: "HIGH" | "MEDIUM" | "LOW";
+  bank: {
+    occurredAt: string;
+    description: string;
+    amountClp: number;
+    direction: "INFLOW" | "OUTFLOW";
+  };
+  exchange: {
+    occurredAt: string;
+    provider: string;
+    externalId: string;
+    eventType: string;
+    asset: string;
+    quantity: number;
+    priceUsd: number;
+    estimatedUsd: number;
+  };
+};
+
+type DailyDetailsData = {
+  date: string;
+  imports: unknown[];
+  portfolioMovements: unknown[];
+  bankMovements: unknown[];
+  matches: unknown[];
+  suggestions: DailySuggestion[];
+};
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MONTH_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -164,6 +217,92 @@ function MonthPill({ label, period, dots, onClick, syncing, future, lastSynced }
   );
 }
 
+// ── DailyCalendarGrid ─────────────────────────────────────────────────────────
+
+function DailyCalendarGrid({
+  data,
+  selectedDay,
+  onSelectDay,
+}: {
+  data:         DailyCalendarData;
+  selectedDay?: string | null;
+  onSelectDay:  (date: string) => void;
+}) {
+  const firstDay  = new Date(data.year, data.month - 1, 1);
+  const totalDays = new Date(data.year, data.month, 0).getDate();
+
+  const startOffset = (firstDay.getDay() + 6) % 7; // lunes = 0
+  const dayMap = new Map(data.days.map((day) => [day.day, day]));
+
+  const cells: Array<DaySummary | null> = [];
+  for (let i = 0; i < startOffset; i++) cells.push(null);
+  for (let d = 1; d <= totalDays; d++)  cells.push(dayMap.get(d) ?? null);
+
+  const weekdays  = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const monthName = MONTH_NAME[data.month] ?? String(data.month);
+
+  return (
+    <div style={{
+      background: "#FFFFFF", border: "1px solid #E2E8F0",
+      borderRadius: "12px", padding: "14px",
+      display: "flex", flexDirection: "column", gap: "12px",
+    }}>
+      <p style={{ fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: 0, textTransform: "capitalize" }}>
+        {monthName} {data.year}
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "6px" }}>
+        {weekdays.map((wd) => (
+          <div key={wd} style={{ fontSize: "10px", fontWeight: 700, color: "#94A3B8", textAlign: "center", padding: "4px 0" }}>
+            {wd}
+          </div>
+        ))}
+
+        {cells.map((day, index) => {
+          if (!day) return <div key={`empty-${index}`} />;
+
+          const active   = day.hasActivity;
+          const selected = selectedDay === day.date;
+
+          return (
+            <button
+              key={day.date}
+              type="button"
+              disabled={!active}
+              onClick={() => active && onSelectDay(day.date)}
+              style={{
+                minHeight: "74px", borderRadius: "10px",
+                border: selected ? "1px solid #16A34A" : active ? "1px solid #C7D2FE" : "1px solid #E2E8F0",
+                background: selected ? "rgba(22,163,74,0.08)" : active ? "#F8FAFC" : "#FFFFFF",
+                cursor: active ? "pointer" : "default",
+                padding: "8px 6px", display: "flex", flexDirection: "column",
+                alignItems: "center", gap: "4px",
+                opacity: active ? 1 : 0.45, fontFamily: fonts.body,
+              }}
+            >
+              <span style={{ fontSize: "13px", fontWeight: 700, color: active ? "#0F2A3D" : "#94A3B8" }}>
+                {day.day}
+              </span>
+
+              {active && (
+                <div style={{
+                  display: "flex", flexDirection: "column", gap: "2px",
+                  alignItems: "center", fontSize: "9px", lineHeight: 1.2, color: "#64748B",
+                }}>
+                  {day.taxImports > 0    && <span>Tax {day.taxImports}</span>}
+                  {day.spotImports > 0   && <span>Spot {day.spotImports}</span>}
+                  {day.bankMovements > 0 && <span>Banco {day.bankMovements}</span>}
+                  {day.matched > 0       && <span>Match {day.matched}</span>}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main drawer ───────────────────────────────────────────────────────────────
 
 export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
@@ -177,6 +316,11 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
   const [syncingMonth,    setSyncingMonth]    = useState<{ year: number; month: number } | null>(null);
   const [lastSyncedMonth, setLastSyncedMonth] = useState<{ year: number; month: number } | null>(null);
   const [taxConn,         setTaxConn]         = useState<TaxConnectionStatus | null>(null);
+  const [dailyCalendar,   setDailyCalendar]   = useState<DailyCalendarData | null>(null);
+  const [loadingDaily,    setLoadingDaily]    = useState(false);
+  const [selectedDay,     setSelectedDay]     = useState<string | null>(null);
+  const [dailyDetails,    setDailyDetails]    = useState<DailyDetailsData | null>(null);
+  const [loadingDetails,  setLoadingDetails]  = useState(false);
   const [msg,             setMsg]             = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
   const [visibleYear,     setVisibleYear]     = useState(readStoredYear);
 
@@ -234,6 +378,37 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
     }
   }, []);
 
+  const loadDailyCalendar = useCallback(async (year: number, month: number) => {
+    setLoadingDaily(true);
+    try {
+      const res = await httpClient<ApiResponse<DailyCalendarData>>(
+        `/api/integrations/binance/sync/calendar/days?year=${year}&month=${month}`,
+        { auth: true },
+      );
+      setDailyCalendar(res.data);
+    } catch {
+      setDailyCalendar(null);
+    } finally {
+      setLoadingDaily(false);
+    }
+  }, []);
+
+  const loadDailyDetails = useCallback(async (date: string) => {
+    setSelectedDay(date);
+    setLoadingDetails(true);
+    try {
+      const res = await httpClient<ApiResponse<DailyDetailsData>>(
+        `/api/integrations/binance/sync/calendar/day-details?date=${date}`,
+        { auth: true },
+      );
+      setDailyDetails(res.data);
+    } catch {
+      setDailyDetails(null);
+    } finally {
+      setLoadingDetails(false);
+    }
+  }, []);
+
   // ── Effects ───────────────────────────────────────────────────────────────────
 
   useEffect(() => { void loadStatus(); }, [loadStatus]);
@@ -283,11 +458,53 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
     return map;
   }, [allImports, calendar]);
 
+  // ── Reconciliation actions ────────────────────────────────────────────────────
+
+  async function handleConfirmDailySuggestion(s: DailySuggestion) {
+    if (!selectedDay || !s.portfolioMovementId) return;
+
+    try {
+      await httpClient("/api/bank/reconciliation/confirm", {
+        method: "POST",
+        auth: true,
+        body: {
+          bankMovementId:      s.bankMovementId,
+          portfolioMovementId: s.portfolioMovementId,
+          confidence:          s.confidence,
+          reason:              `${s.eventLabel} · ${s.exchange.provider} · ${s.exchange.eventType}`,
+        },
+      });
+
+      await loadDailyDetails(selectedDay);
+      await loadDailyCalendar(dailyCalendar!.year, dailyCalendar!.month);
+    } catch {
+      setMsg({ type: "error", text: "No se pudo confirmar la conciliación." });
+    }
+  }
+
+  async function handleIgnoreDailySuggestion(s: DailySuggestion) {
+    if (!selectedDay) return;
+
+    try {
+      await httpClient("/api/bank/reconciliation/reject", {
+        method: "POST",
+        auth: true,
+        body: { bankMovementId: s.bankMovementId },
+      });
+
+      await loadDailyDetails(selectedDay);
+      await loadDailyCalendar(dailyCalendar!.year, dailyCalendar!.month);
+    } catch {
+      setMsg({ type: "error", text: "No se pudo ignorar la sugerencia." });
+    }
+  }
+
   // ── Sync flow ─────────────────────────────────────────────────────────────────
 
   async function handleClickMonth(year: number, month: number) {
     if (syncingMonth) return;
     keepVisibleYear(year);
+    void loadDailyCalendar(year, month);
     setSyncingMonth({ year, month });
     setLastSyncedMonth(null);
     setMsg(null);
@@ -533,6 +750,105 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
                 })}
               </div>
 
+              {/* Detalle diario */}
+              {loadingDaily && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#94A3B8", fontSize: "12px" }}>
+                  <div style={{
+                    width: "12px", height: "12px",
+                    border: "2px solid #E2E8F0", borderTop: "2px solid #F0B90B",
+                    borderRadius: "50%", animation: "bn-spin 0.8s linear infinite", flexShrink: 0,
+                  }} />
+                  Cargando calendario...
+                </div>
+              )}
+              {dailyCalendar && !loadingDaily && (
+                <DailyCalendarGrid
+                  data={dailyCalendar}
+                  selectedDay={selectedDay}
+                  onSelectDay={loadDailyDetails}
+                />
+              )}
+
+              {/* Panel detalle del día seleccionado */}
+              {loadingDetails && (
+                <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0 }}>
+                  Cargando detalle diario...
+                </p>
+              )}
+
+              {dailyDetails && !loadingDetails && (
+                <div style={{
+                  background: "#FFFFFF", border: "1px solid #E2E8F0",
+                  borderRadius: "10px", padding: "12px",
+                  display: "flex", flexDirection: "column", gap: "10px",
+                }}>
+                  <p style={{ fontSize: "13px", fontWeight: 700, color: "#0F2A3D", margin: 0 }}>
+                    Detalle {dailyDetails.date}
+                  </p>
+
+                  <p style={{ fontSize: "11px", color: "#64748B", margin: 0 }}>
+                    Imports: {dailyDetails.imports.length} · Portfolio: {dailyDetails.portfolioMovements.length} · Banco: {dailyDetails.bankMovements.length} · Candidatos: {dailyDetails.suggestions.length}
+                  </p>
+
+                  {dailyDetails.suggestions.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {dailyDetails.suggestions.map((s) => (
+                        <div
+                          key={`${s.bankMovementId}-${s.exchangeExternalId}`}
+                          style={{
+                            border: "1px solid #E2E8F0", borderRadius: "8px",
+                            padding: "10px", background: "#F8FAFC",
+                          }}
+                        >
+                          <p style={{ fontSize: "12px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>
+                            {s.eventLabel} · {s.certainty}
+                          </p>
+                          <p style={{ fontSize: "11px", color: "#64748B", margin: "0 0 4px" }}>
+                            Banco: {s.bank.description} · CLP {Math.round(s.bank.amountClp).toLocaleString("es-CL")}
+                          </p>
+                          <p style={{ fontSize: "11px", color: "#64748B", margin: 0 }}>
+                            Exchange: {s.exchange.provider} · {s.exchange.eventType} · {s.exchange.quantity} {s.exchange.asset}
+                          </p>
+
+                          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "8px" }}>
+                            <button
+                              type="button"
+                              onClick={() => handleIgnoreDailySuggestion(s)}
+                              style={{
+                                padding: "6px 10px", borderRadius: "7px",
+                                border: "1px solid rgba(239,68,68,0.2)",
+                                background: "rgba(239,68,68,0.06)", color: "#DC2626",
+                                fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body,
+                              }}
+                            >
+                              Ignorar
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={!s.portfolioMovementId}
+                              onClick={() => handleConfirmDailySuggestion(s)}
+                              title={!s.portfolioMovementId ? "Sin movimiento de portafolio asociado" : undefined}
+                              style={{
+                                padding: "6px 10px", borderRadius: "7px",
+                                border: "1px solid rgba(22,163,74,0.2)",
+                                background: s.portfolioMovementId ? "rgba(22,163,74,0.08)" : "#F1F5F9",
+                                color: s.portfolioMovementId ? "#16A34A" : "#94A3B8",
+                                fontSize: "11px", fontWeight: 700,
+                                cursor: s.portfolioMovementId ? "pointer" : "not-allowed",
+                                fontFamily: fonts.body,
+                              }}
+                            >
+                              Confirmar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Leyenda dots */}
               <div style={{ display: "flex", gap: "16px", fontSize: "11px", color: "#94A3B8", alignItems: "center", paddingLeft: "2px" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
@@ -551,13 +867,39 @@ export function BinanceSyncDrawer({ onClose, onSyncComplete }: {
 
               {/* Mensaje resultado de sync */}
               {msg && (
-                <div style={{
-                  fontSize: "12px", lineHeight: 1.6, borderRadius: "8px", padding: "10px 14px",
-                  color:      msg.type === "success" ? "#16A34A"  : msg.type === "error" ? "#DC2626" : "#2563EB",
-                  background: msg.type === "success" ? "rgba(22,163,74,0.06)"    : msg.type === "error" ? "rgba(239,68,68,0.06)"    : "rgba(37,99,235,0.06)",
-                  border:    `1px solid ${msg.type === "success"  ? "rgba(22,163,74,0.2)"    : msg.type === "error" ? "rgba(239,68,68,0.2)"    : "rgba(37,99,235,0.2)"}`,
-                }}>
-                  {msg.text}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{
+                    fontSize: "12px", lineHeight: 1.6, borderRadius: "8px", padding: "10px 14px",
+                    color:      msg.type === "success" ? "#16A34A"  : msg.type === "error" ? "#DC2626" : "#2563EB",
+                    background: msg.type === "success" ? "rgba(22,163,74,0.06)"    : msg.type === "error" ? "rgba(239,68,68,0.06)"    : "rgba(37,99,235,0.06)",
+                    border:    `1px solid ${msg.type === "success"  ? "rgba(22,163,74,0.2)"    : msg.type === "error" ? "rgba(239,68,68,0.2)"    : "rgba(37,99,235,0.2)"}`,
+                  }}>
+                    {msg.text}
+                  </div>
+                  {msg.type === "success" && (
+                    <a
+                      href="/importaciones"
+                      style={{
+                        display:         "inline-flex",
+                        alignItems:      "center",
+                        justifyContent:  "center",
+                        gap:             "6px",
+                        padding:         "8px 16px",
+                        borderRadius:    "8px",
+                        background:      "#16A34A",
+                        color:           "#ffffff",
+                        fontSize:        "13px",
+                        fontWeight:      600,
+                        fontFamily:      fonts.body,
+                        textDecoration:  "none",
+                        transition:      "background 0.15s",
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "#15803D"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "#16A34A"; }}
+                    >
+                      Revisar en Importaciones →
+                    </a>
+                  )}
                 </div>
               )}
 

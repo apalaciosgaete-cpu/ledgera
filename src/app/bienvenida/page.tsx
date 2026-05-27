@@ -1,6 +1,6 @@
 // src/app/bienvenida/page.tsx
-import { permanentRedirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export default function BienvenidaPage() {
-  permanentRedirect("/");
+  redirect("/");
 }

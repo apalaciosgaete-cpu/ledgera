@@ -4,7 +4,10 @@ type BankReconciliationAuditAction =
   | "MATCH_CONFIRMED"
   | "MATCH_REJECTED"
   | "MATCH_UNMATCHED"
-  | "AUTO_MATCHED";
+  | "AUTO_MATCHED"
+  | "STAGING_IGNORED"
+  | "STAGING_REVIEW"
+  | "BANK_IMPORT_REJECTED";
 
 type LogBankReconciliationAuditInput = {
   userId:               string;

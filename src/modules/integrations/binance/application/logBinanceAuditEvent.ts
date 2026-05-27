@@ -10,6 +10,7 @@ export type BinanceAuditAction = Extract<
   | "BINANCE_CONNECTED"
   | "BINANCE_CONNECTION_TESTED"
   | "BINANCE_TAX_CONNECTED"
+  | "BINANCE_TAX_CONNECTION_TESTED"
   | "BINANCE_SYNC_STARTED"
   | "BINANCE_SYNC_COMPLETED"
   | "BINANCE_SYNC_FAILED"
@@ -49,6 +50,17 @@ export type BinanceAuditMetadata = {
   skipped?:        number;
   errors?:         number;
   periodResults?:  Array<{ year: number; month: number; imported: number; status: string }>;
+  // Staging group fields
+  reason?:         string;
+  rejectedCount?:  number;
+  totalInGroup?:   number;
+  providers?:      string[];
+  // Decision traceability
+  decisionHash?:   string;
+  source?:         string;
+  beforeStatus?:   string;
+  afterStatus?:    string;
+  recordIds?:      string[];
 };
 
 export async function logBinanceAuditEvent(

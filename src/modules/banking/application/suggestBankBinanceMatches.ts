@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { BankMatchSuggestion } from "../domain/bankMatchingTypes";
 import { resolveUsdClpRate } from "@/modules/market/infrastructure/exchangeRate";
 import { classifyFinancialEvent } from "./classifyFinancialEvent";
+import { getExchangeFinancialEvents } from "@/modules/integrations/binance/application/getExchangeFinancialEvents";
 
 const KEYWORDS = ["BINANCE", "P2P", "CRYPTO", "BIFROST"];
 
@@ -16,6 +17,16 @@ function daysDiff(a: Date, b: Date): number {
   return ms / (1000 * 60 * 60 * 24);
 }
 
+function exchangeEventToCryptoType(eventType: string): string {
+  if (eventType === "SPOT_BUY")          return "BUY";
+  if (eventType === "SPOT_SELL")         return "SELL";
+  if (eventType === "EXTERNAL_DEPOSIT")  return "DEPOSIT";
+  if (eventType === "EXTERNAL_WITHDRAW") return "WITHDRAWAL";
+  if (eventType === "P2P")               return "P2P";
+  if (eventType === "INTERNAL_TRANSFER") return "TRANSFER";
+  return "UNKNOWN";
+}
+
 function keywordScore(description: string): { score: number; reason?: string } {
   const upper = description.toUpperCase();
   const found = KEYWORDS.find((keyword) => upper.includes(keyword));
@@ -28,22 +39,20 @@ function keywordScore(description: string): { score: number; reason?: string } {
   };
 }
 
-function dateScore(bankDate: Date, cryptoDate: Date): { score: number; reason: string } {
-  const diff = daysDiff(bankDate, cryptoDate);
+function dateScore(bankDate: Date, eventDate: Date): { score: number; reason: string } {
+  const diff = daysDiff(bankDate, eventDate);
 
-  if (diff <= 1) {
-    return { score: 0.3, reason: "Fecha dentro de ±1 día" };
-  }
-
-  if (diff <= 3) {
-    return { score: 0.2, reason: "Fecha dentro de ±3 días" };
-  }
+  if (diff <= 1) return { score: 0.3, reason: "Fecha dentro de ±1 día" };
+  if (diff <= 3) return { score: 0.2, reason: "Fecha dentro de ±3 días" };
 
   return { score: 0, reason: "Fecha fuera de rango" };
 }
 
 function typeScore(type: string): { score: number; reason?: string } {
-  if (type === "BUY" || type === "DEPOSIT") {
+  if (type === "BUY" || type === "DEPOSIT" || type === "P2P") {
+    return { score: 0.1, reason: `Movimiento crypto tipo ${type}` };
+  }
+  if (type === "SELL" || type === "WITHDRAWAL" || type === "TRANSFER") {
     return { score: 0.1, reason: `Movimiento crypto tipo ${type}` };
   }
 
@@ -52,11 +61,11 @@ function typeScore(type: string): { score: number; reason?: string } {
 
 function amountDiffPct(
   bankAmountClp: number,
-  cryptoQuantity: number,
-  cryptoPriceUsd: number,
+  quantity: number,
+  priceUsd: number,
   usdClp: number,
 ): number | null {
-  const estimatedClp = cryptoQuantity * cryptoPriceUsd * usdClp;
+  const estimatedClp = quantity * priceUsd * usdClp;
 
   if (!Number.isFinite(estimatedClp) || estimatedClp <= 0 || bankAmountClp <= 0) {
     return null;
@@ -67,18 +76,17 @@ function amountDiffPct(
 
 function amountScore(
   bankAmountClp: number,
-  cryptoQuantity: number,
-  cryptoPriceUsd: number,
+  quantity: number,
+  priceUsd: number,
   usdClp: number,
 ): { score: number; reason?: string } {
-  const estimatedClp = cryptoQuantity * cryptoPriceUsd * usdClp;
+  const estimatedClp = quantity * priceUsd * usdClp;
 
   if (!Number.isFinite(estimatedClp) || estimatedClp <= 0 || bankAmountClp <= 0) {
     return { score: 0 };
   }
 
-  const diffPct = Math.abs(bankAmountClp - estimatedClp) / bankAmountClp;
-
+  const diffPct          = Math.abs(bankAmountClp - estimatedClp) / bankAmountClp;
   const diffRounded      = Math.round(diffPct * 100);
   const estimatedRounded = Math.round(estimatedClp);
   const usdClpRounded    = Math.round(usdClp);
@@ -111,6 +119,8 @@ export type MatchFilters = {
   minConfidence?: number;
   source?:        string;
   type?:          string;
+  from?:          Date;
+  to?:            Date;
 };
 
 export async function suggestBankBinanceMatches(
@@ -124,6 +134,9 @@ export async function suggestBankBinanceMatches(
       userId,
       direction: "OUTFLOW",
       status: { in: ["IMPORTED", "REVIEW"] },
+      occurredAt: filters.from && filters.to
+        ? { gte: filters.from, lt: filters.to }
+        : undefined,
     },
     orderBy: { occurredAt: "desc" },
     take: 50,
@@ -134,28 +147,25 @@ export async function suggestBankBinanceMatches(
   }
 
   const minBankDate = bankMovements.reduce(
-    (min, movement) => movement.occurredAt < min ? movement.occurredAt : min,
+    (min, m) => m.occurredAt < min ? m.occurredAt : min,
     bankMovements[0].occurredAt,
   );
 
   const maxBankDate = bankMovements.reduce(
-    (max, movement) => movement.occurredAt > max ? movement.occurredAt : max,
+    (max, m) => m.occurredAt > max ? m.occurredAt : max,
     bankMovements[0].occurredAt,
   );
 
   const cryptoFrom = addDays(minBankDate, -3);
   const cryptoTo   = addDays(maxBankDate,  3);
 
-  const cryptoMovements = await prisma.portfolioMovement.findMany({
-    where: {
-      userId,
-      source:     filters.source ? filters.source : { in: ["BINANCE", "BINANCE_TAX"] },
-      type:       filters.type   ? filters.type   : { in: ["BUY", "DEPOSIT"] },
-      executedAt: { gte: cryptoFrom, lte: cryptoTo },
-      deletedAt:  null,
-    },
-    orderBy: { executedAt: "asc" },
-    take: 1000,
+  const exchangeEvents = await getExchangeFinancialEvents({
+    userId,
+    from:      cryptoFrom,
+    to:        cryptoTo,
+    providers: filters.source && filters.source !== "ALL"
+      ? [filters.source]
+      : ["BINANCE", "BINANCE_TAX"],
   });
 
   const suggestions: BankMatchSuggestion[] = [];
@@ -172,23 +182,25 @@ export async function suggestBankBinanceMatches(
     const from = addDays(bank.occurredAt, -3);
     const to   = addDays(bank.occurredAt,  3);
 
-    const nearbyCryptoMovements = cryptoMovements.filter(
-      (crypto) => crypto.executedAt >= from && crypto.executedAt <= to,
+    const nearbyEvents = exchangeEvents.filter(
+      (event) => event.occurredAt >= from && event.occurredAt <= to,
     );
 
-    for (const crypto of nearbyCryptoMovements) {
+    for (const event of nearbyEvents) {
+      const cryptoType = exchangeEventToCryptoType(event.eventType);
+
       const reasons: string[] = [];
 
       const keyword = keywordScore(bank.description);
       if (keyword.reason) reasons.push(keyword.reason);
 
-      const date = dateScore(bank.occurredAt, crypto.executedAt);
+      const date = dateScore(bank.occurredAt, event.occurredAt);
       if (date.score > 0) reasons.push(date.reason);
 
-      const type = typeScore(crypto.type);
+      const type = typeScore(cryptoType);
       if (type.reason) reasons.push(type.reason);
 
-      const amount = amountScore(bank.amountClp, crypto.quantity, crypto.priceUsd, usdClp);
+      const amount = amountScore(bank.amountClp, event.quantity, event.priceUsd, usdClp);
       if (amount.reason) reasons.push(amount.reason);
 
       const confidence = Math.min(
@@ -200,16 +212,18 @@ export async function suggestBankBinanceMatches(
         bankDescription: bank.description,
         bankDirection:   bank.direction as "INFLOW" | "OUTFLOW",
         bankAmountClp:   bank.amountClp,
-        cryptoType:      crypto.type,
-        cryptoSource:    crypto.source,
-        amountDiffPct:   amountDiffPct(bank.amountClp, crypto.quantity, crypto.priceUsd, usdClp),
-        dateDiffDays:    daysDiff(bank.occurredAt, crypto.executedAt),
+        cryptoType,
+        cryptoSource:    event.provider,
+        amountDiffPct:   amountDiffPct(bank.amountClp, event.quantity, event.priceUsd, usdClp),
+        dateDiffDays:    daysDiff(bank.occurredAt, event.occurredAt),
       });
 
       if (confidence >= minConfidence) {
         suggestions.push({
           bankMovementId:      bank.id,
-          portfolioMovementId: crypto.id,
+          portfolioMovementId: event.portfolioMovementId,
+          exchangeExternalId:  event.externalId,
+          exchangeProvider:    event.provider,
           confidence,
           reason:     reasons.join(" · "),
           eventType:  financialEvent.eventType,
@@ -220,14 +234,20 @@ export async function suggestBankBinanceMatches(
             occurredAt:  bank.occurredAt.toISOString(),
             description: bank.description,
             amountClp:   bank.amountClp,
+            direction:   bank.direction as "INFLOW" | "OUTFLOW",
           },
-          crypto: {
-            occurredAt: crypto.executedAt.toISOString(),
-            type:       crypto.type,
-            symbol:     crypto.symbol,
-            quantity:   crypto.quantity,
-            priceUsd:   crypto.priceUsd,
-            source:     crypto.source,
+          exchange: {
+            occurredAt:      event.occurredAt.toISOString(),
+            provider:        event.provider,
+            externalId:      event.externalId,
+            eventType:       event.eventType,
+            asset:           event.asset,
+            quantity:        event.quantity,
+            priceUsd:        event.priceUsd,
+            estimatedUsd:    event.estimatedUsd,
+            taxTreatment:    event.taxTreatment,
+            inventoryEffect: event.inventoryEffect,
+            economicEffect:  event.economicEffect,
           },
         });
       }

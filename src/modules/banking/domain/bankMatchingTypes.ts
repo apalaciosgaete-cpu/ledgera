@@ -5,7 +5,15 @@ import type {
 
 export type BankMatchSuggestion = {
   bankMovementId: string;
-  portfolioMovementId: string;
+
+  /**
+   * Puede ser null si el evento exchange aún no generó PortfolioMovement.
+   */
+  portfolioMovementId: string | null;
+
+  exchangeExternalId: string;
+  exchangeProvider: string;
+
   confidence: number;
   reason: string;
 
@@ -18,14 +26,20 @@ export type BankMatchSuggestion = {
     occurredAt: string;
     description: string;
     amountClp: number;
+    direction: "INFLOW" | "OUTFLOW";
   };
 
-  crypto: {
+  exchange: {
     occurredAt: string;
-    type: string;
-    symbol: string;
+    provider: string;
+    externalId: string;
+    eventType: string;
+    asset: string;
     quantity: number;
     priceUsd: number;
-    source: string | null;
+    estimatedUsd: number;
+    taxTreatment: string | null;
+    inventoryEffect: string | null;
+    economicEffect: string | null;
   };
 };

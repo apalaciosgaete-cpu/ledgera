@@ -22,9 +22,6 @@ import {
 } from "@/modules/integrations/binance/infrastructure/exchangeSyncPeriodRepository";
 import { prisma } from "@/lib/prisma";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
-import { autoConfirmImports } from "@/modules/integrations/binance/application/autoConfirmImports";
-import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
-import { generateAnnualTaxSummary } from "@/modules/tax/application/generateAnnualTaxSummary";
 
 const MONTH_ES = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
@@ -193,44 +190,21 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    // ── Auto-confirmación de eventos seguros ──────────────────────────
-    // Corre siempre: puede haber PENDING de ciclos anteriores sin procesar.
-    let autoConfirm = { confirmed: 0, skippedReview: 0, errors: [] as string[] };
-    let taxRebuilt  = false;
-
-    try {
-      autoConfirm = await autoConfirmImports(auth.user.id);
-
-      if (autoConfirm.confirmed > 0) {
-        const rebuild = await rebuildTaxEvents(auth.user.id);
-        taxRebuilt = rebuild.ok;
-        if (taxRebuilt) {
-          await generateAnnualTaxSummary(auth.user.id);
-        }
-      }
-    } catch (autoErr) {
-      console.error("[sync] auto-confirm error:", autoErr);
-      autoConfirm.errors.push(
-        autoErr instanceof Error ? autoErr.message : "Error en auto-confirmación",
-      );
-    }
-
-    const combinedErrors = [...allErrors, ...autoConfirm.errors];
-    const hasErrors      = combinedErrors.length > 0;
-    const periodLabel    = periodLabels.join(", ");
+    const hasErrors   = allErrors.length > 0;
+    const periodLabel = periodLabels.join(", ");
 
     const message = hasErrors
-      ? `Sincronización parcial (${periodLabel}): ${totalImported} descargados, ${autoConfirm.confirmed} confirmados, ${combinedErrors.length} errores.`
-      : `Sincronización completa (${periodLabel}): ${totalImported} descargados, ${autoConfirm.confirmed} confirmados automáticamente${autoConfirm.skippedReview > 0 ? `, ${autoConfirm.skippedReview} en revisión manual` : ""}.`;
+      ? `Sincronización parcial (${periodLabel}): ${totalImported} importados, ${totalSkipped} omitidos, ${allErrors.length} errores. Revisa en Importaciones.`
+      : `Sincronización completa (${periodLabel}): ${totalImported} importados, ${totalSkipped} omitidos. Revisa en Importaciones.`;
 
     return ok(
       {
-        imported:        totalImported,
-        skipped:         totalSkipped,
-        autoConfirmed:   autoConfirm.confirmed,
-        pendingReview:   autoConfirm.skippedReview,
-        errors:          combinedErrors,
-        taxRebuilt,
+        imported:         totalImported,
+        skipped:          totalSkipped,
+        autoConfirmed:    0,
+        pendingReview:    totalImported,
+        errors:           allErrors,
+        taxRebuilt:       false,
         periodResults,
         allPeriodsSynced: false,
       },

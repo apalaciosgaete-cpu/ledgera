@@ -112,12 +112,12 @@ export default function BankPage() {
                 icon="📥"
               />
               <QuickLink
-                href="/bank/reconciliation"
-                label="Conciliación"
+                href="/importaciones"
+                label="Importaciones"
                 description={summary.pending > 0
-                  ? `${summary.pending} movimiento${summary.pending !== 1 ? "s" : ""} pendiente${summary.pending !== 1 ? "s" : ""} de revisar.`
-                  : "Sin pendientes por ahora."}
-                icon="🔗"
+                  ? `${summary.pending} movimiento${summary.pending !== 1 ? "s" : ""} pendiente${summary.pending !== 1 ? "s" : ""} por revisar.`
+                  : "Confirma, rechaza o concilia tus importaciones."}
+                icon="📋"
               />
             </div>
 

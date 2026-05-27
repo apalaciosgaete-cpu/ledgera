@@ -15,8 +15,9 @@ import type { NormalizedImportRecord } from "@/modules/integrations/binance/doma
 import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/application/fetchHistoricalCryptoPrice";
 
 type ConfirmBody = {
-  action:   "CONFIRM" | "REJECT" | "REVIEW";
-  recordId: string;
+  action:       "CONFIRM" | "REJECT" | "REVIEW";
+  recordId:     string;
+  duplicateIds?: string[];  // other records in same staging group — linked to same PortfolioMovement
   override?: {
     movementType?: "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
     priceUsd?:     number;
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as ConfirmBody;
-    const { action, recordId, override } = body;
+    const { action, recordId, duplicateIds = [], override } = body;
 
     if (!recordId) return fail("recordId es obligatorio.", 400);
     if (action !== "CONFIRM" && action !== "REJECT" && action !== "REVIEW") {
@@ -60,6 +61,13 @@ export async function POST(request: NextRequest) {
     // ── REJECT ────────────────────────────────────────────────────────────
     if (action === "REJECT") {
       await rejectImport(recordId, auth.user.id);
+      // Reject all duplicates in the same staging group
+      for (const dupId of duplicateIds) {
+        const dup = await prisma.exchangeImportRecord.findFirst({
+          where: { id: dupId, userId: auth.user.id, status: { notIn: ["CONFIRMED"] } },
+        });
+        if (dup) await rejectImport(dupId, auth.user.id);
+      }
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_REJECTED", auth.user.id, auth.user.email, {
         provider:       record.provider as "BINANCE" | "BINANCE_TAX",
         status:         "SUCCESS",
@@ -67,7 +75,7 @@ export async function POST(request: NextRequest) {
         externalId:     record.externalId,
         externalType:   record.externalType,
       });
-      return ok({ recordId, status: "REJECTED" }, "Registro rechazado.");
+      return ok({ recordId, status: "REJECTED", rejectedDuplicates: duplicateIds.length }, "Registro rechazado.");
     }
 
     // ── CONFIRM ───────────────────────────────────────────────────────────
@@ -113,6 +121,10 @@ export async function POST(request: NextRequest) {
         },
       });
       await confirmImport(recordId, auth.user.id, transferMovement.id);
+      // Link duplicates (other sources of same event) to the same PortfolioMovement
+      for (const dupId of duplicateIds) {
+        await confirmImport(dupId, auth.user.id, transferMovement.id);
+      }
       await logBinanceAuditEvent(request, "BINANCE_IMPORT_CONFIRMED", auth.user.id, auth.user.email, {
         provider:       record.provider as "BINANCE" | "BINANCE_TAX",
         status:         "SUCCESS",
@@ -120,7 +132,7 @@ export async function POST(request: NextRequest) {
         externalId:     record.externalId,
         externalType:   record.externalType,
       });
-      return ok({ recordId, status: "CONFIRMED", movementId: transferMovement.id }, "Registro confirmado (trazabilidad patrimonial).");
+      return ok({ recordId, status: "CONFIRMED", movementId: transferMovement.id, linkedDuplicates: duplicateIds.length }, "Registro confirmado (trazabilidad patrimonial).");
     }
 
     // BUY/SELL: verificar período abierto
@@ -156,6 +168,10 @@ export async function POST(request: NextRequest) {
     });
 
     await confirmImport(recordId, auth.user.id, movement.id);
+    // Link duplicates (other sources of same event) to the same PortfolioMovement
+    for (const dupId of duplicateIds) {
+      await confirmImport(dupId, auth.user.id, movement.id);
+    }
 
     const rebuild = await rebuildTaxEvents(auth.user.id);
     if (!rebuild.ok) {
@@ -172,7 +188,7 @@ export async function POST(request: NextRequest) {
     });
 
     return ok(
-      { recordId, status: "CONFIRMED", movementId: movement.id, taxEventsRebuilt: true },
+      { recordId, status: "CONFIRMED", movementId: movement.id, linkedDuplicates: duplicateIds.length, taxEventsRebuilt: true },
       "Movimiento creado y eventos tributarios reconstruidos.",
       201,
     );

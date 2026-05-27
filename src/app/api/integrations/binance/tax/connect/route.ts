@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
-import { encryptSecret } from "@/modules/security/application/encryption";
+import { decryptSecret, encryptSecret } from "@/modules/security/application/encryption";
 import {
   findConnectionByUser,
   upsertConnection,
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         connected:  true,
         status:     conn.status,
         lastSyncAt: conn.lastSyncAt,
-        apiKeyHint: conn.apiKeyEncrypted.slice(-8),
+        apiKeyHint: decryptSecret(conn.apiKeyEncrypted).slice(-8),
       },
       "API tributaria Binance encontrada.",
     );
