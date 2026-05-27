@@ -35,6 +35,13 @@ const securityHeaders = [
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
+const robotsHeaders = [
+  { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
+  { key: "Pragma", value: "no-cache" },
+  { key: "Expires", value: "0" },
+  { key: "X-Robots-Tag", value: "all" },
+];
+
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit", "pdf-parse"],
   bundlePagesRouterDependencies: true,
@@ -68,6 +75,10 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
+      {
+        source: "/robots.txt",
+        headers: robotsHeaders,
+      },
       {
         source: "/:path*",
         headers: securityHeaders,
