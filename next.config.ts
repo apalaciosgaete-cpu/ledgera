@@ -7,12 +7,12 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   // GA4 + PostHog scripts
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://eu.i.posthog.com https://app.posthog.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://us.i.posthog.com https://eu.i.posthog.com https://app.posthog.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https: https://www.google-analytics.com",
   "font-src 'self' data:",
   // analytics beacons
-  "connect-src 'self' https: https://www.google-analytics.com https://analytics.google.com https://eu.i.posthog.com https://app.posthog.com",
+  "connect-src 'self' https: https://www.google-analytics.com https://analytics.google.com https://us.i.posthog.com https://eu.i.posthog.com https://app.posthog.com",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
