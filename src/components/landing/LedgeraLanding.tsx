@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
@@ -22,9 +22,7 @@ type Plan = {
   note?: string;
 };
 
-const CONTACT_HREF =
-  "mailto:admin@ledgera.cl?subject=Contacto%20LEDGERA";
-
+const CONTACT_HREF = "mailto:admin@ledgera.cl?subject=Contacto%20LEDGERA";
 const HERO_IMAGES = ["/hero-bg.jpg", "/hero1-bg.jpg", "/hero2-bg.jpg"];
 
 const navLinks = [
@@ -33,6 +31,37 @@ const navLinks = [
   { label: "Planes", href: "/planes" },
   { label: "Preguntas", href: "/preguntas" },
   { label: "Blog", href: "/blog" },
+];
+
+const problems = [
+  "Movimientos repartidos entre exchange, banco y archivos sueltos.",
+  "Compras, ventas, depósitos y retiros difíciles de explicar.",
+  "Transferencias bancarias sin contexto financiero crypto.",
+  "Portafolios contaminados por importaciones automáticas o duplicadas.",
+  "Información insuficiente para revisión contable o tributaria.",
+];
+
+const flow = [
+  {
+    step: "01",
+    title: "Importa tus fuentes",
+    text: "Carga movimientos desde exchanges compatibles, cartolas bancarias o registros manuales.",
+  },
+  {
+    step: "02",
+    title: "Revisa antes de confirmar",
+    text: "Cada evento queda en una bandeja de importaciones para evitar duplicados y errores.",
+  },
+  {
+    step: "03",
+    title: "Concilia banco y crypto",
+    text: "Relaciona transferencias bancarias con movimientos confirmados del portafolio.",
+  },
+  {
+    step: "04",
+    title: "Prepara información clara",
+    text: "Obtén portafolio limpio, trazabilidad y una base útil para revisión financiera y tributaria.",
+  },
 ];
 
 const modules = [
@@ -60,37 +89,6 @@ const modules = [
     title: "Auditoría",
     text: "Mantén trazabilidad de decisiones, cambios y movimientos relevantes.",
   },
-];
-
-const flow = [
-  {
-    step: "01",
-    title: "Importa tus fuentes",
-    text: "Carga movimientos desde exchanges compatibles, cartolas bancarias o registros manuales.",
-  },
-  {
-    step: "02",
-    title: "Revisa antes de confirmar",
-    text: "Cada evento queda en una bandeja de importaciones para evitar duplicados y errores.",
-  },
-  {
-    step: "03",
-    title: "Concilia banco y crypto",
-    text: "Busca coincidencias entre transferencias bancarias y movimientos confirmados.",
-  },
-  {
-    step: "04",
-    title: "Prepara información clara",
-    text: "Obtén portafolio limpio, trazabilidad y base útil para revisión financiera y tributaria.",
-  },
-];
-
-const problems = [
-  "Movimientos repartidos entre exchange, banco y archivos sueltos.",
-  "Compras, ventas, depósitos y retiros difíciles de explicar.",
-  "Transferencias bancarias sin contexto financiero crypto.",
-  "Portafolios contaminados por importaciones automáticas o duplicadas.",
-  "Información insuficiente para conversar con un contador.",
 ];
 
 const seoLinks = [
@@ -171,30 +169,6 @@ const plans: Plan[] = [
   },
 ];
 
-const sectionStyle: CSSProperties = {
-  padding: "4.5rem 1.5rem",
-};
-
-const containerStyle: CSSProperties = {
-  maxWidth: "1180px",
-  margin: "0 auto",
-};
-
-const h2Style: CSSProperties = {
-  fontFamily: "var(--font-display)",
-  fontSize: "clamp(2rem, 4vw, 3.25rem)",
-  fontWeight: 800,
-  lineHeight: 1.05,
-  letterSpacing: "-0.045em",
-  color: "var(--color-text-light)",
-  margin: 0,
-};
-
-const mutedTextStyle: CSSProperties = {
-  color: "var(--color-text-muted)",
-  lineHeight: 1.7,
-};
-
 function formatClp(value: number) {
   if (value === 0) return "Gratis";
 
@@ -203,6 +177,32 @@ function formatClp(value: number) {
     currency: "CLP",
     minimumFractionDigits: 0,
   }).format(value);
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      <p className="m-0 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+        {eyebrow}
+      </p>
+      <h2 className="mt-4 font-display text-3xl font-black leading-tight tracking-[-0.045em] text-slate-50 sm:text-4xl lg:text-5xl">
+        {title}
+      </h2>
+      {description ? (
+        <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-400">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 function HeroCarousel() {
@@ -217,248 +217,95 @@ function HeroCarousel() {
   }, []);
 
   return (
-    <section
-      style={{
-        minHeight: "calc(100vh - 76px)",
-        display: "grid",
-        placeItems: "center",
-        position: "relative",
-        overflow: "hidden",
-        padding: "4rem 1.5rem",
-      }}
-    >
+    <section className="relative grid min-h-[calc(100vh-76px)] overflow-hidden px-6 py-16 lg:place-items-center lg:py-20">
       {HERO_IMAGES.map((image, index) => (
         <div
           key={image}
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
           style={{
-            position: "absolute",
-            inset: 0,
             backgroundImage: `url('${image}')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
             opacity: current === index ? 1 : 0,
-            transition: "opacity 1.2s ease-in-out",
           }}
         />
       ))}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(90deg, rgba(4,12,19,0.92) 0%, rgba(15,42,61,0.86) 52%, rgba(15,42,61,0.72) 100%)",
-        }}
-      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,12,19,0.94)_0%,rgba(15,42,61,0.88)_52%,rgba(15,42,61,0.76)_100%)]" />
 
-      <div
-        className="grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-8 items-center"
-        style={{
-          ...containerStyle,
-          position: "relative",
-          zIndex: 1,
-          width: "100%",
-        }}
-      >
+      <div className="relative z-10 mx-auto grid w-full max-w-[1180px] grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              borderRadius: "999px",
-              border: "1px solid rgba(22,163,74,0.28)",
-              background: "rgba(22,163,74,0.14)",
-              color: "#86EFAC",
-              padding: "0.45rem 1rem",
-              fontSize: "0.78rem",
-              fontWeight: 800,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
+          <div className="mb-6 inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
             Orden financiero crypto para Chile
           </div>
 
-          <h1
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(2.5rem, 6vw, 5.6rem)",
-              fontWeight: 850,
-              lineHeight: 0.95,
-              letterSpacing: "-0.075em",
-              color: "var(--color-text-light)",
-              margin: 0,
-              maxWidth: "820px",
-            }}
-          >
+          <h1 className="max-w-4xl font-display text-4xl font-black leading-[0.98] tracking-[-0.07em] text-slate-50 sm:text-5xl lg:text-7xl">
             Ordena tus movimientos crypto.
             <br />
-            <span style={{ color: "var(--color-accent)" }}>
+            <span className="text-emerald-500">
               Concilia banco, exchange y portafolio.
             </span>
             <br />
             Prepara información clara.
           </h1>
 
-          <p
-            style={{
-              ...mutedTextStyle,
-              maxWidth: "650px",
-              fontSize: "1.08rem",
-              margin: "1.5rem 0 0",
-              color: "#CBD5E1",
-            }}
-          >
-            LEDGERA conecta importaciones, banco, portafolio, conciliación y
-            base tributaria en un flujo trazable para personas con actividad
-            crypto en Chile.
+          <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+            Importa tus fuentes, revisa movimientos antes de confirmarlos,
+            concilia banco y exchange, y prepara una base financiera-tributaria
+            trazable para Chile.
           </p>
 
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.85rem",
-              marginTop: "2rem",
-            }}
-          >
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href="/register"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "12px",
-                background: "var(--color-accent)",
-                color: "#FFFFFF",
-                padding: "0.95rem 1.45rem",
-                fontWeight: 800,
-                fontSize: "0.95rem",
-              }}
+              className="inline-flex justify-center rounded-xl bg-emerald-600 px-6 py-4 text-sm font-black text-white transition hover:bg-emerald-700"
             >
               Comenzar a ordenar
             </Link>
-
             <Link
               href="/login"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "12px",
-                border: "1px solid rgba(255,255,255,0.18)",
-                background: "rgba(255,255,255,0.06)",
-                color: "#E2E8F0",
-                padding: "0.95rem 1.45rem",
-                fontWeight: 700,
-                fontSize: "0.95rem",
-              }}
+              className="inline-flex justify-center rounded-xl border border-white/20 bg-white/10 px-6 py-4 text-sm font-bold text-slate-100 transition hover:bg-white/15"
             >
               Ya tengo cuenta
             </Link>
           </div>
 
-          <p
-            style={{
-              marginTop: "1.25rem",
-              fontSize: "0.86rem",
-              color: "#94A3B8",
-            }}
-          >
-            Importa tus fuentes, concilia banco y exchange, y prepara una base
-            tributaria trazable para Chile.
+          <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-400">
+            LEDGERA organiza información financiera-tributaria. No reemplaza la
+            revisión profesional de un contador ni constituye asesoría
+            tributaria personalizada.
           </p>
         </div>
 
-        <div
-          className="hidden md:block"
-          style={{
-            borderRadius: "28px",
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(15,42,61,0.84)",
-            boxShadow: "0 24px 80px rgba(0,0,0,0.32)",
-            padding: "1rem",
-          }}
-        >
-          <div
-            style={{
-              borderRadius: "22px",
-              background: "rgba(4,12,19,0.72)",
-              padding: "1.35rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "1rem",
-                paddingBottom: "1rem",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
+        <div className="hidden rounded-[28px] border border-white/15 bg-[#0F2A3D]/85 p-4 shadow-2xl md:block">
+          <div className="rounded-[22px] bg-[#040C13]/75 p-6">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
               <div>
-                <p
-                  style={{
-                    margin: 0,
-                    color: "var(--color-warning)",
-                    fontSize: "0.78rem",
-                    fontWeight: 900,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                  }}
-                >
+                <p className="m-0 text-xs font-black uppercase tracking-[0.18em] text-amber-400">
                   Flujo LEDGERA
                 </p>
-                <p style={{ margin: "0.35rem 0 0", color: "#94A3B8" }}>
+                <p className="mt-2 text-sm text-slate-400">
                   Revisión antes de confirmar
                 </p>
               </div>
-
-              <span
-                style={{
-                  alignSelf: "flex-start",
-                  borderRadius: "999px",
-                  background: "rgba(22,163,74,0.14)",
-                  color: "#86EFAC",
-                  padding: "0.35rem 0.75rem",
-                  fontSize: "0.75rem",
-                  fontWeight: 800,
-                }}
-              >
+              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
                 Trazable
               </span>
             </div>
 
-            <div style={{ display: "grid", gap: "0.75rem", marginTop: "1rem" }}>
+            <div className="mt-5 grid gap-3">
               {[
-                ["Importar", "Exchange, banco o carga manual"],
-                ["Revisar", "Bandeja de confirmación antes de confirmar"],
-                ["Conciliar", "Banco y crypto en un solo flujo"],
-                ["Preparar", "Base tributaria trazable para Chile"],
+                ["Importaciones", "Exchange, banco o carga manual"],
+                ["Banco", "Movimientos con posible relación crypto"],
+                ["Portafolio", "Solo movimientos confirmados"],
+                ["Conciliación", "Banco, exchange y portafolio conectados"],
+                ["Tributario", "Base para revisión en Chile"],
+                ["Auditoría", "Trazabilidad de cambios y decisiones"],
               ].map(([title, text]) => (
                 <div
                   key={title}
-                  style={{
-                    borderRadius: "16px",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(255,255,255,0.04)",
-                    padding: "1rem",
-                  }}
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
                 >
-                  <p style={{ margin: 0, fontWeight: 850, color: "#F8FAFC" }}>
-                    {title}
-                  </p>
-                  <p
-                    style={{
-                      margin: "0.25rem 0 0",
-                      color: "#94A3B8",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    {text}
-                  </p>
+                  <p className="m-0 font-black text-slate-50">{title}</p>
+                  <p className="mt-1 text-sm text-slate-400">{text}</p>
                 </div>
               ))}
             </div>
@@ -476,11 +323,9 @@ export default function LedgeraLanding() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const visiblePlans = plans;
-
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/portafolio");
+      router.push("/dashboard");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -492,83 +337,34 @@ export default function LedgeraLanding() {
   }, []);
 
   return (
-    <main
-      style={{
-        fontFamily: "var(--font-body)",
-        background:
-          "linear-gradient(180deg, var(--color-primary) 0%, #071B28 28%, #061520 58%, var(--color-primary) 100%)",
-        color: "var(--color-text-light)",
-        overflowX: "hidden",
-      }}
-    >
-      <nav
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          height: "76px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 2rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(15,42,61,0.96)",
-          backdropFilter: "blur(14px)",
-        }}
-      >
+    <main className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#0F2A3D_0%,#071B28_28%,#061520_58%,#0F2A3D_100%)] text-slate-50">
+      <nav className="sticky top-0 z-[100] flex h-[76px] items-center justify-between border-b border-white/10 bg-[#0F2A3D]/95 px-5 backdrop-blur-md lg:px-8">
         <Link href="/" aria-label="Inicio LEDGERA">
           <Logo variant="light" size="lg" showSubtitle />
         </Link>
 
-        <div className="hidden md:flex" style={{ alignItems: "center", gap: 6 }}>
+        <div className="hidden items-center gap-1 md:flex">
           {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              style={{
-                padding: "0.55rem 0.85rem",
-                borderRadius: "10px",
-                color: "#CBD5E1",
-                fontSize: "0.9rem",
-                fontWeight: 700,
-              }}
+              className="rounded-lg px-3 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               {item.label}
             </Link>
           ))}
 
-          <span
-            style={{
-              width: 1,
-              height: 22,
-              background: "rgba(255,255,255,0.12)",
-              margin: "0 0.5rem",
-            }}
-          />
+          <span className="mx-2 h-6 w-px bg-white/15" />
 
           <Link
             href="/login"
-            style={{
-              padding: "0.65rem 0.95rem",
-              borderRadius: "10px",
-              color: "#CBD5E1",
-              fontSize: "0.9rem",
-              fontWeight: 700,
-            }}
+            className="rounded-lg px-3 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             Iniciar sesión
           </Link>
-
           <Link
             href="/register"
-            style={{
-              padding: "0.72rem 1rem",
-              borderRadius: "10px",
-              background: "var(--color-accent)",
-              color: "#FFFFFF",
-              fontSize: "0.9rem",
-              fontWeight: 850,
-            }}
+            className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
           >
             Comenzar ahora
           </Link>
@@ -576,64 +372,39 @@ export default function LedgeraLanding() {
 
         <button
           type="button"
-          className="md:hidden"
+          className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-slate-100 md:hidden"
           onClick={() => setMobileMenuOpen((current) => !current)}
-          style={{
-            border: "1px solid rgba(255,255,255,0.15)",
-            background: "rgba(255,255,255,0.05)",
-            color: "#E2E8F0",
-            borderRadius: "12px",
-            padding: "0.6rem 0.8rem",
-            fontWeight: 800,
-          }}
+          aria-expanded={mobileMenuOpen}
+          aria-label="Abrir menú"
         >
           Menú
         </button>
       </nav>
 
       {mobileMenuOpen ? (
-        <div
-          className="md:hidden"
-          style={{
-            position: "sticky",
-            top: "76px",
-            zIndex: 90,
-            background: "rgba(15,42,61,0.98)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            padding: "1rem 1.5rem",
-          }}
-        >
-          <div style={{ display: "grid", gap: "0.75rem" }}>
+        <div className="sticky top-[76px] z-[90] border-b border-white/10 bg-[#0F2A3D]/98 px-6 py-4 backdrop-blur-md md:hidden">
+          <div className="grid gap-3">
             {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                style={{ color: "#CBD5E1", fontWeight: 700 }}
+                className="font-bold text-slate-300"
               >
                 {item.label}
               </Link>
             ))}
-
             <Link
               href="/login"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ color: "#CBD5E1", fontWeight: 700 }}
+              className="font-bold text-slate-300"
             >
               Iniciar sesión
             </Link>
-
             <Link
               href="/register"
               onClick={() => setMobileMenuOpen(false)}
-              style={{
-                borderRadius: "10px",
-                background: "var(--color-accent)",
-                color: "#FFFFFF",
-                padding: "0.75rem 1rem",
-                textAlign: "center",
-                fontWeight: 850,
-              }}
+              className="rounded-xl bg-emerald-600 px-4 py-3 text-center font-black text-white"
             >
               Comenzar ahora
             </Link>
@@ -643,73 +414,21 @@ export default function LedgeraLanding() {
 
       <HeroCarousel />
 
-      <section style={sectionStyle}>
-        <div style={containerStyle}>
-          <div
-            style={{
-              maxWidth: 860,
-              margin: "0 auto",
-              textAlign: "center",
-            }}
-          >
-            <p
-              style={{
-                color: "var(--color-warning)",
-                fontWeight: 900,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                fontSize: "0.78rem",
-                margin: 0,
-              }}
-            >
-              Problema real
-            </p>
+      <section className="px-6 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1180px]">
+          <SectionHeader
+            eyebrow="Problema real"
+            title="Tu información crypto está dispersa antes de llegar a impuestos."
+            description="Exchange, banco, portafolio y reportes tributarios no deberían vivir separados. LEDGERA conecta esas piezas antes de preparar cualquier análisis."
+          />
 
-            <h2 style={{ ...h2Style, marginTop: "0.9rem" }}>
-              Tu información crypto está dispersa antes de llegar a impuestos.
-            </h2>
-
-            <p
-              style={{
-                ...mutedTextStyle,
-                maxWidth: 720,
-                fontSize: "1rem",
-                margin: "1rem auto 0",
-              }}
-            >
-              Exchange, banco, portafolio y reportes tributarios no deberían
-              vivir separados. LEDGERA conecta esas piezas antes de preparar
-              cualquier análisis.
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-              gap: "1rem",
-              marginTop: "2rem",
-            }}
-          >
+          <div className="mt-9 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {problems.map((problem) => (
               <div
                 key={problem}
-                style={{
-                  borderRadius: "16px",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.04)",
-                  padding: "1.25rem",
-                }}
+                className="rounded-2xl border border-white/10 bg-white/[0.04] p-5"
               >
-                <p
-                  style={{
-                    margin: 0,
-                    color: "#CBD5E1",
-                    fontSize: "0.95rem",
-                    lineHeight: 1.55,
-                    fontWeight: 650,
-                  }}
-                >
+                <p className="m-0 text-sm font-semibold leading-6 text-slate-300">
                   {problem}
                 </p>
               </div>
@@ -718,70 +437,26 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section style={{ ...sectionStyle, background: "rgba(255,255,255,0.03)" }}>
-        <div style={containerStyle}>
-          <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto" }}>
-            <p
-              style={{
-                color: "#86EFAC",
-                fontWeight: 900,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                fontSize: "0.78rem",
-                margin: 0,
-              }}
-            >
-              Cómo funciona
-            </p>
-            <h2 style={{ ...h2Style, marginTop: "0.9rem" }}>
-              De datos dispersos a información financiera revisada.
-            </h2>
-          </div>
+      <section className="bg-white/[0.03] px-6 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1180px]">
+          <SectionHeader
+            eyebrow="Cómo funciona"
+            title="De datos dispersos a información financiera revisada."
+          />
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(235px, 1fr))",
-              gap: "1rem",
-              marginTop: "2.25rem",
-            }}
-          >
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {flow.map((item) => (
               <div
                 key={item.step}
-                style={{
-                  borderRadius: "18px",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(15,42,61,0.72)",
-                  padding: "1.35rem",
-                }}
+                className="rounded-2xl border border-white/10 bg-[#0F2A3D]/70 p-6"
               >
-                <span
-                  style={{
-                    color: "var(--color-warning)",
-                    fontWeight: 900,
-                    fontSize: "0.82rem",
-                  }}
-                >
+                <span className="text-sm font-black text-amber-400">
                   {item.step}
                 </span>
-                <h3
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    color: "#F8FAFC",
-                    fontSize: "1.25rem",
-                    margin: "0.65rem 0 0",
-                  }}
-                >
+                <h3 className="mt-3 font-display text-xl font-black text-slate-50">
                   {item.title}
                 </h3>
-                <p
-                  style={{
-                    ...mutedTextStyle,
-                    margin: "0.75rem 0 0",
-                    fontSize: "0.95rem",
-                  }}
-                >
+                <p className="mt-3 text-sm leading-6 text-slate-400">
                   {item.text}
                 </p>
               </div>
@@ -790,69 +465,23 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section style={sectionStyle}>
-        <div style={containerStyle}>
-          <div
-            style={{
-              maxWidth: 900,
-              margin: "0 auto",
-              textAlign: "center",
-            }}
-          >
-            <p
-              style={{
-                color: "var(--color-warning)",
-                fontWeight: 900,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                fontSize: "0.78rem",
-                margin: 0,
-              }}
-            >
-              Producto construido
-            </p>
+      <section className="px-6 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1180px]">
+          <SectionHeader
+            eyebrow="Producto construido"
+            title="LEDGERA no es una extensión de un exchange. Es un sistema de orden financiero crypto."
+          />
 
-            <h2 style={{ ...h2Style, marginTop: "0.9rem" }}>
-              LEDGERA no es una extensión de un exchange. Es un sistema de
-              orden financiero crypto.
-            </h2>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "1rem",
-              marginTop: "2rem",
-            }}
-          >
+          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {modules.map((module) => (
               <div
                 key={module.title}
-                style={{
-                  borderRadius: "18px",
-                  background: "rgba(255,255,255,0.045)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  padding: "1.45rem",
-                }}
+                className="rounded-2xl border border-white/10 bg-white/[0.045] p-6"
               >
-                <h3
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "1.35rem",
-                    color: "#F8FAFC",
-                    margin: 0,
-                  }}
-                >
+                <h3 className="font-display text-2xl font-black text-slate-50">
                   {module.title}
                 </h3>
-                <p
-                  style={{
-                    ...mutedTextStyle,
-                    margin: "0.75rem 0 0",
-                    fontSize: "0.95rem",
-                  }}
-                >
+                <p className="mt-3 text-sm leading-6 text-slate-400">
                   {module.text}
                 </p>
               </div>
@@ -861,39 +490,15 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section
-        id="planes"
-        style={{ ...sectionStyle, background: "rgba(255,255,255,0.03)" }}
-      >
-        <div style={containerStyle}>
-          <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto" }}>
-            <p
-              style={{
-                color: "#86EFAC",
-                fontWeight: 900,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                fontSize: "0.78rem",
-                margin: 0,
-              }}
-            >
-              Planes
-            </p>
-            <h2 style={{ ...h2Style, marginTop: "0.9rem" }}>
-              Empieza simple y escala cuando tu información crezca.
-            </h2>
+      <section id="planes" className="bg-white/[0.03] px-6 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1180px]">
+          <SectionHeader
+            eyebrow="Planes"
+            title="Empieza simple y escala cuando tu información crezca."
+          />
 
-            <div
-              style={{
-                display: "inline-flex",
-                gap: "0.35rem",
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "999px",
-                padding: "0.35rem",
-                marginTop: "1.5rem",
-              }}
-            >
+          <div className="mt-7 flex justify-center">
+            <div className="inline-flex rounded-full border border-white/10 bg-white/10 p-1">
               {[
                 { value: "monthly", label: "Mensual" },
                 { value: "annual", label: "Anual" },
@@ -902,18 +507,11 @@ export default function LedgeraLanding() {
                   key={option.value}
                   type="button"
                   onClick={() => setBilling(option.value as BillingMode)}
-                  style={{
-                    border: "none",
-                    borderRadius: "999px",
-                    padding: "0.6rem 1rem",
-                    background:
-                      billing === option.value
-                        ? "var(--color-accent)"
-                        : "transparent",
-                    color: billing === option.value ? "#FFFFFF" : "#CBD5E1",
-                    fontWeight: 850,
-                    cursor: "pointer",
-                  }}
+                  className={`rounded-full px-5 py-3 text-sm font-black transition ${
+                    billing === option.value
+                      ? "bg-emerald-600 text-white"
+                      : "text-slate-300 hover:text-white"
+                  }`}
                 >
                   {option.label}
                 </button>
@@ -921,82 +519,38 @@ export default function LedgeraLanding() {
             </div>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(245px, 1fr))",
-              gap: "1rem",
-              marginTop: "2rem",
-            }}
-          >
-            {visiblePlans.map((plan) => {
+          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {plans.map((plan) => {
               const price = billing === "monthly" ? plan.monthly : plan.annual;
 
               return (
                 <div
                   key={plan.key}
-                  style={{
-                    position: "relative",
-                    borderRadius: "20px",
-                    border: plan.highlight
-                      ? "1px solid rgba(22,163,74,0.55)"
-                      : "1px solid rgba(255,255,255,0.08)",
-                    background: plan.highlight
-                      ? "linear-gradient(180deg, rgba(22,163,74,0.13), rgba(255,255,255,0.045))"
-                      : "rgba(255,255,255,0.045)",
-                    padding: "1.45rem",
-                  }}
+                  className={`relative rounded-3xl border p-6 ${
+                    plan.highlight
+                      ? "border-emerald-500/60 bg-[linear-gradient(180deg,rgba(22,163,74,0.14),rgba(255,255,255,0.045))]"
+                      : "border-white/10 bg-white/[0.045]"
+                  }`}
                 >
                   {plan.highlight ? (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: "1rem",
-                        right: "1rem",
-                        borderRadius: "999px",
-                        background: "rgba(22,163,74,0.16)",
-                        color: "#86EFAC",
-                        padding: "0.35rem 0.75rem",
-                        fontSize: "0.72rem",
-                        fontWeight: 900,
-                      }}
-                    >
+                    <span className="absolute right-5 top-5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
                       Recomendado
                     </span>
                   ) : null}
 
-                  <h3
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "1.35rem",
-                      margin: 0,
-                    }}
-                  >
+                  <h3 className="font-display text-2xl font-black text-slate-50">
                     {plan.name}
                   </h3>
-                  <p
-                    style={{
-                      ...mutedTextStyle,
-                      minHeight: 48,
-                      margin: "0.6rem 0 0",
-                      fontSize: "0.92rem",
-                    }}
-                  >
+                  <p className="mt-3 min-h-12 text-sm leading-6 text-slate-400">
                     {plan.description}
                   </p>
 
-                  <div style={{ marginTop: "1.25rem" }}>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: "2rem",
-                        fontWeight: 850,
-                      }}
-                    >
+                  <div className="mt-5">
+                    <span className="font-display text-3xl font-black text-slate-50">
                       {formatClp(price)}
                     </span>
                     {price > 0 ? (
-                      <span style={{ color: "#94A3B8", marginLeft: "0.35rem" }}>
+                      <span className="ml-1 text-sm text-slate-400">
                         / {billing === "monthly" ? "mes" : "año"}
                       </span>
                     ) : null}
@@ -1004,57 +558,25 @@ export default function LedgeraLanding() {
 
                   <Link
                     href={plan.href}
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      marginTop: "1.25rem",
-                      borderRadius: "12px",
-                      background: plan.highlight
-                        ? "var(--color-accent)"
-                        : "rgba(255,255,255,0.08)",
-                      border: plan.highlight
-                        ? "1px solid var(--color-accent)"
-                        : "1px solid rgba(255,255,255,0.10)",
-                      color: "#FFFFFF",
-                      padding: "0.85rem 1rem",
-                      fontWeight: 850,
-                    }}
+                    className={`mt-5 flex justify-center rounded-xl border px-4 py-3 text-sm font-black text-white transition ${
+                      plan.highlight
+                        ? "border-emerald-600 bg-emerald-600 hover:bg-emerald-700"
+                        : "border-white/10 bg-white/10 hover:bg-white/15"
+                    }`}
                   >
                     {plan.cta}
                   </Link>
 
-                  <ul
-                    style={{
-                      display: "grid",
-                      gap: "0.65rem",
-                      listStyle: "none",
-                      padding: 0,
-                      margin: "1.25rem 0 0",
-                    }}
-                  >
+                  <ul className="mt-5 grid list-none gap-3 p-0">
                     {plan.features.map((feature) => (
-                      <li
-                        key={feature}
-                        style={{
-                          color: "#CBD5E1",
-                          fontSize: "0.9rem",
-                          lineHeight: 1.45,
-                        }}
-                      >
+                      <li key={feature} className="text-sm leading-6 text-slate-300">
                         ✓ {feature}
                       </li>
                     ))}
                   </ul>
 
                   {plan.note ? (
-                    <p
-                      style={{
-                        margin: "1rem 0 0",
-                        color: "#94A3B8",
-                        fontSize: "0.78rem",
-                        lineHeight: 1.5,
-                      }}
-                    >
+                    <p className="mt-5 text-xs leading-5 text-slate-400">
                       {plan.note}
                     </p>
                   ) : null}
@@ -1065,32 +587,14 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section style={sectionStyle}>
-        <div style={containerStyle}>
-          <div
-            className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] items-center"
-            style={{
-              borderRadius: "26px",
-              border: "1px solid rgba(255,255,255,0.10)",
-              background:
-                "linear-gradient(135deg, rgba(22,163,74,0.16), rgba(15,42,61,0.92))",
-              padding: "2rem",
-              gap: "1.5rem",
-            }}
-          >
+      <section className="px-6 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1180px]">
+          <div className="grid grid-cols-1 items-center gap-6 rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(22,163,74,0.16),rgba(15,42,61,0.92))] p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:p-8">
             <div>
-              <h2 style={{ ...h2Style, fontSize: "clamp(1.8rem, 3vw, 2.8rem)" }}>
-                Ordena tu historial crypto antes de tomar decisiones
-                tributarias.
+              <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.045em] text-slate-50 lg:text-4xl">
+                Ordena tu historial crypto antes de tomar decisiones tributarias.
               </h2>
-              <p
-                style={{
-                  ...mutedTextStyle,
-                  color: "#CBD5E1",
-                  maxWidth: 720,
-                  margin: "1rem 0 0",
-                }}
-              >
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
                 Primero importa, revisa y confirma. Después analiza portafolio,
                 conciliación y base tributaria.
               </p>
@@ -1098,40 +602,18 @@ export default function LedgeraLanding() {
 
             <Link
               href="/register"
-              className="text-center"
-              style={{
-                display: "block",
-                borderRadius: "14px",
-                background: "var(--color-accent)",
-                color: "#FFFFFF",
-                padding: "1rem 1.35rem",
-                fontWeight: 900,
-              }}
+              className="w-full rounded-2xl bg-emerald-600 px-6 py-4 text-center text-sm font-black text-white transition hover:bg-emerald-700 lg:w-auto"
             >
               Comenzar ahora
             </Link>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "1rem",
-              marginTop: "1.5rem",
-            }}
-          >
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {seoLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                style={{
-                  borderRadius: "16px",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.045)",
-                  padding: "1.1rem",
-                  color: "#E2E8F0",
-                  fontWeight: 800,
-                }}
+                className="rounded-2xl border border-white/10 bg-white/[0.045] p-5 font-black text-slate-200 transition hover:bg-white/[0.07]"
               >
                 {item.label}
               </Link>
@@ -1140,60 +622,21 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section style={{ padding: "1.5rem 1.5rem 0" }}>
-        <div style={{ ...containerStyle, textAlign: "center" }}>
-          <p
-            style={{
-              color: "#475569",
-              fontSize: "0.8rem",
-              lineHeight: 1.6,
-              maxWidth: 760,
-              margin: "0 auto",
-            }}
-          >
-            LEDGERA organiza y prepara información financiera-tributaria. No
-            reemplaza la revisión profesional de un contador ni constituye
-            asesoría tributaria personalizada.
-          </p>
-        </div>
-      </section>
-
-      <footer
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          padding: "3rem 1.5rem",
-          background: "#040C13",
-        }}
-      >
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,minmax(150px,1fr))]"
-          style={{
-            ...containerStyle,
-            gap: "2rem",
-          }}
-        >
+      <footer className="border-t border-white/10 bg-[#040C13] px-6 py-12">
+        <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,minmax(150px,1fr))]">
           <div>
             <Logo variant="light" size="lg" showSubtitle />
-            <p
-              style={{
-                ...mutedTextStyle,
-                maxWidth: 360,
-                margin: "1rem 0 0",
-                fontSize: "0.92rem",
-              }}
-            >
+            <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
               Sistema financiero-tributario para ordenar actividad crypto,
               conciliar fuentes y preparar información clara en Chile.
             </p>
           </div>
 
           <div>
-            <h4 style={{ margin: "0 0 0.85rem", color: "#F8FAFC" }}>
-              Producto
-            </h4>
-            <div style={{ display: "grid", gap: "0.55rem" }}>
+            <h4 className="mb-4 font-black text-slate-50">Producto</h4>
+            <div className="grid gap-3">
               {navLinks.map((item) => (
-                <Link key={item.href} href={item.href} style={{ color: "#94A3B8" }}>
+                <Link key={item.href} href={item.href} className="text-sm text-slate-400">
                   {item.label}
                 </Link>
               ))}
@@ -1201,43 +644,29 @@ export default function LedgeraLanding() {
           </div>
 
           <div>
-            <h4 style={{ margin: "0 0 0.85rem", color: "#F8FAFC" }}>Legal</h4>
-            <div style={{ display: "grid", gap: "0.55rem" }}>
-              <Link href="/terminos" style={{ color: "#94A3B8" }}>
+            <h4 className="mb-4 font-black text-slate-50">Legal</h4>
+            <div className="grid gap-3">
+              <Link href="/terminos" className="text-sm text-slate-400">
                 Términos y condiciones
               </Link>
-              <Link href="/privacidad" style={{ color: "#94A3B8" }}>
+              <Link href="/privacidad" className="text-sm text-slate-400">
                 Política de privacidad
               </Link>
-              <Link href="/cookies" style={{ color: "#94A3B8" }}>
+              <Link href="/cookies" className="text-sm text-slate-400">
                 Política de cookies
               </Link>
             </div>
           </div>
 
           <div>
-            <h4 style={{ margin: "0 0 0.85rem", color: "#F8FAFC" }}>
-              Contacto
-            </h4>
-
-            <div style={{ display: "grid", gap: "0.55rem" }}>
-              <a href="mailto:admin@ledgera.cl" style={{ color: "#94A3B8" }}>
-                admin@ledgera.cl
-              </a>
-            </div>
+            <h4 className="mb-4 font-black text-slate-50">Contacto</h4>
+            <a href="mailto:admin@ledgera.cl" className="text-sm text-slate-400">
+              admin@ledgera.cl
+            </a>
           </div>
         </div>
 
-        <div
-          style={{
-            ...containerStyle,
-            marginTop: "2rem",
-            paddingTop: "1.5rem",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            color: "#64748B",
-            fontSize: "0.85rem",
-          }}
-        >
+        <div className="mx-auto mt-8 max-w-[1180px] border-t border-white/10 pt-6 text-sm text-slate-500">
           © {new Date().getFullYear()} LEDGERA. Todos los derechos reservados.
         </div>
       </footer>
@@ -1246,20 +675,7 @@ export default function LedgeraLanding() {
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          style={{
-            position: "fixed",
-            right: "1.25rem",
-            bottom: "1.25rem",
-            zIndex: 80,
-            width: 48,
-            height: 48,
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "var(--color-primary-hover)",
-            color: "#FFFFFF",
-            fontWeight: 900,
-            cursor: "pointer",
-          }}
+          className="fixed bottom-5 right-5 z-[80] h-12 w-12 rounded-full border border-white/15 bg-[#13364F] font-black text-white"
           aria-label="Volver arriba"
         >
           ↑
