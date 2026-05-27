@@ -1,5 +1,6 @@
 // src/app/sitemap.ts
 import type { MetadataRoute } from "next";
+import { blogArticles } from "@/modules/seo/blogArticles";
 
 const baseUrl = "https://ledgera.cl";
 
@@ -76,10 +77,16 @@ const publicRoutes = [
   },
 ] as const;
 
+const blogRoutes = blogArticles.map((article) => ({
+  path: `/blog/${article.slug}`,
+  changeFrequency: "monthly" as const,
+  priority: 0.7,
+}));
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
 
-  return publicRoutes.map((route) => ({
+  return [...publicRoutes, ...blogRoutes].map((route) => ({
     url: `${baseUrl}${route.path}`,
     lastModified,
     changeFrequency: route.changeFrequency,
