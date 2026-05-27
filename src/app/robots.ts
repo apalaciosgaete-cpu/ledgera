@@ -1,9 +1,9 @@
 // src/app/robots.ts
 import type { MetadataRoute } from "next";
 
-export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://ledgera.cl";
+const baseUrl = "https://ledgera.cl";
 
+export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
@@ -34,11 +34,14 @@ export default function robots(): MetadataRoute.Robots {
           "/movements",
           "/tax",
           "/bank",
+          "/import",
           "/configuracion",
           "/seguridad",
           "/suscripcion",
           "/login",
           "/register",
+          "/verify",
+          "/bienvenida",
         ],
       },
     ],
