@@ -14,10 +14,10 @@ import {
 } from "@/components/public/PublicLayout";
 import { useAuth } from "@/modules/identity/client/authContext";
 
-type PlanKey = "free" | "personal" | "contador" | "empresa";
+type PlanKey = "free" | "personal" | "profesional" | "empresa";
 type BillingCycle = "monthly" | "annual";
 type CheckoutMode = "free" | "checkout" | "contact";
-type CheckoutPlan = "PROFESIONAL" | "EMPRESA";
+type CheckoutPlan = "PERSONAL" | "PROFESIONAL" | "EMPRESA";
 
 type Plan = {
   key: PlanKey;
@@ -66,10 +66,10 @@ const plans: Plan[] = [
     description: "Para el inversor individual",
     availability: "Disponible mensual y anual",
     highlight: true,
-    cta: "Activar plan",
+    cta: "Activar personal",
     annualCta: "Solicitar anual",
     checkoutMode: "checkout",
-    checkoutPlan: "PROFESIONAL",
+    checkoutPlan: "PERSONAL",
     features: [
       "Movimientos ilimitados",
       "Motor FIFO automático",
@@ -81,16 +81,17 @@ const plans: Plan[] = [
     note: null,
   },
   {
-    key: "contador",
+    key: "profesional",
     name: "Profesional",
     monthly: 14990,
     annual: 164890,
     description: "Para asesores y equipos con clientes",
     availability: "Disponible con clientes adicionales +20%",
     highlight: false,
-    cta: "Solicitar activación",
+    cta: "Activa profesional",
     annualCta: "Solicitar anual",
-    checkoutMode: "contact",
+    checkoutMode: "checkout",
+    checkoutPlan: "PROFESIONAL",
     features: [
       "Todo lo de Personal",
       "Hasta 5 clientes incluidos",
