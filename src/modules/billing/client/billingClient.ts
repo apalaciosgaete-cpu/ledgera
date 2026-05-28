@@ -1,6 +1,6 @@
 import { httpClient } from "@/shared/http/httpClient";
 
-export type BillingCheckoutPlan = "PROFESIONAL" | "EMPRESA";
+export type BillingCheckoutPlan = "PERSONAL" | "PROFESIONAL" | "EMPRESA";
 
 type BillingCheckoutResponse = {
   ok: boolean;
