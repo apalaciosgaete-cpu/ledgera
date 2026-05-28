@@ -174,9 +174,10 @@ const primaryCheckoutStyle: CSSProperties = {
 
 const secondaryCheckoutStyle: CSSProperties = {
   ...primaryCheckoutStyle,
-  background: "rgba(255,255,255,0.055)",
-  border: "1px solid rgba(255,255,255,0.10)",
-  color: "#E2E8F0",
+  background: "rgba(22,163,74,0.12)",
+  border: "1px solid rgba(74,222,128,0.42)",
+  boxShadow: "0 0 0 1px rgba(22,163,74,0.08) inset",
+  color: "#F8FAFC",
 };
 
 function formatClp(value: number) {
