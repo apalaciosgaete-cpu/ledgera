@@ -90,13 +90,6 @@ const modules = [
   },
 ];
 
-const seoLinks = [
-  { label: "Impuestos crypto en Chile", href: "/impuestos-crypto-chile" },
-  { label: "Declarar criptomonedas", href: "/como-declarar-crypto-en-chile" },
-  { label: "Conciliación banco y crypto", href: "/conciliacion-binance-banco" },
-  { label: "Contador crypto en Chile", href: "/contador-crypto-chile" },
-];
-
 const plans: Plan[] = [
   {
     key: "free",
@@ -493,7 +486,6 @@ export default function LedgeraLanding() {
           <SectionHeader
             eyebrow="Planes"
             title="Precios claros para empezar, ordenar y escalar."
-            description="El landing muestra una versión resumida. Revisa el detalle completo, condiciones y activación en la página de planes."
           />
 
           <div className="mt-7 flex flex-col items-center justify-center gap-3">
@@ -619,18 +611,6 @@ export default function LedgeraLanding() {
             >
               Comenzar ahora
             </Link>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {seoLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-2xl border border-white/10 bg-white/[0.045] p-5 font-black text-slate-200 transition hover:bg-white/[0.07]"
-              >
-                {item.label}
-              </Link>
-            ))}
           </div>
         </div>
       </section>
