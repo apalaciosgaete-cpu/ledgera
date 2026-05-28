@@ -22,7 +22,6 @@ type Plan = {
   note?: string;
 };
 
-const CONTACT_HREF = "mailto:admin@ledgera.cl?subject=Contacto%20LEDGERA";
 const HERO_IMAGES = ["/hero-bg.jpg", "/hero1-bg.jpg", "/hero2-bg.jpg"];
 
 const navLinks = [
@@ -104,7 +103,7 @@ const plans: Plan[] = [
     name: "Gratuito",
     monthly: 0,
     annual: 0,
-    description: "Para explorar la plataforma",
+    description: "Para explorar LEDGERA",
     highlight: false,
     cta: "Crear cuenta gratis",
     href: "/register",
@@ -119,53 +118,52 @@ const plans: Plan[] = [
     key: "personal",
     name: "Personal",
     monthly: 4990,
-    annual: 49900,
+    annual: 54890,
     description: "Para usuarios crypto individuales",
     highlight: true,
-    cta: "Empezar ahora",
-    href: "/register",
+    cta: "Ver plan Personal",
+    href: "/planes#precios",
     features: [
       "Movimientos ilimitados",
-      "Importaciones y revisión",
       "Conciliación banco y crypto",
       "Exportación CSV y PDF",
       "Auditoría de movimientos",
     ],
+    note: "Disponible mensual y anual.",
   },
   {
-    key: "contador",
-    name: "Contador",
+    key: "profesional",
+    name: "Profesional",
     monthly: 14990,
-    annual: 149900,
-    description: "Para revisar información de clientes",
+    annual: 164890,
+    description: "Para asesores y equipos con clientes",
     highlight: false,
-    cta: "Contactar a LEDGERA",
-    href: CONTACT_HREF,
+    cta: "Ver plan Profesional",
+    href: "/planes#precios",
     features: [
       "Todo lo de Personal",
       "Hasta 5 clientes incluidos",
-      "Reportes verificables",
-      "Trazabilidad por cliente",
+      "Cliente adicional +20%",
       "Soporte prioritario",
     ],
-    note: "Cliente adicional según volumen.",
+    note: "Pensado para operación con clientes.",
   },
   {
     key: "empresa",
     name: "Empresa",
     monthly: 29990,
-    annual: 299900,
+    annual: 329890,
     description: "Para operación corporativa",
     highlight: false,
-    cta: "Hablar con LEDGERA",
-    href: CONTACT_HREF,
+    cta: "Ver plan Empresa",
+    href: "/planes#precios",
     features: [
-      "Todo lo de Contador",
-      "Usuarios y clientes ampliados",
+      "Todo lo de Profesional",
+      "Clientes ilimitados",
       "Auditoría operacional",
-      "Configuración tributaria",
       "Soporte dedicado",
     ],
+    note: "Para empresas, oficinas contables y mayor volumen.",
   },
 ];
 
@@ -494,95 +492,110 @@ export default function LedgeraLanding() {
         <div className="mx-auto max-w-[1180px]">
           <SectionHeader
             eyebrow="Planes"
-            title="Empieza simple y escala cuando tu información crezca."
+            title="Precios claros para empezar, ordenar y escalar."
+            description="El landing muestra una versión resumida. Revisa el detalle completo, condiciones y activación en la página de planes."
           />
 
-          <div className="mt-7 flex justify-center">
-            <div className="inline-flex rounded-full border border-white/10 bg-white/10 p-1">
+          <div className="mt-7 flex flex-col items-center justify-center gap-3">
+            <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.06] p-1">
               {[
                 { value: "monthly", label: "Mensual" },
-                { value: "annual", label: "Anual" },
+                { value: "annual", label: "Anual · 1 mes bonificado" },
               ].map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setBilling(option.value as BillingMode)}
-                  className={`rounded-full px-5 py-3 text-sm font-black transition ${
+                  className={`rounded-xl px-5 py-3 text-sm font-black transition ${
                     billing === option.value
                       ? "bg-emerald-600 text-white"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-400 hover:text-white"
                   }`}
                 >
                   {option.label}
                 </button>
               ))}
             </div>
+            <p className="m-0 text-center text-xs font-bold text-slate-500">
+              El anual equivale a 11 mensualidades por 12 meses de uso.
+            </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan) => {
               const price = billing === "monthly" ? plan.monthly : plan.annual;
 
               return (
-                <div
+                <article
                   key={plan.key}
-                  className={`relative rounded-3xl border p-6 ${
+                  className={`flex h-full flex-col rounded-2xl border p-5 transition ${
                     plan.highlight
-                      ? "border-emerald-500/60 bg-[linear-gradient(180deg,rgba(22,163,74,0.14),rgba(255,255,255,0.045))]"
-                      : "border-white/10 bg-white/[0.045]"
+                      ? "border-emerald-500/45 bg-emerald-500/[0.08] shadow-[0_18px_50px_rgba(16,185,129,0.10)]"
+                      : "border-white/10 bg-white/[0.04] hover:bg-white/[0.055]"
                   }`}
                 >
-                  {plan.highlight ? (
-                    <span className="absolute right-5 top-5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
-                      Recomendado
-                    </span>
-                  ) : null}
+                  <div className="flex-1">
+                    <h3 className="font-display text-2xl font-black tracking-[-0.035em] text-slate-50">
+                      {plan.name}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                      {plan.description}
+                    </p>
 
-                  <h3 className="font-display text-2xl font-black text-slate-50">
-                    {plan.name}
-                  </h3>
-                  <p className="mt-3 min-h-12 text-sm leading-6 text-slate-400">
-                    {plan.description}
-                  </p>
-
-                  <div className="mt-5">
-                    <span className="font-display text-3xl font-black text-slate-50">
-                      {formatClp(price)}
-                    </span>
-                    {price > 0 ? (
-                      <span className="ml-1 text-sm text-slate-400">
-                        / {billing === "monthly" ? "mes" : "año"}
+                    <div className="mt-5 flex items-end gap-2">
+                      <span className="font-display text-3xl font-black tracking-[-0.04em] text-slate-50">
+                        {formatClp(price)}
                       </span>
-                    ) : null}
+                      {price > 0 ? (
+                        <span className="pb-1 text-xs font-bold text-slate-500">
+                          / {billing === "monthly" ? "mes" : "año"}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <ul className="mt-5 grid list-none gap-2.5 p-0">
+                      {plan.features.map((feature) => (
+                        <li
+                          key={feature}
+                          className="flex items-start gap-2 text-sm leading-6 text-slate-300"
+                        >
+                          <span className="mt-0.5 text-emerald-300" aria-hidden="true">
+                            ✓
+                          </span>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
+
+                  {plan.note ? (
+                    <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs leading-5 text-slate-500">
+                      {plan.note}
+                    </p>
+                  ) : null}
 
                   <Link
                     href={plan.href}
-                    className={`mt-5 flex justify-center rounded-xl border px-4 py-3 text-sm font-black text-white transition ${
+                    className={`mt-5 inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-black transition ${
                       plan.highlight
-                        ? "border-emerald-600 bg-emerald-600 hover:bg-emerald-700"
-                        : "border-white/10 bg-white/10 hover:bg-white/15"
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                        : "border border-emerald-500/30 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/15"
                     }`}
                   >
                     {plan.cta}
                   </Link>
-
-                  <ul className="mt-5 grid list-none gap-3 p-0">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="text-sm leading-6 text-slate-300">
-                        ✓ {feature}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {plan.note ? (
-                    <p className="mt-5 text-xs leading-5 text-slate-400">
-                      {plan.note}
-                    </p>
-                  ) : null}
-                </div>
+                </article>
               );
             })}
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link
+              href="/planes#precios"
+              className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-4 text-sm font-black text-slate-100 transition hover:bg-white/[0.09]"
+            >
+              Ver detalle completo de planes
+            </Link>
           </div>
         </div>
       </section>
