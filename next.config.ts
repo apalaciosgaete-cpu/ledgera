@@ -63,10 +63,14 @@ const publicMaintenanceRoutes = [
   "/cookies",
 ];
 
-const maintenanceRedirects = publicMaintenanceRoutes.map((source) => ({
+const maintenanceRewrites = publicMaintenanceRoutes.map((source) => ({
   source,
   destination: "/mantenimiento",
-  permanent: false,
+}));
+
+const maintenanceNoIndexHeaders = publicMaintenanceRoutes.map((source) => ({
+  source,
+  headers: noIndexHeaders,
 }));
 
 const nextConfig: NextConfig = {
@@ -86,7 +90,6 @@ const nextConfig: NextConfig = {
         destination: "https://ledgera.cl/:path*",
         permanent: true,
       },
-      ...(isMaintenanceMode ? maintenanceRedirects : []),
     ];
   },
 
@@ -97,6 +100,7 @@ const nextConfig: NextConfig = {
           source: "/googlead48e80d7c2d1421.html",
           destination: "/google-search-console-verification",
         },
+        ...(isMaintenanceMode ? maintenanceRewrites : []),
       ],
     };
   },
@@ -105,6 +109,7 @@ const nextConfig: NextConfig = {
     return [
       ...(isMaintenanceMode
         ? [
+            ...maintenanceNoIndexHeaders,
             {
               source: "/robots.txt",
               headers: noIndexHeaders,
