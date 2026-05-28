@@ -178,3 +178,21 @@ export interface UpdateBillingWebhookEventInput {
   processedAt?: Date | null;
   errorMessage?: string | null;
 }
+
+export function resolveSubscriptionStatusFromPayment(
+  status: BillingPaymentStatus,
+): BillingSubscriptionStatus {
+  if (status === "APPROVED" || status === "AUTHORIZED") {
+    return "ACTIVE";
+  }
+
+  if (status === "PENDING") {
+    return "PENDING";
+  }
+
+  if (status === "REFUNDED" || status === "CANCELED") {
+    return "CANCELED";
+  }
+
+  return "FAILED";
+}
