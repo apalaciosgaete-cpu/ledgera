@@ -7,8 +7,6 @@ import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButto
 import { BillingPaymentStatusBanner } from "@/components/billing/BillingPaymentStatusBanner";
 import {
   PUBLIC_CONTACT_EMAIL,
-  PUBLIC_WHATSAPP_URL,
-  PublicButton,
   PublicContainer,
   PublicCta,
   PublicHero,
@@ -20,6 +18,7 @@ import { useAuth } from "@/modules/identity/client/authContext";
 type PlanKey = "free" | "personal" | "contador" | "empresa";
 type BillingCycle = "monthly" | "annual";
 type CheckoutMode = "free" | "checkout" | "contact";
+type CheckoutPlan = "PROFESIONAL" | "EMPRESA";
 
 type Plan = {
   key: PlanKey;
@@ -27,9 +26,12 @@ type Plan = {
   monthly: number;
   annual: number;
   description: string;
+  availability: string;
   highlight: boolean;
   cta: string;
+  annualCta: string;
   checkoutMode: CheckoutMode;
+  checkoutPlan?: CheckoutPlan;
   features: string[];
   disabled: string[];
   note: string | null;
@@ -42,8 +44,10 @@ const plans: Plan[] = [
     monthly: 0,
     annual: 0,
     description: "Para explorar la plataforma",
+    availability: "Disponible para empezar sin pago",
     highlight: false,
     cta: "Crear cuenta gratis",
+    annualCta: "Crear cuenta gratis",
     checkoutMode: "free",
     features: [
       "Hasta 25 movimientos",
@@ -59,11 +63,14 @@ const plans: Plan[] = [
     key: "personal",
     name: "Personal",
     monthly: 4990,
-    annual: 49900,
+    annual: 54890,
     description: "Para el inversor individual",
+    availability: "Disponible mensual y anual",
     highlight: true,
-    cta: "Empezar ahora",
+    cta: "Activar plan",
+    annualCta: "Solicitar anual",
     checkoutMode: "checkout",
+    checkoutPlan: "PROFESIONAL",
     features: [
       "Movimientos ilimitados",
       "Motor FIFO automático",
@@ -78,30 +85,35 @@ const plans: Plan[] = [
     key: "contador",
     name: "Contador",
     monthly: 14990,
-    annual: 149900,
+    annual: 164890,
     description: "Múltiples clientes",
+    availability: "Disponible con clientes adicionales +20%",
     highlight: false,
-    cta: "Hablar con LEDGERA",
+    cta: "Solicitar activación",
+    annualCta: "Solicitar anual",
     checkoutMode: "contact",
     features: [
       "Todo lo de Personal",
       "Hasta 5 clientes incluidos",
-      "Cliente adicional +20%",
+      "Cliente adicional +20% del valor del plan",
       "Reportes verificables SII",
       "Soporte prioritario",
     ],
     disabled: [],
-    note: "Mensual: $2.998/cliente adicional · Anual: $29.980/cliente adicional",
+    note: "Cliente adicional: +20% del valor del plan · Mensual $2.998 · Anual $32.978",
   },
   {
     key: "empresa",
     name: "Empresa",
     monthly: 29990,
-    annual: 299900,
+    annual: 329890,
     description: "Para operación corporativa",
+    availability: "Disponible mensual y anual",
     highlight: false,
-    cta: "Contactar ventas",
-    checkoutMode: "contact",
+    cta: "Activar empresa",
+    annualCta: "Solicitar anual",
+    checkoutMode: "checkout",
+    checkoutPlan: "EMPRESA",
     features: [
       "Todo lo de Contador",
       "Clientes ilimitados",
@@ -117,19 +129,19 @@ const plans: Plan[] = [
 const faqItems = [
   {
     q: "¿Puedo pagar con tarjeta?",
-    a: "Sí. El plan Personal puede activarse mediante Mercado Pago con los medios disponibles en su checkout.",
+    a: "Sí. Los planes con activación en línea usan Mercado Pago cuando está disponible para esa modalidad.",
   },
   {
-    q: "¿Por qué Contador y Empresa requieren contacto?",
-    a: "Porque pueden requerir revisión de volumen, cantidad de clientes, soporte, configuración y condiciones operativas antes de activar el servicio.",
+    q: "¿El anual incluye 1 mes bonificado?",
+    a: "Sí. Los precios anuales equivalen a 11 mensualidades, por lo que el usuario paga 11 meses y obtiene 12 meses de uso.",
   },
   {
-    q: "¿El anual realmente incluye 2 meses gratis?",
-    a: "Sí. Los precios anuales equivalen aproximadamente a 10 mensualidades, lo que representa 2 meses sin costo frente al pago mensual por 12 meses.",
+    q: "¿Cuánto aumenta un cliente adicional en el plan Contador?",
+    a: "El cliente adicional aumenta un 20% sobre el valor del plan Contador: $2.998 mensual o $32.978 anual.",
   },
   {
     q: "¿Cuándo se activa el plan?",
-    a: "En el plan Personal, la activación ocurre cuando el proveedor confirma el pago mediante webhook. En planes comerciales, la activación se coordina con LEDGERA.",
+    a: "La activación en línea ocurre cuando el proveedor confirma el pago. Las modalidades anuales o comerciales pueden requerir validación manual de LEDGERA.",
   },
 ];
 
@@ -168,9 +180,9 @@ function formatClp(value: number) {
 
 function buildContactMailto(plan: Plan, billing: BillingCycle) {
   const billingLabel = billing === "monthly" ? "mensual" : "anual";
-  const subject = encodeURIComponent(`Consulta plan ${plan.name} LEDGERA`);
+  const subject = encodeURIComponent(`Activación plan ${plan.name} LEDGERA`);
   const body = encodeURIComponent(
-    `Hola, quiero información sobre el plan ${plan.name} en modalidad ${billingLabel}.`,
+    `Hola, quiero activar el plan ${plan.name} en modalidad ${billingLabel}.`,
   );
 
   return `mailto:${PUBLIC_CONTACT_EMAIL}?subject=${subject}&body=${body}`;
@@ -187,6 +199,8 @@ function PlanCard({
 }) {
   const price = billing === "monthly" ? plan.monthly : plan.annual;
   const ctaStyle = plan.highlight ? primaryCheckoutStyle : secondaryCheckoutStyle;
+  const shouldUseCheckout =
+    plan.checkoutMode === "checkout" && billing === "monthly" && Boolean(plan.checkoutPlan);
 
   return (
     <article
@@ -207,6 +221,9 @@ function PlanCard({
       <div className="mb-6">
         <h3 className="font-display text-2xl font-black tracking-[-0.04em] text-white">{plan.name}</h3>
         <p className="mt-2 text-sm leading-6 text-slate-400">{plan.description}</p>
+        <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-black text-emerald-300">
+          {plan.availability}
+        </p>
 
         <div className="mt-6 flex items-baseline gap-2">
           <span className="font-display text-4xl font-black tracking-[-0.05em] text-white">
@@ -221,7 +238,7 @@ function PlanCard({
 
         {billing === "annual" && plan.annual > 0 ? (
           <p className="mt-2 text-xs font-bold text-emerald-300">
-            Equivale a {formatClp(Math.round(plan.annual / 12))}/mes · 2 meses gratis
+            Pagas 11 meses · 1 mes bonificado
           </p>
         ) : null}
       </div>
@@ -261,13 +278,13 @@ function PlanCard({
         <Link href={isAuthenticated ? "/dashboard" : "/register"} style={secondaryCheckoutStyle}>
           {isAuthenticated ? "Ir al panel" : plan.cta}
         </Link>
-      ) : plan.checkoutMode === "checkout" ? (
-        <BillingCheckoutButton plan="PROFESIONAL" style={ctaStyle}>
+      ) : shouldUseCheckout && plan.checkoutPlan ? (
+        <BillingCheckoutButton plan={plan.checkoutPlan} style={ctaStyle}>
           {plan.cta}
         </BillingCheckoutButton>
       ) : (
         <a href={buildContactMailto(plan, billing)} style={secondaryCheckoutStyle}>
-          {plan.cta}
+          {billing === "annual" ? plan.annualCta : plan.cta}
         </a>
       )}
     </article>
@@ -282,10 +299,10 @@ function PlanesContent() {
     <PublicShell activePath="/planes">
       <PublicHero
         eyebrow="Planes y precios"
-        title="Simple, transparente y preparado para escalar"
-        description="El plan Personal se activa mediante checkout. Los planes Contador y Empresa se coordinan con LEDGERA para validar volumen, soporte y operación antes de activar el servicio."
+        title="Elige el nivel de operación que necesita tu historial crypto"
+        description="Planes disponibles para ordenar movimientos, conciliación, portafolio y base tributaria trazable en Chile, con precios claros para uso personal, contador y empresa."
       >
-        <div className="flex flex-col items-center justify-center gap-4">
+        <div className="flex flex-col items-center justify-center gap-3">
           <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.055] p-1">
             {(["monthly", "annual"] as const).map((option) => (
               <button
@@ -298,19 +315,13 @@ function PlanesContent() {
                     : "rounded-xl px-5 py-3 text-sm font-black text-slate-500 transition hover:text-slate-200"
                 }
               >
-                {option === "monthly" ? "Mensual" : "Anual · 2 meses gratis"}
+                {option === "monthly" ? "Mensual" : "Anual · 1 mes bonificado"}
               </button>
             ))}
           </div>
-
-          <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
-            <PublicButton href={isAuthenticated ? "/dashboard" : "/register"}>
-              {isAuthenticated ? "Ir al panel" : "Comenzar ahora"}
-            </PublicButton>
-            <PublicButton href={PUBLIC_WHATSAPP_URL} variant="secondary">
-              Hablar con LEDGERA
-            </PublicButton>
-          </div>
+          <p className="m-0 text-center text-xs font-bold text-slate-500">
+            El valor anual corresponde a 11 mensualidades por 12 meses de uso.
+          </p>
         </div>
       </PublicHero>
 
@@ -363,11 +374,11 @@ function PlanesContent() {
 
       <PublicCta
         title="Elige el nivel de operación que necesitas"
-        description="Empieza con un plan simple o coordina una operación para clientes, empresas o equipos con mayor volumen."
+        description="Empieza con un plan simple o activa una operación para clientes, empresas o equipos con mayor volumen."
         primaryLabel={isAuthenticated ? "Ir al panel" : "Comenzar ahora"}
         primaryHref={isAuthenticated ? "/dashboard" : "/register"}
-        secondaryLabel="Hablar con LEDGERA"
-        secondaryHref={PUBLIC_WHATSAPP_URL}
+        secondaryLabel="Solicitar plan anual"
+        secondaryHref={`mailto:${PUBLIC_CONTACT_EMAIL}?subject=${encodeURIComponent("Activación anual LEDGERA")}&body=${encodeURIComponent("Hola, quiero solicitar información para activar un plan anual de LEDGERA.")}`}
       />
     </PublicShell>
   );
