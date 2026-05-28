@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
-import { Logo, LogoIcon } from "@/components/brand/Logo";
+import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
@@ -110,7 +110,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const [gearHover,   setGearHover]   = useState(false);
   const [logoutHover, setLogoutHover] = useState(false);
 
-  // ── Sin usuario — no renderizar ──────────────────────────────────────────
   if (!user) return null;
 
   const role         = (user as { role?: string })?.role ?? "personal";
@@ -121,7 +120,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const token    = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
 
-  // ── Logout — navegación completa evita re-render del AuthGuard ───────────
   async function handleLogout() {
     setLogoutHover(false);
     await logout();
@@ -148,7 +146,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
         position:     "sticky",
         top:          0,
         zIndex:       50,
-        height:       "72px",
+        height:       "76px",
         overflowX:    "clip",
       }}>
         <div style={{
@@ -168,18 +166,14 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             aria-label="Ir al portafolio LEDGERA"
             style={{
               alignItems:     "center",
-              background:     "rgba(255,255,255,0.035)",
-              border:         "1px solid rgba(255,255,255,0.08)",
-              borderRadius:   "18px",
               display:        "flex",
               flexShrink:     0,
-              gap:            "12px",
-              padding:        "8px 13px 8px 9px",
+              justifyContent: "center",
+              minWidth:       "220px",
               textDecoration: "none",
             }}
           >
-            <LogoIcon size={38} />
-            <Logo variant="light" size="sm" showSubtitle />
+            <Logo variant="light" size="lg" showSubtitle />
           </Link>
 
           <nav style={{
