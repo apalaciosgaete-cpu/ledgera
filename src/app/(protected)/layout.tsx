@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
-import { Logo } from "@/components/brand/Logo";
+import { Logo, LogoIcon } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
@@ -79,21 +79,21 @@ const roleTokens: Record<string, {
 }> = {
   personal: {
     label:          "Personal",
-    badgeBg:        "rgba(59,130,246,0.16)",
-    badgeColor:     "#60A5FA",
-    avatarGradient: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+    badgeBg:        "rgba(22,163,74,0.14)",
+    badgeColor:     "#4ADE80",
+    avatarGradient: "linear-gradient(135deg, #16A34A 0%, #0F766E 100%)",
   },
   contador: {
-    label:          "Contador",
-    badgeBg:        "rgba(168,85,247,0.16)",
-    badgeColor:     "#C084FC",
-    avatarGradient: "linear-gradient(135deg, #A855F7 0%, #7E22CE 100%)",
+    label:          "Profesional",
+    badgeBg:        "rgba(14,165,233,0.14)",
+    badgeColor:     "#7DD3FC",
+    avatarGradient: "linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%)",
   },
   empresa: {
     label:          "Empresa",
-    badgeBg:        "rgba(245,158,11,0.16)",
-    badgeColor:     "#FCD34D",
-    avatarGradient: "linear-gradient(135deg, #F59E0B 0%, #B45309 100%)",
+    badgeBg:        "rgba(99,102,241,0.14)",
+    badgeColor:     "#A5B4FC",
+    avatarGradient: "linear-gradient(135deg, #6366F1 0%, #4338CA 100%)",
   },
   admin: {
     label:          "Admin",
@@ -142,12 +142,13 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     <div style={{ minHeight: "100vh", background: colors.bgApp, fontFamily: fonts.body }}>
 
       <header style={{
-        background:   colors.primary,
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background:   "#071B28",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        boxShadow:    "0 10px 30px rgba(2,6,23,0.16)",
         position:     "sticky",
         top:          0,
         zIndex:       50,
-        height:       "64px",
+        height:       "72px",
         overflowX:    "clip",
       }}>
         <div style={{
@@ -158,21 +159,38 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           display:        "flex",
           alignItems:     "center",
           justifyContent: "space-between",
-          gap:            "24px",
+          gap:            "22px",
           minWidth:       0,
         }}>
 
-          <Link href="/portafolio" style={{ textDecoration: "none", flexShrink: 0 }}>
-            <Logo variant="light" size="md" showSubtitle />
+          <Link
+            href="/portafolio"
+            aria-label="Ir al portafolio LEDGERA"
+            style={{
+              alignItems:     "center",
+              background:     "rgba(255,255,255,0.035)",
+              border:         "1px solid rgba(255,255,255,0.08)",
+              borderRadius:   "18px",
+              display:        "flex",
+              flexShrink:     0,
+              gap:            "12px",
+              padding:        "8px 13px 8px 9px",
+              textDecoration: "none",
+            }}
+          >
+            <LogoIcon size={38} />
+            <Logo variant="light" size="sm" showSubtitle />
           </Link>
 
           <nav style={{
             display:        "flex",
             alignItems:     "center",
-            gap:            "4px",
+            gap:            "6px",
             flex:           1,
             justifyContent: "center",
             minWidth:       0,
+            overflowX:      "auto",
+            scrollbarWidth: "none",
           }}>
             {navItems.map(item => {
               const active = isActive(item.href);
@@ -185,15 +203,16 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                     alignItems:     "center",
                     justifyContent: "center",
                     height:         "38px",
-                    padding:        "0 20px",
-                    borderRadius:   "9px",
+                    padding:        "0 16px",
+                    borderRadius:   "999px",
+                    border:         active ? "1px solid rgba(74,222,128,0.34)" : "1px solid transparent",
                     fontSize:       "14px",
-                    fontWeight:     active ? 600 : 400,
+                    fontWeight:     active ? 800 : 600,
                     fontFamily:     fonts.body,
                     textDecoration: "none",
                     whiteSpace:     "nowrap",
-                    background:     active ? colors.accent : "transparent",
-                    color:          active ? "#ffffff" : colors.textMuted,
+                    background:     active ? "rgba(22,163,74,0.18)" : "transparent",
+                    color:          active ? "#F8FAFC" : "#94A3B8",
                     transition:     "all 0.15s ease",
                   }}
                 >
@@ -215,17 +234,17 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                   display:        "flex",
                   alignItems:     "center",
                   justifyContent: "center",
-                  width:          "34px",
-                  height:         "34px",
-                  borderRadius:   "9px",
+                  width:          "36px",
+                  height:         "36px",
+                  borderRadius:   "11px",
                   background:     configActive
-                    ? "rgba(245,158,11,0.14)"
-                    : gearHover ? "rgba(255,255,255,0.06)" : "transparent",
+                    ? "rgba(22,163,74,0.16)"
+                    : gearHover ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.035)",
                   border: configActive
-                    ? "1px solid rgba(245,158,11,0.32)"
+                    ? "1px solid rgba(74,222,128,0.32)"
                     : "1px solid rgba(255,255,255,0.08)",
                   color: configActive
-                    ? colors.warning
+                    ? "#4ADE80"
                     : gearHover ? "#CBD5E1" : colors.textMuted,
                   textDecoration: "none",
                   transition:     "all 0.15s ease",
@@ -254,11 +273,11 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                 display:        "flex",
                 alignItems:     "center",
                 justifyContent: "center",
-                width:          "34px",
-                height:         "34px",
-                minWidth:       "34px",
-                borderRadius:   "9px",
-                background:     logoutHover ? "rgba(239,68,68,0.12)" : "transparent",
+                width:          "36px",
+                height:         "36px",
+                minWidth:       "36px",
+                borderRadius:   "11px",
+                background:     logoutHover ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.035)",
                 border:         "1px solid rgba(255,255,255,0.08)",
                 color:          logoutHover ? "#F87171" : colors.textMuted,
                 cursor:         "pointer",
