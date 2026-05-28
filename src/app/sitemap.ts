@@ -17,7 +17,7 @@ const staticPages = [
   "/terminos",
   "/privacidad",
   "/cookies",
-];
+] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   if (isMaintenanceMode) {
@@ -33,11 +33,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const now = new Date();
 
-  const publicRoutes = [
+  const publicRoutes: MetadataRoute.Sitemap = [
     ...staticPages.map((path) => ({
       url: `${baseUrl}${path}`,
       lastModified: now,
-      changeFrequency: path === "" ? "weekly" : "monthly",
+      changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),
       priority: path === "" ? 1 : 0.7,
     })),
     ...seoPageList.map((page) => ({
