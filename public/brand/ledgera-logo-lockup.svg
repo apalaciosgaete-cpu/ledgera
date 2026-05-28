@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="220" viewBox="0 0 880 220" role="img" aria-labelledby="title desc">
+  <title id="title">LEDGERA logo lockup</title>
+  <desc id="desc">Logo LEDGERA con icono compacto y wordmark institucional.</desc>
+  <rect width="880" height="220" fill="transparent"/>
+  <rect x="64" y="48" width="124" height="124" rx="30" fill="#071B28"/>
+  <rect x="72" y="56" width="108" height="108" rx="24" fill="none" stroke="#15384F" stroke-width="6"/>
+  <path d="M102 78 H124 V132 H166 V154 H102 Z" fill="#F8FAFC"/>
+  <rect x="132" y="132" width="34" height="7" rx="3.5" fill="#16A34A"/>
+  <text x="226" y="110" fill="#071B28" font-family="Manrope, Inter, Arial, sans-serif" font-size="58" font-weight="900" letter-spacing="7">LEDGERA</text>
+  <text x="231" y="146" fill="#16A34A" font-family="Inter, Manrope, Arial, sans-serif" font-size="14" font-weight="800" letter-spacing="9">FINANZAS OS</text>
+</svg>
