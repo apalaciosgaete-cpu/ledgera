@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Logo } from "@/components/brand/Logo";
+
+import {
+  PublicButton,
+  PublicContainer,
+  PublicCta,
+  PublicHero,
+  PublicShell,
+  publicPalette,
+} from "@/components/public/PublicLayout";
 import { blogArticles } from "@/modules/seo/blogArticles";
+import { seoPageList } from "@/modules/seo/seoPageContent";
 
 const baseUrl = "https://ledgera.cl";
 const title = "Blog LEDGERA | Cripto, impuestos y conciliación en Chile";
@@ -40,82 +49,230 @@ export const metadata: Metadata = {
 
 export default function BlogPage() {
   return (
-    <main
-      style={{
-        fontFamily: "var(--font-body, 'Inter', system-ui, sans-serif)",
-        background: "#0A1F2E",
-        color: "#F1F5F9",
-        minHeight: "100vh",
-      }}
-    >
-      <nav
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          background: "rgba(7,21,32,0.94)",
-          backdropFilter: "blur(16px)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          padding: "0 2.5rem",
-          minHeight: "76px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
+    <PublicShell activePath="/blog">
+      <PublicHero
+        eyebrow="Blog · Recursos tributarios"
+        title="Cripto, impuestos y conciliación en Chile"
+        description="Guías prácticas para ordenar información crypto antes de una revisión tributaria: movimientos, banco, exchange, FIFO y trazabilidad."
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <Link href="/" style={{ textDecoration: "none" }} aria-label="Inicio LEDGERA">
-            <Logo variant="light" size="lg" showSubtitle />
-          </Link>
-          <Link href="/" style={{ fontSize: "14px", color: "#94A3B8", textDecoration: "none" }}>
-            Inicio
-          </Link>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center" }}>
+          <PublicButton href="/register">Comenzar ahora</PublicButton>
+          <PublicButton href="/planes#precios" variant="secondary">
+            Ver planes
+          </PublicButton>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Link href="/login" style={{ fontSize: "14px", fontWeight: 700, color: "#CBD5E1", textDecoration: "none", padding: "9px 16px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
-            Iniciar sesión
-          </Link>
-          <Link href="/register" style={{ fontSize: "14px", fontWeight: 850, color: "#ffffff", textDecoration: "none", padding: "10px 18px", borderRadius: "10px", background: "#16A34A" }}>
-            Comenzar gratis
-          </Link>
-        </div>
-      </nav>
+      </PublicHero>
 
-      <section style={{ padding: "6rem 2rem 4rem", background: "radial-gradient(circle at top left, rgba(22,163,74,0.20), transparent 34%), linear-gradient(135deg,#061522 0%,#082033 48%,#0B2A3F 100%)", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(22,163,74,0.12)", border: "1px solid rgba(22,163,74,0.25)", borderRadius: "100px", padding: "7px 18px", marginBottom: "1.5rem" }}>
-          <span style={{ fontSize: "12px", fontWeight: 850, color: "#4ADE80", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-            Blog · Recursos tributarios
-          </span>
-        </div>
-        <h1 style={{ fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)", fontSize: "clamp(2.2rem, 5vw, 4rem)", fontWeight: 900, color: "#F8FAFC", letterSpacing: "-0.055em", margin: "0 0 1rem", lineHeight: 1.05 }}>
-          Cripto, impuestos y conciliación en Chile
-        </h1>
-        <p style={{ fontSize: "18px", color: "#CBD5E1", maxWidth: "720px", margin: "0 auto", lineHeight: 1.75 }}>
-          Guías prácticas para ordenar información crypto antes de una revisión tributaria: movimientos, banco, exchange, FIFO y trazabilidad.
-        </p>
+      <section style={{ background: publicPalette.page, padding: "76px 0" }}>
+        <PublicContainer>
+          <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
+            <p
+              style={{
+                color: "#4ADE80",
+                fontSize: "12px",
+                fontWeight: 850,
+                letterSpacing: "0.12em",
+                margin: "0 0 12px",
+                textTransform: "uppercase",
+              }}
+            >
+              Artículos principales
+            </p>
+            <h2
+              style={{
+                color: publicPalette.text,
+                fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)",
+                fontSize: "clamp(1.9rem, 4vw, 3rem)",
+                fontWeight: 900,
+                letterSpacing: "-0.05em",
+                lineHeight: 1.08,
+                margin: 0,
+              }}
+            >
+              Contenido para entender, ordenar y revisar actividad crypto.
+            </h2>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: "22px",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            }}
+          >
+            {blogArticles.map((article) => (
+              <Link
+                key={article.slug}
+                href={`/blog/${article.slug}`}
+                style={{
+                  background: publicPalette.card,
+                  border: `1px solid ${publicPalette.border}`,
+                  borderRadius: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  minHeight: "100%",
+                  padding: "24px",
+                  textDecoration: "none",
+                }}
+              >
+                <div
+                  style={{
+                    alignItems: "center",
+                    alignSelf: "flex-start",
+                    background: `${article.tagColor}18`,
+                    border: `1px solid ${article.tagColor}38`,
+                    borderRadius: "999px",
+                    display: "inline-flex",
+                    marginBottom: "16px",
+                    padding: "6px 12px",
+                  }}
+                >
+                  <span style={{ color: article.tagColor, fontSize: "12px", fontWeight: 850 }}>
+                    {article.tag}
+                  </span>
+                </div>
+
+                <h3
+                  style={{
+                    color: publicPalette.text,
+                    fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)",
+                    fontSize: "21px",
+                    fontWeight: 900,
+                    letterSpacing: "-0.035em",
+                    lineHeight: 1.22,
+                    margin: "0 0 12px",
+                  }}
+                >
+                  {article.title}
+                </h3>
+
+                <p
+                  style={{
+                    color: publicPalette.textMuted,
+                    flex: 1,
+                    fontSize: "14px",
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}
+                >
+                  {article.summary}
+                </p>
+
+                <div
+                  style={{
+                    borderTop: `1px solid ${publicPalette.border}`,
+                    color: publicPalette.textFaint,
+                    display: "flex",
+                    fontSize: "12px",
+                    gap: "12px",
+                    justifyContent: "space-between",
+                    marginTop: "22px",
+                    paddingTop: "14px",
+                  }}
+                >
+                  <span>{article.publishedLabel}</span>
+                  <span>{article.readTime}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </PublicContainer>
       </section>
 
-      <section style={{ padding: "5rem 2rem", maxWidth: "1100px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
-          {blogArticles.map((article) => (
-            <Link key={article.slug} href={`/blog/${article.slug}`} style={{ display: "block", background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "22px", padding: "1.6rem", textDecoration: "none" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", background: `${article.tagColor}14`, border: `1px solid ${article.tagColor}30`, borderRadius: "100px", padding: "5px 12px", marginBottom: "1rem" }}>
-                <span style={{ fontSize: "12px", fontWeight: 850, color: article.tagColor }}>{article.tag}</span>
-              </div>
-              <h2 style={{ fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)", fontSize: "21px", fontWeight: 900, color: "#F8FAFC", margin: "0 0 0.75rem", lineHeight: 1.25, letterSpacing: "-0.035em" }}>
-                {article.title}
-              </h2>
-              <p style={{ fontSize: "14px", color: "#94A3B8", margin: "0 0 1.25rem", lineHeight: 1.7 }}>
-                {article.summary}
-              </p>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748B", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "14px" }}>
-                <span>{article.publishedLabel}</span>
-                <span>{article.readTime}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+      <section style={{ background: publicPalette.section, padding: "76px 0" }}>
+        <PublicContainer>
+          <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
+            <p
+              style={{
+                color: "#4ADE80",
+                fontSize: "12px",
+                fontWeight: 850,
+                letterSpacing: "0.12em",
+                margin: "0 0 12px",
+                textTransform: "uppercase",
+              }}
+            >
+              Recursos base
+            </p>
+            <h2
+              style={{
+                color: publicPalette.text,
+                fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)",
+                fontSize: "clamp(1.8rem, 4vw, 2.7rem)",
+                fontWeight: 900,
+                letterSpacing: "-0.05em",
+                lineHeight: 1.08,
+                margin: 0,
+              }}
+            >
+              Páginas guía para búsquedas clave de LEDGERA.
+            </h2>
+            <p style={{ color: publicPalette.textMuted, fontSize: "15px", lineHeight: 1.75, margin: "16px 0 0" }}>
+              Estos enlaces reemplazan los botones sueltos que estaban al cierre del landing: mantienen el enlazado interno para SEO, pero dentro de una sección editorial coherente.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: "18px",
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            }}
+          >
+            {seoPageList.map((page) => (
+              <Link
+                key={page.path}
+                href={page.path}
+                style={{
+                  background: publicPalette.card,
+                  border: `1px solid ${publicPalette.border}`,
+                  borderRadius: "22px",
+                  padding: "22px",
+                  textDecoration: "none",
+                }}
+              >
+                <p
+                  style={{
+                    color: "#4ADE80",
+                    fontSize: "11px",
+                    fontWeight: 850,
+                    letterSpacing: "0.11em",
+                    margin: "0 0 12px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {page.eyebrow}
+                </p>
+                <h3
+                  style={{
+                    color: publicPalette.text,
+                    fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)",
+                    fontSize: "20px",
+                    fontWeight: 900,
+                    letterSpacing: "-0.035em",
+                    lineHeight: 1.22,
+                    margin: "0 0 10px",
+                  }}
+                >
+                  {page.h1}
+                </h3>
+                <p style={{ color: publicPalette.textMuted, fontSize: "14px", lineHeight: 1.65, margin: 0 }}>
+                  {page.description}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </PublicContainer>
       </section>
-    </main>
+
+      <PublicCta
+        title="Ordena tus movimientos antes de cerrar tu revisión tributaria."
+        description="Crea una cuenta, revisa tus fuentes y construye una base financiera-tributaria trazable para Chile."
+        primaryLabel="Comenzar ahora"
+        primaryHref="/register"
+        secondaryLabel="Ver planes"
+        secondaryHref="/planes#precios"
+      />
+    </PublicShell>
   );
 }
