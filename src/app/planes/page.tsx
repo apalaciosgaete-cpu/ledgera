@@ -8,7 +8,6 @@ import { BillingPaymentStatusBanner } from "@/components/billing/BillingPaymentS
 import {
   PUBLIC_CONTACT_EMAIL,
   PublicContainer,
-  PublicCta,
   PublicHero,
   PublicShell,
   publicPalette,
@@ -329,7 +328,7 @@ function PlanesContent() {
         </div>
       </PublicHero>
 
-      <section style={{ background: publicPalette.section }}>
+      <section id="precios" style={{ background: publicPalette.section }}>
         <PublicContainer>
           <div className="py-14">
             <BillingPaymentStatusBanner />
@@ -376,14 +375,24 @@ function PlanesContent() {
         </PublicContainer>
       </section>
 
-      <PublicCta
-        title="Elige el nivel de operación que necesitas"
-        description="Empieza con un plan simple o activa una operación para clientes, empresas o equipos con mayor volumen."
-        primaryLabel={isAuthenticated ? "Ir al panel" : "Comenzar ahora"}
-        primaryHref={isAuthenticated ? "/dashboard" : "/register"}
-        secondaryLabel="Solicitar plan anual"
-        secondaryHref={`mailto:${PUBLIC_CONTACT_EMAIL}?subject=${encodeURIComponent("Activación anual LEDGERA")}&body=${encodeURIComponent("Hola, quiero solicitar información para activar un plan anual de LEDGERA.")}`}
-      />
+      <section style={{ background: publicPalette.page }}>
+        <PublicContainer>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.045] px-6 py-10 text-center md:px-10">
+            <h2 className="font-display text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">
+              Revisa los valores disponibles
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
+              Compara los planes mensual y anual antes de elegir el nivel de operación que necesitas.
+            </p>
+            <Link
+              href="#precios"
+              className="mt-7 inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-7 py-4 text-sm font-black text-white transition hover:bg-emerald-700"
+            >
+              Ver precios
+            </Link>
+          </div>
+        </PublicContainer>
+      </section>
     </PublicShell>
   );
 }
