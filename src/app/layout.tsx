@@ -50,6 +50,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
+        url: "/favicon.svg",
+        type: "image/svg+xml",
+      },
+      {
         url: "/icon",
         type: "image/png",
         sizes: "512x512",
@@ -106,7 +110,7 @@ const organizationSchema = {
   name: "LEDGERA",
   url: baseUrl,
   email: "admin@ledgera.cl",
-  logo: `${baseUrl}/icon`,
+  logo: `${baseUrl}/brand/ledgera-app-icon.svg`,
   contactPoint: [
     {
       "@type": "ContactPoint",
