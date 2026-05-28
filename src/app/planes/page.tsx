@@ -1,17 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState, type CSSProperties } from "react";
+import { Suspense, useState, type CSSProperties } from "react";
 
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
 import { BillingPaymentStatusBanner } from "@/components/billing/BillingPaymentStatusBanner";
-import { Logo } from "@/components/brand/Logo";
+import {
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_WHATSAPP_URL,
+  PublicButton,
+  PublicContainer,
+  PublicCta,
+  PublicHero,
+  PublicShell,
+  publicPalette,
+} from "@/components/public/PublicLayout";
 import { useAuth } from "@/modules/identity/client/authContext";
-
-const WHATSAPP_URL =
-  "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
-
-const CONTACT_EMAIL = "admin@ledgera.cl";
 
 type PlanKey = "free" | "personal" | "contador" | "empresa";
 type BillingCycle = "monthly" | "annual";
@@ -30,14 +34,6 @@ type Plan = {
   disabled: string[];
   note: string | null;
 };
-
-const NAV_LINKS = [
-  { label: "Quiénes somos", href: "/quienes-somos" },
-  { label: "Cómo funciona", href: "/como-funciona" },
-  { label: "Planes", href: "/planes" },
-  { label: "Preguntas", href: "/preguntas" },
-  { label: "Blog", href: "/blog" },
-];
 
 const plans: Plan[] = [
   {
@@ -118,49 +114,46 @@ const plans: Plan[] = [
   },
 ];
 
-const pageStyle: CSSProperties = {
-  fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-  background: "#0A1F2E",
-  color: "#F1F5F9",
-  overflowX: "hidden",
-};
+const faqItems = [
+  {
+    q: "¿Puedo pagar con tarjeta?",
+    a: "Sí. El plan Personal puede activarse mediante Mercado Pago con los medios disponibles en su checkout.",
+  },
+  {
+    q: "¿Por qué Contador y Empresa requieren contacto?",
+    a: "Porque pueden requerir revisión de volumen, cantidad de clientes, soporte, configuración y condiciones operativas antes de activar el servicio.",
+  },
+  {
+    q: "¿El anual realmente incluye 2 meses gratis?",
+    a: "Sí. Los precios anuales equivalen aproximadamente a 10 mensualidades, lo que representa 2 meses sin costo frente al pago mensual por 12 meses.",
+  },
+  {
+    q: "¿Cuándo se activa el plan?",
+    a: "En el plan Personal, la activación ocurre cuando el proveedor confirma el pago mediante webhook. En planes comerciales, la activación se coordina con LEDGERA.",
+  },
+];
 
-const h2Style: CSSProperties = {
-  fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-  fontSize: "clamp(2rem, 4vw, 3.25rem)",
-  fontWeight: 700,
-  color: "#F1F5F9",
-  letterSpacing: "-0.03em",
-  margin: "0 0 1rem",
-  lineHeight: 1.1,
-};
-
-const primaryButtonStyle: CSSProperties = {
-  display: "block",
-  textAlign: "center",
-  padding: "13px 20px",
-  borderRadius: "9px",
+const primaryCheckoutStyle: CSSProperties = {
+  alignItems: "center",
   background: "#16A34A",
-  border: "none",
-  color: "#ffffff",
+  border: "1px solid rgba(22,163,74,0.55)",
+  borderRadius: "14px",
+  color: "#FFFFFF",
+  display: "inline-flex",
   fontSize: "14px",
-  fontWeight: 700,
-  fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+  fontWeight: 900,
+  justifyContent: "center",
+  minHeight: "48px",
+  padding: "0 20px",
   textDecoration: "none",
+  width: "100%",
 };
 
-const secondaryButtonStyle: CSSProperties = {
-  display: "block",
-  textAlign: "center",
-  padding: "13px 20px",
-  borderRadius: "9px",
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.1)",
+const secondaryCheckoutStyle: CSSProperties = {
+  ...primaryCheckoutStyle,
+  background: "rgba(255,255,255,0.055)",
+  border: "1px solid rgba(255,255,255,0.10)",
   color: "#E2E8F0",
-  fontSize: "14px",
-  fontWeight: 700,
-  fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-  textDecoration: "none",
 };
 
 function formatClp(value: number) {
@@ -180,7 +173,7 @@ function buildContactMailto(plan: Plan, billing: BillingCycle) {
     `Hola, quiero información sobre el plan ${plan.name} en modalidad ${billingLabel}.`,
   );
 
-  return `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+  return `mailto:${PUBLIC_CONTACT_EMAIL}?subject=${subject}&body=${body}`;
 }
 
 function PlanCard({
@@ -193,684 +186,190 @@ function PlanCard({
   isAuthenticated: boolean;
 }) {
   const price = billing === "monthly" ? plan.monthly : plan.annual;
-  const ctaStyle = plan.highlight ? primaryButtonStyle : secondaryButtonStyle;
+  const ctaStyle = plan.highlight ? primaryCheckoutStyle : secondaryCheckoutStyle;
 
   return (
-    <div style={{ position: "relative" }}>
-      {plan.highlight && (
-        <div
-          style={{
-            position: "absolute",
-            top: "-22px",
-            left: 0,
-            right: 0,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <span
-            style={{
-              background: "#16A34A",
-              color: "#ffffff",
-              fontSize: "11px",
-              fontWeight: 700,
-              padding: "4px 14px",
-              borderRadius: "100px",
-              whiteSpace: "nowrap",
-              letterSpacing: "0.06em",
-            }}
-          >
-            MÁS POPULAR
+    <article
+      className={
+        plan.highlight
+          ? "relative flex h-full flex-col rounded-3xl border border-emerald-500/35 bg-emerald-500/[0.08] p-6 shadow-2xl shadow-emerald-950/20"
+          : "relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/[0.045] p-6"
+      }
+    >
+      {plan.highlight ? (
+        <div className="absolute -top-4 left-0 right-0 flex justify-center">
+          <span className="rounded-full bg-emerald-600 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-white">
+            Más popular
           </span>
         </div>
-      )}
+      ) : null}
 
-      <div
-        style={{
-          background: plan.highlight ? "rgba(22,163,74,0.08)" : "rgba(255,255,255,0.03)",
-          border: plan.highlight ? "1px solid rgba(22,163,74,0.35)" : "1px solid rgba(255,255,255,0.07)",
-          borderRadius: "14px",
-          padding: "2rem",
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-      >
-        <div style={{ marginBottom: "1.5rem" }}>
-          <h3
-            style={{
-              fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-              fontSize: "19px",
-              fontWeight: 700,
-              color: "#F1F5F9",
-              margin: "0 0 6px",
-            }}
-          >
-            {plan.name}
-          </h3>
+      <div className="mb-6">
+        <h3 className="font-display text-2xl font-black tracking-[-0.04em] text-white">{plan.name}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-400">{plan.description}</p>
 
-          <p
-            style={{
-              fontSize: "13px",
-              color: "#64748B",
-              margin: "0 0 1.25rem",
-              lineHeight: 1.5,
-            }}
-          >
-            {plan.description}
-          </p>
-
-          <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-            <span
-              style={{
-                fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-                fontSize: "34px",
-                fontWeight: 700,
-                color: "#F1F5F9",
-                lineHeight: 1,
-              }}
-            >
-              {formatClp(price)}
+        <div className="mt-6 flex items-baseline gap-2">
+          <span className="font-display text-4xl font-black tracking-[-0.05em] text-white">
+            {formatClp(price)}
+          </span>
+          {plan.monthly > 0 ? (
+            <span className="text-sm font-bold text-slate-500">
+              /{billing === "monthly" ? "mes" : "año"}
             </span>
-
-            {plan.monthly > 0 && (
-              <span style={{ fontSize: "13px", color: "#475569" }}>
-                /{billing === "monthly" ? "mes" : "año"}
-              </span>
-            )}
-          </div>
-
-          {billing === "annual" && plan.annual > 0 && (
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#4ADE80",
-                margin: "6px 0 0",
-                fontWeight: 500,
-              }}
-            >
-              Equivale a {formatClp(Math.round(plan.annual / 12))}/mes · 2 meses gratis
-            </p>
-          )}
+          ) : null}
         </div>
 
-        <ul
-          style={{
-            margin: "0 0 1rem",
-            padding: 0,
-            listStyle: "none",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            flex: 1,
-          }}
-        >
-          {plan.features.map((feature) => {
-            const isDisabled = plan.disabled.includes(feature);
-
-            return (
-              <li
-                key={feature}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  fontSize: "14px",
-                  color: isDisabled ? "#334155" : "#94A3B8",
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                  {isDisabled ? (
-                    <line x1="4" y1="8" x2="12" y2="8" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
-                  ) : (
-                    <>
-                      <circle cx="8" cy="8" r="7" stroke="#16A34A" strokeWidth="1.2" />
-                      <path d="M5 8l2 2 4-4" stroke="#16A34A" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </>
-                  )}
-                </svg>
-
-                {feature}
-              </li>
-            );
-          })}
-        </ul>
-
-        {plan.note && (
-          <p
-            style={{
-              fontSize: "11px",
-              color: "#64748B",
-              margin: "0 0 1.25rem",
-              lineHeight: 1.5,
-              padding: "8px 10px",
-              background: "rgba(255,255,255,0.03)",
-              borderRadius: "7px",
-              border: "1px solid rgba(255,255,255,0.05)",
-            }}
-          >
-            {plan.note}
+        {billing === "annual" && plan.annual > 0 ? (
+          <p className="mt-2 text-xs font-bold text-emerald-300">
+            Equivale a {formatClp(Math.round(plan.annual / 12))}/mes · 2 meses gratis
           </p>
-        )}
-
-        {plan.checkoutMode === "free" ? (
-          <Link href={isAuthenticated ? "/portafolio" : "/register"} style={secondaryButtonStyle}>
-            {isAuthenticated ? "Ir al panel" : plan.cta}
-          </Link>
-        ) : plan.checkoutMode === "checkout" ? (
-          <BillingCheckoutButton plan="PROFESIONAL" style={ctaStyle}>
-            {plan.cta}
-          </BillingCheckoutButton>
-        ) : (
-          <a href={buildContactMailto(plan, billing)} style={secondaryButtonStyle}>
-            {plan.cta}
-          </a>
-        )}
+        ) : null}
       </div>
-    </div>
+
+      <ul className="mb-5 grid flex-1 gap-3 p-0">
+        {plan.features.map((feature) => {
+          const isDisabled = plan.disabled.includes(feature);
+
+          return (
+            <li
+              key={feature}
+              className={isDisabled ? "flex list-none items-start gap-3 text-sm text-slate-600" : "flex list-none items-start gap-3 text-sm text-slate-300"}
+            >
+              <span
+                className={
+                  isDisabled
+                    ? "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-700"
+                    : "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-emerald-500 text-emerald-400"
+                }
+                aria-hidden="true"
+              >
+                {isDisabled ? "–" : "✓"}
+              </span>
+              {feature}
+            </li>
+          );
+        })}
+      </ul>
+
+      {plan.note ? (
+        <p className="mb-5 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs leading-6 text-slate-500">
+          {plan.note}
+        </p>
+      ) : null}
+
+      {plan.checkoutMode === "free" ? (
+        <Link href={isAuthenticated ? "/dashboard" : "/register"} style={secondaryCheckoutStyle}>
+          {isAuthenticated ? "Ir al panel" : plan.cta}
+        </Link>
+      ) : plan.checkoutMode === "checkout" ? (
+        <BillingCheckoutButton plan="PROFESIONAL" style={ctaStyle}>
+          {plan.cta}
+        </BillingCheckoutButton>
+      ) : (
+        <a href={buildContactMailto(plan, billing)} style={secondaryCheckoutStyle}>
+          {plan.cta}
+        </a>
+      )}
+    </article>
   );
 }
 
 function PlanesContent() {
   const { isAuthenticated } = useAuth();
-
   const [billing, setBilling] = useState<BillingCycle>("monthly");
-  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setShowScrollTop(window.scrollY > 400);
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   return (
-    <main style={pageStyle}>
-      <nav
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          background: "rgba(10,31,46,0.94)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          padding: "0 2.5rem",
-          height: "68px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
+    <PublicShell activePath="/planes">
+      <PublicHero
+        eyebrow="Planes y precios"
+        title="Simple, transparente y preparado para escalar"
+        description="El plan Personal se activa mediante checkout. Los planes Contador y Empresa se coordinan con LEDGERA para validar volumen, soporte y operación antes de activar el servicio."
       >
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <Logo variant="light" size="lg" showSubtitle />
-        </Link>
-
-        <div className="hidden sm:flex" style={{ alignItems: "center", gap: "4px" }}>
-          {NAV_LINKS.map((item) => {
-            const isActive = item.href === "/planes";
-
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                onMouseEnter={() => setHoveredNav(item.label)}
-                onMouseLeave={() => setHoveredNav(null)}
-                style={{
-                  fontSize: "14px",
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive || hoveredNav === item.label ? "#F1F5F9" : "#94A3B8",
-                  textDecoration: "none",
-                  padding: "8px 14px",
-                  borderRadius: "8px",
-                  background: isActive
-                    ? "rgba(22,163,74,0.12)"
-                    : hoveredNav === item.label
-                      ? "rgba(255,255,255,0.06)"
-                      : "transparent",
-                  transition: "all 0.15s ease",
-                }}
+        <div className="flex flex-col items-center justify-center gap-4">
+          <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.055] p-1">
+            {(["monthly", "annual"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setBilling(option)}
+                className={
+                  billing === option
+                    ? "rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white"
+                    : "rounded-xl px-5 py-3 text-sm font-black text-slate-500 transition hover:text-slate-200"
+                }
               >
-                {item.label}
-              </Link>
-            );
-          })}
-
-          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)", margin: "0 8px" }} />
-
-          <Link
-            href="/login"
-            onMouseEnter={() => setHoveredNav("login")}
-            onMouseLeave={() => setHoveredNav(null)}
-            style={{
-              fontSize: "14px",
-              fontWeight: 500,
-              color: hoveredNav === "login" ? "#F1F5F9" : "#94A3B8",
-              textDecoration: "none",
-              padding: "8px 14px",
-              borderRadius: "8px",
-              background: hoveredNav === "login" ? "rgba(255,255,255,0.06)" : "transparent",
-              transition: "all 0.15s ease",
-            }}
-          >
-            Iniciar sesión
-          </Link>
-
-          <Link
-            href={isAuthenticated ? "/portafolio" : "/register"}
-            onMouseEnter={() => setHoveredNav("register")}
-            onMouseLeave={() => setHoveredNav(null)}
-            style={{
-              fontSize: "14px",
-              fontWeight: 600,
-              color: "#ffffff",
-              textDecoration: "none",
-              padding: "9px 18px",
-              borderRadius: "8px",
-              background: hoveredNav === "register" ? "#15803D" : "#16A34A",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {isAuthenticated ? "Ir a mi cuenta" : "Comenzar gratis"}
-          </Link>
-        </div>
-
-        <button
-          className="flex sm:hidden"
-          onClick={() => setMobileMenuOpen((value) => !value)}
-          aria-label="Abrir menú de navegación"
-          style={{
-            background: "transparent",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: "8px",
-            padding: "8px",
-            cursor: "pointer",
-            color: "#94A3B8",
-          }}
-        >
-          {mobileMenuOpen ? (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M4 4l12 12M16 4L4 16" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M3 5h14M3 10h14M3 15h14" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
-      </nav>
-
-      {mobileMenuOpen && (
-        <div
-          className="flex sm:hidden"
-          style={{
-            flexDirection: "column",
-            background: "rgba(10,31,46,0.97)",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            padding: "1rem 1.5rem",
-            gap: "4px",
-            position: "sticky",
-            top: "68px",
-            zIndex: 99,
-          }}
-        >
-          {NAV_LINKS.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={() => setMobileMenuOpen(false)}
-              style={{
-                fontSize: "14px",
-                fontWeight: item.href === "/planes" ? 600 : 500,
-                color: item.href === "/planes" ? "#4ADE80" : "#94A3B8",
-                textDecoration: "none",
-                padding: "10px 0",
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
-
-          <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
-
-          <Link
-            href="/login"
-            onClick={() => setMobileMenuOpen(false)}
-            style={{ fontSize: "15px", fontWeight: 500, color: "#94A3B8", textDecoration: "none", padding: "10px 0" }}
-          >
-            Iniciar sesión
-          </Link>
-
-          <Link
-            href={isAuthenticated ? "/portafolio" : "/register"}
-            onClick={() => setMobileMenuOpen(false)}
-            style={{
-              display: "block",
-              textAlign: "center",
-              fontSize: "15px",
-              fontWeight: 700,
-              color: "#ffffff",
-              textDecoration: "none",
-              padding: "12px 20px",
-              borderRadius: "8px",
-              background: "#16A34A",
-            }}
-          >
-            {isAuthenticated ? "Ir a mi cuenta" : "Comenzar gratis"}
-          </Link>
-        </div>
-      )}
-
-      <section
-        style={{
-          padding: "5rem 2rem 3rem",
-          textAlign: "center",
-          background: "linear-gradient(to bottom, #071520, #0A1F2E)",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            background: "rgba(22,163,74,0.1)",
-            border: "1px solid rgba(22,163,74,0.22)",
-            borderRadius: "100px",
-            padding: "4px 16px",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <span style={{ fontSize: "12px", fontWeight: 700, color: "#4ADE80", letterSpacing: "0.04em" }}>
-            Planes y precios
-          </span>
-        </div>
-
-        <h1 style={{ ...h2Style, margin: "0 auto 1rem", maxWidth: "700px" }}>
-          Simple y transparente
-        </h1>
-
-        <p
-          style={{
-            fontSize: "17px",
-            color: "#94A3B8",
-            maxWidth: "620px",
-            margin: "0 auto 2.5rem",
-            lineHeight: 1.65,
-          }}
-        >
-          El plan Personal se activa mediante checkout. Los planes Contador y Empresa se coordinan con LEDGERA para validar volumen, soporte y operación antes de activar el servicio.
-        </p>
-
-        <div
-          style={{
-            display: "inline-flex",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "10px",
-            padding: "4px",
-            gap: "4px",
-          }}
-        >
-          {(["monthly", "annual"] as const).map((option) => (
-            <button
-              key={option}
-              onClick={() => setBilling(option)}
-              style={{
-                padding: "9px 22px",
-                borderRadius: "7px",
-                border: "none",
-                fontSize: "14px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
-                background: billing === option ? "#16A34A" : "transparent",
-                color: billing === option ? "#ffffff" : "#64748B",
-                transition: "all 0.15s ease",
-              }}
-            >
-              {option === "monthly" ? "Mensual" : "Anual — 2 meses gratis"}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ padding: "0 2rem 5rem" }}>
-        <BillingPaymentStatusBanner />
-
-        <div style={{ maxWidth: "1100px", margin: "0 auto", overflowX: "auto", paddingBottom: "4px" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, minmax(220px, 1fr))",
-              gap: "16px",
-              minWidth: "860px",
-              paddingTop: "28px",
-            }}
-          >
-            {plans.map((plan) => (
-              <PlanCard key={plan.key} plan={plan} billing={billing} isAuthenticated={isAuthenticated} />
+                {option === "monthly" ? "Mensual" : "Anual · 2 meses gratis"}
+              </button>
             ))}
           </div>
-        </div>
-      </section>
 
-      <section style={{ padding: "3rem 2rem 5rem", background: "#071520" }}>
-        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
-          <h2
-            style={{
-              fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-              fontSize: "clamp(1.5rem, 3vw, 2rem)",
-              fontWeight: 700,
-              color: "#F1F5F9",
-              margin: "0 0 2.5rem",
-              textAlign: "center",
-            }}
-          >
-            Preguntas frecuentes sobre los planes
-          </h2>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {[
-              {
-                q: "¿Puedo pagar con tarjeta?",
-                a: "Sí. El plan Personal puede activarse mediante Mercado Pago con los medios disponibles en su checkout.",
-              },
-              {
-                q: "¿Por qué Contador y Empresa requieren contacto?",
-                a: "Porque pueden requerir revisión de volumen, cantidad de clientes, soporte, configuración y condiciones operativas antes de activar el servicio.",
-              },
-              {
-                q: "¿El anual realmente incluye 2 meses gratis?",
-                a: "Sí. Los precios anuales equivalen aproximadamente a 10 mensualidades, lo que representa 2 meses sin costo frente al pago mensual por 12 meses.",
-              },
-              {
-                q: "¿Cuándo se activa el plan?",
-                a: "En el plan Personal, la activación ocurre cuando el proveedor confirma el pago mediante webhook. En planes comerciales, la activación se coordina con LEDGERA.",
-              },
-            ].map((item) => (
-              <div
-                key={item.q}
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                }}
-              >
-                <h3
-                  style={{
-                    fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    color: "#F1F5F9",
-                    margin: "0 0 8px",
-                  }}
-                >
-                  {item.q}
-                </h3>
-
-                <p style={{ fontSize: "14px", color: "#94A3B8", margin: 0, lineHeight: 1.65 }}>
-                  {item.a}
-                </p>
-              </div>
-            ))}
+          <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
+            <PublicButton href={isAuthenticated ? "/dashboard" : "/register"}>
+              {isAuthenticated ? "Ir al panel" : "Comenzar ahora"}
+            </PublicButton>
+            <PublicButton href={PUBLIC_WHATSAPP_URL} variant="secondary">
+              Hablar con LEDGERA
+            </PublicButton>
           </div>
         </div>
+      </PublicHero>
+
+      <section style={{ background: publicPalette.section }}>
+        <PublicContainer>
+          <div className="py-14">
+            <BillingPaymentStatusBanner />
+
+            <div className="mt-8 overflow-x-auto pb-4">
+              <div className="grid min-w-[940px] grid-cols-4 gap-4 lg:min-w-0">
+                {plans.map((plan) => (
+                  <PlanCard
+                    key={plan.key}
+                    plan={plan}
+                    billing={billing}
+                    isAuthenticated={isAuthenticated}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </PublicContainer>
       </section>
 
-      <footer
-        style={{
-          background: "#040C13",
-          padding: "3rem 2.5rem",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-        }}
-      >
-        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "2rem",
-              marginBottom: "2rem",
-            }}
-          >
-            <div>
-              <div style={{ marginBottom: "12px" }}>
-                <Logo variant="light" size="sm" showSubtitle />
-              </div>
-
-              <p style={{ fontSize: "13px", color: "#475569", margin: 0, maxWidth: "260px", lineHeight: 1.6 }}>
-                Software tributario especializado en criptomonedas para el mercado chileno.
+      <section style={{ background: publicPalette.page }}>
+        <PublicContainer style={{ maxWidth: "860px" }}>
+          <div className="py-16">
+            <div className="mb-8 text-center">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">
+                Preguntas sobre planes
               </p>
+              <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">
+                Condiciones claras antes de activar
+              </h2>
             </div>
 
-            <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap" }}>
-              <div>
-                <p
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: "#475569",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    margin: "0 0 12px",
-                  }}
-                >
-                  Producto
-                </p>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/register" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    Comenzar gratis
-                  </Link>
-                  <Link href="/planes" style={{ fontSize: "13px", color: "#4ADE80", textDecoration: "none" }}>
-                    Precios
-                  </Link>
-                  <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    Iniciar sesión
-                  </Link>
-                </div>
-              </div>
-
-              <div>
-                <p
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: "#475569",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    margin: "0 0 12px",
-                  }}
-                >
-                  Legal
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    Términos y condiciones
-                  </Link>
-                  <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    Política de privacidad
-                  </Link>
-                  <Link href="/cookies" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    Política de cookies
-                  </Link>
-                </div>
-              </div>
-
-              <div>
-                <p
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: "#475569",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    margin: "0 0 12px",
-                  }}
-                >
-                  Contacto
-                </p>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <a href={`mailto:${CONTACT_EMAIL}`} style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    {CONTACT_EMAIL}
-                  </a>
-                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
-                    WhatsApp soporte
-                  </a>
-                </div>
-              </div>
+            <div className="grid gap-3">
+              {faqItems.map((item) => (
+                <details key={item.q} className="group rounded-2xl border border-white/10 bg-white/[0.045] p-5">
+                  <summary className="cursor-pointer list-none font-display text-lg font-black tracking-[-0.025em] text-white marker:hidden">
+                    {item.q}
+                  </summary>
+                  <p className="mt-4 text-sm leading-7 text-slate-300">{item.a}</p>
+                </details>
+              ))}
             </div>
           </div>
+        </PublicContainer>
+      </section>
 
-          <div
-            style={{
-              borderTop: "1px solid rgba(255,255,255,0.05)",
-              paddingTop: "1.5rem",
-              display: "flex",
-              justifyContent: "space-between",
-              gap: "1rem",
-              flexWrap: "wrap",
-            }}
-          >
-            <p style={{ fontSize: "12px", color: "#334155", margin: 0 }}>
-              © {new Date().getFullYear()} LEDGERA. Todos los derechos reservados.
-            </p>
-
-            <p style={{ fontSize: "12px", color: "#334155", margin: 0 }}>
-              Pagos integrados con Mercado Pago para planes habilitados por checkout.
-            </p>
-          </div>
-        </div>
-      </footer>
-
-      {showScrollTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          aria-label="Volver al inicio"
-          style={{
-            position: "fixed",
-            right: "24px",
-            bottom: "24px",
-            zIndex: 120,
-            width: "44px",
-            height: "44px",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(10,31,46,0.92)",
-            color: "#94A3B8",
-            cursor: "pointer",
-          }}
-        >
-          ↑
-        </button>
-      )}
-    </main>
+      <PublicCta
+        title="Elige el nivel de operación que necesitas"
+        description="Empieza con un plan simple o coordina una operación para clientes, empresas o equipos con mayor volumen."
+        primaryLabel={isAuthenticated ? "Ir al panel" : "Comenzar ahora"}
+        primaryHref={isAuthenticated ? "/dashboard" : "/register"}
+        secondaryLabel="Hablar con LEDGERA"
+        secondaryHref={PUBLIC_WHATSAPP_URL}
+      />
+    </PublicShell>
   );
 }
 
