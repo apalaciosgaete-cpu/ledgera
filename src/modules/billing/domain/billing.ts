@@ -4,6 +4,7 @@ export type BillingProvider =
 
 export type BillingPlan =
   | "BASICO"
+  | "PERSONAL"
   | "PROFESIONAL"
   | "EMPRESA";
 
@@ -176,38 +177,4 @@ export interface UpdateBillingWebhookEventInput {
   status: BillingWebhookStatus;
   processedAt?: Date | null;
   errorMessage?: string | null;
-}
-
-export const BILLING_PLAN_PRICES_CLP: Record<BillingPlan, number> = {
-  BASICO: 0,
-  PROFESIONAL: 19900,
-  EMPRESA: 59900,
-};
-
-export function isPaidPlan(plan: BillingPlan): boolean {
-  return plan !== "BASICO";
-}
-
-export function isActiveBillingStatus(
-  status: BillingSubscriptionStatus,
-): boolean {
-  return status === "ACTIVE";
-}
-
-export function resolveSubscriptionStatusFromPayment(
-  status: BillingPaymentStatus,
-): BillingSubscriptionStatus {
-  if (status === "APPROVED" || status === "AUTHORIZED") {
-    return "ACTIVE";
-  }
-
-  if (
-    status === "REJECTED" ||
-    status === "CANCELED" ||
-    status === "FAILED"
-  ) {
-    return "FAILED";
-  }
-
-  return "PENDING";
 }
