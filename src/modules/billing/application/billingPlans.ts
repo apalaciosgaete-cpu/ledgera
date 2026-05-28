@@ -28,8 +28,8 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
       "Panel tributario básico",
     ],
   },
-  PROFESIONAL: {
-    plan: "PROFESIONAL",
+  PERSONAL: {
+    plan: "PERSONAL",
     name: "Personal",
     description: "Plan para personas naturales con operación cripto activa.",
     amount: 4990,
@@ -43,6 +43,21 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
       "Soporte por email",
     ],
   },
+  PROFESIONAL: {
+    plan: "PROFESIONAL",
+    name: "Profesional",
+    description: "Plan para asesores y equipos con clientes.",
+    amount: 14990,
+    currency: "CLP",
+    interval: "MONTHLY",
+    features: [
+      "Todo lo de Personal",
+      "Hasta 5 clientes incluidos",
+      "Cliente adicional +20% del valor del plan",
+      "Reportes verificables SII",
+      "Soporte prioritario",
+    ],
+  },
   EMPRESA: {
     plan: "EMPRESA",
     name: "Empresa",
@@ -51,7 +66,7 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
     currency: "CLP",
     interval: "MONTHLY",
     features: [
-      "Todo lo de Contador",
+      "Todo lo de Profesional",
       "Clientes ilimitados",
       "Régimen primera categoría",
       "Configuración tributaria",
@@ -71,6 +86,7 @@ export function isValidBillingPlan(
 ): value is BillingPlan {
   return (
     value === "BASICO" ||
+    value === "PERSONAL" ||
     value === "PROFESIONAL" ||
     value === "EMPRESA"
   );
