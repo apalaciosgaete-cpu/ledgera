@@ -2,113 +2,96 @@ import type { CSSProperties } from "react";
 import { colors, fonts } from "@/styles/tokens";
 
 type LogoVariant = "light" | "dark";
-type LogoSize    = "sm" | "md" | "lg";
+type LogoSize = "sm" | "md" | "lg";
 
 interface LogoProps {
-  variant?:     LogoVariant;
-  size?:        LogoSize;
+  variant?: LogoVariant;
+  size?: LogoSize;
   showSubtitle?: boolean;
 }
 
 const sizes = {
-  sm: { icon: 30, name: 16, sub: 8,  gap: 10 },
-  md: { icon: 40, name: 22, sub: 10, gap: 12 },
-  lg: { icon: 52, name: 28, sub: 11, gap: 14 },
+  sm: { name: 18, sub: 7.5, gap: 3, width: 128 },
+  md: { name: 24, sub: 9, gap: 4, width: 172 },
+  lg: { name: 30, sub: 10.5, gap: 5, width: 220 },
 };
 
-// ─── Logo principal ───────────────────────────────────────────────────────────
-
 export function Logo({
-  variant      = "light",
-  size         = "md",
+  variant = "light",
+  size = "md",
   showSubtitle = true,
 }: LogoProps) {
-  const s         = sizes[size];
-  const nameColor = variant === "light" ? "#F6F8FA" : colors.primary;
-  const fillColor = variant === "light" ? "#F1F5F9" : colors.primary;
+  const s = sizes[size];
+  const nameColor = variant === "light" ? "#F8FAFC" : "#071B28";
+  const subtitleColor = variant === "light" ? "#4ADE80" : colors.accent;
 
   const wrap: CSSProperties = {
-    display:       "flex",
-    alignItems:    "center",
-    gap:           `${s.gap}px`,
-    textDecoration: "none",
-    userSelect:    "none",
-  };
-
-  const textWrap: CSSProperties = {
-    display:       "flex",
+    display: "inline-flex",
     flexDirection: "column",
-    gap:           "2px",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: `${s.gap}px`,
+    minWidth: `${s.width}px`,
+    textDecoration: "none",
+    userSelect: "none",
+    whiteSpace: "nowrap",
   };
 
   const nameStyle: CSSProperties = {
-    fontFamily:    fonts.display,
-    fontSize:      `${s.name}px`,
-    fontWeight:    700,
-    color:         nameColor,
-    letterSpacing: "0.06em",
-    lineHeight:    1,
+    fontFamily: fonts.display,
+    fontSize: `${s.name}px`,
+    fontWeight: 900,
+    color: nameColor,
+    letterSpacing: "0.14em",
+    lineHeight: 0.95,
   };
 
   const subStyle: CSSProperties = {
-    fontFamily:    fonts.body,
-    fontSize:      `${s.sub}px`,
-    fontWeight:    600,
-    color:         colors.warning,
-    letterSpacing: "0.14em",
-    lineHeight:    1,
+    fontFamily: fonts.body,
+    fontSize: `${s.sub}px`,
+    fontWeight: 850,
+    color: subtitleColor,
+    letterSpacing: "0.42em",
+    lineHeight: 1,
+    paddingLeft: "0.42em",
   };
 
   return (
-    <div style={wrap}>
-      {/* ── Ícono L geométrica ── */}
-      <svg
-        width={s.icon}
-        height={s.icon}
-        viewBox="0 0 44 44"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        {/* Trazo vertical */}
-        <rect x="8" y="8"  width="10" height="28" rx="2" fill={fillColor} />
-        {/* Trazo horizontal */}
-        <rect x="8" y="30" width="22" height="10" rx="2" fill={fillColor} />
-        {/* Acento ámbar */}
-        <rect x="26" y="30" width="10" height="10" rx="2" fill={colors.warning} />
-      </svg>
-
-      {/* ── Wordmark ── */}
-      <div style={textWrap}>
-        <span style={nameStyle}>LEDGERA</span>
-        {showSubtitle && <span style={subStyle}>FINANZAS OS</span>}
-      </div>
+    <div style={wrap} aria-label="LEDGERA Finanzas OS">
+      <span style={nameStyle}>LEDGERA</span>
+      {showSubtitle ? <span style={subStyle}>FINANZAS OS</span> : null}
     </div>
   );
 }
 
-// ─── Ícono solo (para app icon, favicon context) ──────────────────────────────
-
 export function LogoIcon({ size = 44 }: { size?: number }) {
+  const radius = Math.round(size * 0.22);
+  const stroke = Math.max(2, Math.round(size * 0.035));
+
   const wrap: CSSProperties = {
-    width:          size,
-    height:         size,
-    borderRadius:   Math.round(size * 0.22),
-    background:     colors.accent,
-    display:        "flex",
-    alignItems:     "center",
+    width: size,
+    height: size,
+    borderRadius: radius,
+    background: "#071B28",
+    border: `${stroke}px solid #15384F`,
+    display: "flex",
+    alignItems: "center",
     justifyContent: "center",
-    flexShrink:     0,
+    flexShrink: 0,
   };
 
-  const inner = Math.round(size * 0.72);
-
   return (
-    <div style={wrap}>
-      <svg width={inner} height={inner} viewBox="0 0 44 44" fill="none">
-        <rect x="8"  y="8"  width="10" height="28" rx="2" fill="#ffffff" />
-        <rect x="8"  y="30" width="22" height="10" rx="2" fill="#ffffff" />
-        <rect x="26" y="30" width="10" height="10" rx="2" fill={colors.warning} />
+    <div style={wrap} aria-label="LEDGERA">
+      <svg
+        width={Math.round(size * 0.66)}
+        height={Math.round(size * 0.66)}
+        viewBox="0 0 512 512"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path d="M176 140 H240 V310 H352 V372 H176 Z" fill="#F8FAFC" />
+        <rect x="252" y="310" width="100" height="18" rx="9" fill="#16A34A" />
       </svg>
     </div>
   );
