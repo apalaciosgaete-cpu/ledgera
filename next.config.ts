@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+const isProduction = process.env.NODE_ENV === "production";
+const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE !== "false" && isProduction;
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -60,6 +63,12 @@ const publicMaintenanceRoutes = [
   "/cookies",
 ];
 
+const maintenanceRedirects = publicMaintenanceRoutes.map((source) => ({
+  source,
+  destination: "/mantenimiento",
+  permanent: false,
+}));
+
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit", "pdf-parse"],
   bundlePagesRouterDependencies: true,
@@ -77,11 +86,7 @@ const nextConfig: NextConfig = {
         destination: "https://ledgera.cl/:path*",
         permanent: true,
       },
-      ...publicMaintenanceRoutes.map((source) => ({
-        source,
-        destination: "/mantenimiento",
-        permanent: false,
-      })),
+      ...(isMaintenanceMode ? maintenanceRedirects : []),
     ];
   },
 
@@ -98,18 +103,22 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
-      {
-        source: "/robots.txt",
-        headers: noIndexHeaders,
-      },
-      {
-        source: "/sitemap.xml",
-        headers: noIndexHeaders,
-      },
-      {
-        source: "/mantenimiento",
-        headers: noIndexHeaders,
-      },
+      ...(isMaintenanceMode
+        ? [
+            {
+              source: "/robots.txt",
+              headers: noIndexHeaders,
+            },
+            {
+              source: "/sitemap.xml",
+              headers: noIndexHeaders,
+            },
+            {
+              source: "/mantenimiento",
+              headers: noIndexHeaders,
+            },
+          ]
+        : []),
       {
         source: "/:path*",
         headers: securityHeaders,
