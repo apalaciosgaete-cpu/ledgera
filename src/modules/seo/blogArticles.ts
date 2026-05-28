@@ -24,6 +24,221 @@ export type BlogArticle = {
 
 export const blogArticles: BlogArticle[] = [
   {
+    slug: "guia-impuestos-criptomonedas-chile",
+    title: "Guía de impuestos de criptomonedas en Chile: qué declarar y cómo ordenar tus movimientos",
+    summary:
+      "Guía completa para entender qué revisar antes de declarar criptomonedas en Chile: ventas, swaps, staking, airdrops, FIFO, banco, exchange, Formulario 22 y respaldos.",
+    tag: "Guía completa",
+    tagColor: "#16A34A",
+    readTime: "12 min",
+    publishedLabel: "28 de mayo, 2026",
+    publishedAt: "2026-05-28",
+    updatedAt: "2026-05-28",
+    sections: [
+      {
+        type: "p",
+        content:
+          "Declarar criptomonedas no parte en el Formulario 22. Parte antes: en el orden de tus movimientos. Si tus compras, ventas, swaps, depósitos, retiros y cartolas bancarias no están conectadas, cualquier cálculo tributario queda débil.",
+      },
+      {
+        type: "p",
+        content:
+          "Esta guía resume los puntos que conviene revisar en Chile antes de preparar información para una declaración o revisión tributaria. El objetivo es ayudarte a construir una base clara, no reemplazar la revisión de un contador o asesor tributario.",
+      },
+      {
+        type: "h2",
+        content: "¿Debo declarar criptomonedas en Chile?",
+      },
+      {
+        type: "p",
+        content:
+          "En términos prácticos, el punto crítico no es solo tener criptomonedas, sino haber realizado operaciones que generan información económica relevante: ventas, permutas, intercambios, recompensas, retiros a banco o movimientos que puedan representar una ganancia, ingreso o cambio patrimonial.",
+      },
+      {
+        type: "callout",
+        content:
+          "Declarar y pagar no son lo mismo. Puede existir obligación de informar o respaldar operaciones aunque el resultado final no genere impuesto a pagar, especialmente si hubo pérdidas, baja ganancia o rentas personales dentro de un tramo exento.",
+      },
+      {
+        type: "h2",
+        content: "Operaciones crypto que conviene revisar",
+      },
+      {
+        type: "ul",
+        content: [
+          "Venta de criptomonedas a pesos chilenos, dólares u otra moneda fiat.",
+          "Intercambio de una criptomoneda por otra, también conocido como swap o permuta.",
+          "Uso de criptomonedas para pagar bienes, servicios o transferir valor a terceros.",
+          "Recompensas de staking, intereses, rewards o rendimientos similares.",
+          "Airdrops, bonificaciones, campañas o tokens recibidos sin una compra directa.",
+          "Minería u otra actividad que genere activos digitales como ingreso.",
+          "Donaciones, regalos o transferencias que cambien la titularidad económica del activo.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Operaciones que no siempre son venta",
+      },
+      {
+        type: "p",
+        content:
+          "No todo movimiento crypto representa una ganancia. Una transferencia entre tus propias wallets o entre tus cuentas de exchange puede ser solo un movimiento interno. El problema aparece cuando no existe trazabilidad suficiente para demostrarlo.",
+      },
+      {
+        type: "ul",
+        content: [
+          "Enviar BTC desde Binance a una wallet propia puede ser una transferencia interna.",
+          "Retirar USDT a otro exchange puede no ser una venta si mantienes titularidad económica.",
+          "Mover fondos entre cuentas propias no debería mezclarse con ventas a terceros.",
+          "Un depósito bancario necesita contexto: puede venir de una venta, de sueldo, de ahorro o de otra fuente.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Cómo calcular una ganancia o pérdida crypto",
+      },
+      {
+        type: "p",
+        content:
+          "Para revisar una venta o intercambio, normalmente necesitas reconstruir cuánto recibiste, cuánto costaron las unidades vendidas, qué comisiones pagaste y qué tipo de cambio corresponde usar para expresarlo en pesos chilenos.",
+      },
+      {
+        type: "step",
+        content: [
+          "Ordena todos los movimientos por fecha y hora de ejecución.",
+          "Separa compras, ventas, swaps, depósitos, retiros y comisiones.",
+          "Identifica qué movimientos afectan realmente el portafolio y cuáles son solo transferencias internas.",
+          "Calcula el costo de adquisición de las unidades vendidas usando un criterio consistente, como FIFO.",
+          "Convierte valores relevantes a CLP con fecha, fuente y criterio trazable.",
+          "Determina resultado: ingresos de venta menos costo asociado y comisiones aplicables.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Qué es FIFO y por qué importa",
+      },
+      {
+        type: "p",
+        content:
+          "FIFO significa First In, First Out: las primeras unidades compradas son las primeras que se consideran vendidas. Si compraste el mismo activo en varias fechas y precios distintos, el orden de los lotes cambia el costo asociado a cada venta.",
+      },
+      {
+        type: "p",
+        content:
+          "El valor de FIFO no está solo en el número final. Está en la trazabilidad: permite explicar qué compra financia qué venta, qué costo se usó y cómo se construyó la ganancia o pérdida realizada.",
+      },
+      {
+        type: "h2",
+        content: "Formulario 22, Impuesto Global Complementario y revisión anual",
+      },
+      {
+        type: "p",
+        content:
+          "En Chile, la declaración anual de renta se realiza mediante el Formulario 22. Para personas naturales, las ganancias o ingresos asociados a criptoactivos pueden interactuar con el Impuesto Global Complementario, que considera la situación tributaria total del contribuyente.",
+      },
+      {
+        type: "callout",
+        content:
+          "Las líneas, códigos y criterios operativos del Formulario 22 pueden cambiar por año tributario. Antes de presentar información, valida el tratamiento vigente con un contador o asesor tributario y con las instrucciones oficiales del período correspondiente.",
+      },
+      {
+        type: "h2",
+        content: "El problema que casi nadie ve: banco y exchange no conversan solos",
+      },
+      {
+        type: "p",
+        content:
+          "Muchos errores nacen porque el historial del exchange y la cartola bancaria se revisan por separado. Una venta en exchange puede terminar como abono bancario. Una compra puede partir como transferencia desde el banco. Si ambos mundos no se concilian, la historia queda incompleta.",
+      },
+      {
+        type: "ul",
+        content: [
+          "Transferencias bancarias sin referencia clara al exchange.",
+          "Abonos bancarios que podrían corresponder a ventas crypto, pero no están asociados a movimientos confirmados.",
+          "Compras P2P difíciles de distinguir de transferencias comunes.",
+          "Diferencias entre fecha bancaria, fecha de ejecución y fecha de liquidación.",
+          "Movimientos duplicados por usar reportes Spot, Funding, Convert, P2P o Tax al mismo tiempo.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Errores frecuentes antes de declarar criptomonedas",
+      },
+      {
+        type: "ul",
+        content: [
+          "Usar solo el saldo actual del exchange como si fuera historial tributario.",
+          "Confundir depósitos o retiros internos con ventas reales.",
+          "No descontar o no documentar comisiones.",
+          "Mezclar movimientos personales, familiares y de empresa en un solo portafolio.",
+          "Confirmar importaciones automáticas sin revisar duplicados.",
+          "No guardar respaldo del archivo original descargado desde el exchange.",
+          "Calcular en USD y olvidar la conversión documentada a pesos chilenos.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Checklist mínimo antes de hablar con tu contador",
+      },
+      {
+        type: "ol",
+        content: [
+          "Descarga historiales completos de exchanges usados durante el año.",
+          "Reúne cartolas bancarias relacionadas con compras o ventas crypto.",
+          "Marca movimientos internos entre wallets o cuentas propias.",
+          "Identifica ventas, swaps, recompensas y retiros a fiat.",
+          "Conserva fechas, montos, activos, comisiones y tipo de cambio aplicado.",
+          "Prepara un resumen de resultado realizado y respaldos por movimiento.",
+          "Deja documentado qué criterio de costo se usó y por qué.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Cómo ayuda LEDGERA",
+      },
+      {
+        type: "p",
+        content:
+          "LEDGERA está diseñado para ordenar la información antes de calcular. Las importaciones se revisan antes de confirmarse, el portafolio se construye desde movimientos trazables y la conciliación busca conectar exchange, banco y base tributaria.",
+      },
+      {
+        type: "ul",
+        content: [
+          "Importaciones revisables antes de entrar al portafolio.",
+          "Movimientos confirmados como fuente principal de cálculo.",
+          "Conciliación entre banco y actividad crypto.",
+          "FIFO y base tributaria reconstruible desde movimientos.",
+          "Exportaciones CSV y PDF para revisión profesional.",
+          "Trazabilidad de cambios, clasificaciones y decisiones relevantes.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Preguntas frecuentes",
+      },
+      {
+        type: "ul",
+        content: [
+          "¿Debo declarar si solo compré y mantuve? Depende del caso y de si hubo otros hechos relevantes. Aun así, conviene conservar respaldo de compras y origen de fondos.",
+          "¿Un swap entre criptomonedas importa? Sí, debe revisarse porque puede representar una permuta o intercambio con efecto económico.",
+          "¿El staking se revisa igual que una venta? No necesariamente. Puede tener tratamiento distinto porque puede representar rendimiento o ingreso antes de una venta posterior.",
+          "¿Puedo usar solo el reporte del exchange? Es insuficiente si no explica banco, transferencias internas, duplicados, comisiones y criterio de costo.",
+          "¿LEDGERA reemplaza al contador? No. LEDGERA prepara información ordenada y trazable para facilitar la revisión profesional.",
+        ],
+      },
+      {
+        type: "callout",
+        content:
+          "Esta guía es informativa. No constituye asesoría legal, contable ni tributaria personalizada. La decisión final debe revisarse con un profesional considerando documentos, período tributario y normativa vigente.",
+      },
+    ],
+    related: [
+      { label: "Impuestos crypto en Chile", href: "/impuestos-crypto-chile" },
+      { label: "Cómo declarar crypto en Chile", href: "/como-declarar-crypto-en-chile" },
+      { label: "Método FIFO en criptomonedas", href: "/blog/metodo-fifo-criptomonedas-chile" },
+    ],
+  },
+  {
     slug: "como-declarar-criptomonedas-sii-chile",
     title: "Cómo preparar información para declarar criptomonedas en Chile",
     summary:
@@ -79,6 +294,7 @@ export const blogArticles: BlogArticle[] = [
       },
     ],
     related: [
+      { label: "Guía de impuestos crypto en Chile", href: "/blog/guia-impuestos-criptomonedas-chile" },
       { label: "Impuestos crypto en Chile", href: "/impuestos-crypto-chile" },
       { label: "Método FIFO en criptomonedas", href: "/blog/metodo-fifo-criptomonedas-chile" },
       { label: "Conciliación banco y exchange", href: "/conciliacion-binance-banco" },
@@ -135,6 +351,7 @@ export const blogArticles: BlogArticle[] = [
       },
     ],
     related: [
+      { label: "Guía de impuestos crypto en Chile", href: "/blog/guia-impuestos-criptomonedas-chile" },
       { label: "Cómo preparar la declaración crypto", href: "/blog/como-declarar-criptomonedas-sii-chile" },
       { label: "Impuestos crypto en Chile", href: "/impuestos-crypto-chile" },
       { label: "Contador crypto en Chile", href: "/contador-crypto-chile" },
@@ -195,6 +412,7 @@ export const blogArticles: BlogArticle[] = [
       },
     ],
     related: [
+      { label: "Guía de impuestos crypto en Chile", href: "/blog/guia-impuestos-criptomonedas-chile" },
       { label: "Impuestos crypto Chile", href: "/impuestos-crypto-chile" },
       { label: "Declarar criptomonedas en Chile", href: "/como-declarar-crypto-en-chile" },
       { label: "Preguntas frecuentes", href: "/preguntas" },
@@ -256,6 +474,7 @@ export const blogArticles: BlogArticle[] = [
       },
     ],
     related: [
+      { label: "Guía de impuestos crypto en Chile", href: "/blog/guia-impuestos-criptomonedas-chile" },
       { label: "Método FIFO crypto", href: "/blog/metodo-fifo-criptomonedas-chile" },
       { label: "Impuestos crypto Chile", href: "/impuestos-crypto-chile" },
       { label: "Cómo declarar crypto", href: "/como-declarar-crypto-en-chile" },
@@ -316,6 +535,7 @@ export const blogArticles: BlogArticle[] = [
       },
     ],
     related: [
+      { label: "Guía de impuestos crypto en Chile", href: "/blog/guia-impuestos-criptomonedas-chile" },
       { label: "Contador crypto en Chile", href: "/contador-crypto-chile" },
       { label: "Preguntas frecuentes", href: "/preguntas" },
       { label: "Planes LEDGERA", href: "/planes" },
@@ -376,6 +596,7 @@ export const blogArticles: BlogArticle[] = [
       },
     ],
     related: [
+      { label: "Guía de impuestos crypto en Chile", href: "/blog/guia-impuestos-criptomonedas-chile" },
       { label: "Binance impuestos Chile", href: "/binance-impuestos-chile" },
       { label: "Conciliación banco y exchange", href: "/conciliacion-binance-banco" },
       { label: "Cómo funciona LEDGERA", href: "/como-funciona" },
