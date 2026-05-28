@@ -83,10 +83,10 @@ const plans: Plan[] = [
   },
   {
     key: "contador",
-    name: "Contador",
+    name: "Profesional",
     monthly: 14990,
     annual: 164890,
-    description: "Múltiples clientes",
+    description: "Para asesores y equipos con clientes",
     availability: "Disponible con clientes adicionales +20%",
     highlight: false,
     cta: "Solicitar activación",
@@ -115,7 +115,7 @@ const plans: Plan[] = [
     checkoutMode: "checkout",
     checkoutPlan: "EMPRESA",
     features: [
-      "Todo lo de Contador",
+      "Todo lo de Profesional",
       "Clientes ilimitados",
       "Régimen primera categoría",
       "Configuración tributaria",
@@ -133,15 +133,27 @@ const faqItems = [
   },
   {
     q: "¿El anual incluye 1 mes bonificado?",
-    a: "Sí. Los precios anuales equivalen a 11 mensualidades, por lo que el usuario paga 11 meses y obtiene 12 meses de uso.",
+    a: "Sí. Los precios anuales equivalen a 11 mensualidades, por lo que pagas 11 meses y obtienes 12 meses de uso.",
   },
   {
-    q: "¿Cuánto aumenta un cliente adicional en el plan Contador?",
-    a: "El cliente adicional aumenta un 20% sobre el valor del plan Contador: $2.998 mensual o $32.978 anual.",
+    q: "¿Cuánto aumenta un cliente adicional en el plan Profesional?",
+    a: "El cliente adicional aumenta un 20% sobre el valor del plan Profesional: $2.998 mensual o $32.978 anual.",
   },
   {
     q: "¿Cuándo se activa el plan?",
-    a: "La activación en línea ocurre cuando el proveedor confirma el pago. Las modalidades anuales o comerciales pueden requerir validación manual de LEDGERA.",
+    a: "Cuando el pago queda confirmado, se activa el plan contratado. El usuario obtiene el plan que seleccionó y pagó; no queda sujeto a una validación comercial posterior para cambiarlo por otro plan.",
+  },
+  {
+    q: "¿Puedo cambiar de plan después?",
+    a: "Sí. Puedes subir de plan cuando tu operación crezca. El cambio se coordina para evitar duplicar cobros o perder continuidad del período ya pagado.",
+  },
+  {
+    q: "¿Puedo cancelar la suscripción?",
+    a: "Sí. Puedes solicitar la cancelación antes del siguiente ciclo de cobro. El acceso se mantiene activo hasta el término del período ya pagado.",
+  },
+  {
+    q: "¿Hay devoluciones?",
+    a: "Las devoluciones se revisan caso a caso. Si existe cobro duplicado, error de activación o un problema imputable a LEDGERA, se regulariza o devuelve según corresponda. En períodos ya activados y usados, no se considera devolución proporcional automática.",
   },
 ];
 
@@ -210,14 +222,6 @@ function PlanCard({
           : "relative flex h-full flex-col rounded-3xl border border-white/10 bg-white/[0.045] p-6"
       }
     >
-      {plan.highlight ? (
-        <div className="absolute -top-4 left-0 right-0 flex justify-center">
-          <span className="rounded-full bg-emerald-600 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-white">
-            Más popular
-          </span>
-        </div>
-      ) : null}
-
       <div className="mb-6">
         <h3 className="font-display text-2xl font-black tracking-[-0.04em] text-white">{plan.name}</h3>
         <p className="mt-2 text-sm leading-6 text-slate-400">{plan.description}</p>
@@ -300,7 +304,7 @@ function PlanesContent() {
       <PublicHero
         eyebrow="Planes y precios"
         title="Elige el nivel de operación que necesita tu historial crypto"
-        description="Planes disponibles para ordenar movimientos, conciliación, portafolio y base tributaria trazable en Chile, con precios claros para uso personal, contador y empresa."
+        description="Planes disponibles para ordenar movimientos, conciliación, portafolio y base tributaria trazable en Chile, con precios claros para uso personal, profesional y empresa."
       >
         <div className="flex flex-col items-center justify-center gap-3">
           <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.055] p-1">
