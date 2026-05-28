@@ -7,7 +7,7 @@ import { colors, fonts } from "@/styles/tokens";
 
 export const PUBLIC_CONTACT_EMAIL = "admin@ledgera.cl";
 export const PUBLIC_WHATSAPP_URL =
-  "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una+consulta+sobre+Ledgera&type=phone_number";
+  "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una%20consulta%20sobre%20LEDGERA&type=phone_number";
 
 export const publicNavLinks = [
   { label: "Quiénes somos", href: "/quienes-somos" },
@@ -19,7 +19,7 @@ export const publicNavLinks = [
 
 export const publicPalette = {
   page: "#071520",
-  section: "#0A1F2E",
+  section: "#071B28",
   sectionSoft: "#0F2A3D",
   footer: "#040C13",
   action: colors.accent,
@@ -29,14 +29,15 @@ export const publicPalette = {
   textSoft: "#CBD5E1",
   textMuted: "#94A3B8",
   textFaint: "#64748B",
-  border: "rgba(255,255,255,0.08)",
-  card: "rgba(255,255,255,0.035)",
-  cardStrong: "rgba(255,255,255,0.06)",
+  border: "rgba(255,255,255,0.10)",
+  card: "rgba(255,255,255,0.045)",
+  cardStrong: "rgba(255,255,255,0.065)",
 };
 
 const pageStyle: CSSProperties = {
   minHeight: "100vh",
-  background: publicPalette.page,
+  background:
+    "linear-gradient(180deg,#0F2A3D 0%,#071B28 28%,#061520 58%,#0F2A3D 100%)",
   color: publicPalette.text,
   fontFamily: fonts.body,
   overflowX: "hidden",
@@ -44,7 +45,7 @@ const pageStyle: CSSProperties = {
 
 const containerStyle: CSSProperties = {
   width: "100%",
-  maxWidth: "1120px",
+  maxWidth: "1180px",
   margin: "0 auto",
   paddingLeft: "24px",
   paddingRight: "24px",
@@ -60,102 +61,63 @@ export function PublicContainer({
   return <div style={{ ...containerStyle, ...style }}>{children}</div>;
 }
 
-export function PublicHeader({ activePath }: { activePath?: string }) {
+function PublicNavLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        background: "rgba(7, 21, 32, 0.94)",
-        backdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${publicPalette.border}`,
-      }}
+    <Link
+      href={href}
+      className="rounded-lg px-3 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
     >
-      <PublicContainer
-        style={{
-          minHeight: "76px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "20px",
-          paddingTop: "10px",
-          paddingBottom: "10px",
-        }}
-      >
-        <Link href="/" aria-label="Inicio LEDGERA" style={{ textDecoration: "none", flexShrink: 0 }}>
+      {children}
+    </Link>
+  );
+}
+
+export function PublicHeader({ activePath: _activePath }: { activePath?: string }) {
+  return (
+    <header className="sticky top-0 z-[100] border-b border-white/10 bg-[#0F2A3D]/95 backdrop-blur-md">
+      <div className="flex h-[76px] items-center justify-between px-5 lg:px-8">
+        <Link href="/" aria-label="Inicio LEDGERA" className="shrink-0">
           <Logo variant="light" size="lg" showSubtitle />
         </Link>
 
-        <nav
-          aria-label="Navegación principal"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: "6px",
-            flexWrap: "wrap",
-          }}
-        >
-          {publicNavLinks.map((item) => {
-            const isActive = activePath === item.href;
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Navegación principal">
+          {publicNavLinks.map((item) => (
+            <PublicNavLink key={item.href} href={item.href}>
+              {item.label}
+            </PublicNavLink>
+          ))}
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  color: isActive ? "#4ADE80" : publicPalette.textMuted,
-                  background: isActive ? "rgba(22,163,74,0.12)" : "transparent",
-                  border: isActive ? "1px solid rgba(22,163,74,0.18)" : "1px solid transparent",
-                  borderRadius: "10px",
-                  fontSize: "14px",
-                  fontWeight: isActive ? 800 : 650,
-                  padding: "8px 11px",
-                  textDecoration: "none",
-                  lineHeight: 1,
-                }}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
+          <span className="mx-2 h-6 w-px bg-white/15" aria-hidden="true" />
 
-          <Link
-            href="/login"
-            style={{
-              marginLeft: "6px",
-              color: publicPalette.textSoft,
-              border: `1px solid ${publicPalette.border}`,
-              borderRadius: "10px",
-              fontSize: "14px",
-              fontWeight: 700,
-              padding: "9px 14px",
-              textDecoration: "none",
-              lineHeight: 1,
-            }}
-          >
-            Iniciar sesión
-          </Link>
-
+          <PublicNavLink href="/login">Iniciar sesión</PublicNavLink>
           <Link
             href="/register"
-            style={{
-              color: "#ffffff",
-              background: publicPalette.action,
-              border: "1px solid rgba(22,163,74,0.55)",
-              borderRadius: "10px",
-              fontSize: "14px",
-              fontWeight: 850,
-              padding: "10px 16px",
-              textDecoration: "none",
-              lineHeight: 1,
-            }}
+            className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
           >
-            Comenzar gratis
+            Comenzar ahora
           </Link>
         </nav>
-      </PublicContainer>
+
+        <details className="group relative md:hidden">
+          <summary className="list-none rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-slate-100 marker:hidden">
+            Menú
+          </summary>
+          <div className="absolute right-0 top-[56px] z-[110] grid min-w-[230px] gap-3 rounded-2xl border border-white/10 bg-[#0F2A3D]/98 p-4 shadow-2xl backdrop-blur-md">
+            {publicNavLinks.map((item) => (
+              <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-300">
+                {item.label}
+              </Link>
+            ))}
+            <span className="h-px bg-white/10" />
+            <Link href="/login" className="text-sm font-bold text-slate-300">
+              Iniciar sesión
+            </Link>
+            <Link href="/register" className="rounded-xl bg-emerald-600 px-4 py-3 text-center text-sm font-black text-white">
+              Comenzar ahora
+            </Link>
+          </div>
+        </details>
+      </div>
     </header>
   );
 }
@@ -198,6 +160,7 @@ export function PublicFooter() {
           <FooterGroup
             title="Producto"
             links={[
+              { label: "Quiénes somos", href: "/quienes-somos" },
               { label: "Cómo funciona", href: "/como-funciona" },
               { label: "Planes", href: "/planes" },
               { label: "Preguntas frecuentes", href: "/preguntas" },
@@ -206,7 +169,7 @@ export function PublicFooter() {
           />
 
           <FooterGroup
-            title="SEO / recursos"
+            title="Recursos SEO"
             links={[
               { label: "Impuestos crypto Chile", href: "/impuestos-crypto-chile" },
               { label: "Declarar criptomonedas", href: "/como-declarar-crypto-en-chile" },
@@ -325,7 +288,7 @@ export function PublicHero({
       style={{
         borderBottom: `1px solid ${publicPalette.border}`,
         background:
-          "radial-gradient(circle at top left, rgba(22,163,74,0.22), transparent 32%), linear-gradient(135deg, #061522 0%, #082033 48%, #0B2A3F 100%)",
+          "radial-gradient(circle at top left, rgba(22,163,74,0.20), transparent 34%), linear-gradient(135deg, #061522 0%, #082033 48%, #0B2A3F 100%)",
         padding: "86px 0 70px",
       }}
     >
@@ -426,7 +389,7 @@ export function PublicButton({
 export function PublicCta({
   title,
   description,
-  primaryLabel = "Comenzar gratis",
+  primaryLabel = "Comenzar ahora",
   primaryHref = "/register",
   secondaryLabel = "Ver planes",
   secondaryHref = "/planes",
