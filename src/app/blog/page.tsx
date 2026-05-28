@@ -42,7 +42,7 @@ export default function BlogPage() {
   return (
     <main
       style={{
-        fontFamily: "var(--font-body, 'Plus Jakarta Sans', sans-serif)",
+        fontFamily: "var(--font-body, 'Inter', system-ui, sans-serif)",
         background: "#0A1F2E",
         color: "#F1F5F9",
         minHeight: "100vh",
@@ -53,11 +53,11 @@ export default function BlogPage() {
           position: "sticky",
           top: 0,
           zIndex: 100,
-          background: "rgba(10,31,46,0.94)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(7,21,32,0.94)",
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
           padding: "0 2.5rem",
-          height: "68px",
+          minHeight: "76px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -67,164 +67,48 @@ export default function BlogPage() {
           <Link href="/" style={{ textDecoration: "none" }} aria-label="Inicio LEDGERA">
             <Logo variant="light" size="lg" showSubtitle />
           </Link>
-          <Link
-            href="/"
-            style={{
-              fontSize: "14px",
-              color: "#64748B",
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M13 8H3M7 4L3 8l4 4"
-                stroke="#64748B"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <Link href="/" style={{ fontSize: "14px", color: "#94A3B8", textDecoration: "none" }}>
             Inicio
           </Link>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Link
-            href="/login"
-            style={{
-              fontSize: "15px",
-              fontWeight: 500,
-              color: "#94A3B8",
-              textDecoration: "none",
-              padding: "8px 18px",
-              borderRadius: "8px",
-            }}
-          >
+          <Link href="/login" style={{ fontSize: "14px", fontWeight: 700, color: "#CBD5E1", textDecoration: "none", padding: "9px 16px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)" }}>
             Iniciar sesión
           </Link>
-          <Link
-            href="/register"
-            style={{
-              fontSize: "15px",
-              fontWeight: 600,
-              color: "#ffffff",
-              textDecoration: "none",
-              padding: "9px 20px",
-              borderRadius: "8px",
-              background: "#16A34A",
-            }}
-          >
+          <Link href="/register" style={{ fontSize: "14px", fontWeight: 850, color: "#ffffff", textDecoration: "none", padding: "10px 18px", borderRadius: "10px", background: "#16A34A" }}>
             Comenzar gratis
           </Link>
         </div>
       </nav>
 
-      <section
-        style={{
-          padding: "6rem 2rem 4rem",
-          background: "#071520",
-          textAlign: "center",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            background: "rgba(22,163,74,0.12)",
-            border: "1px solid rgba(22,163,74,0.25)",
-            borderRadius: "100px",
-            padding: "5px 18px",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "#4ADE80" }}>
+      <section style={{ padding: "6rem 2rem 4rem", background: "radial-gradient(circle at top left, rgba(22,163,74,0.20), transparent 34%), linear-gradient(135deg,#061522 0%,#082033 48%,#0B2A3F 100%)", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(22,163,74,0.12)", border: "1px solid rgba(22,163,74,0.25)", borderRadius: "100px", padding: "7px 18px", marginBottom: "1.5rem" }}>
+          <span style={{ fontSize: "12px", fontWeight: 850, color: "#4ADE80", letterSpacing: "0.12em", textTransform: "uppercase" }}>
             Blog · Recursos tributarios
           </span>
         </div>
-        <h1
-          style={{
-            fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-            fontSize: "clamp(2rem, 4vw, 3rem)",
-            fontWeight: 700,
-            color: "#F1F5F9",
-            letterSpacing: "-0.03em",
-            margin: "0 0 1rem",
-            lineHeight: 1.1,
-          }}
-        >
+        <h1 style={{ fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)", fontSize: "clamp(2.2rem, 5vw, 4rem)", fontWeight: 900, color: "#F8FAFC", letterSpacing: "-0.055em", margin: "0 0 1rem", lineHeight: 1.05 }}>
           Cripto, impuestos y conciliación en Chile
         </h1>
-        <p
-          style={{
-            fontSize: "17px",
-            color: "#94A3B8",
-            maxWidth: "620px",
-            margin: "0 auto",
-            lineHeight: 1.65,
-          }}
-        >
+        <p style={{ fontSize: "18px", color: "#CBD5E1", maxWidth: "720px", margin: "0 auto", lineHeight: 1.75 }}>
           Guías prácticas para ordenar información crypto antes de una revisión tributaria: movimientos, banco, exchange, FIFO y trazabilidad.
         </p>
       </section>
 
       <section style={{ padding: "5rem 2rem", maxWidth: "1100px", margin: "0 auto" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: "24px",
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
           {blogArticles.map((article) => (
-            <Link
-              key={article.slug}
-              href={`/blog/${article.slug}`}
-              style={{
-                display: "block",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "18px",
-                padding: "1.5rem",
-                textDecoration: "none",
-                transition: "border-color 0.15s ease, transform 0.15s ease",
-              }}
-            >
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: `${article.tagColor}14`,
-                  border: `1px solid ${article.tagColor}30`,
-                  borderRadius: "100px",
-                  padding: "4px 12px",
-                  marginBottom: "1rem",
-                }}
-              >
-                <span style={{ fontSize: "12px", fontWeight: 700, color: article.tagColor }}>
-                  {article.tag}
-                </span>
+            <Link key={article.slug} href={`/blog/${article.slug}`} style={{ display: "block", background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "22px", padding: "1.6rem", textDecoration: "none" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", background: `${article.tagColor}14`, border: `1px solid ${article.tagColor}30`, borderRadius: "100px", padding: "5px 12px", marginBottom: "1rem" }}>
+                <span style={{ fontSize: "12px", fontWeight: 850, color: article.tagColor }}>{article.tag}</span>
               </div>
-              <h2
-                style={{
-                  fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)",
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "#F1F5F9",
-                  margin: "0 0 0.75rem",
-                  lineHeight: 1.3,
-                }}
-              >
+              <h2 style={{ fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)", fontSize: "21px", fontWeight: 900, color: "#F8FAFC", margin: "0 0 0.75rem", lineHeight: 1.25, letterSpacing: "-0.035em" }}>
                 {article.title}
               </h2>
-              <p style={{ fontSize: "14px", color: "#94A3B8", margin: "0 0 1.25rem", lineHeight: 1.65 }}>
+              <p style={{ fontSize: "14px", color: "#94A3B8", margin: "0 0 1.25rem", lineHeight: 1.7 }}>
                 {article.summary}
               </p>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748B" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748B", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "14px" }}>
                 <span>{article.publishedLabel}</span>
                 <span>{article.readTime}</span>
               </div>
