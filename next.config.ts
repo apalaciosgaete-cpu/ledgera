@@ -35,11 +35,29 @@ const securityHeaders = [
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
-const robotsHeaders = [
+const noIndexHeaders = [
   { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
   { key: "Pragma", value: "no-cache" },
   { key: "Expires", value: "0" },
-  { key: "X-Robots-Tag", value: "all" },
+  { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet, noimageindex" },
+];
+
+const publicMaintenanceRoutes = [
+  "/",
+  "/como-funciona",
+  "/planes",
+  "/impuestos-crypto-chile",
+  "/como-declarar-crypto-en-chile",
+  "/conciliacion-binance-banco",
+  "/contador-crypto-chile",
+  "/binance-impuestos-chile",
+  "/quienes-somos",
+  "/preguntas",
+  "/blog",
+  "/blog/:path*",
+  "/terminos",
+  "/privacidad",
+  "/cookies",
 ];
 
 const nextConfig: NextConfig = {
@@ -59,6 +77,11 @@ const nextConfig: NextConfig = {
         destination: "https://ledgera.cl/:path*",
         permanent: true,
       },
+      ...publicMaintenanceRoutes.map((source) => ({
+        source,
+        destination: "/mantenimiento",
+        permanent: false,
+      })),
     ];
   },
 
@@ -77,7 +100,15 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/robots.txt",
-        headers: robotsHeaders,
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/sitemap.xml",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/mantenimiento",
+        headers: noIndexHeaders,
       },
       {
         source: "/:path*",
