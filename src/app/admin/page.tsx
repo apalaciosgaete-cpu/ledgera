@@ -685,15 +685,6 @@ export default function AdminPage() {
                 bg:     "rgba(22,163,74,0.08)",
                 border: "rgba(22,163,74,0.2)",
               },
-              {
-                name:   "MercadoPago",
-                desc:   "Pagos con tarjeta de crédito, débito y medios locales. Procesador activo para suscripciones.",
-                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>,
-                status: "Activo",
-                color:  colors.accent,
-                bg:     "rgba(22,163,74,0.08)",
-                border: "rgba(22,163,74,0.2)",
-              },
             ].map(method => (
               <div key={method.name} style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>

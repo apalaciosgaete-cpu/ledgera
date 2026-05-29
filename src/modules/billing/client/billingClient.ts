@@ -6,7 +6,6 @@ type BillingCheckoutResponse = {
   ok: boolean;
   message?: string;
   data?: {
-    provider: "MERCADOPAGO";
     paymentId: string;
     checkoutId?: string | null;
     url?: string | null;
@@ -17,7 +16,7 @@ export async function createBillingCheckout(
   plan: BillingCheckoutPlan,
 ): Promise<string> {
   const response = await httpClient<BillingCheckoutResponse>(
-    "/api/billing/mercadopago/checkout",
+    "/api/billing/checkout",
     {
       method: "POST",
       auth: true,

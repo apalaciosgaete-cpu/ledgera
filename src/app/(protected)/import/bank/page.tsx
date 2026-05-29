@@ -22,7 +22,6 @@ const BANKS = [
   "BCI",
   "Scotiabank",
   "Falabella",
-  "MercadoPago",
   "Tenpo",
   "Otro",
 ];

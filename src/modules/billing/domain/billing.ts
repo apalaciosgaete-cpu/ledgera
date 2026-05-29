@@ -1,6 +1,4 @@
-export type BillingProvider =
-  | "MERCADOPAGO"
-  | "MANUAL";
+export type BillingProvider = string;
 
 export type BillingPlan =
   | "BASICO"
