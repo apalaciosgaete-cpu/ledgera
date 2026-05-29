@@ -14,6 +14,7 @@ const POLL_INTERVAL = 4000;
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [initError, setInitError] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -28,19 +29,26 @@ export default function ChatWidget() {
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const initChat = useCallback(async (name?: string) => {
-    const res = await fetch("/api/chat/init", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guestName: name }),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      setConversationId(data.data.conversationId);
-      setMessages(data.data.messages ?? []);
-      if (data.data.messages?.length) {
-        lastMessageTime.current = data.data.messages.at(-1).createdAt;
+    try {
+      setInitError(false);
+      const res = await fetch("/api/chat/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guestName: name }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setConversationId(data.data.conversationId);
+        setMessages(data.data.messages ?? []);
+        if (data.data.messages?.length) {
+          lastMessageTime.current = data.data.messages.at(-1).createdAt;
+        }
+        setReady(true);
+      } else {
+        setInitError(true);
       }
-      setReady(true);
+    } catch {
+      setInitError(true);
     }
   }, []);
 
@@ -197,7 +205,12 @@ export default function ChatWidget() {
             <>
               {/* Mensajes */}
               <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                {messages.length === 0 && (
+                {initError && (
+                  <div style={{ textAlign: "center", color: "#f87171", fontSize: "0.82rem", marginTop: "2rem" }}>
+                    No se pudo conectar. <button onClick={() => initChat()} style={{ color: "#818cf8", background: "none", border: "none", cursor: "pointer", fontSize: "0.82rem" }}>Reintentar</button>
+                  </div>
+                )}
+                {!initError && messages.length === 0 && (
                   <div style={{ textAlign: "center", color: "#475569", fontSize: "0.82rem", marginTop: "2rem" }}>
                     👋 Hola, ¿en qué te podemos ayudar?<br/>Escríbenos y te responderemos pronto.
                   </div>
@@ -244,7 +257,7 @@ export default function ChatWidget() {
                 />
                 <button
                   onClick={send}
-                  disabled={!input.trim() || sending}
+                  disabled={!input.trim() || sending || !conversationId}
                   style={{
                     background: input.trim() ? "#3a76f0" : "rgba(255,255,255,0.06)",
                     border: "none", borderRadius: "8px", padding: "0.6rem 0.9rem",
