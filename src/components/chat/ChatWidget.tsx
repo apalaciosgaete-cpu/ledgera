@@ -15,26 +15,42 @@ export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [initError, setInitError] = useState(false);
+  const [adminOnline, setAdminOnline] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [unread, setUnread] = useState(0);
-  const [guestName, setGuestName] = useState("");
-  const [step, setStep] = useState<"name" | "chat">("chat");
+  // Estado post-envío offline
+  const [showOfflineForm, setShowOfflineForm] = useState(false);
+  const [offlineName, setOfflineName] = useState("");
+  const [offlineEmail, setOfflineEmail] = useState("");
+  const [offlineSubmitted, setOfflineSubmitted] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageTime = useRef<string>(new Date(0).toISOString());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  const initChat = useCallback(async (name?: string) => {
+  // Verificar si admin está online
+  const checkAdminStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/chat/status");
+      const data = await res.json();
+      setAdminOnline(data.adminOnline ?? false);
+    } catch {
+      setAdminOnline(false);
+    }
+  }, []);
+
+  const initChat = useCallback(async () => {
     try {
       setInitError(false);
       const res = await fetch("/api/chat/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guestName: name }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (data.ok) {
@@ -54,11 +70,11 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (!open) return;
-    if (!ready) {
-      initChat();
-    }
-  }, [open, ready, initChat]);
+    checkAdminStatus();
+    if (!ready) initChat();
+  }, [open, ready, initChat, checkAdminStatus]);
 
+  // Polling mensajes nuevos
   useEffect(() => {
     if (!ready || !open) return;
     pollRef.current = setInterval(async () => {
@@ -89,6 +105,7 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, optimistic]);
     const text = input.trim();
     setInput("");
+
     const res = await fetch("/api/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -98,15 +115,23 @@ export default function ChatWidget() {
     if (data.ok) {
       setMessages((prev) => prev.map((m) => m.id === optimistic.id ? data.data.message : m));
       lastMessageTime.current = data.data.message.createdAt;
+      // Si admin offline → mostrar formulario de contacto
+      if (!adminOnline) setShowOfflineForm(true);
     }
     setSending(false);
     scrollToBottom();
   };
 
-  const handleNameSubmit = async (e: React.FormEvent) => {
+  const submitOfflineForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    await initChat(guestName);
-    setStep("chat");
+    if (!conversationId) return;
+    // Guardar nombre/email actualizando la conversación
+    await fetch("/api/chat/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId, name: offlineName, email: offlineEmail }),
+    }).catch(() => {});
+    setOfflineSubmitted(true);
   };
 
   return (
@@ -129,8 +154,7 @@ export default function ChatWidget() {
         {unread > 0 && !open && (
           <span style={{
             position: "absolute", top: "-4px", right: "-4px",
-            background: "#ef4444", color: "#fff",
-            fontSize: "11px", fontWeight: 700,
+            background: "#ef4444", color: "#fff", fontSize: "11px", fontWeight: 700,
             width: "20px", height: "20px", borderRadius: "50%",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>{unread}</span>
@@ -146,7 +170,7 @@ export default function ChatWidget() {
         )}
       </button>
 
-      {/* Ventana de chat */}
+      {/* Ventana */}
       {open && (
         <div style={{
           position: "fixed", bottom: "96px", right: "28px",
@@ -154,14 +178,12 @@ export default function ChatWidget() {
           height: "460px", maxHeight: "calc(100vh - 120px)",
           background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: "16px", display: "flex", flexDirection: "column",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999,
-          overflow: "hidden",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, overflow: "hidden",
         }}>
           {/* Header */}
           <div style={{
             padding: "1rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.08)",
             display: "flex", alignItems: "center", gap: "0.75rem",
-            background: "#0f172a",
           }}>
             <div style={{
               width: "36px", height: "36px", borderRadius: "50%",
@@ -173,20 +195,54 @@ export default function ChatWidget() {
             </div>
             <div>
               <p style={{ margin: 0, fontWeight: 700, color: "#f1f5f9", fontSize: "0.9rem" }}>Soporte LEDGERA</p>
-              <p style={{ margin: 0, fontSize: "0.75rem", color: "#22c55e" }}>● En línea</p>
+              <p style={{ margin: 0, fontSize: "0.72rem", color: adminOnline ? "#22c55e" : "#94a3b8" }}>
+                {adminOnline ? "● En línea" : "● Responderemos pronto"}
+              </p>
             </div>
           </div>
 
           {/* Contenido */}
-          {step === "name" ? (
-            <form onSubmit={handleNameSubmit} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", flex: 1 }}>
-              <p style={{ color: "#94a3b8", fontSize: "0.88rem", margin: 0 }}>
-                Hola 👋 ¿Cómo te llamas para poder ayudarte mejor?
+          {initError ? (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+              <p style={{ color: "#f87171", fontSize: "0.85rem", textAlign: "center" }}>No se pudo conectar.</p>
+              <button onClick={initChat} style={{ color: "#818cf8", background: "none", border: "1px solid rgba(129,140,248,0.3)", borderRadius: "8px", padding: "0.4rem 0.9rem", cursor: "pointer", fontSize: "0.82rem" }}>
+                Reintentar
+              </button>
+            </div>
+          ) : offlineSubmitted ? (
+            /* Confirmación datos dejados */
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem", textAlign: "center", gap: "0.75rem" }}>
+              <div style={{ fontSize: "2rem" }}>✅</div>
+              <p style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.95rem", margin: 0 }}>¡Listo!</p>
+              <p style={{ color: "#94a3b8", fontSize: "0.85rem", margin: 0, lineHeight: 1.6 }}>
+                Nos contactaremos contigo a la brevedad en <strong style={{ color: "#818cf8" }}>{offlineEmail}</strong>.
               </p>
+            </div>
+          ) : showOfflineForm ? (
+            /* Formulario contacto offline */
+            <form onSubmit={submitOfflineForm} style={{ flex: 1, display: "flex", flexDirection: "column", padding: "1.2rem", gap: "0.85rem", overflowY: "auto" }}>
+              <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "10px", padding: "0.75rem 1rem" }}>
+                <p style={{ color: "#fcd34d", fontSize: "0.82rem", margin: 0, lineHeight: 1.6 }}>
+                  En este momento no hay nadie disponible. Deja tus datos y te contactaremos a la brevedad.
+                </p>
+              </div>
               <input
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                placeholder="Tu nombre (opcional)"
+                value={offlineName}
+                onChange={(e) => setOfflineName(e.target.value)}
+                placeholder="Tu nombre"
+                required
+                style={{
+                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "8px", padding: "0.6rem 0.8rem", color: "#f1f5f9",
+                  fontSize: "0.88rem", outline: "none",
+                }}
+              />
+              <input
+                value={offlineEmail}
+                onChange={(e) => setOfflineEmail(e.target.value)}
+                placeholder="Tu correo electrónico"
+                type="email"
+                required
                 style={{
                   background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
                   borderRadius: "8px", padding: "0.6rem 0.8rem", color: "#f1f5f9",
@@ -198,28 +254,28 @@ export default function ChatWidget() {
                 borderRadius: "8px", padding: "0.65rem", cursor: "pointer",
                 fontWeight: 600, fontSize: "0.88rem",
               }}>
-                Iniciar chat →
+                Enviar y esperar respuesta →
+              </button>
+              <button type="button" onClick={() => setShowOfflineForm(false)} style={{
+                background: "none", border: "none", color: "#64748b",
+                fontSize: "0.78rem", cursor: "pointer",
+              }}>
+                Volver al chat
               </button>
             </form>
           ) : (
             <>
               {/* Mensajes */}
               <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                {initError && (
-                  <div style={{ textAlign: "center", color: "#f87171", fontSize: "0.82rem", marginTop: "2rem" }}>
-                    No se pudo conectar. <button onClick={() => initChat()} style={{ color: "#818cf8", background: "none", border: "none", cursor: "pointer", fontSize: "0.82rem" }}>Reintentar</button>
-                  </div>
-                )}
-                {!initError && messages.length === 0 && (
+                {messages.length === 0 && (
                   <div style={{ textAlign: "center", color: "#475569", fontSize: "0.82rem", marginTop: "2rem" }}>
-                    👋 Hola, ¿en qué te podemos ayudar?<br/>Escríbenos y te responderemos pronto.
+                    {adminOnline
+                      ? "👋 Hola, ¿en qué te podemos ayudar? Escríbenos."
+                      : "👋 Hola, escríbenos tu consulta y te responderemos pronto."}
                   </div>
                 )}
                 {messages.map((m) => (
-                  <div key={m.id} style={{
-                    display: "flex",
-                    justifyContent: m.sender === "USER" ? "flex-end" : "flex-start",
-                  }}>
+                  <div key={m.id} style={{ display: "flex", justifyContent: m.sender === "USER" ? "flex-end" : "flex-start" }}>
                     <div style={{
                       maxWidth: "80%", padding: "0.5rem 0.8rem",
                       borderRadius: m.sender === "USER" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
@@ -233,6 +289,21 @@ export default function ChatWidget() {
                     </div>
                   </div>
                 ))}
+                {/* Indicador esperando respuesta (offline, mensaje enviado) */}
+                {messages.some(m => m.sender === "USER") && !messages.some(m => m.sender === "ADMIN") && !adminOnline && (
+                  <div style={{ textAlign: "center", marginTop: "0.5rem" }}>
+                    <span style={{ color: "#64748b", fontSize: "0.75rem" }}>
+                      ✓ Mensaje recibido — te responderemos pronto
+                    </span>
+                    <br/>
+                    <button
+                      onClick={() => setShowOfflineForm(true)}
+                      style={{ color: "#818cf8", background: "none", border: "none", fontSize: "0.75rem", cursor: "pointer", marginTop: "4px", textDecoration: "underline" }}
+                    >
+                      Dejar mis datos de contacto
+                    </button>
+                  </div>
+                )}
                 <div ref={bottomRef}/>
               </div>
 
@@ -240,7 +311,6 @@ export default function ChatWidget() {
               <div style={{
                 padding: "0.75rem", borderTop: "1px solid rgba(255,255,255,0.08)",
                 display: "flex", gap: "0.5rem", alignItems: "flex-end",
-                background: "#0f172a",
               }}>
                 <textarea
                   value={input}
@@ -259,9 +329,9 @@ export default function ChatWidget() {
                   onClick={send}
                   disabled={!input.trim() || sending || !conversationId}
                   style={{
-                    background: input.trim() ? "#3a76f0" : "rgba(255,255,255,0.06)",
+                    background: input.trim() && conversationId ? "#3a76f0" : "rgba(255,255,255,0.06)",
                     border: "none", borderRadius: "8px", padding: "0.6rem 0.9rem",
-                    cursor: input.trim() ? "pointer" : "default", color: "#fff",
+                    cursor: input.trim() && conversationId ? "pointer" : "default", color: "#fff",
                     transition: "background 0.15s",
                   }}
                 >

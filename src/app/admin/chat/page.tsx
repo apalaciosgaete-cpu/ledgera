@@ -37,7 +37,14 @@ export default function AdminChatPage() {
     }
   }, []);
 
-  useEffect(() => { loadConversations(); }, [loadConversations]);
+  useEffect(() => {
+    loadConversations();
+    // Heartbeat: marcar admin como online mientras tiene el panel abierto
+    const sendHeartbeat = () => fetch("/api/admin/chat/heartbeat", { method: "POST" });
+    sendHeartbeat();
+    const hb = setInterval(sendHeartbeat, 30_000);
+    return () => clearInterval(hb);
+  }, [loadConversations]);
 
   useEffect(() => {
     if (!selected) return;

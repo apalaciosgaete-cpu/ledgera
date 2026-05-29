@@ -76,7 +76,10 @@ export default function proxy(req: NextRequest) {
     "/api/users",
     "/api/billing/health",
     "/api/preview",
-    "/api/chat",
+    "/api/chat/init",
+    "/api/chat/send",
+    "/api/chat/poll",
+    "/api/chat/status",
     "/verify",
     "/api/verify",
   ];
