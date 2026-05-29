@@ -261,16 +261,20 @@ export default function IntegracionesPage() {
             </p>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               {[
-                { name: "Banco de Chile", color: "#E30613", bg: "#1a0505", logo: "/bancochile-symbol.svg"  },
-                { name: "Santander",      color: "#FF4444", bg: "#1a0505", logo: "/santander-symbol.svg"   },
-                { name: "BCI",            color: "#4D8FFF", bg: "#050a1a", logo: "/bci-symbol.svg"          },
-                { name: "Scotiabank",     color: "#FF4455", bg: "#1a0508", logo: "/scotiabank-symbol.svg"  },
-                { name: "BancoEstado",    color: "#4DA8FF", bg: "#050f1a", logo: "/bancoestado-symbol.svg" },
-                { name: "Itaú",           color: "#FF9D4D", bg: "#1a0d05", logo: "/itau-symbol.svg"         },
-                { name: "Falabella",      color: "#4DCC88", bg: "#051a0d", logo: "/falabella-symbol.svg"   },
-                { name: "Tenpo",          color: "#FF6699", bg: "#1a0510", logo: "/tenpo-symbol.svg"        },
-                { name: "Ripley",         color: "#C084FC", bg: "#100518", logo: "/ripley-symbol.svg"       },
-                { name: "Security",       color: "#60A5FA", bg: "#050d1a", logo: "/security-symbol.svg"    },
+                { name: "Banco de Chile",       color: "#E30613", bg: "#1a0505", logo: "/bancochile-symbol.svg"        },
+                { name: "Banco Internacional",  color: "#4D8FFF", bg: "#050a1a", logo: "/bancointernacional-symbol.svg"},
+                { name: "Scotiabank Chile",     color: "#FF4455", bg: "#1a0508", logo: "/scotiabank-symbol.svg"        },
+                { name: "BCI",                  color: "#5B9BFF", bg: "#050a1a", logo: "/bci-symbol.svg"               },
+                { name: "Banco BICE",           color: "#6699FF", bg: "#050a18", logo: "/bice-symbol.svg"              },
+                { name: "HSBC Bank Chile",      color: "#FF4444", bg: "#1a0505", logo: "/hsbc-symbol.svg"              },
+                { name: "Santander Chile",      color: "#FF4444", bg: "#1a0505", logo: "/santander-symbol.svg"         },
+                { name: "Itaú Corpbanca",       color: "#FF9D4D", bg: "#1a0d05", logo: "/itau-symbol.svg"              },
+                { name: "Banco Security",       color: "#60A5FA", bg: "#050d1a", logo: "/security-symbol.svg"          },
+                { name: "Banco Falabella",      color: "#4DCC88", bg: "#051a0d", logo: "/falabella-symbol.svg"         },
+                { name: "Banco Ripley",         color: "#C084FC", bg: "#100518", logo: "/ripley-symbol.svg"            },
+                { name: "Banco Consorcio",      color: "#38BDF8", bg: "#050e1a", logo: "/consorcio-symbol.svg"         },
+                { name: "Scotiabank Azul",      color: "#60A5FA", bg: "#050a1a", logo: "/scotiabankAzul-symbol.svg"    },
+                { name: "BTG Pactual Chile",    color: "#4D8FFF", bg: "#000d1a", logo: "/btgpactual-symbol.svg"        },
               ].map(bank => (
                 <div key={bank.name} style={{
                   background: bank.bg, border: `1px solid ${bank.color}30`,
