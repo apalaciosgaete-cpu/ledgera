@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/shared/db/prisma";
+import { prisma } from "@/lib/prisma";
 import { sendPushToAdmin } from "@/modules/chat/pushAdmin";
 
 export async function POST(req: NextRequest) {

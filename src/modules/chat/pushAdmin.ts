@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { prisma } from "@/shared/db/prisma";
+import { prisma } from "@/lib/prisma";
 
 const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const vapidPrivate = process.env.VAPID_PRIVATE_KEY ?? "";
