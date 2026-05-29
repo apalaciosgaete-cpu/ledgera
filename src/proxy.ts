@@ -50,29 +50,11 @@ function isStaticAsset(pathname: string): boolean {
   );
 }
 
-const isMaintenanceMode =
-  process.env.NODE_ENV === "production" &&
-  process.env.SITE_MAINTENANCE_MODE !== "false";
-
 export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (isStaticAsset(pathname)) {
     return NextResponse.next();
-  }
-
-  // Bypass de mantenimiento: si tiene la cookie, pasa directo
-  if (isMaintenanceMode && pathname !== "/mantenimiento" && pathname !== "/api/preview") {
-    const hasPreviewCookie = req.cookies.get("ledgera_preview")?.value === "1";
-    const isMaintenanceRoute = MAINTENANCE_ROUTES.some(
-      (r) => pathname === r || pathname.startsWith(`${r}/`)
-    );
-    if (isMaintenanceRoute && !hasPreviewCookie) {
-      return NextResponse.rewrite(new URL("/mantenimiento", req.url));
-    }
-    if (isMaintenanceRoute && hasPreviewCookie) {
-      return NextResponse.next();
-    }
   }
 
   const publicRoutes = [
