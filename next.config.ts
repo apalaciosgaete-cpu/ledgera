@@ -100,7 +100,7 @@ const nextConfig: NextConfig = {
           source: "/googlead48e80d7c2d1421.html",
           destination: "/google-search-console-verification",
         },
-        ...(isMaintenanceMode ? maintenanceRewrites : []),
+        // mantenimiento manejado en middleware (proxy.ts)
       ],
     };
   },
