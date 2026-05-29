@@ -154,22 +154,25 @@ export default function IntegracionesPage() {
             <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
               Exchanges que operan en Chile
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "10px" }}>
               {[
-                { name: "Buda.com", logo: "/buda-symbol.svg"   },
-                { name: "Orionx",   logo: "/orionx-symbol.svg" },
+                { name: "Buda.com", domain: "buda.com"   },
+                { name: "Orionx",   domain: "orionx.com" },
               ].map(ex => (
                 <div key={ex.name} style={{
                   background: colors.surface, border: `1px solid ${colors.border}`,
                   borderRadius: "12px", padding: "14px 16px",
-                  display: "flex", alignItems: "center", gap: "10px",
+                  display: "flex", alignItems: "center", gap: "12px",
                   opacity: 0.65, cursor: "default",
                 }}>
-                  <img src={ex.logo} alt={ex.name} width="32" height="32" style={{ borderRadius: "6px", flexShrink: 0 }} />
+                  <img
+                    src={`https://logo.clearbit.com/${ex.domain}?size=128`}
+                    alt={ex.name} width="36" height="36"
+                    style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${ex.domain}&size=128`; }}
+                  />
                   <span style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, flex: 1 }}>{ex.name}</span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>
-                    Próx.
-                  </span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>Próx.</span>
                 </div>
               ))}
             </div>
@@ -180,7 +183,7 @@ export default function IntegracionesPage() {
             <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
               Exchanges internacionales
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "10px" }}>
 
               {/* Binance — clickeable */}
               <button
@@ -207,21 +210,24 @@ export default function IntegracionesPage() {
 
               {/* Resto */}
               {[
-                { name: "Coinbase",  logo: "/coinbase-symbol.svg"  },
-                { name: "Kraken",    logo: "/kraken-symbol.svg"    },
-                { name: "CoinGecko", logo: "/coingecko-symbol.svg" },
+                { name: "Coinbase",  domain: "coinbase.com"  },
+                { name: "Kraken",    domain: "kraken.com"    },
+                { name: "CoinGecko", domain: "coingecko.com" },
               ].map(ex => (
                 <div key={ex.name} style={{
                   background: colors.surface, border: `1px solid ${colors.border}`,
                   borderRadius: "12px", padding: "14px 16px",
-                  display: "flex", alignItems: "center", gap: "10px",
+                  display: "flex", alignItems: "center", gap: "12px",
                   opacity: 0.65, cursor: "default",
                 }}>
-                  <img src={ex.logo} alt={ex.name} width="32" height="32" style={{ borderRadius: "6px", flexShrink: 0 }} />
+                  <img
+                    src={`https://logo.clearbit.com/${ex.domain}?size=128`}
+                    alt={ex.name} width="36" height="36"
+                    style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${ex.domain}&size=128`; }}
+                  />
                   <span style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, flex: 1 }}>{ex.name}</span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>
-                    Próx.
-                  </span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>Próx.</span>
                 </div>
               ))}
             </div>
@@ -259,32 +265,42 @@ export default function IntegracionesPage() {
             <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
               Bancos que operan en Chile
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "10px" }}>
               {[
-                { name: "Banco de Chile",    logo: "/bancochile-symbol.svg"        },
-                { name: "Banco Internacional", logo: "/bancointernacional-symbol.svg"},
-                { name: "Scotiabank Chile",  logo: "/scotiabank-symbol.svg"         },
-                { name: "BCI",               logo: "/bci-symbol.svg"                },
-                { name: "Banco BICE",        logo: "/bice-symbol.svg"               },
-                { name: "HSBC Bank Chile",   logo: "/hsbc-symbol.svg"               },
-                { name: "Santander Chile",   logo: "/santander-symbol.svg"          },
-                { name: "Itaú Corpbanca",    logo: "/itau-symbol.svg"               },
-                { name: "Banco Security",    logo: "/security-symbol.svg"           },
-                { name: "Banco Falabella",   logo: "/falabella-symbol.svg"          },
-                { name: "Banco Ripley",      logo: "/ripley-symbol.svg"             },
-                { name: "Banco Consorcio",   logo: "/consorcio-symbol.svg"          },
-                { name: "Scotiabank Azul",   logo: "/scotiabankAzul-symbol.svg"     },
-                { name: "BTG Pactual Chile", logo: "/btgpactual-symbol.svg"         },
+                { name: "Banco de Chile",    domain: "bancochile.cl"        },
+                { name: "Banco Internacional", domain: "bancointernacional.cl"},
+                { name: "Scotiabank Chile",  domain: "scotiabank.com"        },
+                { name: "BCI",               domain: "bci.cl"                },
+                { name: "Banco BICE",        domain: "bice.cl"               },
+                { name: "HSBC Bank Chile",   domain: "hsbc.com"              },
+                { name: "Santander Chile",   domain: "santander.com"         },
+                { name: "Itaú Corpbanca",    domain: "itau.com"              },
+                { name: "Banco Security",    domain: "security.cl"           },
+                { name: "Banco Falabella",   domain: "bancofalabella.cl"     },
+                { name: "Banco Ripley",      domain: "bancoripley.cl"        },
+                { name: "Banco Consorcio",   domain: "bancoconsorcio.cl"     },
+                { name: "Scotiabank Azul",   domain: "scotiabank.com"        },
+                { name: "BTG Pactual Chile", domain: "btgpactual.com"        },
               ].map(bank => (
                 <div key={bank.name} style={{
                   background: colors.surface, border: `1px solid ${colors.border}`,
                   borderRadius: "12px", padding: "14px 16px",
-                  display: "flex", alignItems: "center", gap: "10px",
+                  display: "flex", alignItems: "center", gap: "12px",
                   opacity: 0.75, cursor: "default",
-                  width: "100%",
                 }}>
-                  <img src={bank.logo} alt={bank.name} width="32" height="32" style={{ borderRadius: "6px", flexShrink: 0 }} />
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <img
+                    src={`https://logo.clearbit.com/${bank.domain}?size=128`}
+                    alt={bank.name}
+                    width="36" height="36"
+                    style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
+                    onError={(e) => {
+                      const el = e.target as HTMLImageElement;
+                      if (!el.src.includes("gstatic")) {
+                        el.src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${bank.domain}&size=128`;
+                      }
+                    }}
+                  />
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, flex: 1 }}>
                     {bank.name}
                   </span>
                   <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>
