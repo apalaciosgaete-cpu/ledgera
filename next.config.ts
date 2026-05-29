@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
-const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE === "true" && isProduction;
+const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE !== "false" && isProduction;
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -65,6 +65,7 @@ const publicMaintenanceRoutes = [
 
 const maintenanceRewrites = publicMaintenanceRoutes.map((source) => ({
   source,
+  missing: [{ type: "cookie" as const, key: "ledgera_preview" }],
   destination: "/mantenimiento",
 }));
 
