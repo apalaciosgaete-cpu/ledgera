@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 import { fonts } from "@/styles/tokens";
 
 type Tab = "exchange" | "banco" | "wallets";
 
 const EXCHANGES = [
-  { name: "Binance",      desc: "Spot, futuros y staking. API REST.",          color: "#F0B90B", active: true  },
-  { name: "Buda.com",     desc: "Exchange chileno. Transacciones CLP/cripto.", color: "#FF6B35", active: false },
-  { name: "Orionx",       desc: "Exchange chileno. Órdenes y retiros.",        color: "#6B5CE7", active: false },
-  { name: "Coinbase",     desc: "Spot, staking y earn.",                       color: "#0052FF", active: false },
-  { name: "Kraken",       desc: "Spot y futuros. Historial completo.",         color: "#5741D9", active: false },
+  { name: "Binance",  desc: "Spot, futuros y staking. API REST.",          color: "#F0B90B" },
+  { name: "Buda.com", desc: "Exchange chileno. Transacciones CLP/cripto.", color: "#FF6B35" },
+  { name: "Orionx",   desc: "Exchange chileno. Órdenes y retiros.",        color: "#6B5CE7" },
+  { name: "Coinbase", desc: "Spot, staking y earn.",                       color: "#0052FF" },
+  { name: "Kraken",   desc: "Spot y futuros. Historial completo.",         color: "#5741D9" },
 ];
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -82,48 +81,39 @@ export default function IntegracionesPage() {
 
       {/* Exchange */}
       {tab === "exchange" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {/* Binance — activo */}
-          <BinanceIntegrationPanel />
-
-          {/* Próximamente */}
-          <div style={{ marginTop: "8px" }}>
-            <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>
-              Próximamente
-            </p>
-            {EXCHANGES.filter(ex => !ex.active).map(ex => (
-              <div key={ex.name} style={{
-                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: "12px", padding: "1rem 1.25rem",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                marginBottom: "8px", gap: "1rem", opacity: 0.55,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{
-                    width: "36px", height: "36px", borderRadius: "8px",
-                    background: `${ex.color}18`, border: `1px solid ${ex.color}30`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "10px", fontWeight: 700, color: ex.color,
-                    fontFamily: fonts.display, flexShrink: 0,
-                  }}>
-                    {ex.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#94a3b8", margin: "0 0 2px" }}>{ex.name}</p>
-                    <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>{ex.desc}</p>
-                  </div>
-                </div>
-                <span style={{
-                  fontSize: "10px", fontWeight: 700, color: "#475569",
-                  background: "rgba(100,116,139,0.1)", border: "1px solid rgba(100,116,139,0.2)",
-                  borderRadius: "6px", padding: "3px 8px",
-                  letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap",
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {EXCHANGES.map(ex => (
+            <div key={ex.name} style={{
+              background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: "12px", padding: "1rem 1.25rem",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              gap: "1rem", opacity: 0.55,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{
+                  width: "36px", height: "36px", borderRadius: "8px",
+                  background: `${ex.color}18`, border: `1px solid ${ex.color}30`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "10px", fontWeight: 700, color: ex.color,
+                  fontFamily: fonts.display, flexShrink: 0,
                 }}>
-                  Próximamente
-                </span>
+                  {ex.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#94a3b8", margin: "0 0 2px" }}>{ex.name}</p>
+                  <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>{ex.desc}</p>
+                </div>
               </div>
-            ))}
-          </div>
+              <span style={{
+                fontSize: "10px", fontWeight: 700, color: "#475569",
+                background: "rgba(100,116,139,0.1)", border: "1px solid rgba(100,116,139,0.2)",
+                borderRadius: "6px", padding: "3px 8px",
+                letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap",
+              }}>
+                Próximamente
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
