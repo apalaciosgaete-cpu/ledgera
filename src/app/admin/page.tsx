@@ -668,41 +668,6 @@ export default function AdminPage() {
             </div>
           )}
         </div>
-        {/* Medios de pago */}
-        <div style={{ marginTop: "24px" }}>
-          <div style={{ marginBottom: "16px" }}>
-            <h2 style={{ fontFamily: fonts.display, fontSize: "16px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 4px" }}>Medios de pago</h2>
-            <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>Métodos disponibles para cobro de suscripciones.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px" }}>
-            {[
-              {
-                name:   "Facturación manual",
-                desc:   "El administrador asigna plan y vigencia directamente desde este panel.",
-                icon:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
-                status: "Activo",
-                color:  colors.accent,
-                bg:     "rgba(22,163,74,0.08)",
-                border: "rgba(22,163,74,0.2)",
-              },
-            ].map(method => (
-              <div key={method.name} style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                  <div style={{ width: 40, height: 40, borderRadius: "10px", background: method.bg, border: `1px solid ${method.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: method.color, flexShrink: 0 }}>
-                    {method.icon}
-                  </div>
-                  <span style={{ fontSize: "10px", fontWeight: 700, color: method.color, background: method.bg, border: `1px solid ${method.border}`, borderRadius: "6px", padding: "3px 8px", letterSpacing: "0.05em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                    {method.status}
-                  </span>
-                </div>
-                <div>
-                  <p style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary, margin: "0 0 4px", fontFamily: fonts.display }}>{method.name}</p>
-                  <p style={{ fontSize: "11px", color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>{method.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </main>
 
       {confirmDelete && (
