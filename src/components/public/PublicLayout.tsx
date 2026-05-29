@@ -6,9 +6,6 @@ import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 
 export const PUBLIC_CONTACT_EMAIL = "admin@ledgera.cl";
-export const PUBLIC_WHATSAPP_URL =
-  "https://api.whatsapp.com/send/?phone=56972871569&text=Hola%2C+tengo+una%20consulta%20sobre%20LEDGERA&type=phone_number";
-
 export const publicNavLinks = [
   { label: "Quiénes somos", href: "/quienes-somos" },
   { label: "Cómo funciona", href: "/como-funciona" },
