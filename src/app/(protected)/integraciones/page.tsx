@@ -156,18 +156,23 @@ export default function IntegracionesPage() {
             </p>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               {[
-                { name: "Buda.com", color: "#FF6B35", bg: "#1a0f0a", logo: "/buda-symbol.svg" },
-                { name: "Orionx",   color: "#A78BFA", bg: "#0f0a1a", logo: "/orionx-symbol.svg" },
+                { name: "Buda.com", domain: "buda.com"   },
+                { name: "Orionx",   domain: "orionx.com" },
               ].map(ex => (
                 <div key={ex.name} style={{
-                  background: ex.bg, border: `1px solid ${ex.color}30`,
+                  background: colors.surface, border: `1px solid ${colors.border}`,
                   borderRadius: "12px", padding: "0.75rem 1.5rem",
                   display: "flex", alignItems: "center", gap: "10px",
-                  opacity: 0.6, cursor: "default",
+                  opacity: 0.65, cursor: "default",
                 }}>
-                  <img src={ex.logo} alt={ex.name} width="28" height="28" style={{ borderRadius: "6px" }} />
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: ex.color, fontFamily: fonts.display }}>{ex.name}</span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
+                  <img
+                    src={`https://logo.clearbit.com/${ex.domain}`}
+                    alt={ex.name} width="28" height="28"
+                    style={{ borderRadius: "6px", background: "#fff" }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = `https://www.google.com/s2/favicons?domain=${ex.domain}&sz=64`; }}
+                  />
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display }}>{ex.name}</span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
                     Próximamente
                   </span>
                 </div>
@@ -207,19 +212,24 @@ export default function IntegracionesPage() {
 
               {/* Resto */}
               {[
-                { name: "Coinbase",  color: "#4D9AFF", bg: "#0a0f1a", logo: "/coinbase-symbol.svg"  },
-                { name: "Kraken",    color: "#9F8AEF", bg: "#100a1a", logo: "/kraken-symbol.svg"    },
-                { name: "CoinGecko", color: "#8DC63F", bg: "#0a120a", logo: "/coingecko-symbol.svg" },
+                { name: "Coinbase",  domain: "coinbase.com"  },
+                { name: "Kraken",    domain: "kraken.com"    },
+                { name: "CoinGecko", domain: "coingecko.com" },
               ].map(ex => (
                 <div key={ex.name} style={{
-                  background: ex.bg, border: `1px solid ${ex.color}30`,
+                  background: colors.surface, border: `1px solid ${colors.border}`,
                   borderRadius: "12px", padding: "0.75rem 1.5rem",
                   display: "flex", alignItems: "center", gap: "10px",
-                  opacity: 0.6, cursor: "default",
+                  opacity: 0.65, cursor: "default",
                 }}>
-                  <img src={ex.logo} alt={ex.name} width="28" height="28" style={{ borderRadius: "6px" }} />
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: ex.color, fontFamily: fonts.display }}>{ex.name}</span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
+                  <img
+                    src={`https://logo.clearbit.com/${ex.domain}`}
+                    alt={ex.name} width="28" height="28"
+                    style={{ borderRadius: "6px", background: "#fff" }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = `https://www.google.com/s2/favicons?domain=${ex.domain}&sz=64`; }}
+                  />
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display }}>{ex.name}</span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
                     Próximamente
                   </span>
                 </div>
@@ -261,32 +271,40 @@ export default function IntegracionesPage() {
             </p>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               {[
-                { name: "Banco de Chile",       color: "#E30613", bg: "#1a0505", logo: "/bancochile-symbol.svg"        },
-                { name: "Banco Internacional",  color: "#4D8FFF", bg: "#050a1a", logo: "/bancointernacional-symbol.svg"},
-                { name: "Scotiabank Chile",     color: "#FF4455", bg: "#1a0508", logo: "/scotiabank-symbol.svg"        },
-                { name: "BCI",                  color: "#5B9BFF", bg: "#050a1a", logo: "/bci-symbol.svg"               },
-                { name: "Banco BICE",           color: "#6699FF", bg: "#050a18", logo: "/bice-symbol.svg"              },
-                { name: "HSBC Bank Chile",      color: "#FF4444", bg: "#1a0505", logo: "/hsbc-symbol.svg"              },
-                { name: "Santander Chile",      color: "#FF4444", bg: "#1a0505", logo: "/santander-symbol.svg"         },
-                { name: "Itaú Corpbanca",       color: "#FF9D4D", bg: "#1a0d05", logo: "/itau-symbol.svg"              },
-                { name: "Banco Security",       color: "#60A5FA", bg: "#050d1a", logo: "/security-symbol.svg"          },
-                { name: "Banco Falabella",      color: "#4DCC88", bg: "#051a0d", logo: "/falabella-symbol.svg"         },
-                { name: "Banco Ripley",         color: "#C084FC", bg: "#100518", logo: "/ripley-symbol.svg"            },
-                { name: "Banco Consorcio",      color: "#38BDF8", bg: "#050e1a", logo: "/consorcio-symbol.svg"         },
-                { name: "Scotiabank Azul",      color: "#60A5FA", bg: "#050a1a", logo: "/scotiabankAzul-symbol.svg"    },
-                { name: "BTG Pactual Chile",    color: "#4D8FFF", bg: "#000d1a", logo: "/btgpactual-symbol.svg"        },
+                { name: "Banco de Chile",    domain: "bancochile.cl"         },
+                { name: "Banco Internacional", domain: "bancointernacional.cl"},
+                { name: "Scotiabank Chile",  domain: "scotiabank.cl"          },
+                { name: "BCI",               domain: "bci.cl"                 },
+                { name: "Banco BICE",        domain: "bice.cl"                },
+                { name: "HSBC Bank Chile",   domain: "hsbc.cl"                },
+                { name: "Santander Chile",   domain: "santander.cl"           },
+                { name: "Itaú Corpbanca",    domain: "itau.cl"                },
+                { name: "Banco Security",    domain: "security.cl"            },
+                { name: "Banco Falabella",   domain: "bancofalabella.cl"      },
+                { name: "Banco Ripley",      domain: "bancoripley.cl"         },
+                { name: "Banco Consorcio",   domain: "bancoconsorcio.cl"      },
+                { name: "Scotiabank Azul",   domain: "scotiabank.cl"          },
+                { name: "BTG Pactual Chile", domain: "btgpactual.com"         },
               ].map(bank => (
                 <div key={bank.name} style={{
-                  background: bank.bg, border: `1px solid ${bank.color}30`,
+                  background: colors.surface, border: `1px solid ${colors.border}`,
                   borderRadius: "12px", padding: "0.75rem 1.25rem",
                   display: "flex", alignItems: "center", gap: "10px",
-                  opacity: 0.65, cursor: "default",
+                  opacity: 0.7, cursor: "default",
                 }}>
-                  <img src={bank.logo} alt={bank.name} width="28" height="28" style={{ borderRadius: "6px", flexShrink: 0 }} />
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: bank.color, fontFamily: fonts.display, whiteSpace: "nowrap" }}>
+                  <img
+                    src={`https://logo.clearbit.com/${bank.domain}`}
+                    alt={bank.name}
+                    width="28" height="28"
+                    style={{ borderRadius: "6px", flexShrink: 0, background: "#fff" }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://www.google.com/s2/favicons?domain=${bank.domain}&sz=64`;
+                    }}
+                  />
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, whiteSpace: "nowrap" }}>
                     {bank.name}
                   </span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "4px" }}>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "4px" }}>
                     Próximamente
                   </span>
                 </div>
