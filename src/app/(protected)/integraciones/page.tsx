@@ -5,14 +5,6 @@ import { colors, fonts } from "@/styles/tokens";
 
 type Tab = "exchange" | "banco" | "wallets";
 
-const EXCHANGES = [
-  { name: "Binance",  desc: "Spot, futuros y staking. API REST.",          color: "#F0B90B" },
-  { name: "Buda.com", desc: "Exchange chileno. Transacciones CLP/cripto.", color: "#FF6B35" },
-  { name: "Orionx",   desc: "Exchange chileno. Órdenes y retiros.",        color: "#6B5CE7" },
-  { name: "Coinbase", desc: "Spot, staking y earn.",                       color: "#0052FF" },
-  { name: "Kraken",   desc: "Spot y futuros. Historial completo.",         color: "#5741D9" },
-];
-
 const TABS: { key: Tab; label: string }[] = [
   { key: "exchange", label: "Exchange" },
   { key: "banco",    label: "Banco"    },
@@ -57,39 +49,23 @@ export default function IntegracionesPage() {
 
       {/* Exchange */}
       {tab === "exchange" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {EXCHANGES.map(ex => (
-            <div key={ex.name} style={{
-              background: colors.surface, border: `1px solid ${colors.border}`,
-              borderRadius: "12px", padding: "1rem 1.25rem",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              gap: "1rem", opacity: 0.6,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{
-                  width: "36px", height: "36px", borderRadius: "8px",
-                  background: `${ex.color}18`, border: `1px solid ${ex.color}30`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "10px", fontWeight: 700, color: ex.color,
-                  fontFamily: fonts.display, flexShrink: 0,
-                }}>
-                  {ex.name.slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <p style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary, margin: "0 0 2px" }}>{ex.name}</p>
-                  <p style={{ fontSize: "11px", color: colors.textSecondary, margin: 0 }}>{ex.desc}</p>
-                </div>
-              </div>
-              <span style={{
-                fontSize: "10px", fontWeight: 700, color: colors.textMuted,
-                background: colors.surfaceAlt, border: `1px solid ${colors.border}`,
-                borderRadius: "6px", padding: "3px 8px",
-                letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap",
-              }}>
-                Próximamente
-              </span>
-            </div>
-          ))}
+        <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "3rem 2rem", textAlign: "center" }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🔗</div>
+          <h3 style={{ fontFamily: fonts.display, fontSize: "16px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 8px" }}>
+            Conexión con exchanges
+          </h3>
+          <p style={{ fontSize: "13px", color: colors.textSecondary, margin: "0 0 1.5rem", lineHeight: 1.6 }}>
+            Conecta Binance, Buda.com, Orionx, Coinbase, Kraken y más.<br/>
+            Los movimientos se importarán automáticamente.
+          </p>
+          <span style={{
+            display: "inline-block",
+            background: colors.warningMuted, border: `1px solid rgba(245,158,11,0.25)`,
+            color: colors.warning, padding: "6px 16px", borderRadius: "8px",
+            fontSize: "12px", fontWeight: 600,
+          }}>
+            Próximamente
+          </span>
         </div>
       )}
 
