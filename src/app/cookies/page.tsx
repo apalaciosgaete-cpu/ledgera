@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
 
-const SIGNAL_URL = "https://signal.me/#p/+56972871569";
-
 export default function CookiesPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
@@ -353,14 +351,6 @@ export default function CookiesPage() {
                 <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Contacto</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>admin@ledgera.cl</a>
-                  <a
-                    href={SIGNAL_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}
-                  >
-                    Signal
-                  </a>
                 </div>
               </div>
             </div>
@@ -380,30 +370,6 @@ export default function CookiesPage() {
           </svg>
         </button>
       )}
-      <a
-        href={SIGNAL_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Contactar por Signal"
-        style={{
-          position: "fixed",
-          bottom: "28px",
-          right: "28px",
-          width: "52px",
-          height: "52px",
-          borderRadius: "50%",
-          background: "#3a76f0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          textDecoration: "none",
-          zIndex: 999,
-        }}
-      >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="#ffffff">
-          <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.658 1.438 5.165L2.196 21.27a.75.75 0 00.933.933l4.102-1.241A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
-        </svg>
-      </a>
     </div>
   );
 }

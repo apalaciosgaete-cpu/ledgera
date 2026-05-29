@@ -189,31 +189,6 @@ export default function RootLayout({
         <CookieBanner />
         <ChatWidget />
         <SwRegister />
-        <a
-          href="https://signal.me/#p/+56972871569"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Contactar por Signal"
-          style={{
-            position: "fixed",
-            bottom: "28px",
-            right: "28px",
-            width: "52px",
-            height: "52px",
-            borderRadius: "50%",
-            background: "#3a76f0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            textDecoration: "none",
-            zIndex: 999,
-            boxShadow: "0 4px 12px rgba(58,118,240,0.4)",
-          }}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="#ffffff">
-            <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.658 1.438 5.165L2.196 21.27a.75.75 0 00.933.933l4.102-1.241A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
-          </svg>
-        </a>
       </body>
     </html>
   );
