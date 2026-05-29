@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/shared/db/prisma";
-import { getCurrentUser } from "@/modules/identity/server/getCurrentUser";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCurrentUser(req).catch(() => null);
+    const session = await getSessionFromRequest(req).catch(() => null);
     const body = await req.json().catch(() => ({}));
     const { guestName, guestEmail } = body as { guestName?: string; guestEmail?: string };
 
@@ -20,15 +20,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const sessionId = user?.id ?? crypto.randomUUID();
+    const sessionId = session?.user.id ?? crypto.randomUUID();
 
     const conversation = await prisma.chatConversation.upsert({
       where: { sessionId },
       create: {
         sessionId,
-        userId: user?.id ?? null,
-        guestName: user ? user.full_name : (guestName ?? null),
-        guestEmail: user ? user.email : (guestEmail ?? null),
+        userId: session?.user.id ?? null,
+        guestName: session ? null : (guestName ?? null),
+        guestEmail: session ? session.user.email : (guestEmail ?? null),
         status: "OPEN",
       },
       update: {},
