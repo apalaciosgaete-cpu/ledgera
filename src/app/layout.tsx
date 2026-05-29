@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
+import ChatWidget from "@/components/chat/ChatWidget";
+import SwRegister from "@/components/chat/SwRegister";
 
 const baseUrl = "https://ledgera.cl";
 const googleSiteVerification =
@@ -185,6 +187,8 @@ export default function RootLayout({
         <AuthProvider>{children}</AuthProvider>
         <AnalyticsProviders />
         <CookieBanner />
+        <ChatWidget />
+        <SwRegister />
         <a
           href="https://signal.me/#p/+56972871569"
           target="_blank"

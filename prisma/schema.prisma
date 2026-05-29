@@ -463,6 +463,7 @@ model users {
   bankMovements           BankMovement[]
   bankFileUploads         BankFileUpload[]
   bankCsvTemplates        BankCsvTemplate[]
+  chatConversations       ChatConversation[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -880,6 +881,50 @@ model JobQueue {
   @@index([userId])
   @@index([jobType])
   @@map("job_queue")
+}
+
+// ── Chat interno ──────────────────────────────────────────────────────────────
+
+model ChatConversation {
+  id         String    @id @default(cuid())
+  userId     String?
+  sessionId  String    @unique
+  status     String    @default("OPEN")
+  guestName  String?
+  guestEmail String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  messages   ChatMessage[]
+  user       users?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  sender         String
+  content        String
+  createdAt      DateTime         @default(now())
+  readAt         DateTime?
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+model ChatPushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@map("chat_push_subscriptions")
 }
 
 // ── Workspaces / B2B ──────────────────────────────────────────────────────────
