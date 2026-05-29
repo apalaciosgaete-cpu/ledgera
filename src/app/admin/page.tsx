@@ -328,21 +328,41 @@ export default function AdminPage() {
             </span>
           </div>
 
-          <button
-            onClick={() => router.push("/portafolio")}
-            style={{
-              background: "transparent",
-              border: `1px solid ${colors.borderDark}`,
-              borderRadius: "8px",
-              color: colors.textMuted,
-              fontSize: "14px",
-              padding: "8px 16px",
-              cursor: "pointer",
-              fontFamily: fonts.body,
-            }}
-          >
-            ← Volver a la app
-          </button>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => router.push("/admin/chat")}
+              style={{
+                background: "#3a76f0",
+                border: "none",
+                borderRadius: "8px",
+                color: "#fff",
+                fontSize: "14px",
+                padding: "8px 16px",
+                cursor: "pointer",
+                fontFamily: fonts.body,
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              💬 Chat soporte
+            </button>
+            <button
+              onClick={() => router.push("/portafolio")}
+              style={{
+                background: "transparent",
+                border: `1px solid ${colors.borderDark}`,
+                borderRadius: "8px",
+                color: colors.textMuted,
+                fontSize: "14px",
+                padding: "8px 16px",
+                cursor: "pointer",
+                fontFamily: fonts.body,
+              }}
+            >
+              ← Volver a la app
+            </button>
+          </div>
         </div>
       </header>
 
