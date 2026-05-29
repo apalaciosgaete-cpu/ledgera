@@ -1,5 +1,6 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100" height="100" rx="18" fill="#1E3A5F"/>
-  <text x="50" y="52" font-family="Arial Black, sans-serif" font-size="20" font-weight="900" text-anchor="middle" fill="white">BANCO</text>
-  <text x="50" y="74" font-family="Arial Black, sans-serif" font-size="16" font-weight="900" text-anchor="middle" fill="#FFD700">SECURITY</text>
+  <rect width="100" height="100" rx="0" fill="#1B2E5E"/>
+  <path d="M50 15 L78 28 L78 52 C78 66 65 78 50 83 C35 78 22 66 22 52 L22 28 Z" fill="white"/>
+  <path d="M50 24 L70 34 L70 52 C70 62 61 71 50 75 C39 71 30 62 30 52 L30 34 Z" fill="#1B2E5E"/>
+  <text x="50" y="58" font-family="Arial Black, sans-serif" font-size="16" font-weight="900" text-anchor="middle" fill="white">SEC</text>
 </svg>
