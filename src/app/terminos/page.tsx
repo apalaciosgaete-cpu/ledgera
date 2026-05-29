@@ -93,14 +93,14 @@ export default function TerminosPage() {
               lineHeight: 1.15,
             }}
           >
-            Términos y Condiciones
+            Términos y Condiciones de Uso
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-            Última actualización: 8 de mayo de 2026 · Versión 2.0
+            Última actualización: 29 de mayo de 2026 · Versión 1.0 · Plataforma v0.1.0.26
           </p>
         </div>
 
-        {/* AVISO NORMATIVO */}
+        {/* AVISO PRELIMINAR */}
         <div
           style={{
             background: "rgba(99,102,241,0.06)",
@@ -111,424 +111,470 @@ export default function TerminosPage() {
           }}
         >
           <p style={{ color: "#a5b4fc", fontSize: "0.88rem", margin: 0, lineHeight: 1.7 }}>
-            El presente documento constituye un contrato de adhesión en los términos del{" "}
-            <strong style={{ color: "#c7d2fe" }}>Art. 16 de la Ley N° 19.496</strong> de
-            Protección al Consumidor. Su aceptación se perfecciona electrónicamente conforme
-            a la{" "}
-            <strong style={{ color: "#c7d2fe" }}>Ley N° 19.799</strong> de Firma Electrónica.
-            Resultan también aplicables la{" "}
-            <strong style={{ color: "#c7d2fe" }}>Ley N° 21.719</strong> de Protección de
-            Datos Personales, el{" "}
-            <strong style={{ color: "#c7d2fe" }}>Código Civil</strong> y la normativa del{" "}
-            <strong style={{ color: "#c7d2fe" }}>SII</strong> sobre activos digitales.
+            Los presentes Términos y Condiciones de Uso constituyen un contrato legalmente
+            vinculante entre el titular de LEDGERA y toda persona que acceda o utilice la
+            Plataforma. Al registrarse, acceder o utilizar el Servicio, el Usuario declara
+            haber leído, comprendido y aceptado íntegramente estos Términos. Este documento
+            se rige por la legislación de la{" "}
+            <strong style={{ color: "#c7d2fe" }}>República de Chile</strong>. Su aceptación
+            electrónica produce los efectos previstos en la{" "}
+            <strong style={{ color: "#c7d2fe" }}>Ley N° 19.799</strong> sobre Documentos
+            Electrónicos, Firma Electrónica y Servicios de Certificación de dicha Firma.
           </p>
         </div>
 
         {/* SECCIONES */}
 
-        <LegalSection title="1. Identificación del prestador">
+        <LegalSection title="1. Definiciones">
+          <p>Para los efectos de estos Términos, se entenderá por:</p>
+          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Plataforma o Servicio:</strong> el conjunto
+              de funcionalidades de software de LEDGERA accesibles mediante navegador web u
+              otros medios habilitados, destinadas al registro, normalización, cálculo,
+              clasificación y reporte de información contable y tributaria asociada a
+              criptoactivos.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Usuario:</strong> toda persona natural o
+              jurídica que crea una cuenta o utiliza el Servicio.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Criptoactivo o activo financiero virtual:</strong>{" "}
+              representación digital de unidades de valor, bienes o servicios, con excepción
+              del dinero en moneda nacional o divisas, que puede ser transferida, almacenada
+              o intercambiada digitalmente, conforme a la definición incorporada por la Ley
+              N° 21.521.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Movimientos de portafolio:</strong> los
+              registros de transacciones que el Usuario ingresa o que se ingieren desde
+              fuentes externas, y que constituyen la fuente de verdad del sistema.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Evento tributario:</strong> resultado
+              derivado de forma determinística por la Plataforma a partir de los movimientos,
+              conforme al método FIFO y a la lógica de cálculo del sistema.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Conectores de exchange:</strong> módulos
+              de ingestión que importan información desde plataformas de intercambio de
+              terceros hacia los movimientos de portafolio.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Contenido del Usuario:</strong> todo dato,
+              archivo, registro o información que el Usuario ingrese, cargue o conecte a la
+              Plataforma.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Datos personales:</strong> los definidos
+              en la Ley N° 19.628 y, a partir de su entrada en vigencia, en la Ley N° 21.719.
+            </li>
+          </ul>
+        </LegalSection>
+
+        <LegalSection title="2. Naturaleza y alcance del Servicio">
           <p>
-            <strong style={{ color: "#e2e8f0" }}>Ledgera</strong> (en adelante,{" "}
-            <em>"la Plataforma"</em>) es un servicio de software como servicio (SaaS)
-            operado por{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ledgera SpA</strong>, sociedad por acciones
-            constituida en la República de Chile, con domicilio en la Región Metropolitana.
+            LEDGERA es una herramienta de software de gestión contable y tributaria que
+            convierte transacciones de criptoactivos en información estructurada, calculando
+            eventos tributarios y generando reportes y antecedentes de apoyo. LEDGERA se
+            posiciona como una capa contable de las finanzas digitales.
           </p>
-          <InfoBox>
-            <strong>Correo:</strong>{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
-              admin@ledgera.cl
-            </a>
-            {"  ·  "}
-            <strong>Web:</strong> ledgera.cl
+          <InfoBox color="amber">
+            <strong style={{ color: "#fcd34d" }}>LEDGERA NO es ni presta los siguientes servicios:</strong>{" "}
+            no es exchange, casa de cambio ni mercado de criptoactivos; no custodia ni
+            administra criptoactivos o fondos; no intermedia ni ejecuta operaciones de compra
+            o venta; no presta asesoría de inversión, contable, tributaria ni legal
+            personalizada.
           </InfoBox>
           <p>
-            La Plataforma está diseñada para asistir a personas naturales y jurídicas en la
-            gestión, clasificación y reporte de operaciones con activos digitales
-            (criptomonedas) frente al Servicio de Impuestos Internos (SII) de Chile.
+            <strong style={{ color: "#e2e8f0" }}>Exclusión del perímetro regulado por la Ley N° 21.521 (Ley Fintec).</strong>{" "}
+            LEDGERA no presta ninguno de los servicios financieros regulados taxativamente
+            por dicha ley (plataformas de financiamiento colectivo, sistemas alternativos de
+            transacción, asesoría crediticia y de inversión, custodia de instrumentos
+            financieros, e intermediación de órdenes). En consecuencia, LEDGERA no se
+            encuentra inscrita ni requiere inscripción en el Registro de Prestadores de
+            Servicios Financieros.
+          </p>
+          <p>
+            <strong style={{ color: "#e2e8f0" }}>Etapa de desarrollo.</strong> El Usuario
+            reconoce que la Plataforma se encuentra en etapa de desarrollo activo
+            (versión v0.1.0.x). Las funcionalidades pueden cambiar, ser corregidas,
+            suspendidas o discontinuadas sin previo aviso. El Servicio se entrega en su
+            estado actual y según disponibilidad.
           </p>
         </LegalSection>
 
-        <LegalSection title="2. Aceptación electrónica del contrato">
+        <LegalSection title="3. Carácter referencial de los cálculos tributarios">
           <p>
-            Al registrarse, acceder o utilizar cualquier función de Ledgera, el Usuario
-            manifiesta su voluntad de contratar y declara haber leído, comprendido y aceptado
-            en su totalidad los presentes Términos y Condiciones (en adelante, <em>"los Términos"</em>
-            ), así como la{" "}
+            Los eventos tributarios, resúmenes, indicadores (incluyendo Tax Health y Tax
+            Overview), declaraciones de apoyo y exportaciones generados por la Plataforma
+            tienen <strong style={{ color: "#e2e8f0" }}>carácter informativo y referencial</strong>.
+            Se calculan de manera determinística a partir de la información ingresada por el
+            Usuario o ingerida desde fuentes externas, aplicando el método FIFO y la lógica
+            vigente del sistema.
+          </p>
+          <p>
+            La exactitud de los resultados depende íntegramente de la veracidad, integridad
+            y oportunidad de la información ingresada. LEDGERA no valida la existencia real
+            de las transacciones ni la titularidad de los activos.
+          </p>
+          <InfoBox color="red">
+            <strong style={{ color: "#fca5a5" }}>El Usuario es el único y exclusivo responsable</strong>{" "}
+            del cumplimiento de sus obligaciones tributarias ante el SII y cualquier otra
+            autoridad competente, incluyendo la presentación correcta y oportuna de
+            declaraciones y el pago de los tributos que correspondan.
+          </InfoBox>
+          <p>
+            LEDGERA recomienda enfáticamente que el Usuario valide los resultados de la
+            Plataforma con un contador, auditor o asesor tributario habilitado antes de
+            presentarlos ante cualquier autoridad.
+          </p>
+          <p>
+            LEDGERA no responde por interpretaciones, criterios, oficios, resoluciones o
+            cambios normativos del SII u otras autoridades, ni por diferencias, sanciones,
+            multas, intereses o recargos derivados de la actuación del Usuario.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="4. Registro, cuenta y seguridad">
+          <p>
+            El uso del Servicio requiere la creación de una cuenta con información veraz,
+            exacta y actualizada. El Usuario se obliga a mantener actualizada dicha
+            información.
+          </p>
+          <p>
+            El Usuario es responsable de la confidencialidad de sus credenciales de acceso
+            y de toda actividad realizada bajo su cuenta. La Plataforma ofrece autenticación
+            de dos factores (2FA), cuya activación se recomienda. El Usuario debe notificar
+            de inmediato cualquier uso no autorizado de su cuenta.
+          </p>
+          <p>
+            Para utilizar el Servicio, el Usuario debe ser mayor de 18 años y tener
+            capacidad legal para contratar conforme al derecho chileno. Si actúa en
+            representación de una persona jurídica, declara contar con facultades suficientes
+            para obligarla.
+          </p>
+          <p>
+            LEDGERA podrá rechazar, suspender o cancelar registros que infrinjan estos
+            Términos o la ley.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="5. Licencia de uso">
+          <p>
+            Sujeto al cumplimiento de estos Términos y, cuando corresponda, al pago de la
+            suscripción, LEDGERA concede al Usuario una licencia{" "}
+            <strong style={{ color: "#e2e8f0" }}>
+              limitada, personal, revocable, no exclusiva, no transferible y no sublicenciable
+            </strong>{" "}
+            para utilizar el Servicio con fines lícitos.
+          </p>
+          <p>
+            Esta licencia no transfiere propiedad alguna sobre la Plataforma ni sobre sus
+            componentes. Todo derecho no concedido expresamente queda reservado a LEDGERA.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="6. Conducta del Usuario y usos prohibidos">
+          <p>El Usuario se obliga a no:</p>
+          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <li>
+              Utilizar el Servicio para fines ilícitos, fraudulentos o contrarios a la
+              moral, el orden público o la buena fe.
+            </li>
+            <li>
+              Ingresar información falsa, o destinada a ocultar el origen ilícito de fondos
+              o activos.
+            </li>
+            <li>
+              Vulnerar, sobrecargar, interferir o intentar acceder sin autorización a los
+              sistemas, infraestructura o datos de la Plataforma o de terceros.
+            </li>
+            <li>
+              Realizar ingeniería inversa, descompilar, desensamblar o intentar obtener el
+              código fuente del Servicio, salvo en la medida permitida por la ley.
+            </li>
+            <li>
+              Revender, redistribuir o explotar comercialmente el Servicio sin autorización
+              escrita.
+            </li>
+            <li>
+              Introducir software malicioso o realizar actividades que comprometan la
+              seguridad o disponibilidad del Servicio.
+            </li>
+          </ul>
+        </LegalSection>
+
+        <LegalSection title="7. Prevención de lavado de activos y financiamiento del terrorismo">
+          <p>
+            El Usuario declara y garantiza que los criptoactivos, fondos y transacciones
+            registrados en la Plataforma provienen de fuentes lícitas y que su uso del
+            Servicio cumple la legislación aplicable, incluyendo la{" "}
+            <strong style={{ color: "#e2e8f0" }}>Ley N° 19.913</strong> que crea la Unidad
+            de Análisis Financiero (UAF) y la normativa sobre prevención de lavado de activos
+            y financiamiento del terrorismo.
+          </p>
+          <p>
+            LEDGERA podrá suspender o terminar el acceso del Usuario y, cuando la ley lo
+            exija, reportar a las autoridades competentes, ante indicios fundados de uso
+            ilícito del Servicio.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="8. Propiedad intelectual">
+          <p>
+            La Plataforma, su código fuente, arquitectura, módulos, motor de cálculo,
+            diseño, marca, logotipos, interfaces y toda la documentación asociada son de
+            propiedad exclusiva de LEDGERA o de sus licenciantes, y se encuentran protegidos
+            por la legislación chilena sobre propiedad intelectual e industrial.
+          </p>
+          <p>
+            El Contenido del Usuario es y seguirá siendo de propiedad del Usuario. El
+            Usuario concede a LEDGERA una licencia limitada para procesar, almacenar y
+            tratar dicho contenido con la única finalidad de prestar el Servicio, conforme
+            a la{" "}
             <Link href="/privacidad" style={{ color: "#818cf8" }}>
               Política de Privacidad
-            </Link>{" "}
-            y la{" "}
-            <Link href="/cookies" style={{ color: "#818cf8" }}>
-              Política de Cookies
             </Link>
             .
           </p>
           <p>
-            Esta aceptación constituye una firma electrónica simple en los términos del{" "}
-            <strong style={{ color: "#e2e8f0" }}>Art. 2 letra g) de la Ley N° 19.799</strong>{" "}
-            de Firma Electrónica, y tiene plena validez jurídica equivalente a la firma
-            manuscrita para estos efectos.
-          </p>
-          <p>
-            Si el Usuario no está de acuerdo con alguna de las condiciones establecidas en los
-            presentes Términos, deberá abstenerse de utilizar la Plataforma.
+            Queda prohibido el uso de las marcas, signos distintivos o materiales de
+            LEDGERA sin autorización previa y por escrito.
           </p>
         </LegalSection>
 
-        <LegalSection title="3. Descripción del servicio">
-          <p>Ledgera ofrece las siguientes funcionalidades principales:</p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>
-              Importación y clasificación de movimientos de activos digitales mediante
-              archivos CSV o integración automática con exchanges.
-            </li>
-            <li>
-              Aplicación del método FIFO (First In, First Out) para el cálculo del costo
-              tributario, conforme a las instrucciones del SII (Circular N° 31/2021 y
-              Circular N° 43/2021).
-            </li>
-            <li>
-              Generación de reportes de ganancias y pérdidas de capital para la declaración
-              anual de impuestos a la renta.
-            </li>
-            <li>
-              Panel de control tributario con indicadores de riesgo, PnL y alertas
-              accionables.
-            </li>
-            <li>
-              Registro de auditoría inmutable de eventos tributarios y cierres de período.
-            </li>
-            <li>
-              Motor de conversión de divisas basado en datos oficiales del Banco Central de
-              Chile (BCCh).
-            </li>
-          </ul>
-          <InfoBox color="amber">
-            Ledgera es una{" "}
-            <strong style={{ color: "#fcd34d" }}>herramienta de asistencia tributaria</strong>{" "}
-            y no reemplaza la asesoría profesional de un contador, abogado o asesor
-            tributario habilitado. El Usuario es el único responsable ante el SII por el
-            contenido de sus declaraciones de impuestos.
-          </InfoBox>
-        </LegalSection>
-
-        <LegalSection title="4. Registro y cuenta de usuario">
+        <LegalSection title="9. Servicios y fuentes de terceros">
           <p>
-            El acceso a las funciones avanzadas de la Plataforma requiere la creación de una
-            cuenta personal. Al registrarse, el Usuario se compromete a:
+            La Plataforma puede integrar o depender de servicios de terceros, incluyendo
+            conectores de exchanges (Binance, Coinbase, Kraken y otros), proveedores de
+            datos de mercado (CoinGecko), proveedores de tipo de cambio (mindicador.cl),
+            proveedores de infraestructura y de procesamiento de pagos.
           </p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>
-              Proporcionar información veraz, actualizada y completa durante el proceso de
-              registro y mantenerla así durante toda la vigencia de la relación contractual.
-            </li>
-            <li>
-              Mantener la confidencialidad de sus credenciales de acceso (correo electrónico
-              y contraseña), siendo el único responsable de su custodia.
-            </li>
-            <li>
-              Notificar de inmediato a Ledgera ante cualquier uso no autorizado de su cuenta
-              o brecha de seguridad de la que tome conocimiento.
-            </li>
-            <li>
-              Asumir plena responsabilidad por todas las actividades realizadas bajo su
-              cuenta, incluso si fueron efectuadas por terceros con acceso a sus credenciales.
-            </li>
-          </ul>
           <p>
-            Ledgera se reserva el derecho de suspender o cancelar cuentas que incumplan los
-            presentes Términos, que presenten información falsa o que realicen un uso
-            fraudulento de la Plataforma, sin perjuicio de las acciones legales que
-            correspondan.
+            LEDGERA no controla dichos servicios y no garantiza su disponibilidad, exactitud,
+            continuidad ni vigencia. La Plataforma no responde por interrupciones, errores,
+            retrasos, cambios de API, indisponibilidad de precios o tipos de cambio, ni por
+            cualquier perjuicio derivado de fallas de terceros.
+          </p>
+          <p>
+            Los conectores de exchange operan mediante una capa de ingestión y normalización
+            y no ejecutan operaciones de trading. El Usuario es responsable de las
+            credenciales, permisos y claves de API que conecte; se recomienda otorgar
+            permisos de solo lectura.
           </p>
         </LegalSection>
 
-        <LegalSection title="5. Planes, precios y facturación">
+        <LegalSection title="10. Suscripciones, precios y pagos">
           <p>
-            Ledgera ofrece distintos planes de suscripción cuyos precios y características
-            se detallan en la{" "}
-            <Link href="/planes" style={{ color: "#818cf8" }}>
-              página de planes
-            </Link>
-            . Todos los montos se expresan en pesos chilenos (CLP) e incluyen el Impuesto al
-            Valor Agregado (IVA) cuando corresponda según la normativa tributaria vigente.
+            El acceso a determinadas funcionalidades puede requerir el pago de una
+            suscripción. Los precios, planes, periodicidad y condiciones serán informados de
+            manera previa, clara y oportuna, conforme a la{" "}
+            <strong style={{ color: "#e2e8f0" }}>Ley N° 19.496</strong> sobre Protección de
+            los Derechos de los Consumidores cuando esta resulte aplicable.
           </p>
           <p>
-            El cobro se realiza de forma anticipada al inicio de cada período de
-            suscripción (mensual o anual). El procesamiento de pagos es realizado por un
-            proveedor externo que opera bajo su propia política de privacidad y seguridad.
-            Ledgera no almacena datos de tarjetas de crédito ni débito.
+            Los pagos se procesan a través de proveedores de pago externos. LEDGERA no
+            almacena ni accede a los datos completos de tarjetas u otros medios de pago del
+            Usuario.
           </p>
           <p>
-            La falta de pago al vencimiento del período vigente habilita a Ledgera a
-            restringir el acceso al servicio. El Usuario será notificado previamente por
-            correo electrónico antes de la restricción.
+            Las suscripciones podrán renovarse automáticamente según el plan contratado. El
+            Usuario podrá cancelar la renovación conforme a las condiciones del plan y a la
+            normativa aplicable, incluyendo el derecho de retracto cuando proceda en
+            términos de la Ley N° 19.496.
           </p>
-        </LegalSection>
-
-        <LegalSection title="6. Derecho a retracto — Ley N° 19.496">
-          <div
-            style={{
-              background: "rgba(34,197,94,0.07)",
-              border: "1px solid rgba(34,197,94,0.2)",
-              borderRadius: "10px",
-              padding: "1rem 1.2rem",
-              marginBottom: "0.5rem",
-            }}
-          >
-            <p style={{ color: "#86efac", fontSize: "0.9rem", margin: 0, lineHeight: 1.7 }}>
-              Conforme al{" "}
-              <strong style={{ color: "#bbf7d0" }}>Art. 3 bis de la Ley N° 19.496</strong>{" "}
-              de Protección al Consumidor, el Usuario tiene derecho a retractarse del contrato
-              dentro de los{" "}
-              <strong style={{ color: "#bbf7d0" }}>10 días hábiles</strong> siguientes a la
-              fecha de contratación del plan, con reembolso total del monto pagado.
-            </p>
-          </div>
           <p>
-            Para ejercer el derecho a retracto, el Usuario debe enviar una comunicación
-            escrita a{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
-              admin@ledgera.cl
-            </a>{" "}
-            indicando su intención de retractarse. El reembolso se realizará por el mismo
-            medio de pago utilizado en un plazo máximo de 10 días hábiles desde la
-            recepción de la solicitud.
-          </p>
-          <InfoBox color="amber">
-            <strong style={{ color: "#fcd34d" }}>Excepción legal:</strong> El derecho a
-            retracto no aplica cuando el Usuario haya solicitado o descargado reportes
-            tributarios durante el período, conforme al Art. 3 bis letra b) de la Ley
-            19.496, que excluye los servicios digitales cuya ejecución haya comenzado con
-            acuerdo del consumidor.
-          </InfoBox>
-        </LegalSection>
-
-        <LegalSection title="7. Derechos del consumidor">
-          <p>
-            En virtud de la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 19.496</strong> de Protección al
-            Consumidor, el Usuario tiene derecho a:
-          </p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>
-              <strong style={{ color: "#e2e8f0" }}>Información veraz y oportuna</strong> sobre
-              el servicio contratado, sus características, condiciones y precios (Art. 3
-              letra b).
-            </li>
-            <li>
-              <strong style={{ color: "#e2e8f0" }}>No discriminación arbitraria</strong> en el
-              acceso al servicio y en las condiciones de la prestación (Art. 3 letra c).
-            </li>
-            <li>
-              <strong style={{ color: "#e2e8f0" }}>Seguridad en el servicio</strong> y en los
-              datos que el Usuario proporciona a la Plataforma (Art. 3 letra d).
-            </li>
-            <li>
-              <strong style={{ color: "#e2e8f0" }}>Retracto</strong> en los términos indicados
-              en la sección 6 precedente (Art. 3 bis).
-            </li>
-            <li>
-              <strong style={{ color: "#e2e8f0" }}>Reclamo y reparación</strong> ante el{" "}
-              <strong style={{ color: "#e2e8f0" }}>SERNAC</strong> (Servicio Nacional del
-              Consumidor) o ante los Juzgados de Policía Local competentes, si considera que
-              sus derechos han sido vulnerados.
-            </li>
-          </ul>
-          <p>
-            Ledgera se compromete a no incluir cláusulas contrarias a las normas de orden
-            público de la Ley 19.496. Cualquier cláusula que contravenga dicha ley se
-            tendrá por no escrita.
+            Salvo disposición legal en contrario o lo indicado expresamente en el plan, los
+            montos pagados por periodos ya transcurridos no son reembolsables. LEDGERA podrá
+            modificar precios y planes, informando con antelación razonable; los cambios no
+            afectarán periodos ya pagados.
           </p>
         </LegalSection>
 
-        <LegalSection title="8. Uso aceptable">
+        <LegalSection title="11. Protección de datos personales">
           <p>
-            El Usuario se compromete a utilizar la Plataforma exclusivamente para fines
-            lícitos y de conformidad con los presentes Términos. Queda expresamente
-            prohibido:
-          </p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>
-              Ingresar datos falsos, manipulados o que induzcan a error en las declaraciones
-              tributarias presentadas ante el SII u otras autoridades.
-            </li>
-            <li>
-              Evadir, eludir o defraudar al SII u otras autoridades fiscales nacionales o
-              extranjeras.
-            </li>
-            <li>
-              Realizar operaciones vinculadas a lavado de activos, financiamiento del
-              terrorismo o cualquier actividad ilícita conforme a la{" "}
-              <strong style={{ color: "#e2e8f0" }}>Ley N° 19.913</strong> y su normativa
-              complementaria de la UAF.
-            </li>
-            <li>
-              Realizar ingeniería inversa, descompilar, desensamblar o intentar acceder al
-              código fuente de la Plataforma.
-            </li>
-            <li>
-              Revender, sublicenciar, ceder o transferir el acceso a la Plataforma a
-              terceros sin autorización expresa y escrita de Ledgera SpA.
-            </li>
-            <li>
-              Utilizar sistemas automatizados (bots, scrapers u otros) para extraer datos
-              de la Plataforma de forma masiva sin autorización previa.
-            </li>
-          </ul>
-          <p>
-            El incumplimiento de estas obligaciones faculta a Ledgera para suspender o
-            cancelar el acceso de forma inmediata y adoptar las acciones legales que
-            correspondan, sin perjuicio de la responsabilidad penal o civil del Usuario.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="9. Responsabilidad y limitaciones">
-          <p>
-            Ledgera realiza sus mejores esfuerzos para mantener la Plataforma operativa,
-            segura y actualizada conforme a la normativa SII vigente. Sin perjuicio de ello,{" "}
-            <strong style={{ color: "#e2e8f0" }}>no garantiza</strong>:
-          </p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li>
-              Que los cálculos tributarios generados sean aceptados sin observaciones por el
-              SII en todos los casos, dado que la fiscalización depende de criterios propios
-              de dicha institución.
-            </li>
-            <li>
-              La disponibilidad ininterrumpida del servicio. Ledgera procurará notificar con
-              anticipación cualquier mantención programada.
-            </li>
-            <li>
-              Que los tipos de cambio FX provistos por el BCCh correspondan exactamente a
-              los exigidos en una fiscalización específica, pues el criterio de conversión
-              aplicable en cada caso es determinado por el SII.
-            </li>
-          </ul>
-          <p>
-            La responsabilidad máxima de Ledgera frente al Usuario, por concepto de daños
-            directos, no podrá exceder el monto equivalente a las sumas efectivamente pagadas
-            por el Usuario en los <strong style={{ color: "#e2e8f0" }}>3 meses</strong>{" "}
-            inmediatamente anteriores al evento generador del daño.
-          </p>
-          <InfoBox color="red">
-            <strong style={{ color: "#fca5a5" }}>Límite legal infranqueable:</strong>{" "}
-            Conforme al{" "}
-            <strong style={{ color: "#fca5a5" }}>Art. 1465 del Código Civil</strong>, la
-            limitación de responsabilidad anterior{" "}
-            <strong style={{ color: "#fca5a5" }}>
-              no aplica en casos de dolo o culpa grave
-            </strong>{" "}
-            imputable a Ledgera SpA. En tales supuestos, Ledgera responderá por la totalidad
-            de los perjuicios causados conforme a las reglas generales del derecho civil
-            chileno.
-          </InfoBox>
-          <p>
-            Ledgera no será responsable por daños indirectos, lucro cesante, pérdida de
-            datos o daño emergente derivado del uso o imposibilidad de uso de la Plataforma,
-            salvo en los casos de dolo o culpa grave señalados precedentemente.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="10. Protección de datos personales">
-          <p>
-            El tratamiento de los datos personales del Usuario se rige por la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 21.719</strong> de Protección de
-            Datos Personales de Chile y se describe en detalle en la{" "}
+            El tratamiento de datos personales por parte de LEDGERA se rige por la{" "}
+            <strong style={{ color: "#e2e8f0" }}>Ley N° 19.628</strong> sobre Protección de
+            la Vida Privada y, a partir de su entrada en vigencia plena el 1 de diciembre de
+            2026, por la{" "}
+            <strong style={{ color: "#e2e8f0" }}>Ley N° 21.719</strong>, así como por la{" "}
             <Link href="/privacidad" style={{ color: "#818cf8" }}>
               Política de Privacidad
-            </Link>
-            , que forma parte integrante de los presentes Términos.
+            </Link>{" "}
+            de LEDGERA, que forma parte integrante de estos Términos.
           </p>
           <p>
-            Al aceptar estos Términos, el Usuario otorga su consentimiento expreso para el
-            tratamiento de sus datos personales con las finalidades, bases legales y
-            condiciones descritas en dicha Política.
+            LEDGERA trata los datos personales del Usuario con la finalidad de prestar el
+            Servicio, sobre la base del consentimiento del Usuario y de la ejecución del
+            presente contrato.
           </p>
           <p>
-            Los datos tributarios del Usuario (movimientos, carteras, cálculos FIFO) son
-            tratados exclusivamente para la prestación del servicio contratado y no son
-            compartidos con terceros salvo en los casos indicados en la Política de
-            Privacidad.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="11. Propiedad intelectual">
-          <p>
-            Todos los derechos de propiedad intelectual sobre la Plataforma, incluyendo
-            diseño, código fuente, algoritmos, marca comercial, logotipos y contenidos, son
-            de titularidad exclusiva de{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ledgera SpA</strong> y se encuentran
-            protegidos por la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 17.336</strong> de Propiedad
-            Intelectual de Chile y los convenios internacionales aplicables.
+            El Usuario podrá ejercer sus derechos de acceso, rectificación, cancelación o
+            supresión, oposición y portabilidad conforme a la normativa vigente, mediante
+            los canales indicados en la cláusula 21.
           </p>
           <p>
-            En virtud de los presentes Términos, el Usuario recibe una{" "}
-            <strong style={{ color: "#e2e8f0" }}>
-              licencia limitada, no exclusiva, intransferible y revocable
-            </strong>{" "}
-            para acceder y utilizar la Plataforma durante la vigencia de su suscripción y
-            únicamente para los fines previstos en estos Términos.
-          </p>
-          <p>
-            Queda expresamente prohibida cualquier reproducción, distribución, modificación
-            o explotación comercial de los contenidos de la Plataforma sin autorización
-            previa y escrita de Ledgera SpA.
+            LEDGERA adopta medidas técnicas y organizativas de seguridad razonables,
+            incluyendo control de acceso, registros de auditoría, limitación de tasa en
+            endpoints críticos, respaldos y monitoreo. El Usuario reconoce que, por razones
+            de infraestructura tecnológica, sus datos pueden ser almacenados o procesados
+            en servidores ubicados fuera de Chile, adoptándose los resguardos adecuados
+            conforme a la normativa aplicable.{" "}
+            <strong style={{ color: "#e2e8f0" }}>LEDGERA no vende los datos personales del Usuario a terceros.</strong>
           </p>
         </LegalSection>
 
-        <LegalSection title="12. Modificaciones">
+        <LegalSection title="12. Disponibilidad, mantenimiento y respaldos">
           <p>
-            Ledgera podrá modificar los presentes Términos en cualquier momento, por razones
-            de adecuación normativa, cambios en el servicio u otras causas justificadas.
+            LEDGERA procurará mantener el Servicio disponible de forma continua, pero no
+            garantiza disponibilidad ininterrumpida ni libre de errores. Podrán existir
+            interrupciones por mantenimiento, actualizaciones, fallas técnicas o causas de
+            fuerza mayor.
           </p>
           <p>
-            Los cambios serán notificados al correo electrónico registrado con al menos{" "}
-            <strong style={{ color: "#e2e8f0" }}>10 días hábiles de anticipación</strong>{" "}
-            a su entrada en vigor. Continuando con el uso de la Plataforma tras el plazo
-            indicado, el Usuario manifiesta su aceptación de los nuevos Términos.
-          </p>
-          <p>
-            Si el Usuario no acepta las modificaciones, podrá ejercer su derecho a retracto
-            o resolver el contrato en los términos de la sección 6, sin costo adicional,
-            dentro de los 10 días hábiles siguientes a la notificación del cambio.
+            Aunque LEDGERA realiza respaldos de información, el Usuario es responsable de
+            conservar copias de su propia información relevante. LEDGERA no garantiza la
+            recuperación íntegra de datos en todos los escenarios.
           </p>
         </LegalSection>
 
-        <LegalSection title="13. Ley aplicable y jurisdicción">
+        <LegalSection title="13. Garantías y exención de responsabilidad">
           <p>
-            Los presentes Términos y la relación contractual entre Ledgera SpA y el Usuario
-            se rigen íntegramente por las leyes de la{" "}
-            <strong style={{ color: "#e2e8f0" }}>República de Chile</strong>.
+            El Servicio se proporciona{" "}
+            <strong style={{ color: "#e2e8f0" }}>"en su estado actual"</strong> y{" "}
+            <strong style={{ color: "#e2e8f0" }}>"según disponibilidad"</strong>, sin
+            garantías de ningún tipo más allá de las que la ley imponga de manera imperativa.
           </p>
           <p>
-            Para la resolución de cualquier controversia derivada o relacionada con los
-            presentes Términos, las partes se someten a la jurisdicción de los:
+            En la máxima medida permitida por la legislación chilena, LEDGERA no garantiza
+            que el Servicio satisfaga requerimientos específicos del Usuario, que opere sin
+            interrupciones o errores, ni que los resultados sean exactos o suficientes para
+            un fin determinado.
+          </p>
+          <InfoBox color="indigo">
+            Ninguna disposición de estos Términos excluye o limita responsabilidades que,
+            conforme a la ley chilena, no puedan ser excluidas ni limitadas, incluyendo las
+            derivadas de{" "}
+            <strong style={{ color: "#c7d2fe" }}>dolo o culpa grave</strong> y, cuando
+            resulte aplicable, las garantías legales de la{" "}
+            <strong style={{ color: "#c7d2fe" }}>Ley N° 19.496</strong>.
+          </InfoBox>
+        </LegalSection>
+
+        <LegalSection title="14. Limitación de responsabilidad">
+          <p>
+            En la máxima medida permitida por la ley, LEDGERA no será responsable por
+            daños indirectos, incidentales, especiales, punitivos o consecuenciales, ni por
+            lucro cesante, pérdida de datos, pérdida de oportunidades de negocio, sanciones
+            tributarias o perjuicios derivados de decisiones del Usuario basadas en la
+            Plataforma.
+          </p>
+          <p>
+            En aquellos casos en que LEDGERA deba responder y la limitación sea legalmente
+            admisible, su responsabilidad total acumulada quedará limitada al monto
+            efectivamente pagado por el Usuario en concepto de suscripción durante los{" "}
+            <strong style={{ color: "#e2e8f0" }}>doce (12) meses</strong> anteriores al
+            hecho que origina la responsabilidad.
+          </p>
+          <p>
+            Las limitaciones de esta cláusula no afectan los derechos irrenunciables que la
+            ley reconozca al Usuario consumidor.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="15. Indemnidad">
+          <p>
+            El Usuario mantendrá indemne a LEDGERA, sus titulares, administradores,
+            colaboradores y proveedores frente a cualquier reclamo, demanda, sanción,
+            pérdida o gasto (incluidos honorarios razonables de defensa) derivado de:
           </p>
           <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <li>El incumplimiento de estos Términos.</li>
+            <li>La infracción de la ley o de derechos de terceros.</li>
+            <li>La información ingresada por el Usuario.</li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Juzgados de Policía Local</strong>{" "}
-              competentes, cuando se trate de controversias entre Ledgera y consumidores
-              finales en el marco de la Ley N° 19.496.
-            </li>
-            <li>
-              <strong style={{ color: "#e2e8f0" }}>
-                Tribunales Ordinarios de Justicia de Santiago
-              </strong>
-              , para cualquier otra controversia de carácter civil o comercial, con expresa
-              renuncia a cualquier otro fuero o domicilio.
+              El uso que el Usuario haga de los resultados del Servicio, especialmente en
+              materia tributaria.
             </li>
           </ul>
+        </LegalSection>
+
+        <LegalSection title="16. Suspensión y terminación">
           <p>
-            Lo anterior es sin perjuicio del derecho del Usuario-consumidor a recurrir ante
-            el <strong style={{ color: "#e2e8f0" }}>SERNAC</strong> en cualquier momento.
+            LEDGERA podrá suspender o terminar el acceso del Usuario, total o parcialmente,
+            en caso de incumplimiento de estos Términos, uso ilícito, falta de pago o por
+            requerimiento de autoridad competente.
+          </p>
+          <p>
+            El Usuario podrá terminar el uso del Servicio en cualquier momento, cancelando
+            su cuenta o suscripción según corresponda.
+          </p>
+          <p>
+            Terminada la relación, el tratamiento y conservación de datos se regirá por la
+            Política de Privacidad y por las obligaciones de conservación que imponga la ley.
+            El Usuario podrá solicitar la exportación de su información antes del cierre de
+            la cuenta, dentro de los plazos y formatos disponibles.
           </p>
         </LegalSection>
 
-        <LegalSection title="14. Contacto">
-          <p>Para consultas sobre estos Términos o sobre el servicio en general:</p>
+        <LegalSection title="17. Modificaciones a los Términos y al Servicio">
+          <p>
+            LEDGERA podrá modificar estos Términos para adecuarlos a cambios legales,
+            técnicos o del Servicio. Las modificaciones se informarán con antelación
+            razonable a través de la Plataforma o por los medios de contacto registrados.
+          </p>
+          <p>
+            El uso continuado del Servicio luego de la entrada en vigencia de las
+            modificaciones implica su aceptación. Si el Usuario no las acepta, podrá
+            terminar el uso del Servicio conforme a la cláusula 16.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="18. Fuerza mayor">
+          <p>
+            LEDGERA no será responsable por el incumplimiento o retraso en sus obligaciones
+            cuando obedezca a caso fortuito o fuerza mayor, incluyendo fallas de
+            infraestructura de terceros, cortes de energía o conectividad, ciberataques,
+            actos de autoridad o desastres.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="19. Confidencialidad">
+          <p>
+            Las partes mantendrán reserva sobre la información confidencial a la que accedan
+            con ocasión del uso del Servicio, salvo obligación legal de revelarla o
+            autorización expresa de la parte titular.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="20. Cesión, divisibilidad e integridad">
+          <p>
+            El Usuario no podrá ceder estos Términos sin autorización previa y escrita de
+            LEDGERA. LEDGERA podrá cederlos en el marco de reorganizaciones societarias,
+            informando al Usuario.
+          </p>
+          <p>
+            Si alguna disposición de estos Términos fuere declarada nula o inaplicable, las
+            restantes mantendrán plena vigencia.
+          </p>
+          <p>
+            Estos Términos, junto con la{" "}
+            <Link href="/privacidad" style={{ color: "#818cf8" }}>
+              Política de Privacidad
+            </Link>{" "}
+            y las condiciones específicas de cada plan, constituyen el acuerdo íntegro entre
+            las partes respecto del uso del Servicio.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="21. Notificaciones y contacto">
+          <p>
+            Las comunicaciones del Usuario relativas a estos Términos, al ejercicio de
+            derechos sobre datos personales o a reclamos, podrán dirigirse a los canales de
+            contacto oficiales de LEDGERA publicados en la Plataforma.
+          </p>
           <InfoBox>
             <strong>Correo:</strong>{" "}
             <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
@@ -536,20 +582,67 @@ export default function TerminosPage() {
             </a>
             {"  ·  "}
             <strong>WhatsApp:</strong>{" "}
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#818cf8" }}>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#818cf8" }}
+            >
               Soporte en línea
             </a>
           </InfoBox>
           <p>
-            Respondemos consultas en un plazo máximo de{" "}
-            <strong style={{ color: "#e2e8f0" }}>5 días hábiles</strong>.
+            LEDGERA dirigirá sus comunicaciones al correo electrónico u otros datos de
+            contacto registrados por el Usuario. Respondemos consultas en un plazo máximo
+            de <strong style={{ color: "#e2e8f0" }}>5 días hábiles</strong>.
           </p>
         </LegalSection>
+
+        <LegalSection title="22. Legislación aplicable y jurisdicción">
+          <p>
+            Estos Términos se rigen por las leyes de la{" "}
+            <strong style={{ color: "#e2e8f0" }}>República de Chile</strong>.
+          </p>
+          <p>
+            Toda controversia derivada de estos Términos se someterá a los tribunales
+            ordinarios de justicia con asiento en la{" "}
+            <strong style={{ color: "#e2e8f0" }}>comuna de Santiago</strong>, sin perjuicio
+            de los derechos que la Ley N° 19.496 reconozca al Usuario consumidor, incluida
+            la competencia que corresponda a los juzgados de su domicilio y la facultad de
+            recurrir al{" "}
+            <strong style={{ color: "#e2e8f0" }}>Servicio Nacional del Consumidor (SERNAC)</strong>.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="23. Idioma">
+          <p>
+            Estos Términos se otorgan en idioma{" "}
+            <strong style={{ color: "#e2e8f0" }}>español</strong>, lengua que prevalecerá
+            ante cualquier traducción.
+          </p>
+        </LegalSection>
+
+        {/* NOTA DE PIE */}
+        <div
+          style={{
+            marginTop: "2rem",
+            padding: "1rem 1.2rem",
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={{ color: "#475569", fontSize: "0.8rem", margin: 0, lineHeight: 1.6 }}>
+            Documento redactado sobre la base del marco legal chileno vigente a la fecha de
+            actualización. No constituye asesoría legal. Se recomienda su revisión y
+            validación por un abogado habilitado en Chile.
+          </p>
+        </div>
 
         {/* VER TAMBIÉN */}
         <div
           style={{
-            marginTop: "3rem",
+            marginTop: "2rem",
             padding: "1.5rem",
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
