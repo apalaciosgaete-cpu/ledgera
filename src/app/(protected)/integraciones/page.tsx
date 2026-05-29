@@ -5,6 +5,7 @@ import { colors, fonts } from "@/styles/tokens";
 import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 
 type Tab = "exchange" | "banco" | "wallets";
+type ExchangeKey = "binance" | null;
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg: string }[] = [
   {
@@ -51,6 +52,7 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg:
 
 export default function IntegracionesPage() {
   const [tab, setTab] = useState<Tab | null>(null);
+  const [exchange, setExchange] = useState<ExchangeKey>(null);
 
   if (!tab) {
     return (
@@ -143,8 +145,8 @@ export default function IntegracionesPage() {
         </div>
       </div>
 
-      {/* Contenido */}
-      {tab === "exchange" && (
+      {/* Contenido Exchange */}
+      {tab === "exchange" && !exchange && (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
 
           {/* Chile */}
@@ -164,15 +166,8 @@ export default function IntegracionesPage() {
                   opacity: 0.6, cursor: "default",
                 }}>
                   <img src={ex.logo} alt={ex.name} width="28" height="28" style={{ borderRadius: "6px" }} />
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: ex.color, fontFamily: fonts.display }}>
-                    {ex.name}
-                  </span>
-                  <span style={{
-                    fontSize: "9px", fontWeight: 700, color: "#64748B",
-                    background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em",
-                    textTransform: "uppercase", marginLeft: "6px",
-                  }}>
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: ex.color, fontFamily: fonts.display }}>{ex.name}</span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
                     Próximamente
                   </span>
                 </div>
@@ -185,36 +180,32 @@ export default function IntegracionesPage() {
             <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
               Exchanges internacionales
             </p>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
 
-              {/* Binance — ACTIVO */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-                <div style={{
+              {/* Binance — clickeable */}
+              <button
+                onClick={() => setExchange("binance")}
+                style={{
                   background: "#1E2026", border: "1px solid rgba(243,186,47,0.35)",
                   borderRadius: "12px", padding: "0.75rem 1.5rem",
                   display: "flex", alignItems: "center", gap: "10px",
-                  cursor: "default",
-                }}>
-                  <img src="/binance-symbol.svg" alt="Binance" width="28" height="28" />
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: "#F3BA2F", fontFamily: fonts.display }}>
-                    Binance
-                  </span>
-                  <span style={{
-                    fontSize: "9px", fontWeight: 700, color: "#16A34A",
-                    background: "rgba(22,163,74,0.15)", border: "1px solid rgba(22,163,74,0.3)",
-                    borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em",
-                    textTransform: "uppercase", marginLeft: "6px",
-                  }}>
-                    Activo
-                  </span>
-                </div>
-                {/* Panel de conexión Binance */}
-                <div style={{ marginTop: "12px" }}>
-                  <BinanceIntegrationPanel />
-                </div>
-              </div>
+                  cursor: "pointer", fontFamily: fonts.body,
+                  transition: "border-color 0.15s, box-shadow 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(243,186,47,0.7)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(243,186,47,0.15)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(243,186,47,0.35)"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <img src="/binance-symbol.svg" alt="Binance" width="28" height="28" />
+                <span style={{ fontSize: "15px", fontWeight: 700, color: "#F3BA2F", fontFamily: fonts.display }}>Binance</span>
+                <span style={{ fontSize: "9px", fontWeight: 700, color: "#16A34A", background: "rgba(22,163,74,0.15)", border: "1px solid rgba(22,163,74,0.3)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
+                  Activo
+                </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F3BA2F" strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "4px", opacity: 0.6 }}>
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </button>
 
-              {/* Resto internacionales */}
+              {/* Resto */}
               {[
                 { name: "Coinbase",  color: "#4D9AFF", bg: "#0a0f1a", logo: "/coinbase-symbol.svg"  },
                 { name: "Kraken",    color: "#9F8AEF", bg: "#100a1a", logo: "/kraken-symbol.svg"    },
@@ -227,22 +218,36 @@ export default function IntegracionesPage() {
                   opacity: 0.6, cursor: "default",
                 }}>
                   <img src={ex.logo} alt={ex.name} width="28" height="28" style={{ borderRadius: "6px" }} />
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: ex.color, fontFamily: fonts.display }}>
-                    {ex.name}
-                  </span>
-                  <span style={{
-                    fontSize: "9px", fontWeight: 700, color: "#64748B",
-                    background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em",
-                    textTransform: "uppercase", marginLeft: "6px",
-                  }}>
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: ex.color, fontFamily: fonts.display }}>{ex.name}</span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
                     Próximamente
                   </span>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+      )}
 
+      {/* Vista interior: Binance */}
+      {tab === "exchange" && exchange === "binance" && (
+        <div>
+          <button
+            onClick={() => setExchange(null)}
+            style={{ display: "flex", alignItems: "center", gap: "6px", background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "13px", fontFamily: fonts.body, padding: "0 0 24px", marginBottom: "4px" }}
+          >
+            ← Volver a Exchanges
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "28px" }}>
+            <div style={{ background: "#1E2026", border: "1px solid rgba(243,186,47,0.3)", borderRadius: "12px", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <img src="/binance-symbol.svg" alt="Binance" width="28" height="28" />
+            </div>
+            <div>
+              <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 2px" }}>Binance</h2>
+              <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>Conecta tus APIs de Binance para importar movimientos automáticamente</p>
+            </div>
+          </div>
+          <BinanceIntegrationPanel />
         </div>
       )}
 
