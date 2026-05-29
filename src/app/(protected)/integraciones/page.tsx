@@ -252,19 +252,56 @@ export default function IntegracionesPage() {
       )}
 
       {tab === "banco" && (
-        <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "3rem 2rem", textAlign: "center" }}>
-          <p style={{ fontSize: "13px", color: colors.textSecondary, margin: "0 0 1.5rem", lineHeight: 1.7 }}>
-            Importa movimientos bancarios desde tu banco.<br/>
-            Soporta Banco de Chile, Santander, BCI, Scotiabank y más.
-          </p>
-          <a href="/import/bank" style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            background: colors.accent, color: "#fff", padding: "9px 20px",
-            borderRadius: "8px", textDecoration: "none",
-            fontSize: "13px", fontWeight: 600, fontFamily: fonts.body,
-          }}>
-            Importar movimientos bancarios →
-          </a>
+        <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+
+          {/* Bancos Chile */}
+          <div>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
+              Bancos que operan en Chile
+            </p>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              {[
+                { name: "Banco de Chile", color: "#E30613", bg: "#1a0505", logo: "/bancochile-symbol.svg"  },
+                { name: "Santander",      color: "#FF4444", bg: "#1a0505", logo: "/santander-symbol.svg"   },
+                { name: "BCI",            color: "#4D8FFF", bg: "#050a1a", logo: "/bci-symbol.svg"          },
+                { name: "Scotiabank",     color: "#FF4455", bg: "#1a0508", logo: "/scotiabank-symbol.svg"  },
+                { name: "BancoEstado",    color: "#4DA8FF", bg: "#050f1a", logo: "/bancoestado-symbol.svg" },
+                { name: "Itaú",           color: "#FF9D4D", bg: "#1a0d05", logo: "/itau-symbol.svg"         },
+                { name: "Falabella",      color: "#4DCC88", bg: "#051a0d", logo: "/falabella-symbol.svg"   },
+                { name: "Tenpo",          color: "#FF6699", bg: "#1a0510", logo: "/tenpo-symbol.svg"        },
+                { name: "Ripley",         color: "#C084FC", bg: "#100518", logo: "/ripley-symbol.svg"       },
+                { name: "Security",       color: "#60A5FA", bg: "#050d1a", logo: "/security-symbol.svg"    },
+              ].map(bank => (
+                <div key={bank.name} style={{
+                  background: bank.bg, border: `1px solid ${bank.color}30`,
+                  borderRadius: "12px", padding: "0.75rem 1.25rem",
+                  display: "flex", alignItems: "center", gap: "10px",
+                  opacity: 0.65, cursor: "default",
+                }}>
+                  <img src={bank.logo} alt={bank.name} width="28" height="28" style={{ borderRadius: "6px", flexShrink: 0 }} />
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: bank.color, fontFamily: fonts.display, whiteSpace: "nowrap" }}>
+                    {bank.name}
+                  </span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748B", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "4px" }}>
+                    Próximamente
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bancos internacionales */}
+          <div>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
+              Bancos internacionales
+            </p>
+            <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "2rem", textAlign: "center" }}>
+              <span style={{ display: "inline-block", background: colors.warningMuted, border: "1px solid rgba(245,158,11,0.25)", color: colors.warning, padding: "6px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: 600 }}>
+                Próximamente
+              </span>
+            </div>
+          </div>
+
         </div>
       )}
 

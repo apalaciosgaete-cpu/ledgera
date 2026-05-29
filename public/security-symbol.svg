@@ -1,0 +1,5 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" rx="18" fill="#1E3A5F"/>
+  <text x="50" y="52" font-family="Arial Black, sans-serif" font-size="20" font-weight="900" text-anchor="middle" fill="white">BANCO</text>
+  <text x="50" y="74" font-family="Arial Black, sans-serif" font-size="16" font-weight="900" text-anchor="middle" fill="#FFD700">SECURITY</text>
+</svg>
