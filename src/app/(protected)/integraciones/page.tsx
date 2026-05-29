@@ -144,17 +144,113 @@ export default function IntegracionesPage() {
 
       {/* Contenido */}
       {tab === "exchange" && (
-        <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "3rem 2rem", textAlign: "center" }}>
-          <p style={{ fontSize: "13px", color: colors.textSecondary, margin: "0 0 1.5rem", lineHeight: 1.7 }}>
-            Conecta Binance, Buda.com, Orionx, Coinbase, Kraken y más.<br/>
-            Los movimientos se importarán automáticamente a la piscina.
-          </p>
-          <span style={{
-            display: "inline-block",
-            background: colors.warningMuted, border: "1px solid rgba(245,158,11,0.25)",
-            color: colors.warning, padding: "6px 16px", borderRadius: "8px",
-            fontSize: "12px", fontWeight: 600,
-          }}>Próximamente</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+
+          {/* Chile */}
+          <div>
+            <p style={{ fontSize: "11px", fontWeight: 700, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 14px" }}>
+              Exchanges que operan en Chile
+            </p>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {[
+                { name: "Buda.com", color: "#FF6B35", bg: "#1a0f0a", initials: "BU" },
+                { name: "Orionx",   color: "#A78BFA", bg: "#0f0a1a", initials: "OR" },
+              ].map(ex => (
+                <div key={ex.name} style={{
+                  background: ex.bg, border: `1px solid ${ex.color}30`,
+                  borderRadius: "10px", padding: "0.625rem 1.25rem",
+                  display: "flex", alignItems: "center", gap: "8px",
+                  opacity: 0.65, cursor: "default",
+                }}>
+                  <div style={{
+                    width: "20px", height: "20px", borderRadius: "4px",
+                    background: `${ex.color}25`, border: `1px solid ${ex.color}40`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "8px", fontWeight: 800, color: ex.color, flexShrink: 0,
+                    fontFamily: fonts.display,
+                  }}>
+                    {ex.initials}
+                  </div>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: ex.color, fontFamily: fonts.body }}>
+                    {ex.name}
+                  </span>
+                  <span style={{
+                    fontSize: "9px", fontWeight: 700, color: colors.textMuted,
+                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em",
+                    textTransform: "uppercase", marginLeft: "4px",
+                  }}>
+                    Próximamente
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Internacionales */}
+          <div>
+            <p style={{ fontSize: "11px", fontWeight: 700, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 14px" }}>
+              Exchanges internacionales
+            </p>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {/* Binance — con logo real */}
+              <div style={{
+                background: "#1E2026", border: "1px solid rgba(243,186,47,0.2)",
+                borderRadius: "10px", padding: "0.625rem 1.25rem",
+                display: "flex", alignItems: "center", gap: "8px",
+                opacity: 0.65, cursor: "default",
+              }}>
+                <img src="/binance-symbol.svg" alt="Binance" width="20" height="20" aria-hidden="true" />
+                <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#F3BA2F", fontFamily: fonts.body }}>
+                  Binance
+                </span>
+                <span style={{
+                  fontSize: "9px", fontWeight: 700, color: "#94A3B8",
+                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em",
+                  textTransform: "uppercase", marginLeft: "4px",
+                }}>
+                  Próximamente
+                </span>
+              </div>
+
+              {/* Resto */}
+              {[
+                { name: "Coinbase", color: "#4D9AFF", bg: "#0a0f1a", initials: "CO" },
+                { name: "Kraken",   color: "#9F8AEF", bg: "#100a1a", initials: "KR" },
+                { name: "CoinGecko", color: "#8DC63F", bg: "#0a120a", initials: "CG" },
+              ].map(ex => (
+                <div key={ex.name} style={{
+                  background: ex.bg, border: `1px solid ${ex.color}30`,
+                  borderRadius: "10px", padding: "0.625rem 1.25rem",
+                  display: "flex", alignItems: "center", gap: "8px",
+                  opacity: 0.65, cursor: "default",
+                }}>
+                  <div style={{
+                    width: "20px", height: "20px", borderRadius: "4px",
+                    background: `${ex.color}25`, border: `1px solid ${ex.color}40`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "8px", fontWeight: 800, color: ex.color, flexShrink: 0,
+                    fontFamily: fonts.display,
+                  }}>
+                    {ex.initials}
+                  </div>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: ex.color, fontFamily: fonts.body }}>
+                    {ex.name}
+                  </span>
+                  <span style={{
+                    fontSize: "9px", fontWeight: 700, color: colors.textMuted,
+                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em",
+                    textTransform: "uppercase", marginLeft: "4px",
+                  }}>
+                    Próximamente
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       )}
 
