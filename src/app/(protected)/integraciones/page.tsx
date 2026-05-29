@@ -166,7 +166,7 @@ export default function IntegracionesPage() {
                   opacity: 0.65, cursor: "default",
                 }}>
                   <img
-                    src={`https://logo.clearbit.com/${ex.domain}?size=128`}
+                    src={`https://cdn.brandfetch.io/${ex.domain}/w/128/h/128`}
                     alt={ex.name} width="36" height="36"
                     style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${ex.domain}&size=128`; }}
@@ -221,7 +221,7 @@ export default function IntegracionesPage() {
                   opacity: 0.65, cursor: "default",
                 }}>
                   <img
-                    src={`https://logo.clearbit.com/${ex.domain}?size=128`}
+                    src={`https://cdn.brandfetch.io/${ex.domain}/w/128/h/128`}
                     alt={ex.name} width="36" height="36"
                     style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${ex.domain}&size=128`; }}
@@ -267,20 +267,20 @@ export default function IntegracionesPage() {
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "10px" }}>
               {[
-                { name: "Banco de Chile",    domain: "bancochile.cl"        },
-                { name: "Banco Internacional", domain: "bancointernacional.cl"},
-                { name: "Scotiabank Chile",  domain: "scotiabank.com"        },
-                { name: "BCI",               domain: "bci.cl"                },
-                { name: "Banco BICE",        domain: "bice.cl"               },
-                { name: "HSBC Bank Chile",   domain: "hsbc.com"              },
-                { name: "Santander Chile",   domain: "santander.com"         },
-                { name: "Itaú Corpbanca",    domain: "itau.com"              },
-                { name: "Banco Security",    domain: "security.cl"           },
-                { name: "Banco Falabella",   domain: "bancofalabella.cl"     },
-                { name: "Banco Ripley",      domain: "bancoripley.cl"        },
-                { name: "Banco Consorcio",   domain: "bancoconsorcio.cl"     },
-                { name: "Scotiabank Azul",   domain: "scotiabank.com"        },
-                { name: "BTG Pactual Chile", domain: "btgpactual.com"        },
+                { name: "Banco de Chile",    domain: "bancochile.cl"           },
+                { name: "Banco Internacional", domain: "bancointernacional.cl" },
+                { name: "Scotiabank Chile",  domain: "scotiabank.com"           },
+                { name: "BCI",               domain: "bci.cl"                   },
+                { name: "Banco BICE",        domain: "bice.cl"                  },
+                { name: "HSBC Bank Chile",   domain: "hsbc.com"                 },
+                { name: "Santander Chile",   domain: "santander.com"            },
+                { name: "Itaú Corpbanca",    domain: "itau.com"                 },
+                { name: "Banco Security",    domain: "security.cl"              },
+                { name: "Banco Falabella",   domain: "bancofalabella.cl"        },
+                { name: "Banco Ripley",      domain: "bancoripley.cl"           },
+                { name: "Banco Consorcio",   domain: "bancoconsorcio.cl"        },
+                { name: "Scotiabank Azul",   domain: "scotiabank.com"           },
+                { name: "BTG Pactual Chile", domain: "btgpactual.com"           },
               ].map(bank => (
                 <div key={bank.name} style={{
                   background: colors.surface, border: `1px solid ${colors.border}`,
@@ -289,14 +289,14 @@ export default function IntegracionesPage() {
                   opacity: 0.75, cursor: "default",
                 }}>
                   <img
-                    src={`https://logo.clearbit.com/${bank.domain}?size=128`}
+                    src={`https://cdn.brandfetch.io/${bank.domain}/w/128/h/128`}
                     alt={bank.name}
                     width="36" height="36"
-                    style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
+                    style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain", background: "#f8fafc" }}
                     onError={(e) => {
                       const el = e.target as HTMLImageElement;
-                      if (!el.src.includes("gstatic")) {
-                        el.src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${bank.domain}&size=128`;
+                      if (!el.src.includes("clearbit")) {
+                        el.src = `https://logo.clearbit.com/${bank.domain}`;
                       }
                     }}
                   />
