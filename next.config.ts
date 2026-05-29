@@ -65,7 +65,6 @@ const publicMaintenanceRoutes = [
 
 const maintenanceRewrites = publicMaintenanceRoutes.map((source) => ({
   source,
-  missing: [{ type: "cookie" as const, key: "ledgera_preview" }],
   destination: "/mantenimiento",
 }));
 
