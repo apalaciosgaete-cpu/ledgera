@@ -275,13 +275,13 @@ export default function IntegracionesPage() {
                 { name: "HSBC Bank Chile",   domain: "hsbc.com"                 },
                 { name: "Santander Chile",   domain: "santander.com"            },
                 { name: "Itaú Corpbanca",    domain: "itau.com"                 },
-                { name: "Banco Security",    domain: "security.cl"              },
+                { name: "Banco Security",    domain: "security.cl", logo: "/bancosecurity-logo.png" },
                 { name: "Banco Falabella",   domain: "bancofalabella.cl"        },
                 { name: "Banco Ripley",      domain: "bancoripley.cl"           },
                 { name: "Banco Consorcio",   domain: "bancoconsorcio.cl"        },
                 { name: "Scotiabank Azul",   domain: "scotiabank.com"           },
                 { name: "BTG Pactual Chile", domain: "btgpactual.com"           },
-              ].map(bank => (
+              ].map((bank: { name: string; domain: string; logo?: string }) => (
                 <div key={bank.name} style={{
                   background: colors.surface, border: `1px solid ${colors.border}`,
                   borderRadius: "12px", padding: "14px 16px",
@@ -289,7 +289,7 @@ export default function IntegracionesPage() {
                   opacity: 0.75, cursor: "default",
                 }}>
                   <img
-                    src={`https://cdn.brandfetch.io/${bank.domain}/w/128/h/128`}
+                    src={bank.logo ?? `https://cdn.brandfetch.io/${bank.domain}/w/128/h/128`}
                     alt={bank.name}
                     width="36" height="36"
                     style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain", background: "#f8fafc" }}
