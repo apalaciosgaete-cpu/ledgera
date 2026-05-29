@@ -153,8 +153,8 @@ export default function IntegracionesPage() {
             </p>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               {[
-                { name: "Buda.com", color: "#FF6B35", bg: "#1a0f0a", initials: "BU" },
-                { name: "Orionx",   color: "#A78BFA", bg: "#0f0a1a", initials: "OR" },
+                { name: "Buda.com", color: "#FF6B35", bg: "#1a0f0a", logo: "/buda-symbol.svg" },
+                { name: "Orionx",   color: "#A78BFA", bg: "#0f0a1a", logo: "/orionx-symbol.svg" },
               ].map(ex => (
                 <div key={ex.name} style={{
                   background: ex.bg, border: `1px solid ${ex.color}30`,
@@ -162,15 +162,7 @@ export default function IntegracionesPage() {
                   display: "flex", alignItems: "center", gap: "8px",
                   opacity: 0.65, cursor: "default",
                 }}>
-                  <div style={{
-                    width: "20px", height: "20px", borderRadius: "4px",
-                    background: `${ex.color}25`, border: `1px solid ${ex.color}40`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "8px", fontWeight: 800, color: ex.color, flexShrink: 0,
-                    fontFamily: fonts.display,
-                  }}>
-                    {ex.initials}
-                  </div>
+                  <img src={ex.logo} alt={ex.name} width="20" height="20" style={{ borderRadius: "4px" }} />
                   <span style={{ fontSize: "0.875rem", fontWeight: 600, color: ex.color, fontFamily: fonts.body }}>
                     {ex.name}
                   </span>
@@ -214,11 +206,10 @@ export default function IntegracionesPage() {
                 </span>
               </div>
 
-              {/* Resto */}
               {[
-                { name: "Coinbase", color: "#4D9AFF", bg: "#0a0f1a", initials: "CO" },
-                { name: "Kraken",   color: "#9F8AEF", bg: "#100a1a", initials: "KR" },
-                { name: "CoinGecko", color: "#8DC63F", bg: "#0a120a", initials: "CG" },
+                { name: "Coinbase",  color: "#4D9AFF", bg: "#0a0f1a", logo: "/coinbase-symbol.svg"  },
+                { name: "Kraken",    color: "#9F8AEF", bg: "#100a1a", logo: "/kraken-symbol.svg"    },
+                { name: "CoinGecko", color: "#8DC63F", bg: "#0a120a", logo: "/coingecko-symbol.svg" },
               ].map(ex => (
                 <div key={ex.name} style={{
                   background: ex.bg, border: `1px solid ${ex.color}30`,
@@ -226,15 +217,7 @@ export default function IntegracionesPage() {
                   display: "flex", alignItems: "center", gap: "8px",
                   opacity: 0.65, cursor: "default",
                 }}>
-                  <div style={{
-                    width: "20px", height: "20px", borderRadius: "4px",
-                    background: `${ex.color}25`, border: `1px solid ${ex.color}40`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "8px", fontWeight: 800, color: ex.color, flexShrink: 0,
-                    fontFamily: fonts.display,
-                  }}>
-                    {ex.initials}
-                  </div>
+                  <img src={ex.logo} alt={ex.name} width="20" height="20" style={{ borderRadius: "4px" }} />
                   <span style={{ fontSize: "0.875rem", fontWeight: 600, color: ex.color, fontFamily: fonts.body }}>
                     {ex.name}
                   </span>
