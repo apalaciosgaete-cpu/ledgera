@@ -29,40 +29,20 @@ function LogoutIcon() {
   );
 }
 
+const baseNavItems: { href: string; label: string }[] = [
+  { href: "/portafolio",    label: "Portafolio" },
+  { href: "/integraciones", label: "Conexiones" },
+  { href: "/panel",         label: "Consolidado" },
+  { href: "/tributario",    label: "Tributario" },
+  { href: "/auditoria",     label: "Auditoría" },
+  { href: "/planes",        label: "Planes" },
+];
+
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
-  personal: [
-    { href: "/portafolio",    label: "Portafolio" },
-    { href: "/integraciones", label: "Integraciones" },
-    { href: "/panel",         label: "Panel" },
-    { href: "/tributario",    label: "Tributario" },
-    { href: "/auditoria",     label: "Auditoría" },
-    { href: "/planes",        label: "Planes" },
-  ],
-  contador: [
-    { href: "/portafolio",    label: "Portafolio" },
-    { href: "/integraciones", label: "Integraciones" },
-    { href: "/panel",         label: "Panel" },
-    { href: "/tributario",    label: "Tributario" },
-    { href: "/auditoria",     label: "Auditoría" },
-    { href: "/planes",        label: "Planes" },
-  ],
-  empresa: [
-    { href: "/portafolio",    label: "Portafolio" },
-    { href: "/integraciones", label: "Integraciones" },
-    { href: "/panel",         label: "Panel" },
-    { href: "/tributario",    label: "Tributario" },
-    { href: "/auditoria",     label: "Auditoría" },
-    { href: "/planes",        label: "Planes" },
-  ],
-  admin: [
-    { href: "/portafolio",    label: "Portafolio" },
-    { href: "/integraciones", label: "Integraciones" },
-    { href: "/panel",         label: "Panel" },
-    { href: "/tributario",    label: "Tributario" },
-    { href: "/auditoria",  label: "Auditoría" },
-    { href: "/planes",     label: "Planes" },
-    { href: "/admin",      label: "Admin" },
-  ],
+  personal: baseNavItems,
+  contador: baseNavItems,
+  empresa:  baseNavItems,
+  admin:    [...baseNavItems, { href: "/admin", label: "Admin" }],
 };
 
 const ROLES_CON_CONFIGURACION = ["admin", "empresa", "contador", "personal"];
@@ -123,19 +103,11 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   }
 
   function isActive(href: string) {
-    if (href === "/import/bank") {
-      return (
-        pathname.startsWith("/import/bank") ||
-        pathname.startsWith("/bank/") ||
-        pathname.startsWith("/importaciones")
-      );
-    }
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
     <div style={{ minHeight: "100vh", background: colors.bgApp, fontFamily: fonts.body }}>
-
       <header style={{
         background:   "#071B28",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -157,7 +129,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           gap:            "22px",
           minWidth:       0,
         }}>
-
           <Link
             href="/portafolio"
             aria-label="Ir al portafolio LEDGERA"
@@ -214,7 +185,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: 0 }}>
-
             {showConfig && (
               <Link
                 href="/configuracion"
@@ -280,7 +250,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               <LogoutIcon />
             </button>
           </div>
-
         </div>
       </header>
 
