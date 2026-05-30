@@ -49,30 +49,28 @@ async function ensureAssetVisibilityTable() {
   `);
 }
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+async function resolveAuth(request: NextRequest) {
   const csrfResponse = enforceCsrfProtection(request);
-
-  if (csrfResponse) {
-    return csrfResponse;
-  }
+  if (csrfResponse) return { csrfResponse, auth: null };
 
   const auth = await requireAuth(request);
-  if (!auth || auth instanceof NextResponse) {
-    return jsonError("No autorizado", 401);
-  }
+  if (!auth || auth instanceof NextResponse) return { csrfResponse: jsonError("No autorizado", 401), auth: null };
+
+  return { csrfResponse: null, auth };
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const { csrfResponse, auth } = await resolveAuth(request);
+  if (csrfResponse) return csrfResponse;
+  if (!auth) return jsonError("No autorizado", 401);
 
   try {
     const { symbol: rawSymbol } = await context.params;
     const symbol = normalizeSymbol(rawSymbol);
     const reason = await readReason(request);
 
-    if (!symbol) {
-      return jsonError("El activo es obligatorio.", 400);
-    }
-
-    if (!reason) {
-      return jsonError("El motivo para ocultar el activo es obligatorio.", 400);
-    }
+    if (!symbol) return jsonError("El activo es obligatorio.", 400);
+    if (!reason) return jsonError("El motivo para ocultar el activo es obligatorio.", 400);
 
     const movementCount = await prisma.portfolioMovement.count({
       where: {
@@ -126,7 +124,46 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error) {
-    console.error("[api/portfolio/assets/[symbol]]", error);
+    console.error("[api/portfolio/assets/[symbol]/DELETE]", error);
     return jsonError("Error interno al ocultar el activo.", 500);
+  }
+}
+
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  const { csrfResponse, auth } = await resolveAuth(request);
+  if (csrfResponse) return csrfResponse;
+  if (!auth) return jsonError("No autorizado", 401);
+
+  try {
+    const { symbol: rawSymbol } = await context.params;
+    const symbol = normalizeSymbol(rawSymbol);
+
+    if (!symbol) return jsonError("El activo es obligatorio.", 400);
+
+    await ensureAssetVisibilityTable();
+
+    await prisma.$executeRawUnsafe(
+      `
+        UPDATE portfolio_asset_visibility_preferences
+        SET hidden = FALSE,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $1
+          AND symbol = $2
+      `,
+      auth.user.id,
+      symbol,
+    );
+
+    return NextResponse.json({
+      ok: true,
+      message: `Activo ${symbol} restaurado en el consolidado.`,
+      data: {
+        symbol,
+        hidden: false,
+      },
+    });
+  } catch (error) {
+    console.error("[api/portfolio/assets/[symbol]/PATCH]", error);
+    return jsonError("Error interno al restaurar el activo.", 500);
   }
 }
