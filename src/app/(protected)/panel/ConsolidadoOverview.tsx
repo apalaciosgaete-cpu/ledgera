@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AssetSearch } from "./AssetSearch";
 
 type PageData = {
@@ -56,34 +56,36 @@ export function ConsolidadoOverview() {
   const [data, setData] = useState<PageData | null>(null);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [portfolioRes, taxRes, integrityRes] = await Promise.all([fetch("/api/portfolio"), fetch("/api/tax/health"), fetch("/api/tax/events/integrity")]);
-        const [portfolioJson, taxJson, integrityJson] = await Promise.all([portfolioRes.json(), taxRes.json(), integrityRes.json()]);
+  const load = useCallback(async () => {
+    try {
+      setError("");
+      const [portfolioRes, taxRes, integrityRes] = await Promise.all([fetch("/api/portfolio", { cache: "no-store" }), fetch("/api/tax/health", { cache: "no-store" }), fetch("/api/tax/events/integrity", { cache: "no-store" })]);
+      const [portfolioJson, taxJson, integrityJson] = await Promise.all([portfolioRes.json(), taxRes.json(), integrityRes.json()]);
 
-        if (!portfolioJson.ok) throw new Error(portfolioJson.message || "No se pudo cargar el patrimonio.");
-        if (!taxJson.ok) throw new Error(taxJson.message || "No se pudo cargar el estado tributario.");
-        if (!integrityJson.ok) throw new Error(integrityJson.message || "No se pudo cargar auditoría.");
+      if (!portfolioJson.ok) throw new Error(portfolioJson.message || "No se pudo cargar el patrimonio.");
+      if (!taxJson.ok) throw new Error(taxJson.message || "No se pudo cargar el estado tributario.");
+      if (!integrityJson.ok) throw new Error(integrityJson.message || "No se pudo cargar auditoría.");
 
-        const taxStatus = taxJson.data.status === "OK" ? "Al día" : taxJson.data.status === "REVIEW" ? "Revisión recomendada" : "Atención requerida";
-        const auditIssues = Number(integrityJson.data.summary.orphanEvents || 0) + Number(integrityJson.data.summary.sellWithoutEvent || 0);
+      const taxStatus = taxJson.data.status === "OK" ? "Al día" : taxJson.data.status === "REVIEW" ? "Revisión recomendada" : "Atención requerida";
+      const auditIssues = Number(integrityJson.data.summary.orphanEvents || 0) + Number(integrityJson.data.summary.sellWithoutEvent || 0);
 
-        setData({
-          patrimonioClp: portfolioJson.data.totals.totalCostClp,
-          activos: portfolioJson.data.totals.symbolCount,
-          costoUsd: portfolioJson.data.totals.totalCostUsd,
-          dolar: portfolioJson.data.fx.usdToClp,
-          estadoTributario: taxStatus,
-          estadoAuditoria: auditIssues > 0 ? "Revisión pendiente" : "Consistente",
-          posiciones: [...portfolioJson.data.positions].sort((a, b) => b.totalCostClp - a.totalCostClp).slice(0, 8),
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo cargar el consolidado.");
-      }
+      setData({
+        patrimonioClp: portfolioJson.data.totals.totalCostClp,
+        activos: portfolioJson.data.totals.symbolCount,
+        costoUsd: portfolioJson.data.totals.totalCostUsd,
+        dolar: portfolioJson.data.fx.usdToClp,
+        estadoTributario: taxStatus,
+        estadoAuditoria: auditIssues > 0 ? "Revisión pendiente" : "Consistente",
+        posiciones: [...portfolioJson.data.positions].sort((a, b) => b.totalCostClp - a.totalCostClp).slice(0, 8),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo cargar el consolidado.");
     }
-    void load();
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   if (error) return <p style={{ color: "#DC2626", fontWeight: 700 }}>{error}</p>;
   if (!data) return <p style={{ color: "#64748B" }}>Cargando consolidado...</p>;
@@ -111,7 +113,7 @@ export function ConsolidadoOverview() {
         <Status title="Conexiones" value="Fuentes de datos" note="Bancos, exchanges y billeteras conectadas." href="/integraciones" />
       </div>
 
-      <AssetSearch />
+      <AssetSearch onMovementCreated={load} />
 
       <section id="activos-principales" style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 16, overflow: "hidden", scrollMarginTop: "96px" }}>
         <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #E2E8F0" }}>
@@ -126,8 +128,8 @@ export function ConsolidadoOverview() {
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
-            <thead><tr>{["Activo", "Cantidad", "Costo USD", "Costo CLP"].map((heading) => <th key={heading} style={{ textAlign: "left", padding: "0.85rem 1rem", color: "#64748B", fontSize: "0.75rem" }}>{heading}</th>)}</tr></thead>
-            <tbody>{data.posiciones.map((position) => <tr key={position.symbol}><td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{position.symbol}</td><td style={{ padding: "0.85rem 1rem" }}>{number(position.quantity)}</td><td style={{ padding: "0.85rem 1rem" }}>{usd(position.totalCostUsd)}</td><td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{clp(position.totalCostClp)}</td></tr>)}</tbody>
+            <thead><tr>{["Activo", "Cantidad", "Costo USD", "Costo CLP", "Acciones"].map((heading) => <th key={heading} style={{ textAlign: "left", padding: "0.85rem 1rem", color: "#64748B", fontSize: "0.75rem" }}>{heading}</th>)}</tr></thead>
+            <tbody>{data.posiciones.map((position) => <tr key={position.symbol}><td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{position.symbol}</td><td style={{ padding: "0.85rem 1rem" }}>{number(position.quantity)}</td><td style={{ padding: "0.85rem 1rem" }}>{usd(position.totalCostUsd)}</td><td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{clp(position.totalCostClp)}</td><td style={{ padding: "0.85rem 1rem" }}><Link href={"/movements?symbol=" + encodeURIComponent(position.symbol)} style={{ color: "#0F2A3D", fontWeight: 800, textDecoration: "none" }}>Ver movimientos</Link></td></tr>)}</tbody>
           </table>
         )}
       </section>
