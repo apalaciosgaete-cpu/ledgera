@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { AssetLogo } from "./AssetLogo";
 import { AssetSearch } from "./AssetSearch";
 
 type Position = {
@@ -188,7 +189,12 @@ export function ConsolidadoOverview() {
               <tbody>
                 {data.posiciones.map((position) => (
                   <tr key={position.symbol} style={{ borderTop: "1px solid #EEF2F7" }}>
-                    <td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{position.symbol}</td>
+                    <td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>
+                      <div style={{ alignItems: "center", display: "flex", gap: 10 }}>
+                        <AssetLogo symbol={position.symbol} />
+                        <span>{position.symbol}</span>
+                      </div>
+                    </td>
                     <td style={{ padding: "0.85rem 1rem" }}>{number(position.boughtQuantity || 0)}</td>
                     <td style={{ padding: "0.85rem 1rem" }}>{number(position.soldQuantity || 0)}</td>
                     <td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{number(position.quantity)}</td>
