@@ -11,6 +11,10 @@ type AssetResult = {
   large?: string;
 };
 
+type AssetSearchProps = {
+  onMovementCreated?: () => Promise<void> | void;
+};
+
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -24,7 +28,7 @@ function scrollToMainAssets() {
   document.getElementById("activos-principales")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-export function AssetSearch() {
+export function AssetSearch({ onMovementCreated }: AssetSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AssetResult[]>([]);
   const [selected, setSelected] = useState<AssetResult | null>(null);
@@ -112,8 +116,13 @@ export function AssetSearch() {
         },
       });
 
-      setMessage("Compra guardada. Actualizando Activos principales...");
-      window.setTimeout(() => window.location.reload(), 600);
+      setMessage("Compra guardada. Activos principales actualizado.");
+      setSelected(null);
+      setQuantity("");
+      setPriceUsd("");
+      setFeeUsd("0");
+      await onMovementCreated?.();
+      window.setTimeout(scrollToMainAssets, 50);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "No fue posible guardar la compra.");
     } finally {
