@@ -52,36 +52,77 @@ function Status({ title, value, note, href }: { title: string; value: string; no
   );
 }
 
+function resolveTaxStatus(status: string) {
+  if (status === "OK") return "Al día";
+  if (status === "REVIEW") return "Revisión recomendada";
+  return "Atención requerida";
+}
+
 export function ConsolidadoOverview() {
   const [data, setData] = useState<PageData | null>(null);
   const [error, setError] = useState("");
+  const [secondaryLoading, setSecondaryLoading] = useState(false);
+
+  const loadSecondaryStatus = useCallback(async () => {
+    setSecondaryLoading(true);
+
+    try {
+      const [taxResult, integrityResult] = await Promise.allSettled([
+        fetch("/api/tax/health", { cache: "no-store" }).then((response) => response.json()),
+        fetch("/api/tax/events/integrity", { cache: "no-store" }).then((response) => response.json()),
+      ]);
+
+      setData((current) => {
+        if (!current) return current;
+
+        let estadoTributario = current.estadoTributario;
+        let estadoAuditoria = current.estadoAuditoria;
+
+        if (taxResult.status === "fulfilled" && taxResult.value?.ok) {
+          estadoTributario = resolveTaxStatus(String(taxResult.value.data.status));
+        }
+
+        if (integrityResult.status === "fulfilled" && integrityResult.value?.ok) {
+          const auditIssues =
+            Number(integrityResult.value.data.summary.orphanEvents || 0) +
+            Number(integrityResult.value.data.summary.sellWithoutEvent || 0);
+          estadoAuditoria = auditIssues > 0 ? "Revisión pendiente" : "Consistente";
+        }
+
+        return {
+          ...current,
+          estadoTributario,
+          estadoAuditoria,
+        };
+      });
+    } finally {
+      setSecondaryLoading(false);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     try {
       setError("");
-      const [portfolioRes, taxRes, integrityRes] = await Promise.all([fetch("/api/portfolio", { cache: "no-store" }), fetch("/api/tax/health", { cache: "no-store" }), fetch("/api/tax/events/integrity", { cache: "no-store" })]);
-      const [portfolioJson, taxJson, integrityJson] = await Promise.all([portfolioRes.json(), taxRes.json(), integrityRes.json()]);
+      const portfolioRes = await fetch("/api/portfolio", { cache: "no-store" });
+      const portfolioJson = await portfolioRes.json();
 
       if (!portfolioJson.ok) throw new Error(portfolioJson.message || "No se pudo cargar el patrimonio.");
-      if (!taxJson.ok) throw new Error(taxJson.message || "No se pudo cargar el estado tributario.");
-      if (!integrityJson.ok) throw new Error(integrityJson.message || "No se pudo cargar auditoría.");
-
-      const taxStatus = taxJson.data.status === "OK" ? "Al día" : taxJson.data.status === "REVIEW" ? "Revisión recomendada" : "Atención requerida";
-      const auditIssues = Number(integrityJson.data.summary.orphanEvents || 0) + Number(integrityJson.data.summary.sellWithoutEvent || 0);
 
       setData({
         patrimonioClp: portfolioJson.data.totals.totalCostClp,
         activos: portfolioJson.data.totals.symbolCount,
         costoUsd: portfolioJson.data.totals.totalCostUsd,
         dolar: portfolioJson.data.fx.usdToClp,
-        estadoTributario: taxStatus,
-        estadoAuditoria: auditIssues > 0 ? "Revisión pendiente" : "Consistente",
+        estadoTributario: "Calculando...",
+        estadoAuditoria: "Calculando...",
         posiciones: [...portfolioJson.data.positions].sort((a, b) => b.totalCostClp - a.totalCostClp).slice(0, 8),
       });
+
+      void loadSecondaryStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo cargar el consolidado.");
     }
-  }, []);
+  }, [loadSecondaryStatus]);
 
   useEffect(() => {
     void load();
@@ -108,8 +149,8 @@ export function ConsolidadoOverview() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, marginBottom: "1.5rem" }}>
-        <Status title="Estado tributario" value={data.estadoTributario} note="Revisión general de tu situación tributaria." href="/tributario" />
-        <Status title="Estado de auditoría" value={data.estadoAuditoria} note="Consistencia de la información procesada." href="/auditoria" />
+        <Status title="Estado tributario" value={data.estadoTributario} note={secondaryLoading ? "Validando estado tributario..." : "Revisión general de tu situación tributaria."} href="/tributario" />
+        <Status title="Estado de auditoría" value={data.estadoAuditoria} note={secondaryLoading ? "Validando consistencia..." : "Consistencia de la información procesada."} href="/auditoria" />
         <Status title="Conexiones" value="Fuentes de datos" note="Bancos, exchanges y billeteras conectadas." href="/integraciones" />
       </div>
 
