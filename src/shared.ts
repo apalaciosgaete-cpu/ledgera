@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionByToken } from "@/modules/identity/infrastructure/sessionRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 
-export type MovementType = "BUY" | "SELL";
+export type MovementType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW" | "STAKING_REWARD";
 
 export type MovementDto = {
   id: string;
