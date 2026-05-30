@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type AssetResult = {
   id: string;
@@ -11,6 +11,7 @@ type AssetResult = {
 };
 
 export function AssetSearch() {
+  const selectedRef = useRef<HTMLDivElement | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AssetResult[]>([]);
   const [selected, setSelected] = useState<AssetResult | null>(null);
@@ -41,6 +42,13 @@ export function AssetSearch() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function selectAsset(asset: AssetResult) {
+    setSelected(asset);
+    window.setTimeout(() => {
+      selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   }
 
   return (
@@ -75,7 +83,7 @@ export function AssetSearch() {
       {results.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
           {results.map((asset) => (
-            <button key={asset.id} type="button" onClick={() => setSelected(asset)} style={{ background: selected?.id === asset.id ? "rgba(22,163,74,0.08)" : "#F8FAFC", border: selected?.id === asset.id ? "1px solid rgba(22,163,74,0.35)" : "1px solid #E2E8F0", borderRadius: 12, padding: "0.85rem", display: "flex", gap: 10, alignItems: "center", textAlign: "left", cursor: "pointer" }}>
+            <button key={asset.id} type="button" onClick={() => selectAsset(asset)} style={{ background: selected?.id === asset.id ? "rgba(22,163,74,0.08)" : "#F8FAFC", border: selected?.id === asset.id ? "1px solid rgba(22,163,74,0.35)" : "1px solid #E2E8F0", borderRadius: 12, padding: "0.85rem", display: "flex", gap: 10, alignItems: "center", textAlign: "left", cursor: "pointer" }}>
               <img src={asset.thumb || asset.large} alt={asset.name} width={32} height={32} style={{ borderRadius: "50%", background: "#fff", flexShrink: 0 }} />
               <div style={{ minWidth: 0 }}>
                 <p style={{ margin: "0 0 2px", color: "#0F2A3D", fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{asset.name}</p>
@@ -87,7 +95,7 @@ export function AssetSearch() {
       )}
 
       {selected && (
-        <div style={{ marginTop: "1rem", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.25)", borderRadius: 12, padding: "0.85rem", display: "flex", gap: 10, alignItems: "center" }}>
+        <div ref={selectedRef} style={{ marginTop: "1rem", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.25)", borderRadius: 12, padding: "0.85rem", display: "flex", gap: 10, alignItems: "center" }}>
           <img src={selected.thumb || selected.large} alt={selected.name} width={34} height={34} style={{ borderRadius: "50%", background: "#fff", flexShrink: 0 }} />
           <div>
             <p style={{ margin: "0 0 2px", color: "#0F2A3D", fontWeight: 800 }}>{selected.name}</p>
