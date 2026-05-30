@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ui } from "@/styles/design-system";
+import { httpClient } from "@/shared/http/httpClient";
 
 type Movement = {
   id: string;
@@ -20,6 +21,12 @@ type MovementsResponse = {
   ok: boolean;
   message: string;
   data: Movement[] | null;
+};
+
+type AnnulMovementResponse = {
+  ok: boolean;
+  message: string;
+  data?: { id?: string } | null;
 };
 
 type TypeFilter = "ALL" | "BUY" | "SELL";
@@ -47,6 +54,10 @@ function formatDate(value: string) {
     month: "2-digit",
     day: "2-digit",
   }).format(date);
+}
+
+function normalizeSymbol(value: string | null) {
+  return String(value ?? "").trim().toUpperCase();
 }
 
 function MovementTypeBadge({ type }: { type: string }) {
@@ -90,14 +101,17 @@ function MovementsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const highlightId = searchParams.get("highlight");
+  const symbolParam = normalizeSymbol(searchParams.get("symbol"));
 
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [annullingId, setAnnullingId] = useState<string | null>(null);
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [symbolFilter, setSymbolFilter] = useState("");
+  const [symbolFilter, setSymbolFilter] = useState(symbolParam);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -105,7 +119,10 @@ function MovementsPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/portfolio/movements");
+      const res = await fetch("/api/portfolio/movements", {
+        cache: "no-store",
+        credentials: "include",
+      });
       const json: MovementsResponse = await res.json();
       if (!json.ok || !json.data) {
         setMessage(json.message || "No fue posible cargar movimientos.");
@@ -123,8 +140,14 @@ function MovementsPage() {
   }
 
   useEffect(() => {
-    fetchMovements();
+    void fetchMovements();
   }, []);
+
+  useEffect(() => {
+    if (!symbolParam) return;
+    setSymbolFilter(symbolParam);
+    setStatusFilter("ACTIVE");
+  }, [symbolParam]);
 
   useEffect(() => {
     if (!highlightId) return;
@@ -146,7 +169,7 @@ function MovementsPage() {
   );
 
   const availableSymbols = useMemo(
-    () => Array.from(new Set(movements.map((m) => m.symbol).filter(Boolean))).sort(),
+    () => Array.from(new Set(movements.map((m) => normalizeSymbol(m.symbol)).filter(Boolean))).sort(),
     [movements],
   );
 
@@ -156,7 +179,7 @@ function MovementsPage() {
         if (typeFilter !== "ALL" && movement.type !== typeFilter) return false;
         if (statusFilter === "ACTIVE" && movement.deletedAt) return false;
         if (statusFilter === "DELETED" && !movement.deletedAt) return false;
-        if (symbolFilter && movement.symbol.toUpperCase() !== symbolFilter.toUpperCase()) return false;
+        if (symbolFilter && normalizeSymbol(movement.symbol) !== normalizeSymbol(symbolFilter)) return false;
         const movementTime = new Date(movement.executedAt).getTime();
         if (dateFrom) {
           const fromTime = new Date(dateFrom).getTime();
@@ -195,6 +218,48 @@ function MovementsPage() {
     setSymbolFilter("");
     setDateFrom("");
     setDateTo("");
+    setActionMessage(null);
+    router.replace("/movements");
+  }
+
+  async function annulMovement(movement: Movement) {
+    if (movement.deletedAt || annullingId) return;
+
+    const reason = window.prompt(
+      `Indica el motivo de anulación para el movimiento ${movement.symbol} del ${formatDate(movement.executedAt)}.`,
+    );
+
+    const normalizedReason = String(reason ?? "").trim();
+    if (!normalizedReason) {
+      setActionMessage("Anulación cancelada. El motivo es obligatorio.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Esta acción anulará el movimiento y recalculará el motor tributario. ¿Deseas continuar?",
+    );
+
+    if (!confirmed) {
+      setActionMessage("Anulación cancelada.");
+      return;
+    }
+
+    setAnnullingId(movement.id);
+    setActionMessage(null);
+
+    try {
+      const response = await httpClient<AnnulMovementResponse>(`/api/portfolio/movements/${movement.id}`, {
+        method: "DELETE",
+        body: { reason: normalizedReason },
+      });
+
+      setActionMessage(response.message || "Movimiento anulado correctamente.");
+      await fetchMovements();
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : "No fue posible anular el movimiento.");
+    } finally {
+      setAnnullingId(null);
+    }
   }
 
   return (
@@ -203,7 +268,7 @@ function MovementsPage() {
         <div>
           <h1 className={ui.title}>Movimientos</h1>
           <p className={ui.label}>
-            Registro operativo que actua como fuente de verdad para portafolio,
+            Registro operativo que actúa como fuente de verdad para portafolio,
             eventos tributarios y reportes.
           </p>
         </div>
@@ -212,13 +277,23 @@ function MovementsPage() {
             Ver portafolio
           </button>
           <button type="button" onClick={() => router.push("/tributario")} className={ui.buttonSecondary}>
-            Revision tributaria
+            Revisión tributaria
           </button>
         </div>
       </div>
 
       {message && (
         <div className={`rounded p-4 text-sm ${ui.alertRisk}`}>{message}</div>
+      )}
+
+      {actionMessage && (
+        <div className={`rounded p-4 text-sm ${ui.alertWarning}`}>{actionMessage}</div>
+      )}
+
+      {symbolParam && (
+        <div className={`rounded p-4 text-sm ${ui.alertWarning}`}>
+          Viendo movimientos del activo <span className="font-medium">{symbolParam}</span>.
+        </div>
       )}
 
       {highlightId && (
@@ -338,13 +413,14 @@ function MovementsPage() {
                       <th className="p-2">Precio USD</th>
                       <th className="p-2">Fee USD</th>
                       <th className="p-2">Estado</th>
-                      <th className="p-2">Motivo anulacion</th>
+                      <th className="p-2">Motivo anulación</th>
                       <th className="p-2">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredMovements.map((movement) => {
                       const isHighlighted = movement.id === highlightId;
+                      const isAnnulling = annullingId === movement.id;
                       return (
                         <tr
                           key={movement.id}
@@ -360,13 +436,25 @@ function MovementsPage() {
                           <td className="p-2"><MovementStatusBadge movement={movement} /></td>
                           <td className="p-2">{movement.deletedReason || "-"}</td>
                           <td className="p-2">
-                            <button
-                              type="button"
-                              onClick={() => router.push(`/movements?highlight=${movement.id}`)}
-                              className={`${ui.buttonSecondary} px-3 py-1 text-xs`}
-                            >
-                              Destacar
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => router.push(`/movements?highlight=${movement.id}`)}
+                                className={`${ui.buttonSecondary} px-3 py-1 text-xs`}
+                              >
+                                Destacar
+                              </button>
+                              {!movement.deletedAt && (
+                                <button
+                                  type="button"
+                                  onClick={() => void annulMovement(movement)}
+                                  disabled={Boolean(annullingId)}
+                                  className={`${ui.buttonSecondary} px-3 py-1 text-xs ${isAnnulling ? "opacity-60" : ""}`}
+                                >
+                                  {isAnnulling ? "Anulando..." : "Anular"}
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
