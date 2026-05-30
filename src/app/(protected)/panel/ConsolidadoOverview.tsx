@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { httpClient } from "@/shared/http/httpClient";
 import { AssetSearch } from "./AssetSearch";
 
 type PageData = {
@@ -17,6 +18,15 @@ type PageData = {
     totalCostUsd: number;
     totalCostClp: number;
   }>;
+};
+
+type DeleteAssetResponse = {
+  ok: boolean;
+  message: string;
+  data?: {
+    symbol?: string;
+    deletedMovements?: number;
+  } | null;
 };
 
 function clp(value: number) {
@@ -62,6 +72,8 @@ export function ConsolidadoOverview() {
   const [data, setData] = useState<PageData | null>(null);
   const [error, setError] = useState("");
   const [secondaryLoading, setSecondaryLoading] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
+  const [deletingSymbol, setDeletingSymbol] = useState<string | null>(null);
 
   const loadSecondaryStatus = useCallback(async () => {
     setSecondaryLoading(true);
@@ -128,6 +140,46 @@ export function ConsolidadoOverview() {
     void load();
   }, [load]);
 
+  async function deleteAsset(symbol: string) {
+    if (deletingSymbol) return;
+
+    const reason = window.prompt(
+      `Indica el motivo para eliminar ${symbol} de Activos principales. Se anularán sus movimientos activos.`,
+    );
+
+    const normalizedReason = String(reason ?? "").trim();
+    if (!normalizedReason) {
+      setActionMessage("Eliminación cancelada. El motivo es obligatorio.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Esta acción anulará todos los movimientos activos de ${symbol}, recalculará el motor tributario y eliminará el activo del consolidado. ¿Deseas continuar?`,
+    );
+
+    if (!confirmed) {
+      setActionMessage("Eliminación cancelada.");
+      return;
+    }
+
+    setDeletingSymbol(symbol);
+    setActionMessage("");
+
+    try {
+      const response = await httpClient<DeleteAssetResponse>(`/api/portfolio/assets/${encodeURIComponent(symbol)}`, {
+        method: "DELETE",
+        body: { reason: normalizedReason },
+      });
+
+      setActionMessage(response.message || `Activo ${symbol} eliminado correctamente.`);
+      await load();
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : `No fue posible eliminar ${symbol}.`);
+    } finally {
+      setDeletingSymbol(null);
+    }
+  }
+
   if (error) return <p style={{ color: "#DC2626", fontWeight: 700 }}>{error}</p>;
   if (!data) return <p style={{ color: "#64748B" }}>Cargando consolidado...</p>;
 
@@ -140,6 +192,12 @@ export function ConsolidadoOverview() {
         </div>
         <Link href="/integraciones" style={{ background: "#0F2A3D", color: "#fff", borderRadius: 10, padding: "0.7rem 1rem", fontWeight: 800, textDecoration: "none" }}>Administrar conexiones</Link>
       </div>
+
+      {actionMessage && (
+        <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 12, color: "#92400E", fontSize: "0.85rem", fontWeight: 700, marginBottom: "1rem", padding: "0.85rem 1rem" }}>
+          {actionMessage}
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: "1.5rem" }}>
         <Metric title="Patrimonio estimado" value={clp(data.patrimonioClp)} note="Valor calculado con la información disponible." />
@@ -169,8 +227,40 @@ export function ConsolidadoOverview() {
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
-            <thead><tr>{["Activo", "Cantidad", "Costo USD", "Costo CLP", "Acciones"].map((heading) => <th key={heading} style={{ textAlign: "left", padding: "0.85rem 1rem", color: "#64748B", fontSize: "0.75rem" }}>{heading}</th>)}</tr></thead>
-            <tbody>{data.posiciones.map((position) => <tr key={position.symbol}><td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{position.symbol}</td><td style={{ padding: "0.85rem 1rem" }}>{number(position.quantity)}</td><td style={{ padding: "0.85rem 1rem" }}>{usd(position.totalCostUsd)}</td><td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{clp(position.totalCostClp)}</td><td style={{ padding: "0.85rem 1rem" }}><Link href={"/movements?symbol=" + encodeURIComponent(position.symbol)} style={{ color: "#0F2A3D", fontWeight: 800, textDecoration: "none" }}>Ver movimientos</Link></td></tr>)}</tbody>
+            <thead>
+              <tr>
+                {["Activo", "Cantidad", "Costo USD", "Costo CLP", "Acciones"].map((heading) => (
+                  <th key={heading} style={{ textAlign: "left", padding: "0.85rem 1rem", color: "#64748B", fontSize: "0.75rem" }}>{heading}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.posiciones.map((position) => {
+                const isDeleting = deletingSymbol === position.symbol;
+
+                return (
+                  <tr key={position.symbol}>
+                    <td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{position.symbol}</td>
+                    <td style={{ padding: "0.85rem 1rem" }}>{number(position.quantity)}</td>
+                    <td style={{ padding: "0.85rem 1rem" }}>{usd(position.totalCostUsd)}</td>
+                    <td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{clp(position.totalCostClp)}</td>
+                    <td style={{ padding: "0.85rem 1rem" }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        <Link href={"/movements?symbol=" + encodeURIComponent(position.symbol)} style={{ color: "#0F2A3D", fontWeight: 800, textDecoration: "none" }}>Ver movimientos</Link>
+                        <button
+                          type="button"
+                          onClick={() => void deleteAsset(position.symbol)}
+                          disabled={Boolean(deletingSymbol)}
+                          style={{ background: "transparent", border: "none", color: isDeleting ? "#94A3B8" : "#DC2626", cursor: deletingSymbol ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: 800, padding: 0 }}
+                        >
+                          {isDeleting ? "Eliminando..." : "Eliminar activo"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
           </table>
         )}
       </section>
