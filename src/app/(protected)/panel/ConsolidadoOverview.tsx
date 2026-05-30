@@ -12,6 +12,7 @@ type PageData = {
   dolar: number;
   estadoTributario: string;
   estadoAuditoria: string;
+  hiddenAssets: string[];
   posiciones: Array<{
     symbol: string;
     quantity: number;
@@ -20,13 +21,9 @@ type PageData = {
   }>;
 };
 
-type DeleteAssetResponse = {
+type AssetVisibilityResponse = {
   ok: boolean;
   message: string;
-  data?: {
-    symbol?: string;
-    deletedMovements?: number;
-  } | null;
 };
 
 function clp(value: number) {
@@ -73,11 +70,10 @@ export function ConsolidadoOverview() {
   const [error, setError] = useState("");
   const [secondaryLoading, setSecondaryLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
-  const [deletingSymbol, setDeletingSymbol] = useState<string | null>(null);
+  const [actingSymbol, setActingSymbol] = useState<string | null>(null);
 
   const loadSecondaryStatus = useCallback(async () => {
     setSecondaryLoading(true);
-
     try {
       const [taxResult, integrityResult] = await Promise.allSettled([
         fetch("/api/tax/health", { cache: "no-store" }).then((response) => response.json()),
@@ -86,7 +82,6 @@ export function ConsolidadoOverview() {
 
       setData((current) => {
         if (!current) return current;
-
         let estadoTributario = current.estadoTributario;
         let estadoAuditoria = current.estadoAuditoria;
 
@@ -95,17 +90,11 @@ export function ConsolidadoOverview() {
         }
 
         if (integrityResult.status === "fulfilled" && integrityResult.value?.ok) {
-          const auditIssues =
-            Number(integrityResult.value.data.summary.orphanEvents || 0) +
-            Number(integrityResult.value.data.summary.sellWithoutEvent || 0);
+          const auditIssues = Number(integrityResult.value.data.summary.orphanEvents || 0) + Number(integrityResult.value.data.summary.sellWithoutEvent || 0);
           estadoAuditoria = auditIssues > 0 ? "Revisión pendiente" : "Consistente";
         }
 
-        return {
-          ...current,
-          estadoTributario,
-          estadoAuditoria,
-        };
+        return { ...current, estadoTributario, estadoAuditoria };
       });
     } finally {
       setSecondaryLoading(false);
@@ -117,7 +106,6 @@ export function ConsolidadoOverview() {
       setError("");
       const portfolioRes = await fetch("/api/portfolio", { cache: "no-store" });
       const portfolioJson = await portfolioRes.json();
-
       if (!portfolioJson.ok) throw new Error(portfolioJson.message || "No se pudo cargar el patrimonio.");
 
       setData({
@@ -127,6 +115,7 @@ export function ConsolidadoOverview() {
         dolar: portfolioJson.data.fx.usdToClp,
         estadoTributario: "Calculando...",
         estadoAuditoria: "Calculando...",
+        hiddenAssets: Array.isArray(portfolioJson.data.hiddenAssets) ? portfolioJson.data.hiddenAssets : [],
         posiciones: [...portfolioJson.data.positions].sort((a, b) => b.totalCostClp - a.totalCostClp).slice(0, 8),
       });
 
@@ -140,43 +129,42 @@ export function ConsolidadoOverview() {
     void load();
   }, [load]);
 
-  async function deleteAsset(symbol: string) {
-    if (deletingSymbol) return;
-
-    const reason = window.prompt(
-      `Indica el motivo para eliminar ${symbol} de Activos principales. Se anularán sus movimientos activos.`,
-    );
-
+  async function hideAsset(symbol: string) {
+    if (actingSymbol) return;
+    const reason = window.prompt(`Motivo para ocultar ${symbol} del consolidado:`);
     const normalizedReason = String(reason ?? "").trim();
     if (!normalizedReason) {
-      setActionMessage("Eliminación cancelada. El motivo es obligatorio.");
+      setActionMessage("Acción cancelada. El motivo es obligatorio.");
       return;
     }
-
-    const confirmed = window.confirm(
-      `Esta acción anulará todos los movimientos activos de ${symbol}, recalculará el motor tributario y eliminará el activo del consolidado. ¿Deseas continuar?`,
-    );
-
-    if (!confirmed) {
-      setActionMessage("Eliminación cancelada.");
-      return;
-    }
-
-    setDeletingSymbol(symbol);
+    setActingSymbol(symbol);
     setActionMessage("");
-
     try {
-      const response = await httpClient<DeleteAssetResponse>(`/api/portfolio/assets/${encodeURIComponent(symbol)}`, {
+      const response = await httpClient<AssetVisibilityResponse>(`/api/portfolio/assets/${encodeURIComponent(symbol)}`, {
         method: "DELETE",
         body: { reason: normalizedReason },
       });
-
-      setActionMessage(response.message || `Activo ${symbol} eliminado correctamente.`);
+      setActionMessage(response.message || `Activo ${symbol} ocultado.`);
       await load();
     } catch (err) {
-      setActionMessage(err instanceof Error ? err.message : `No fue posible eliminar ${symbol}.`);
+      setActionMessage(err instanceof Error ? err.message : `No fue posible ocultar ${symbol}.`);
     } finally {
-      setDeletingSymbol(null);
+      setActingSymbol(null);
+    }
+  }
+
+  async function restoreAsset(symbol: string) {
+    if (actingSymbol) return;
+    setActingSymbol(symbol);
+    setActionMessage("");
+    try {
+      const response = await httpClient<AssetVisibilityResponse>(`/api/portfolio/assets/${encodeURIComponent(symbol)}`, { method: "PATCH" });
+      setActionMessage(response.message || `Activo ${symbol} restaurado.`);
+      await load();
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : `No fue posible restaurar ${symbol}.`);
+    } finally {
+      setActingSymbol(null);
     }
   }
 
@@ -193,16 +181,12 @@ export function ConsolidadoOverview() {
         <Link href="/integraciones" style={{ background: "#0F2A3D", color: "#fff", borderRadius: 10, padding: "0.7rem 1rem", fontWeight: 800, textDecoration: "none" }}>Administrar conexiones</Link>
       </div>
 
-      {actionMessage && (
-        <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 12, color: "#92400E", fontSize: "0.85rem", fontWeight: 700, marginBottom: "1rem", padding: "0.85rem 1rem" }}>
-          {actionMessage}
-        </div>
-      )}
+      {actionMessage && <div style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: 12, color: "#334155", fontSize: "0.85rem", fontWeight: 700, marginBottom: "1rem", padding: "0.85rem 1rem" }}>{actionMessage}</div>}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: "1.5rem" }}>
         <Metric title="Patrimonio estimado" value={clp(data.patrimonioClp)} note="Valor calculado con la información disponible." />
-        <Metric title="Activos" value={String(data.activos)} note="Activos con saldo registrado." />
-        <Metric title="Costo total USD" value={usd(data.costoUsd)} note="Base de costo histórica." />
+        <Metric title="Activos" value={String(data.activos)} note="Activos visibles en el consolidado." />
+        <Metric title="Costo total USD" value={usd(data.costoUsd)} note="Base de costo histórica visible." />
         <Metric title="Dólar usado" value={clp(data.dolar)} note="Referencia para mostrar valores en pesos." />
       </div>
 
@@ -214,56 +198,51 @@ export function ConsolidadoOverview() {
 
       <AssetSearch onMovementCreated={load} />
 
-      <section id="activos-principales" style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 16, overflow: "hidden", scrollMarginTop: "96px" }}>
-        <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #E2E8F0" }}>
-          <h2 style={{ margin: "0 0 3px", color: "#0F2A3D", fontSize: "1rem", fontWeight: 800 }}>Activos principales</h2>
-          <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.82rem" }}>Detalle resumido de los saldos calculados.</p>
+      <section id="activos-principales" style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 18, overflow: "hidden", scrollMarginTop: "96px", boxShadow: "0 10px 30px rgba(15, 42, 61, 0.04)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "1rem 1.25rem", borderBottom: "1px solid #E2E8F0", flexWrap: "wrap" }}>
+          <div>
+            <h2 style={{ margin: "0 0 3px", color: "#0F2A3D", fontSize: "1rem", fontWeight: 800 }}>Activos principales</h2>
+            <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.82rem" }}>Activos visibles en tu consolidado patrimonial.</p>
+          </div>
+          <p style={{ margin: 0, color: "#64748B", fontSize: "0.78rem", fontWeight: 700 }}>Ocultar no modifica el libro financiero.</p>
         </div>
 
         {data.posiciones.length === 0 ? (
           <div style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-            <p style={{ margin: "0 0 8px", color: "#0F2A3D", fontWeight: 800 }}>Aún no hay información financiera cargada</p>
-            <Link href="/integraciones" style={{ color: "#16A34A", fontWeight: 800, textDecoration: "none" }}>Configurar conexiones</Link>
+            <p style={{ margin: "0 0 8px", color: "#0F2A3D", fontWeight: 800 }}>No hay activos visibles en el consolidado</p>
+            <p style={{ margin: 0, color: "#64748B", fontSize: "0.85rem" }}>Agrega activos o restaura activos ocultos para verlos nuevamente.</p>
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
-            <thead>
-              <tr>
-                {["Activo", "Cantidad", "Costo USD", "Costo CLP", "Acciones"].map((heading) => (
-                  <th key={heading} style={{ textAlign: "left", padding: "0.85rem 1rem", color: "#64748B", fontSize: "0.75rem" }}>{heading}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.posiciones.map((position) => {
-                const isDeleting = deletingSymbol === position.symbol;
-
-                return (
-                  <tr key={position.symbol}>
-                    <td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{position.symbol}</td>
-                    <td style={{ padding: "0.85rem 1rem" }}>{number(position.quantity)}</td>
-                    <td style={{ padding: "0.85rem 1rem" }}>{usd(position.totalCostUsd)}</td>
-                    <td style={{ padding: "0.85rem 1rem", fontWeight: 800 }}>{clp(position.totalCostClp)}</td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        <Link href={"/movements?symbol=" + encodeURIComponent(position.symbol)} style={{ color: "#0F2A3D", fontWeight: 800, textDecoration: "none" }}>Ver movimientos</Link>
-                        <button
-                          type="button"
-                          onClick={() => void deleteAsset(position.symbol)}
-                          disabled={Boolean(deletingSymbol)}
-                          style={{ background: "transparent", border: "none", color: isDeleting ? "#94A3B8" : "#DC2626", cursor: deletingSymbol ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: 800, padding: 0 }}
-                        >
-                          {isDeleting ? "Eliminando..." : "Eliminar activo"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+            <thead style={{ background: "#F8FAFC" }}><tr>{["Activo", "Cantidad", "Costo USD", "Costo CLP", "Acción"].map((heading) => <th key={heading} style={{ textAlign: heading === "Acción" ? "right" : "left", padding: "0.9rem 1rem", color: "#64748B", fontSize: "0.72rem", letterSpacing: "0.04em", textTransform: "uppercase" }}>{heading}</th>)}</tr></thead>
+            <tbody>{data.posiciones.map((position) => {
+              const isActing = actingSymbol === position.symbol;
+              return (
+                <tr key={position.symbol} style={{ borderTop: "1px solid #EEF2F7" }}>
+                  <td style={{ padding: "0.95rem 1rem", fontWeight: 900, color: "#0F2A3D" }}>{position.symbol}</td>
+                  <td style={{ padding: "0.95rem 1rem", color: "#334155" }}>{number(position.quantity)}</td>
+                  <td style={{ padding: "0.95rem 1rem", color: "#334155" }}>{usd(position.totalCostUsd)}</td>
+                  <td style={{ padding: "0.95rem 1rem", color: "#0F2A3D", fontWeight: 800 }}>{clp(position.totalCostClp)}</td>
+                  <td style={{ padding: "0.95rem 1rem", textAlign: "right" }}><button type="button" onClick={() => void hideAsset(position.symbol)} disabled={Boolean(actingSymbol)} style={{ background: isActing ? "#E2E8F0" : "#F1F5F9", border: "1px solid #CBD5E1", borderRadius: 999, color: isActing ? "#94A3B8" : "#0F2A3D", cursor: actingSymbol ? "not-allowed" : "pointer", fontSize: "0.78rem", fontWeight: 900, padding: "0.5rem 0.85rem" }}>{isActing ? "Ocultando..." : "Ocultar"}</button></td>
+                </tr>
+              );
+            })}</tbody>
           </table>
         )}
       </section>
+
+      {data.hiddenAssets.length > 0 && (
+        <section style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 18, marginTop: "1rem", overflow: "hidden" }}>
+          <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #E2E8F0" }}>
+            <h2 style={{ margin: "0 0 3px", color: "#0F2A3D", fontSize: "1rem", fontWeight: 800 }}>Activos ocultos</h2>
+            <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.82rem" }}>Puedes restaurarlos sin alterar movimientos históricos.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, padding: "1rem" }}>{data.hiddenAssets.map((symbol) => {
+            const isActing = actingSymbol === symbol;
+            return <div key={symbol} style={{ alignItems: "center", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 14, display: "flex", justifyContent: "space-between", gap: 10, padding: "0.85rem" }}><span style={{ color: "#0F2A3D", fontWeight: 900 }}>{symbol}</span><button type="button" onClick={() => void restoreAsset(symbol)} disabled={Boolean(actingSymbol)} style={{ background: isActing ? "#E2E8F0" : "#0F2A3D", border: "none", borderRadius: 999, color: "#fff", cursor: actingSymbol ? "not-allowed" : "pointer", fontSize: "0.78rem", fontWeight: 900, padding: "0.45rem 0.75rem" }}>{isActing ? "Restaurando..." : "Restaurar"}</button></div>;
+          })}</div>
+        </section>
+      )}
     </div>
   );
 }
