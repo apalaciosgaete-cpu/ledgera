@@ -1,7 +1,7 @@
 "use client";
 
-import { ConsolidadoOverview } from "./ConsolidadoOverview";
+import { ConsolidadoOverviewV2 } from "./ConsolidadoOverviewV2";
 
 export default function PanelPage() {
-  return <ConsolidadoOverview />;
+  return <ConsolidadoOverviewV2 />;
 }
