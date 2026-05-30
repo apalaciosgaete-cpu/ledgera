@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 type AssetResult = {
   id: string;
@@ -10,8 +10,17 @@ type AssetResult = {
   large?: string;
 };
 
+function scrollToMainAssets() {
+  const headings = Array.from(document.querySelectorAll("h2"));
+  const targetHeading = headings.find((heading) =>
+    heading.textContent?.toLowerCase().includes("activos principales"),
+  );
+
+  const targetSection = targetHeading?.closest("section");
+  targetSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export function AssetSearch() {
-  const selectedRef = useRef<HTMLDivElement | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AssetResult[]>([]);
   const [selected, setSelected] = useState<AssetResult | null>(null);
@@ -46,9 +55,7 @@ export function AssetSearch() {
 
   function selectAsset(asset: AssetResult) {
     setSelected(asset);
-    window.setTimeout(() => {
-      selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 50);
+    window.setTimeout(scrollToMainAssets, 50);
   }
 
   return (
@@ -95,7 +102,7 @@ export function AssetSearch() {
       )}
 
       {selected && (
-        <div ref={selectedRef} style={{ marginTop: "1rem", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.25)", borderRadius: 12, padding: "0.85rem", display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ marginTop: "1rem", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.25)", borderRadius: 12, padding: "0.85rem", display: "flex", gap: 10, alignItems: "center" }}>
           <img src={selected.thumb || selected.large} alt={selected.name} width={34} height={34} style={{ borderRadius: "50%", background: "#fff", flexShrink: 0 }} />
           <div>
             <p style={{ margin: "0 0 2px", color: "#0F2A3D", fontWeight: 800 }}>{selected.name}</p>
