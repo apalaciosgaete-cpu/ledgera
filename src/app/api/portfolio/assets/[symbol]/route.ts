@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
-import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
-import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 type RouteContext = {
   params: Promise<{ symbol: string }>;
 };
 
-type DeleteAssetBody = {
+type HideAssetBody = {
   reason?: string;
 };
 
@@ -21,13 +19,34 @@ function normalizeSymbol(value: string) {
   return decodeURIComponent(value).trim().toUpperCase();
 }
 
-async function readDeleteReason(request: NextRequest) {
+async function readReason(request: NextRequest) {
   try {
-    const body = (await request.json()) as DeleteAssetBody;
+    const body = (await request.json()) as HideAssetBody;
     return String(body.reason ?? "").trim();
   } catch {
     return "";
   }
+}
+
+async function ensureAssetVisibilityTable() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS portfolio_asset_visibility_preferences (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      symbol TEXT NOT NULL,
+      hidden BOOLEAN NOT NULL DEFAULT TRUE,
+      hidden_reason TEXT,
+      hidden_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT portfolio_asset_visibility_preferences_user_symbol_unique UNIQUE (user_id, symbol)
+    )
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE INDEX IF NOT EXISTS portfolio_asset_visibility_preferences_user_hidden_idx
+    ON portfolio_asset_visibility_preferences (user_id, hidden)
+  `);
 }
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
@@ -45,90 +64,69 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { symbol: rawSymbol } = await context.params;
     const symbol = normalizeSymbol(rawSymbol);
-    const reason = await readDeleteReason(request);
+    const reason = await readReason(request);
 
     if (!symbol) {
       return jsonError("El activo es obligatorio.", 400);
     }
 
     if (!reason) {
-      return jsonError("El motivo de eliminación es obligatorio.", 400);
+      return jsonError("El motivo para ocultar el activo es obligatorio.", 400);
     }
 
-    const movements = await prisma.portfolioMovement.findMany({
+    const movementCount = await prisma.portfolioMovement.count({
       where: {
         userId: auth.user.id,
         symbol,
         deletedAt: null,
       },
-      orderBy: [{ executedAt: "asc" }, { id: "asc" }],
-      select: {
-        id: true,
-        executedAt: true,
-      },
     });
 
-    if (movements.length === 0) {
+    if (movementCount === 0) {
       return jsonError("No existen movimientos activos para este activo.", 404);
     }
 
-    const checkedYears = new Set<number>();
+    await ensureAssetVisibilityTable();
 
-    for (const movement of movements) {
-      const year = new Date(movement.executedAt).getUTCFullYear();
-      if (checkedYears.has(year)) continue;
-      checkedYears.add(year);
-      await assertPeriodOpen(new Date(movement.executedAt), auth.user.id);
-    }
+    const preferenceId = `asset_visibility_${auth.user.id}_${symbol}`;
 
-    const deletedAt = new Date();
-    const deletedReason = `Eliminación de activo ${symbol}: ${reason}`;
-    const movementIds = movements.map((movement) => movement.id);
-
-    await prisma.portfolioMovement.updateMany({
-      where: {
-        userId: auth.user.id,
-        id: { in: movementIds },
-        deletedAt: null,
-      },
-      data: {
-        deletedAt,
-        deletedReason,
-      },
-    });
-
-    const motorResult = await rebuildTaxEvents(auth.user.id);
-
-    if (!motorResult.ok) {
-      await prisma.portfolioMovement.updateMany({
-        where: {
-          userId: auth.user.id,
-          id: { in: movementIds },
-          deletedAt,
-        },
-        data: {
-          deletedAt: null,
-          deletedReason: null,
-        },
-      });
-
-      return jsonError("Error en el motor tributario. La eliminación fue revertida.", 500);
-    }
+    await prisma.$executeRawUnsafe(
+      `
+        INSERT INTO portfolio_asset_visibility_preferences (
+          id,
+          user_id,
+          symbol,
+          hidden,
+          hidden_reason,
+          hidden_at,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, $2, $3, TRUE, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (user_id, symbol)
+        DO UPDATE SET
+          hidden = TRUE,
+          hidden_reason = EXCLUDED.hidden_reason,
+          hidden_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      `,
+      preferenceId,
+      auth.user.id,
+      symbol,
+      reason,
+    );
 
     return NextResponse.json({
       ok: true,
-      message: `Activo ${symbol} eliminado correctamente.`,
+      message: `Activo ${symbol} ocultado del consolidado. El libro financiero no fue modificado.`,
       data: {
         symbol,
-        deletedMovements: movementIds.length,
+        hidden: true,
+        affectedMovements: 0,
       },
     });
   } catch (error) {
-    if (error instanceof Error && error.message.includes("período tributario")) {
-      return jsonError(error.message, 409);
-    }
-
     console.error("[api/portfolio/assets/[symbol]]", error);
-    return jsonError("Error interno al eliminar el activo.", 500);
+    return jsonError("Error interno al ocultar el activo.", 500);
   }
 }
