@@ -30,9 +30,8 @@ function LogoutIcon() {
 }
 
 const baseNavItems: { href: string; label: string }[] = [
-  { href: "/portafolio",    label: "Portafolio" },
-  { href: "/integraciones", label: "Conexiones" },
   { href: "/panel",         label: "Consolidado" },
+  { href: "/integraciones", label: "Conexiones" },
   { href: "/tributario",    label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
   { href: "/planes",        label: "Planes" },
@@ -130,8 +129,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           minWidth:       0,
         }}>
           <Link
-            href="/portafolio"
-            aria-label="Ir al portafolio LEDGERA"
+            href="/panel"
+            aria-label="Ir al consolidado LEDGERA"
             style={{
               alignItems:     "center",
               display:        "flex",
