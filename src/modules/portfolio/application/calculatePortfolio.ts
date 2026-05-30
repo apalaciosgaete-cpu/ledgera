@@ -1,6 +1,6 @@
 import { round, normalizeSymbol as sharedNormalizeSymbol } from "@/shared/utils/math";
 
-export type PortfolioMovementType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
+export type PortfolioMovementType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW" | "STAKING_REWARD";
 
 export interface PortfolioMovement {
   id: string;
@@ -20,8 +20,11 @@ interface PositionAccumulator {
   soldQuantity: number;
   depositedQuantity: number;
   withdrawnQuantity: number;
+  stakingRewardQuantity: number;
   buyCostUsd: number;
   sellProceedsUsd: number;
+  depositValueUsd: number;
+  stakingRewardValueUsd: number;
   buyFeesUsd: number;
   sellFeesUsd: number;
 }
@@ -37,12 +40,19 @@ export interface CalculatedPortfolioPosition {
   soldQuantity: number;
   depositedQuantity: number;
   withdrawnQuantity: number;
+  stakingRewardQuantity: number;
   buyCostUsd: number;
   sellProceedsUsd: number;
+  depositValueUsd: number;
+  stakingRewardValueUsd: number;
+  capitalContributedUsd: number;
   buyFeesUsd: number;
   sellFeesUsd: number;
   buyCostClp: number;
   sellProceedsClp: number;
+  depositValueClp: number;
+  stakingRewardValueClp: number;
+  capitalContributedClp: number;
 }
 
 export interface CalculatedPortfolioTotals {
@@ -52,10 +62,15 @@ export interface CalculatedPortfolioTotals {
   totalCostClp: number;
   totalBoughtQuantity: number;
   totalSoldQuantity: number;
+  totalStakingRewardQuantity: number;
   totalBuyCostUsd: number;
   totalSellProceedsUsd: number;
+  totalStakingRewardValueUsd: number;
+  totalCapitalContributedUsd: number;
   totalBuyCostClp: number;
   totalSellProceedsClp: number;
+  totalStakingRewardValueClp: number;
+  totalCapitalContributedClp: number;
 }
 
 export interface CalculatedPortfolioFx {
@@ -96,7 +111,7 @@ function convertUsdToClp(amountUsd: number, rate: number): number {
 }
 
 function normalizeMovementType(type: string): PortfolioMovementType | null {
-  if (type === "BUY" || type === "SELL" || type === "DEPOSIT" || type === "WITHDRAW") return type;
+  if (type === "BUY" || type === "SELL" || type === "DEPOSIT" || type === "WITHDRAW" || type === "STAKING_REWARD") return type;
   return null;
 }
 
@@ -115,8 +130,11 @@ function createAccumulator(symbol: string): PositionAccumulator {
     soldQuantity: 0,
     depositedQuantity: 0,
     withdrawnQuantity: 0,
+    stakingRewardQuantity: 0,
     buyCostUsd: 0,
     sellProceedsUsd: 0,
+    depositValueUsd: 0,
+    stakingRewardValueUsd: 0,
     buyFeesUsd: 0,
     sellFeesUsd: 0,
   };
@@ -153,8 +171,21 @@ export async function calculatePortfolio(movements: PortfolioMovement[]): Promis
     }
 
     if (type === "DEPOSIT") {
+      const depositValueUsd = quantity * priceUsd;
       current.quantity += quantity;
+      current.totalCostUsd += depositValueUsd;
       current.depositedQuantity += quantity;
+      current.depositValueUsd += depositValueUsd;
+      positionsMap.set(symbol, current);
+      continue;
+    }
+
+    if (type === "STAKING_REWARD") {
+      const stakingRewardValueUsd = quantity * priceUsd;
+      current.quantity += quantity;
+      current.totalCostUsd += stakingRewardValueUsd;
+      current.stakingRewardQuantity += quantity;
+      current.stakingRewardValueUsd += stakingRewardValueUsd;
       positionsMap.set(symbol, current);
       continue;
     }
@@ -189,6 +220,7 @@ export async function calculatePortfolio(movements: PortfolioMovement[]): Promis
     const averageCostUsd = position.quantity > 0 ? position.totalCostUsd / position.quantity : 0;
     const totalCostClpRaw = convertUsdToClp(position.totalCostUsd, fxRate.rate);
     const averageCostClpRaw = position.quantity > 0 ? totalCostClpRaw / position.quantity : 0;
+    const capitalContributedUsd = position.buyCostUsd + position.depositValueUsd;
 
     positions.push({
       symbol: position.symbol,
@@ -201,12 +233,19 @@ export async function calculatePortfolio(movements: PortfolioMovement[]): Promis
       soldQuantity: round(position.soldQuantity, 8),
       depositedQuantity: round(position.depositedQuantity, 8),
       withdrawnQuantity: round(position.withdrawnQuantity, 8),
+      stakingRewardQuantity: round(position.stakingRewardQuantity, 8),
       buyCostUsd: round(position.buyCostUsd, 2),
       sellProceedsUsd: round(position.sellProceedsUsd, 2),
+      depositValueUsd: round(position.depositValueUsd, 2),
+      stakingRewardValueUsd: round(position.stakingRewardValueUsd, 2),
+      capitalContributedUsd: round(capitalContributedUsd, 2),
       buyFeesUsd: round(position.buyFeesUsd, 2),
       sellFeesUsd: round(position.sellFeesUsd, 2),
       buyCostClp: round(convertUsdToClp(position.buyCostUsd, fxRate.rate), 2),
       sellProceedsClp: round(convertUsdToClp(position.sellProceedsUsd, fxRate.rate), 2),
+      depositValueClp: round(convertUsdToClp(position.depositValueUsd, fxRate.rate), 2),
+      stakingRewardValueClp: round(convertUsdToClp(position.stakingRewardValueUsd, fxRate.rate), 2),
+      capitalContributedClp: round(convertUsdToClp(capitalContributedUsd, fxRate.rate), 2),
     });
   }
 
@@ -219,10 +258,15 @@ export async function calculatePortfolio(movements: PortfolioMovement[]): Promis
     totalCostClp: round(positions.reduce((acc, p) => acc + p.totalCostClp, 0), 2),
     totalBoughtQuantity: round(positions.reduce((acc, p) => acc + p.boughtQuantity, 0), 8),
     totalSoldQuantity: round(positions.reduce((acc, p) => acc + p.soldQuantity, 0), 8),
+    totalStakingRewardQuantity: round(positions.reduce((acc, p) => acc + p.stakingRewardQuantity, 0), 8),
     totalBuyCostUsd: round(positions.reduce((acc, p) => acc + p.buyCostUsd, 0), 2),
     totalSellProceedsUsd: round(positions.reduce((acc, p) => acc + p.sellProceedsUsd, 0), 2),
+    totalStakingRewardValueUsd: round(positions.reduce((acc, p) => acc + p.stakingRewardValueUsd, 0), 2),
+    totalCapitalContributedUsd: round(positions.reduce((acc, p) => acc + p.capitalContributedUsd, 0), 2),
     totalBuyCostClp: round(positions.reduce((acc, p) => acc + p.buyCostClp, 0), 2),
     totalSellProceedsClp: round(positions.reduce((acc, p) => acc + p.sellProceedsClp, 0), 2),
+    totalStakingRewardValueClp: round(positions.reduce((acc, p) => acc + p.stakingRewardValueClp, 0), 2),
+    totalCapitalContributedClp: round(positions.reduce((acc, p) => acc + p.capitalContributedClp, 0), 2),
   };
 
   return {
