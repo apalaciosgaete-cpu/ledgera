@@ -30,7 +30,7 @@ function ensureStyles() {
       margin: 0;
     }
     .ledgera-auth-trust-item {
-      align-items: center;
+      align-items: flex-start;
       color: #0f2a3d;
       display: flex;
       font-size: 12px;
@@ -59,6 +59,9 @@ function ensureStyles() {
       text-decoration: none;
       width: 100%;
       box-sizing: border-box;
+    }
+    .ledgera-google-entry-button:hover {
+      background: #f8fafc;
     }
     .ledgera-auth-separator {
       align-items: center;
@@ -106,8 +109,15 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
-function googleMark() {
-  return `<span aria-hidden="true" style="align-items:center;border-radius:50%;border:1px solid #dbe3ef;color:#0f2a3d;display:inline-flex;font-weight:900;height:20px;justify-content:center;width:20px;">G</span>`;
+function googleLogo() {
+  return `
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+      <path fill="#4285F4" d="M17.64 9.204c0-.638-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.717v2.258h2.91c1.702-1.567 2.682-3.874 2.682-6.615z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.91-2.259c-.806.54-1.837.86-3.046.86-2.344 0-4.328-1.583-5.036-3.71H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+      <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.043l3.007-2.333z"/>
+      <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+    </svg>
+  `;
 }
 
 function buildLoginBlock() {
@@ -118,16 +128,19 @@ function buildLoginBlock() {
   wrapper.style.gap = "12px";
 
   wrapper.innerHTML = `
-    <div class="ledgera-auth-trust-box">
-      <p class="ledgera-auth-trust-title">Acceso protegido</p>
-      <p class="ledgera-auth-trust-item"><span class="ledgera-auth-trust-check">✓</span> Compatible con autenticación en dos factores (2FA)</p>
-      <p class="ledgera-auth-trust-item"><span class="ledgera-auth-trust-check">✓</span> Puedes ingresar con Google o con correo y contraseña</p>
-    </div>
     <a class="ledgera-google-entry-button" href="/api/auth/google">
-      ${googleMark()}
+      ${googleLogo()}
       Continuar con Google
     </a>
+
     <div class="ledgera-auth-separator">o ingresa con correo</div>
+
+    <div class="ledgera-auth-trust-box">
+      <p class="ledgera-auth-trust-title">Seguridad de acceso</p>
+      <p class="ledgera-auth-trust-item"><span class="ledgera-auth-trust-check">✓</span> Inicio seguro con Google disponible</p>
+      <p class="ledgera-auth-trust-item"><span class="ledgera-auth-trust-check">✓</span> 2FA configurable desde Seguridad después de ingresar</p>
+      <p class="ledgera-auth-trust-item"><span class="ledgera-auth-trust-check">✓</span> Sesión protegida para tu información financiera</p>
+    </div>
   `;
 
   return wrapper;
@@ -142,13 +155,14 @@ function buildRegisterBlock() {
 
   wrapper.innerHTML = `
     <a class="ledgera-google-entry-button" href="/api/auth/google">
-      ${googleMark()}
+      ${googleLogo()}
       Crear o ingresar con Google
     </a>
+
     <div class="ledgera-register-trust-box">
       <p class="ledgera-register-trust-title">Protección de cuenta</p>
-      <p class="ledgera-register-trust-item"><span class="ledgera-auth-trust-check">✓</span> Autenticación en dos factores con app autenticadora</p>
       <p class="ledgera-register-trust-item"><span class="ledgera-auth-trust-check">✓</span> Inicio seguro con Google disponible</p>
+      <p class="ledgera-register-trust-item"><span class="ledgera-auth-trust-check">✓</span> 2FA configurable después de crear tu cuenta</p>
       <p class="ledgera-register-trust-item"><span class="ledgera-auth-trust-check">✓</span> Credenciales protegidas y sesión segura</p>
     </div>
   `;
