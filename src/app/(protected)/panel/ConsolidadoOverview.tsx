@@ -91,15 +91,15 @@ function AssetCard({ position }: { position: Position }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0.9rem", marginBottom: "1rem" }}>
-        <CardStat label="Comprado" value={number(position.boughtQuantity || 0)} />
-        <CardStat label="Vendido" value={number(position.soldQuantity || 0)} />
+        <CardStat label="Comprado unidades" value={number(position.boughtQuantity || 0)} />
+        <CardStat label="Vendido unidades" value={number(position.soldQuantity || 0)} />
         <CardStat label="Posicion actual" value={number(position.quantity)} strong />
         <CardStat label="Costo actual CLP" value={clp(position.totalCostClp)} strong />
       </div>
 
       <div style={{ borderTop: "1px solid #EEF2F7", display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0.9rem", paddingTop: "1rem" }}>
         <CardStat label="Capital aportado" value={usd(capitalUsd)} strong />
-        <CardStat label="Staking" value={usd(stakingUsd)} />
+        <CardStat label="Recompensas staking" value={usd(stakingUsd)} />
         <CardStat label="Ventas acumuladas" value={usd(position.sellProceedsUsd || 0)} />
         <CardStat label="Costo compras" value={usd(position.buyCostUsd || 0)} />
       </div>
@@ -154,7 +154,7 @@ export function ConsolidadoOverview() {
       const portfolioRes = await fetch("/api/portfolio", { cache: "no-store" });
       const portfolioJson = await portfolioRes.json();
 
-      if (!portfolioJson.ok) throw new Error(portfolioJson.message || "No se pudo cargar el patrimonio.");
+      if (!portfolioJson.ok) throw new Error(portfolioJson.message || "No se pudo cargar el consolidado.");
 
       setData({
         patrimonioClp: portfolioJson.data.totals.totalCostClp,
@@ -186,23 +186,23 @@ export function ConsolidadoOverview() {
       <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         <div>
           <h1 style={{ margin: "0 0 4px", color: "#0F2A3D", fontSize: "1.5rem", fontWeight: 800 }}>Consolidado</h1>
-          <p style={{ margin: 0, color: "#64748B", fontSize: "0.92rem" }}>Vista financiera agregada desde el Libro Financiero.</p>
+          <p style={{ margin: 0, color: "#64748B", fontSize: "0.92rem" }}>Posicion financiera agregada desde el Libro Financiero; no incluye detalle transaccional ni calculo tributario.</p>
         </div>
         <Link href="/integraciones" style={{ background: "#0F2A3D", color: "#fff", borderRadius: 10, padding: "0.7rem 1rem", fontWeight: 800, textDecoration: "none" }}>Administrar conexiones</Link>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: "1.5rem" }}>
-        <Metric title="Patrimonio estimado" value={clp(data.patrimonioClp)} note="Posicion actual valorizada a costo." />
-        <Metric title="Activos" value={String(data.activos)} note="Activos con posicion actual." />
+        <Metric title="Costo actual consolidado" value={clp(data.patrimonioClp)} note="Posicion actual valorizada a costo, no a mercado." />
+        <Metric title="Activos con posicion" value={String(data.activos)} note="Activos actualmente abiertos." />
         <Metric title="Capital aportado" value={usd(data.totalCapitalAportadoUsd)} note="Compras y depositos valorizados." />
-        <Metric title="Staking" value={usd(data.totalRecompensasStakingUsd)} note="Rendimientos separados del capital." />
-        <Metric title="Ventas USD" value={usd(data.totalVentasUsd)} note="Total vendido desde la ingesta." />
+        <Metric title="Recompensas staking" value={usd(data.totalRecompensasStakingUsd)} note="Rendimientos separados del capital." />
+        <Metric title="Ventas acumuladas" value={usd(data.totalVentasUsd)} note="Ventas brutas; no equivalen a utilidad." />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, marginBottom: "1.5rem" }}>
-        <Status title="Estado tributario" value={data.estadoTributario} note={secondaryLoading ? "Validando estado tributario..." : "Revision general de tu situacion tributaria."} href="/tributario" />
-        <Status title="Estado de auditoria" value={data.estadoAuditoria} note={secondaryLoading ? "Validando consistencia..." : "Consistencia de la informacion procesada."} href="/auditoria" />
-        <Status title="Dolar usado" value={clp(data.dolar)} note="Referencia para mostrar valores en pesos." href="/consolidado" />
+        <Status title="Tributario" value={data.estadoTributario} note={secondaryLoading ? "Validando estado tributario..." : "Acceso a revision declarativa y fiscal."} href="/tributario" />
+        <Status title="Auditoria" value={data.estadoAuditoria} note={secondaryLoading ? "Validando consistencia..." : "Acceso a trazabilidad y consistencia operacional."} href="/auditoria" />
+        <Status title="Tipo de cambio" value={clp(data.dolar)} note="Referencia tecnica usada para valores en CLP." href="/consolidado" />
       </div>
 
       <AssetSearch onMovementCreated={load} />
@@ -210,7 +210,7 @@ export function ConsolidadoOverview() {
       <section id="activos-principales" style={{ scrollMarginTop: "96px" }}>
         <div style={{ marginBottom: "1rem" }}>
           <h2 style={{ margin: "0 0 3px", color: "#0F2A3D", fontSize: "1rem", fontWeight: 800 }}>Activos consolidados</h2>
-          <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.82rem" }}>Cards agregadas por activo, sin detalle transaccional ni calculo tributario.</p>
+          <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.82rem" }}>Cards agregadas por activo. Para revisar movimientos especificos usa el Libro Financiero.</p>
         </div>
 
         {data.posiciones.length === 0 ? (
