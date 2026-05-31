@@ -6,6 +6,7 @@ import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
 import ChatWidget from "@/components/chat/ChatWidget";
 import SwRegister from "@/components/chat/SwRegister";
+import AuthEntryTrustOverlay from "@/components/auth/AuthEntryTrustOverlay";
 
 const baseUrl = "https://ledgera.cl";
 const googleSiteVerification =
@@ -185,7 +186,8 @@ export default function RootLayout({
           }}
         />
         <AuthProvider>{children}</AuthProvider>
-        <AnalyticsProviders />
+<AuthEntryTrustOverlay />
+<AnalyticsProviders />
         <CookieBanner />
         <ChatWidget />
         <SwRegister />
