@@ -12,6 +12,9 @@ type Movement = {
   priceUsd: number;
   feeUsd: number;
   executedAt: string;
+  source?: string | null;
+  provider?: string | null;
+  origin?: string | null;
   deletedAt?: string | null;
   deletedReason?: string | null;
 };
@@ -67,6 +70,19 @@ function movementTypeLabel(type: string) {
   return labels[type] || type;
 }
 
+function movementOriginLabel(movement: Movement) {
+  const raw = String(movement.origin || movement.provider || movement.source || "").trim();
+  if (!raw) return "Manual";
+
+  const normalized = raw.toUpperCase();
+  if (normalized.includes("BINANCE")) return "Binance";
+  if (normalized.includes("BANK") || normalized.includes("BANCO")) return "Banco";
+  if (normalized.includes("WALLET")) return "Wallet";
+  if (normalized.includes("MANUAL")) return "Manual";
+
+  return raw;
+}
+
 function MovementTypeBadge({ type }: { type: string }) {
   if (type === "BUY" || type === "DEPOSIT" || type === "STAKING_REWARD" || type === "AIRDROP") {
     return (
@@ -87,6 +103,14 @@ function MovementTypeBadge({ type }: { type: string }) {
   return (
     <span className="rounded border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
       {movementTypeLabel(type)}
+    </span>
+  );
+}
+
+function MovementOriginBadge({ movement }: { movement: Movement }) {
+  return (
+    <span className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
+      {movementOriginLabel(movement)}
     </span>
   );
 }
@@ -364,6 +388,7 @@ function MovementsPage() {
                   <thead className="bg-slate-100 text-left text-slate-700">
                     <tr>
                       <th className="p-2">Fecha</th>
+                      <th className="p-2">Origen</th>
                       <th className="p-2">Tipo financiero</th>
                       <th className="p-2">Activo</th>
                       <th className="p-2">Cantidad</th>
@@ -384,6 +409,7 @@ function MovementsPage() {
                           className={`border-t border-slate-200 ${movement.deletedAt ? "bg-slate-50 text-slate-500" : ""} ${isHighlighted ? "border-l-4 border-[#D97706] bg-[#F59E0B20]" : ""}`}
                         >
                           <td className="p-2">{formatDate(movement.executedAt)}</td>
+                          <td className="p-2"><MovementOriginBadge movement={movement} /></td>
                           <td className="p-2"><MovementTypeBadge type={movement.type} /></td>
                           <td className="p-2 font-medium text-slate-950">{normalizeSymbol(movement.symbol)}</td>
                           <td className="p-2">{formatNumber(movement.quantity)}</td>
@@ -394,7 +420,7 @@ function MovementsPage() {
                           <td className="p-2">
                             <button
                               type="button"
-                              onClick={() => router.push(`/movements?highlight=${movement.id}`)}
+                              onClick={() => router.push(`/libro-financiero?highlight=${movement.id}`)}
                               className={`${ui.buttonSecondary} px-3 py-1 text-xs`}
                             >
                               Destacar
