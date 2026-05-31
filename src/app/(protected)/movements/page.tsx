@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ui } from "@/styles/design-system";
-import { httpClient } from "@/shared/http/httpClient";
 
 type Movement = {
   id: string;
@@ -23,13 +22,7 @@ type MovementsResponse = {
   data: Movement[] | null;
 };
 
-type AnnulMovementResponse = {
-  ok: boolean;
-  message: string;
-  data?: { id?: string } | null;
-};
-
-type TypeFilter = "ALL" | "BUY" | "SELL";
+type TypeFilter = "ALL" | "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW" | "STAKING_REWARD" | "AIRDROP" | "TRANSFER";
 type StatusFilter = "ALL" | "ACTIVE" | "DELETED";
 
 function formatUsd(value: number) {
@@ -56,28 +49,44 @@ function formatDate(value: string) {
   }).format(date);
 }
 
-function normalizeSymbol(value: string | null) {
-  return String(value ?? "").trim().toUpperCase();
+function normalizeSymbol(value: string) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function movementTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    BUY: "Compra",
+    SELL: "Venta",
+    DEPOSIT: "Depósito",
+    WITHDRAW: "Retiro",
+    STAKING_REWARD: "Recompensa de staking",
+    AIRDROP: "Airdrop",
+    TRANSFER: "Transferencia",
+  };
+
+  return labels[type] || type;
 }
 
 function MovementTypeBadge({ type }: { type: string }) {
-  if (type === "BUY") {
+  if (type === "BUY" || type === "DEPOSIT" || type === "STAKING_REWARD" || type === "AIRDROP") {
     return (
       <span className={`rounded px-2 py-1 text-xs font-medium ${ui.badgeOk}`}>
-        Compra
+        {movementTypeLabel(type)}
       </span>
     );
   }
-  if (type === "SELL") {
+
+  if (type === "SELL" || type === "WITHDRAW") {
     return (
       <span className={`rounded px-2 py-1 text-xs font-medium ${ui.badgeRisk}`}>
-        Venta
+        {movementTypeLabel(type)}
       </span>
     );
   }
+
   return (
     <span className="rounded border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-      {type}
+      {movementTypeLabel(type)}
     </span>
   );
 }
@@ -92,7 +101,7 @@ function MovementStatusBadge({ movement }: { movement: Movement }) {
   }
   return (
     <span className="rounded bg-[#2563EB]/10 px-2 py-1 text-xs font-medium text-[#1D4ED8]">
-      Activo
+      Vigente
     </span>
   );
 }
@@ -101,17 +110,14 @@ function MovementsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const highlightId = searchParams.get("highlight");
-  const symbolParam = normalizeSymbol(searchParams.get("symbol"));
 
   const [movements, setMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [annullingId, setAnnullingId] = useState<string | null>(null);
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [symbolFilter, setSymbolFilter] = useState(symbolParam);
+  const [symbolFilter, setSymbolFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -119,20 +125,17 @@ function MovementsPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/portfolio/movements", {
-        cache: "no-store",
-        credentials: "include",
-      });
+      const res = await fetch("/api/portfolio/movements", { cache: "no-store", credentials: "include" });
       const json: MovementsResponse = await res.json();
       if (!json.ok || !json.data) {
-        setMessage(json.message || "No fue posible cargar movimientos.");
+        setMessage(json.message || "No fue posible cargar el Libro Financiero.");
         setMovements([]);
         return;
       }
       setMovements(json.data);
     } catch (error) {
-      console.error("MOVEMENTS PAGE ERROR:", error);
-      setMessage("Error cargando movimientos.");
+      console.error("FINANCIAL LEDGER PAGE ERROR:", error);
+      setMessage("Error cargando el Libro Financiero.");
       setMovements([]);
     } finally {
       setLoading(false);
@@ -142,12 +145,6 @@ function MovementsPage() {
   useEffect(() => {
     void fetchMovements();
   }, []);
-
-  useEffect(() => {
-    if (!symbolParam) return;
-    setSymbolFilter(symbolParam);
-    setStatusFilter("ACTIVE");
-  }, [symbolParam]);
 
   useEffect(() => {
     if (!highlightId) return;
@@ -204,11 +201,14 @@ function MovementsPage() {
       (acc, movement) => {
         if (movement.type === "BUY") acc.buyCount += 1;
         if (movement.type === "SELL") acc.sellCount += 1;
+        if (movement.type === "DEPOSIT") acc.depositCount += 1;
+        if (movement.type === "WITHDRAW") acc.withdrawCount += 1;
+        if (movement.type === "STAKING_REWARD") acc.stakingCount += 1;
         acc.totalFeeUsd += movement.feeUsd || 0;
         acc.totalNotionalUsd += movement.quantity * movement.priceUsd;
         return acc;
       },
-      { buyCount: 0, sellCount: 0, totalFeeUsd: 0, totalNotionalUsd: 0 },
+      { buyCount: 0, sellCount: 0, depositCount: 0, withdrawCount: 0, stakingCount: 0, totalFeeUsd: 0, totalNotionalUsd: 0 },
     );
   }, [activeMovements]);
 
@@ -218,63 +218,21 @@ function MovementsPage() {
     setSymbolFilter("");
     setDateFrom("");
     setDateTo("");
-    setActionMessage(null);
-    router.replace("/movements");
-  }
-
-  async function annulMovement(movement: Movement) {
-    if (movement.deletedAt || annullingId) return;
-
-    const reason = window.prompt(
-      `Indica el motivo de anulación para el movimiento ${movement.symbol} del ${formatDate(movement.executedAt)}.`,
-    );
-
-    const normalizedReason = String(reason ?? "").trim();
-    if (!normalizedReason) {
-      setActionMessage("Anulación cancelada. El motivo es obligatorio.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      "Esta acción anulará el movimiento y recalculará el motor tributario. ¿Deseas continuar?",
-    );
-
-    if (!confirmed) {
-      setActionMessage("Anulación cancelada.");
-      return;
-    }
-
-    setAnnullingId(movement.id);
-    setActionMessage(null);
-
-    try {
-      const response = await httpClient<AnnulMovementResponse>(`/api/portfolio/movements/${movement.id}`, {
-        method: "DELETE",
-        body: { reason: normalizedReason },
-      });
-
-      setActionMessage(response.message || "Movimiento anulado correctamente.");
-      await fetchMovements();
-    } catch (error) {
-      setActionMessage(error instanceof Error ? error.message : "No fue posible anular el movimiento.");
-    } finally {
-      setAnnullingId(null);
-    }
   }
 
   return (
     <section className={ui.page}>
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className={ui.title}>Movimientos</h1>
+          <h1 className={ui.title}>Libro Financiero</h1>
           <p className={ui.label}>
-            Registro operativo que actúa como fuente de verdad para portafolio,
-            eventos tributarios y reportes.
+            Registro financiero operacional que constituye la fuente única de verdad de LEDGERA.
+            Consolidado, Tributario y Auditoría derivan desde este libro.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={() => router.push("/portafolio")} className={ui.buttonSecondary}>
-            Ver portafolio
+          <button type="button" onClick={() => router.push("/panel")} className={ui.buttonSecondary}>
+            Ver Consolidado
           </button>
           <button type="button" onClick={() => router.push("/tributario")} className={ui.buttonSecondary}>
             Revisión tributaria
@@ -286,21 +244,11 @@ function MovementsPage() {
         <div className={`rounded p-4 text-sm ${ui.alertRisk}`}>{message}</div>
       )}
 
-      {actionMessage && (
-        <div className={`rounded p-4 text-sm ${ui.alertWarning}`}>{actionMessage}</div>
-      )}
-
-      {symbolParam && (
-        <div className={`rounded p-4 text-sm ${ui.alertWarning}`}>
-          Viendo movimientos del activo <span className="font-medium">{symbolParam}</span>.
-        </div>
-      )}
-
       {highlightId && (
         <div className={`rounded p-4 text-sm ${ui.alertWarning}`}>
           {highlightedMovement ? (
             <p>
-              Movimiento destacado:{" "}
+              Movimiento destacado: {" "}
               <span className="font-medium">
                 {highlightedMovement.symbol} · {formatDate(highlightedMovement.executedAt)}
               </span>
@@ -312,19 +260,19 @@ function MovementsPage() {
       )}
 
       {loading ? (
-        <div className={`${ui.card} p-4 text-sm text-slate-600`}>Cargando movimientos...</div>
+        <div className={`${ui.card} p-4 text-sm text-slate-600`}>Cargando Libro Financiero...</div>
       ) : movements.length === 0 ? (
         <div className={`${ui.card} space-y-4 p-6`}>
           <p className="font-medium text-slate-950">No hay movimientos registrados.</p>
           <p className="mt-1 text-sm text-slate-600">
-            Agrega movimientos desde Portafolio para comenzar.
+            Conecta una fuente de datos o importa información para comenzar.
           </p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className={`${ui.card} p-4`}>
-              <p className={ui.label}>Activos</p>
+              <p className={ui.label}>Movimientos vigentes</p>
               <p className="text-2xl font-semibold text-slate-950">{activeMovements.length}</p>
             </div>
             <div className={`${ui.card} p-4`}>
@@ -341,7 +289,7 @@ function MovementsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className={`${ui.card} p-4`}>
               <p className={ui.label}>Volumen bruto USD</p>
               <p className="text-2xl font-semibold text-slate-950">{formatUsd(totals.totalNotionalUsd)}</p>
@@ -349,6 +297,10 @@ function MovementsPage() {
             <div className={`${ui.card} p-4`}>
               <p className={ui.label}>Fees USD</p>
               <p className="text-2xl font-semibold text-slate-950">{formatUsd(totals.totalFeeUsd)}</p>
+            </div>
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Staking</p>
+              <p className="text-2xl font-semibold text-[#14532D]">{totals.stakingCount}</p>
             </div>
           </div>
 
@@ -361,13 +313,18 @@ function MovementsPage() {
                   <option value="ALL">Todos</option>
                   <option value="BUY">Compra</option>
                   <option value="SELL">Venta</option>
+                  <option value="DEPOSIT">Depósito</option>
+                  <option value="WITHDRAW">Retiro</option>
+                  <option value="STAKING_REWARD">Recompensa de staking</option>
+                  <option value="AIRDROP">Airdrop</option>
+                  <option value="TRANSFER">Transferencia</option>
                 </select>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium text-slate-800">Estado</label>
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
                   <option value="ALL">Todos</option>
-                  <option value="ACTIVE">Activos</option>
+                  <option value="ACTIVE">Vigentes</option>
                   <option value="DELETED">Anulados</option>
                 </select>
               </div>
@@ -396,7 +353,7 @@ function MovementsPage() {
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-slate-950">Listado de movimientos</h2>
+            <h2 className="text-lg font-semibold text-slate-950">Movimientos del Libro Financiero</h2>
             {filteredMovements.length === 0 ? (
               <div className={`${ui.card} p-4 text-sm text-slate-600`}>
                 No hay movimientos que coincidan con los filtros aplicados.
@@ -407,20 +364,19 @@ function MovementsPage() {
                   <thead className="bg-slate-100 text-left text-slate-700">
                     <tr>
                       <th className="p-2">Fecha</th>
-                      <th className="p-2">Tipo</th>
+                      <th className="p-2">Tipo financiero</th>
                       <th className="p-2">Activo</th>
                       <th className="p-2">Cantidad</th>
                       <th className="p-2">Precio USD</th>
                       <th className="p-2">Fee USD</th>
                       <th className="p-2">Estado</th>
-                      <th className="p-2">Motivo anulación</th>
+                      <th className="p-2">Motivo anulacion</th>
                       <th className="p-2">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredMovements.map((movement) => {
                       const isHighlighted = movement.id === highlightId;
-                      const isAnnulling = annullingId === movement.id;
                       return (
                         <tr
                           key={movement.id}
@@ -429,32 +385,20 @@ function MovementsPage() {
                         >
                           <td className="p-2">{formatDate(movement.executedAt)}</td>
                           <td className="p-2"><MovementTypeBadge type={movement.type} /></td>
-                          <td className="p-2 font-medium text-slate-950">{movement.symbol}</td>
+                          <td className="p-2 font-medium text-slate-950">{normalizeSymbol(movement.symbol)}</td>
                           <td className="p-2">{formatNumber(movement.quantity)}</td>
                           <td className="p-2">{formatUsd(movement.priceUsd)}</td>
                           <td className="p-2">{formatUsd(movement.feeUsd)}</td>
                           <td className="p-2"><MovementStatusBadge movement={movement} /></td>
                           <td className="p-2">{movement.deletedReason || "-"}</td>
                           <td className="p-2">
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                type="button"
-                                onClick={() => router.push(`/movements?highlight=${movement.id}`)}
-                                className={`${ui.buttonSecondary} px-3 py-1 text-xs`}
-                              >
-                                Destacar
-                              </button>
-                              {!movement.deletedAt && (
-                                <button
-                                  type="button"
-                                  onClick={() => void annulMovement(movement)}
-                                  disabled={Boolean(annullingId)}
-                                  className={`${ui.buttonSecondary} px-3 py-1 text-xs ${isAnnulling ? "opacity-60" : ""}`}
-                                >
-                                  {isAnnulling ? "Anulando..." : "Anular"}
-                                </button>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/movements?highlight=${movement.id}`)}
+                              className={`${ui.buttonSecondary} px-3 py-1 text-xs`}
+                            >
+                              Destacar
+                            </button>
                           </td>
                         </tr>
                       );
