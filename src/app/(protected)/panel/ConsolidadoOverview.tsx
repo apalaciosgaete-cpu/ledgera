@@ -153,7 +153,7 @@ export function ConsolidadoOverview() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 12 }}>
-          <ActionCard title="Libro financiero" value="Revisar movimientos" note="Origen operativo de todos los calculos." href="/movements" />
+          <ActionCard title="Libro financiero" value="Revisar movimientos" note="Origen operativo de todos los calculos." href="/libro-financiero" />
           <ActionCard title="Tributario" value="Preparar declaracion" note="Clasificacion y revision fiscal." href="/tributario" />
           <ActionCard title="Auditoria" value="Ver trazabilidad" note="Consistencia, evidencia y control." href="/auditoria" />
           <ActionCard title="Conexiones" value="Gestionar fuentes" note="Exchanges, bancos y billeteras." href="/integraciones" />
