@@ -34,6 +34,7 @@ const baseNavItems: { href: string; label: string }[] = [
   { href: "/integraciones", label: "Conexiones" },
   { href: "/tributario",    label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
+  { href: "/seguridad",     label: "Seguridad" },
   { href: "/planes",        label: "Planes" },
 ];
 
