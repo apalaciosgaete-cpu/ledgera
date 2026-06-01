@@ -145,6 +145,26 @@ function RegisterForm() {
       return;
     }
 
+    if (!/[A-Z]/.test(password)) {
+      setErrorMessage("La contraseña debe incluir al menos una letra mayúscula.");
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setErrorMessage("La contraseña debe incluir al menos una letra minúscula.");
+      return;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      setErrorMessage("La contraseña debe incluir al menos un número.");
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      setErrorMessage("La contraseña debe incluir al menos un símbolo (ej: !@#$%).");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -598,16 +618,20 @@ function RegisterForm() {
                   </button>
                 </div>
 
-                {password.length > 0 && password.length < 8 && (
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      color: colors.warning,
-                      margin: "4px 0 0",
-                    }}
-                  >
-                    {8 - password.length} caracteres más requeridos
-                  </p>
+                {password.length > 0 && (
+                  <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "2px" }}>
+                    {[
+                      { ok: password.length >= 8, label: "Mínimo 8 caracteres" },
+                      { ok: /[A-Z]/.test(password), label: "Una mayúscula" },
+                      { ok: /[a-z]/.test(password), label: "Una minúscula" },
+                      { ok: /[0-9]/.test(password), label: "Un número" },
+                      { ok: /[^A-Za-z0-9]/.test(password), label: "Un símbolo (!@#$%...)" },
+                    ].map((req) => (
+                      <p key={req.label} style={{ fontSize: "11px", margin: 0, color: req.ok ? "#4ADE80" : colors.warning }}>
+                        {req.ok ? "✓" : "·"} {req.label}
+                      </p>
+                    ))}
+                  </div>
                 )}
               </div>
 
