@@ -211,20 +211,28 @@ export default function AuthEntryTrustOverlay() {
     removeInjectedBlocks();
 
     const run = () => {
-      if (pathname === "/login") {
-        injectLoginTrust();
-      }
-
-      if (pathname === "/register") {
-        injectRegisterTrust();
-      }
+      if (pathname === "/login") injectLoginTrust();
+      if (pathname === "/register") injectRegisterTrust();
     };
 
     run();
-    const timeout = window.setTimeout(run, 150);
+    const t1 = window.setTimeout(run, 150);
+    const t2 = window.setTimeout(run, 400);
+    const t3 = window.setTimeout(run, 800);
+
+    const observer = new MutationObserver(() => {
+      if (!document.getElementById(LOGIN_BLOCK_ID) && !document.getElementById(REGISTER_BLOCK_ID)) {
+        run();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      window.clearTimeout(timeout);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+      observer.disconnect();
     };
   }, [pathname]);
 
