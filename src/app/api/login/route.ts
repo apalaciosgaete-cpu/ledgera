@@ -1,4 +1,8 @@
+import crypto from "node:crypto";
+
 import { NextRequest, NextResponse } from "next/server";
+import speakeasy from "speakeasy";
+import QRCode from "qrcode";
 
 import {
   createAdminAuditLog,
@@ -15,6 +19,22 @@ import {
   checkLoginRateLimit,
   clearLoginRateLimit,
 } from "@/modules/security/infrastructure/loginRateLimitStore";
+import { prisma } from "@/lib/prisma";
+
+export const runtime = "nodejs";
+
+const REGISTRATION_2FA_TOKEN_SECRET =
+  process.env.REGISTRATION_2FA_TOKEN_SECRET ??
+  process.env.NEXTAUTH_SECRET ??
+  process.env.AUTH_SECRET ??
+  "ledgera-dev-registration-2fa-secret";
+
+function signSetupToken(userId: string, email: string, secret: string) {
+  return crypto
+    .createHmac("sha256", REGISTRATION_2FA_TOKEN_SECRET)
+    .update(`${userId}:${email}:${secret}`)
+    .digest("hex");
+}
 
 type LoginRequestBody = {
   email?: string;
@@ -99,7 +119,7 @@ export async function POST(req: NextRequest) {
     if (user.twoFactorEnabled) {
       return NextResponse.json(
         {
-          ok: false,
+          ok: true,
           twoFactorRequired: true,
           pendingUserId: user.id,
           message: "Se requiere verificación en dos pasos.",
@@ -108,59 +128,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const sessionToken = generateSessionToken();
-    const expiresAt = buildSessionExpirationDate();
-
-    const session = await rotateSessionForUser({
-      userId: user.id,
-      token: sessionToken,
-      expiresAt,
+    // Sin 2FA activo → forzar configuración antes de crear sesión
+    const secret = speakeasy.generateSecret({
+      name: `LEDGERA (${user.email})`,
+      issuer: "LEDGERA",
+      length: 20,
     });
 
-    if (user.role === "admin") {
-      await createAdminAuditLog({
-        action: "ADMIN_LOGIN",
-        actorId: user.id,
-        actorEmail: user.email,
-        ...getAuditRequestContext(req),
-        metadata: {
-          source: "api/login",
-          twoFactor: false,
-          sessionId: session.id,
-          sessionRotation: true,
-        },
-      });
+    if (!secret.base32 || !secret.otpauth_url) {
+      return NextResponse.json(
+        { ok: false, message: "No fue posible generar seguridad 2FA.", data: null },
+        { status: 500 },
+      );
     }
 
-    clearLoginRateLimit(rateLimitKey);
+    const qrCode = await QRCode.toDataURL(secret.otpauth_url);
 
-    const response = NextResponse.json({
-      ok: true,
-      message: "Login exitoso.",
+    await prisma.users.update({
+      where: { id: user.id },
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          role: user.role,
-        },
-        session: {
-          id: session.id,
-          token: session.token,
-          expiresAt: session.expiresAt,
-        },
+        twoFactorSecret: secret.base32,
+        twoFactorEnabled: false,
+        updated_at: new Date(),
       },
     });
 
-    response.cookies.set("session_token", sessionToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      expires: expiresAt,
-    });
+    const setupToken = signSetupToken(user.id, user.email, secret.base32);
 
-    return response;
+    clearLoginRateLimit(rateLimitKey);
+
+    return NextResponse.json({
+      ok: true,
+      twoFactorSetupRequired: true,
+      pendingUserId: user.id,
+      pendingEmail: user.email,
+      qrCode,
+      secret: secret.base32,
+      setupToken,
+      message: "Debes activar autenticación en dos pasos para continuar.",
+    });
   } catch (error) {
     console.error("[login] error:", error);
 
