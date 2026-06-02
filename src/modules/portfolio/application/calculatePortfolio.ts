@@ -85,7 +85,16 @@ export interface CalculatedPortfolio {
   fx: CalculatedPortfolioFx;
 }
 
+type FxCache = { rate: number; source: string; asOf: string; cachedAt: number };
+let fxCache: FxCache | null = null;
+const FX_TTL_MS = 15 * 60 * 1000;
+
 async function fetchUsdClp(): Promise<{ rate: number; source: string; asOf: string }> {
+  const now = Date.now();
+  if (fxCache && now - fxCache.cachedAt < FX_TTL_MS) {
+    return { rate: fxCache.rate, source: fxCache.source, asOf: fxCache.asOf };
+  }
+
   try {
     const today = new Date();
     const day = String(today.getUTCDate()).padStart(2, "0");
@@ -93,17 +102,22 @@ async function fetchUsdClp(): Promise<{ rate: number; source: string; asOf: stri
     const year = today.getUTCFullYear();
     const res = await fetch(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, {
       headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) throw new Error("no response");
     const data = await res.json();
     const valor = data?.serie?.[0]?.valor;
     if (typeof valor === "number" && valor > 0) {
+      fxCache = { rate: valor, source: "MINDICADOR", asOf: today.toISOString(), cachedAt: now };
       return { rate: valor, source: "MINDICADOR", asOf: today.toISOString() };
     }
   } catch {
     // fallback
   }
-  return { rate: 950, source: "STATIC", asOf: new Date().toISOString() };
+
+  const fallback = { rate: 950, source: "STATIC", asOf: new Date().toISOString() };
+  fxCache = { ...fallback, cachedAt: now };
+  return fallback;
 }
 
 function convertUsdToClp(amountUsd: number, rate: number): number {
@@ -138,6 +152,10 @@ function createAccumulator(symbol: string): PositionAccumulator {
     buyFeesUsd: 0,
     sellFeesUsd: 0,
   };
+}
+
+export async function prefetchFx(): Promise<void> {
+  await fetchUsdClp();
 }
 
 export async function calculatePortfolio(movements: PortfolioMovement[]): Promise<CalculatedPortfolio> {
