@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function TaxRootPage() {
-  redirect("/tax/overview");
+  redirect("/tax/summary");
 }

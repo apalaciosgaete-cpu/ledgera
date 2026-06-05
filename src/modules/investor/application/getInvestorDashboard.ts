@@ -318,8 +318,8 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_TAX_EVENTS",
       label: "Revisar tributario",
-      href: "/tributario",
-      detail: "Corrige ventas sin evento o eventos huérfanos antes de preparar reportes.",
+      href: "/tax/summary",
+      detail: "Revisa si corresponde declarar o pagar antes de entrar al detalle tecnico.",
     };
   }
 
