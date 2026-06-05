@@ -111,7 +111,7 @@ export async function checkAuditIntegrity(
 
   // 5. Check for TaxEvents without movements
   const taxEventsWithoutMovements = await prisma.taxEvent.findMany({
-    where: { userId, movement: null },
+    where: { userId, movementId: null },
   });
 
   if (taxEventsWithoutMovements.length > 0) {
@@ -128,7 +128,7 @@ export async function checkAuditIntegrity(
 
   // 6. Check for Movements with conflicting classifications
   const conflictingMovements = await prisma.portfolioMovement.findMany({
-    where: { userId, taxEvent: null, deletedAt: null },
+    where: { userId, taxEvent: { is: null }, deletedAt: null },
   });
 
   if (conflictingMovements.length > 0) {
@@ -156,7 +156,8 @@ export async function checkAuditIntegrity(
     (await prisma.taxEventAuditLog.count({ where: { userId } })) +
     (await prisma.movementAuditLog.count({ where: { userId } }));
 
-  const verifiedLogs = (declarationLogs.length > 0 ? 1 : 0) +
+  const verifiedLogs =
+    (declarationLogs.length > 0 ? 1 : 0) +
     (classificationLogs.length > 0 ? 1 : 0) +
     (await prisma.taxEventAuditLog.count({
       where: { userId, previousHash: { not: null } },
