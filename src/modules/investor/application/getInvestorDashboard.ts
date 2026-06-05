@@ -327,8 +327,8 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_PORTFOLIO",
       label: "Revisar inversiones",
-      href: "/movements",
-      detail: "Valida activos, cantidades y costos antes de cerrar el período.",
+      href: "/investments",
+      detail: "Valida activos, cantidades, valor actual y costos estimados antes de cerrar el período.",
     };
   }
 

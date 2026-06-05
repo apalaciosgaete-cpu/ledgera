@@ -243,7 +243,7 @@ export function InvestorDashboard() {
               <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 4px" }}>Mis activos</h2>
               <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Principales posiciones por valor actual en CLP.</p>
             </div>
-            <Link href="/movements" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver movimientos</Link>
+            <Link href="/investments" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver inversiones</Link>
           </div>
 
           {data.activos.length === 0 ? (
