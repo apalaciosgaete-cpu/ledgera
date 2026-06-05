@@ -114,14 +114,27 @@ function percent(value: number | null) {
   return `${value.toLocaleString("es-CL", { maximumFractionDigits: 2 })}%`;
 }
 
-function Metric({ label, value, note, accent = "neutral" }: { label: string; value: string; note: string; accent?: "neutral" | "good" | "warn" }) {
+function Metric({ label, value, note, accent = "neutral", href }: { label: string; value: string; note: string; accent?: "neutral" | "good" | "warn"; href?: string }) {
   const accentColor = accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : "#0F2A3D";
-
-  return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: "16px", minHeight: 126 }}>
+  const content = (
+    <>
       <p style={{ margin: "0 0 8px", color: "#64748B", fontSize: 11, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</p>
       <p style={{ margin: "0 0 6px", color: accentColor, fontSize: "1.55rem", lineHeight: 1.15, fontWeight: 850 }}>{value}</p>
       <p style={{ margin: 0, color: "#64748B", fontSize: 13, lineHeight: 1.45 }}>{note}</p>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, display: "block", minHeight: 126, padding: "16px", textDecoration: "none" }}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: "16px", minHeight: 126 }}>
+      {content}
     </article>
   );
 }
@@ -233,7 +246,7 @@ export function InvestorDashboard() {
         <Metric label="Rentabilidad total" value={percent(data.rentabilidad.totalReturnPercent)} note={`${clp(data.rentabilidad.totalReturnClp)} realizado + staking`} accent={returnAccent} />
         <Metric label="No realizada" value={clp(data.rentabilidad.unrealizedPnlClp)} note={`${percent(data.rentabilidad.unrealizedPnlPercent)} vs costo estimado`} accent={unrealizedAccent} />
         <Metric label="Activos" value={String(data.patrimonio.assetCount)} note="Posiciones abiertas con saldo actual" />
-        <Metric label="Staking" value={usd(data.staking.rewardUsd)} note={data.staking.message} accent={data.staking.status === "WITH_DATA" ? "good" : "neutral"} />
+        <Metric label="Staking" value={usd(data.staking.rewardUsd)} note={data.staking.message} accent={data.staking.status === "WITH_DATA" ? "good" : "neutral"} href="/staking" />
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))", gap: 16, marginBottom: 24 }}>
