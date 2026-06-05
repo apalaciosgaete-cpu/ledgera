@@ -245,6 +245,10 @@ model TaxDeclarationAuditLog {
   statusFrom      String?
   statusTo        String?
   contentHash     String?
+  beforeState     String?
+  afterState      String?
+  previousHash    String?
+  currentHash     String?
   ipAddress       String?
   userAgent       String?
   metadata        String?
@@ -260,6 +264,86 @@ model TaxDeclarationAuditLog {
   @@index([createdAt])
   @@index([userId, taxYear])
   @@map("tax_declaration_audit_logs")
+}
+
+model TaxClassificationAuditLog {
+  id              String   @id @default(cuid())
+  userId          String
+  movementId      String
+  action          String
+  actorId         String?
+  actorEmail      String?
+  beforeState     String?
+  afterState      String?
+  previousHash    String?
+  currentHash     String?
+  ipAddress       String?
+  userAgent       String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([movementId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("tax_classification_audit_logs")
+}
+
+model TaxEventAuditLog {
+  id              String   @id @default(cuid())
+  userId          String
+  taxEventId      String
+  action          String
+  actorId         String?
+  actorEmail      String?
+  taxYear         Int
+  beforeState     String?
+  afterState      String?
+  previousHash    String?
+  currentHash     String?
+  ipAddress       String?
+  userAgent       String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([taxEventId])
+  @@index([action])
+  @@index([taxYear])
+  @@index([createdAt])
+  @@index([userId, taxYear])
+  @@map("tax_event_audit_logs")
+}
+
+model MovementAuditLog {
+  id              String   @id @default(cuid())
+  userId          String
+  movementId      String
+  action          String
+  actorId         String?
+  actorEmail      String?
+  beforeState     String?
+  afterState      String?
+  previousHash    String?
+  currentHash     String?
+  ipAddress       String?
+  userAgent       String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([movementId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("movement_audit_logs")
 }
 
 model FxRate {
