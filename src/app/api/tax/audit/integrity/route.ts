@@ -6,6 +6,19 @@ import { checkAuditIntegrity } from "@/modules/tax/application/integrityCheckSer
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function resolveIntegrityMessage(status: string): string {
+  switch (status) {
+    case "CRITICAL":
+      return "Integridad de auditoria con inconsistencias criticas.";
+    case "RISK":
+      return "Integridad de auditoria con riesgos operacionales.";
+    case "LEGACY_UNVERIFIABLE":
+      return "Integridad nueva correcta; existen DDJJ legacy no verificables criptograficamente.";
+    default:
+      return "Integridad de auditoria verificada.";
+  }
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
 
@@ -22,7 +35,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         ok: true,
-        message: "Integridad de auditoría verificada.",
+        message: resolveIntegrityMessage(result.status),
         data: result,
       },
       { status: 200 },

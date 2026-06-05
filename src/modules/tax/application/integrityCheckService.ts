@@ -3,13 +3,13 @@ import { verifyAuditChain } from "@/modules/tax/application/auditChainService";
 
 export interface IntegrityIssue {
   type: string;
-  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "LEGACY";
   description: string;
   data: Record<string, unknown>;
 }
 
 export interface IntegrityCheckResult {
-  status: "OK" | "RISK" | "CRITICAL";
+  status: "OK" | "RISK" | "CRITICAL" | "LEGACY_UNVERIFIABLE";
   timestamp: Date;
   issues: IntegrityIssue[];
   summary: {
@@ -17,6 +17,7 @@ export interface IntegrityCheckResult {
     chain_verified_logs: number;
     broken_chains: number;
     orphaned_records: number;
+    legacy_unverifiable_records: number;
   };
 }
 
@@ -32,24 +33,33 @@ export async function checkAuditIntegrity(
   });
 
   if (declarationLogs.length > 0) {
-    const logsWithoutHash = declarationLogs.filter((log) => !log.currentHash);
-    if (logsWithoutHash.length > 0) {
-      issues.push({
-        type: "DECLARATION_AUDIT_LOG_WITHOUT_HASH",
-        severity: "CRITICAL",
-        description: "Declaration audit logs without chained hash",
-        data: {
-          count: logsWithoutHash.length,
-          firstLogId: logsWithoutHash[0]?.id,
-        },
-      });
-    }
-
     const declarationIds = Array.from(
       new Set(declarationLogs.map((log) => log.declarationId)),
     );
 
     for (const declarationId of declarationIds) {
+      const declarationChain = declarationLogs.filter(
+        (log) => log.declarationId === declarationId,
+      );
+      const logsWithoutHash = declarationChain.filter(
+        (log) => !log.currentHash,
+      );
+
+      if (logsWithoutHash.length > 0) {
+        issues.push({
+          type: "LEGACY_UNVERIFIABLE",
+          severity: "LEGACY",
+          description:
+            "Legacy declaration audit logs do not have chained hashes and cannot be cryptographically verified.",
+          data: {
+            declarationId,
+            count: logsWithoutHash.length,
+            firstLogId: logsWithoutHash[0]?.id,
+          },
+        });
+        continue;
+      }
+
       const chainLogs = declarationLogs.filter(
         (log): log is typeof declarationLogs[number] & { currentHash: string } =>
           log.declarationId === declarationId && log.currentHash !== null,
@@ -172,11 +182,13 @@ export async function checkAuditIntegrity(
   }
 
   // Determine status
-  let status: "OK" | "RISK" | "CRITICAL" = "OK";
+  let status: IntegrityCheckResult["status"] = "OK";
   if (issues.some((i) => i.severity === "CRITICAL")) {
     status = "CRITICAL";
   } else if (issues.some((i) => i.severity === "HIGH")) {
     status = "RISK";
+  } else if (issues.some((i) => i.severity === "LEGACY")) {
+    status = "LEGACY_UNVERIFIABLE";
   }
 
   const totalLogs =
@@ -205,6 +217,9 @@ export async function checkAuditIntegrity(
       broken_chains: issues.filter((i) => i.type.includes("CHAIN")).length,
       orphaned_records: issues.filter((i) => i.type.includes("ORPHANED"))
         .length,
+      legacy_unverifiable_records: issues.filter(
+        (i) => i.type === "LEGACY_UNVERIFIABLE",
+      ).length,
     },
   };
 }
