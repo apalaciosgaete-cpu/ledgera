@@ -2,5 +2,5 @@
 import { permanentRedirect } from "next/navigation";
 
 export default function DashboardPage() {
-  permanentRedirect("/portafolio");
+  permanentRedirect("/panel");
 }
