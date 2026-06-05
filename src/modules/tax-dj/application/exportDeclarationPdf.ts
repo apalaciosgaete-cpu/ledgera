@@ -1,4 +1,4 @@
-import { PDFDocument, rgb } from "pdf-lib";
+import PDFDocument from "pdfkit";
 
 type DeclarationPayload = {
   summary?: {
@@ -75,98 +75,53 @@ function safeIsoDate(value: Date | string | null | undefined) {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    minimumFractionDigits: 2,
-  }).format(value);
-}
-
-export async function buildDeclarationPdf(
+export function buildDeclarationPdf(
   input: ExportDeclarationPdfInput,
-): Promise<Uint8Array> {
-  const doc = await PDFDocument.create();
-  const page = doc.addPage([595, 842]);
-  const { height } = page.getSize();
-
+): Buffer {
+  const doc = new PDFDocument();
   const payload = parsePayload(input.payloadJson);
-  let y = height - 40;
+  const chunks: Buffer[] = [];
 
-  const fontSize = 12;
-  const titleSize = 18;
-  const sectionSize = 14;
+  doc.on("data", (chunk) => chunks.push(chunk));
 
-  page.drawText("DECLARACIÓN DE INGRESOS - LEDGERA", {
-    x: 40,
-    y,
-    size: titleSize,
-    color: rgb(0, 0, 0),
-  });
+  doc.fontSize(18).text("DECLARACIÓN DE INGRESOS - LEDGERA", 50, 40);
 
-  y -= 30;
+  doc.fontSize(12).moveDown(1);
+  doc.text(`ID: ${input.id}`);
+  doc.text(`Año Tributario: ${input.taxYear}`);
+  doc.text(`Tipo: ${input.declarationType}`);
+  doc.text(`Estado: ${input.status}`);
+  doc.text(`Hash: ${input.contentHash}`);
+  doc.text(`Generado: ${safeIsoDate(input.generatedAt)}`);
+  doc.text(`Confirmado: ${safeIsoDate(input.confirmedAt) || "No confirmado"}`);
 
-  const infoFields = [
-    `ID: ${input.id}`,
-    `Año Tributario: ${input.taxYear}`,
-    `Tipo: ${input.declarationType}`,
-    `Estado: ${input.status}`,
-    `Hash: ${input.contentHash}`,
-    `Generado: ${safeIsoDate(input.generatedAt)}`,
-    `Confirmado: ${safeIsoDate(input.confirmedAt) || "No confirmado"}`,
-  ];
-
-  for (const field of infoFields) {
-    page.drawText(field, {
-      x: 40,
-      y,
-      size: fontSize,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-    y -= 15;
-  }
-
-  y -= 15;
-
-  page.drawText("RESUMEN", {
-    x: 40,
-    y,
-    size: sectionSize,
-    color: rgb(0, 0, 0),
-  });
-
-  y -= 20;
+  doc.moveDown(1).fontSize(14).text("RESUMEN", { underline: true });
 
   const summary = payload.summary;
-  const summaryData = [
-    `Total eventos: ${summary?.totalEvents ?? 0}`,
-    `Total activos: ${summary?.totalSymbols ?? 0}`,
-    `Ingresos USD: ${(summary?.totalProceedsUsd ?? 0).toFixed(2)}`,
-    `Ingresos CLP: ${(summary?.totalProceedsClp ?? 0).toFixed(2)}`,
-    `Costo USD: ${(summary?.totalCostBasisUsd ?? 0).toFixed(2)}`,
-    `Costo CLP: ${(summary?.totalCostBasisClp ?? 0).toFixed(2)}`,
-    `Resultado USD: ${(summary?.totalRealizedPnlUsd ?? 0).toFixed(2)}`,
-    `Resultado CLP: ${(summary?.totalRealizedPnlClp ?? 0).toFixed(2)}`,
-  ];
+  doc.fontSize(11).moveDown(0.5);
+  doc.text(`Total eventos: ${summary?.totalEvents ?? 0}`);
+  doc.text(`Total activos: ${summary?.totalSymbols ?? 0}`);
+  doc.text(`Ingresos USD: ${(summary?.totalProceedsUsd ?? 0).toFixed(2)}`);
+  doc.text(`Ingresos CLP: ${(summary?.totalProceedsClp ?? 0).toFixed(2)}`);
+  doc.text(`Costo USD: ${(summary?.totalCostBasisUsd ?? 0).toFixed(2)}`);
+  doc.text(`Costo CLP: ${(summary?.totalCostBasisClp ?? 0).toFixed(2)}`);
+  doc.text(`Resultado USD: ${(summary?.totalRealizedPnlUsd ?? 0).toFixed(2)}`);
+  doc.text(`Resultado CLP: ${(summary?.totalRealizedPnlClp ?? 0).toFixed(2)}`);
 
-  for (const data of summaryData) {
-    page.drawText(data, {
-      x: 60,
-      y,
-      size: fontSize - 1,
-      color: rgb(0.3, 0.3, 0.3),
-    });
-    y -= 12;
+  if (payload.bySymbol && payload.bySymbol.length > 0) {
+    doc.moveDown(1).fontSize(14).text("POR ACTIVO", { underline: true });
+    doc.fontSize(10).moveDown(0.3);
 
-    if (y < 50) {
-      const newPage = doc.addPage([595, 842]);
-      page.drawPage(newPage);
-      y = 842 - 40;
+    for (const item of payload.bySymbol) {
+      doc.text(
+        `${item.symbol}: ${item.events} eventos, ${item.quantity} cantidad, USD: ${item.proceedsUsd.toFixed(2)}, CLP: ${item.proceedsClp.toFixed(2)}`,
+      );
     }
   }
 
-  const pdfBytes = await doc.save();
-  return pdfBytes;
+  doc.end();
+
+  return Buffer.concat(chunks);
 }
 
 export function buildDeclarationPdfFilename(input: {
