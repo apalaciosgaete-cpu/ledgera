@@ -7,6 +7,8 @@ import {
   type PortfolioMovement,
   type PortfolioMovementType,
 } from "@/modules/portfolio/application/calculatePortfolio";
+import { getCoinGeckoPricesUsd } from "@/modules/portfolio/infrastructure/coingecko";
+import { getCoinGeckoIdBySymbol } from "@/modules/portfolio/domain/assetMarketMap";
 import { round } from "@/shared/utils/math";
 
 type RawPortfolioMovement = {
@@ -41,7 +43,14 @@ export type InvestorDashboard = {
   patrimonio: {
     totalCostClp: number;
     totalCostUsd: number;
+    totalMarketValueClp: number;
+    totalMarketValueUsd: number;
     assetCount: number;
+    marketPricing: {
+      source: "COINGECKO" | "COST_FALLBACK";
+      pricedAssets: number;
+      totalAssets: number;
+    };
     fx: {
       usdToClp: number;
       source: string;
@@ -56,14 +65,40 @@ export type InvestorDashboard = {
     totalReturnUsd: number;
     totalReturnClp: number;
     totalReturnPercent: number | null;
+    unrealizedPnlUsd: number;
+    unrealizedPnlClp: number;
+    unrealizedPnlPercent: number | null;
   };
   activos: {
     symbol: string;
     quantity: number;
     totalCostClp: number;
     totalCostUsd: number;
+    currentPriceUsd: number;
+    marketValueClp: number;
+    marketValueUsd: number;
+    unrealizedPnlClp: number;
+    unrealizedPnlUsd: number;
+    returnPercent: number | null;
     portfolioSharePercent: number;
   }[];
+  distribucion: {
+    symbol: string;
+    percent: number;
+    valueClp: number;
+  }[];
+  destacados: {
+    bestAsset: {
+      symbol: string;
+      returnPercent: number;
+      unrealizedPnlClp: number;
+    } | null;
+    worstAsset: {
+      symbol: string;
+      returnPercent: number;
+      unrealizedPnlClp: number;
+    } | null;
+  };
   staking: {
     status: "WITH_DATA" | "PLACEHOLDER";
     rewardUsd: number;
@@ -110,18 +145,102 @@ function toPortfolioMovement(movement: RawPortfolioMovement): PortfolioMovement 
   };
 }
 
-function buildAssets(positions: CalculatedPortfolioPosition[], totalCostClp: number) {
+async function buildMarketPriceBySymbol(positions: CalculatedPortfolioPosition[]) {
+  const marketIdsBySymbol = new Map<string, string>();
+
+  for (const position of positions) {
+    if (position.quantity <= 0) continue;
+    const marketId = getCoinGeckoIdBySymbol(position.symbol);
+    if (marketId) marketIdsBySymbol.set(position.symbol, marketId);
+  }
+
+  if (marketIdsBySymbol.size === 0) {
+    return {
+      pricesBySymbol: new Map<string, number>(),
+      pricedAssets: 0,
+    };
+  }
+
+  try {
+    const marketPrices = await getCoinGeckoPricesUsd(Array.from(marketIdsBySymbol.values()));
+    const pricesBySymbol = new Map<string, number>();
+
+    for (const [symbol, marketId] of marketIdsBySymbol) {
+      const price = Number(marketPrices[marketId] ?? 0);
+      if (Number.isFinite(price) && price > 0) {
+        pricesBySymbol.set(symbol, price);
+      }
+    }
+
+    return {
+      pricesBySymbol,
+      pricedAssets: pricesBySymbol.size,
+    };
+  } catch {
+    return {
+      pricesBySymbol: new Map<string, number>(),
+      pricedAssets: 0,
+    };
+  }
+}
+
+function buildAssets(
+  positions: CalculatedPortfolioPosition[],
+  totalMarketValueClp: number,
+  pricesBySymbol: Map<string, number>,
+  usdToClp: number,
+) {
   return positions
     .filter((position) => position.quantity > 0)
-    .sort((a, b) => b.totalCostClp - a.totalCostClp)
-    .slice(0, 8)
-    .map((position) => ({
-      symbol: position.symbol,
-      quantity: position.quantity,
-      totalCostClp: position.totalCostClp,
-      totalCostUsd: position.totalCostUsd,
-      portfolioSharePercent: totalCostClp > 0 ? round((position.totalCostClp / totalCostClp) * 100, 2) : 0,
-    }));
+    .map((position) => {
+      const currentPriceUsd = pricesBySymbol.get(position.symbol) ?? position.averageCostUsd;
+      const marketValueUsd = round(position.quantity * currentPriceUsd, 2);
+      const marketValueClp = round(marketValueUsd * usdToClp, 2);
+      const unrealizedPnlUsd = round(marketValueUsd - position.totalCostUsd, 2);
+      const unrealizedPnlClp = round(marketValueClp - position.totalCostClp, 2);
+      const returnPercent = position.totalCostUsd > 0 ? round((unrealizedPnlUsd / position.totalCostUsd) * 100, 2) : null;
+
+      return {
+        symbol: position.symbol,
+        quantity: position.quantity,
+        totalCostClp: position.totalCostClp,
+        totalCostUsd: position.totalCostUsd,
+        currentPriceUsd: round(currentPriceUsd, 8),
+        marketValueClp,
+        marketValueUsd,
+        unrealizedPnlClp,
+        unrealizedPnlUsd,
+        returnPercent,
+        portfolioSharePercent: totalMarketValueClp > 0 ? round((marketValueClp / totalMarketValueClp) * 100, 2) : 0,
+      };
+    })
+    .sort((a, b) => b.marketValueClp - a.marketValueClp);
+}
+
+function buildHighlights(assets: ReturnType<typeof buildAssets>): InvestorDashboard["destacados"] {
+  const rankedAssets = assets
+    .filter((asset) => asset.returnPercent !== null)
+    .sort((a, b) => Number(b.returnPercent) - Number(a.returnPercent));
+
+  const bestAsset = rankedAssets[0] ?? null;
+  const worstAsset = rankedAssets.length > 1 ? rankedAssets[rankedAssets.length - 1] : null;
+
+  return {
+    bestAsset: bestAsset
+      ? {
+        symbol: bestAsset.symbol,
+        returnPercent: Number(bestAsset.returnPercent),
+        unrealizedPnlClp: bestAsset.unrealizedPnlClp,
+      }
+      : null,
+    worstAsset: worstAsset
+      ? {
+        symbol: worstAsset.symbol,
+        returnPercent: Number(worstAsset.returnPercent),
+        unrealizedPnlClp: worstAsset.unrealizedPnlClp,
+      }
+      : null,
+  };
 }
 
 function buildTaxStatus(params: {
@@ -260,6 +379,25 @@ export async function getInvestorDashboard(user: AccessPolicyUser): Promise<Inve
     .map(toPortfolioMovement)
     .filter((movement): movement is PortfolioMovement => Boolean(movement));
   const portfolio = await calculatePortfolio(movements);
+  const { pricesBySymbol, pricedAssets } = await buildMarketPriceBySymbol(portfolio.positions);
+  const totalMarketValueUsd = round(
+    portfolio.positions
+      .filter((position) => position.quantity > 0)
+      .reduce((sum, position) => {
+        const currentPriceUsd = pricesBySymbol.get(position.symbol) ?? position.averageCostUsd;
+        return sum + position.quantity * currentPriceUsd;
+      }, 0),
+    2,
+  );
+  const totalMarketValueClp = round(totalMarketValueUsd * portfolio.fx.usdToClp, 2);
+  const assets = buildAssets(portfolio.positions, totalMarketValueClp, pricesBySymbol, portfolio.fx.usdToClp);
+  const distribution = assets.slice(0, 8).map((asset) => ({
+    symbol: asset.symbol,
+    percent: asset.portfolioSharePercent,
+    valueClp: asset.marketValueClp,
+  }));
+  const unrealizedPnlUsd = round(totalMarketValueUsd - portfolio.totals.totalCostUsd, 2);
+  const unrealizedPnlClp = round(totalMarketValueClp - portfolio.totals.totalCostClp, 2);
 
   const movementIds = new Set(rawMovements.map((movement) => movement.id));
   const eventMovementIds = new Set(taxEvents.map((event) => event.movementId));
@@ -285,7 +423,14 @@ export async function getInvestorDashboard(user: AccessPolicyUser): Promise<Inve
     patrimonio: {
       totalCostClp: portfolio.totals.totalCostClp,
       totalCostUsd: portfolio.totals.totalCostUsd,
+      totalMarketValueClp,
+      totalMarketValueUsd,
       assetCount: portfolio.totals.symbolCount,
+      marketPricing: {
+        source: pricedAssets > 0 ? "COINGECKO" : "COST_FALLBACK",
+        pricedAssets,
+        totalAssets: portfolio.totals.symbolCount,
+      },
       fx: portfolio.fx,
     },
     rentabilidad: {
@@ -296,8 +441,13 @@ export async function getInvestorDashboard(user: AccessPolicyUser): Promise<Inve
       totalReturnUsd,
       totalReturnClp,
       totalReturnPercent: capitalBaseUsd > 0 ? round((totalReturnUsd / capitalBaseUsd) * 100, 2) : null,
+      unrealizedPnlUsd,
+      unrealizedPnlClp,
+      unrealizedPnlPercent: portfolio.totals.totalCostUsd > 0 ? round((unrealizedPnlUsd / portfolio.totals.totalCostUsd) * 100, 2) : null,
     },
-    activos: buildAssets(portfolio.positions, portfolio.totals.totalCostClp),
+    activos: assets,
+    distribucion: distribution,
+    destacados: buildHighlights(assets),
     staking: {
       status: stakingRewardUsd > 0 ? "WITH_DATA" : "PLACEHOLDER",
       rewardUsd: stakingRewardUsd,
