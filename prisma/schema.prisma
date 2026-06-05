@@ -548,6 +548,9 @@ model users {
   bankFileUploads         BankFileUpload[]
   bankCsvTemplates        BankCsvTemplate[]
   chatConversations       ChatConversation[]
+  taxClassificationAuditLogs TaxClassificationAuditLog[]
+  taxEventAuditLogs       TaxEventAuditLog[]
+  movementAuditLogs       MovementAuditLog[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
