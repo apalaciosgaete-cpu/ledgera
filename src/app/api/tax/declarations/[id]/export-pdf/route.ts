@@ -76,7 +76,7 @@ export async function GET(
       );
     }
 
-    const pdf = await buildDeclarationPdf(
+    const pdf = buildDeclarationPdf(
       declaration as ExportDeclarationPdfInput,
     );
 
@@ -153,3 +153,4 @@ export async function GET(
     );
   }
 }
+
