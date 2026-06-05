@@ -1,7 +1,7 @@
 "use client";
 
-import { ConsolidadoOverview } from "./ConsolidadoOverview";
+import { InvestorDashboard } from "./InvestorDashboard";
 
 export default function PanelPage() {
-  return <ConsolidadoOverview />;
+  return <InvestorDashboard />;
 }
