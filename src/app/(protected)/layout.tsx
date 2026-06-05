@@ -32,6 +32,7 @@ function LogoutIcon() {
 const baseNavItems: { href: string; label: string }[] = [
   { href: "/panel",         label: "Dashboard" },
   { href: "/investments",   label: "Inversiones" },
+  { href: "/staking",       label: "Staking" },
   { href: "/integraciones", label: "Conexiones" },
   { href: "/tributario",    label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
