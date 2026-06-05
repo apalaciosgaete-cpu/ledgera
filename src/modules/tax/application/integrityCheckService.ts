@@ -117,7 +117,22 @@ export async function checkAuditIntegrity(
     });
   }
 
-  // 5. Skipped: movement on TaxEvent is required, so no orphaned tax-event records can exist.
+  // 5. Check for TaxEvents without movements
+  const taxEventsWithoutMovements = await prisma.taxEvent.findMany({
+    where: { userId, movementId: null },
+  });
+
+  if (taxEventsWithoutMovements.length > 0) {
+    issues.push({
+      type: "ORPHANED_TAX_EVENTS",
+      severity: "MEDIUM",
+      description: `${taxEventsWithoutMovements.length} tax events without linked movement`,
+      data: {
+        count: taxEventsWithoutMovements.length,
+        firstEventId: taxEventsWithoutMovements[0]?.id,
+      },
+    });
+  }
 
   // 6. Check for Movements with conflicting classifications
   const conflictingMovements = await prisma.portfolioMovement.findMany({
@@ -149,7 +164,8 @@ export async function checkAuditIntegrity(
     (await prisma.taxEventAuditLog.count({ where: { userId } })) +
     (await prisma.movementAuditLog.count({ where: { userId } }));
 
-  const verifiedLogs = (declarationLogs.length > 0 ? 1 : 0) +
+  const verifiedLogs =
+    (declarationLogs.length > 0 ? 1 : 0) +
     (classificationLogs.length > 0 ? 1 : 0) +
     (await prisma.taxEventAuditLog.count({
       where: { userId, previousHash: { not: null } },
