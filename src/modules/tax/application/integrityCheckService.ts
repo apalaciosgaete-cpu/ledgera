@@ -32,22 +32,43 @@ export async function checkAuditIntegrity(
   });
 
   if (declarationLogs.length > 0) {
-    const chainLogs = declarationLogs.filter(
-      (log): log is typeof declarationLogs[number] & { currentHash: string } =>
-        log.currentHash !== null,
-    );
-    const isChainValid = chainLogs.length === 0 || verifyAuditChain(chainLogs);
-    if (!isChainValid) {
+    const logsWithoutHash = declarationLogs.filter((log) => !log.currentHash);
+    if (logsWithoutHash.length > 0) {
       issues.push({
-        type: "BROKEN_DECLARATION_CHAIN",
+        type: "DECLARATION_AUDIT_LOG_WITHOUT_HASH",
         severity: "CRITICAL",
-        description: "Declaration audit chain integrity violated",
+        description: "Declaration audit logs without chained hash",
         data: {
-          totalLogs: declarationLogs.length,
-          chainStartHash: declarationLogs[0]?.currentHash,
-          chainEndHash: declarationLogs[declarationLogs.length - 1]?.currentHash,
+          count: logsWithoutHash.length,
+          firstLogId: logsWithoutHash[0]?.id,
         },
       });
+    }
+
+    const declarationIds = Array.from(
+      new Set(declarationLogs.map((log) => log.declarationId)),
+    );
+
+    for (const declarationId of declarationIds) {
+      const chainLogs = declarationLogs.filter(
+        (log): log is typeof declarationLogs[number] & { currentHash: string } =>
+          log.declarationId === declarationId && log.currentHash !== null,
+      );
+      const isChainValid = chainLogs.length > 0 && verifyAuditChain(chainLogs);
+
+      if (!isChainValid) {
+        issues.push({
+          type: "BROKEN_DECLARATION_CHAIN",
+          severity: "CRITICAL",
+          description: "Declaration audit chain integrity violated",
+          data: {
+            declarationId,
+            totalLogs: chainLogs.length,
+            chainStartHash: chainLogs[0]?.currentHash,
+            chainEndHash: chainLogs[chainLogs.length - 1]?.currentHash,
+          },
+        });
+      }
     }
   }
 
@@ -59,11 +80,26 @@ export async function checkAuditIntegrity(
     });
 
   if (classificationLogs.length > 0) {
+    const classificationLogsWithoutHash = classificationLogs.filter(
+      (log) => !log.currentHash,
+    );
+    if (classificationLogsWithoutHash.length > 0) {
+      issues.push({
+        type: "CLASSIFICATION_AUDIT_LOG_WITHOUT_HASH",
+        severity: "CRITICAL",
+        description: "Classification audit logs without chained hash",
+        data: {
+          count: classificationLogsWithoutHash.length,
+          firstLogId: classificationLogsWithoutHash[0]?.id,
+        },
+      });
+    }
+
     const chainLogs = classificationLogs.filter(
       (log): log is typeof classificationLogs[number] & { currentHash: string } =>
         log.currentHash !== null,
     );
-    const isChainValid = chainLogs.length === 0 || verifyAuditChain(chainLogs);
+    const isChainValid = chainLogs.length > 0 && verifyAuditChain(chainLogs);
     if (!isChainValid) {
       issues.push({
         type: "BROKEN_CLASSIFICATION_CHAIN",

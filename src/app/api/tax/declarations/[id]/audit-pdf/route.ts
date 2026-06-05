@@ -49,7 +49,7 @@ export async function GET(
       (i) => i.data.declarationId === id,
     ).length;
 
-    const verificationUrl = `${new URL(req.url).origin}/api/tax/declarations/${id}/verify`;
+    const verificationUrl = `${new URL(req.url).origin}/api/verify/declaration/${declaration.contentHash}`;
 
     const report = {
       id: declaration.id,
@@ -66,8 +66,8 @@ export async function GET(
         createdAt: log.createdAt,
         actorEmail: log.actorEmail,
         ipAddress: log.ipAddress,
-        beforeState: log.statusFrom ? JSON.stringify({ status: log.statusFrom }) : null,
-        afterState: log.statusTo ? JSON.stringify({ status: log.statusTo }) : null,
+        beforeState: log.beforeState,
+        afterState: log.afterState,
         currentHash: log.currentHash,
         metadata: log.metadata,
       })),

@@ -1,12 +1,16 @@
-import { createHash, randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 
 import type {
   TaxDeclarationDraft,
   TaxDeclarationEventLine,
+  TaxDeclarationMetadata,
   TaxDeclarationPayload,
   TaxDeclarationSymbolSummary,
   TaxDeclarationType,
 } from "@/modules/tax-dj/domain/declaration";
+import { computeDeclarationHash } from "@/modules/tax-dj/application/verifyDeclarationHash";
+import { TAX_ENGINE_METADATA } from "@/modules/tax/domain/taxEngineVersion";
+import { taxPolicy } from "@/modules/tax/domain/taxPolicy";
 import { round, normalizeSymbol } from "@/shared/utils/math";
 
 export type TaxEventForDeclaration = {
@@ -56,7 +60,41 @@ function serializeEvent(event: TaxEventForDeclaration): TaxDeclarationEventLine 
   };
 }
 
-function buildPayload(events: TaxEventForDeclaration[]): TaxDeclarationPayload {
+function buildMetadata(input: {
+  taxYear: number;
+  declarationType: TaxDeclarationType;
+}): TaxDeclarationMetadata {
+  return {
+    protocolVersion: "LEDGERA_DDJJ_V1",
+    taxYear: input.taxYear,
+    declarationType: input.declarationType,
+    taxEngine: TAX_ENGINE_METADATA,
+    taxPolicy: {
+      regime: taxPolicy.regime,
+      declarationCurrency: taxPolicy.sii.declarationCurrency,
+      siiDecimalPlaces: taxPolicy.sii.decimalPlaces,
+      habituality: taxPolicy.habituality,
+      rates: taxPolicy.rates,
+      utm: taxPolicy.utm,
+    },
+    rounding: {
+      cryptoDecimals: 8,
+      fiatDecimals: 4,
+      siiClpDecimals: taxPolicy.sii.decimalPlaces,
+    },
+    fx: {
+      source: TAX_ENGINE_METADATA.fxSource,
+      quote: "USDCLP",
+    },
+  };
+}
+
+function buildPayload(input: {
+  taxYear: number;
+  declarationType: TaxDeclarationType;
+  events: TaxEventForDeclaration[];
+}): TaxDeclarationPayload {
+  const { events } = input;
   const lines = events.map(serializeEvent);
   const bySymbolMap = new Map<string, TaxDeclarationSymbolSummary>();
 
@@ -105,6 +143,10 @@ function buildPayload(events: TaxEventForDeclaration[]): TaxDeclarationPayload {
   }));
 
   return {
+    metadata: buildMetadata({
+      taxYear: input.taxYear,
+      declarationType: input.declarationType,
+    }),
     summary: {
       totalEvents: lines.length,
       totalSymbols: bySymbol.length,
@@ -127,21 +169,15 @@ function buildPayload(events: TaxEventForDeclaration[]): TaxDeclarationPayload {
   };
 }
 
-function buildContentHash(payload: unknown): string {
-  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
-}
-
 export function buildDeclarationDraft(
   input: BuildDeclarationDraftInput,
 ): TaxDeclarationDraft {
-  const payloadJson = buildPayload(input.events);
-
-  const contentHash = buildContentHash({
-    userId: input.userId,
+  const payloadJson = buildPayload({
     taxYear: input.taxYear,
     declarationType: input.declarationType,
-    payloadJson,
+    events: input.events,
   });
+  const contentHash = computeDeclarationHash(payloadJson);
 
   return {
     id: randomUUID(),

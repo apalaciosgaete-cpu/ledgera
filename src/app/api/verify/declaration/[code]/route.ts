@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { verifyDeclarationHash } from "@/modules/tax-dj/application/verifyDeclarationHash";
+import { verifyAuditChain } from "@/modules/tax/application/auditChainService";
 
 type RouteContext = {
   params: Promise<{ code: string }>;
@@ -9,6 +10,7 @@ type RouteContext = {
 
 type PublicTaxDeclarationRecord = {
   id: string;
+  userId: string;
   taxYear: number;
   declarationType: string;
   status: string;
@@ -107,6 +109,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       orderBy: [{ generatedAt: "desc" }, { createdAt: "desc" }],
       select: {
         id: true,
+        userId: true,
         taxYear: true,
         declarationType: true,
         status: true,
@@ -137,8 +140,24 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       payloadJson,
       expectedHash: declaration.contentHash,
     });
+    const auditLogs = await prisma.taxDeclarationAuditLog.findMany({
+      where: {
+        userId: declaration.userId,
+        declarationId: declaration.id,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    const auditChainValid =
+      auditLogs.length > 0 &&
+      auditLogs.every((log) => Boolean(log.currentHash)) &&
+      verifyAuditChain(
+        auditLogs.filter(
+          (log): log is typeof auditLogs[number] & { currentHash: string } =>
+            log.currentHash !== null,
+        ),
+      );
     const isVoided = declaration.status === "VOIDED" || Boolean(declaration.voidedAt);
-    const isPubliclyValid = integrity.valid && !isVoided;
+    const isPubliclyValid = integrity.valid && auditChainValid && !isVoided;
 
     return NextResponse.json({
       ok: true,
@@ -167,6 +186,8 @@ export async function GET(_req: NextRequest, context: RouteContext) {
         verification: {
           isValid: isPubliclyValid,
           integrityValid: integrity.valid,
+          auditChainValid,
+          auditEventCount: auditLogs.length,
           expectedHash: integrity.expectedHash,
           computedHash: integrity.computedHash,
           revokedOrVoided: isVoided,
