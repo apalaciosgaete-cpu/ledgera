@@ -23,7 +23,7 @@ export interface DeclarationAuditReport {
   generatedAt: Date;
   confirmedAt?: Date | null;
   auditTrail: AuditTrailEntry[];
-  integrityStatus: "OK" | "RISK" | "CRITICAL";
+  integrityStatus: "OK" | "RISK" | "CRITICAL" | "LEGACY_UNVERIFIABLE";
   integrityIssues: number;
 }
 

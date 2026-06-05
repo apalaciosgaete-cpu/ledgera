@@ -25,7 +25,31 @@ type AuditLog = {
   ipAddress: string | null;
   userAgent: string | null;
   metadata: string | null;
+  previousHash: string | null;
+  currentHash: string | null;
   createdAt: string;
+};
+
+type IntegrityStatus = "OK" | "RISK" | "CRITICAL" | "LEGACY_UNVERIFIABLE";
+
+type IntegrityIssue = {
+  type: string;
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "LEGACY";
+  description: string;
+  data: Record<string, unknown>;
+};
+
+type IntegrityResult = {
+  status: IntegrityStatus;
+  timestamp: string;
+  issues: IntegrityIssue[];
+  summary: {
+    total_audit_logs: number;
+    chain_verified_logs: number;
+    broken_chains: number;
+    orphaned_records: number;
+    legacy_unverifiable_records: number;
+  };
 };
 
 type AuditResponse = {
@@ -34,6 +58,12 @@ type AuditResponse = {
   data: {
     logs: AuditLog[];
   };
+};
+
+type IntegrityResponse = {
+  ok: boolean;
+  message: string;
+  data: IntegrityResult;
 };
 
 const ACTIONS: { value: AuditAction; label: string }[] = [
@@ -85,6 +115,41 @@ function actionBadge(action: AuditAction) {
   return "border border-[var(--color-border)] bg-[var(--color-surface-alt)] text-[var(--color-text-secondary)]";
 }
 
+function integrityBadge(status: IntegrityStatus) {
+  if (status === "OK") return ui.badgeOk;
+  if (status === "LEGACY_UNVERIFIABLE") return ui.badgeWarning;
+  return ui.badgeRisk;
+}
+
+function integrityLabel(status: IntegrityStatus) {
+  switch (status) {
+    case "OK":
+      return "Integridad OK";
+    case "LEGACY_UNVERIFIABLE":
+      return "Legacy no verificable";
+    case "RISK":
+      return "Riesgo";
+    case "CRITICAL":
+      return "Critico";
+  }
+}
+
+function issueLabel(issue: IntegrityIssue) {
+  if (issue.type === "LEGACY_UNVERIFIABLE") {
+    return "DDJJ legacy sin cadena criptografica";
+  }
+
+  if (issue.type === "BROKEN_DECLARATION_CHAIN") {
+    return "Cadena DDJJ rota";
+  }
+
+  if (issue.type === "ORPHANED_DECLARATION") {
+    return "DDJJ sin auditoria";
+  }
+
+  return issue.type;
+}
+
 function declarationTypeLabel(type: string) {
   switch (type) {
     case "DJ_CRYPTO_SUMMARY":
@@ -108,6 +173,7 @@ export default function TaxDeclarationsAuditPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [integrity, setIntegrity] = useState<IntegrityResult | null>(null);
 
   const sortedLogs = useMemo(() => {
     return [...logs].sort(
@@ -127,25 +193,41 @@ export default function TaxDeclarationsAuditPage() {
       if (year) searchParams.set("year", year);
       if (action) searchParams.set("action", action);
 
-      const response = await fetch(
-        `/api/tax/declarations/audit?${searchParams.toString()}`,
-        {
+      const [response, integrityResponse] = await Promise.all([
+        fetch(`/api/tax/declarations/audit?${searchParams.toString()}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token ?? ""}`,
           },
           credentials: "include",
           cache: "no-store",
-        },
-      );
+        }),
+        fetch("/api/tax/audit/integrity", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token ?? ""}`,
+          },
+          credentials: "include",
+          cache: "no-store",
+        }),
+      ]);
 
       const json = (await response.json()) as AuditResponse;
+      const integrityJson =
+        (await integrityResponse.json()) as IntegrityResponse;
 
       if (!response.ok || !json.ok) {
         throw new Error(json.message || "No fue posible cargar auditoría.");
       }
 
+      if (!integrityResponse.ok || !integrityJson.ok) {
+        throw new Error(
+          integrityJson.message || "No fue posible cargar integridad.",
+        );
+      }
+
       setLogs(json.data.logs ?? []);
+      setIntegrity(integrityJson.data);
     } catch (err) {
       setError(
         err instanceof Error
@@ -158,7 +240,7 @@ export default function TaxDeclarationsAuditPage() {
   }
 
   useEffect(() => {
-    void loadAuditLogs();
+    void Promise.resolve().then(loadAuditLogs);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -214,6 +296,100 @@ export default function TaxDeclarationsAuditPage() {
         </button>
       </div>
 
+      {integrity ? (
+        <div className={`${ui.card} p-5 space-y-4`}>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
+                  Integridad DDJJ
+                </h2>
+
+                <span
+                  className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${integrityBadge(
+                    integrity.status,
+                  )}`}
+                >
+                  {integrityLabel(integrity.status)}
+                </span>
+              </div>
+
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                {integrity.status === "LEGACY_UNVERIFIABLE"
+                  ? "Hay evidencia historica anterior al protocolo de cadena; se conserva sin marcarla como corrupcion."
+                  : "Estado calculado desde hash DDJJ, cadena de auditoria y registros relacionados."}
+              </p>
+            </div>
+
+            <div className={`${ui.cardSoft} px-3 py-2 md:w-64`}>
+              <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                Ultima verificacion
+              </p>
+
+              <p className="mt-1 text-sm text-[var(--color-text-primary)]">
+                {formatDate(integrity.timestamp)}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-4">
+            <div className={`${ui.cardSoft} p-3`}>
+              <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                Eventos auditoria
+              </p>
+              <p className="mt-1 text-sm text-[var(--color-text-primary)]">
+                {integrity.summary.total_audit_logs}
+              </p>
+            </div>
+
+            <div className={`${ui.cardSoft} p-3`}>
+              <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                Cadenas rotas
+              </p>
+              <p className="mt-1 text-sm text-[var(--color-text-primary)]">
+                {integrity.summary.broken_chains}
+              </p>
+            </div>
+
+            <div className={`${ui.cardSoft} p-3`}>
+              <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                Huerfanos
+              </p>
+              <p className="mt-1 text-sm text-[var(--color-text-primary)]">
+                {integrity.summary.orphaned_records}
+              </p>
+            </div>
+
+            <div className={`${ui.cardSoft} p-3`}>
+              <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                Legacy no verificable
+              </p>
+              <p className="mt-1 text-sm text-[var(--color-text-primary)]">
+                {integrity.summary.legacy_unverifiable_records}
+              </p>
+            </div>
+          </div>
+
+          {integrity.issues.length > 0 ? (
+            <div className="space-y-2">
+              {integrity.issues.slice(0, 5).map((issue, index) => (
+                <div
+                  key={`${issue.type}-${index}`}
+                  className={`${ui.cardSoft} flex flex-col gap-1 p-3 text-sm md:flex-row md:items-center md:justify-between`}
+                >
+                  <span className="font-medium text-[var(--color-text-primary)]">
+                    {issueLabel(issue)}
+                  </span>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    {issue.severity}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {error ? (
         <div className={`${ui.alertRisk} rounded-md p-3 text-sm`}>
           {error}
@@ -258,6 +434,14 @@ export default function TaxDeclarationsAuditPage() {
                         >
                           {actionLabel(log.action)}
                         </span>
+
+                        {!log.currentHash ? (
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${ui.badgeWarning}`}
+                          >
+                            Legacy
+                          </span>
+                        ) : null}
                       </div>
 
                       <p className="text-sm text-[var(--color-text-secondary)]">
