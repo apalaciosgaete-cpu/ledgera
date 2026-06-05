@@ -5,8 +5,10 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import {
   createTaxDeclarationAuditLog,
   getTaxDeclarationByIdForUser,
+  listTaxDeclarationAuditLogs,
 } from "@/modules/tax-dj/infrastructure/declarationRepository";
 import { verifyDeclarationHash } from "@/modules/tax-dj/application/verifyDeclarationHash";
+import { verifyAuditChain } from "@/modules/tax/application/auditChainService";
 
 type TaxDeclarationVerifyRecord = {
   id: string;
@@ -64,6 +66,26 @@ export async function GET(
       payloadJson,
       expectedHash: declaration.contentHash,
     });
+    const auditLogs = await listTaxDeclarationAuditLogs({
+      userId: auth.user.id,
+      declarationId: declaration.id,
+      limit: 1000,
+    });
+    const orderedAuditLogs = [...auditLogs].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+    const auditChainValid =
+      orderedAuditLogs.length > 0 &&
+      orderedAuditLogs.every((log) => Boolean(log.currentHash)) &&
+      verifyAuditChain(
+        orderedAuditLogs.filter(
+          (
+            log,
+          ): log is typeof orderedAuditLogs[number] & { currentHash: string } =>
+            log.currentHash !== null,
+        ),
+      );
+    const endToEndValid = verification.valid && auditChainValid;
 
     const requestMetadata = resolveRequestMetadata(req);
 
@@ -82,6 +104,8 @@ export async function GET(
       userAgent: requestMetadata.userAgent,
       metadata: {
         verificationValid: verification.valid,
+        auditChainValid,
+        endToEndValid,
         computedHash: verification.computedHash,
         expectedHash: verification.expectedHash,
       },
@@ -96,10 +120,15 @@ export async function GET(
           status: declaration.status,
           generatedAt: declaration.generatedAt,
         },
-        verification,
+        verification: {
+          ...verification,
+          auditChainValid,
+          auditEventCount: orderedAuditLogs.length,
+          endToEndValid,
+        },
       },
-      verification.valid
-        ? "Hash verificado correctamente."
+      endToEndValid
+        ? "Integridad end-to-end verificada correctamente."
         : "La declaración presenta inconsistencias de integridad.",
     );
   } catch (error) {

@@ -161,6 +161,13 @@ export async function PATCH(
       return fail("La declaración ya fue anulada.", 409);
     }
 
+    if (existing.status === "EXPORTED" && status !== "VOIDED") {
+      return fail(
+        "La declaracion exportada esta congelada. Solo se permite anulacion controlada.",
+        409,
+      );
+    }
+
     if (existing.status === status) {
       return fail("La declaración ya posee ese estado.", 409);
     }

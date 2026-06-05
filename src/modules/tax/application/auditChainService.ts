@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import { createStableSha256Hash } from "@/shared/hash";
 
 export interface AuditEventInput {
   userId: string;
@@ -17,23 +17,27 @@ export interface ChainedAuditEvent extends AuditEventInput {
   currentHash: string;
 }
 
-function hashContent(data: Record<string, unknown>): string {
-  const json = JSON.stringify(data);
-  return crypto.createHash("sha256").update(json).digest("hex");
+function normalizeNullable(value: unknown): unknown {
+  return value === undefined ? null : value;
 }
 
 function computeChainHash(
   previousHash: string | null | undefined,
   eventData: Record<string, unknown>,
 ): string {
-  const eventHash = hashContent(eventData);
+  return createStableSha256Hash({
+    algorithm: "LEDGERA_AUDIT_CHAIN_V1",
+    previousHash: previousHash ?? null,
+    eventHash: createStableSha256Hash(eventData),
+  });
+}
 
-  if (!previousHash) {
-    return eventHash;
+function parseJsonOrNull(value: string | null | undefined): unknown {
+  if (!value) {
+    return null;
   }
 
-  const combined = previousHash + eventHash;
-  return crypto.createHash("sha256").update(combined).digest("hex");
+  return JSON.parse(value);
 }
 
 export function buildChainedAuditEvent(
@@ -43,11 +47,11 @@ export function buildChainedAuditEvent(
   const eventData = {
     userId: input.userId,
     action: input.action,
-    beforeState: input.beforeState,
-    afterState: input.afterState,
-    actorId: input.actorId,
-    actorEmail: input.actorEmail,
-    timestamp: new Date().toISOString(),
+    beforeState: normalizeNullable(input.beforeState),
+    afterState: normalizeNullable(input.afterState),
+    actorId: input.actorId ?? null,
+    actorEmail: input.actorEmail ?? null,
+    metadata: normalizeNullable(input.metadata),
   };
 
   const currentHash = computeChainHash(previousHash, eventData);
@@ -65,8 +69,11 @@ export function verifyAuditChain(
     currentHash: string;
     userId: string;
     action: string;
+    actorId?: string | null;
+    actorEmail?: string | null;
     beforeState?: string | null;
     afterState?: string | null;
+    metadata?: string | null;
   }>,
 ): boolean {
   let expectedPreviousHash: string | null = null;
@@ -76,13 +83,21 @@ export function verifyAuditChain(
       return false;
     }
 
-    const eventData = {
-      userId: event.userId,
-      action: event.action,
-      beforeState: event.beforeState ? JSON.parse(event.beforeState) : null,
-      afterState: event.afterState ? JSON.parse(event.afterState) : null,
-      timestamp: "", // Would need to include actual timestamp for perfect verification
-    };
+    let eventData: Record<string, unknown>;
+
+    try {
+      eventData = {
+        userId: event.userId,
+        action: event.action,
+        beforeState: parseJsonOrNull(event.beforeState),
+        afterState: parseJsonOrNull(event.afterState),
+        actorId: event.actorId ?? null,
+        actorEmail: event.actorEmail ?? null,
+        metadata: parseJsonOrNull(event.metadata),
+      };
+    } catch {
+      return false;
+    }
 
     const expectedHash = computeChainHash(expectedPreviousHash, eventData);
 

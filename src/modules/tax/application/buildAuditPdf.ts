@@ -82,7 +82,11 @@ export async function buildDeclarationAuditPdf(
     doc.addPage().fontSize(14).text("CADENA DE AUDITORÍA", { underline: true });
     doc.fontSize(9);
 
-    for (let i = 0; i < Math.min(report.auditTrail.length, 20); i++) {
+    for (let i = 0; i < report.auditTrail.length; i++) {
+      if (doc.y > 720) {
+        doc.addPage();
+      }
+
       const entry = report.auditTrail[i];
       const date = entry.createdAt instanceof Date
         ? entry.createdAt.toISOString().split("T")[0]
@@ -101,9 +105,6 @@ export async function buildDeclarationAuditPdf(
       doc.text("");
     }
 
-    if (report.auditTrail.length > 20) {
-      doc.text(`... y ${report.auditTrail.length - 20} eventos más`);
-    }
   }
 
   // QR y URL de verificación

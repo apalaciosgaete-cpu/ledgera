@@ -25,6 +25,7 @@ export type TaxDeclarationDraft = {
 };
 
 export type TaxDeclarationPayload = {
+  metadata: TaxDeclarationMetadata;
   summary: {
     totalEvents: number;
     totalSymbols: number;
@@ -40,6 +41,48 @@ export type TaxDeclarationPayload = {
   };
   bySymbol: TaxDeclarationSymbolSummary[];
   events: TaxDeclarationEventLine[];
+};
+
+export type TaxDeclarationMetadata = {
+  protocolVersion: "LEDGERA_DDJJ_V1";
+  taxYear: number;
+  declarationType: TaxDeclarationType;
+  taxEngine: {
+    version: string;
+    algorithm: string;
+    roundingMode: string;
+    decimalPlaces: number;
+    fxSource: string;
+    normativa: string;
+    regime: string;
+  };
+  taxPolicy: {
+    regime: string;
+    declarationCurrency: "CLP";
+    siiDecimalPlaces: number;
+    habituality: {
+      yearlySellThreshold: number;
+      symbolSellThreshold: number;
+    };
+    rates: {
+      igcMaxRatePct: number;
+      capitalGainFlatRatePct: number;
+      firstCategoryRatePct: number;
+    };
+    utm: {
+      valueClp: number;
+      asOf: string;
+    };
+  };
+  rounding: {
+    cryptoDecimals: number;
+    fiatDecimals: number;
+    siiClpDecimals: number;
+  };
+  fx: {
+    source: string;
+    quote: "USDCLP";
+  };
 };
 
 export type TaxDeclarationSymbolSummary = {

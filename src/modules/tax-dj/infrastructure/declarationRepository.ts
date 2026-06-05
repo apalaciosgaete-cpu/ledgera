@@ -4,6 +4,7 @@ import type {
   TaxDeclarationStatus,
   TaxDeclarationType,
 } from "@/modules/tax-dj/domain/declaration";
+import { buildChainedAuditEvent } from "@/modules/tax/application/auditChainService";
 
 export async function createTaxDeclarationDraft(draft: TaxDeclarationDraft) {
   return prisma.taxDeclaration.create({
@@ -116,6 +117,39 @@ export async function createTaxDeclarationAuditLog(
   input: CreateTaxDeclarationAuditLogInput,
 ) {
   try {
+    const previousLog = await prisma.taxDeclarationAuditLog.findFirst({
+      where: {
+        userId: input.userId,
+        declarationId: input.declarationId,
+      },
+      orderBy: { createdAt: "desc" },
+      select: { currentHash: true },
+    });
+    const metadata = {
+      ...(input.metadata ?? {}),
+      contentHash: input.contentHash ?? null,
+    };
+    const beforeState = input.statusFrom
+      ? { status: input.statusFrom }
+      : null;
+    const afterState = input.statusTo
+      ? { status: input.statusTo }
+      : null;
+    const chainedEvent = buildChainedAuditEvent(
+      {
+        userId: input.userId,
+        action: input.action,
+        beforeState,
+        afterState,
+        actorId: input.actorId ?? null,
+        actorEmail: input.actorEmail ?? null,
+        ipAddress: input.ipAddress ?? null,
+        userAgent: input.userAgent ?? null,
+        metadata,
+      },
+      previousLog?.currentHash ?? null,
+    );
+
     return await prisma.taxDeclarationAuditLog.create({
       data: {
         userId: input.userId,
@@ -128,9 +162,13 @@ export async function createTaxDeclarationAuditLog(
         statusFrom: input.statusFrom ?? null,
         statusTo: input.statusTo ?? null,
         contentHash: input.contentHash ?? null,
+        beforeState: beforeState ? JSON.stringify(beforeState) : null,
+        afterState: afterState ? JSON.stringify(afterState) : null,
+        previousHash: chainedEvent.previousHash,
+        currentHash: chainedEvent.currentHash,
         ipAddress: input.ipAddress ?? null,
         userAgent: input.userAgent ?? null,
-        metadata: input.metadata ? JSON.stringify(input.metadata) : null,
+        metadata: JSON.stringify(metadata),
       },
     });
   } catch (error) {

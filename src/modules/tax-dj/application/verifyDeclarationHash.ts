@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import { createStableSha256Hash } from "@/shared/hash";
 
 type VerifyDeclarationHashInput = {
   payloadJson: unknown;
@@ -11,28 +11,11 @@ export type VerifyDeclarationHashResult = {
   expectedHash: string;
 };
 
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
-  }
-
-  if (value && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>).sort(
-      ([a], [b]) => a.localeCompare(b),
-    );
-
-    return `{${entries
-      .map(([key, val]) => `"${key}":${stableStringify(val)}`)
-      .join(",")}}`;
-  }
-
-  return JSON.stringify(value);
-}
-
 export function computeDeclarationHash(payloadJson: unknown): string {
-  const normalized = stableStringify(payloadJson);
-
-  return crypto.createHash("sha256").update(normalized).digest("hex");
+  return createStableSha256Hash({
+    algorithm: "LEDGERA_DDJJ_CONTENT_V1",
+    payloadJson,
+  });
 }
 
 export function verifyDeclarationHash(
