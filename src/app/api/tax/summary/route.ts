@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { round, normalizeSymbol } from "@/shared/utils/math";
+import { requireAuth } from "@/shared";
+import { fail } from "@/shared/apiResponse";
+import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 
 type CanonicalMovementType = "BUY" | "SELL";
 
@@ -64,6 +67,28 @@ type TaxSummaryRow = {
   realizedPnlClp: number;
 };
 
+type TaxSummaryTotals = {
+  eventsCount: number;
+  quantitySold: number;
+  proceedsNetUsd: number;
+  costBasisUsd: number;
+  feeUsd: number;
+  realizedPnlUsd: number;
+  proceedsNetClp: number;
+  costBasisClp: number;
+  feeClp: number;
+  realizedPnlClp: number;
+};
+
+type TaxSummaryDecision = {
+  status: "EMPTY" | "NO_TAX_EVENTS" | "DECLARE_REVIEW" | "PAY_REVIEW" | "LOSS_REVIEW";
+  label: string;
+  headline: string;
+  detail: string;
+  shouldDeclare: boolean;
+  likelyPayment: boolean;
+};
+
 // ─── FX inline ────────────────────────────────────────────────────────────────
 
 async function fetchUsdClp(): Promise<number> {
@@ -99,16 +124,94 @@ function parseYear(value: string | null): number | null {
   return parsed;
 }
 
+function emptyTotals(): TaxSummaryTotals {
+  return {
+    eventsCount: 0,
+    quantitySold: 0,
+    proceedsNetUsd: 0,
+    costBasisUsd: 0,
+    feeUsd: 0,
+    realizedPnlUsd: 0,
+    proceedsNetClp: 0,
+    costBasisClp: 0,
+    feeClp: 0,
+    realizedPnlClp: 0,
+  };
+}
+
+function buildDecision(params: { movementCount: number; sellCount: number; totals: TaxSummaryTotals }): TaxSummaryDecision {
+  if (params.movementCount === 0) {
+    return {
+      status: "EMPTY",
+      label: "Sin movimientos",
+      headline: "Todavia no hay base para decidir.",
+      detail: "Carga movimientos para que LEDGERA pueda calcular ventas, resultado y estado tributario.",
+      shouldDeclare: false,
+      likelyPayment: false,
+    };
+  }
+
+  if (params.sellCount === 0 || params.totals.eventsCount === 0) {
+    return {
+      status: "NO_TAX_EVENTS",
+      label: "Sin ventas detectadas",
+      headline: "No hay eventos de venta para este filtro.",
+      detail: "Con los datos actuales no se detectan ventas tributables. Mantener respaldo sigue siendo recomendable.",
+      shouldDeclare: false,
+      likelyPayment: false,
+    };
+  }
+
+  if (params.totals.realizedPnlClp > 0) {
+    return {
+      status: "PAY_REVIEW",
+      label: "Revisar posible pago",
+      headline: "Hay ganancia realizada.",
+      detail: "El resultado es positivo. Revisa el detalle y valida con contador antes de declarar o pagar.",
+      shouldDeclare: true,
+      likelyPayment: true,
+    };
+  }
+
+  if (params.totals.realizedPnlClp < 0) {
+    return {
+      status: "LOSS_REVIEW",
+      label: "Declarar/revisar perdida",
+      headline: "Hay perdida realizada.",
+      detail: "El resultado es negativo. Puede ser relevante respaldarlo aunque no implique pago directo.",
+      shouldDeclare: true,
+      likelyPayment: false,
+    };
+  }
+
+  return {
+    status: "DECLARE_REVIEW",
+    label: "Revisar declaracion",
+    headline: "Hay ventas sin ganancia neta.",
+    detail: "El resultado neto esta en cero. Revisa respaldo de ventas, costos y fees antes de cerrar.",
+    shouldDeclare: true,
+    likelyPayment: false,
+  };
+}
+
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request);
+  if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const yearFilter = parseYear(searchParams.get("year"));
     const symbolFilter = searchParams.get("symbol");
     const normalizedSymbolFilter = symbolFilter ? normalizeSymbol(symbolFilter) : null;
+    const scope = buildUserScopeWhere(auth.user);
 
     const rawMovements = (await prisma.portfolioMovement.findMany({
+      where: {
+        deletedAt: null,
+        ...scope,
+      },
       orderBy: { executedAt: "asc" },
     })) as RawPortfolioMovement[];
 
@@ -194,6 +297,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const availableYears = Array.from(new Set(events.map((event) => new Date(event.executedAt).getUTCFullYear()))).sort((a, b) => b - a);
     const filteredEvents = events.filter((event) => {
       const eventYear = new Date(event.executedAt).getUTCFullYear();
       if (yearFilter && eventYear !== yearFilter) return false;
@@ -269,19 +373,31 @@ export async function GET(request: NextRequest) {
         acc.realizedPnlClp += row.realizedPnlClp;
         return acc;
       },
-      {
-        eventsCount: 0,
-        quantitySold: 0,
-        proceedsNetUsd: 0,
-        costBasisUsd: 0,
-        feeUsd: 0,
-        realizedPnlUsd: 0,
-        proceedsNetClp: 0,
-        costBasisClp: 0,
-        feeClp: 0,
-        realizedPnlClp: 0,
-      }
+      emptyTotals()
     );
+    const roundedTotals = {
+      eventsCount: totals.eventsCount,
+      quantitySold: round(totals.quantitySold, 8),
+      proceedsNetUsd: round(totals.proceedsNetUsd, 2),
+      costBasisUsd: round(totals.costBasisUsd, 2),
+      feeUsd: round(totals.feeUsd, 2),
+      realizedPnlUsd: round(totals.realizedPnlUsd, 2),
+      proceedsNetClp: round(totals.proceedsNetClp, 2),
+      costBasisClp: round(totals.costBasisClp, 2),
+      feeClp: round(totals.feeClp, 2),
+      realizedPnlClp: round(totals.realizedPnlClp, 2),
+    };
+    const sellCount = movements.filter((movement) => {
+      if (movement.type !== "SELL") return false;
+      if (yearFilter && movement.executedAt.getUTCFullYear() !== yearFilter) return false;
+      if (normalizedSymbolFilter && movement.symbol !== normalizedSymbolFilter) return false;
+      return true;
+    }).length;
+    const decision = buildDecision({
+      movementCount: rawMovements.length,
+      sellCount,
+      totals: roundedTotals,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -289,19 +405,15 @@ export async function GET(request: NextRequest) {
       filters: { year: yearFilter, symbol: normalizedSymbolFilter },
       data: {
         usdClp: round(usdClp, 4),
+        availableYears,
+        decision,
+        nextAction: decision.status === "EMPTY"
+          ? { label: "Cargar movimientos", href: "/importaciones" }
+          : decision.shouldDeclare
+            ? { label: "Revisar eventos", href: "/tax/review" }
+            : { label: "Ver inversiones", href: "/investments" },
         rows,
-        totals: {
-          eventsCount: totals.eventsCount,
-          quantitySold: round(totals.quantitySold, 8),
-          proceedsNetUsd: round(totals.proceedsNetUsd, 2),
-          costBasisUsd: round(totals.costBasisUsd, 2),
-          feeUsd: round(totals.feeUsd, 2),
-          realizedPnlUsd: round(totals.realizedPnlUsd, 2),
-          proceedsNetClp: round(totals.proceedsNetClp, 2),
-          costBasisClp: round(totals.costBasisClp, 2),
-          feeClp: round(totals.feeClp, 2),
-          realizedPnlClp: round(totals.realizedPnlClp, 2),
-        },
+        totals: roundedTotals,
       },
     });
   } catch (error) {
