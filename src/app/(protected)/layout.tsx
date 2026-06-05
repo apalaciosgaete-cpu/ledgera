@@ -30,7 +30,8 @@ function LogoutIcon() {
 }
 
 const baseNavItems: { href: string; label: string }[] = [
-  { href: "/panel",         label: "Consolidado" },
+  { href: "/panel",         label: "Dashboard" },
+  { href: "/investments",   label: "Inversiones" },
   { href: "/integraciones", label: "Conexiones" },
   { href: "/tributario",    label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
