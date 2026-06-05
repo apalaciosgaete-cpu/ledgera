@@ -7,7 +7,14 @@ type DashboardData = {
   patrimonio: {
     totalCostClp: number;
     totalCostUsd: number;
+    totalMarketValueClp: number;
+    totalMarketValueUsd: number;
     assetCount: number;
+    marketPricing: {
+      source: "COINGECKO" | "COST_FALLBACK";
+      pricedAssets: number;
+      totalAssets: number;
+    };
     fx: {
       usdToClp: number;
       source: string;
@@ -22,14 +29,40 @@ type DashboardData = {
     totalReturnUsd: number;
     totalReturnClp: number;
     totalReturnPercent: number | null;
+    unrealizedPnlUsd: number;
+    unrealizedPnlClp: number;
+    unrealizedPnlPercent: number | null;
   };
   activos: {
     symbol: string;
     quantity: number;
     totalCostClp: number;
     totalCostUsd: number;
+    currentPriceUsd: number;
+    marketValueClp: number;
+    marketValueUsd: number;
+    unrealizedPnlClp: number;
+    unrealizedPnlUsd: number;
+    returnPercent: number | null;
     portfolioSharePercent: number;
   }[];
+  distribucion: {
+    symbol: string;
+    percent: number;
+    valueClp: number;
+  }[];
+  destacados: {
+    bestAsset: {
+      symbol: string;
+      returnPercent: number;
+      unrealizedPnlClp: number;
+    } | null;
+    worstAsset: {
+      symbol: string;
+      returnPercent: number;
+      unrealizedPnlClp: number;
+    } | null;
+  };
   staking: {
     status: "WITH_DATA" | "PLACEHOLDER";
     rewardUsd: number;
@@ -116,6 +149,26 @@ function EmptyAssets() {
   );
 }
 
+function HighlightAsset({ label, asset }: { label: string; asset: DashboardData["destacados"]["bestAsset"] }) {
+  const isPositive = Number(asset?.returnPercent ?? 0) >= 0;
+
+  return (
+    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
+      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.05em", margin: "0 0 8px", textTransform: "uppercase" }}>{label}</p>
+      {asset ? (
+        <>
+          <p style={{ color: "#0F2A3D", fontSize: "1.35rem", fontWeight: 850, margin: "0 0 6px" }}>{asset.symbol}</p>
+          <p style={{ color: isPositive ? "#15803D" : "#B45309", fontSize: 14, fontWeight: 800, margin: 0 }}>
+            {percent(asset.returnPercent)} · {clp(asset.unrealizedPnlClp)}
+          </p>
+        </>
+      ) : (
+        <p style={{ color: "#64748B", fontSize: 14, margin: 0 }}>Sin datos suficientes</p>
+      )}
+    </article>
+  );
+}
+
 export function InvestorDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
@@ -154,9 +207,13 @@ export function InvestorDashboard() {
 
   const taxAccent = data.tributario.status === "REVIEW_REQUIRED" ? "warn" : "good";
   const returnAccent = data.rentabilidad.totalReturnUsd >= 0 ? "good" : "warn";
+  const unrealizedAccent = data.rentabilidad.unrealizedPnlUsd >= 0 ? "good" : "warn";
+  const marketSourceNote = data.patrimonio.marketPricing.source === "COINGECKO"
+    ? `${data.patrimonio.marketPricing.pricedAssets}/${data.patrimonio.marketPricing.totalAssets} activos con precio de mercado`
+    : "Sin precio de mercado externo; se usa costo como referencia";
 
   return (
-    <div style={{ maxWidth: 1180 }}>
+    <div style={{ maxWidth: 1180, width: "100%" }}>
       <section style={{ alignItems: "flex-start", display: "flex", gap: "18px", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap" }}>
         <div style={{ maxWidth: 760 }}>
           <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Investor Dashboard</p>
@@ -172,18 +229,19 @@ export function InvestorDashboard() {
       </section>
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12, marginBottom: 24 }}>
-        <Metric label="Patrimonio" value={clp(data.patrimonio.totalCostClp)} note={`${usd(data.patrimonio.totalCostUsd)} valorizado a costo`} />
-        <Metric label="Rentabilidad" value={clp(data.rentabilidad.totalReturnClp)} note={`${percent(data.rentabilidad.totalReturnPercent)} sobre capital aportado`} accent={returnAccent} />
+        <Metric label="Patrimonio total" value={clp(data.patrimonio.totalMarketValueClp)} note={`${usd(data.patrimonio.totalMarketValueUsd)} valor actual estimado`} />
+        <Metric label="Rentabilidad total" value={percent(data.rentabilidad.totalReturnPercent)} note={`${clp(data.rentabilidad.totalReturnClp)} realizado + staking`} accent={returnAccent} />
+        <Metric label="No realizada" value={clp(data.rentabilidad.unrealizedPnlClp)} note={`${percent(data.rentabilidad.unrealizedPnlPercent)} vs costo estimado`} accent={unrealizedAccent} />
         <Metric label="Activos" value={String(data.patrimonio.assetCount)} note="Posiciones abiertas con saldo actual" />
         <Metric label="Staking" value={usd(data.staking.rewardUsd)} note={data.staking.message} accent={data.staking.status === "WITH_DATA" ? "good" : "neutral"} />
       </section>
 
-      <section style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.5fr) minmax(280px, 0.85fr)", gap: 16, marginBottom: 24 }}>
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))", gap: 16, marginBottom: 24 }}>
         <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
           <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
             <div>
               <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 4px" }}>Mis activos</h2>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Principales posiciones por costo en CLP.</p>
+              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Principales posiciones por valor actual en CLP.</p>
             </div>
             <Link href="/movements" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver movimientos</Link>
           </div>
@@ -192,14 +250,17 @@ export function InvestorDashboard() {
             <EmptyAssets />
           ) : (
             <div style={{ display: "grid", gap: 8 }}>
-              {data.activos.map((asset) => (
-                <div key={asset.symbol} style={{ alignItems: "center", border: "1px solid #E2E8F0", borderRadius: 8, display: "grid", gap: 12, gridTemplateColumns: "86px minmax(120px, 1fr) 120px", padding: "12px" }}>
+              {data.activos.slice(0, 8).map((asset) => (
+                <div key={asset.symbol} style={{ alignItems: "center", border: "1px solid #E2E8F0", borderRadius: 8, display: "grid", gap: 12, gridTemplateColumns: "minmax(64px, 0.7fr) minmax(130px, 1.4fr) minmax(96px, 0.8fr)", padding: "12px" }}>
                   <strong style={{ color: "#0F2A3D", fontSize: 15 }}>{asset.symbol}</strong>
                   <div>
-                    <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 750, margin: "0 0 4px" }}>{clp(asset.totalCostClp)}</p>
-                    <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>{formatterNumber.format(asset.quantity)} unidades</p>
+                    <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 750, margin: "0 0 4px" }}>{clp(asset.marketValueClp)}</p>
+                    <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>{formatterNumber.format(asset.quantity)} unidades · {usd(asset.currentPriceUsd)}</p>
                   </div>
-                  <p style={{ color: "#475569", fontSize: 13, fontWeight: 800, margin: 0, textAlign: "right" }}>{asset.portfolioSharePercent}%</p>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ color: Number(asset.returnPercent ?? 0) >= 0 ? "#15803D" : "#B45309", fontSize: 13, fontWeight: 850, margin: "0 0 4px" }}>{percent(asset.returnPercent)}</p>
+                    <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>{asset.portfolioSharePercent}%</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -207,6 +268,32 @@ export function InvestorDashboard() {
         </article>
 
         <aside style={{ display: "grid", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+            <HighlightAsset label="Mejor activo" asset={data.destacados.bestAsset} />
+            <HighlightAsset label="Peor activo" asset={data.destacados.worstAsset} />
+          </div>
+
+          <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
+            <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 12px" }}>Distribución</h2>
+            {data.distribucion.length === 0 ? (
+              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Sin activos para distribuir.</p>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {data.distribucion.map((item) => (
+                  <div key={item.symbol}>
+                    <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 5 }}>
+                      <span style={{ color: "#0F2A3D", fontSize: 13, fontWeight: 850 }}>{item.symbol}</span>
+                      <span style={{ color: "#64748B", fontSize: 12, fontWeight: 750 }}>{item.percent}%</span>
+                    </div>
+                    <div style={{ background: "#E2E8F0", borderRadius: 999, height: 8, overflow: "hidden" }}>
+                      <div style={{ background: "#0F766E", borderRadius: 999, height: "100%", width: `${Math.min(Math.max(item.percent, 0), 100)}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
           <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
             <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
               <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Estado tributario</h2>
@@ -234,6 +321,7 @@ export function InvestorDashboard() {
       <section style={{ color: "#64748B", display: "flex", flexWrap: "wrap", fontSize: 12, gap: 12 }}>
         <span>FX: {clp(data.patrimonio.fx.usdToClp)}</span>
         <span>Fuente: {data.patrimonio.fx.source}</span>
+        <span>Mercado: {marketSourceNote}</span>
         <span>Actualizado: {new Date(data.patrimonio.fx.asOf).toLocaleDateString("es-CL")}</span>
       </section>
     </div>
