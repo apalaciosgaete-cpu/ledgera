@@ -146,7 +146,7 @@ export default function TaxExecutivePage() {
           <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Resumen tributario ejecutivo</p>
           <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>¿Debo declarar o pagar?</h1>
           <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
-            Lectura simple de tu situación tributaria actual. Sin FIFO, sin taxEvents, sin complejidad.
+            Lectura simple de tu situación tributaria actual. Sin complejidad.
           </p>
         </div>
 
@@ -247,11 +247,11 @@ export default function TaxExecutivePage() {
               <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 10px" }}>Operaciones relevantes</h3>
               <div style={{ display: "grid", gap: 8 }}>
                 <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "#475569", fontSize: 13 }}>Ventas (SELL)</span>
+                  <span style={{ color: "#475569", fontSize: 13 }}>Ventas</span>
                   <strong style={{ color: "#0F2A3D", fontSize: 13 }}>{data.keyOperations.totalSales}</strong>
                 </div>
                 <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "#475569", fontSize: 13 }}>Compras (BUY)</span>
+                  <span style={{ color: "#475569", fontSize: 13 }}>Compras</span>
                   <strong style={{ color: "#0F2A3D", fontSize: 13 }}>{data.keyOperations.totalBuys}</strong>
                 </div>
                 {data.keyOperations.totalStaking > 0 && (

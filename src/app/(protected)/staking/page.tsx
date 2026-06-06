@@ -72,7 +72,7 @@ function EmptyState() {
     <section style={{ background: "#FFFFFF", border: "1px dashed #CBD5E1", borderRadius: 8, padding: 28, textAlign: "center" }}>
       <h2 style={{ color: "#0F2A3D", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 8px" }}>Todavia no hay staking registrado</h2>
       <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.55, margin: "0 auto 16px", maxWidth: 560 }}>
-        Importa o registra movimientos STAKING_REWARD para ver recompensas por activo, fuente y periodo.
+        Importa o registra recompensas de staking para ver el detalle por activo, fuente y periodo.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
         <Link href="/importaciones" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
@@ -152,7 +152,7 @@ export default function StakingPage() {
           <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Staking simple</p>
           <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Rewards, origen y monto tributable</h1>
           <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
-            Vista directa de recompensas registradas como STAKING_REWARD para entender cuanto generaron y donde revisar.
+            Vista directa de recompensas de staking para entender cuanto generaron y donde revisar.
           </p>
         </div>
 
@@ -163,7 +163,7 @@ export default function StakingPage() {
 
       <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", marginBottom: 20 }}>
         <Metric label="Rewards totales" value={clp(data.totals.rewardClp)} note={`${usd(data.totals.rewardUsd)} estimado`} tone={data.status === "WITH_DATA" ? "good" : "neutral"} />
-        <Metric label="Eventos" value={String(data.totals.eventCount)} note="Movimientos STAKING_REWARD" tone="info" />
+        <Metric label="Eventos" value={String(data.totals.eventCount)} note="Recompensas registradas" tone="info" />
         <Metric label="Activos con staking" value={String(data.totals.assetCount)} note={`${formatterNumber.format(data.totals.quantity)} unidades recibidas`} />
       </section>
 

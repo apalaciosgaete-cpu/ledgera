@@ -39,6 +39,18 @@ type InvestmentsData = {
     unrealizedPnlPercent: number | null;
   };
   activos: InvestmentAsset[];
+  destacados: {
+    bestAsset: {
+      symbol: string;
+      returnPercent: number;
+      unrealizedPnlClp: number;
+    } | null;
+    worstAsset: {
+      symbol: string;
+      returnPercent: number;
+      unrealizedPnlClp: number;
+    } | null;
+  };
 };
 
 type SortKey = "value" | "return" | "symbol" | "pnl";
@@ -51,6 +63,26 @@ function Metric({ label, value, note, tone = "neutral" }: { label: string; value
       <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>{label}</p>
       <p style={{ color, fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{value}</p>
       <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.45, margin: 0 }}>{note}</p>
+    </article>
+  );
+}
+
+function HighlightAsset({ label, asset }: { label: string; asset: InvestmentsData["destacados"]["bestAsset"] }) {
+  const isPositive = Number(asset?.returnPercent ?? 0) >= 0;
+
+  return (
+    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
+      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.05em", margin: "0 0 8px", textTransform: "uppercase" }}>{label}</p>
+      {asset ? (
+        <>
+          <p style={{ color: "#0F2A3D", fontSize: "1.35rem", fontWeight: 850, margin: "0 0 6px" }}>{asset.symbol}</p>
+          <p style={{ color: isPositive ? "#15803D" : "#B45309", fontSize: 14, fontWeight: 800, margin: 0 }}>
+            {percent(asset.returnPercent)} · {clp(asset.unrealizedPnlClp)}
+          </p>
+        </>
+      ) : (
+        <p style={{ color: "#64748B", fontSize: 14, margin: 0 }}>Sin datos suficientes</p>
+      )}
     </article>
   );
 }
@@ -140,8 +172,13 @@ export default function InvestmentsPage() {
 
       <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", marginBottom: 20 }}>
         <Metric label="Valor actual" value={clp(data.patrimonio.totalMarketValueClp)} note={`${data.patrimonio.assetCount} activos con posicion`} />
-        <Metric label="Costo estimado" value={clp(data.patrimonio.totalCostClp)} note="Base de costo según método FIFO. Puede variar si hay movimientos sin clasificar." />
+        <Metric label="Costo estimado" value={clp(data.patrimonio.totalCostClp)} note="Suma de costos registrados. Puede variar si hay movimientos sin clasificar." />
         <Metric label="Ganancia / perdida" value={clp(data.rentabilidad.unrealizedPnlClp)} note={`${percent(data.rentabilidad.unrealizedPnlPercent)} no realizado`} tone={pnlTone} />
+      </section>
+
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 16 }}>
+        <HighlightAsset label="Ganador principal" asset={data.destacados.bestAsset} />
+        <HighlightAsset label="Perdedor principal" asset={data.destacados.worstAsset} />
       </section>
 
       <section style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", marginBottom: 12 }}>

@@ -319,8 +319,8 @@ export function InvestorDashboard() {
             <p style={{ color: "#0F2A3D", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 6px" }}>{data.tributario.label}</p>
             <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 14px" }}>{data.tributario.message}</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <Metric label="Ventas" value={String(data.tributario.totalSellMovements)} note="Movimientos SELL" accent={taxAccent} />
-              <Metric label="Eventos" value={String(data.tributario.totalTaxEvents)} note="Eventos tributarios" accent={taxAccent} />
+              <Metric label="Ventas" value={String(data.tributario.totalSellMovements)} note="Operaciones de venta" accent={taxAccent} />
+              <Metric label="Eventos" value={String(data.tributario.totalTaxEvents)} note="Ventas con resultado calculado" accent={taxAccent} />
             </div>
           </article>
 

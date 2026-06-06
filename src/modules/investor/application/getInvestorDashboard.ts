@@ -506,7 +506,7 @@ export async function getInvestorDashboard(user: AccessPolicyUser): Promise<Inve
       rewardUsd: stakingRewardUsd,
       rewardClp: stakingRewardClp,
       message: stakingRewardUsd > 0
-        ? "Recompensas detectadas desde movimientos STAKING_REWARD."
+        ? "Recompensas detectadas desde registros de staking."
         : "Sin recompensas de staking registradas todavía.",
     },
     tributario: taxStatus,
