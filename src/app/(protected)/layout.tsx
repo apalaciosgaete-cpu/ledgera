@@ -34,7 +34,7 @@ const baseNavItems: { href: string; label: string }[] = [
   { href: "/inversiones",   label: "Inversiones" },
   { href: "/staking",       label: "Staking" },
   { href: "/integraciones", label: "Conexiones" },
-  { href: "/impuestos/resumen", label: "Tributario" },
+  { href: "/impuestos", label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
   { href: "/seguridad",     label: "Seguridad" },
   { href: "/planes",        label: "Planes" },
