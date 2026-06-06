@@ -152,9 +152,14 @@ export default function TaxExecutivePage() {
           </p>
         </div>
 
-        <Link href="/panel" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
-          Volver al panel
-        </Link>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <Link href="/impuestos/simulador" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+            Simular venta
+          </Link>
+          <Link href="/panel" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+            Volver al panel
+          </Link>
+        </div>
       </section>
 
       <section style={{ alignItems: "end", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginBottom: 20, padding: 16 }}>
