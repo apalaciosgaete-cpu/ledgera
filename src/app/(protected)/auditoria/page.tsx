@@ -101,6 +101,7 @@ const sections = [
   { key: "integridad", title: "Integridad", description: "Ventas sin evento, eventos huérfanos, duplicados, inconsistencias y score de salud.", href: "/auditoria/integridad", available: true },
   { key: "verificacion", title: "Verificación Pública", description: "Códigos de verificación, hashes, estados y revocaciones de documentos.", href: "/auditoria/verificacion", available: true },
   { key: "evidencia", title: "Evidencia", description: "Reportes, declaraciones, hashes y verificaciones reunidos para fiscalización.", href: "/auditoria/evidencia", available: true },
+  { key: "cadena", title: "Cadena de Custodia", description: "Movimiento → FIFO → Tax Event → DDJJ → Reporte → Hash → Verificación. Trazabilidad completa.", href: "/auditoria/cadena", available: true },
   { key: "informe", title: "Informe de Auditoría", description: "PDF completo con integridad, declaraciones, períodos, hallazgos, QR y hash.", href: "/auditoria/informe", available: true },
 ];
 
