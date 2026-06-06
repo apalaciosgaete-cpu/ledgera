@@ -94,8 +94,8 @@ const sections = [
     key: "declaraciones",
     title: "Declaraciones",
     description: "Gestiona declaraciones tributarias, estados e historial.",
-    href: "#",
-    available: false,
+    href: "/impuestos/declaraciones",
+    available: true,
   },
   {
     key: "calendario",
