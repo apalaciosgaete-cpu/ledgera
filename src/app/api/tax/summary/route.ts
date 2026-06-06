@@ -100,6 +100,8 @@ type TopAsset = {
   realizedPnlClp: number;
   eventsCount: number;
   quantitySold: number;
+  stakingRewardClp: number;
+  stakingCount: number;
 };
 
 type KeyOperations = {
@@ -451,20 +453,47 @@ export async function GET(request: NextRequest) {
     const assetMap = new Map<string, TopAsset>();
     for (const event of events) {
       const key = event.symbol;
-      const current = assetMap.get(key) ?? { symbol: key, realizedPnlClp: 0, eventsCount: 0, quantitySold: 0 };
+      const current = assetMap.get(key) ?? { symbol: key, realizedPnlClp: 0, eventsCount: 0, quantitySold: 0, stakingRewardClp: 0, stakingCount: 0 };
       current.realizedPnlClp += event.realizedPnlClp;
       current.eventsCount += 1;
       current.quantitySold += event.quantity;
       assetMap.set(key, current);
     }
+
+    const stakingBySymbol = new Map<string, { rewardClp: number; count: number }>();
+    for (const sm of stakingMovements) {
+      const year = sm.executedAt.getUTCFullYear();
+      if (yearFilter && year !== yearFilter) continue;
+      const sym = normalizeSymbol(String(sm.symbol));
+      const rewardUsd = Number(sm.quantity || 0) * Number(sm.priceUsd || 0);
+      const rewardClp = round(rewardUsd * usdClp, 2);
+      const current = stakingBySymbol.get(sym) ?? { rewardClp: 0, count: 0 };
+      current.rewardClp += rewardClp;
+      current.count += 1;
+      stakingBySymbol.set(sym, current);
+    }
+
+    for (const [sym, staking] of stakingBySymbol) {
+      const current = assetMap.get(sym) ?? { symbol: sym, realizedPnlClp: 0, eventsCount: 0, quantitySold: 0, stakingRewardClp: 0, stakingCount: 0 };
+      current.stakingRewardClp = round(staking.rewardClp, 2);
+      current.stakingCount = staking.count;
+      assetMap.set(sym, current);
+    }
+
     const topAssets = Array.from(assetMap.values())
-      .sort((a, b) => b.realizedPnlClp - a.realizedPnlClp)
+      .sort((a, b) => {
+        const impactA = a.realizedPnlClp + a.stakingRewardClp;
+        const impactB = b.realizedPnlClp + b.stakingRewardClp;
+        return impactB - impactA;
+      })
       .slice(0, 5)
       .map((a) => ({
         symbol: a.symbol,
         realizedPnlClp: round(a.realizedPnlClp, 2),
         eventsCount: a.eventsCount,
         quantitySold: round(a.quantitySold, 8),
+        stakingRewardClp: round(a.stakingRewardClp, 2),
+        stakingCount: a.stakingCount,
       }));
 
     const keyOperations: KeyOperations = {

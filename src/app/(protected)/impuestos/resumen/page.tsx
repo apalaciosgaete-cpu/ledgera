@@ -17,6 +17,8 @@ type TopAsset = {
   realizedPnlClp: number;
   eventsCount: number;
   quantitySold: number;
+  stakingRewardClp: number;
+  stakingCount: number;
 };
 
 type KeyOperations = {
@@ -273,29 +275,37 @@ export default function TaxExecutivePage() {
           {data.topAssets.length > 0 && (
             <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 20, overflow: "hidden" }}>
               <div style={{ padding: "16px 18px", borderBottom: "1px solid #E2E8F0" }}>
-                <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Activos que generaron impuestos</h3>
+                <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Impacto por activo</h3>
               </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ borderCollapse: "collapse", minWidth: 500, width: "100%" }}>
-                  <thead>
-                    <tr style={{ background: "#F8FAFC", textAlign: "left" }}>
-                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px" }}>Activo</th>
-                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>Ventas</th>
-                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>Cantidad vendida</th>
-                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>Resultado CLP</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.topAssets.map((asset) => (
-                      <tr key={asset.symbol} style={{ borderTop: "1px solid #E2E8F0" }}>
-                        <td style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850, padding: "12px 18px" }}>{asset.symbol}</td>
-                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 18px", textAlign: "right" }}>{asset.eventsCount}</td>
-                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 18px", textAlign: "right" }}>{asset.quantitySold}</td>
-                        <td style={{ color: asset.realizedPnlClp >= 0 ? "#15803D" : "#B45309", fontSize: 13, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>{clp(asset.realizedPnlClp)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div style={{ display: "grid", gap: 0 }}>
+                {data.topAssets.map((asset) => (
+                  <div key={asset.symbol} style={{ alignItems: "center", borderTop: "1px solid #E2E8F0", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", padding: "14px 18px" }}>
+                    <div style={{ minWidth: 80 }}>
+                      <p style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 850, margin: 0 }}>{asset.symbol}</p>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 18 }}>
+                      {asset.realizedPnlClp !== 0 && (
+                        <div>
+                          <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 3px", textTransform: "uppercase" }}>
+                            {asset.realizedPnlClp >= 0 ? "Ganancia" : "Pérdida"}
+                          </p>
+                          <p style={{ color: asset.realizedPnlClp >= 0 ? "#15803D" : "#B45309", fontSize: 14, fontWeight: 850, margin: 0 }}>
+                            {clp(Math.abs(asset.realizedPnlClp))}
+                          </p>
+                        </div>
+                      )}
+                      {asset.stakingRewardClp > 0 && (
+                        <div>
+                          <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 3px", textTransform: "uppercase" }}>Staking</p>
+                          <p style={{ color: "#0F766E", fontSize: 14, fontWeight: 850, margin: 0 }}>{clp(asset.stakingRewardClp)}</p>
+                        </div>
+                      )}
+                      {asset.realizedPnlClp === 0 && asset.stakingRewardClp === 0 && (
+                        <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Sin impacto calculado</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
