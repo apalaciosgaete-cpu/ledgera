@@ -73,8 +73,8 @@ const sections = [
     key: "revision",
     title: "Revisión",
     description: "Revisa eventos tributarios, alertas e inconsistencias antes de declarar.",
-    href: "#",
-    available: false,
+    href: "/impuestos/revision",
+    available: true,
   },
   {
     key: "reportes",
