@@ -101,8 +101,8 @@ const sections = [
     key: "calendario",
     title: "Calendario",
     description: "¿Qué viene ahora? Próximas declaraciones, cierres y obligaciones.",
-    href: "#",
-    available: false,
+    href: "/impuestos/calendario",
+    available: true,
   },
 ];
 
