@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { buildUserScopeWhere, type AccessPolicyUser } from "@/modules/identity/domain/accessPolicy";
-import { calculatePortfolio } from "@/modules/portfolio/application/calculatePortfolio";
+import { prefetchFx } from "@/modules/portfolio/application/calculatePortfolio";
 import { round } from "@/shared/utils/math";
 
 type RawStakingMovement = {
@@ -82,8 +82,8 @@ function addToGroup<T extends { rewardUsd: number; rewardClp: number; eventCount
 export async function getInvestorStaking(user: AccessPolicyUser): Promise<InvestorStaking> {
   const scope = buildUserScopeWhere(user);
 
-  const portfolioFx = await calculatePortfolio([]);
-  const usdToClp = portfolioFx.fx.usdToClp;
+  const fx = await prefetchFx();
+  const usdToClp = fx.usdToClp;
 
   const rewards = await prisma.portfolioMovement.findMany({
     where: {
@@ -210,6 +210,6 @@ export async function getInvestorStaking(user: AccessPolicyUser): Promise<Invest
         label: "Sin staking registrado",
         detail: "Cuando importes rewards o los registres manualmente, apareceran aca con monto, origen y fecha.",
       },
-    fx: portfolioFx.fx,
+    fx,
   };
 }

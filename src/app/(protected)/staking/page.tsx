@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { clp, usd, percent, formatterNumber, date } from "@/shared/formatting";
 
 type StakingData = {
   status: "WITH_DATA" | "PLACEHOLDER";
@@ -53,34 +54,6 @@ type StakingData = {
     asOf: string;
   };
 };
-
-const formatterClp = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
-
-const formatterUsd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 2,
-});
-
-const formatterNumber = new Intl.NumberFormat("es-CL", {
-  maximumFractionDigits: 8,
-});
-
-function clp(value: number) {
-  return formatterClp.format(value || 0);
-}
-
-function usd(value: number) {
-  return formatterUsd.format(value || 0);
-}
-
-function date(value: string) {
-  return new Date(value).toLocaleDateString("es-CL");
-}
 
 function Metric({ label, value, note, tone = "neutral" }: { label: string; value: string; note: string; tone?: "neutral" | "good" | "info" }) {
   const color = tone === "good" ? "#15803D" : tone === "info" ? "#0F766E" : "#0F2A3D";

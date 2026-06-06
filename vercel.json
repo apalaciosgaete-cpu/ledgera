@@ -19,14 +19,26 @@
       "memory": 1024
     },
     "src/app/api/tax/**/*.ts": {
-      "maxDuration": 30,
-      "memory": 1024
-    },
-    "src/app/api/import/**/*.ts": {
       "maxDuration": 60,
       "memory": 1024
     },
-    "src/app/api/reports/**/*.ts": {
+    "src/app/api/imports/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/tax/reports/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/tax/declarations/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/tax/ledger/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/bank/**/*.ts": {
       "maxDuration": 60,
       "memory": 1024
     },
@@ -35,20 +47,6 @@
       "memory": 512
     }
   },
-  "crons": [
-    {
-      "path": "/api/jobs/process-queue",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/jobs/sync-exchange-rates",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/jobs/snapshot-periods",
-      "schedule": "0 3 * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/fonts/(.*)",

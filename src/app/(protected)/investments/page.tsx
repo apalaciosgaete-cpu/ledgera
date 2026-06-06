@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { clp, usd, percent, formatterNumber } from "@/shared/formatting";
 
 type InvestmentAsset = {
   symbol: string;
@@ -41,35 +42,6 @@ type InvestmentsData = {
 };
 
 type SortKey = "value" | "return" | "symbol" | "pnl";
-
-const formatterClp = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
-
-const formatterUsd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 2,
-});
-
-const formatterNumber = new Intl.NumberFormat("es-CL", {
-  maximumFractionDigits: 8,
-});
-
-function clp(value: number) {
-  return formatterClp.format(value || 0);
-}
-
-function usd(value: number) {
-  return formatterUsd.format(value || 0);
-}
-
-function percent(value: number | null) {
-  if (value === null) return "Sin base";
-  return `${value.toLocaleString("es-CL", { maximumFractionDigits: 2 })}%`;
-}
 
 function Metric({ label, value, note, tone = "neutral" }: { label: string; value: string; note: string; tone?: "neutral" | "good" | "warn" }) {
   const color = tone === "good" ? "#15803D" : tone === "warn" ? "#B45309" : "#0F2A3D";
@@ -168,7 +140,7 @@ export default function InvestmentsPage() {
 
       <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", marginBottom: 20 }}>
         <Metric label="Valor actual" value={clp(data.patrimonio.totalMarketValueClp)} note={`${data.patrimonio.assetCount} activos con posicion`} />
-        <Metric label="Costo estimado" value={clp(data.patrimonio.totalCostClp)} note="Base de costo derivada de movimientos" />
+        <Metric label="Costo estimado" value={clp(data.patrimonio.totalCostClp)} note="Base de costo según método FIFO. Puede variar si hay movimientos sin clasificar." />
         <Metric label="Ganancia / perdida" value={clp(data.rentabilidad.unrealizedPnlClp)} note={`${percent(data.rentabilidad.unrealizedPnlPercent)} no realizado`} tone={pnlTone} />
       </section>
 

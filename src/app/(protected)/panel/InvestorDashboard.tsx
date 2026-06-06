@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { clp, usd, percent, formatterNumber } from "@/shared/formatting";
 
 type DashboardData = {
   patrimonio: {
@@ -86,34 +87,6 @@ type DashboardData = {
   };
 };
 
-const formatterClp = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
-
-const formatterUsd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
-
-const formatterNumber = new Intl.NumberFormat("es-CL", {
-  maximumFractionDigits: 8,
-});
-
-function clp(value: number) {
-  return formatterClp.format(value || 0);
-}
-
-function usd(value: number) {
-  return formatterUsd.format(value || 0);
-}
-
-function percent(value: number | null) {
-  if (value === null) return "Sin base";
-  return `${value.toLocaleString("es-CL", { maximumFractionDigits: 2 })}%`;
-}
-
 function Metric({ label, value, note, accent = "neutral", href }: { label: string; value: string; note: string; accent?: "neutral" | "good" | "warn"; href?: string }) {
   const accentColor = accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : "#0F2A3D";
   const content = (
@@ -158,6 +131,20 @@ function EmptyAssets() {
     <div style={{ border: "1px dashed #CBD5E1", borderRadius: 8, padding: "24px", textAlign: "center" }}>
       <p style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 800, margin: "0 0 6px" }}>Todavía no hay activos con posición</p>
       <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.5, margin: 0 }}>Cuando cargues movimientos, LEDGERA mostrará acá tus principales posiciones.</p>
+    </div>
+  );
+}
+
+function EmptyDashboard() {
+  return (
+    <div style={{ border: "1px dashed #CBD5E1", borderRadius: 8, padding: "40px 24px", textAlign: "center" }}>
+      <p style={{ color: "#0F2A3D", fontSize: "1.25rem", fontWeight: 850, margin: "0 0 10px" }}>Bienvenido a LEDGERA</p>
+      <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: "0 auto 18px", maxWidth: 480 }}>
+        Aún no tienes movimientos registrados. Carga tu primera operación para ver tu patrimonio, rentabilidad y estado tributario.
+      </p>
+      <Link href="/importaciones" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "11px 16px", textDecoration: "none" }}>
+        Cargar movimientos
+      </Link>
     </div>
   );
 }
@@ -216,6 +203,18 @@ export function InvestorDashboard() {
 
   if (!data) {
     return <p style={{ color: "#64748B", fontSize: 14, fontWeight: 700 }}>Cargando dashboard de inversionista...</p>;
+  }
+
+  if (data.tributario.status === "EMPTY") {
+    return (
+      <div style={{ maxWidth: 1180, width: "100%" }}>
+        <section style={{ marginBottom: 24 }}>
+          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Investor Dashboard</p>
+          <h1 style={{ color: "#0F2A3D", fontSize: "1.9rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Patrimonio, inversión y próxima acción</h1>
+        </section>
+        <EmptyDashboard />
+      </div>
+    );
   }
 
   const taxAccent = data.tributario.status === "REVIEW_REQUIRED" ? "warn" : "good";
