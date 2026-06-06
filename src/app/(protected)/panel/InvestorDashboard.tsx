@@ -228,15 +228,20 @@ export function InvestorDashboard() {
     <div style={{ maxWidth: 1180, width: "100%" }}>
       <section style={{ alignItems: "flex-start", display: "flex", gap: "18px", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap" }}>
         <div style={{ maxWidth: 760 }}>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Investor Dashboard</p>
+          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Panel de inversiones</p>
           <h1 style={{ color: "#0F2A3D", fontSize: "1.9rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Patrimonio, inversión y próxima acción</h1>
           <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
             Vista simple para entender el estado actual de tus activos, rendimiento realizado y revisión tributaria.
           </p>
         </div>
+      </section>
 
-        <Link href={data.proximaAccion.href} style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontWeight: 850, minHeight: 42, padding: "11px 16px", textDecoration: "none" }}>
-          {data.proximaAccion.label}
+      <section style={{ background: "#FFFFFF", border: "2px solid #0F766E", borderRadius: 12, marginBottom: 24, padding: "24px" }}>
+        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 10px", textTransform: "uppercase" }}>Tu siguiente paso</p>
+        <h2 style={{ color: "#0F2A3D", fontSize: "1.5rem", fontWeight: 850, lineHeight: 1.2, margin: "0 0 8px" }}>{data.proximaAccion.label}</h2>
+        <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.55, margin: "0 0 18px", maxWidth: 720 }}>{data.proximaAccion.detail}</p>
+        <Link href={data.proximaAccion.href} style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 18px", textDecoration: "none" }}>
+          {data.proximaAccion.label} →
         </Link>
       </section>
 
@@ -319,14 +324,6 @@ export function InvestorDashboard() {
             </div>
           </article>
 
-          <article style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: 8, padding: 18 }}>
-            <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.05em", margin: "0 0 8px", textTransform: "uppercase" }}>Próxima acción</p>
-            <h2 style={{ color: "#0F2A3D", fontSize: "1.15rem", fontWeight: 850, lineHeight: 1.25, margin: "0 0 8px" }}>{data.proximaAccion.label}</h2>
-            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 14px" }}>{data.proximaAccion.detail}</p>
-            <Link href={data.proximaAccion.href} style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 12px", textDecoration: "none" }}>
-              Abrir
-            </Link>
-          </article>
         </aside>
       </section>
 

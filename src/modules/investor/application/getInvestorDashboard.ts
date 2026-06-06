@@ -38,6 +38,7 @@ export type InvestorNextActionCode =
   | "REVIEW_TAX_EVENTS"
   | "REVIEW_PORTFOLIO"
   | "REVIEW_STAKING"
+  | "GENERATE_REPORT"
   | "OPEN_TAX_SUMMARY";
 
 export type InvestorDashboard = {
@@ -362,6 +363,15 @@ function buildNextAction(params: {
       label: "Revisar inversiones",
       href: "/inversiones",
       detail: "Valida activos, cantidades, valor actual y costos estimados antes de cerrar el período.",
+    };
+  }
+
+  if (params.taxStatus === "READY" || params.taxStatus === "NO_TAX_EVENTS") {
+    return {
+      code: "GENERATE_REPORT",
+      label: "Generar reporte tributario",
+      href: "/tax/reports",
+      detail: "Tus datos están actualizados y consistentes. Genera un reporte para revisar con tu contador.",
     };
   }
 
