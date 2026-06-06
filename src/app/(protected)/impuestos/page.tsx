@@ -87,8 +87,8 @@ const sections = [
     key: "reportes",
     title: "Reportes",
     description: "Exporta PDF y CSV para tu contador o para tus registros.",
-    href: "#",
-    available: false,
+    href: "/impuestos/reportes",
+    available: true,
   },
   {
     key: "declaraciones",
