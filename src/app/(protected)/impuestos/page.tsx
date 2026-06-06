@@ -91,6 +91,13 @@ const sections = [
     available: true,
   },
   {
+    key: "evidencia",
+    title: "Evidencia",
+    description: "Hash, verificación pública e integridad de declaraciones tributarias.",
+    href: "/impuestos/evidencia",
+    available: true,
+  },
+  {
     key: "declaraciones",
     title: "Declaraciones",
     description: "Gestiona declaraciones tributarias, estados e historial.",
