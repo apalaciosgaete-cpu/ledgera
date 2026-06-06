@@ -97,11 +97,11 @@ const sections = [
   { key: "movimientos", title: "Movimientos", description: "Origen de cada cálculo. Fecha, activo, cantidad, precio, fee y relación con evento tributario.", href: "/auditoria/movimientos", available: true },
   { key: "fifo", title: "FIFO", description: "Desglose de lotes FIFO para cada venta. Cost basis, consumo y ganancia verificable.", href: "/auditoria/fifo", available: true },
   { key: "eventos", title: "Eventos Tributarios", description: "Auditoría de taxEvents. Clasificación, PnL, fuente, relación movimiento e historial.", href: "/auditoria/eventos", available: true },
-  { key: "declaraciones", title: "Declaraciones", description: "Cadena de custodia de DDJJ. CREATED → REVIEWED → CONFIRMED → EXPORTED → VOIDED.", href: "/auditoria/declaraciones", available: false },
-  { key: "integridad", title: "Integridad", description: "Ventas sin evento, eventos huérfanos, duplicados, inconsistencias y score de salud.", href: "/auditoria/integridad", available: false },
-  { key: "verificacion", title: "Verificación Pública", description: "Códigos de verificación, hashes, estados y revocaciones de documentos.", href: "/auditoria/verificacion", available: false },
-  { key: "evidencia", title: "Evidencia", description: "Reportes, declaraciones, hashes y verificaciones reunidos para fiscalización.", href: "/auditoria/evidencia", available: false },
-  { key: "informe", title: "Informe de Auditoría", description: "PDF completo con integridad, declaraciones, períodos, hallazgos, QR y hash.", href: "/auditoria/informe", available: false },
+  { key: "declaraciones", title: "Declaraciones", description: "Cadena de custodia de DDJJ. CREATED → REVIEWED → CONFIRMED → EXPORTED → VOIDED.", href: "/auditoria/declaraciones", available: true },
+  { key: "integridad", title: "Integridad", description: "Ventas sin evento, eventos huérfanos, duplicados, inconsistencias y score de salud.", href: "/auditoria/integridad", available: true },
+  { key: "verificacion", title: "Verificación Pública", description: "Códigos de verificación, hashes, estados y revocaciones de documentos.", href: "/auditoria/verificacion", available: true },
+  { key: "evidencia", title: "Evidencia", description: "Reportes, declaraciones, hashes y verificaciones reunidos para fiscalización.", href: "/auditoria/evidencia", available: true },
+  { key: "informe", title: "Informe de Auditoría", description: "PDF completo con integridad, declaraciones, períodos, hallazgos, QR y hash.", href: "/auditoria/informe", available: true },
 ];
 
 function periodLabel(status: string) {
