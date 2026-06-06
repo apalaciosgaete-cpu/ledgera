@@ -12,6 +12,20 @@ type SummaryDecision = {
   likelyPayment: boolean;
 };
 
+type TopAsset = {
+  symbol: string;
+  realizedPnlClp: number;
+  eventsCount: number;
+  quantitySold: number;
+};
+
+type KeyOperations = {
+  totalSales: number;
+  totalBuys: number;
+  totalStaking: number;
+  totalOther: number;
+};
+
 type SummaryData = {
   usdClp: number;
   availableYears: number[];
@@ -31,6 +45,8 @@ type SummaryData = {
     impuestoEstimadoClp: number;
     confidenceLevel: number;
   };
+  topAssets: TopAsset[];
+  keyOperations: KeyOperations;
 };
 
 type SummaryResponse = {
@@ -217,14 +233,72 @@ export default function TaxExecutivePage() {
             </article>
           </section>
 
-          <section style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: 8, padding: 16, marginBottom: 20 }}>
-            <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850, margin: "0 0 6px" }}>¿Qué significa esto?</p>
-            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.55, margin: 0 }}>
-              LEDGERA analiza tus ventas y staking para estimar si generas base imponible.
-              El impuesto es una aproximación (6.5% de la base) — valida con tu contador antes de declarar.
-              Si tu nivel de confianza es bajo, revisa que todas tus operaciones estén correctamente registradas.
-            </p>
+          <section style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", marginBottom: 20 }}>
+            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
+              <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 10px" }}>¿Por qué debo declarar?</h3>
+              <p style={{ color: "#475569", fontSize: 13, lineHeight: 1.55, margin: "0 0 10px" }}>{decision.detail}</p>
+              <p style={{ color: "#64748B", fontSize: 12, lineHeight: 1.5, margin: 0 }}>
+                Basado en {data.keyOperations.totalSales} ventas, {data.keyOperations.totalBuys} compras
+                {data.keyOperations.totalStaking > 0 ? ` y ${data.keyOperations.totalStaking} staking rewards` : ""} registrados.
+              </p>
+            </article>
+
+            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
+              <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 10px" }}>Operaciones relevantes</h3>
+              <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#475569", fontSize: 13 }}>Ventas (SELL)</span>
+                  <strong style={{ color: "#0F2A3D", fontSize: 13 }}>{data.keyOperations.totalSales}</strong>
+                </div>
+                <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#475569", fontSize: 13 }}>Compras (BUY)</span>
+                  <strong style={{ color: "#0F2A3D", fontSize: 13 }}>{data.keyOperations.totalBuys}</strong>
+                </div>
+                {data.keyOperations.totalStaking > 0 && (
+                  <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#475569", fontSize: 13 }}>Staking rewards</span>
+                    <strong style={{ color: "#0F2A3D", fontSize: 13 }}>{data.keyOperations.totalStaking}</strong>
+                  </div>
+                )}
+                {data.keyOperations.totalOther > 0 && (
+                  <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#475569", fontSize: 13 }}>Otros movimientos</span>
+                    <strong style={{ color: "#0F2A3D", fontSize: 13 }}>{data.keyOperations.totalOther}</strong>
+                  </div>
+                )}
+              </div>
+            </article>
           </section>
+
+          {data.topAssets.length > 0 && (
+            <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 20, overflow: "hidden" }}>
+              <div style={{ padding: "16px 18px", borderBottom: "1px solid #E2E8F0" }}>
+                <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Activos que generaron impuestos</h3>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ borderCollapse: "collapse", minWidth: 500, width: "100%" }}>
+                  <thead>
+                    <tr style={{ background: "#F8FAFC", textAlign: "left" }}>
+                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px" }}>Activo</th>
+                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>Ventas</th>
+                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>Cantidad vendida</th>
+                      <th style={{ color: "#475569", fontSize: 12, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>Resultado CLP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.topAssets.map((asset) => (
+                      <tr key={asset.symbol} style={{ borderTop: "1px solid #E2E8F0" }}>
+                        <td style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850, padding: "12px 18px" }}>{asset.symbol}</td>
+                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 18px", textAlign: "right" }}>{asset.eventsCount}</td>
+                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 18px", textAlign: "right" }}>{asset.quantitySold}</td>
+                        <td style={{ color: asset.realizedPnlClp >= 0 ? "#15803D" : "#B45309", fontSize: 13, fontWeight: 850, padding: "12px 18px", textAlign: "right" }}>{clp(asset.realizedPnlClp)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
         </>
       )}
     </div>

@@ -95,6 +95,20 @@ type TaxSummaryDecision = {
   likelyPayment: boolean;
 };
 
+type TopAsset = {
+  symbol: string;
+  realizedPnlClp: number;
+  eventsCount: number;
+  quantitySold: number;
+};
+
+type KeyOperations = {
+  totalSales: number;
+  totalBuys: number;
+  totalStaking: number;
+  totalOther: number;
+};
+
 // ─── FX inline ────────────────────────────────────────────────────────────────
 
 async function fetchUsdClp(): Promise<number> {
@@ -434,6 +448,35 @@ export async function GET(request: NextRequest) {
       totals: roundedTotals,
     });
 
+    const assetMap = new Map<string, TopAsset>();
+    for (const event of events) {
+      const key = event.symbol;
+      const current = assetMap.get(key) ?? { symbol: key, realizedPnlClp: 0, eventsCount: 0, quantitySold: 0 };
+      current.realizedPnlClp += event.realizedPnlClp;
+      current.eventsCount += 1;
+      current.quantitySold += event.quantity;
+      assetMap.set(key, current);
+    }
+    const topAssets = Array.from(assetMap.values())
+      .sort((a, b) => b.realizedPnlClp - a.realizedPnlClp)
+      .slice(0, 5)
+      .map((a) => ({
+        symbol: a.symbol,
+        realizedPnlClp: round(a.realizedPnlClp, 2),
+        eventsCount: a.eventsCount,
+        quantitySold: round(a.quantitySold, 8),
+      }));
+
+    const keyOperations: KeyOperations = {
+      totalSales: rawMovements.filter((m) => String(m.type).trim().toUpperCase() === "SELL").length,
+      totalBuys: rawMovements.filter((m) => String(m.type).trim().toUpperCase() === "BUY").length,
+      totalStaking: rawMovements.filter((m) => String(m.type).trim().toUpperCase() === "STAKING_REWARD").length,
+      totalOther: rawMovements.filter((m) => {
+        const t = String(m.type).trim().toUpperCase();
+        return t !== "SELL" && t !== "BUY" && t !== "STAKING_REWARD";
+      }).length,
+    };
+
     return NextResponse.json({
       ok: true,
       message: "Resumen tributario obtenido correctamente",
@@ -449,6 +492,8 @@ export async function GET(request: NextRequest) {
             : { label: "Ver inversiones", href: "/inversiones" },
         rows,
         totals: roundedTotals,
+        topAssets,
+        keyOperations,
       },
     });
   } catch (error) {
