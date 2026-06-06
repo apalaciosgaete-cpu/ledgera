@@ -77,6 +77,13 @@ const sections = [
     available: true,
   },
   {
+    key: "salud",
+    title: "Salud",
+    description: "¿Cómo están tus datos? Score, problemas detectados y recomendaciones.",
+    href: "/impuestos/salud",
+    available: true,
+  },
+  {
     key: "reportes",
     title: "Reportes",
     description: "Exporta PDF y CSV para tu contador o para tus registros.",
