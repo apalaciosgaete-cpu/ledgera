@@ -94,7 +94,7 @@ type DashboardData = {
 
 const sections = [
   { key: "periodos", title: "Períodos", description: "Cierre, reapertura, snapshots, timeline y trazabilidad de períodos tributarios.", href: "/auditoria/periodos", available: true },
-  { key: "movimientos", title: "Movimientos", description: "Origen de cada cálculo. Fecha, activo, cantidad, precio, fee y relación con evento tributario.", href: "/auditoria/movimientos", available: false },
+  { key: "movimientos", title: "Movimientos", description: "Origen de cada cálculo. Fecha, activo, cantidad, precio, fee y relación con evento tributario.", href: "/auditoria/movimientos", available: true },
   { key: "fifo", title: "FIFO", description: "Desglose de lotes FIFO para cada venta. Cost basis, consumo y ganancia verificable.", href: "/auditoria/fifo", available: false },
   { key: "eventos", title: "Eventos Tributarios", description: "Auditoría de taxEvents. Clasificación, PnL, fuente, relación movimiento e historial.", href: "/auditoria/eventos", available: false },
   { key: "declaraciones", title: "Declaraciones", description: "Cadena de custodia de DDJJ. CREATED → REVIEWED → CONFIRMED → EXPORTED → VOIDED.", href: "/auditoria/declaraciones", available: false },
