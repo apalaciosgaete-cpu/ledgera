@@ -209,7 +209,7 @@ export function InvestorDashboard() {
     return (
       <div style={{ maxWidth: 1180, width: "100%" }}>
         <section style={{ marginBottom: 24 }}>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Investor Dashboard</p>
+          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Panel de inversiones</p>
           <h1 style={{ color: "#0F2A3D", fontSize: "1.9rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Patrimonio, inversión y próxima acción</h1>
         </section>
         <EmptyDashboard />
@@ -255,7 +255,7 @@ export function InvestorDashboard() {
               <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 4px" }}>Mis activos</h2>
               <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Principales posiciones por valor actual en CLP.</p>
             </div>
-            <Link href="/investments" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver inversiones</Link>
+            <Link href="/inversiones" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver inversiones</Link>
           </div>
 
           {data.activos.length === 0 ? (

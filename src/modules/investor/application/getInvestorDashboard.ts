@@ -324,7 +324,7 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_TAX_EVENTS",
       label: "Revisar alertas tributarias",
-      href: "/tax/summary",
+      href: "/impuestos/resumen",
       detail: `Hay ${params.sellWithoutEvent + params.orphanEvents} inconsistencias entre movimientos y eventos tributarios. Resuélvelas antes de generar reportes.`,
     };
   }
@@ -333,7 +333,7 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_TAX_EVENTS",
       label: "Revisar tributario",
-      href: "/tax/summary",
+      href: "/impuestos/resumen",
       detail: "Revisa si corresponde declarar o pagar antes de entrar al detalle técnico.",
     };
   }
@@ -351,7 +351,7 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_PORTFOLIO",
       label: "Revisar pérdidas realizadas",
-      href: "/investments",
+      href: "/inversiones",
       detail: "Tienes pérdidas realizadas. Consulta con tu contador sobre compensación de pérdidas antes de cerrar el período.",
     };
   }
@@ -360,7 +360,7 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_PORTFOLIO",
       label: "Revisar inversiones",
-      href: "/investments",
+      href: "/inversiones",
       detail: "Valida activos, cantidades, valor actual y costos estimados antes de cerrar el período.",
     };
   }
@@ -368,7 +368,7 @@ function buildNextAction(params: {
   return {
     code: "OPEN_TAX_SUMMARY",
     label: "Ver resumen tributario",
-    href: "/tax/summary",
+    href: "/impuestos/resumen",
     detail: "Consulta el resultado fiscal simple del período actual.",
   };
 }

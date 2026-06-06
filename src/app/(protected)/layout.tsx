@@ -31,10 +31,10 @@ function LogoutIcon() {
 
 const baseNavItems: { href: string; label: string }[] = [
   { href: "/panel",         label: "Dashboard" },
-  { href: "/investments",   label: "Inversiones" },
+  { href: "/inversiones",   label: "Inversiones" },
   { href: "/staking",       label: "Staking" },
   { href: "/integraciones", label: "Conexiones" },
-  { href: "/tax/summary",   label: "Tributario" },
+  { href: "/impuestos/resumen", label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
   { href: "/seguridad",     label: "Seguridad" },
   { href: "/planes",        label: "Planes" },

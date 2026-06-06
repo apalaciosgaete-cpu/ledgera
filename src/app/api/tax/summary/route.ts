@@ -411,7 +411,7 @@ export async function GET(request: NextRequest) {
           ? { label: "Cargar movimientos", href: "/importaciones" }
           : decision.shouldDeclare
             ? { label: "Revisar eventos", href: "/tax/review" }
-            : { label: "Ver inversiones", href: "/investments" },
+            : { label: "Ver inversiones", href: "/inversiones" },
         rows,
         totals: roundedTotals,
       },
