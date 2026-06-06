@@ -81,6 +81,9 @@ type TaxSummaryTotals = {
   stakingRewardUsd: number;
   stakingRewardClp: number;
   stakingCount: number;
+  baseImponibleClp: number;
+  impuestoEstimadoClp: number;
+  confidenceLevel: number;
 };
 
 type TaxSummaryDecision = {
@@ -142,6 +145,9 @@ function emptyTotals(): TaxSummaryTotals {
     stakingRewardUsd: 0,
     stakingRewardClp: 0,
     stakingCount: 0,
+    baseImponibleClp: 0,
+    impuestoEstimadoClp: 0,
+    confidenceLevel: 0,
   };
 }
 
@@ -308,6 +314,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const sellMovementIds = new Set(movements.filter(m => m.type === "SELL").map(m => m.id));
+    const eventMovementIds = new Set(events.map(e => e.movementId));
+    const sellWithoutEvent = movements.filter(m => m.type === "SELL" && !eventMovementIds.has(m.id)).length;
+    const orphanEvents = events.filter(e => !sellMovementIds.has(e.movementId)).length;
+
     const availableYears = Array.from(new Set(events.map((event) => new Date(event.executedAt).getUTCFullYear()))).sort((a, b) => b - a);
     const filteredEvents = events.filter((event) => {
       const eventYear = new Date(event.executedAt).getUTCFullYear();
@@ -386,6 +397,12 @@ export async function GET(request: NextRequest) {
       },
       emptyTotals()
     );
+    const baseImponibleClp = round(Math.max(0, totals.realizedPnlClp) + totals.stakingRewardClp, 2);
+    const impuestoEstimadoClp = round(baseImponibleClp * 0.065, 2);
+    const confidenceLevel = Math.max(0, Math.min(100, rawMovements.length > 0
+      ? Math.round(100 - (sellWithoutEvent + orphanEvents) * 10)
+      : 0));
+
     const roundedTotals = {
       eventsCount: totals.eventsCount,
       quantitySold: round(totals.quantitySold, 8),
@@ -400,7 +417,11 @@ export async function GET(request: NextRequest) {
       stakingRewardUsd: round(stakingRewardUsd, 2),
       stakingRewardClp: round(stakingRewardClp, 2),
       stakingCount,
+      baseImponibleClp,
+      impuestoEstimadoClp,
+      confidenceLevel,
     };
+
     const sellCount = movements.filter((movement) => {
       if (movement.type !== "SELL") return false;
       if (yearFilter && movement.executedAt.getUTCFullYear() !== yearFilter) return false;
