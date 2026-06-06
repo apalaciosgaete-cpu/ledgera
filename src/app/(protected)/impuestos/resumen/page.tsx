@@ -47,6 +47,9 @@ type SummaryData = {
     costBasisClp: number;
     feeClp: number;
     realizedPnlClp: number;
+    stakingRewardUsd: number;
+    stakingRewardClp: number;
+    stakingCount: number;
   };
 };
 
@@ -190,25 +193,38 @@ export default function TaxSummaryPage() {
 
       {!loading && data && decision && (
         <>
-          <section style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 8, marginBottom: 16, padding: 18 }}>
-            <span style={{ background: "#FFFFFF", borderRadius: 999, color: tone.color, display: "inline-flex", fontSize: 12, fontWeight: 850, marginBottom: 12, padding: "6px 10px" }}>{decision.label}</span>
-            <h2 style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.18, margin: "0 0 8px" }}>{decision.headline}</h2>
-            <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.55, margin: "0 0 14px", maxWidth: 780 }}>{decision.detail}</p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              <Link href={data.nextAction.href} style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
-                {data.nextAction.label}
+          {decision.status === "EMPTY" ? (
+            <section style={{ background: "#F8FAFC", border: "1px dashed #CBD5E1", borderRadius: 8, marginBottom: 16, padding: "32px 24px", textAlign: "center" }}>
+              <h2 style={{ color: "#0F2A3D", fontSize: "1.25rem", fontWeight: 850, margin: "0 0 10px" }}>{decision.headline}</h2>
+              <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: "0 auto 18px", maxWidth: 520 }}>{decision.detail}</p>
+              <Link href="/importaciones" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "11px 16px", textDecoration: "none" }}>
+                Cargar movimientos
               </Link>
-              <Link href="/tax/reports" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
-                Reportes
-              </Link>
-            </div>
-          </section>
+            </section>
+          ) : (
+            <section style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 8, marginBottom: 16, padding: 18 }}>
+              <span style={{ background: "#FFFFFF", borderRadius: 999, color: tone.color, display: "inline-flex", fontSize: 12, fontWeight: 850, marginBottom: 12, padding: "6px 10px" }}>{decision.label}</span>
+              <h2 style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.18, margin: "0 0 8px" }}>{decision.headline}</h2>
+              <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.55, margin: "0 0 14px", maxWidth: 780 }}>{decision.detail}</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                <Link href={data.nextAction.href} style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+                  {data.nextAction.label}
+                </Link>
+                <Link href="/tax/reports" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+                  Reportes
+                </Link>
+              </div>
+            </section>
+          )}
 
           <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", marginBottom: 18 }}>
             <Metric label="Resultado CLP" value={clp(data.totals.realizedPnlClp)} note={`${usd(data.totals.realizedPnlUsd)} realizado`} color={pnlColor} />
             <Metric label="Ventas" value={String(data.totals.eventsCount)} note="Eventos SELL calculados" />
             <Metric label="Ingresos venta" value={clp(data.totals.proceedsNetClp)} note="Neto de fees" />
             <Metric label="Costo FIFO" value={clp(data.totals.costBasisClp)} note="Base de costo estimada" />
+            {data.totals.stakingCount > 0 && (
+              <Metric label="Staking" value={clp(data.totals.stakingRewardClp)} note={`${usd(data.totals.stakingRewardUsd)} en ${data.totals.stakingCount} rewards`} color="#15803D" />
+            )}
           </section>
 
           <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, overflow: "hidden" }}>
