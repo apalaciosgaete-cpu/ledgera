@@ -111,6 +111,13 @@ const sections = [
     href: "/impuestos/calendario",
     available: true,
   },
+  {
+    key: "cierre",
+    title: "Cierre Tributario",
+    description: "Congela tu estado tributario cuando estés listo para declarar. Reabre si necesitas corregir.",
+    href: "/impuestos/cierre",
+    available: true,
+  },
 ];
 
 export default function ImpuestosHubPage() {
