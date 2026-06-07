@@ -1,14 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import ConfiguracionShell from "../ConfiguracionShell";
 
-export default function SeguridadRedirectPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push("/configuracion?section=seguridad");
-  }, [router]);
-
-  return null;
+export default function SeguridadPage() {
+  return <ConfiguracionShell forcedSection="seguridad" />;
 }

@@ -22,6 +22,10 @@ function isPublicRoute(pathname: string): boolean {
 
 const TWOFAGATE_ROUTES = [
   "/configuracion",
+  "/configuracion/perfil",
+  "/configuracion/seguridad",
+  "/configuracion/facturacion",
+  "/configuracion/admin",
 ];
 
 function is2FAGateRoute(pathname: string): boolean {
@@ -56,7 +60,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (!isLoading && isAuthenticated && needs2FA && !is2FAGateRoute(pathname)) {
-      router.push("/configuracion?section=seguridad&setup2fa=1");
+      router.push("/configuracion/seguridad?setup2fa=1");
     }
   }, [isAuthenticated, isLoading, needs2FA, pathname, publicRoute, router]);
 
