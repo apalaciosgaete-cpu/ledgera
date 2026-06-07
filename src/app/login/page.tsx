@@ -100,6 +100,7 @@ function LoginForm() {
   const [setupCode, setSetupCode] = useState("");
   const [verifyingSetup, setVerifyingSetup] = useState(false);
   const [errorSetup, setErrorSetup] = useState("");
+  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !oauth2fa) {
@@ -160,6 +161,7 @@ function LoginForm() {
 
       if (response.twoFactorRequired && response.pendingUserId) {
         setPendingUserId(response.pendingUserId);
+        setIsRecovery(false);
         setStep(2);
         return;
       }
@@ -230,17 +232,15 @@ function LoginForm() {
     setVerifyingSetup(true);
 
     try {
+      const isLoginRecovery = isRecovery || !setupToken;
+      const endpoint = isLoginRecovery ? "/api/2fa/login" : "/api/2fa/registration/verify";
+      const body = isLoginRecovery
+        ? { userId: pendingUserId, code: setupCode }
+        : { userId: pendingUserId, email: setupEmail, code: setupCode, setupToken };
+
       const response = await httpClient<{ ok?: boolean; message?: string; data?: { session?: { token?: string } } }>(
-        "/api/2fa/registration/verify",
-        {
-          method: "POST",
-          body: {
-            userId: pendingUserId,
-            email: setupEmail,
-            code: setupCode,
-            setupToken,
-          },
-        },
+        endpoint,
+        { method: "POST", body },
       );
 
       const token = response.data?.session?.token;
@@ -256,6 +256,34 @@ function LoginForm() {
       setErrorSetup(resolveClientError(error, "Error al verificar el código."));
     } finally {
       setVerifyingSetup(false);
+    }
+  }
+
+  async function startRecovery() {
+    setError2FA("");
+    try {
+      const response = await httpClient<{ ok?: boolean; message?: string; data?: { qrCode?: string; secret?: string } }>(
+        "/api/2fa/login/setup",
+        {
+          method: "POST",
+          body: { userId: pendingUserId, email },
+        },
+      );
+
+      if (response.ok && response.data) {
+        setSetupQrCode(response.data.qrCode ?? "");
+        setSetupSecret(response.data.secret ?? "");
+        setSetupEmail(email);
+        setSetupToken("");
+        setSetupCode("");
+        setErrorSetup("");
+        setIsRecovery(true);
+        setStep(3);
+      } else {
+        setError2FA(response.message || "No fue posible iniciar la recuperación.");
+      }
+    } catch (error) {
+      setError2FA(resolveClientError(error, "Error al iniciar recuperación de 2FA."));
     }
   }
 
@@ -553,25 +581,43 @@ function LoginForm() {
                 {validating2FA ? "Verificando..." : "Verificar"}
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setStep(1);
-                  setTwoFACode("");
-                  setError2FA("");
-                }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#64748B",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                  fontFamily: fonts.body,
-                  textDecoration: "underline",
-                }}
-              >
-                Volver al inicio de sesión
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                <button
+                  type="button"
+                  onClick={startRecovery}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#0F766E",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    fontFamily: fonts.body,
+                    textDecoration: "underline",
+                    fontWeight: 600,
+                  }}
+                >
+                  Reconfigurar 2FA / perdí acceso a la app
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(1);
+                    setTwoFACode("");
+                    setError2FA("");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#64748B",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    fontFamily: fonts.body,
+                    textDecoration: "underline",
+                  }}
+                >
+                  Volver al inicio de sesión
+                </button>
+              </div>
             </form>
           </div>
         )}
@@ -580,10 +626,12 @@ function LoginForm() {
           <div style={cardStyle}>
             <div style={{ textAlign: "center" }}>
               <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 6px" }}>
-                Seguridad obligatoria
+                {isRecovery ? "Recuperar acceso con 2FA" : "Seguridad obligatoria"}
               </h2>
               <p style={{ fontSize: "13px", color: "#64748B", margin: 0 }}>
-                Escanea el QR con Google Authenticator, Microsoft Authenticator o Authy.
+                {isRecovery
+                  ? "Escanea el nuevo QR con tu app de autenticación. Tu código anterior quedará invalidado."
+                  : "Escanea el QR con Google Authenticator, Microsoft Authenticator o Authy."}
               </p>
             </div>
 
@@ -640,7 +688,11 @@ function LoginForm() {
                   cursor: verifyingSetup || setupCode.length < 6 ? "not-allowed" : "pointer",
                 }}
               >
-                {verifyingSetup ? "Activando seguridad..." : "Activar 2FA e ingresar"}
+                {verifyingSetup
+                  ? "Verificando..."
+                  : isRecovery
+                    ? "Verificar e ingresar"
+                    : "Activar 2FA e ingresar"}
               </button>
             </form>
           </div>

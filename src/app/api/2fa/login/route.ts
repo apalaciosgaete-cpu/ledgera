@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import speakeasy from "speakeasy";
 
+import { prisma } from "@/lib/prisma";
 import {
   createAdminAuditLog,
   getAuditRequestContext,
@@ -36,9 +37,9 @@ export async function POST(req: NextRequest) {
 
     const user = await getUserById(userId);
 
-    if (!user || !user.twoFactorSecret || !user.twoFactorEnabled) {
+    if (!user || !user.twoFactorSecret) {
       return NextResponse.json(
-        { ok: false, message: "Usuario no válido o 2FA no habilitado." },
+        { ok: false, message: "Usuario no válido o 2FA no configurado." },
         { status: 400 },
       );
     }
@@ -62,6 +63,14 @@ export async function POST(req: NextRequest) {
         { ok: false, message: "Código inválido. Intenta nuevamente." },
         { status: 400 },
       );
+    }
+
+    // Si estamos en recuperación (twoFactorEnabled era false), activar ahora
+    if (!user.twoFactorEnabled) {
+      await prisma.users.update({
+        where: { id: user.id },
+        data: { twoFactorEnabled: true, updated_at: new Date() },
+      });
     }
 
     const sessionToken = generateSessionToken();
