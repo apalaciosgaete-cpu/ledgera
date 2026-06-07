@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { clp, usd, percent } from "@/shared/formatting";
+import { clp } from "@/shared/formatting";
 
 type TaxStatus = "EMPTY" | "NO_TAX_EVENTS" | "DECLARE_REVIEW" | "PAY_REVIEW" | "LOSS_REVIEW";
 
@@ -30,94 +30,57 @@ type SummaryData = {
   totals: SummaryTotals;
 };
 
-function statusTone(status: TaxStatus) {
+function statusConfig(status: TaxStatus) {
   switch (status) {
-    case "EMPTY": return { bg: "#F1F5F9", border: "#CBD5E1", color: "#475569", icon: "◌" };
-    case "NO_TAX_EVENTS": return { bg: "#F0FDF4", border: "#86EFAC", color: "#166534", icon: "✓" };
-    case "DECLARE_REVIEW": return { bg: "#FEF9C3", border: "#FDE047", color: "#854D0E", icon: "!" };
-    case "PAY_REVIEW": return { bg: "#FEF2F2", border: "#FCA5A5", color: "#991B1B", icon: "!" };
-    case "LOSS_REVIEW": return { bg: "#FFFBEB", border: "#FCD34D", color: "#92400E", icon: "!" };
+    case "EMPTY":
+      return {
+        border: "#CBD5E1",
+        bg: "#F8FAFC",
+        titleColor: "#475569",
+        subtitle: "Sin movimientos registrados",
+        ctaLabel: "Cargar movimientos",
+        ctaHref: "/importaciones",
+        ctaBg: "#0F766E",
+        showMetrics: false,
+      };
+    case "NO_TAX_EVENTS":
+      return {
+        border: "#86EFAC",
+        bg: "#F0FDF4",
+        titleColor: "#166534",
+        subtitle: "Sin acción requerida",
+        ctaLabel: "Ver detalle",
+        ctaHref: "/impuestos/resumen",
+        ctaBg: "#16A34A",
+        showMetrics: false,
+      };
+    case "DECLARE_REVIEW":
+    case "PAY_REVIEW":
+    case "LOSS_REVIEW":
+      return {
+        border: "#FDE047",
+        bg: "#FEF9C3",
+        titleColor: "#854D0E",
+        subtitle: "Declaración recomendada",
+        ctaLabel: "Revisar declaración",
+        ctaHref: "/impuestos/resumen",
+        ctaBg: "#B45309",
+        showMetrics: true,
+      };
   }
 }
 
-function confidenceTone(level: number) {
-  if (level >= 90) return { color: "#15803D", label: "Excelente" };
-  if (level >= 70) return { color: "#0F766E", label: "Bueno" };
-  if (level >= 40) return { color: "#B45309", label: "Regular" };
-  return { color: "#991B1B", label: "Crítico" };
-}
-
-const sections = [
-  {
-    key: "resumen",
-    title: "Resumen",
-    description: "Estado tributario ejecutivo. ¿Debo declarar? ¿Debo pagar? ¿Cuánto?",
-    href: "/impuestos/resumen",
-    available: true,
-  },
-  {
-    key: "explicacion",
-    title: "Explicación",
-    description: "¿Por qué obtuve este resultado? Impacto por activo y operaciones relevantes.",
-    href: "/impuestos/resumen",
-    available: true,
-  },
-  {
-    key: "simulador",
-    title: "Simulador",
-    description: "¿Qué pasaría si vendo? Simula escenarios antes de operar.",
-    href: "/impuestos/simulador",
-    available: true,
-  },
-  {
-    key: "revision",
-    title: "Revisión",
-    description: "Revisa eventos tributarios, alertas e inconsistencias antes de declarar.",
-    href: "/impuestos/revision",
-    available: true,
-  },
-  {
-    key: "salud",
-    title: "Salud",
-    description: "¿Cómo están tus datos? Score, problemas detectados y recomendaciones.",
-    href: "/impuestos/salud",
-    available: true,
-  },
-  {
-    key: "reportes",
-    title: "Reportes",
-    description: "Exporta PDF y CSV para tu contador o para tus registros.",
-    href: "/impuestos/reportes",
-    available: true,
-  },
-  {
-    key: "evidencia",
-    title: "Evidencia",
-    description: "Hash, verificación pública e integridad de declaraciones tributarias.",
-    href: "/impuestos/evidencia",
-    available: true,
-  },
-  {
-    key: "declaraciones",
-    title: "Declaraciones",
-    description: "Gestiona declaraciones tributarias, estados e historial.",
-    href: "/impuestos/declaraciones",
-    available: true,
-  },
-  {
-    key: "calendario",
-    title: "Calendario",
-    description: "¿Qué viene ahora? Próximas declaraciones, cierres y obligaciones.",
-    href: "/impuestos/calendario",
-    available: true,
-  },
-  {
-    key: "cierre",
-    title: "Cierre Tributario",
-    description: "Congela tu estado tributario cuando estés listo para declarar. Reabre si necesitas corregir.",
-    href: "/impuestos/cierre",
-    available: true,
-  },
+const tools = [
+  { key: "resumen", title: "Resumen", description: "Estado tributario ejecutivo. ¿Debo declarar? ¿Debo pagar? ¿Cuánto?", href: "/impuestos/resumen", available: true },
+  { key: "explicacion", title: "Explicación", description: "¿Por qué obtuve este resultado? Impacto por activo y operaciones relevantes.", href: "/impuestos/resumen", available: true },
+  { key: "simulador", title: "Simulador", description: "¿Qué pasaría si vendo? Simula escenarios antes de operar.", href: "/impuestos/simulador", available: true },
+  { key: "revision", title: "Revisión", description: "Revisa operaciones calculadas, alertas e inconsistencias antes de declarar.", href: "/impuestos/revision", available: true },
+  { key: "salud", title: "Calidad de información", description: "¿Cómo están tus datos? Score, problemas detectados y recomendaciones.", href: "/impuestos/salud", available: true },
+  { key: "reportes", title: "Reportes", description: "Exporta PDF y CSV para tu contador o para tus registros.", href: "/impuestos/reportes", available: true },
+  { key: "evidencia", title: "Verificación y respaldo", description: "Hash, verificación pública e integridad de declaraciones tributarias.", href: "/impuestos/evidencia", available: true },
+  { key: "declaraciones", title: "Declaraciones", description: "Gestiona declaraciones tributarias, estados e historial.", href: "/impuestos/declaraciones", available: true },
+  { key: "calendario", title: "Calendario", description: "¿Qué viene ahora? Próximas declaraciones, cierres y obligaciones.", href: "/impuestos/calendario", available: true },
+  { key: "cierre", title: "Cierre tributario", description: "Congela tu estado tributario cuando estés listo para declarar. Reabre si necesitas corregir.", href: "/impuestos/cierre", available: true },
 ];
 
 export default function ImpuestosHubPage() {
@@ -141,11 +104,11 @@ export default function ImpuestosHubPage() {
     void load();
   }, []);
 
-  const tone = data ? statusTone(data.decision.status) : statusTone("EMPTY");
-  const conf = data ? confidenceTone(data.totals.confidenceLevel) : { color: "#64748B", label: "—" };
+  const cfg = data ? statusConfig(data.decision.status) : statusConfig("EMPTY");
 
   return (
     <div style={{ maxWidth: 1180, width: "100%" }}>
+      {/* Header */}
       <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Centro tributario</p>
@@ -164,78 +127,68 @@ export default function ImpuestosHubPage() {
         </div>
       ) : data ? (
         <>
-          <section style={{ background: tone.bg, border: `2px solid ${tone.border}`, borderRadius: 12, marginBottom: 24, padding: "22px 24px" }}>
-            <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
-              <span style={{ color: tone.color, fontSize: 18, fontWeight: 850 }}>{tone.icon}</span>
-              <span style={{ color: tone.color, fontSize: 13, fontWeight: 850 }}>{data.decision.label}</span>
-            </div>
-            <h2 style={{ color: "#0F2A3D", fontSize: "1.4rem", fontWeight: 850, lineHeight: 1.2, margin: "0 0 8px" }}>{data.decision.headline}</h2>
-            <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.55, margin: "0 0 16px", maxWidth: 720 }}>{data.decision.detail}</p>
+          {/* Tarjeta principal de estado tributario */}
+          <section style={{ background: cfg.bg, border: `2px solid ${cfg.border}`, borderRadius: 12, marginBottom: 32, padding: "28px 28px" }}>
+            <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 10px", textTransform: "uppercase" }}>Estado tributario</p>
+
+            <h2 style={{ color: cfg.titleColor, fontSize: "1.5rem", fontWeight: 850, lineHeight: 1.2, margin: "0 0 6px" }}>
+              {cfg.subtitle}
+            </h2>
+
+            <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.55, margin: "0 0 20px", maxWidth: 640 }}>
+              {data.decision.detail}
+            </p>
+
+            {cfg.showMetrics && (
+              <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: 20, flexWrap: "wrap" }}>
+                <div>
+                  <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 4px", textTransform: "uppercase" }}>Impuesto estimado</p>
+                  <p style={{ color: "#0F2A3D", fontSize: "1.8rem", fontWeight: 850, lineHeight: 1.15, margin: 0 }}>{clp(data.totals.impuestoEstimadoClp)}</p>
+                </div>
+                {data.totals.baseImponibleClp > 0 && (
+                  <div>
+                    <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 4px", textTransform: "uppercase" }}>Monto afecto estimado</p>
+                    <p style={{ color: "#475569", fontSize: "1.15rem", fontWeight: 700, lineHeight: 1.15, margin: 0 }}>{clp(data.totals.baseImponibleClp)}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              <Link href={data.nextAction.href} style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "11px 16px", textDecoration: "none" }}>
-                {data.nextAction.label} →
+              <Link href={cfg.ctaHref} style={{ background: cfg.ctaBg, borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 20px", textDecoration: "none" }}>
+                {cfg.ctaLabel} →
               </Link>
-              <Link href="/impuestos/simulador" style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "11px 16px", textDecoration: "none" }}>
-                Simular venta
-              </Link>
+              {cfg.showMetrics && (
+                <Link href="/impuestos/resumen" style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 20px", textDecoration: "none" }}>
+                  Ver detalle
+                </Link>
+              )}
             </div>
           </section>
 
-          <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginBottom: 24 }}>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Base imponible</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{clp(data.totals.baseImponibleClp)}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Estimada CLP</p>
-            </article>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Impuesto estimado</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{clp(data.totals.impuestoEstimadoClp)}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>~6.5% de la base</p>
-            </article>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Salud datos</p>
-              <p style={{ color: conf.color, fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{conf.label}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{data.totals.confidenceLevel}% confianza</p>
-            </article>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Eventos</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{data.totals.eventsCount}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Ventas calculadas</p>
-            </article>
+          {/* Herramientas tributarias */}
+          <section style={{ marginBottom: 24 }}>
+            <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 16px", textTransform: "uppercase" }}>Herramientas tributarias</p>
+            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))" }}>
+              {tools.map((tool) => {
+                const content = (
+                  <article style={{ background: tool.available ? "#FFFFFF" : "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, opacity: tool.available ? 1 : 0.7, padding: 18 }}>
+                    <div style={{ alignItems: "center", display: "flex", gap: 10, marginBottom: 6 }}>
+                      <h3 style={{ color: "#0F2A3D", fontSize: "0.95rem", fontWeight: 850, margin: 0 }}>{tool.title}</h3>
+                      {!tool.available && <span style={{ background: "#F1F5F9", borderRadius: 999, color: "#64748B", fontSize: 11, fontWeight: 850, padding: "2px 8px" }}>Próximamente</span>}
+                    </div>
+                    <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{tool.description}</p>
+                  </article>
+                );
+                if (tool.available) {
+                  return <Link key={tool.key} href={tool.href} style={{ textDecoration: "none" }}>{content}</Link>;
+                }
+                return <div key={tool.key}>{content}</div>;
+              })}
+            </div>
           </section>
         </>
       ) : null}
-
-      <section style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", marginBottom: 24 }}>
-        {sections.map((section) => {
-          const content = (
-            <article style={{
-              background: section.available ? "#FFFFFF" : "#F8FAFC",
-              border: "1px solid #E2E8F0",
-              borderRadius: 8,
-              opacity: section.available ? 1 : 0.7,
-              padding: 20,
-            }}>
-              <div style={{ alignItems: "center", display: "flex", gap: 10, marginBottom: 8 }}>
-                <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>{section.title}</h3>
-                {!section.available && (
-                  <span style={{ background: "#F1F5F9", borderRadius: 999, color: "#64748B", fontSize: 11, fontWeight: 850, padding: "2px 8px" }}>Próximamente</span>
-                )}
-              </div>
-              <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{section.description}</p>
-            </article>
-          );
-
-          if (section.available) {
-            return (
-              <Link key={section.key} href={section.href} style={{ textDecoration: "none" }}>
-                {content}
-              </Link>
-            );
-          }
-          return <div key={section.key}>{content}</div>;
-        })}
-      </section>
     </div>
   );
 }
