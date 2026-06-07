@@ -118,15 +118,16 @@ function SecurityCheckItem({ label, status }: { label: string; status: "ok" | "w
     info: { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.15)", icon: "#0EA5E9", text: "#0F2A3D" },
   };
   const c = colors[status];
+  const icon = status === "ok" ? "✓" : status === "warn" ? "⚠" : "ℹ";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", background: c.bg, border: `1px solid ${c.border}`, borderRadius: "8px" }}>
-      <span style={{ color: c.icon, fontSize: "16px", fontWeight: 700 }}>✓</span>
+      <span style={{ color: c.icon, fontSize: "16px", fontWeight: 700 }}>{icon}</span>
       <span style={{ fontSize: "13px", color: c.text, fontWeight: 600 }}>{label}</span>
     </div>
   );
 }
 
-function SecurityCenterPanel() {
+function SecurityCenterPanel({ twoFactorEnabled }: { twoFactorEnabled: boolean }) {
   return (
     <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1.25rem" }}>
@@ -139,10 +140,22 @@ function SecurityCenterPanel() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <SecurityCheckItem label="2FA activo" status="ok" />
+        <SecurityCheckItem label={twoFactorEnabled ? "2FA activo" : "2FA pendiente — requerido para navegar"} status={twoFactorEnabled ? "ok" : "warn"} />
         <SecurityCheckItem label="Sesión protegida" status="ok" />
         <SecurityCheckItem label="Verificación de cuenta" status="ok" />
       </div>
+
+      {!twoFactorEnabled && (
+        <div style={{ marginTop: "16px", padding: "14px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "10px" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "13px", fontWeight: 700, color: "#92400E" }}>
+            Debes activar 2FA para usar LEDGERA
+          </p>
+          <p style={{ margin: 0, fontSize: "12px", color: "#78350F", lineHeight: 1.5 }}>
+            Por seguridad, todas las funciones de la plataforma requieren autenticación en dos pasos.
+            Configúralo desde tu app de autenticación (Google Authenticator, Authy, etc.) escaneando el código QR.
+          </p>
+        </div>
+      )}
 
       <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E2E8F0" }}>
         <a href="/seguridad" style={{ fontSize: "13px", color: "#0EA5E9", textDecoration: "none", fontWeight: 700 }}>
@@ -372,7 +385,7 @@ export default function ConfiguracionPage() {
               </SectionCard>
             )}
 
-            <SecurityCenterPanel />
+            <SecurityCenterPanel twoFactorEnabled={user?.twoFactorEnabled === true} />
 
             {role === "admin" && <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />}
           </>
