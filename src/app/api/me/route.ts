@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
         status:                auth.user.status,
         subscriptionPlan:      auth.user.subscriptionPlan,
         subscriptionExpiresAt: auth.user.subscriptionExpiresAt,
+        twoFactorEnabled:      auth.user.twoFactorEnabled,
       },
       session: auth.session,
     });

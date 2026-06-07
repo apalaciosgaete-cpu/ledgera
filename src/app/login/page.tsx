@@ -75,9 +75,10 @@ function resolveClientError(error: unknown, fallback: string) {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   const justRegistered = searchParams.get("registered") === "1";
+  const oauth2fa = searchParams.get("oauth2fa") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -101,10 +102,34 @@ function LoginForm() {
   const [errorSetup, setErrorSetup] = useState("");
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && !oauth2fa) {
       router.push("/portafolio");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, oauth2fa]);
+
+  // Cargar configuración 2FA para usuarios OAuth sin 2FA
+  useEffect(() => {
+    if (oauth2fa && isAuthenticated && user) {
+      fetch("/api/2fa/oauth-setup", { credentials: "include" })
+        .then(r => r.json())
+        .then(json => {
+          if (json.ok && json.data) {
+            setSetupQrCode(json.data.qrCode ?? "");
+            setSetupSecret(json.data.secret ?? "");
+            setSetupToken(json.data.setupToken ?? "");
+            setSetupEmail(user.email ?? "");
+            setSetupCode("");
+            setErrorSetup("");
+            setStep(3);
+          } else {
+            setErrorSetup(json.message || "No fue posible cargar la configuración de 2FA.");
+          }
+        })
+        .catch(() => {
+          setErrorSetup("Error al cargar la configuración de 2FA. Intenta recargar la página.");
+        });
+    }
+  }, [oauth2fa, isAuthenticated, user]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

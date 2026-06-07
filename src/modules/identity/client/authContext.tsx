@@ -35,6 +35,7 @@ type AuthContextValue = {
   isLoading: boolean;
   lastAuthError: string | null;
   subscriptionState: SubscriptionStateResult | null;
+  needs2FA: boolean;
 
   login: (
     email: string,
@@ -206,6 +207,10 @@ export function AuthProvider({
       });
     }, [user]);
 
+  const needs2FA = useMemo(() => {
+    return !!user && user.twoFactorEnabled !== true;
+  }, [user]);
+
   const value = useMemo<AuthContextValue>(
   () => ({
     user,
@@ -213,6 +218,7 @@ export function AuthProvider({
     isLoading,
     lastAuthError,
     subscriptionState,
+    needs2FA,
     login,
     logout,
     refreshUser,
@@ -223,6 +229,7 @@ export function AuthProvider({
     isLoading,
     lastAuthError,
     subscriptionState,
+    needs2FA,
     login,
     logout,
     refreshUser,

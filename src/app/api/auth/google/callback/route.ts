@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
+import speakeasy from "speakeasy";
+import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/modules/identity/application/password";
@@ -13,8 +15,22 @@ import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionR
 export const runtime = "nodejs";
 
 const OAUTH_STATE_COOKIE = "ledgera_google_oauth_state";
+const PENDING_2FA_COOKIE = "ledgera_pending_2fa";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
+
+const REGISTRATION_2FA_TOKEN_SECRET =
+  process.env.REGISTRATION_2FA_TOKEN_SECRET ??
+  process.env.NEXTAUTH_SECRET ??
+  process.env.AUTH_SECRET ??
+  "ledgera-dev-registration-2fa-secret";
+
+function signSetupToken(userId: string, email: string, secret: string) {
+  return crypto
+    .createHmac("sha256", REGISTRATION_2FA_TOKEN_SECRET)
+    .update(`${userId}:${email}:${secret}`)
+    .digest("hex");
+}
 
 type GoogleTokenResponse = {
   access_token?: string;
@@ -162,6 +178,58 @@ export async function GET(req: NextRequest) {
       token: sessionToken,
       expiresAt,
     });
+
+    // Si el usuario no tiene 2FA, forzar configuración antes de permitir acceso
+    if (!user.twoFactorEnabled) {
+      const secret = speakeasy.generateSecret({
+        name: `LEDGERA (${user.email})`,
+        issuer: "LEDGERA",
+        length: 20,
+      });
+
+      if (!secret.base32 || !secret.otpauth_url) {
+        return redirectToLogin(req, "google_2fa_setup_failed");
+      }
+
+      await prisma.users.update({
+        where: { id: user.id },
+        data: {
+          twoFactorSecret: secret.base32,
+          twoFactorEnabled: false,
+          updated_at: new Date(),
+        },
+      });
+
+      const setupToken = signSetupToken(user.id, user.email, secret.base32);
+
+      const response = NextResponse.redirect(new URL("/login?oauth2fa=1", req.nextUrl.origin));
+
+      response.cookies.set("session_token", sessionToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        expires: expiresAt,
+      });
+
+      response.cookies.set(PENDING_2FA_COOKIE, setupToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 15 * 60, // 15 minutos
+      });
+
+      response.cookies.set(OAUTH_STATE_COOKIE, "", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 0,
+      });
+
+      return response;
+    }
 
     const response = NextResponse.redirect(new URL("/portafolio", req.nextUrl.origin));
 

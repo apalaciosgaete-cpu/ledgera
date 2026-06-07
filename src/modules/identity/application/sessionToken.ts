@@ -53,6 +53,7 @@ export async function getSessionFromRequest(request: Request) {
         status: user.status,
         subscriptionPlan: user.subscriptionPlan,
         subscriptionExpiresAt: user.subscriptionExpiresAt,
+        twoFactorEnabled: user.twoFactorEnabled,
       },
       session: {
         id: session.id,

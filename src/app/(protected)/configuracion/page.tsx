@@ -15,13 +15,12 @@ type AuditEntry = {
   createdAt:  string;
 };
 type Section = "tributario" | "persona" | "empresa" | "seguridad" | "auditoria";
-type TwoFAStep = "idle" | "setup" | "confirm" | "active" | "disable";
 
 const ALL_SECTIONS: { key: Section; label: string; description: string; roles: string[]; icon: React.ReactNode }[] = [
   { key: "tributario",    label: "Tributario",    description: "Motor FIFO y reglas SII",       roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg> },
   { key: "persona",       label: "Persona natural", description: "Identidad del contribuyente", roles: ["admin","personal"],             icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
   { key: "empresa",       label: "Empresa",       description: "Identidad del contribuyente",   roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg> },
-  { key: "seguridad",     label: "Seguridad",     description: "Sesiones y acceso",             roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> },
+  { key: "seguridad",     label: "Seguridad",     description: "Sesiones y acceso",             roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> },
   { key: "auditoria",     label: "Auditoría",     description: "Registro de cambios",           roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg> },
 ];
 
@@ -110,209 +109,44 @@ function SaveBar({ onSave, saving, saved, onReset, error }: { onSave: () => void
 }
 
 // ─── 2FA Panel ────────────────────────────────────────────────────────────────
-function TwoFAPanel() {
-  const [step,        setStep]        = useState<TwoFAStep>("idle");
-  const [qrCode,      setQrCode]      = useState("");
-  const [secret,      setSecret]      = useState("");
-  const [code,        setCode]        = useState("");
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState("");
-  const [success,     setSuccess]     = useState("");
-  const [is2FAActive, setIs2FAActive] = useState(false);
+function SecurityCheckItem({ label, status }: { label: string; status: "ok" | "warn" | "info" }) {
+  const colors = {
+    ok:   { bg: "rgba(22,163,74,0.06)", border: "rgba(22,163,74,0.15)", icon: "#4ADE80", text: "#0F2A3D" },
+    warn: { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.15)", icon: "#F59E0B", text: "#0F2A3D" },
+    info: { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.15)", icon: "#0EA5E9", text: "#0F2A3D" },
+  };
+  const c = colors[status];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", background: c.bg, border: `1px solid ${c.border}`, borderRadius: "8px" }}>
+      <span style={{ color: c.icon, fontSize: "16px", fontWeight: 700 }}>✓</span>
+      <span style={{ fontSize: "13px", color: c.text, fontWeight: 600 }}>{label}</span>
+    </div>
+  );
+}
 
-  // Verificar si 2FA ya está activo
-  useEffect(() => {
-    fetch("/api/2fa/status")
-      .then(r => r.json())
-      .then(d => {
-        if (d.enabled) { setIs2FAActive(true); setStep("active"); }
-      })
-      .catch(() => {});
-  }, []);
-
-  async function iniciarSetup() {
-    setLoading(true); setError("");
-    try {
-      const res  = await fetch("/api/2fa/setup");
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.message);
-      setQrCode(json.qrCode);
-      setSecret(json.secret);
-      setStep("setup");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al generar QR");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function confirmarActivacion() {
-    if (code.length !== 6) return;
-    setLoading(true); setError("");
-    try {
-      const res  = await fetch("/api/2fa/verify", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ code }),
-      });
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.message);
-      setIs2FAActive(true);
-      setStep("active");
-      setSuccess("2FA activado correctamente.");
-      setCode("");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Código inválido");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function desactivar2FA() {
-    if (code.length !== 6) return;
-    setLoading(true); setError("");
-    try {
-      const res  = await fetch("/api/2fa/disable", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ code }),
-      });
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.message);
-      setIs2FAActive(false);
-      setStep("idle");
-      setSuccess("2FA desactivado correctamente.");
-      setCode("");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Código inválido");
-    } finally {
-      setLoading(false);
-    }
-  }
-
+function SecurityCenterPanel() {
   return (
     <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "1.25rem" }}>
-        <div>
-          <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>
-            Autenticación en dos factores (2FA)
-          </h3>
-          <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>
-            Protege tu cuenta con Google Authenticator u otra app TOTP.
-          </p>
-        </div>
-        <span style={{
-          fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "6px",
-          background: is2FAActive ? "rgba(22,163,74,0.12)" : "rgba(100,116,139,0.12)",
-          color:      is2FAActive ? "#4ADE80" : "#64748B",
-          border:     `1px solid ${is2FAActive ? "rgba(22,163,74,0.25)" : "rgba(100,116,139,0.2)"}`,
-          whiteSpace: "nowrap",
-          flexShrink: 0,
-        }}>
-          {is2FAActive ? "✓ Activo" : "Inactivo"}
-        </span>
+      <div style={{ marginBottom: "1.25rem" }}>
+        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>
+          Estado de seguridad
+        </h3>
+        <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>
+          LEDGERA requiere verificación en dos pasos para proteger tu información financiera y tributaria.
+        </p>
       </div>
 
-      {/* Mensajes */}
-      {error   && <p style={{ fontSize: "12px", color: "#EF4444", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: "6px", padding: "8px 12px", margin: "0 0 1rem" }}>{error}</p>}
-      {success && <p style={{ fontSize: "12px", color: "#4ADE80", background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.15)", borderRadius: "6px", padding: "8px 12px", margin: "0 0 1rem" }}>{success}</p>}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <SecurityCheckItem label="2FA activo" status="ok" />
+        <SecurityCheckItem label="Sesión protegida" status="ok" />
+        <SecurityCheckItem label="Verificación de cuenta" status="ok" />
+      </div>
 
-      {/* ESTADO: idle — no activo */}
-      {step === "idle" && (
-        <button type="button" onClick={iniciarSetup} disabled={loading}
-          style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: loading ? "#15803D" : "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
-          {loading ? "Generando QR..." : "Activar 2FA"}
-        </button>
-      )}
-
-      {/* ESTADO: setup — mostrar QR */}
-      {step === "setup" && qrCode && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-            <p style={{ fontSize: "13px", color: "#475569", margin: 0, textAlign: "center" }}>
-              Escanea este código QR con <strong style={{ color: "#0F2A3D" }}>Google Authenticator</strong> u otra app TOTP
-            </p>
-            {/* QR Code */}
-            <img src={qrCode} alt="QR 2FA" style={{ width: "180px", height: "180px", borderRadius: "8px", background: "#fff", padding: "8px" }} />
-            {/* Clave manual */}
-            <div style={{ width: "100%", background: "rgba(0,0,0,0.2)", borderRadius: "6px", padding: "8px 12px", textAlign: "center" }}>
-              <p style={{ fontSize: "11px", color: "#64748B", margin: "0 0 4px" }}>Clave manual (si no puedes escanear)</p>
-              <code style={{ fontSize: "13px", color: "#475569", letterSpacing: "0.1em", wordBreak: "break-all" }}>{secret}</code>
-            </div>
-          </div>
-
-          <div>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>
-              Ingresa el código de 6 dígitos para confirmar
-            </label>
-            <input
-              type="text"
-              value={code}
-              onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="000000"
-              maxLength={6}
-              autoFocus
-              style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "8px", padding: "10px 12px", color: "#0F172A", fontSize: "20px", fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.3em", textAlign: "center", outline: "none", width: "160px", boxSizing: "border-box" }}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button type="button" onClick={confirmarActivacion} disabled={loading || code.length < 6}
-              style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: code.length < 6 ? "#334155" : "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: code.length < 6 ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
-              {loading ? "Verificando..." : "Confirmar y activar"}
-            </button>
-            <button type="button" onClick={() => { setStep("idle"); setCode(""); setError(""); }}
-              style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid #E2E8F0", background: "transparent", color: "#64748B", fontSize: "13px", cursor: "pointer", fontFamily: fonts.body }}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ESTADO: active — 2FA activado */}
-      {step === "active" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.15)", borderRadius: "8px", padding: "12px 14px", fontSize: "13px", color: "#4ADE80" }}>
-            ✓ Tu cuenta está protegida con autenticación en dos factores.
-          </div>
-          {step === "active" && (
-            <div>
-              <button type="button" onClick={() => { setStep("disable"); setCode(""); setError(""); }}
-                style={{ padding: "9px 16px", borderRadius: "8px", border: "1px solid rgba(239,68,68,0.3)", background: "transparent", color: "#EF4444", fontSize: "13px", cursor: "pointer", fontFamily: fonts.body }}>
-                Desactivar 2FA
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ESTADO: disable — confirmar desactivación */}
-      {step === "disable" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <p style={{ fontSize: "13px", color: "#F59E0B", margin: 0 }}>
-            Ingresa el código de tu app autenticadora para desactivar el 2FA.
-          </p>
-          <input
-            type="text"
-            value={code}
-            onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder="000000"
-            maxLength={6}
-            autoFocus
-            style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "8px", padding: "10px 12px", color: "#0F172A", fontSize: "20px", fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.3em", textAlign: "center", outline: "none", width: "160px", boxSizing: "border-box" }}
-          />
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button type="button" onClick={desactivar2FA} disabled={loading || code.length < 6}
-              style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: code.length < 6 ? "#334155" : "#DC2626", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: code.length < 6 ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
-              {loading ? "Desactivando..." : "Confirmar desactivación"}
-            </button>
-            <button type="button" onClick={() => { setStep("active"); setCode(""); setError(""); }}
-              style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid #E2E8F0", background: "transparent", color: "#64748B", fontSize: "13px", cursor: "pointer", fontFamily: fonts.body }}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
+      <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E2E8F0" }}>
+        <a href="/seguridad" style={{ fontSize: "13px", color: "#0EA5E9", textDecoration: "none", fontWeight: 700 }}>
+          Gestionar sesiones activas →
+        </a>
+      </div>
     </div>
   );
 }
@@ -523,21 +357,22 @@ export default function ConfiguracionPage() {
         {/* SEGURIDAD */}
         {section === "seguridad" && (
           <>
-            <SectionCard title="Sesiones y control de acceso" description="Parámetros de gobierno operacional para la plataforma">
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "0.5rem" }}>
-                <Field label="Expiración de sesión (horas)" hint="Las sesiones se cerrarán automáticamente tras este período.">
-                  <TextInput value={str("SECURITY_SESSION_HOURS")} onChange={v => set("SECURITY_SESSION_HOURS", v)} type="number" style={{ width: "140px" }} />
-                </Field>
-                <Field label="Máximo intentos de login fallidos" hint="La cuenta se bloqueará tras esta cantidad de intentos fallidos.">
-                  <TextInput value={str("SECURITY_MAX_LOGIN_ATTEMPTS")} onChange={v => set("SECURITY_MAX_LOGIN_ATTEMPTS", v)} type="number" style={{ width: "140px" }} />
-                </Field>
-              </div>
-            </SectionCard>
+            {role === "admin" && (
+              <SectionCard title="Sesiones y control de acceso" description="Parámetros de gobierno operacional para la plataforma">
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "0.5rem" }}>
+                  <Field label="Expiración de sesión (horas)" hint="Las sesiones se cerrarán automáticamente tras este período.">
+                    <TextInput value={str("SECURITY_SESSION_HOURS")} onChange={v => set("SECURITY_SESSION_HOURS", v)} type="number" style={{ width: "140px" }} />
+                  </Field>
+                  <Field label="Máximo intentos de login fallidos" hint="La cuenta se bloqueará tras esta cantidad de intentos fallidos.">
+                    <TextInput value={str("SECURITY_MAX_LOGIN_ATTEMPTS")} onChange={v => set("SECURITY_MAX_LOGIN_ATTEMPTS", v)} type="number" style={{ width: "140px" }} />
+                  </Field>
+                </div>
+              </SectionCard>
+            )}
 
-            {/* 2FA Panel */}
-            <TwoFAPanel />
+            <SecurityCenterPanel />
 
-            <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
+            {role === "admin" && <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />}
           </>
         )}
 

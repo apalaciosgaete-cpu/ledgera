@@ -9,6 +9,7 @@ export type AuthUser = {
   status?: "active" | "inactive" | "suspended";
   subscriptionPlan?: "BASICO" | "PROFESIONAL" | "EMPRESA";
   subscriptionExpiresAt?: string | null;
+  twoFactorEnabled?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
