@@ -2,17 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { httpClient } from "@/shared/http/httpClient";
-
-type ProfileData = {
-  fullName: string;
-  email:    string;
-  rut:      string | null;
-  phone:    string | null;
-  address:  string | null;
-  commune:  string | null;
-  country:  string | null;
-};
 
 type Props = {
   email:    string;
@@ -22,36 +11,6 @@ type Props = {
   badgeColor:     string;
   roleLabel:      string;
   onLogout: () => void;
-};
-
-function formatRut(value: string): string {
-  const clean = value.replace(/[^0-9kK]/g, "");
-  if (clean.length < 2) return clean;
-  const body = clean.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  const dv   = clean.slice(-1).toUpperCase();
-  return `${body}-${dv}`;
-}
-
-const inputStyle: React.CSSProperties = {
-  width:        "100%",
-  background:   "rgba(255,255,255,0.05)",
-  border:       "1px solid rgba(255,255,255,0.12)",
-  borderRadius: "8px",
-  padding:      "9px 12px",
-  fontSize:     "13px",
-  color:        "#E2E8F0",
-  outline:      "none",
-  boxSizing:    "border-box",
-};
-
-const labelStyle: React.CSSProperties = {
-  display:      "block",
-  fontSize:     "11px",
-  fontWeight:   600,
-  color:        "#64748B",
-  marginBottom: "5px",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
 };
 
 function menuItemStyle(active: boolean): React.CSSProperties {
@@ -73,35 +32,8 @@ function menuItemStyle(active: boolean): React.CSSProperties {
 export function UserProfileDropdown({
   email, initials, avatarGradient, badgeBg, badgeColor, roleLabel, onLogout,
 }: Props) {
-  const [open,    setOpen]    = useState(false);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [form,    setForm]    = useState<ProfileData>({
-    fullName: "", email, rut: "", phone: "", address: "", commune: "", country: "Chile",
-  });
-  const [saving,  setSaving]  = useState(false);
-  const [saved,   setSaved]   = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    httpClient<{ data: ProfileData }>("/api/user/profile", { auth: true })
-      .then(res => {
-        setProfile(res.data);
-        setForm({
-          fullName: res.data.fullName ?? "",
-          email:    res.data.email    ?? email,
-          rut:      res.data.rut      ?? "",
-          phone:    res.data.phone    ?? "",
-          address:  res.data.address  ?? "",
-          commune:  res.data.commune  ?? "",
-          country:  res.data.country  ?? "Chile",
-        });
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "No se pudieron cargar los datos.");
-      });
-  }, [open, email]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -113,39 +45,6 @@ export function UserProfileDropdown({
     if (open) document.addEventListener("click", onClickOutside);
     return () => document.removeEventListener("click", onClickOutside);
   }, [open]);
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-    try {
-      await httpClient("/api/user/profile", {
-        method: "PATCH",
-        auth: true,
-        body: {
-          fullName: form.fullName,
-          rut:      form.rut || null,
-          phone:    form.phone || null,
-          address:  form.address || null,
-          commune:  form.commune || null,
-          country:  form.country || null,
-        },
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function field(key: keyof ProfileData) {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = key === "rut" ? formatRut(e.target.value) : e.target.value;
-      setForm(f => ({ ...f, [key]: val }));
-    };
-  }
 
   return (
     <div ref={panelRef} style={{ position: "relative" }}>
@@ -214,7 +113,7 @@ export function UserProfileDropdown({
           position:     "absolute",
           top:          "calc(100% + 8px)",
           right:        0,
-          width:        "340px",
+          width:        "260px",
           background:   "#0F2236",
           border:       "1px solid rgba(255,255,255,0.1)",
           borderRadius: "14px",
@@ -222,11 +121,10 @@ export function UserProfileDropdown({
           zIndex:       200,
           display:      "flex",
           flexDirection:"column",
-          maxHeight:    "min(520px, calc(100vh - 100px))",
+          padding:      "8px",
         }}>
-          {/* Header — fijo */}
           <div style={{
-            padding:      "16px 20px 14px",
+            padding:      "12px 12px 10px",
             borderBottom: "1px solid rgba(255,255,255,0.07)",
             flexShrink:   0,
           }}>
@@ -238,17 +136,12 @@ export function UserProfileDropdown({
             </p>
           </div>
 
-          {/* Links rápidos */}
-          <div style={{
-            padding: "8px 20px",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
-            flexShrink: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "2px",
-          }}>
+          <div style={{ padding: "6px 0", display: "flex", flexDirection: "column", gap: "2px" }}>
             <Link href="/configuracion" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
               Perfil
+            </Link>
+            <Link href="/configuracion?section=seguridad" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
+              Seguridad
             </Link>
             <Link href="/planes" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
               Facturación
@@ -258,142 +151,24 @@ export function UserProfileDropdown({
             </Link>
           </div>
 
-          {/* Body scrolleable */}
-          <form
-            id="profile-form"
-            onSubmit={handleSave}
-            style={{
-              padding:    "16px 20px",
-              display:    "flex",
-              flexDirection: "column",
-              gap:        "12px",
-              overflowY:  "auto",
-              flex:       1,
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Nombre completo</label>
-              <input
-                style={inputStyle}
-                value={form.fullName}
-                onChange={field("fullName")}
-                placeholder="Ej: Juan Pérez González"
-                required
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>RUT</label>
-              <input
-                style={inputStyle}
-                value={form.rut ?? ""}
-                onChange={field("rut")}
-                placeholder="12.345.678-9"
-                maxLength={12}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Dirección</label>
-              <input
-                style={inputStyle}
-                value={form.address ?? ""}
-                onChange={field("address")}
-                placeholder="Av. Libertador Bernardo O'Higgins 1234"
-              />
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              <div>
-                <label style={labelStyle}>Comuna</label>
-                <input
-                  style={inputStyle}
-                  value={form.commune ?? ""}
-                  onChange={field("commune")}
-                  placeholder="Santiago"
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>País</label>
-                <input
-                  style={inputStyle}
-                  value={form.country ?? "Chile"}
-                  onChange={field("country")}
-                  placeholder="Chile"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Correo electrónico</label>
-              <input
-                style={{ ...inputStyle, color: "#64748B", cursor: "not-allowed" }}
-                value={form.email}
-                readOnly
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Teléfono</label>
-              <input
-                style={inputStyle}
-                value={form.phone ?? ""}
-                onChange={field("phone")}
-                placeholder="+56 9 1234 5678"
-                type="tel"
-              />
-            </div>
-
-            {error && (
-              <p style={{ margin: 0, fontSize: "12px", color: "#F87171", background: "rgba(239,68,68,0.08)", borderRadius: "6px", padding: "8px 10px" }}>
-                {error}
-              </p>
-            )}
-          </form>
-
-          {/* Footer — fijo */}
-          <div style={{
-            padding:      "12px 20px 16px",
-            borderTop:    "1px solid rgba(255,255,255,0.07)",
-            flexShrink:   0,
-            display:      "flex",
-            flexDirection:"column",
-            gap:          "8px",
-          }}>
-            <button
-              type="submit"
-              form="profile-form"
-              disabled={saving || !profile}
-              style={{
-                width:        "100%",
-                padding:      "10px",
-                borderRadius: "9px",
-                border:       "none",
-                background:   saved ? "#15803D" : "#16A34A",
-                color:        "#fff",
-                fontSize:     "13px",
-                fontWeight:   700,
-                cursor:       saving ? "wait" : "pointer",
-                opacity:      saving || !profile ? 0.7 : 1,
-                transition:   "all 0.15s ease",
-              }}
-            >
-              {saved ? "¡Guardado!" : saving ? "Guardando…" : "Guardar cambios"}
-            </button>
-
+          <div style={{ paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
             <button
               type="button"
               onClick={() => { setOpen(false); onLogout(); }}
               style={{
-                width:        "100%",
-                padding:      "10px",
-                borderRadius: "9px",
-                border:       "1px solid rgba(239,68,68,0.25)",
-                background:   "transparent",
-                color:        "#F87171",
+                display:      "flex",
+                alignItems:   "center",
+                gap:          "10px",
+                padding:      "9px 12px",
+                borderRadius: "8px",
                 fontSize:     "13px",
-                fontWeight:   700,
+                fontWeight:   600,
+                color:        "#F87171",
+                background:   "transparent",
+                border:       "none",
                 cursor:       "pointer",
+                width:        "100%",
+                textAlign:    "left",
                 transition:   "all 0.15s ease",
               }}
             >

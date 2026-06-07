@@ -263,9 +263,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                     <Link href="/configuracion" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/configuracion"))}>
                       Configuración
                     </Link>
-                    <Link href="/seguridad" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/seguridad"))}>
-                      Seguridad
-                    </Link>
                     {role === "admin" && (
                       <Link href="/admin" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/admin"))}>
                         Administración

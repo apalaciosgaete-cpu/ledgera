@@ -14,13 +14,14 @@ type AuditEntry = {
   actorEmail: string | null;
   createdAt:  string;
 };
-type Section = "tributario" | "persona" | "empresa" | "seguridad" | "auditoria";
+type Section = "tributario" | "persona" | "empresa" | "seguridad" | "facturacion" | "auditoria";
 
 const ALL_SECTIONS: { key: Section; label: string; description: string; roles: string[]; icon: React.ReactNode }[] = [
   { key: "tributario",    label: "Tributario",    description: "Motor FIFO y reglas SII",       roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg> },
-  { key: "persona",       label: "Persona natural", description: "Identidad del contribuyente", roles: ["admin","personal"],             icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
-  { key: "empresa",       label: "Empresa",       description: "Identidad del contribuyente",   roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg> },
+  { key: "persona",       label: "Perfil",        description: "Identidad del contribuyente",   roles: ["admin","personal"],             icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
+  { key: "empresa",       label: "Perfil",        description: "Identidad del contribuyente",   roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg> },
   { key: "seguridad",     label: "Seguridad",     description: "Sesiones y acceso",             roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> },
+  { key: "facturacion",   label: "Facturación",   description: "Plan y suscripción",            roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><line x1="6" y1="15" x2="10" y2="15" /></svg> },
   { key: "auditoria",     label: "Auditoría",     description: "Registro de cambios",           roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg> },
 ];
 
@@ -29,6 +30,7 @@ const SECTION_PREFIX: Record<Section, string> = {
   persona:    "PN_",
   empresa:    "COMPANY_",
   seguridad:  "SECURITY_",
+  facturacion: "",
   auditoria:  "",
 };
 
@@ -374,6 +376,17 @@ export default function ConfiguracionPage() {
 
             {role === "admin" && <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />}
           </>
+        )}
+
+        {/* FACTURACIÓN */}
+        {section === "facturacion" && (
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem" }}>
+            <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>Facturación</h3>
+            <p style={{ fontSize: "12px", color: "#475569", margin: "0 0 1.25rem" }}>Gestiona tu plan de suscripción y facturación.</p>
+            <a href="/planes" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "8px", border: "none", background: "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, textDecoration: "none", fontFamily: fonts.body }}>
+              Ver planes →
+            </a>
+          </div>
         )}
 
         {/* AUDITORÍA */}
