@@ -47,83 +47,33 @@ type DashboardData = {
       generatedAt: string;
     }[];
   };
-  movements: {
-    total: number;
-    inYear: number;
-  };
-  events: {
-    total: number;
-    pendingEvents: number;
-  };
-  validations: {
-    total: number;
-    valid: number;
-    revoked: number;
-    recent: {
-      id: string;
-      hash: string;
-      type: string;
-      year: number | null;
-      issuedAt: string;
-    }[];
-  };
-  snapshots: {
-    id: string;
-    contentHash: string;
-    createdAt: string;
-  }[];
-  recentLogs: {
-    period: {
-      id: string;
-      action: string;
-      reason: string | null;
-      actorEmail: string | null;
-      createdAt: string;
-    }[];
-    declarations: {
-      id: string;
-      action: string;
-      declarationId: string;
-      actorEmail: string | null;
-      statusFrom: string | null;
-      statusTo: string | null;
-      createdAt: string;
-    }[];
-  };
+  movements: { total: number; inYear: number };
+  events: { total: number; pendingEvents: number };
+  validations: { total: number; valid: number; revoked: number };
+  snapshots: { id: string; contentHash: string; createdAt: string }[];
 };
 
-const sections = [
-  { key: "periodos", title: "Períodos", description: "Cierre, reapertura, snapshots, timeline y trazabilidad de períodos tributarios.", href: "/auditoria/periodos", available: true },
-  { key: "movimientos", title: "Movimientos", description: "Origen de cada cálculo. Fecha, activo, cantidad, precio, fee y relación con evento tributario.", href: "/auditoria/movimientos", available: true },
+function buildFindings(data: DashboardData): string[] {
+  const findings: string[] = [];
+  const i = data.integrity.issues;
+  if (i.sellWithoutEvent > 0) findings.push(`${i.sellWithoutEvent} venta${i.sellWithoutEvent > 1 ? "s" : ""} sin clasificación`);
+  if (i.pendingEvents > 0) findings.push(`${i.pendingEvents} evento${i.pendingEvents > 1 ? "s" : ""} pendiente${i.pendingEvents > 1 ? "s" : ""} de clasificar`);
+  if (i.orphanEvents > 0) findings.push(`${i.orphanEvents} evento${i.orphanEvents > 1 ? "s" : ""} huérfano${i.orphanEvents > 1 ? "s" : ""}`);
+  if (i.unknownTypeCount > 0) findings.push(`${i.unknownTypeCount} tipo${i.unknownTypeCount > 1 ? "s" : ""} de movimiento desconocido${i.unknownTypeCount > 1 ? "s" : ""}`);
+  if (i.missingPriceCount > 0) findings.push(`${i.missingPriceCount} precio${i.missingPriceCount > 1 ? "s" : ""} faltante${i.missingPriceCount > 1 ? "s" : ""}`);
+  if (i.missingQuantityCount > 0) findings.push(`${i.missingQuantityCount} cantidad${i.missingQuantityCount > 1 ? "es" : ""} faltante${i.missingQuantityCount > 1 ? "s" : ""}`);
+  if (i.futureDateCount > 0) findings.push(`${i.futureDateCount} fecha${i.futureDateCount > 1 ? "s" : ""} futura${i.futureDateCount > 1 ? "s" : ""}`);
+  return findings;
+}
+
+const auditorTools = [
   { key: "fifo", title: "FIFO", description: "Desglose de lotes FIFO para cada venta. Cost basis, consumo y ganancia verificable.", href: "/auditoria/fifo", available: true },
-  { key: "eventos", title: "Eventos Tributarios", description: "Auditoría de taxEvents. Clasificación, PnL, fuente, relación movimiento e historial.", href: "/auditoria/eventos", available: true },
+  { key: "movimientos", title: "Operaciones auditadas", description: "Origen de cada cálculo. Fecha, activo, cantidad, precio, fee y relación con evento tributario.", href: "/auditoria/movimientos", available: true },
+  { key: "eventos", title: "Eventos pendientes", description: "Auditoría de taxEvents. Clasificación, PnL, fuente, relación movimiento e historial.", href: "/auditoria/eventos", available: true },
+  { key: "periodos", title: "Estado del período", description: "Cierre, reapertura, snapshots, timeline y trazabilidad de períodos tributarios.", href: "/auditoria/periodos", available: true },
   { key: "declaraciones", title: "Declaraciones", description: "Cadena de custodia de DDJJ. CREATED → REVIEWED → CONFIRMED → EXPORTED → VOIDED.", href: "/auditoria/declaraciones", available: true },
-  { key: "integridad", title: "Integridad", description: "Ventas sin evento, eventos huérfanos, duplicados, inconsistencias y score de salud.", href: "/auditoria/integridad", available: true },
-  { key: "verificacion", title: "Verificación Pública", description: "Códigos de verificación, hashes, estados y revocaciones de documentos.", href: "/auditoria/verificacion", available: true },
-  { key: "evidencia", title: "Evidencia", description: "Reportes, declaraciones, hashes y verificaciones reunidos para fiscalización.", href: "/auditoria/evidencia", available: true },
-  { key: "cadena", title: "Cadena de Custodia", description: "Movimiento → FIFO → Tax Event → DDJJ → Reporte → Hash → Verificación. Trazabilidad completa.", href: "/auditoria/cadena", available: true },
-  { key: "informe", title: "Informe de Auditoría", description: "PDF completo con integridad, declaraciones, períodos, hallazgos, QR y hash.", href: "/auditoria/informe", available: true },
+  { key: "verificacion", title: "Verificaciones públicas", description: "Códigos de verificación, hashes, estados y revocaciones de documentos.", href: "/auditoria/verificacion", available: true },
 ];
-
-function periodLabel(status: string) {
-  switch (status) {
-    case "OPEN": return { text: "Abierto", color: "#16A34A", bg: "#F0FDF4" };
-    case "CLOSED": return { text: "Cerrado", color: "#64748B", bg: "#F8FAFC" };
-    case "REOPENED": return { text: "Reabierto", color: "#D97706", bg: "#FFFBEB" };
-    default: return { text: status, color: "#64748B", bg: "#F1F5F9" };
-  }
-}
-
-function declarationStatusLabel(status: string) {
-  switch (status) {
-    case "DRAFT": return { text: "Borrador", bg: "#F1F5F9", color: "#475569" };
-    case "REVIEWED": return { text: "Revisada", bg: "#E0F2FE", color: "#075985" };
-    case "CONFIRMED": return { text: "Confirmada", bg: "#F0FDF4", color: "#166534" };
-    case "VOIDED": return { text: "Anulada", bg: "#FEF2F2", color: "#991B1B" };
-    case "EXPORTED": return { text: "Exportada", bg: "#FFFBEB", color: "#92400E" };
-    default: return { text: status, bg: "#F1F5F9", color: "#475569" };
-  }
-}
 
 export default function AuditoriaHubPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -146,139 +96,176 @@ export default function AuditoriaHubPage() {
     void load();
   }, []);
 
+  const findings = data ? buildFindings(data) : [];
+  const healthy = data ? data.integrity.totalIssues === 0 : true;
+
   return (
     <div style={{ maxWidth: 1180, width: "100%" }}>
-      <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", marginBottom: 24 }}>
+      {/* Header */}
+      <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", marginBottom: 28 }}>
         <div>
           <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Auditoría</p>
-          <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Centro de Auditoría</h1>
+          <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Estado de auditoría</h1>
           <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
-            Demuéstrame que el cálculo es correcto. Trazabilidad, FIFO, integridad y cadena de custodia.
+            Demuestra que el cálculo es correcto. Trazabilidad, FIFO, integridad y cadena de custodia.
           </p>
         </div>
       </section>
 
-      {loading && <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando dashboard de auditoría...</p>}
-      {error && <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{error}</div>}
+      {loading ? (
+        <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando estado de auditoría...</p>
+      ) : error ? (
+        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{error}</div>
+      ) : data ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-      {!loading && data && (
-        <>
-          {/* KPIs */}
-          <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginBottom: 24 }}>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Integridad</p>
-              <p style={{ color: data.integrity.color, fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{data.integrity.status}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{data.integrity.healthScore}/100 · {data.integrity.totalIssues} problema{data.integrity.totalIssues !== 1 ? "s" : ""}</p>
-            </article>
+          {/* 1. Estado de Auditoría */}
+          <section style={{
+            background: healthy ? "#F0FDF4" : "#FEF9C3",
+            border: `2px solid ${healthy ? "#86EFAC" : "#FDE047"}`,
+            borderRadius: 14,
+            padding: "28px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 20 }}>{healthy ? "✓" : "⚠"}</span>
+              <h2 style={{ color: healthy ? "#166534" : "#854D0E", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>
+                {healthy ? "Sin observaciones" : "Requiere revisión"}
+              </h2>
+            </div>
 
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Período {data.period.year}</p>
-              <p style={{ color: periodLabel(data.period.status).color, fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{periodLabel(data.period.status).text}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{data.period.snapshotCount} snapshot{data.period.snapshotCount !== 1 ? "s" : ""} · {data.period.logCount} log{data.period.logCount !== 1 ? "s" : ""}</p>
-            </article>
+            <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.55, margin: "0 0 20px", maxWidth: 640 }}>
+              {healthy
+                ? "Integridad verificada, FIFO verificado, declaraciones sin inconsistencias."
+                : `${findings.length} hallazgo${findings.length > 1 ? "s" : ""} detectado${findings.length > 1 ? "s" : ""}. Revisa antes de declarar.`}
+            </p>
 
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Declaraciones</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{data.declarations.counts.total}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{data.declarations.counts.confirmed} confirmada{data.declarations.counts.confirmed !== 1 ? "s" : ""} · {data.declarations.counts.voided} anulada{data.declarations.counts.voided !== 1 ? "s" : ""}</p>
-            </article>
+            {healthy && (
+              <ul style={{ listStyle: "none", margin: "0 0 20px", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> Integridad verificada
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> FIFO verificado
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> Declaraciones sin inconsistencias
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> {data.validations.valid} verificación{data.validations.valid !== 1 ? "es" : ""} válida{data.validations.valid !== 1 ? "s" : ""}
+                </li>
+              </ul>
+            )}
 
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Eventos</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{data.events.total}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{data.events.pendingEvents} pendiente{data.events.pendingEvents !== 1 ? "s" : ""} de clasificar</p>
-            </article>
+            {!healthy && findings.length > 0 && (
+              <ul style={{ listStyle: "none", margin: "0 0 20px", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                {findings.slice(0, 4).map((f, i) => (
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#854D0E" }}>
+                    <span style={{ fontWeight: 700 }}>•</span> {f}
+                  </li>
+                ))}
+              </ul>
+            )}
 
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Movimientos</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{data.movements.total}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{data.movements.inYear} en {data.year}</p>
-            </article>
-
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Verificaciones</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{data.validations.total}</p>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{data.validations.valid} válida{data.validations.valid !== 1 ? "s" : ""} · {data.validations.revoked} revocada{data.validations.revoked !== 1 ? "s" : ""}</p>
-            </article>
+            <Link
+              href={healthy ? "/auditoria/evidencia" : "/auditoria/integridad"}
+              style={{
+                background: healthy ? "#16A34A" : "#B45309",
+                borderRadius: 8,
+                color: "#FFFFFF",
+                display: "inline-flex",
+                fontSize: 14,
+                fontWeight: 850,
+                padding: "12px 22px",
+                textDecoration: "none",
+              }}
+            >
+              {healthy ? "Ver evidencia →" : "Revisar observaciones →"}
+            </Link>
           </section>
 
-          {/* Declaraciones recientes */}
-          {data.declarations.recent.length > 0 && (
-            <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 24, overflow: "hidden" }}>
-              <div style={{ padding: "16px 18px", borderBottom: "1px solid #E2E8F0" }}>
-                <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Declaraciones recientes</h3>
-              </div>
-              <div style={{ display: "grid", gap: 0 }}>
-                {data.declarations.recent.map((d) => {
-                  const st = declarationStatusLabel(d.status);
-                  return (
-                    <div key={d.id} style={{ alignItems: "center", borderTop: "1px solid #E2E8F0", display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", padding: "12px 18px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                        <span style={{ background: st.bg, borderRadius: 999, color: st.color, fontSize: 12, fontWeight: 800, padding: "2px 10px" }}>{st.text}</span>
-                        <span style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 750 }}>{d.type}</span>
-                        <span style={{ color: "#64748B", fontSize: 12 }}>{d.taxYear}</span>
-                      </div>
-                      <span style={{ color: "#94A3B8", fontSize: 12, fontFamily: "monospace" }}>{d.hash.slice(0, 12)}…{d.hash.slice(-6)}</span>
-                    </div>
-                  );
-                })}
+          {/* 2. Hallazgos (solo si hay problemas) */}
+          {!healthy && findings.length > 0 && (
+            <section>
+              <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Hallazgos</p>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px 24px" }}>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {findings.map((f, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#0F2A3D" }}>
+                      <span style={{ color: "#DC2626", fontWeight: 700 }}>•</span>
+                      <span>{f.charAt(0).toUpperCase() + f.slice(1)}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </section>
           )}
 
-          {/* Snapshots */}
-          {data.snapshots.length > 0 && (
-            <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 24, overflow: "hidden" }}>
-              <div style={{ padding: "16px 18px", borderBottom: "1px solid #E2E8F0" }}>
-                <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Snapshots del período {data.year}</h3>
-              </div>
-              <div style={{ display: "grid", gap: 0 }}>
-                {data.snapshots.map((s, i) => (
-                  <div key={s.id} style={{ alignItems: "center", borderTop: "1px solid #E2E8F0", display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", padding: "12px 18px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ color: "#94A3B8", fontSize: 12, fontWeight: 750 }}>#{i + 1}</span>
-                      <span style={{ color: "#0F2A3D", fontSize: 13, fontWeight: 750 }}>{new Date(s.createdAt).toLocaleDateString("es-CL")}</span>
+          {/* 3. Cadena de custodia (visual) */}
+          <section>
+            <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Cadena de custodia</p>
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: 13 }}>
+                {[
+                  { label: "Operación", count: data.movements.total, color: "#0F766E" },
+                  { label: "FIFO", count: data.events.total, color: "#0F766E" },
+                  { label: "Evento tributario", count: data.events.total, color: "#0F766E" },
+                  { label: "Declaración", count: data.declarations.counts.total, color: "#0F766E" },
+                  { label: "Hash", count: data.validations.total, color: "#0F766E" },
+                  { label: "Verificación", count: data.validations.valid, color: "#16A34A" },
+                ].map((step, i, arr) => (
+                  <div key={step.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ background: step.color + "14", border: `1px solid ${step.color}33`, borderRadius: 8, padding: "10px 14px", textAlign: "center" }}>
+                      <p style={{ margin: 0, fontSize: 11, color: "#64748B", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>{step.label}</p>
+                      <p style={{ margin: "2px 0 0", fontSize: 16, fontWeight: 850, color: step.color }}>{step.count}</p>
                     </div>
-                    <span style={{ color: "#94A3B8", fontSize: 12, fontFamily: "monospace" }}>{s.contentHash}</span>
+                    {i < arr.length - 1 && (
+                      <span style={{ color: "#CBD5E1", fontSize: 16, fontWeight: 700 }}>→</span>
+                    )}
                   </div>
                 ))}
               </div>
-            </section>
-          )}
-
-          {/* Secciones */}
-          <section style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", marginBottom: 24 }}>
-            {sections.map((section) => {
-              const content = (
-                <article style={{
-                  background: section.available ? "#FFFFFF" : "#F8FAFC",
-                  border: "1px solid #E2E8F0",
-                  borderRadius: 8,
-                  opacity: section.available ? 1 : 0.7,
-                  padding: 20,
-                }}>
-                  <div style={{ alignItems: "center", display: "flex", gap: 10, marginBottom: 8 }}>
-                    <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>{section.title}</h3>
-                    {!section.available && (
-                      <span style={{ background: "#F1F5F9", borderRadius: 999, color: "#64748B", fontSize: 11, fontWeight: 850, padding: "2px 8px" }}>Próximamente</span>
-                    )}
-                  </div>
-                  <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{section.description}</p>
-                </article>
-              );
-
-              if (section.available) {
-                return (
-                  <Link key={section.key} href={section.href} style={{ textDecoration: "none" }}>
-                    {content}
-                  </Link>
-                );
-              }
-              return <div key={section.key}>{content}</div>;
-            })}
+            </div>
           </section>
-        </>
-      )}
+
+          {/* 4. Evidencia */}
+          <section>
+            <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Evidencia</p>
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div>
+                <p style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>Evidencia disponible</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                  <span style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700 }}>✓</span> Hash válido</span>
+                  <span style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700 }}>✓</span> Verificación pública</span>
+                  <span style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700 }}>✓</span> Declaraciones auditadas</span>
+                </div>
+              </div>
+              <Link href="/auditoria/evidencia" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none", flexShrink: 0 }}>
+                Abrir evidencia →
+              </Link>
+            </div>
+          </section>
+
+          {/* 5. Herramientas del auditor */}
+          <section>
+            <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Herramientas del auditor</p>
+            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))" }}>
+              {auditorTools.map((tool) => {
+                const content = (
+                  <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 10, padding: 18, height: "100%" }}>
+                    <h3 style={{ color: "#0F2A3D", fontSize: "0.95rem", fontWeight: 850, margin: "0 0 6px" }}>{tool.title}</h3>
+                    <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{tool.description}</p>
+                  </article>
+                );
+                return tool.available ? (
+                  <Link key={tool.key} href={tool.href} style={{ textDecoration: "none" }}>{content}</Link>
+                ) : (
+                  <div key={tool.key}>{content}</div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
