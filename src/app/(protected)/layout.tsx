@@ -37,7 +37,6 @@ const baseNavItems: { href: string; label: string }[] = [
   { href: "/impuestos", label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
   { href: "/seguridad",     label: "Seguridad" },
-  { href: "/planes",        label: "Planes" },
 ];
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {

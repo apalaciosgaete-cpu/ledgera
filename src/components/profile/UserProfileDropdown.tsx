@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { httpClient } from "@/shared/http/httpClient";
 
@@ -218,6 +219,37 @@ export function UserProfileDropdown({
             <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>
               Esta información se usa en tus reportes tributarios
             </p>
+          </div>
+
+          {/* Cambiar plan */}
+          <div
+            style={{
+              padding: "12px 20px",
+              borderBottom: "1px solid rgba(255,255,255,0.07)",
+              flexShrink: 0,
+            }}
+          >
+            <Link
+              href="/planes"
+              onClick={() => setOpen(false)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                borderRadius: "10px",
+                padding: "11px 12px",
+                background: "rgba(22,163,74,0.10)",
+                border: "1px solid rgba(74,222,128,0.20)",
+                color: "#D1FAE5",
+                fontSize: "13px",
+                fontWeight: 750,
+                textDecoration: "none",
+              }}
+            >
+              <span>Cambiar plan</span>
+              <span style={{ color: "#4ADE80", fontSize: "16px", lineHeight: 1 }}>→</span>
+            </Link>
           </div>
 
           {/* Body scrolleable */}
