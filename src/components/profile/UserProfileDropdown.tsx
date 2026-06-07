@@ -21,6 +21,7 @@ type Props = {
   badgeBg:        string;
   badgeColor:     string;
   roleLabel:      string;
+  onLogout: () => void;
 };
 
 function formatRut(value: string): string {
@@ -53,8 +54,24 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: "0.06em",
 };
 
+function menuItemStyle(active: boolean): React.CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "9px 12px",
+    borderRadius: "8px",
+    fontSize: "13px",
+    fontWeight: active ? 700 : 600,
+    color: active ? "#F8FAFC" : "#94A3B8",
+    background: active ? "rgba(22,163,74,0.14)" : "transparent",
+    textDecoration: "none",
+    transition: "all 0.15s ease",
+  };
+}
+
 export function UserProfileDropdown({
-  email, initials, avatarGradient, badgeBg, badgeColor, roleLabel,
+  email, initials, avatarGradient, badgeBg, badgeColor, roleLabel, onLogout,
 }: Props) {
   const [open,    setOpen]    = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -214,41 +231,30 @@ export function UserProfileDropdown({
             flexShrink:   0,
           }}>
             <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#F1F5F9" }}>
-              Mis datos
+              Mi cuenta
             </p>
             <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>
-              Esta información se usa en tus reportes tributarios
+              {email} · {roleLabel}
             </p>
           </div>
 
-          {/* Cambiar plan */}
-          <div
-            style={{
-              padding: "12px 20px",
-              borderBottom: "1px solid rgba(255,255,255,0.07)",
-              flexShrink: 0,
-            }}
-          >
-            <Link
-              href="/planes"
-              onClick={() => setOpen(false)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                borderRadius: "10px",
-                padding: "11px 12px",
-                background: "rgba(22,163,74,0.10)",
-                border: "1px solid rgba(74,222,128,0.20)",
-                color: "#D1FAE5",
-                fontSize: "13px",
-                fontWeight: 750,
-                textDecoration: "none",
-              }}
-            >
-              <span>Cambiar plan</span>
-              <span style={{ color: "#4ADE80", fontSize: "16px", lineHeight: 1 }}>→</span>
+          {/* Links rápidos */}
+          <div style={{
+            padding: "8px 20px",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: "2px",
+          }}>
+            <Link href="/configuracion" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
+              Perfil
+            </Link>
+            <Link href="/planes" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
+              Facturación
+            </Link>
+            <Link href="/planes" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
+              Cambiar plan
             </Link>
           </div>
 
@@ -345,11 +351,14 @@ export function UserProfileDropdown({
             )}
           </form>
 
-          {/* Footer — fijo con botón guardar */}
+          {/* Footer — fijo */}
           <div style={{
             padding:      "12px 20px 16px",
             borderTop:    "1px solid rgba(255,255,255,0.07)",
             flexShrink:   0,
+            display:      "flex",
+            flexDirection:"column",
+            gap:          "8px",
           }}>
             <button
               type="submit"
@@ -370,6 +379,25 @@ export function UserProfileDropdown({
               }}
             >
               {saved ? "¡Guardado!" : saving ? "Guardando…" : "Guardar cambios"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onLogout(); }}
+              style={{
+                width:        "100%",
+                padding:      "10px",
+                borderRadius: "9px",
+                border:       "1px solid rgba(239,68,68,0.25)",
+                background:   "transparent",
+                color:        "#F87171",
+                fontSize:     "13px",
+                fontWeight:   700,
+                cursor:       "pointer",
+                transition:   "all 0.15s ease",
+              }}
+            >
+              Cerrar sesión
             </button>
           </div>
         </div>

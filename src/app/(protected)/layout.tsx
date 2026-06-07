@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
@@ -32,18 +32,16 @@ function LogoutIcon() {
 const baseNavItems: { href: string; label: string }[] = [
   { href: "/panel",         label: "Dashboard" },
   { href: "/inversiones",   label: "Inversiones" },
-  { href: "/staking",       label: "Staking" },
   { href: "/integraciones", label: "Conexiones" },
-  { href: "/impuestos", label: "Tributario" },
+  { href: "/impuestos",     label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
-  { href: "/seguridad",     label: "Seguridad" },
 ];
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   personal: baseNavItems,
   contador: baseNavItems,
   empresa:  baseNavItems,
-  admin:    [...baseNavItems, { href: "/admin", label: "Admin" }],
+  admin:    baseNavItems,
 };
 
 const ROLES_CON_CONFIGURACION = ["admin", "empresa", "contador", "personal"];
@@ -84,27 +82,54 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const pathname         = usePathname();
   const { user, logout } = useAuth();
 
-  const [gearHover,   setGearHover]   = useState(false);
-  const [logoutHover, setLogoutHover] = useState(false);
+  const [gearHover, setGearHover] = useState(false);
+  const [gearOpen,  setGearOpen]  = useState(false);
+  const gearRef = useRef<HTMLDivElement>(null);
 
   if (!user) return null;
 
   const role         = (user as { role?: string })?.role ?? "personal";
   const navItems     = navItemsByRole[role] ?? navItemsByRole.personal;
-  const configActive = pathname.startsWith("/configuracion");
-  const showConfig   = ROLES_CON_CONFIGURACION.includes(role);
+  const gearActive = pathname.startsWith("/configuracion") || pathname.startsWith("/seguridad") || pathname.startsWith("/admin");
+  const showGear   = ROLES_CON_CONFIGURACION.includes(role);
 
   const token    = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
 
   async function handleLogout() {
-    setLogoutHover(false);
     await logout();
     window.location.href = "/bienvenida";
   }
 
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (gearRef.current && !gearRef.current.contains(target)) {
+        setGearOpen(false);
+      }
+    }
+    if (gearOpen) document.addEventListener("click", onClickOutside);
+    return () => document.removeEventListener("click", onClickOutside);
+  }, [gearOpen]);
+
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
+  function gearMenuItemStyle(active: boolean): React.CSSProperties {
+    return {
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      padding: "10px 12px",
+      borderRadius: "10px",
+      fontSize: "13px",
+      fontWeight: active ? 700 : 600,
+      color: active ? "#F8FAFC" : "#94A3B8",
+      background: active ? "rgba(22,163,74,0.14)" : "transparent",
+      textDecoration: "none",
+      transition: "all 0.15s ease",
+    };
   }
 
   return (
@@ -186,35 +211,69 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: 0 }}>
-            {showConfig && (
-              <Link
-                href="/configuracion"
-                title="Configuración"
-                onMouseEnter={() => setGearHover(true)}
-                onMouseLeave={() => setGearHover(false)}
-                style={{
-                  display:        "flex",
-                  alignItems:     "center",
-                  justifyContent: "center",
-                  width:          "36px",
-                  height:         "36px",
-                  borderRadius:   "11px",
-                  background:     configActive
-                    ? "rgba(22,163,74,0.16)"
-                    : gearHover ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.035)",
-                  border: configActive
-                    ? "1px solid rgba(74,222,128,0.32)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                  color: configActive
-                    ? "#4ADE80"
-                    : gearHover ? "#CBD5E1" : colors.textMuted,
-                  textDecoration: "none",
-                  transition:     "all 0.15s ease",
-                  flexShrink:     0,
-                }}
-              >
-                <GearIcon />
-              </Link>
+            {showGear && (
+              <div ref={gearRef} style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  aria-expanded={gearOpen}
+                  aria-haspopup="menu"
+                  onClick={(e) => { e.stopPropagation(); setGearOpen(v => !v); }}
+                  onMouseEnter={() => setGearHover(true)}
+                  onMouseLeave={() => setGearHover(false)}
+                  style={{
+                    display:        "flex",
+                    alignItems:     "center",
+                    justifyContent: "center",
+                    width:          "36px",
+                    height:         "36px",
+                    borderRadius:   "11px",
+                    background:     gearActive
+                      ? "rgba(22,163,74,0.16)"
+                      : gearHover ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.035)",
+                    border: gearActive
+                      ? "1px solid rgba(74,222,128,0.32)"
+                      : "1px solid rgba(255,255,255,0.08)",
+                    color: gearActive
+                      ? "#4ADE80"
+                      : gearHover ? "#CBD5E1" : colors.textMuted,
+                    cursor:         "pointer",
+                    transition:     "all 0.15s ease",
+                    flexShrink:     0,
+                    padding:        0,
+                  }}
+                >
+                  <GearIcon />
+                </button>
+
+                {gearOpen && (
+                  <div style={{
+                    position:     "absolute",
+                    top:          "calc(100% + 8px)",
+                    right:        0,
+                    width:        "220px",
+                    background:   "#0F2236",
+                    border:       "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "14px",
+                    boxShadow:    "0 16px 40px rgba(0,0,0,0.5)",
+                    zIndex:       200,
+                    display:      "flex",
+                    flexDirection:"column",
+                    padding:      "8px",
+                  }}>
+                    <Link href="/configuracion" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/configuracion"))}>
+                      Configuración
+                    </Link>
+                    <Link href="/seguridad" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/seguridad"))}>
+                      Seguridad
+                    </Link>
+                    {role === "admin" && (
+                      <Link href="/admin" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/admin"))}>
+                        Administración
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
 
             <UserProfileDropdown
@@ -224,32 +283,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               badgeBg={token.badgeBg}
               badgeColor={token.badgeColor}
               roleLabel={token.label}
+              onLogout={handleLogout}
             />
-
-            <button
-              onClick={handleLogout}
-              title="Cerrar sesión"
-              onMouseEnter={() => setLogoutHover(true)}
-              onMouseLeave={() => setLogoutHover(false)}
-              style={{
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                width:          "36px",
-                height:         "36px",
-                minWidth:       "36px",
-                borderRadius:   "11px",
-                background:     logoutHover ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.035)",
-                border:         "1px solid rgba(255,255,255,0.08)",
-                color:          logoutHover ? "#F87171" : colors.textMuted,
-                cursor:         "pointer",
-                transition:     "all 0.15s ease",
-                padding:        0,
-                flexShrink:     0,
-              }}
-            >
-              <LogoutIcon />
-            </button>
           </div>
         </div>
       </header>
