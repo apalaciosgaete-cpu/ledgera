@@ -13,9 +13,13 @@ export default function TwoFASetupPanel() {
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/2fa/setup", { credentials: "include" })
+  function loadQr(regenerate = false) {
+    setLoading(true);
+    setError("");
+    const url = regenerate ? "/api/2fa/setup?regenerate=1" : "/api/2fa/setup";
+    fetch(url, { credentials: "include" })
       .then(r => r.json())
       .then(json => {
         if (json.ok) {
@@ -26,8 +30,10 @@ export default function TwoFASetupPanel() {
         }
       })
       .catch(() => setError("Error de red al cargar 2FA"))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => { setLoading(false); setRegenerating(false); });
+  }
+
+  useEffect(() => { loadQr(); }, []);
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
@@ -76,7 +82,17 @@ export default function TwoFASetupPanel() {
 
   return (
     <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem" }}>
-      <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>Configurar verificación en dos pasos</h3>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: 0 }}>Configurar verificación en dos pasos</h3>
+        <button
+          type="button"
+          onClick={() => { setRegenerating(true); loadQr(true); }}
+          disabled={regenerating}
+          style={{ background: "transparent", border: "none", color: "#0EA5E9", fontSize: "12px", fontWeight: 600, cursor: regenerating ? "not-allowed" : "pointer", textDecoration: "underline", padding: 0 }}
+        >
+          {regenerating ? "Generando..." : "Generar nuevo QR"}
+        </button>
+      </div>
       <p style={{ fontSize: "12px", color: "#475569", margin: "0 0 1.25rem" }}>Escanea el código QR con tu app de autenticación y luego ingresa el código de 6 dígitos.</p>
 
       {error && (
