@@ -154,7 +154,7 @@ function SecurityCenterPanel() {
 }
 
 export default function ConfiguracionPage() {
-  const { user } = useAuth();
+  const { user, subscriptionState } = useAuth();
   const role = (user as { role?: string })?.role ?? "personal";
   const SECTIONS = ALL_SECTIONS.filter(s => s.roles.includes(role));
   const searchParams = useSearchParams();
@@ -380,13 +380,60 @@ export default function ConfiguracionPage() {
 
         {/* FACTURACIÓN */}
         {section === "facturacion" && (
-          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem" }}>
-            <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>Facturación</h3>
-            <p style={{ fontSize: "12px", color: "#475569", margin: "0 0 1.25rem" }}>Gestiona tu plan de suscripción y facturación.</p>
-            <a href="/planes" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "8px", border: "none", background: "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, textDecoration: "none", fontFamily: fonts.body }}>
-              Ver planes →
-            </a>
-          </div>
+          <>
+            <SectionCard title="Suscripción actual" description="Estado de tu plan y próxima renovación">
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+                  <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Plan</p>
+                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>
+                      {subscriptionState?.plan ?? user?.subscriptionPlan ?? "—"}
+                    </p>
+                  </div>
+                  <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Estado</p>
+                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: subscriptionState?.isActive ? "#16A34A" : "#EF4444" }}>
+                      {subscriptionState?.label ?? "Desconocido"}
+                    </p>
+                  </div>
+                  <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Próxima renovación</p>
+                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>
+                      {subscriptionState?.expiresAt
+                        ? new Date(subscriptionState.expiresAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })
+                        : user?.subscriptionExpiresAt
+                          ? new Date(user.subscriptionExpiresAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })
+                          : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {subscriptionState?.daysRemaining !== null && subscriptionState?.daysRemaining !== undefined && (
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    padding: "10px 12px", borderRadius: "8px",
+                    background: subscriptionState.daysRemaining <= 7 ? "rgba(245,158,11,0.08)" : "rgba(22,163,74,0.06)",
+                    border: `1px solid ${subscriptionState.daysRemaining <= 7 ? "rgba(245,158,11,0.2)" : "rgba(22,163,74,0.15)"}`,
+                  }}>
+                    <span style={{ fontSize: "16px" }}>{subscriptionState.daysRemaining <= 7 ? "⚠️" : "✓"}</span>
+                    <span style={{ fontSize: "13px", color: "#475569" }}>
+                      {subscriptionState.daysRemaining <= 0
+                        ? "Tu suscripción ha vencido. Renueva para continuar."
+                        : subscriptionState.daysRemaining <= 7
+                          ? `Tu suscripción vence en ${subscriptionState.daysRemaining} día(s).`
+                          : `Tu suscripción está activa. Quedan ${subscriptionState.daysRemaining} días.`}
+                    </span>
+                  </div>
+                )}
+
+                <div style={{ paddingTop: "6px" }}>
+                  <a href="/planes" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "8px", border: "none", background: "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, textDecoration: "none", fontFamily: fonts.body }}>
+                    Cambiar plan →
+                  </a>
+                </div>
+              </div>
+            </SectionCard>
+          </>
         )}
 
         {/* AUDITORÍA */}

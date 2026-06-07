@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
-  email:    string;
-  initials: string;
+  name:           string;
+  initials:       string;
   avatarGradient: string;
   badgeBg:        string;
   badgeColor:     string;
@@ -30,7 +30,7 @@ function menuItemStyle(active: boolean): React.CSSProperties {
 }
 
 export function UserProfileDropdown({
-  email, initials, avatarGradient, badgeBg, badgeColor, roleLabel, onLogout,
+  name, initials, avatarGradient, badgeBg, badgeColor, roleLabel, onLogout,
 }: Props) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -88,7 +88,7 @@ export function UserProfileDropdown({
             fontSize: "12px", fontWeight: 500, color: "#E2E8F0", lineHeight: 1,
             maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
-            {email}
+            {name}
           </span>
           <span style={{
             display: "inline-flex", alignSelf: "flex-start",
@@ -107,13 +107,13 @@ export function UserProfileDropdown({
         </svg>
       </button>
 
-      {/* Dropdown panel */}
+      {/* Dropdown panel — identity + config + logout only */}
       {open && (
         <div style={{
           position:     "absolute",
           top:          "calc(100% + 8px)",
           right:        0,
-          width:        "260px",
+          width:        "220px",
           background:   "#0F2236",
           border:       "1px solid rgba(255,255,255,0.1)",
           borderRadius: "14px",
@@ -123,31 +123,28 @@ export function UserProfileDropdown({
           flexDirection:"column",
           padding:      "8px",
         }}>
+          {/* Identity header */}
           <div style={{
             padding:      "12px 12px 10px",
             borderBottom: "1px solid rgba(255,255,255,0.07)",
             flexShrink:   0,
           }}>
             <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#F1F5F9" }}>
-              Mi cuenta
+              {name}
             </p>
             <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>
-              {email} · {roleLabel}
+              {roleLabel}
             </p>
           </div>
 
+          {/* Single action: Configuración */}
           <div style={{ padding: "6px 0", display: "flex", flexDirection: "column", gap: "2px" }}>
             <Link href="/configuracion" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
-              Perfil
-            </Link>
-            <Link href="/configuracion?section=seguridad" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
-              Seguridad
-            </Link>
-            <Link href="/planes" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
-              Facturación
-            </Link>
-            <Link href="/planes" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
-              Cambiar plan
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              Configuración
             </Link>
           </div>
 
@@ -172,6 +169,11 @@ export function UserProfileDropdown({
                 transition:   "all 0.15s ease",
               }}
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Cerrar sesión
             </button>
           </div>

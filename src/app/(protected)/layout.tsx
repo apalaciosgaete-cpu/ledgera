@@ -274,7 +274,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             )}
 
             <UserProfileDropdown
-              email={user.email}
+              name={user.email}
               initials={initials}
               avatarGradient={token.avatarGradient}
               badgeBg={token.badgeBg}
