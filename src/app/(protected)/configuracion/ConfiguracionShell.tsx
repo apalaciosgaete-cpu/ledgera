@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { fonts } from "@/styles/tokens";
+import TwoFASetupPanel from "@/components/auth/TwoFASetupPanel";
 
 export type Section = "tributario" | "persona" | "empresa" | "seguridad" | "facturacion" | "auditoria";
 
