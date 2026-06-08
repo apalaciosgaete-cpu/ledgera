@@ -51,6 +51,16 @@ export async function POST(req: NextRequest) {
     const setupToken = body.setupToken?.trim();
 
     if (!userId || !email || !code || !setupToken) {
+      console.warn("[2fa/registration/verify] Datos incompletos:", {
+        hasUserId: !!userId,
+        hasEmail: !!email,
+        hasCode: !!code,
+        hasSetupToken: !!setupToken,
+        userIdLen: userId?.length,
+        emailLen: email?.length,
+        codeLen: code?.length,
+        setupTokenLen: setupToken?.length,
+      });
       return NextResponse.json(
         {
           ok: false,

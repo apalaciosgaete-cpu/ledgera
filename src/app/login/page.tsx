@@ -229,10 +229,32 @@ function LoginForm() {
   async function handleSetup2FA(e: FormEvent) {
     e.preventDefault();
     setErrorSetup("");
+
+    if (!pendingUserId) {
+      setErrorSetup("Error de sesión: falta identificador de usuario. Recarga la página e intenta nuevamente.");
+      return;
+    }
+    if (!setupCode || setupCode.length !== 6) {
+      setErrorSetup("Ingresa el código de 6 dígitos de tu app autenticadora.");
+      return;
+    }
+
+    const isLoginRecovery = isRecovery || !setupToken;
+
+    if (!isLoginRecovery) {
+      if (!setupEmail) {
+        setErrorSetup("Error de configuración: falta el correo. Recarga la página e intenta nuevamente.");
+        return;
+      }
+      if (!setupToken) {
+        setErrorSetup("Error de configuración: falta el token de seguridad. Recarga la página e intenta nuevamente.");
+        return;
+      }
+    }
+
     setVerifyingSetup(true);
 
     try {
-      const isLoginRecovery = isRecovery || !setupToken;
       const endpoint = isLoginRecovery ? "/api/2fa/login" : "/api/2fa/registration/verify";
       const body = isLoginRecovery
         ? { userId: pendingUserId, code: setupCode }
