@@ -68,9 +68,13 @@ export async function getUserById(id: string): Promise<User | null> {
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const user = await prisma.users.findUnique({ where: { email } });
-  if (!user) return null;
-  return mapRowToUser(user);
+  const lowerEmail = email.toLowerCase();
+  const user = await prisma.users.findUnique({ where: { email: lowerEmail } });
+  if (user) return mapRowToUser(user);
+  // Fallback para emails con mayúsculas en BD legacy
+  const users = await prisma.users.findMany({ where: { email: { contains: lowerEmail } }, take: 2 });
+  const match = users.find(u => u.email.toLowerCase() === lowerEmail);
+  return match ? mapRowToUser(match) : null;
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
