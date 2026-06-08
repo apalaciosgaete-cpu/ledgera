@@ -94,13 +94,18 @@ export async function POST(req: NextRequest) {
     const user = await getUserByEmail(email);
 
     if (!user) {
+      console.warn("[login] Usuario no encontrado:", email);
       return NextResponse.json(
         { ok: false, message: "Credenciales inválidas.", data: null },
         { status: 401 },
       );
     }
 
+    console.log("[login] Usuario encontrado:", user.id, "status:", user.status, "2FA:", user.twoFactorEnabled, "hash length:", user.passwordHash?.length);
+
     const passwordIsValid = await verifyPassword(password, user.passwordHash);
+
+    console.log("[login] Password válida:", passwordIsValid);
 
     if (!passwordIsValid) {
       return NextResponse.json(
