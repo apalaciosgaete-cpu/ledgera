@@ -44,7 +44,7 @@ const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   admin:    baseNavItems,
 };
 
-const ROLES_CON_CONFIGURACION = ["admin", "empresa", "contador", "personal"];
+
 
 const roleTokens: Record<string, {
   label:          string;
@@ -82,16 +82,13 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const pathname         = usePathname();
   const { user, logout } = useAuth();
 
-  const [gearHover, setGearHover] = useState(false);
-  const [gearOpen,  setGearOpen]  = useState(false);
-  const gearRef = useRef<HTMLDivElement>(null);
+
 
   if (!user) return null;
 
   const role         = (user as { role?: string })?.role ?? "personal";
   const navItems     = navItemsByRole[role] ?? navItemsByRole.personal;
-  const gearActive = pathname.startsWith("/configuracion") || pathname.startsWith("/seguridad") || pathname.startsWith("/admin");
-  const showGear   = ROLES_CON_CONFIGURACION.includes(role);
+
 
   const token    = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
@@ -101,36 +98,13 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     window.location.href = "/bienvenida";
   }
 
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      if (gearRef.current && !gearRef.current.contains(target)) {
-        setGearOpen(false);
-      }
-    }
-    if (gearOpen) document.addEventListener("click", onClickOutside);
-    return () => document.removeEventListener("click", onClickOutside);
-  }, [gearOpen]);
+
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  function gearMenuItemStyle(active: boolean): React.CSSProperties {
-    return {
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      padding: "10px 12px",
-      borderRadius: "10px",
-      fontSize: "13px",
-      fontWeight: active ? 700 : 600,
-      color: active ? "#F8FAFC" : "#94A3B8",
-      background: active ? "rgba(22,163,74,0.14)" : "transparent",
-      textDecoration: "none",
-      transition: "all 0.15s ease",
-    };
-  }
+
 
   return (
     <div style={{ minHeight: "100vh", background: colors.bgApp, fontFamily: fonts.body }}>
@@ -211,68 +185,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: 0 }}>
-            {showGear && (
-              <div ref={gearRef} style={{ position: "relative" }}>
-                <button
-                  type="button"
-                  aria-expanded={gearOpen}
-                  aria-haspopup="menu"
-                  onClick={(e) => { e.stopPropagation(); setGearOpen(v => !v); }}
-                  onMouseEnter={() => setGearHover(true)}
-                  onMouseLeave={() => setGearHover(false)}
-                  style={{
-                    display:        "flex",
-                    alignItems:     "center",
-                    justifyContent: "center",
-                    width:          "36px",
-                    height:         "36px",
-                    borderRadius:   "11px",
-                    background:     gearActive
-                      ? "rgba(22,163,74,0.16)"
-                      : gearHover ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.035)",
-                    border: gearActive
-                      ? "1px solid rgba(74,222,128,0.32)"
-                      : "1px solid rgba(255,255,255,0.08)",
-                    color: gearActive
-                      ? "#4ADE80"
-                      : gearHover ? "#CBD5E1" : colors.textMuted,
-                    cursor:         "pointer",
-                    transition:     "all 0.15s ease",
-                    flexShrink:     0,
-                    padding:        0,
-                  }}
-                >
-                  <GearIcon />
-                </button>
-
-                {gearOpen && (
-                  <div style={{
-                    position:     "absolute",
-                    top:          "calc(100% + 8px)",
-                    right:        0,
-                    width:        "220px",
-                    background:   "#0F2236",
-                    border:       "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "14px",
-                    boxShadow:    "0 16px 40px rgba(0,0,0,0.5)",
-                    zIndex:       200,
-                    display:      "flex",
-                    flexDirection:"column",
-                    padding:      "8px",
-                  }}>
-                    <Link href="/configuracion" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/configuracion"))}>
-                      Configuración
-                    </Link>
-                    {role === "admin" && (
-                      <Link href="/admin" onClick={() => setGearOpen(false)} style={gearMenuItemStyle(pathname.startsWith("/admin"))}>
-                        Administración
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
             <UserProfileDropdown
               name={user.email}
               initials={initials}
@@ -280,6 +192,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               badgeBg={token.badgeBg}
               badgeColor={token.badgeColor}
               roleLabel={token.label}
+              isAdmin={role === "admin"}
               onLogout={handleLogout}
             />
           </div>

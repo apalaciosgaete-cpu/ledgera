@@ -10,6 +10,7 @@ type Props = {
   badgeBg:        string;
   badgeColor:     string;
   roleLabel:      string;
+  isAdmin:        boolean;
   onLogout: () => void;
 };
 
@@ -30,7 +31,7 @@ function menuItemStyle(active: boolean): React.CSSProperties {
 }
 
 export function UserProfileDropdown({
-  name, initials, avatarGradient, badgeBg, badgeColor, roleLabel, onLogout,
+  name, initials, avatarGradient, badgeBg, badgeColor, roleLabel, isAdmin, onLogout,
 }: Props) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
