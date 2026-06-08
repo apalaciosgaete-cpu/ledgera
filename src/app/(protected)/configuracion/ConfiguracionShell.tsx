@@ -9,8 +9,7 @@ export type Section = "tributario" | "persona" | "empresa" | "seguridad" | "fact
 
 export const ALL_SECTIONS: { key: Section; label: string; description: string; roles: string[]; icon: React.ReactNode; href: string }[] = [
   { key: "tributario",  label: "Tributario",  description: "Motor FIFO y reglas SII",       roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>, href: "/configuracion/admin/tributario" },
-  { key: "persona",     label: "Perfil",      description: "Identidad del contribuyente",   roles: ["admin","personal"],             icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>, href: "/configuracion/perfil" },
-  { key: "empresa",     label: "Perfil",      description: "Identidad del contribuyente",   roles: ["admin","empresa","contador"],   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg>, href: "/configuracion/perfil" },
+  { key: "persona",     label: "Perfil",      description: "Identidad del contribuyente",   roles: ["admin","personal","empresa","contador"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>, href: "/configuracion/perfil" },
   { key: "seguridad",   label: "Seguridad",   description: "Sesiones y acceso",             roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, href: "/configuracion/seguridad" },
   { key: "facturacion", label: "Facturación", description: "Plan y suscripción",            roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><line x1="6" y1="15" x2="10" y2="15" /></svg>, href: "/configuracion/facturacion" },
   { key: "auditoria",   label: "Auditoría",   description: "Registro de cambios",           roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>, href: "/configuracion/admin/auditoria" },
@@ -24,6 +23,10 @@ const SECTION_PREFIX: Record<Section, string> = {
   facturacion: "",
   auditoria:  "",
 };
+
+function profilePrefix(role: string) {
+  return role === "empresa" || role === "contador" ? "COMPANY_" : "PN_";
+}
 
 function Toggle({ value, onChange, disabled }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
@@ -219,7 +222,7 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
   }
 
   async function saveSection() {
-    const prefix = SECTION_PREFIX[section];
+    const prefix = section === "persona" ? profilePrefix(role) : SECTION_PREFIX[section];
     const changed = Object.entries(draft).filter(([key, value]) => key.startsWith(prefix) && value !== settings[key]);
     if (changed.length === 0) { setSaved(true); setTimeout(() => setSaved(false), 2000); return; }
     setSaving(true); setSaved(false); setSaveError("");
@@ -282,8 +285,24 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
         </>
       )}
 
-      {/* PERSONA NATURAL */}
-      {section === "persona" && (
+      {/* PERFIL */}
+      {section === "persona" && (role === "empresa" || role === "contador") && (
+        <>
+          <SectionCard title="Identidad del contribuyente" description="Datos legales que aparecerán en los reportes tributarios exportables">
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <Field label="Razón social"><TextInput value={str("COMPANY_RAZON_SOCIAL")} onChange={v => set("COMPANY_RAZON_SOCIAL", v)} placeholder="Ej: Mi Empresa SpA" /></Field>
+              <Field label="RUT" hint="Con puntos y guión. Ej: 76.123.456-7"><TextInput value={str("COMPANY_RUT")} onChange={v => set("COMPANY_RUT", v)} placeholder="76.123.456-7" /></Field>
+              <Field label="Giro tributario"><TextInput value={str("COMPANY_GIRO")} onChange={v => set("COMPANY_GIRO", v)} placeholder="Ej: Inversión en activos digitales" /></Field>
+              <Field label="Dirección"><TextInput value={str("COMPANY_DIRECCION")} onChange={v => set("COMPANY_DIRECCION", v)} placeholder="Ej: Av. Providencia 1234, Santiago" /></Field>
+              <Field label="Representante legal"><TextInput value={str("COMPANY_REPRESENTANTE")} onChange={v => set("COMPANY_REPRESENTANTE", v)} placeholder="Nombre completo" /></Field>
+              <Field label="Email de contacto"><TextInput value={str("COMPANY_EMAIL")} onChange={v => set("COMPANY_EMAIL", v)} placeholder="contacto@empresa.cl" type="email" /></Field>
+            </div>
+          </SectionCard>
+          <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
+        </>
+      )}
+
+      {section === "persona" && role !== "empresa" && role !== "contador" && (
         <>
           <SectionCard title="Datos del contribuyente" description="Información personal que aparecerá en los reportes tributarios exportables">
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -313,23 +332,6 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
               <Field label="Email de contacto">
                 <TextInput value={str("PN_EMAIL")} onChange={v => set("PN_EMAIL", v)} placeholder="correo@ejemplo.cl" type="email" />
               </Field>
-            </div>
-          </SectionCard>
-          <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
-        </>
-      )}
-
-      {/* EMPRESA */}
-      {section === "empresa" && (
-        <>
-          <SectionCard title="Identidad del contribuyente" description="Datos legales que aparecerán en los reportes tributarios exportables">
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <Field label="Razón social"><TextInput value={str("COMPANY_RAZON_SOCIAL")} onChange={v => set("COMPANY_RAZON_SOCIAL", v)} placeholder="Ej: Mi Empresa SpA" /></Field>
-              <Field label="RUT" hint="Con puntos y guión. Ej: 76.123.456-7"><TextInput value={str("COMPANY_RUT")} onChange={v => set("COMPANY_RUT", v)} placeholder="76.123.456-7" /></Field>
-              <Field label="Giro tributario"><TextInput value={str("COMPANY_GIRO")} onChange={v => set("COMPANY_GIRO", v)} placeholder="Ej: Inversión en activos digitales" /></Field>
-              <Field label="Dirección"><TextInput value={str("COMPANY_DIRECCION")} onChange={v => set("COMPANY_DIRECCION", v)} placeholder="Ej: Av. Providencia 1234, Santiago" /></Field>
-              <Field label="Representante legal"><TextInput value={str("COMPANY_REPRESENTANTE")} onChange={v => set("COMPANY_REPRESENTANTE", v)} placeholder="Nombre completo" /></Field>
-              <Field label="Email de contacto"><TextInput value={str("COMPANY_EMAIL")} onChange={v => set("COMPANY_EMAIL", v)} placeholder="contacto@empresa.cl" type="email" /></Field>
             </div>
           </SectionCard>
           <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
