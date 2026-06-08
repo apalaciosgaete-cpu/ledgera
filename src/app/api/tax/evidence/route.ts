@@ -58,14 +58,14 @@ export async function GET(request: NextRequest) {
         statusBg: st.bg,
         hash: d.contentHash,
         hashShort: d.contentHash.slice(0, 12) + "..." + d.contentHash.slice(-12),
-        verifyUrl: `/verify/declaration/${encodeURIComponent(d.contentHash)}`,
+        verifyUrl: `/verify/report/${encodeURIComponent(d.contentHash)}`,
         generatedAt: d.generatedAt.toISOString(),
         confirmedAt: d.confirmedAt?.toISOString() ?? null,
         voidedAt: d.voidedAt?.toISOString() ?? null,
       };
     });
 
-    const publicVerifyUrl = `${request.nextUrl.origin}/verify/declaration/`;
+    const publicVerifyUrl = `${request.nextUrl.origin}/verify/report/`;
 
     return NextResponse.json({
       ok: true,
