@@ -132,7 +132,7 @@ export default function CalendarioPage() {
               Las fechas son referenciales para el calendario tributario chileno. Valida con tu contador las fechas exactas del año en curso.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              <Link href="/impuestos/resumen" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
+              <Link href="/impuestos" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
                 Ver resumen →
               </Link>
               <Link href="/impuestos/simulador" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>

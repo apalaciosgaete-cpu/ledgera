@@ -170,7 +170,7 @@ export default function StakingPage() {
       <section style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: 8, marginBottom: 20, padding: 16 }}>
         <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850, margin: "0 0 5px" }}>{data.taxNote.label}</p>
         <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 10px" }}>{data.taxNote.detail}</p>
-        <Link href="/impuestos/resumen" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
+        <Link href="/impuestos" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
           Ver estado tributario →
         </Link>
       </section>

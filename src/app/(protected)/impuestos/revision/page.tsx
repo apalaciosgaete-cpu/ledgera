@@ -206,7 +206,7 @@ export default function RevisionPage() {
             <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 10px" }}>
               Revisa el impacto por activo y las operaciones relevantes en la sección de explicación.
             </p>
-            <Link href="/impuestos/resumen" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
+            <Link href="/impuestos" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
               Ver explicación tributaria →
             </Link>
           </section>

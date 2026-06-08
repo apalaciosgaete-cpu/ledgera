@@ -248,20 +248,14 @@ export default function AuditoriaHubPage() {
           {/* 5. Herramientas del auditor */}
           <section>
             <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Herramientas del auditor</p>
-            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))" }}>
-              {auditorTools.map((tool) => {
-                const content = (
-                  <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 10, padding: 18, height: "100%" }}>
-                    <h3 style={{ color: "#0F2A3D", fontSize: "0.95rem", fontWeight: 850, margin: "0 0 6px" }}>{tool.title}</h3>
-                    <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{tool.description}</p>
-                  </article>
-                );
-                return tool.available ? (
-                  <Link key={tool.key} href={tool.href} style={{ textDecoration: "none" }}>{content}</Link>
-                ) : (
-                  <div key={tool.key}>{content}</div>
-                );
-              })}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "18px 22px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px" }}>
+                {auditorTools.map((tool) => (
+                  <Link key={tool.key} href={tool.href} style={{ color: "#0F766E", fontSize: 13, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+                    {tool.title} →
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         </div>

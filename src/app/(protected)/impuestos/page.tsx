@@ -74,7 +74,7 @@ function statusConfig(status: TaxStatus) {
         subtitle: "Sin acción requerida",
         description: "No detectamos operaciones que requieran declaración tributaria.",
         ctaLabel: "Ver detalle",
-        ctaHref: "/impuestos/resumen",
+        ctaHref: "/impuestos",
         ctaBg: "#16A34A",
       };
     case "DECLARE_REVIEW":
@@ -89,7 +89,7 @@ function statusConfig(status: TaxStatus) {
         subtitle: "Declaración recomendada",
         description: "Detectamos ventas con ganancia y staking.",
         ctaLabel: "Revisar declaración",
-        ctaHref: "/impuestos/resumen",
+        ctaHref: "/impuestos",
         ctaBg: "#B45309",
       };
   }
@@ -98,7 +98,7 @@ function statusConfig(status: TaxStatus) {
 const yearEnd = new Date().getFullYear() + "-12-31";
 
 const advancedTools = [
-  { key: "explicacion", title: "¿Por qué debo declarar?", description: "Impacto por activo y operaciones relevantes.", href: "/impuestos/resumen", available: true },
+  { key: "explicacion", title: "¿Por qué debo declarar?", description: "Impacto por activo y operaciones relevantes.", href: "/impuestos", available: true },
   { key: "simulador", title: "Simulador", description: "¿Qué pasaría si vendo? Simula escenarios antes de operar.", href: "/impuestos/simulador", available: true },
   { key: "declaraciones", title: "Declaraciones", description: "Gestiona declaraciones tributarias, estados e historial.", href: "/impuestos/declaraciones", available: true },
   { key: "reportes", title: "Reportes", description: "Exporta PDF y CSV para tu contador o para tus registros.", href: "/impuestos/reportes", available: true },
@@ -222,7 +222,7 @@ export default function ImpuestosHubPage() {
                   )}
                 </ul>
                 <div style={{ marginTop: 18 }}>
-                  <Link href="/impuestos/resumen" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 8, border: "1px solid #E2E8F0", background: "#FFFFFF", color: "#0F2A3D", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                  <Link href="/impuestos" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 8, border: "1px solid #E2E8F0", background: "#FFFFFF", color: "#0F2A3D", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
                     Ver explicación →
                   </Link>
                 </div>
