@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: "desc" },
       }),
       prisma.reportValidation.findMany({
+        where: { userId: auth.user.id },
         select: { id: true, hash: true, type: true, issuedAt: true, year: true, revokedAt: true },
         orderBy: { issuedAt: "desc" },
         take: 20,
