@@ -1,10 +1,51 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "next build",
+  "devCommand": "next dev",
   "framework": "nextjs",
   "installCommand": "npm install",
   "regions": ["fra1"],
   "env": {
     "NEXT_TURBOPACK": "0"
+  },
+  "build": {
+    "env": {
+      "NEXT_TURBOPACK": "0"
+    }
+  },
+  "functions": {
+    "src/app/api/integrations/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/tax/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/imports/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/tax/reports/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/tax/declarations/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/tax/ledger/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/bank/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/admin/**/*.ts": {
+      "maxDuration": 30,
+      "memory": 512
+    }
   },
   "crons": [
     {
@@ -25,6 +66,50 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/brand/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/verify/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
-  ]
+  ],
+  "rewrites": [
+    {
+      "source": "/googlead48e80d7c2d1421.html",
+      "destination": "/google-search-console-verification"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.ledgera.cl"
+        }
+      ],
+      "destination": "https://ledgera.cl/:path*",
+      "permanent": true
+    }
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "staging": true,
+      "develop": false
+    }
+  }
 }

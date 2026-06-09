@@ -154,8 +154,9 @@ function createAccumulator(symbol: string): PositionAccumulator {
   };
 }
 
-export async function prefetchFx(): Promise<void> {
-  await fetchUsdClp();
+export async function prefetchFx(): Promise<{ usdToClp: number; source: string; asOf: string }> {
+  const { rate, source, asOf } = await fetchUsdClp();
+  return { usdToClp: rate, source, asOf };
 }
 
 export async function calculatePortfolio(movements: PortfolioMovement[]): Promise<CalculatedPortfolio> {

@@ -140,6 +140,7 @@ model AnnualTaxSummary {
 
 model ReportValidation {
   id        String    @id @default(cuid())
+  userId    String    @default("")
   type      String    @default("INFORMATIVE")
   year      Int       @default(0)
   hash      String    @unique @default("")

@@ -1,89 +1,40 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { httpClient } from "@/shared/http/httpClient";
-
-type ProfileData = {
-  fullName: string;
-  email:    string;
-  rut:      string | null;
-  phone:    string | null;
-  address:  string | null;
-  commune:  string | null;
-  country:  string | null;
-};
 
 type Props = {
-  email:    string;
-  initials: string;
+  name:           string;
+  initials:       string;
   avatarGradient: string;
   badgeBg:        string;
   badgeColor:     string;
   roleLabel:      string;
+  isAdmin:        boolean;
+  onLogout: () => void;
 };
 
-function formatRut(value: string): string {
-  const clean = value.replace(/[^0-9kK]/g, "");
-  if (clean.length < 2) return clean;
-  const body = clean.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  const dv   = clean.slice(-1).toUpperCase();
-  return `${body}-${dv}`;
+function menuItemStyle(active: boolean): React.CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "9px 12px",
+    borderRadius: "8px",
+    fontSize: "13px",
+    fontWeight: active ? 700 : 600,
+    color: active ? "#F8FAFC" : "#94A3B8",
+    background: active ? "rgba(22,163,74,0.14)" : "transparent",
+    textDecoration: "none",
+    transition: "all 0.15s ease",
+  };
 }
 
-const inputStyle: React.CSSProperties = {
-  width:        "100%",
-  background:   "rgba(255,255,255,0.05)",
-  border:       "1px solid rgba(255,255,255,0.12)",
-  borderRadius: "8px",
-  padding:      "9px 12px",
-  fontSize:     "13px",
-  color:        "#E2E8F0",
-  outline:      "none",
-  boxSizing:    "border-box",
-};
-
-const labelStyle: React.CSSProperties = {
-  display:      "block",
-  fontSize:     "11px",
-  fontWeight:   600,
-  color:        "#64748B",
-  marginBottom: "5px",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-};
-
 export function UserProfileDropdown({
-  email, initials, avatarGradient, badgeBg, badgeColor, roleLabel,
+  name, initials, avatarGradient, badgeBg, badgeColor, roleLabel, isAdmin, onLogout,
 }: Props) {
-  const [open,    setOpen]    = useState(false);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [form,    setForm]    = useState<ProfileData>({
-    fullName: "", email, rut: "", phone: "", address: "", commune: "", country: "Chile",
-  });
-  const [saving,  setSaving]  = useState(false);
-  const [saved,   setSaved]   = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    httpClient<{ data: ProfileData }>("/api/user/profile", { auth: true })
-      .then(res => {
-        setProfile(res.data);
-        setForm({
-          fullName: res.data.fullName ?? "",
-          email:    res.data.email    ?? email,
-          rut:      res.data.rut      ?? "",
-          phone:    res.data.phone    ?? "",
-          address:  res.data.address  ?? "",
-          commune:  res.data.commune  ?? "",
-          country:  res.data.country  ?? "Chile",
-        });
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "No se pudieron cargar los datos.");
-      });
-  }, [open, email]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -95,39 +46,6 @@ export function UserProfileDropdown({
     if (open) document.addEventListener("click", onClickOutside);
     return () => document.removeEventListener("click", onClickOutside);
   }, [open]);
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-    try {
-      await httpClient("/api/user/profile", {
-        method: "PATCH",
-        auth: true,
-        body: {
-          fullName: form.fullName,
-          rut:      form.rut || null,
-          phone:    form.phone || null,
-          address:  form.address || null,
-          commune:  form.commune || null,
-          country:  form.country || null,
-        },
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function field(key: keyof ProfileData) {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = key === "rut" ? formatRut(e.target.value) : e.target.value;
-      setForm(f => ({ ...f, [key]: val }));
-    };
-  }
 
   return (
     <div ref={panelRef} style={{ position: "relative" }}>
@@ -171,7 +89,7 @@ export function UserProfileDropdown({
             fontSize: "12px", fontWeight: 500, color: "#E2E8F0", lineHeight: 1,
             maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
-            {email}
+            {name}
           </span>
           <span style={{
             display: "inline-flex", alignSelf: "flex-start",
@@ -190,13 +108,13 @@ export function UserProfileDropdown({
         </svg>
       </button>
 
-      {/* Dropdown panel */}
+      {/* Dropdown panel — identity + config + logout only */}
       {open && (
         <div style={{
           position:     "absolute",
           top:          "calc(100% + 8px)",
           right:        0,
-          width:        "340px",
+          width:        "220px",
           background:   "#0F2236",
           border:       "1px solid rgba(255,255,255,0.1)",
           borderRadius: "14px",
@@ -204,140 +122,60 @@ export function UserProfileDropdown({
           zIndex:       200,
           display:      "flex",
           flexDirection:"column",
-          maxHeight:    "min(520px, calc(100vh - 100px))",
+          padding:      "8px",
         }}>
-          {/* Header — fijo */}
+          {/* Identity header */}
           <div style={{
-            padding:      "16px 20px 14px",
+            padding:      "12px 12px 10px",
             borderBottom: "1px solid rgba(255,255,255,0.07)",
             flexShrink:   0,
           }}>
             <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#F1F5F9" }}>
-              Mis datos
+              {name}
             </p>
             <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>
-              Esta información se usa en tus reportes tributarios
+              {roleLabel}
             </p>
           </div>
 
-          {/* Body scrolleable */}
-          <form
-            id="profile-form"
-            onSubmit={handleSave}
-            style={{
-              padding:    "16px 20px",
-              display:    "flex",
-              flexDirection: "column",
-              gap:        "12px",
-              overflowY:  "auto",
-              flex:       1,
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Nombre completo</label>
-              <input
-                style={inputStyle}
-                value={form.fullName}
-                onChange={field("fullName")}
-                placeholder="Ej: Juan Pérez González"
-                required
-              />
-            </div>
+          {/* Single action: Configuración */}
+          <div style={{ padding: "6px 0", display: "flex", flexDirection: "column", gap: "2px" }}>
+            <Link href="/configuracion" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              Configuración
+            </Link>
+          </div>
 
-            <div>
-              <label style={labelStyle}>RUT</label>
-              <input
-                style={inputStyle}
-                value={form.rut ?? ""}
-                onChange={field("rut")}
-                placeholder="12.345.678-9"
-                maxLength={12}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Dirección</label>
-              <input
-                style={inputStyle}
-                value={form.address ?? ""}
-                onChange={field("address")}
-                placeholder="Av. Libertador Bernardo O'Higgins 1234"
-              />
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              <div>
-                <label style={labelStyle}>Comuna</label>
-                <input
-                  style={inputStyle}
-                  value={form.commune ?? ""}
-                  onChange={field("commune")}
-                  placeholder="Santiago"
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>País</label>
-                <input
-                  style={inputStyle}
-                  value={form.country ?? "Chile"}
-                  onChange={field("country")}
-                  placeholder="Chile"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Correo electrónico</label>
-              <input
-                style={{ ...inputStyle, color: "#64748B", cursor: "not-allowed" }}
-                value={form.email}
-                readOnly
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Teléfono</label>
-              <input
-                style={inputStyle}
-                value={form.phone ?? ""}
-                onChange={field("phone")}
-                placeholder="+56 9 1234 5678"
-                type="tel"
-              />
-            </div>
-
-            {error && (
-              <p style={{ margin: 0, fontSize: "12px", color: "#F87171", background: "rgba(239,68,68,0.08)", borderRadius: "6px", padding: "8px 10px" }}>
-                {error}
-              </p>
-            )}
-          </form>
-
-          {/* Footer — fijo con botón guardar */}
-          <div style={{
-            padding:      "12px 20px 16px",
-            borderTop:    "1px solid rgba(255,255,255,0.07)",
-            flexShrink:   0,
-          }}>
+          <div style={{ paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
             <button
-              type="submit"
-              form="profile-form"
-              disabled={saving || !profile}
+              type="button"
+              onClick={() => { setOpen(false); onLogout(); }}
               style={{
-                width:        "100%",
-                padding:      "10px",
-                borderRadius: "9px",
-                border:       "none",
-                background:   saved ? "#15803D" : "#16A34A",
-                color:        "#fff",
+                display:      "flex",
+                alignItems:   "center",
+                gap:          "10px",
+                padding:      "9px 12px",
+                borderRadius: "8px",
                 fontSize:     "13px",
-                fontWeight:   700,
-                cursor:       saving ? "wait" : "pointer",
-                opacity:      saving || !profile ? 0.7 : 1,
+                fontWeight:   600,
+                color:        "#F87171",
+                background:   "transparent",
+                border:       "none",
+                cursor:       "pointer",
+                width:        "100%",
+                textAlign:    "left",
                 transition:   "all 0.15s ease",
               }}
             >
-              {saved ? "¡Guardado!" : saving ? "Guardando…" : "Guardar cambios"}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Cerrar sesión
             </button>
           </div>
         </div>

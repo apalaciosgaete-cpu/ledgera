@@ -88,6 +88,22 @@ export function resolveSubscriptionState(
   }
 
   if (!expiresAt) {
+    // Plan BASICO sin fecha de expiración = plan gratuito/base, no un problema
+    if (plan === "BASICO") {
+      return {
+        state: "ACTIVE",
+        isAdmin: false,
+        isActive: true,
+        isExpired: false,
+        isBlocked: false,
+        plan,
+        expiresAt: null,
+        daysRemaining: null,
+        label: "Plan básico activo",
+        message: "Estás usando el plan gratuito.",
+      };
+    }
+
     return {
       state: "INACTIVE",
       isAdmin: false,

@@ -422,6 +422,7 @@ if (!subscriptionCheck.ok) {
 
     const validation = await createReportValidation({
       reportType: "INFORMATIVE_TAX_REPORT",
+      userId: auth.user.id,
       periodYear: year,
       symbol,
       payload,

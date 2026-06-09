@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { clp, usd, percent, formatterNumber } from "@/shared/formatting";
 
 type DashboardData = {
   patrimonio: {
@@ -86,34 +87,6 @@ type DashboardData = {
   };
 };
 
-const formatterClp = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
-
-const formatterUsd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
-
-const formatterNumber = new Intl.NumberFormat("es-CL", {
-  maximumFractionDigits: 8,
-});
-
-function clp(value: number) {
-  return formatterClp.format(value || 0);
-}
-
-function usd(value: number) {
-  return formatterUsd.format(value || 0);
-}
-
-function percent(value: number | null) {
-  if (value === null) return "Sin base";
-  return `${value.toLocaleString("es-CL", { maximumFractionDigits: 2 })}%`;
-}
-
 function Metric({ label, value, note, accent = "neutral", href }: { label: string; value: string; note: string; accent?: "neutral" | "good" | "warn"; href?: string }) {
   const accentColor = accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : "#0F2A3D";
   const content = (
@@ -158,6 +131,20 @@ function EmptyAssets() {
     <div style={{ border: "1px dashed #CBD5E1", borderRadius: 8, padding: "24px", textAlign: "center" }}>
       <p style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 800, margin: "0 0 6px" }}>Todavía no hay activos con posición</p>
       <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.5, margin: 0 }}>Cuando cargues movimientos, LEDGERA mostrará acá tus principales posiciones.</p>
+    </div>
+  );
+}
+
+function EmptyDashboard() {
+  return (
+    <div style={{ border: "1px dashed #CBD5E1", borderRadius: 8, padding: "40px 24px", textAlign: "center" }}>
+      <p style={{ color: "#0F2A3D", fontSize: "1.25rem", fontWeight: 850, margin: "0 0 10px" }}>Bienvenido a LEDGERA</p>
+      <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: "0 auto 18px", maxWidth: 480 }}>
+        Aún no tienes movimientos registrados. Carga tu primera operación para ver tu patrimonio, rentabilidad y estado tributario.
+      </p>
+      <Link href="/importaciones" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "11px 16px", textDecoration: "none" }}>
+        Cargar movimientos
+      </Link>
     </div>
   );
 }
@@ -218,6 +205,18 @@ export function InvestorDashboard() {
     return <p style={{ color: "#64748B", fontSize: 14, fontWeight: 700 }}>Cargando dashboard de inversionista...</p>;
   }
 
+  if (data.tributario.status === "EMPTY") {
+    return (
+      <div style={{ maxWidth: 1180, width: "100%" }}>
+        <section style={{ marginBottom: 24 }}>
+          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Panel de inversiones</p>
+          <h1 style={{ color: "#0F2A3D", fontSize: "1.9rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Patrimonio, inversión y próxima acción</h1>
+        </section>
+        <EmptyDashboard />
+      </div>
+    );
+  }
+
   const taxAccent = data.tributario.status === "REVIEW_REQUIRED" ? "warn" : "good";
   const returnAccent = data.rentabilidad.totalReturnUsd >= 0 ? "good" : "warn";
   const unrealizedAccent = data.rentabilidad.unrealizedPnlUsd >= 0 ? "good" : "warn";
@@ -229,15 +228,20 @@ export function InvestorDashboard() {
     <div style={{ maxWidth: 1180, width: "100%" }}>
       <section style={{ alignItems: "flex-start", display: "flex", gap: "18px", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap" }}>
         <div style={{ maxWidth: 760 }}>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Investor Dashboard</p>
+          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Panel de inversiones</p>
           <h1 style={{ color: "#0F2A3D", fontSize: "1.9rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Patrimonio, inversión y próxima acción</h1>
           <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
             Vista simple para entender el estado actual de tus activos, rendimiento realizado y revisión tributaria.
           </p>
         </div>
+      </section>
 
-        <Link href={data.proximaAccion.href} style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontWeight: 850, minHeight: 42, padding: "11px 16px", textDecoration: "none" }}>
-          {data.proximaAccion.label}
+      <section style={{ background: "#FFFFFF", border: "2px solid #0F766E", borderRadius: 12, marginBottom: 24, padding: "24px" }}>
+        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 10px", textTransform: "uppercase" }}>Tu siguiente paso</p>
+        <h2 style={{ color: "#0F2A3D", fontSize: "1.5rem", fontWeight: 850, lineHeight: 1.2, margin: "0 0 8px" }}>{data.proximaAccion.label}</h2>
+        <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.55, margin: "0 0 18px", maxWidth: 720 }}>{data.proximaAccion.detail}</p>
+        <Link href={data.proximaAccion.href} style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 18px", textDecoration: "none" }}>
+          {data.proximaAccion.label} →
         </Link>
       </section>
 
@@ -256,7 +260,7 @@ export function InvestorDashboard() {
               <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 4px" }}>Mis activos</h2>
               <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Principales posiciones por valor actual en CLP.</p>
             </div>
-            <Link href="/investments" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver inversiones</Link>
+            <Link href="/inversiones" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver inversiones</Link>
           </div>
 
           {data.activos.length === 0 ? (
@@ -315,19 +319,11 @@ export function InvestorDashboard() {
             <p style={{ color: "#0F2A3D", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 6px" }}>{data.tributario.label}</p>
             <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 14px" }}>{data.tributario.message}</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <Metric label="Ventas" value={String(data.tributario.totalSellMovements)} note="Movimientos SELL" accent={taxAccent} />
-              <Metric label="Eventos" value={String(data.tributario.totalTaxEvents)} note="Eventos tributarios" accent={taxAccent} />
+              <Metric label="Ventas" value={String(data.tributario.totalSellMovements)} note="Operaciones de venta" accent={taxAccent} />
+              <Metric label="Eventos" value={String(data.tributario.totalTaxEvents)} note="Ventas con resultado calculado" accent={taxAccent} />
             </div>
           </article>
 
-          <article style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: 8, padding: 18 }}>
-            <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.05em", margin: "0 0 8px", textTransform: "uppercase" }}>Próxima acción</p>
-            <h2 style={{ color: "#0F2A3D", fontSize: "1.15rem", fontWeight: 850, lineHeight: 1.25, margin: "0 0 8px" }}>{data.proximaAccion.label}</h2>
-            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 14px" }}>{data.proximaAccion.detail}</p>
-            <Link href={data.proximaAccion.href} style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 12px", textDecoration: "none" }}>
-              Abrir
-            </Link>
-          </article>
         </aside>
       </section>
 

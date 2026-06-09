@@ -49,7 +49,7 @@ export async function GET(
       (i) => i.data.declarationId === id,
     ).length;
 
-    const verificationUrl = `${new URL(req.url).origin}/api/verify/declaration/${declaration.contentHash}`;
+    const verificationUrl = `${new URL(req.url).origin}/verify/report/${declaration.contentHash}`;
 
     const report = {
       id: declaration.id,

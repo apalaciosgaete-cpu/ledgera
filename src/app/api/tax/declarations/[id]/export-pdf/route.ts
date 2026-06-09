@@ -126,7 +126,7 @@ export async function GET(
         exportFormat: "PDF_AUDITOR",
         filename,
         verificationCode: declaration.contentHash,
-        verificationPath: `/api/verify/declaration/${declaration.contentHash}`,
+        verificationPath: `/verify/report/${declaration.contentHash}`,
       },
     });
 

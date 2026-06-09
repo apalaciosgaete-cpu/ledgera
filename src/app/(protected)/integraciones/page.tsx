@@ -4,7 +4,7 @@ import { useState } from "react";
 import { colors, fonts } from "@/styles/tokens";
 import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 
-type Tab = "exchange" | "banco" | "wallets";
+type Tab = "exchange" | "banco" | "wallets" | "staking";
 type ExchangeKey = "binance" | null;
 
 type Bank = {
@@ -69,6 +69,20 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg:
         <path d="M20 12V8H6a2 2 0 0 1 0-4h14v4"/>
         <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/>
         <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
+      </svg>
+    ),
+  },
+  {
+    key: "staking",
+    label: "Staking",
+    color: "#0F766E",
+    bg: "rgba(15,118,110,0.08)",
+    icon: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v20" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
+        <path d="M19 9l2 2-2 2" />
+        <path d="M5 15l-2-2 2-2" />
       </svg>
     ),
   },
@@ -274,6 +288,7 @@ export default function IntegracionesPage() {
             {tab === "exchange" && "Conecta tus exchanges de criptomonedas"}
             {tab === "banco"    && "Importa cartolas o movimientos bancarios desde PDF, Excel o CSV"}
             {tab === "wallets"  && "Conecta tus wallets on-chain"}
+            {tab === "staking"  && "Registra o revisa recompensas de staking asociadas a tus activos"}
           </p>
         </div>
       </div>
@@ -617,6 +632,61 @@ export default function IntegracionesPage() {
             color: colors.warning, padding: "6px 16px", borderRadius: "8px",
             fontSize: "12px", fontWeight: 600,
           }}>Próximamente</span>
+        </div>
+      )}
+
+      {tab === "staking" && (
+        <div
+          style={{
+            background: colors.surface,
+            border: `1px solid ${colors.border}`,
+            borderRadius: "16px",
+            padding: "24px",
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: fonts.display,
+              fontSize: "18px",
+              fontWeight: 700,
+              color: colors.textPrimary,
+              margin: "0 0 8px",
+            }}
+          >
+            Staking
+          </h2>
+
+          <p
+            style={{
+              fontSize: "13px",
+              color: colors.textSecondary,
+              lineHeight: 1.6,
+              margin: "0 0 20px",
+            }}
+          >
+            Las recompensas de staking se registran como movimientos del portafolio
+            y pueden tener impacto tributario. Desde aquí puedes revisar el detalle
+            de staking acumulado.
+          </p>
+
+          <a
+            href="/staking"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "40px",
+              padding: "0 16px",
+              borderRadius: "10px",
+              background: "#0F766E",
+              color: "#FFFFFF",
+              fontSize: "13px",
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            Abrir staking
+          </a>
         </div>
       )}
     </div>

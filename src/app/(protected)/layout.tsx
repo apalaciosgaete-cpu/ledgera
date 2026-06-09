@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
@@ -31,23 +31,20 @@ function LogoutIcon() {
 
 const baseNavItems: { href: string; label: string }[] = [
   { href: "/panel",         label: "Dashboard" },
-  { href: "/investments",   label: "Inversiones" },
-  { href: "/staking",       label: "Staking" },
+  { href: "/inversiones",   label: "Inversiones" },
   { href: "/integraciones", label: "Conexiones" },
-  { href: "/tax/summary",   label: "Tributario" },
+  { href: "/impuestos",     label: "Tributario" },
   { href: "/auditoria",     label: "Auditoría" },
-  { href: "/seguridad",     label: "Seguridad" },
-  { href: "/planes",        label: "Planes" },
 ];
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   personal: baseNavItems,
   contador: baseNavItems,
   empresa:  baseNavItems,
-  admin:    [...baseNavItems, { href: "/admin", label: "Admin" }],
+  admin:    baseNavItems,
 };
 
-const ROLES_CON_CONFIGURACION = ["admin", "empresa", "contador", "personal"];
+
 
 const roleTokens: Record<string, {
   label:          string;
@@ -85,28 +82,29 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const pathname         = usePathname();
   const { user, logout } = useAuth();
 
-  const [gearHover,   setGearHover]   = useState(false);
-  const [logoutHover, setLogoutHover] = useState(false);
+
 
   if (!user) return null;
 
   const role         = (user as { role?: string })?.role ?? "personal";
   const navItems     = navItemsByRole[role] ?? navItemsByRole.personal;
-  const configActive = pathname.startsWith("/configuracion");
-  const showConfig   = ROLES_CON_CONFIGURACION.includes(role);
+
 
   const token    = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
 
   async function handleLogout() {
-    setLogoutHover(false);
     await logout();
     window.location.href = "/bienvenida";
   }
 
+
+
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
+
+
 
   return (
     <div style={{ minHeight: "100vh", background: colors.bgApp, fontFamily: fonts.body }}>
@@ -187,70 +185,16 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: 0 }}>
-            {showConfig && (
-              <Link
-                href="/configuracion"
-                title="Configuración"
-                onMouseEnter={() => setGearHover(true)}
-                onMouseLeave={() => setGearHover(false)}
-                style={{
-                  display:        "flex",
-                  alignItems:     "center",
-                  justifyContent: "center",
-                  width:          "36px",
-                  height:         "36px",
-                  borderRadius:   "11px",
-                  background:     configActive
-                    ? "rgba(22,163,74,0.16)"
-                    : gearHover ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.035)",
-                  border: configActive
-                    ? "1px solid rgba(74,222,128,0.32)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                  color: configActive
-                    ? "#4ADE80"
-                    : gearHover ? "#CBD5E1" : colors.textMuted,
-                  textDecoration: "none",
-                  transition:     "all 0.15s ease",
-                  flexShrink:     0,
-                }}
-              >
-                <GearIcon />
-              </Link>
-            )}
-
             <UserProfileDropdown
-              email={user.email}
+              name={user.email}
               initials={initials}
               avatarGradient={token.avatarGradient}
               badgeBg={token.badgeBg}
               badgeColor={token.badgeColor}
               roleLabel={token.label}
+              isAdmin={role === "admin"}
+              onLogout={handleLogout}
             />
-
-            <button
-              onClick={handleLogout}
-              title="Cerrar sesión"
-              onMouseEnter={() => setLogoutHover(true)}
-              onMouseLeave={() => setLogoutHover(false)}
-              style={{
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                width:          "36px",
-                height:         "36px",
-                minWidth:       "36px",
-                borderRadius:   "11px",
-                background:     logoutHover ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.035)",
-                border:         "1px solid rgba(255,255,255,0.08)",
-                color:          logoutHover ? "#F87171" : colors.textMuted,
-                cursor:         "pointer",
-                transition:     "all 0.15s ease",
-                padding:        0,
-                flexShrink:     0,
-              }}
-            >
-              <LogoutIcon />
-            </button>
           </div>
         </div>
       </header>

@@ -2,14 +2,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError } from "@/shared/apiResponse";
-
-function getBearerToken(request: NextRequest) {
-  const authorization = request.headers.get("authorization");
-  if (authorization?.startsWith("Bearer ")) {
-    return authorization.replace("Bearer ", "").trim();
-  }
-  return request.cookies.get("session_token")?.value ?? null;
-}
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 
 function getReportTypeLabel(type: string): string {
   switch (type) {
@@ -25,8 +18,8 @@ function getReportTypeLabel(type: string): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getBearerToken(request);
-    if (!token) return fail("No autorizado.", 401);
+    const auth = await getSessionFromRequest(request);
+    if (!auth) return fail("No autorizado.", 401);
 
     const yearParam = request.nextUrl.searchParams.get("year");
     const year      = yearParam ? Number(yearParam) : new Date().getFullYear();
@@ -36,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     const validations = await prisma.reportValidation.findMany({
-      where:   { year },
+      where:   { userId: auth.user.id, year },
       orderBy: { issuedAt: "desc" },
     });
 

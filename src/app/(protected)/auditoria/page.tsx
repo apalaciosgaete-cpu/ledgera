@@ -1,427 +1,265 @@
-﻿"use client";
+"use client";
 
-import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-type PeriodStatus = "OPEN" | "CLOSED" | "REOPENED";
-type Section = "estado" | "log" | "registros";
-
-interface PeriodData {
+type DashboardData = {
   year: number;
-  status: PeriodStatus;
-  isClosed: boolean;
-  closedAt: string | null;
-  reopenedAt: string | null;
-  closedReason: string | null;
-}
-
-interface AuditLog {
-  id: string;
-  year: number;
-  action: string;
-  reason: string | null;
-  actorId: string | null;
-  actorEmail: string | null;
-  metadata: Record<string, unknown> | null;
-  createdAt: string;
-}
-
-interface RegistroCierre {
-  id: string;
-  contentHash: string;
-  createdAt: string;
-}
-
-interface ReportValidation {
-  id: string;
-  validationCode: string;
-  reportType: string;
-  reportTypeLabel: string;
-  status: string;
-  isValid: boolean;
-  issuedAt: string;
-  symbol: string | null;
-  contentHash: string;
-  revokedAt: string | null;
-}
-
-interface AuditoriaData {
-  period: PeriodData;
-  logs: AuditLog[];
-  registros: RegistroCierre[];
-  validations: ReportValidation[];
-}
-
-interface PeriodConfigItem {
-  label: string;
-  color: string;
-  bg: string;
-  border: string;
-}
-
-interface ActionConfigItem {
-  label: string;
-  description: string;
-  color: string;
-  bg: string;
-  icon: string;
-}
-
-const PERIOD_CONFIG: Record<PeriodStatus, PeriodConfigItem> = {
-  OPEN: { label: "Abierto", color: "#16A34A", bg: "rgba(22,163,74,0.07)", border: "rgba(22,163,74,0.22)" },
-  CLOSED: { label: "Cerrado", color: "#64748B", bg: "rgba(100,116,139,0.07)", border: "rgba(100,116,139,0.22)" },
-  REOPENED: { label: "Reabierto", color: "#D97706", bg: "rgba(245,158,11,0.07)", border: "rgba(245,158,11,0.22)" },
+  integrity: {
+    healthScore: number;
+    status: string;
+    color: string;
+    issues: {
+      sellWithoutEvent: number;
+      orphanEvents: number;
+      unknownTypeCount: number;
+      missingPriceCount: number;
+      missingQuantityCount: number;
+      futureDateCount: number;
+      pendingEvents: number;
+    };
+    totalIssues: number;
+  };
+  period: {
+    year: number;
+    status: "OPEN" | "CLOSED" | "REOPENED";
+    closedAt: string | null;
+    reopenedAt: string | null;
+    closedReason: string | null;
+    snapshotCount: number;
+    logCount: number;
+  };
+  declarations: {
+    counts: {
+      total: number;
+      draft: number;
+      reviewed: number;
+      confirmed: number;
+      voided: number;
+      exported: number;
+    };
+    recent: {
+      id: string;
+      taxYear: number;
+      type: string;
+      status: string;
+      hash: string;
+      generatedAt: string;
+    }[];
+  };
+  movements: { total: number; inYear: number };
+  events: { total: number; pendingEvents: number };
+  validations: { total: number; valid: number; revoked: number };
+  snapshots: { id: string; contentHash: string; createdAt: string }[];
 };
 
-const ACTION_CONFIG: Record<string, ActionConfigItem> = {
-  CLOSE: { label: "Periodo cerrado", description: "Se congelo el estado tributario del periodo.", color: "#64748B", bg: "rgba(100,116,139,0.08)", icon: "🔒" },
-  REOPEN: { label: "Periodo reabierto", description: "Se habilito el periodo para realizar correcciones.", color: "#D97706", bg: "rgba(245,158,11,0.08)", icon: "🔓" },
-  SNAPSHOT: { label: "Registro de cierre generado", description: "Se creo un respaldo del estado tributario.", color: "#0F2A3D", bg: "rgba(15,42,61,0.06)", icon: "📋" },
-  REBUILD: { label: "Motor recalculado", description: "Se recalcularon los eventos tributarios desde los movimientos.", color: "#7C3AED", bg: "rgba(124,58,237,0.08)", icon: "⚙️" },
-};
-
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleDateString("es-CL", {
-    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
+function buildFindings(data: DashboardData): string[] {
+  const findings: string[] = [];
+  const i = data.integrity.issues;
+  if (i.sellWithoutEvent > 0) findings.push(`${i.sellWithoutEvent} venta${i.sellWithoutEvent > 1 ? "s" : ""} sin clasificación`);
+  if (i.pendingEvents > 0) findings.push(`${i.pendingEvents} evento${i.pendingEvents > 1 ? "s" : ""} pendiente${i.pendingEvents > 1 ? "s" : ""} de clasificar`);
+  if (i.orphanEvents > 0) findings.push(`${i.orphanEvents} evento${i.orphanEvents > 1 ? "s" : ""} huérfano${i.orphanEvents > 1 ? "s" : ""}`);
+  if (i.unknownTypeCount > 0) findings.push(`${i.unknownTypeCount} tipo${i.unknownTypeCount > 1 ? "s" : ""} de movimiento desconocido${i.unknownTypeCount > 1 ? "s" : ""}`);
+  if (i.missingPriceCount > 0) findings.push(`${i.missingPriceCount} precio${i.missingPriceCount > 1 ? "s" : ""} faltante${i.missingPriceCount > 1 ? "s" : ""}`);
+  if (i.missingQuantityCount > 0) findings.push(`${i.missingQuantityCount} cantidad${i.missingQuantityCount > 1 ? "es" : ""} faltante${i.missingQuantityCount > 1 ? "s" : ""}`);
+  if (i.futureDateCount > 0) findings.push(`${i.futureDateCount} fecha${i.futureDateCount > 1 ? "s" : ""} futura${i.futureDateCount > 1 ? "s" : ""}`);
+  return findings;
 }
 
-function formatDateShort(value: string) {
-  return new Date(value).toLocaleDateString("es-CL", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-}
+const auditorTools = [
+  { key: "fifo", title: "FIFO", description: "Desglose de lotes FIFO para cada venta. Cost basis, consumo y ganancia verificable.", href: "/auditoria/fifo", available: true },
+  { key: "movimientos", title: "Operaciones auditadas", description: "Origen de cada cálculo. Fecha, activo, cantidad, precio, fee y relación con evento tributario.", href: "/auditoria/movimientos", available: true },
+  { key: "eventos", title: "Eventos pendientes", description: "Auditoría de taxEvents. Clasificación, PnL, fuente, relación movimiento e historial.", href: "/auditoria/eventos", available: true },
+  { key: "periodos", title: "Estado del período", description: "Cierre, reapertura, snapshots, timeline y trazabilidad de períodos tributarios.", href: "/auditoria/periodos", available: true },
+  { key: "declaraciones", title: "Declaraciones", description: "Cadena de custodia de DDJJ. CREATED → REVIEWED → CONFIRMED → EXPORTED → VOIDED.", href: "/auditoria/declaraciones", available: true },
+  { key: "verificacion", title: "Verificaciones públicas", description: "Códigos de verificación, hashes, estados y revocaciones de documentos.", href: "/auditoria/verificacion", available: true },
+];
 
-function buildLogDescription(log: AuditLog): string {
-  const cfg = ACTION_CONFIG[log.action];
-  const base = cfg?.description ?? `Accion: ${log.action}`;
-  const reason = log.reason ? ` Motivo: "${log.reason}".` : "";
-  return base + reason;
-}
-
-const currentYear = new Date().getFullYear();
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px",
-  border: "1px solid rgba(15,42,61,0.15)", fontSize: "0.875rem",
-  fontFamily: "var(--font-body)", color: "#0F2A3D", background: "#ffffff",
-  boxSizing: "border-box", outline: "none",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#64748B",
-  marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em",
-};
-
-export default function AuditoriaPage() {
-  const [year, setYear] = useState(currentYear);
-  const [section, setSection] = useState<Section>("estado");
-  const [data, setData] = useState<AuditoriaData | null>(null);
+export default function AuditoriaHubPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [closeReason, setCloseReason] = useState("");
-  const [closeLoading, setCloseLoading] = useState(false);
-  const [closeError, setCloseError] = useState<string | null>(null);
-  const [closeSuccess, setCloseSuccess] = useState<string | null>(null);
-  const [reopenReason, setReopenReason] = useState("");
-  const [reopenLoading, setReopenLoading] = useState(false);
-  const [reopenError, setReopenError] = useState<string | null>(null);
-  const [reopenSuccess, setReopenSuccess] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
-  async function fetchAll() {
-    setLoading(true);
-    setError(null);
-    try {
-      const [periodRes, logsRes, snapshotsRes, validationsRes] = await Promise.all([
-        fetch(`/api/tax/periods/status?year=${year}`),
-        fetch(`/api/tax/periods/audit?year=${year}`),
-        fetch(`/api/tax/periods/snapshots?year=${year}`),
-        fetch(`/api/report-validations?year=${year}`),
-      ]);
-      if (!periodRes.ok || !logsRes.ok || !snapshotsRes.ok || !validationsRes.ok) throw new Error("Error al conectar con el servidor");
-      const periodJson = await periodRes.json();
-      const logsJson = await logsRes.json();
-      const snapshotsJson = await snapshotsRes.json();
-      const validationsJson = await validationsRes.json();
-      if (!periodJson.ok || !logsJson.ok || !snapshotsJson.ok || !validationsJson.ok) throw new Error("Respuesta invalida del servidor");
-      setData({ period: periodJson.data, logs: logsJson.data.logs, registros: snapshotsJson.data.snapshots, validations: validationsJson.data.validations });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error inesperado");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/audit/dashboard", { cache: "no-store" });
+        const json = await res.json();
+        if (!res.ok || !json.ok) throw new Error(json.message || "Error cargando dashboard.");
+        setData(json.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error inesperado.");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
+    void load();
+  }, []);
 
-  useEffect(() => { fetchAll(); }, [year]);
-
-  async function handleClose() {
-    setCloseError(null); setCloseSuccess(null);
-    if (!closeReason.trim()) { setCloseError("El motivo de cierre es obligatorio"); return; }
-    setCloseLoading(true);
-    try {
-      const res = await fetch("/api/tax/periods/close", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year, closedReason: closeReason.trim() }) });
-      const json = await res.json();
-      if (!res.ok || !json.ok) { setCloseError(json.message ?? "Error al cerrar el periodo"); return; }
-      setCloseSuccess(`Periodo ${year} cerrado correctamente.`);
-      setCloseReason("");
-      await fetchAll();
-    } catch { setCloseError("Error de conexion"); } finally { setCloseLoading(false); }
-  }
-
-  async function handleReopen() {
-    setReopenError(null); setReopenSuccess(null);
-    if (!reopenReason.trim()) { setReopenError("El motivo de reapertura es obligatorio"); return; }
-    setReopenLoading(true);
-    try {
-      const res = await fetch("/api/tax/periods/reopen", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ year, reopenReason: reopenReason.trim() }) });
-      const json = await res.json();
-      if (!res.ok || !json.ok) { setReopenError(json.message ?? "Error al reabrir el periodo"); return; }
-      setReopenSuccess(`Periodo ${year} reabierto correctamente.`);
-      setReopenReason("");
-      await fetchAll();
-    } catch { setReopenError("Error de conexion"); } finally { setReopenLoading(false); }
-  }
-
-  async function handleCopyLink(id: string, text: string) {
-    try { await navigator.clipboard.writeText(text); setCopiedId(id); setTimeout(() => setCopiedId(null), 2000); } catch { /* noop */ }
-  }
-
-  if (loading) {
-    return (
-      <>
-        <style>{`@keyframes ledgera-spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60vh", gap: "1rem" }}>
-          <div style={{ width: 28, height: 28, border: "2px solid rgba(15,42,61,0.12)", borderTopColor: "#0F2A3D", borderRadius: "50%", animation: "ledgera-spin 0.75s linear infinite" }} />
-          <p style={{ color: "#94A3B8", fontSize: "0.875rem", margin: 0 }}>Cargando auditoria...</p>
-        </div>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ padding: "2rem" }}>
-        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.18)", borderRadius: "12px", padding: "1.25rem 1.5rem" }}>
-          <p style={{ color: "#DC2626", fontWeight: 600, margin: "0 0 4px" }}>Error al cargar Auditoria</p>
-          <p style={{ color: "#64748B", margin: 0, fontSize: "0.875rem" }}>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const { period, logs, registros, validations } = data;
-  const pcfg = PERIOD_CONFIG[period.status];
+  const findings = data ? buildFindings(data) : [];
+  const healthy = data ? data.integrity.totalIssues === 0 : true;
 
   return (
-    <div style={{ maxWidth: "1100px", fontFamily: "var(--font-body)" }}>
-
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.5rem", gap: "1rem", flexWrap: "wrap" }}>
+    <div style={{ maxWidth: 1180, width: "100%" }}>
+      {/* Header */}
+      <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>Auditoria</h1>
-          <p style={{ color: "#94A3B8", margin: 0, fontSize: "0.875rem" }}>Control de periodos tributarios y trazabilidad de operaciones</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-          {[currentYear - 1, currentYear].map((y) => (
-            <button key={y} onClick={() => setYear(y)} style={{ padding: "6px 16px", borderRadius: "8px", border: "1px solid", borderColor: year === y ? "#0F2A3D" : "rgba(15,42,61,0.15)", background: year === y ? "#0F2A3D" : "transparent", color: year === y ? "#ffffff" : "#64748B", fontSize: "0.875rem", fontWeight: year === y ? 600 : 400, cursor: "pointer", fontFamily: "var(--font-body)" }}>
-              {y}
-            </button>
-          ))}
-          <a href="/api/movements/audit/export" download="movimientos_auditoria.csv" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#ffffff", color: "#0F2A3D", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#0F2A3D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Movimientos CSV
-          </a>
-          <a href={`/api/tax/periods/audit/export/csv?year=${year}`} download={`ledgera-trazabilidad-auditoria-${year}.csv`} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#ffffff", color: "#0F2A3D", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#0F2A3D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Trazabilidad XLS
-          </a>
-          <a href={`/api/tax/periods/audit/export/pdf?year=${year}`} download={`ledgera-trazabilidad-auditoria-${year}.pdf`} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#0F2A3D", color: "#ffffff", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Trazabilidad PDF
-          </a>
-        </div>
-      </div>
-
-      <div style={{ background: pcfg.bg, border: `1px solid ${pcfg.border}`, borderRadius: "14px", padding: "1.25rem 1.5rem", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-        <div style={{ width: 12, height: 12, borderRadius: "50%", background: pcfg.color, flexShrink: 0 }} />
-        <div style={{ flex: 1 }}>
-          <p style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.125rem", color: pcfg.color }}>Periodo {year} — {pcfg.label}</p>
-          <p style={{ margin: 0, fontSize: "0.8125rem", color: "#94A3B8" }}>
-            {period.closedAt ? `Cerrado el ${formatDateTime(period.closedAt)}` : "Sin fecha de cierre registrada"}
-            {period.reopenedAt ? ` · Reabierto el ${formatDateTime(period.reopenedAt)}` : ""}
+          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Auditoría</p>
+          <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Estado de auditoría</h1>
+          <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
+            Demuestra que el cálculo es correcto. Trazabilidad, FIFO, integridad y cadena de custodia.
           </p>
         </div>
-        <div style={{ background: "rgba(255,255,255,0.6)", borderRadius: "8px", padding: "0.5rem 1rem", textAlign: "center" }}>
-          <p style={{ margin: 0, fontSize: "0.6875rem", color: "#94A3B8", fontWeight: 600, textTransform: "uppercase" }}>Registros de cierre</p>
-          <p style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.25rem", color: "#0F2A3D" }}>{registros.length}</p>
-        </div>
-        <div style={{ background: "rgba(255,255,255,0.6)", borderRadius: "8px", padding: "0.5rem 1rem", textAlign: "center" }}>
-          <p style={{ margin: 0, fontSize: "0.6875rem", color: "#94A3B8", fontWeight: 600, textTransform: "uppercase" }}>Eventos registrados</p>
-          <p style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.25rem", color: "#0F2A3D" }}>{logs.length}</p>
-        </div>
-      </div>
+      </section>
 
-      <div style={{ display: "flex", gap: "4px", marginBottom: "1.5rem", borderBottom: "1px solid #E2E8F0" }}>
-        {(["estado", "log", "registros"] as Section[]).map((s) => (
-          <button key={s} onClick={() => setSection(s)} style={{ padding: "8px 18px", borderRadius: "8px 8px 0 0", border: "none", borderBottom: section === s ? "2px solid #0F2A3D" : "2px solid transparent", background: "transparent", color: section === s ? "#0F2A3D" : "#94A3B8", fontWeight: section === s ? 600 : 400, fontSize: "0.875rem", cursor: "pointer", fontFamily: "var(--font-body)" }}>
-            {s === "estado" ? "Estado y acciones" : s === "log" ? "Historial" : "Registros de cierre"}
-          </button>
-        ))}
-      </div>
+      {loading ? (
+        <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando estado de auditoría...</p>
+      ) : error ? (
+        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{error}</div>
+      ) : data ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-      {section === "estado" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {(period.status === "OPEN" || period.status === "REOPENED") && (
-            <div style={{ background: "#ffffff", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.25rem 1.5rem" }}>
-              <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "0.9375rem", color: "#0F2A3D", margin: "0 0 4px" }}>Cerrar periodo {year}</p>
-              <p style={{ fontSize: "0.8125rem", color: "#64748B", margin: "0 0 1rem" }}>Congela el estado tributario del periodo.</p>
-              <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: "220px" }}>
-                  <label style={labelStyle}>Motivo de cierre</label>
-                  <input type="text" placeholder="Ej: Cierre periodo anual 2026..." value={closeReason} onChange={(e) => { setCloseReason(e.target.value); setCloseError(null); setCloseSuccess(null); }} style={inputStyle} />
-                </div>
-                <button onClick={handleClose} disabled={closeLoading} style={{ background: closeLoading ? "#94A3B8" : "#0F2A3D", color: "#ffffff", border: "none", borderRadius: "8px", padding: "0.5rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, cursor: closeLoading ? "not-allowed" : "pointer", fontFamily: "var(--font-body)", whiteSpace: "nowrap", height: "38px" }}>
-                  {closeLoading ? "Cerrando..." : "Cerrar periodo"}
-                </button>
+          {/* 1. Estado de Auditoría */}
+          <section style={{
+            background: healthy ? "#F0FDF4" : "#FEF9C3",
+            border: `2px solid ${healthy ? "#86EFAC" : "#FDE047"}`,
+            borderRadius: 14,
+            padding: "28px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 20 }}>{healthy ? "✓" : "⚠"}</span>
+              <h2 style={{ color: healthy ? "#166534" : "#854D0E", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>
+                {healthy ? "Sin observaciones" : "Requiere revisión"}
+              </h2>
+            </div>
+
+            <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.55, margin: "0 0 20px", maxWidth: 640 }}>
+              {healthy
+                ? "Integridad verificada, FIFO verificado, declaraciones sin inconsistencias."
+                : `${findings.length} hallazgo${findings.length > 1 ? "s" : ""} detectado${findings.length > 1 ? "s" : ""}. Revisa antes de declarar.`}
+            </p>
+
+            {healthy && (
+              <ul style={{ listStyle: "none", margin: "0 0 20px", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> Integridad verificada
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> FIFO verificado
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> Declaraciones sin inconsistencias
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#166534" }}>
+                  <span style={{ fontWeight: 700 }}>✓</span> {data.validations.valid} verificación{data.validations.valid !== 1 ? "es" : ""} válida{data.validations.valid !== 1 ? "s" : ""}
+                </li>
+              </ul>
+            )}
+
+            {!healthy && findings.length > 0 && (
+              <ul style={{ listStyle: "none", margin: "0 0 20px", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                {findings.slice(0, 4).map((f, i) => (
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#854D0E" }}>
+                    <span style={{ fontWeight: 700 }}>•</span> {f}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <Link
+              href={healthy ? "/auditoria/evidencia" : "/auditoria/integridad"}
+              style={{
+                background: healthy ? "#16A34A" : "#B45309",
+                borderRadius: 8,
+                color: "#FFFFFF",
+                display: "inline-flex",
+                fontSize: 14,
+                fontWeight: 850,
+                padding: "12px 22px",
+                textDecoration: "none",
+              }}
+            >
+              {healthy ? "Ver evidencia →" : "Revisar observaciones →"}
+            </Link>
+          </section>
+
+          {/* 2. Hallazgos (solo si hay problemas) */}
+          {!healthy && findings.length > 0 && (
+            <section>
+              <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Hallazgos</p>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px 24px" }}>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {findings.map((f, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#0F2A3D" }}>
+                      <span style={{ color: "#DC2626", fontWeight: 700 }}>•</span>
+                      <span>{f.charAt(0).toUpperCase() + f.slice(1)}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              {closeError && <p style={{ margin: "10px 0 0", fontSize: "0.8125rem", color: "#DC2626", background: "rgba(220,38,38,0.05)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.15)" }}>{closeError}</p>}
-              {closeSuccess && <p style={{ margin: "10px 0 0", fontSize: "0.8125rem", color: "#16A34A", background: "rgba(22,163,74,0.05)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(22,163,74,0.15)" }}>{closeSuccess}</p>}
-            </div>
+            </section>
           )}
-          {period.status === "CLOSED" && (
-            <div style={{ background: "#ffffff", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "12px", padding: "1.25rem 1.5rem" }}>
-              <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "0.9375rem", color: "#D97706", margin: "0 0 4px" }}>Reabrir periodo {year}</p>
-              <p style={{ fontSize: "0.8125rem", color: "#64748B", margin: "0 0 1rem" }}>Permite modificar movimientos o eventos del periodo.</p>
-              <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: "220px" }}>
-                  <label style={labelStyle}>Motivo de reapertura</label>
-                  <input type="text" placeholder="Ej: Correccion de clasificacion..." value={reopenReason} onChange={(e) => { setReopenReason(e.target.value); setReopenError(null); setReopenSuccess(null); }} style={inputStyle} />
-                </div>
-                <button onClick={handleReopen} disabled={reopenLoading} style={{ background: reopenLoading ? "#94A3B8" : "#D97706", color: "#ffffff", border: "none", borderRadius: "8px", padding: "0.5rem 1.25rem", fontSize: "0.875rem", fontWeight: 600, cursor: reopenLoading ? "not-allowed" : "pointer", fontFamily: "var(--font-body)", whiteSpace: "nowrap", height: "38px" }}>
-                  {reopenLoading ? "Reabriendo..." : "Reabrir periodo"}
-                </button>
-              </div>
-              {reopenError && <p style={{ margin: "10px 0 0", fontSize: "0.8125rem", color: "#DC2626", background: "rgba(220,38,38,0.05)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(220,38,38,0.15)" }}>{reopenError}</p>}
-              {reopenSuccess && <p style={{ margin: "10px 0 0", fontSize: "0.8125rem", color: "#16A34A", background: "rgba(22,163,74,0.05)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(22,163,74,0.15)" }}>{reopenSuccess}</p>}
-            </div>
-          )}
-          {period.status === "REOPENED" && (
-            <div style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "12px", padding: "1rem 1.25rem" }}>
-              <p style={{ fontSize: "0.8125rem", color: "#92400E", margin: 0 }}>El periodo esta reabierto. Realiza las correcciones necesarias, luego cierralo nuevamente.</p>
-            </div>
-          )}
-          {period.status === "CLOSED" && (
-            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1rem 1.25rem" }}>
-              <p style={{ fontSize: "0.8125rem", color: "#94A3B8", margin: 0 }}>El periodo {year} esta cerrado. Usa la opcion de reapertura si necesitas realizar correcciones.</p>
-            </div>
-          )}
-        </div>
-      )}
 
-      {section === "log" && (
-        <div>
-          {logs.length === 0 ? (
-            <div style={{ background: "#F8FAFC", border: "1px dashed rgba(15,42,61,0.13)", borderRadius: "12px", padding: "3rem", textAlign: "center" }}>
-              <p style={{ color: "#94A3B8", margin: "0 0 4px", fontWeight: 600 }}>Sin actividad registrada para {year}</p>
-              <p style={{ color: "#CBD5E1", margin: 0, fontSize: "0.875rem" }}>Las acciones sobre el periodo aparecen aqui automaticamente.</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {logs.map((log, index) => {
-                const actionCfg = ACTION_CONFIG[log.action] ?? { label: log.action, description: "", color: "#64748B", bg: "rgba(100,116,139,0.06)", icon: "•" };
-                const isLast = index === logs.length - 1;
-                return (
-                  <div key={log.id} style={{ display: "flex", gap: "1rem", paddingBottom: isLast ? 0 : "1.25rem" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, width: 32 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: actionCfg.bg, border: `1px solid ${actionCfg.color}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem" }}>
-                        {actionCfg.icon}
-                      </div>
-                      {!isLast && <div style={{ width: 1, flex: 1, background: "#E2E8F0", marginTop: "4px" }} />}
+          {/* 3. Cadena de custodia (visual) */}
+          <section>
+            <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Cadena de custodia</p>
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: 13 }}>
+                {[
+                  { label: "Operación", count: data.movements.total, color: "#0F766E" },
+                  { label: "FIFO", count: data.events.total, color: "#0F766E" },
+                  { label: "Evento tributario", count: data.events.total, color: "#0F766E" },
+                  { label: "Declaración", count: data.declarations.counts.total, color: "#0F766E" },
+                  { label: "Hash", count: data.validations.total, color: "#0F766E" },
+                  { label: "Verificación", count: data.validations.valid, color: "#16A34A" },
+                ].map((step, i, arr) => (
+                  <div key={step.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ background: step.color + "14", border: `1px solid ${step.color}33`, borderRadius: 8, padding: "10px 14px", textAlign: "center" }}>
+                      <p style={{ margin: 0, fontSize: 11, color: "#64748B", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>{step.label}</p>
+                      <p style={{ margin: "2px 0 0", fontSize: 16, fontWeight: 850, color: step.color }}>{step.count}</p>
                     </div>
-                    <div style={{ flex: 1, paddingTop: "4px" }}>
-                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap", marginBottom: "4px" }}>
-                        <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9375rem", color: actionCfg.color }}>{actionCfg.label}</p>
-                        <span style={{ fontSize: "0.75rem", color: "#94A3B8" }}>{formatDateTime(log.createdAt)}</span>
-                      </div>
-                      <p style={{ margin: 0, fontSize: "0.8125rem", color: "#475569" }}>{buildLogDescription(log)}</p>
-                      {log.reason && <p style={{ margin: "4px 0 0", fontSize: "0.8125rem", color: "#64748B", fontStyle: "italic" }}>&quot;{log.reason}&quot;</p>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {section === "registros" && (
-        <div>
-          <div style={{ background: "rgba(15,42,61,0.04)", border: "1px solid rgba(15,42,61,0.1)", borderRadius: "10px", padding: "0.875rem 1rem", marginBottom: "1.25rem", fontSize: "0.8125rem", color: "#475569" }}>
-            Cada reporte verificable tiene un codigo unico que permite confirmar su autenticidad.
-          </div>
-          {validations.length > 0 && (
-            <div style={{ marginBottom: "1.5rem" }}>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "0.9375rem", fontWeight: 700, color: "#0F2A3D", margin: "0 0 0.75rem" }}>Reportes verificables del periodo {year}</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {validations.map((v) => {
-                  const verifyUrl = `${typeof window !== "undefined" ? window.location.origin : "https://ledgera.cl"}/verify/report/${v.validationCode}`;
-                  return (
-                    <div key={v.id} style={{ background: "#ffffff", border: `1px solid ${v.isValid ? "#E2E8F0" : "rgba(220,38,38,0.15)"}`, borderRadius: "10px", padding: "1rem 1.25rem" }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-                        <div style={{ flex: 1, minWidth: "200px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                            <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: "4px", fontSize: "0.6875rem", fontWeight: 700, background: v.isValid ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)", color: v.isValid ? "#16A34A" : "#DC2626" }}>
-                              {v.isValid ? "Valido" : "Revocado"}
-                            </span>
-                            <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#0F2A3D" }}>{v.reportTypeLabel}</span>
-                          </div>
-                          <p style={{ margin: "0 0 4px", fontSize: "0.75rem", color: "#94A3B8" }}>Emitido: {formatDateTime(v.issuedAt)}{v.symbol ? ` · Activo: ${v.symbol}` : ""}</p>
-                          <p style={{ margin: 0, fontFamily: "monospace", fontSize: "0.75rem", color: "#64748B", wordBreak: "break-all" }}>{v.validationCode}</p>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
-                          <a href={verifyUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "0.4rem 1rem", borderRadius: "8px", background: "#0F2A3D", color: "#ffffff", fontSize: "0.8125rem", fontWeight: 600, textDecoration: "none", textAlign: "center", whiteSpace: "nowrap" }}>
-                            Ver verificacion
-                          </a>
-                          <button onClick={() => handleCopyLink(v.id, verifyUrl)} style={{ background: copiedId === v.id ? "rgba(22,163,74,0.08)" : "#F1F5F9", border: `1px solid ${copiedId === v.id ? "rgba(22,163,74,0.3)" : "transparent"}`, borderRadius: "8px", padding: "0.4rem 1rem", fontSize: "0.8125rem", fontWeight: 600, color: copiedId === v.id ? "#16A34A" : "#64748B", cursor: "pointer", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
-                            {copiedId === v.id ? "Copiado" : "Copiar enlace"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {validations.length === 0 && (
-            <div style={{ background: "#F8FAFC", border: "1px dashed rgba(15,42,61,0.13)", borderRadius: "12px", padding: "2rem", textAlign: "center", marginBottom: "1.5rem" }}>
-              <p style={{ color: "#94A3B8", margin: "0 0 4px", fontWeight: 600 }}>Sin reportes verificables para {year}</p>
-              <p style={{ color: "#CBD5E1", margin: 0, fontSize: "0.875rem" }}>Se generan al descargar el PDF desde Tributario.</p>
-            </div>
-          )}
-          {registros.length > 0 && (
-            <div>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "0.9375rem", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>Constancias de estado tributario</h2>
-              <p style={{ fontSize: "0.8125rem", color: "#64748B", margin: "0 0 0.75rem" }}>Registro tecnico del estado del portafolio al momento de cada cierre.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {registros.map((reg, index) => (
-                  <div key={reg.id} style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "10px", padding: "0.875rem 1.25rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-                    <div style={{ flex: 1, minWidth: "200px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                        <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#94A3B8", background: "#EEF2FF", padding: "2px 8px", borderRadius: "4px" }}>#{index + 1}</span>
-                        <span style={{ fontSize: "0.75rem", color: "#94A3B8" }}>{formatDateShort(reg.createdAt)}</span>
-                      </div>
-                      <p style={{ margin: 0, fontFamily: "monospace", fontSize: "0.75rem", color: "#94A3B8", wordBreak: "break-all" }}>{reg.contentHash}</p>
-                    </div>
+                    {i < arr.length - 1 && (
+                      <span style={{ color: "#CBD5E1", fontSize: 16, fontWeight: 700 }}>→</span>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </section>
 
+          {/* 4. Evidencia */}
+          <section>
+            <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Evidencia</p>
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div>
+                <p style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>Evidencia disponible</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                  <span style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700 }}>✓</span> Hash válido</span>
+                  <span style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700 }}>✓</span> Verificación pública</span>
+                  <span style={{ fontSize: 13, color: "#166534", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700 }}>✓</span> Declaraciones auditadas</span>
+                </div>
+              </div>
+              <Link href="/auditoria/evidencia" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none", flexShrink: 0 }}>
+                Abrir evidencia →
+              </Link>
+            </div>
+          </section>
+
+          {/* 5. Herramientas del auditor */}
+          <section>
+            <p style={{ color: "#334155", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 14px", textTransform: "uppercase" }}>Herramientas del auditor</p>
+            <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "18px 22px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px" }}>
+                {auditorTools.map((tool) => (
+                  <Link key={tool.key} href={tool.href} style={{ color: "#0F766E", fontSize: 13, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+                    {tool.title} →
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

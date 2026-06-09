@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 
 const FALLBACK_USD_CLP = 950;
+const FX_CACHE_TTL_MS = 60_000;
+
+const fxCache = new Map<string, { value: number; expiresAt: number }>();
 
 async function fetchMindicadorRate(date: Date): Promise<number | null> {
   try {
@@ -31,32 +34,51 @@ export async function resolveUsdClpRate(date: Date): Promise<number> {
   const dateStr = date.toISOString().slice(0, 10);
   const dateKey = new Date(`${dateStr}T00:00:00.000Z`);
 
+  const cached = fxCache.get(dateStr);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  let rate: number | null = null;
+
   try {
     const exact = await prisma.fxRate.findFirst({
       where: { currency: "USD", date: dateKey },
     });
-    if (exact && Number(exact.valueClp) > 0) return Number(exact.valueClp);
+    if (exact && Number(exact.valueClp) > 0) rate = Number(exact.valueClp);
   } catch { /* continuar */ }
 
-  const fetched = await fetchMindicadorRate(date);
-  if (fetched && fetched > 0) {
-    try {
-      await prisma.fxRate.upsert({
-        where:  { currency_date: { currency: "USD", date: dateKey } },
-        update: { valueClp: fetched, source: "mindicador" },
-        create: { currency: "USD", date: dateKey, valueClp: fetched, source: "mindicador" },
-      });
-    } catch { /* no bloquear */ }
-    return fetched;
+  if (rate === null) {
+    const fetched = await fetchMindicadorRate(date);
+    if (fetched && fetched > 0) {
+      try {
+        await prisma.fxRate.upsert({
+          where:  { currency_date: { currency: "USD", date: dateKey } },
+          update: { valueClp: fetched, source: "mindicador" },
+          create: { currency: "USD", date: dateKey, valueClp: fetched, source: "mindicador" },
+        });
+      } catch { /* no bloquear */ }
+      rate = fetched;
+    }
   }
 
-  try {
-    const closest = await prisma.fxRate.findFirst({
-      where:   { currency: "USD", date: { lte: dateKey } },
-      orderBy: { date: "desc" },
-    });
-    if (closest && Number(closest.valueClp) > 0) return Number(closest.valueClp);
-  } catch { /* continuar */ }
+  if (rate === null) {
+    try {
+      const closest = await prisma.fxRate.findFirst({
+        where:   { currency: "USD", date: { lte: dateKey } },
+        orderBy: { date: "desc" },
+      });
+      if (closest && Number(closest.valueClp) > 0) rate = Number(closest.valueClp);
+    } catch { /* continuar */ }
+  }
 
-  return FALLBACK_USD_CLP;
+  if (rate === null) {
+    if (cached) {
+      return cached.value;
+    }
+    rate = FALLBACK_USD_CLP;
+  }
+
+  fxCache.set(dateStr, { value: rate, expiresAt: Date.now() + FX_CACHE_TTL_MS });
+  return rate;
 }

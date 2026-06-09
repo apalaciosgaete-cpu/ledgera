@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
 
     const validation = await createReportValidation({
       reportType: "AUDIT_TRAIL_PDF",
+      userId: auth.user.id,
       periodYear: year,
       payload,
     });

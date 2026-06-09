@@ -48,6 +48,7 @@ export type SessionUser = {
   email: string;
   fullName?: string;
   role?: string;
+  twoFactorEnabled?: boolean;
 };
 
 export type SessionData = {
@@ -88,6 +89,7 @@ async function getSessionFromToken(token: string): Promise<SessionData | null> {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      twoFactorEnabled: user.twoFactorEnabled,
     },
     token: session.token,
   };

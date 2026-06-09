@@ -37,6 +37,8 @@ export type InvestorNextActionCode =
   | "IMPORT_MOVEMENTS"
   | "REVIEW_TAX_EVENTS"
   | "REVIEW_PORTFOLIO"
+  | "REVIEW_STAKING"
+  | "GENERATE_REPORT"
   | "OPEN_TAX_SUMMARY";
 
 export type InvestorDashboard = {
@@ -176,7 +178,8 @@ async function buildMarketPriceBySymbol(positions: CalculatedPortfolioPosition[]
       pricesBySymbol,
       pricedAssets: pricesBySymbol.size,
     };
-  } catch {
+  } catch (err) {
+    console.warn("[getInvestorDashboard] CoinGecko price fetch failed:", err instanceof Error ? err.message : String(err));
     return {
       pricesBySymbol: new Map<string, number>(),
       pricedAssets: 0,
@@ -304,6 +307,10 @@ function buildNextAction(params: {
   movementCount: number;
   taxStatus: InvestorTaxStatusCode;
   assetCount: number;
+  stakingRewardUsd: number;
+  sellWithoutEvent: number;
+  orphanEvents: number;
+  realizedPnlUsd: number;
 }): InvestorDashboard["proximaAccion"] {
   if (params.movementCount === 0) {
     return {
@@ -314,12 +321,39 @@ function buildNextAction(params: {
     };
   }
 
+  if (params.sellWithoutEvent > 0 || params.orphanEvents > 0) {
+    return {
+      code: "REVIEW_TAX_EVENTS",
+      label: "Revisar alertas tributarias",
+      href: "/impuestos",
+      detail: `Hay ${params.sellWithoutEvent + params.orphanEvents} inconsistencias entre movimientos y eventos tributarios. Resuélvelas antes de generar reportes.`,
+    };
+  }
+
   if (params.taxStatus === "REVIEW_REQUIRED") {
     return {
       code: "REVIEW_TAX_EVENTS",
       label: "Revisar tributario",
-      href: "/tax/summary",
-      detail: "Revisa si corresponde declarar o pagar antes de entrar al detalle tecnico.",
+      href: "/impuestos",
+      detail: "Revisa si corresponde declarar o pagar antes de entrar al detalle técnico.",
+    };
+  }
+
+  if (params.stakingRewardUsd > 0) {
+    return {
+      code: "REVIEW_STAKING",
+      label: "Revisar staking",
+      href: "/staking",
+      detail: "Tienes recompensas de staking registradas. Verifica si deben revisarse tributariamente.",
+    };
+  }
+
+  if (params.realizedPnlUsd < 0) {
+    return {
+      code: "REVIEW_PORTFOLIO",
+      label: "Revisar pérdidas realizadas",
+      href: "/inversiones",
+      detail: "Tienes pérdidas realizadas. Consulta con tu contador sobre compensación de pérdidas antes de cerrar el período.",
     };
   }
 
@@ -327,15 +361,24 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_PORTFOLIO",
       label: "Revisar inversiones",
-      href: "/investments",
+      href: "/inversiones",
       detail: "Valida activos, cantidades, valor actual y costos estimados antes de cerrar el período.",
+    };
+  }
+
+  if (params.taxStatus === "READY" || params.taxStatus === "NO_TAX_EVENTS") {
+    return {
+      code: "GENERATE_REPORT",
+      label: "Generar reporte tributario",
+      href: "/tax/reports",
+      detail: "Tus datos están actualizados y consistentes. Genera un reporte para revisar con tu contador.",
     };
   }
 
   return {
     code: "OPEN_TAX_SUMMARY",
     label: "Ver resumen tributario",
-    href: "/tax/summary",
+    href: "/impuestos",
     detail: "Consulta el resultado fiscal simple del período actual.",
   };
 }
@@ -375,9 +418,19 @@ export async function getInvestorDashboard(user: AccessPolicyUser): Promise<Inve
     prefetchFx(),
   ]);
 
-  const movements = rawMovements
-    .map(toPortfolioMovement)
-    .filter((movement): movement is PortfolioMovement => Boolean(movement));
+  const movements: PortfolioMovement[] = [];
+  let filteredMovementCount = 0;
+  for (const raw of rawMovements) {
+    const converted = toPortfolioMovement(raw);
+    if (converted) {
+      movements.push(converted);
+    } else {
+      filteredMovementCount++;
+    }
+  }
+  if (filteredMovementCount > 0) {
+    console.warn(`[getInvestorDashboard] ${filteredMovementCount} movements filtered due to unknown type`);
+  }
   const portfolio = await calculatePortfolio(movements);
   const { pricesBySymbol, pricedAssets } = await buildMarketPriceBySymbol(portfolio.positions);
   const totalMarketValueUsd = round(
@@ -453,7 +506,7 @@ export async function getInvestorDashboard(user: AccessPolicyUser): Promise<Inve
       rewardUsd: stakingRewardUsd,
       rewardClp: stakingRewardClp,
       message: stakingRewardUsd > 0
-        ? "Recompensas detectadas desde movimientos STAKING_REWARD."
+        ? "Recompensas detectadas desde registros de staking."
         : "Sin recompensas de staking registradas todavía.",
     },
     tributario: taxStatus,
@@ -461,6 +514,10 @@ export async function getInvestorDashboard(user: AccessPolicyUser): Promise<Inve
       movementCount: rawMovements.length,
       taxStatus: taxStatus.status,
       assetCount: portfolio.totals.symbolCount,
+      stakingRewardUsd,
+      sellWithoutEvent,
+      orphanEvents,
+      realizedPnlUsd,
     }),
   };
 }

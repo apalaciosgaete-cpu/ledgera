@@ -78,6 +78,12 @@ type TaxSummaryTotals = {
   costBasisClp: number;
   feeClp: number;
   realizedPnlClp: number;
+  stakingRewardUsd: number;
+  stakingRewardClp: number;
+  stakingCount: number;
+  baseImponibleClp: number;
+  impuestoEstimadoClp: number;
+  confidenceLevel: number;
 };
 
 type TaxSummaryDecision = {
@@ -87,6 +93,22 @@ type TaxSummaryDecision = {
   detail: string;
   shouldDeclare: boolean;
   likelyPayment: boolean;
+};
+
+type TopAsset = {
+  symbol: string;
+  realizedPnlClp: number;
+  eventsCount: number;
+  quantitySold: number;
+  stakingRewardClp: number;
+  stakingCount: number;
+};
+
+type KeyOperations = {
+  totalSales: number;
+  totalBuys: number;
+  totalStaking: number;
+  totalOther: number;
 };
 
 // ─── FX inline ────────────────────────────────────────────────────────────────
@@ -136,6 +158,12 @@ function emptyTotals(): TaxSummaryTotals {
     costBasisClp: 0,
     feeClp: 0,
     realizedPnlClp: 0,
+    stakingRewardUsd: 0,
+    stakingRewardClp: 0,
+    stakingCount: 0,
+    baseImponibleClp: 0,
+    impuestoEstimadoClp: 0,
+    confidenceLevel: 0,
   };
 }
 
@@ -143,8 +171,8 @@ function buildDecision(params: { movementCount: number; sellCount: number; total
   if (params.movementCount === 0) {
     return {
       status: "EMPTY",
-      label: "Sin movimientos",
-      headline: "Todavia no hay base para decidir.",
+      label: "Sin acción requerida",
+      headline: "Sin movimientos registrados.",
       detail: "Carga movimientos para que LEDGERA pueda calcular ventas, resultado y estado tributario.",
       shouldDeclare: false,
       likelyPayment: false,
@@ -154,9 +182,9 @@ function buildDecision(params: { movementCount: number; sellCount: number; total
   if (params.sellCount === 0 || params.totals.eventsCount === 0) {
     return {
       status: "NO_TAX_EVENTS",
-      label: "Sin ventas detectadas",
-      headline: "No hay eventos de venta para este filtro.",
-      detail: "Con los datos actuales no se detectan ventas tributables. Mantener respaldo sigue siendo recomendable.",
+      label: "Sin acción requerida",
+      headline: "No hay ventas que requieran revisión.",
+      detail: "Con los datos actuales no se detectan ventas tributables. Si tienes staking, revisa si genera ingresos declarables.",
       shouldDeclare: false,
       likelyPayment: false,
     };
@@ -165,9 +193,9 @@ function buildDecision(params: { movementCount: number; sellCount: number; total
   if (params.totals.realizedPnlClp > 0) {
     return {
       status: "PAY_REVIEW",
-      label: "Revisar posible pago",
-      headline: "Hay ganancia realizada.",
-      detail: "El resultado es positivo. Revisa el detalle y valida con contador antes de declarar o pagar.",
+      label: "Declarar y posible pago",
+      headline: "Hay ganancia realizada." + (params.totals.stakingRewardClp > 0 ? " También staking detectado." : ""),
+      detail: "El resultado es positivo" + (params.totals.stakingRewardClp > 0 ? " y tienes ingresos por staking." : ".") + " Revisa el detalle y valida con contador antes de declarar o pagar.",
       shouldDeclare: true,
       likelyPayment: true,
     };
@@ -176,9 +204,9 @@ function buildDecision(params: { movementCount: number; sellCount: number; total
   if (params.totals.realizedPnlClp < 0) {
     return {
       status: "LOSS_REVIEW",
-      label: "Declarar/revisar perdida",
-      headline: "Hay perdida realizada.",
-      detail: "El resultado es negativo. Puede ser relevante respaldarlo aunque no implique pago directo.",
+      label: "Revisar",
+      headline: "Hay pérdida realizada." + (params.totals.stakingRewardClp > 0 ? " También staking detectado." : ""),
+      detail: "El resultado es negativo" + (params.totals.stakingRewardClp > 0 ? " pero tienes ingresos por staking." : ".") + " Puede ser relevante respaldarlo aunque no implique pago directo.",
       shouldDeclare: true,
       likelyPayment: false,
     };
@@ -186,9 +214,9 @@ function buildDecision(params: { movementCount: number; sellCount: number; total
 
   return {
     status: "DECLARE_REVIEW",
-    label: "Revisar declaracion",
-    headline: "Hay ventas sin ganancia neta.",
-    detail: "El resultado neto esta en cero. Revisa respaldo de ventas, costos y fees antes de cerrar.",
+    label: "Declarar",
+    headline: "Hay ventas sin ganancia neta." + (params.totals.stakingRewardClp > 0 ? " También staking detectado." : ""),
+    detail: "El resultado neto está en cero" + (params.totals.stakingRewardClp > 0 ? " pero tienes ingresos por staking." : ".") + " Revisa respaldo de ventas, costos y fees antes de cerrar.",
     shouldDeclare: true,
     likelyPayment: false,
   };
@@ -232,6 +260,11 @@ export async function GET(request: NextRequest) {
       .filter((movement): movement is TaxSourceMovement => Boolean(movement));
 
     const usdClp = await fetchUsdClp();
+
+    const stakingMovements = rawMovements.filter((m) => String(m.type).trim().toUpperCase() === "STAKING_REWARD");
+    const stakingRewardUsd = stakingMovements.reduce((sum, m) => sum + Number(m.quantity || 0) * Number(m.priceUsd || 0), 0);
+    const stakingRewardClp = round(stakingRewardUsd * usdClp, 2);
+    const stakingCount = stakingMovements.length;
 
     const ledger = new Map<string, PositionAccumulator>();
     const events: TaxEvent[] = [];
@@ -296,6 +329,11 @@ export async function GET(request: NextRequest) {
         });
       }
     }
+
+    const sellMovementIds = new Set(movements.filter(m => m.type === "SELL").map(m => m.id));
+    const eventMovementIds = new Set(events.map(e => e.movementId));
+    const sellWithoutEvent = movements.filter(m => m.type === "SELL" && !eventMovementIds.has(m.id)).length;
+    const orphanEvents = events.filter(e => !sellMovementIds.has(e.movementId)).length;
 
     const availableYears = Array.from(new Set(events.map((event) => new Date(event.executedAt).getUTCFullYear()))).sort((a, b) => b - a);
     const filteredEvents = events.filter((event) => {
@@ -375,6 +413,12 @@ export async function GET(request: NextRequest) {
       },
       emptyTotals()
     );
+    const baseImponibleClp = round(Math.max(0, totals.realizedPnlClp) + totals.stakingRewardClp, 2);
+    const impuestoEstimadoClp = round(baseImponibleClp * 0.065, 2);
+    const confidenceLevel = Math.max(0, Math.min(100, rawMovements.length > 0
+      ? Math.round(100 - (sellWithoutEvent + orphanEvents) * 10)
+      : 0));
+
     const roundedTotals = {
       eventsCount: totals.eventsCount,
       quantitySold: round(totals.quantitySold, 8),
@@ -386,7 +430,14 @@ export async function GET(request: NextRequest) {
       costBasisClp: round(totals.costBasisClp, 2),
       feeClp: round(totals.feeClp, 2),
       realizedPnlClp: round(totals.realizedPnlClp, 2),
+      stakingRewardUsd: round(stakingRewardUsd, 2),
+      stakingRewardClp: round(stakingRewardClp, 2),
+      stakingCount,
+      baseImponibleClp,
+      impuestoEstimadoClp,
+      confidenceLevel,
     };
+
     const sellCount = movements.filter((movement) => {
       if (movement.type !== "SELL") return false;
       if (yearFilter && movement.executedAt.getUTCFullYear() !== yearFilter) return false;
@@ -398,6 +449,62 @@ export async function GET(request: NextRequest) {
       sellCount,
       totals: roundedTotals,
     });
+
+    const assetMap = new Map<string, TopAsset>();
+    for (const event of events) {
+      const key = event.symbol;
+      const current = assetMap.get(key) ?? { symbol: key, realizedPnlClp: 0, eventsCount: 0, quantitySold: 0, stakingRewardClp: 0, stakingCount: 0 };
+      current.realizedPnlClp += event.realizedPnlClp;
+      current.eventsCount += 1;
+      current.quantitySold += event.quantity;
+      assetMap.set(key, current);
+    }
+
+    const stakingBySymbol = new Map<string, { rewardClp: number; count: number }>();
+    for (const sm of stakingMovements) {
+      const year = sm.executedAt.getUTCFullYear();
+      if (yearFilter && year !== yearFilter) continue;
+      const sym = normalizeSymbol(String(sm.symbol));
+      const rewardUsd = Number(sm.quantity || 0) * Number(sm.priceUsd || 0);
+      const rewardClp = round(rewardUsd * usdClp, 2);
+      const current = stakingBySymbol.get(sym) ?? { rewardClp: 0, count: 0 };
+      current.rewardClp += rewardClp;
+      current.count += 1;
+      stakingBySymbol.set(sym, current);
+    }
+
+    for (const [sym, staking] of stakingBySymbol) {
+      const current = assetMap.get(sym) ?? { symbol: sym, realizedPnlClp: 0, eventsCount: 0, quantitySold: 0, stakingRewardClp: 0, stakingCount: 0 };
+      current.stakingRewardClp = round(staking.rewardClp, 2);
+      current.stakingCount = staking.count;
+      assetMap.set(sym, current);
+    }
+
+    const topAssets = Array.from(assetMap.values())
+      .sort((a, b) => {
+        const impactA = a.realizedPnlClp + a.stakingRewardClp;
+        const impactB = b.realizedPnlClp + b.stakingRewardClp;
+        return impactB - impactA;
+      })
+      .slice(0, 5)
+      .map((a) => ({
+        symbol: a.symbol,
+        realizedPnlClp: round(a.realizedPnlClp, 2),
+        eventsCount: a.eventsCount,
+        quantitySold: round(a.quantitySold, 8),
+        stakingRewardClp: round(a.stakingRewardClp, 2),
+        stakingCount: a.stakingCount,
+      }));
+
+    const keyOperations: KeyOperations = {
+      totalSales: rawMovements.filter((m) => String(m.type).trim().toUpperCase() === "SELL").length,
+      totalBuys: rawMovements.filter((m) => String(m.type).trim().toUpperCase() === "BUY").length,
+      totalStaking: rawMovements.filter((m) => String(m.type).trim().toUpperCase() === "STAKING_REWARD").length,
+      totalOther: rawMovements.filter((m) => {
+        const t = String(m.type).trim().toUpperCase();
+        return t !== "SELL" && t !== "BUY" && t !== "STAKING_REWARD";
+      }).length,
+    };
 
     return NextResponse.json({
       ok: true,
@@ -411,9 +518,11 @@ export async function GET(request: NextRequest) {
           ? { label: "Cargar movimientos", href: "/importaciones" }
           : decision.shouldDeclare
             ? { label: "Revisar eventos", href: "/tax/review" }
-            : { label: "Ver inversiones", href: "/investments" },
+            : { label: "Ver inversiones", href: "/inversiones" },
         rows,
         totals: roundedTotals,
+        topAssets,
+        keyOperations,
       },
     });
   } catch (error) {

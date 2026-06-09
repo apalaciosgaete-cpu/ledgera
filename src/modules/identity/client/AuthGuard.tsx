@@ -20,10 +20,24 @@ function isPublicRoute(pathname: string): boolean {
   );
 }
 
+const TWOFAGATE_ROUTES = [
+  "/configuracion",
+  "/configuracion/perfil",
+  "/configuracion/seguridad",
+  "/configuracion/facturacion",
+  "/configuracion/admin",
+];
+
+function is2FAGateRoute(pathname: string): boolean {
+  return TWOFAGATE_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router        = useRouter();
   const pathname      = usePathname();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, needs2FA } = useAuth();
   const publicRoute   = isPublicRoute(pathname);
   const wasAuthenticated = useRef(false);
 
@@ -42,8 +56,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
       router.push("/login");
+      return;
     }
-  }, [isAuthenticated, isLoading, publicRoute, router]);
+
+    if (!isLoading && isAuthenticated && needs2FA && !is2FAGateRoute(pathname)) {
+      router.push("/configuracion/seguridad?setup2fa=1");
+    }
+  }, [isAuthenticated, isLoading, needs2FA, pathname, publicRoute, router]);
 
   if (isLoading) {
     return (

@@ -10,6 +10,7 @@ type CreateReportValidationInput = {
     | "INFORMATIVE_TAX_CSV"
     | "AUDIT_TRAIL_PDF"
     | "AUDIT_TRAIL_CSV";
+  userId:      string;
   periodYear?: number | null;
   symbol?:     string | null;
   payload:     unknown;
@@ -33,6 +34,7 @@ export async function createReportValidation(input: CreateReportValidationInput)
 
   const reportValidation = await prisma.reportValidation.create({
     data: {
+      userId:   input.userId,
       type:     input.reportType,
       hash,
       year:     input.periodYear ?? 0,
