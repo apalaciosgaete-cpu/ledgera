@@ -22,6 +22,7 @@ function ensureStyles() {
       flex-direction: column;
       gap: 7px;
       font-family: inherit;
+      display: none;
     }
     .ledgera-auth-trust-title {
       color: #0f2a3d;
