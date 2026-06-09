@@ -88,6 +88,7 @@ function ensureStyles() {
       flex-direction: column;
       gap: 8px;
       font-family: inherit;
+      display: none;
     }
     .ledgera-register-trust-title {
       color: #4ade80;
