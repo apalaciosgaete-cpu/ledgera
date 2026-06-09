@@ -1,7 +1,9 @@
+import { TaxClassificationService } from "@/services/taxClassificationService";
 import { taxPolicy } from "./taxPolicy";
 
 export type SuggestedTaxCategory =
   | "ORDINARY_INCOME"
+  | "ORDINARY_INCOME_MINING"
   | "CAPITAL_GAIN"
   | "NON_TAXABLE"
   | "UNCLASSIFIED";
@@ -59,16 +61,15 @@ export function resolveTaxCategory(
   input: ResolveTaxCategoryInput
 ): ResolveTaxCategoryResult {
   const normalizedType = normalizeType(input.eventType);
+  const statutoryCategory = TaxClassificationService.classify(normalizedType);
 
   if (normalizedType !== "SELL") {
     return {
-      suggestedTaxCategory: "UNCLASSIFIED",
-      suggestedTaxReason:
-        "La operación no corresponde a una disposición tipo SELL dentro del criterio automático actual.",
-      suggestedTaxConfidence: "LOW",
+      suggestedTaxCategory: statutoryCategory,
+      suggestedTaxReason: TaxClassificationService.getDescription(statutoryCategory),
+      suggestedTaxConfidence: statutoryCategory === "UNCLASSIFIED" ? "LOW" : "HIGH",
       suggestedTaxRule: "NON_SELL_EVENT",
-      suggestedTaxContext:
-        "Evento fuera del alcance de la regla automática de realización tributaria."
+      suggestedTaxContext: TaxClassificationService.getSiiLine(statutoryCategory)
     };
   }
 

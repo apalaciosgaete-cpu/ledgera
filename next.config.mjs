@@ -1,6 +1,3 @@
-import type { NextConfig } from "next";
-
-const isProduction = process.env.NODE_ENV === "production";
 const isMaintenanceMode = false;
 
 const contentSecurityPolicy = [
@@ -9,12 +6,10 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  // GA4 + PostHog scripts
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://us.i.posthog.com https://eu.i.posthog.com https://app.posthog.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https: https://www.google-analytics.com",
   "font-src 'self' data:",
-  // analytics beacons
   "connect-src 'self' https: https://www.google-analytics.com https://analytics.google.com https://us.i.posthog.com https://eu.i.posthog.com https://app.posthog.com",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
@@ -42,7 +37,10 @@ const noIndexHeaders = [
   { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
   { key: "Pragma", value: "no-cache" },
   { key: "Expires", value: "0" },
-  { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet, noimageindex" },
+  {
+    key: "X-Robots-Tag",
+    value: "noindex, nofollow, noarchive, nosnippet, noimageindex",
+  },
 ];
 
 const publicMaintenanceRoutes = [
@@ -63,19 +61,15 @@ const publicMaintenanceRoutes = [
   "/cookies",
 ];
 
-const maintenanceRewrites = publicMaintenanceRoutes.map((source) => ({
-  source,
-  destination: "/mantenimiento",
-}));
-
 const maintenanceNoIndexHeaders = publicMaintenanceRoutes.map((source) => ({
   source,
   headers: noIndexHeaders,
 }));
 
-const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdfkit", "pdf-parse"],
-  bundlePagesRouterDependencies: true,
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ["pdfkit", "pdf-parse"],
+  },
 
   async redirects() {
     return [
@@ -100,7 +94,6 @@ const nextConfig: NextConfig = {
           source: "/googlead48e80d7c2d1421.html",
           destination: "/google-search-console-verification",
         },
-        // mantenimiento manejado en middleware (proxy.ts)
       ],
     };
   },

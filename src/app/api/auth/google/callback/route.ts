@@ -5,7 +5,7 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/modules/identity/application/password";
+import { hashPassword } from "@/modules/identity/application/passwordHash";
 import {
   buildSessionExpirationDate,
   generateSessionToken,

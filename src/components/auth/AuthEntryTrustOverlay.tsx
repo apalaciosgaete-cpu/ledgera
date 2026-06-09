@@ -22,6 +22,7 @@ function ensureStyles() {
       flex-direction: column;
       gap: 7px;
       font-family: inherit;
+      display: none;
     }
     .ledgera-auth-trust-title {
       color: #0f2a3d;
@@ -87,6 +88,7 @@ function ensureStyles() {
       flex-direction: column;
       gap: 8px;
       font-family: inherit;
+      display: none;
     }
     .ledgera-register-trust-title {
       color: #4ade80;
@@ -142,6 +144,7 @@ function buildLoginBlock() {
       <p class="ledgera-auth-trust-item"><span class="ledgera-auth-trust-check">✓</span> Sesión protegida para tu información financiera</p>
     </div>
   `;
+  wrapper.querySelector(".ledgera-auth-trust-box")?.remove();
 
   return wrapper;
 }
@@ -166,6 +169,7 @@ function buildRegisterBlock() {
       <p class="ledgera-register-trust-item"><span class="ledgera-auth-trust-check">✓</span> Credenciales protegidas y sesión segura</p>
     </div>
   `;
+  wrapper.querySelector(".ledgera-register-trust-box")?.remove();
 
   return wrapper;
 }

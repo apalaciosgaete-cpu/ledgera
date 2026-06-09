@@ -9,6 +9,12 @@ import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 import { saveSessionToken } from "@/modules/identity/client/authStorage";
 import { useAuth } from "@/modules/identity/client/authContext";
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_REQUIREMENTS,
+  validatePasswordComplexity,
+} from "@/modules/identity/application/password";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
 type Role = "personal" | "contador" | "empresa";
@@ -140,28 +146,9 @@ function RegisterForm() {
       return;
     }
 
-    if (password.length < 8) {
-      setErrorMessage("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      setErrorMessage("La contraseña debe incluir al menos una letra mayúscula.");
-      return;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      setErrorMessage("La contraseña debe incluir al menos una letra minúscula.");
-      return;
-    }
-
-    if (!/[0-9]/.test(password)) {
-      setErrorMessage("La contraseña debe incluir al menos un número.");
-      return;
-    }
-
-    if (!/[^A-Za-z0-9]/.test(password)) {
-      setErrorMessage("La contraseña debe incluir al menos un símbolo (ej: !@#$%).");
+    const passwordValidation = validatePasswordComplexity(password);
+    if (!passwordValidation.valid) {
+      setErrorMessage(passwordValidation.message ?? "La contraseña no cumple los requisitos.");
       return;
     }
 
@@ -584,8 +571,9 @@ function RegisterForm() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
-                    minLength={8}
-                    placeholder="Mínimo 8 caracteres"
+                    minLength={PASSWORD_MIN_LENGTH}
+                    maxLength={PASSWORD_MAX_LENGTH}
+                    placeholder={`Entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres`}
                     style={{
                       width: "100%",
                       padding: "11px 42px 11px 14px",
@@ -620,17 +608,22 @@ function RegisterForm() {
 
                 {password.length > 0 && (
                   <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "2px" }}>
-                    {[
-                      { ok: password.length >= 8, label: "Mínimo 8 caracteres" },
-                      { ok: /[A-Z]/.test(password), label: "Una mayúscula" },
-                      { ok: /[a-z]/.test(password), label: "Una minúscula" },
-                      { ok: /[0-9]/.test(password), label: "Un número" },
-                      { ok: /[^A-Za-z0-9]/.test(password), label: "Un símbolo (!@#$%...)" },
-                    ].map((req) => (
-                      <p key={req.label} style={{ fontSize: "11px", margin: 0, color: req.ok ? "#4ADE80" : colors.warning }}>
-                        {req.ok ? "✓" : "·"} {req.label}
-                      </p>
-                    ))}
+                    {PASSWORD_REQUIREMENTS.map((requirement) => {
+                      const isMet = requirement.isMet(password);
+
+                      return (
+                        <p
+                          key={requirement.id}
+                          style={{
+                            fontSize: "11px",
+                            margin: 0,
+                            color: isMet ? "#4ADE80" : colors.warning,
+                          }}
+                        >
+                          {isMet ? "✓" : "·"} {requirement.label}
+                        </p>
+                      );
+                    })}
                   </div>
                 )}
               </div>

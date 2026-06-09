@@ -47,6 +47,12 @@
       "memory": 512
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/fx-rate",
+      "schedule": "0 14 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/fonts/(.*)",
