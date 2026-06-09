@@ -54,7 +54,7 @@ model TaxEvent {
   costBasisUsd         Float    @default(0)
   feeUsd               Float    @default(0)
   realizedPnlUsd       Float    @default(0)
-  usdClp               Float    @default(950)
+  usdClp               Float
   proceedsGrossClp     Float    @default(0)
   proceedsNetClp       Float    @default(0)
   costBasisClp         Float    @default(0)
@@ -358,6 +358,48 @@ model FxRate {
   @@map("fx_rates")
 }
 
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("auth_accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("auth_verification_tokens")
+}
+
 model SystemSetting {
   id        String   @id @default(cuid())
   key       String   @unique
@@ -529,6 +571,8 @@ model users {
 
   portfolios              portfolios[]
   sessions                sessions[]
+  authAccounts            Account[]
+  authSessions            Session[]
   portfolioMovements      PortfolioMovement[]
   taxEvents               TaxEvent[]
   taxPeriodClosures       TaxPeriodClose[]

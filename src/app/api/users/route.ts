@@ -10,10 +10,8 @@ import {
   buildSessionExpirationDate,
   generateSessionToken,
 } from "@/modules/identity/application/sessionToken";
-import {
-  hashPassword,
-  validatePasswordComplexity,
-} from "@/modules/identity/application/password";
+import { validatePasswordComplexity } from "@/modules/identity/application/password";
+import { hashPassword } from "@/modules/identity/application/passwordHash";
 import { sanitizeUser } from "@/modules/identity/application/sanitizeUser";
 import { createPortfolio } from "@/modules/portfolio/infrastructure/portfolioRepository";
 import { fail, ok, serverError } from "@/shared/apiResponse";

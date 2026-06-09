@@ -14,7 +14,7 @@ import {
   buildSessionExpirationDate,
   generateSessionToken,
 } from "@/modules/identity/application/sessionToken";
-import { verifyPassword } from "@/modules/identity/application/password";
+import { verifyPassword } from "@/modules/identity/application/passwordHash";
 import {
   checkLoginRateLimit,
   clearLoginRateLimit,

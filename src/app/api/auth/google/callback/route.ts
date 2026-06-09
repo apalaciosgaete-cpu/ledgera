@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/modules/identity/application/password";
+import { hashPassword } from "@/modules/identity/application/passwordHash";
 import {
   buildSessionExpirationDate,
   generateSessionToken,

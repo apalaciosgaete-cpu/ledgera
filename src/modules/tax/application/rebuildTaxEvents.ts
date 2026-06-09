@@ -4,6 +4,7 @@ import { TAX_ENGINE_METADATA } from "@/modules/tax/domain/taxEngineVersion";
 import { resolveTaxCategory } from "@/modules/tax/domain/resolveTaxCategory";
 import { createTaxPeriodSnapshot } from "@/modules/tax/infrastructure/taxPeriodSnapshotRepository";
 import { round, normalizeSymbol } from "@/shared/utils/math";
+import { FxRateService } from "@/services/fxRateService";
 import { generateTaxLedger } from "./generateTaxLedger";
 
 interface InventoryLot {
@@ -105,65 +106,13 @@ function consumeFifoLots(params: {
   return { consumedQuantity, missingQuantity: remainingQuantity, averageCostUsdAtSale, costBasisUsd };
 }
 
-async function fetchMindicadorRate(date: Date): Promise<number | null> {
-  try {
-    const d       = new Date(date);
-    const day     = String(d.getUTCDate()).padStart(2, "0");
-    const month   = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const year    = d.getUTCFullYear();
-    const url     = `https://mindicador.cl/api/dolar/${day}-${month}-${year}`;
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok) return null;
-    const data  = await response.json();
-    const valor = data?.serie?.[0]?.valor;
-    return typeof valor === "number" && valor > 0 ? valor : null;
-  } catch {
-    return null;
-  }
-}
-
 async function getUsdClp(date: Date, cache: Map<string, number>): Promise<number> {
   const dateStr = date.toISOString().slice(0, 10);
   if (cache.has(dateStr)) return cache.get(dateStr)!;
 
-  const dateKey = new Date(`${dateStr}T00:00:00.000Z`);
-
-  try {
-    const exact = await prisma.fxRate.findFirst({
-      where: { currency: "USD", date: dateKey },
-    });
-    if (exact && Number(exact.valueClp) > 0) {
-      cache.set(dateStr, Number(exact.valueClp));
-      return Number(exact.valueClp);
-    }
-  } catch { /* continuar */ }
-
-  const rate = await fetchMindicadorRate(date);
-  if (rate && rate > 0) {
-    try {
-      await prisma.fxRate.upsert({
-        where:  { currency_date: { currency: "USD", date: dateKey } },
-        update: { valueClp: rate, source: "mindicador" },
-        create: { currency: "USD", date: dateKey, valueClp: rate, source: "mindicador" },
-      });
-    } catch { /* no bloquear */ }
-    cache.set(dateStr, rate);
-    return rate;
-  }
-
-  try {
-    const closest = await prisma.fxRate.findFirst({
-      where:   { currency: "USD", date: { lte: dateKey } },
-      orderBy: { date: "desc" },
-    });
-    if (closest && Number(closest.valueClp) > 0) {
-      cache.set(dateStr, Number(closest.valueClp));
-      return Number(closest.valueClp);
-    }
-  } catch { /* continuar */ }
-
-  cache.set(dateStr, 950);
-  return 950;
+  const rate = await FxRateService.getRateForTransactionWithFallback(date);
+  cache.set(dateStr, rate);
+  return rate;
 }
 
 async function snapshotBeforeRebuild(userId: string): Promise<void> {
