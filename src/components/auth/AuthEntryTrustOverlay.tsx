@@ -144,6 +144,7 @@ function buildLoginBlock() {
       <p class="ledgera-auth-trust-item"><span class="ledgera-auth-trust-check">✓</span> Sesión protegida para tu información financiera</p>
     </div>
   `;
+  wrapper.querySelector(".ledgera-auth-trust-box")?.remove();
 
   return wrapper;
 }
@@ -168,6 +169,7 @@ function buildRegisterBlock() {
       <p class="ledgera-register-trust-item"><span class="ledgera-auth-trust-check">✓</span> Credenciales protegidas y sesión segura</p>
     </div>
   `;
+  wrapper.querySelector(".ledgera-register-trust-box")?.remove();
 
   return wrapper;
 }
