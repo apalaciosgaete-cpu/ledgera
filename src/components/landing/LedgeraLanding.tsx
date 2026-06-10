@@ -101,7 +101,7 @@ const plans: Plan[] = [
     cta: "Crear cuenta gratis",
     href: "/register",
     features: [
-      "Hasta 25 movimientos",
+      "Ilimitado para organizar",
       "Importaciones básicas",
       "Portafolio inicial",
       "Panel tributario básico",
@@ -225,23 +225,16 @@ function HeroCarousel() {
       <div className="relative z-10 mx-auto grid w-full max-w-[1180px] grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div>
           <div className="mb-6 inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
-            Orden financiero crypto para Chile
+            Declaración crypto simplificada
           </div>
 
           <h1 className="max-w-4xl font-display text-4xl font-black leading-[0.98] tracking-[-0.07em] text-slate-50 sm:text-5xl lg:text-7xl">
-            Ordena tus movimientos crypto.
-            <br />
-            <span className="text-emerald-500">
-              Concilia banco, exchange y portafolio.
-            </span>
-            <br />
-            Prepara información clara.
+            Calcula tus impuestos crypto para el SII
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-            Importa tus fuentes, revisa movimientos antes de confirmarlos,
-            concilia banco y exchange, y prepara una base financiera-tributaria
-            trazable para Chile.
+            Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu
+            ganancia y te dice qué poner en el Formulario 22.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -249,7 +242,7 @@ function HeroCarousel() {
               href="/register"
               className="inline-flex justify-center rounded-xl bg-emerald-600 px-6 py-4 text-sm font-black text-white transition hover:bg-emerald-700"
             >
-              Comenzar a ordenar
+              Calcular mi declaración gratis
             </Link>
             <Link
               href="/login"
@@ -357,7 +350,7 @@ export default function LedgeraLanding() {
             href="/register"
             className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
           >
-            Comenzar ahora
+            Calcular gratis
           </Link>
         </div>
 
@@ -397,7 +390,7 @@ export default function LedgeraLanding() {
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-xl bg-emerald-600 px-4 py-3 text-center font-black text-white"
             >
-              Comenzar ahora
+              Calcular gratis
             </Link>
           </div>
         </div>
@@ -536,9 +529,13 @@ export default function LedgeraLanding() {
 
                     <div className="mt-5 flex items-end gap-2">
                       <span className="font-display text-3xl font-black tracking-[-0.04em] text-slate-50">
-                        {formatClp(price)}
+                        {plan.key === "personal" ? formatClp(9990) : formatClp(price)}
                       </span>
-                      {price > 0 ? (
+                      {plan.key === "personal" ? (
+                        <span className="pb-1 text-xs font-bold text-slate-500">
+                          por año fiscal
+                        </span>
+                      ) : price > 0 ? (
                         <span className="pb-1 text-xs font-bold text-slate-500">
                           / {billing === "monthly" ? "mes" : "año"}
                         </span>
@@ -609,7 +606,7 @@ export default function LedgeraLanding() {
               href="/register"
               className="w-full rounded-2xl bg-emerald-600 px-6 py-4 text-center text-sm font-black text-white transition hover:bg-emerald-700 lg:w-auto"
             >
-              Comenzar ahora
+              Calcular mi declaración gratis
             </Link>
           </div>
         </div>
