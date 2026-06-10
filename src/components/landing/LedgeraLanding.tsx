@@ -423,7 +423,7 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section className="bg-white/[0.03] px-6 py-16 lg:py-20">
+      <section className="bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.03)_12%,rgba(255,255,255,0.03)_88%,transparent_100%)] px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-[1180px]">
           <SectionHeader
             eyebrow="Cómo funciona"
@@ -476,7 +476,7 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section id="planes" className="bg-white/[0.03] px-6 py-16 lg:py-20">
+      <section id="planes" className="bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.03)_12%,rgba(255,255,255,0.03)_88%,transparent_100%)] px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-[1180px]">
           <SectionHeader
             eyebrow="Planes"
@@ -613,6 +613,8 @@ export default function LedgeraLanding() {
           </div>
         </div>
       </section>
+
+      <div className="h-16 w-full bg-[linear-gradient(180deg,#061520_0%,#040C13_100%)]" />
 
       <footer className="border-t border-white/10 bg-[#040C13] px-6 py-12">
         <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,minmax(150px,1fr))]">
