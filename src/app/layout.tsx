@@ -12,9 +12,9 @@ const baseUrl = "https://ledgera.cl";
 const googleSiteVerification =
   process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
   "6Iatkj-oi2CtR-GyTina6GNlkzxObGIs6u115Fl064k";
-const defaultTitle = "LEDGERA | Sistema financiero-tributario para crypto en Chile";
+const defaultTitle = "LEDGERA | Calcula tus impuestos crypto para el SII en Chile";
 const defaultDescription =
-  "Ordena movimientos crypto, concilia banco y exchange, revisa importaciones y prepara información tributaria trazable para Chile.";
+  "Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu ganancia y te dice qué poner en el Formulario 22 del SII.";
 
 function safeJsonLd(data: Record<string, unknown>) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
@@ -34,6 +34,14 @@ export const metadata: Metadata = {
     "criptomonedas SII",
     "declarar criptomonedas Chile",
     "tributación cripto Chile",
+    "Formulario 22 crypto",
+    "declaración Bitcoin Chile",
+    "impuestos Buda",
+    "impuestos Binance Chile",
+    "como declarar crypto SII",
+    "renta crypto Chile",
+    "DJ1821",
+    "Renta 2026 crypto",
     "conciliación Binance banco",
     "conciliación crypto banco",
     "contador crypto Chile",
@@ -83,7 +91,7 @@ export const metadata: Metadata = {
         url: `${baseUrl}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: "LEDGERA: sistema financiero-tributario para crypto en Chile",
+        alt: "LEDGERA: calcula tus impuestos crypto para el SII en Chile",
       },
     ],
   },
@@ -147,7 +155,7 @@ const softwareSchema = {
   operatingSystem: "Web",
   url: baseUrl,
   description:
-    "Sistema financiero-tributario para ordenar movimientos crypto, banco, portafolio, conciliación y base tributaria en Chile.",
+    "Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu ganancia y te dice qué poner en el Formulario 22 del SII.",
   inLanguage: "es-CL",
   publisher: {
     "@id": `${baseUrl}/#organization`,

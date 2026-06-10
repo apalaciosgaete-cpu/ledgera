@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "LEDGERA",
     short_name: "LEDGERA",
     description:
-      "Sistema financiero-tributario para ordenar movimientos crypto, conciliación banco-exchange y base tributaria trazable en Chile.",
+      "Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu ganancia y te dice qué poner en el Formulario 22 del SII.",
     start_url: "/",
     scope: "/",
     display: "standalone",
