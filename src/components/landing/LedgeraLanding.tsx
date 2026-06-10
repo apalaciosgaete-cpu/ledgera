@@ -224,7 +224,7 @@ function HeroCarousel() {
 
       <div className="relative z-10 mx-auto grid w-full max-w-[1180px] grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div className="flex flex-col justify-center">
-          <div className="mb-3 inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+          <div className="mb-3 w-fit inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
             Declaración crypto simplificada
           </div>
 
