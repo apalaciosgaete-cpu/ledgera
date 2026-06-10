@@ -221,6 +221,7 @@ function HeroCarousel() {
       ))}
 
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,12,19,0.94)_0%,rgba(15,42,61,0.88)_52%,rgba(15,42,61,0.76)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent_0%,rgba(15,42,61,0.85)_60%,#0F2A3D_100%)]" />
 
       <div className="relative z-10 mx-auto grid w-full max-w-[1180px] grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div className="flex flex-col justify-center">
