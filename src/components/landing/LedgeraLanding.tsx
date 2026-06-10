@@ -223,16 +223,18 @@ function HeroCarousel() {
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,12,19,0.94)_0%,rgba(15,42,61,0.88)_52%,rgba(15,42,61,0.76)_100%)]" />
 
       <div className="relative z-10 mx-auto grid w-full max-w-[1180px] grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-        <div>
-          <div className="mb-6 inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+        <div className="flex flex-col justify-center">
+          <div className="mb-3 inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
             Declaración crypto simplificada
           </div>
 
           <h1 className="max-w-4xl font-display text-4xl font-black leading-[0.98] tracking-[-0.07em] text-slate-50 sm:text-5xl lg:text-7xl">
-            Calcula tus impuestos crypto para el SII
+            Calcula tus impuestos
+            <br />
+            <span className="text-emerald-500">crypto para el SII</span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
             Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu
             ganancia y te dice qué poner en el Formulario 22.
           </p>
