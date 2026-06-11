@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       return fail("No autorizado.", 401);
     }
 
-    // Exponer campos que el middleware necesita para verificar suscripción
+    // Exponer campos que el middleware y el cliente necesitan para routing.
     return ok({
       user: {
         id:                    auth.user.id,
@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         subscriptionPlan:      auth.user.subscriptionPlan,
         subscriptionExpiresAt: auth.user.subscriptionExpiresAt,
         twoFactorEnabled:      auth.user.twoFactorEnabled,
+        needsOnboarding:       auth.user.needsOnboarding,
       },
       session: auth.session,
     });

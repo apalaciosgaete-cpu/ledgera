@@ -34,12 +34,40 @@ function is2FAGateRoute(pathname: string): boolean {
   );
 }
 
+/**
+ * CAPA 4.1 — Rutas permitidas mientras el usuario está en onboarding.
+ *
+ * El usuario no debe ver el panel vacío. Solo puede:
+ * - completar el wizard de onboarding
+ * - conectar exchanges
+ * - importar movimientos (manual, Binance CSV, banco)
+ * - revisar la bandeja de importaciones
+ * - configurar 2FA (controlado por el guard de 2FA antes que este)
+ */
+const ONBOARDING_ROUTES = [
+  "/onboarding",
+  "/integraciones",
+  "/import",
+  "/import/manual",
+  "/import/binance",
+  "/import/bank",
+  "/importaciones",
+];
+
+function isOnboardingRoute(pathname: string): boolean {
+  return ONBOARDING_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router        = useRouter();
   const pathname      = usePathname();
-  const { isAuthenticated, isLoading, needs2FA } = useAuth();
+  const { isAuthenticated, isLoading, needs2FA, user } = useAuth();
   const publicRoute   = isPublicRoute(pathname);
   const wasAuthenticated = useRef(false);
+
+  const needsOnboarding = user?.needsOnboarding === true;
 
   // Trackear si el usuario estaba autenticado antes
   useEffect(() => {
@@ -61,8 +89,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (!isLoading && isAuthenticated && needs2FA && !is2FAGateRoute(pathname)) {
       router.push("/configuracion/seguridad?setup2fa=1");
+      return;
     }
-  }, [isAuthenticated, isLoading, needs2FA, pathname, publicRoute, router]);
+
+    if (!isLoading && isAuthenticated && !needs2FA && needsOnboarding && !isOnboardingRoute(pathname)) {
+      router.push("/onboarding");
+    }
+  }, [isAuthenticated, isLoading, needs2FA, needsOnboarding, pathname, publicRoute, router]);
 
   if (isLoading) {
     return (

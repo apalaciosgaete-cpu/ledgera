@@ -10,6 +10,7 @@ export type AuthUser = {
   subscriptionPlan?: "BASICO" | "PROFESIONAL" | "EMPRESA";
   subscriptionExpiresAt?: string | null;
   twoFactorEnabled?: boolean;
+  needsOnboarding?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };

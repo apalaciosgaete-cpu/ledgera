@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { getSessionByToken } from "@/modules/identity/infrastructure/sessionRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { checkUserNeedsOnboarding } from "@/modules/onboarding/application/checkUserNeedsOnboarding";
 
 export function generateSessionToken(): string {
   return randomBytes(32).toString("hex");
@@ -45,6 +46,8 @@ export async function getSessionFromRequest(request: Request) {
     const user = await getUserById(session.userId);
     if (!user) return null;
 
+    const needsOnboarding = await checkUserNeedsOnboarding(user.id);
+
     return {
       user: {
         id: user.id,
@@ -54,6 +57,7 @@ export async function getSessionFromRequest(request: Request) {
         subscriptionPlan: user.subscriptionPlan,
         subscriptionExpiresAt: user.subscriptionExpiresAt,
         twoFactorEnabled: user.twoFactorEnabled,
+        needsOnboarding,
       },
       session: {
         id: session.id,
