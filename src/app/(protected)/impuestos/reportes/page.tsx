@@ -76,7 +76,7 @@ export default function ReportesPage() {
             PDF para ti, PDF para tu contador, CSV técnico. Toda la información tributaria exportable.
           </p>
         </div>
-        <Link href="/impuestos" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+        <Link href="/mi-situacion" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Volver al centro tributario
         </Link>
       </section>

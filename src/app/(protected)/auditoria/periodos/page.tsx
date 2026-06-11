@@ -224,7 +224,7 @@ export default function AuditoriaPage() {
           <p style={{ color: "#94A3B8", margin: 0, fontSize: "0.875rem" }}>Control de periodos tributarios y trazabilidad de operaciones</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-          <a href="/auditoria" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#ffffff", color: "#0F2A3D", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
+          <a href="/panel" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(15,42,61,0.15)", background: "#ffffff", color: "#0F2A3D", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
             ← Volver a auditoría
           </a>
           {[currentYear - 1, currentYear].map((y) => (

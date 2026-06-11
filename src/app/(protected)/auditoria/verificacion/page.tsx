@@ -62,7 +62,7 @@ export default function AuditoriaVerificacionPage() {
             Un tercero puede validar la autenticidad de cada documento emitido por LEDGERA.
           </p>
         </div>
-        <Link href="/auditoria" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+        <Link href="/panel" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Volver a auditoría
         </Link>
       </section>

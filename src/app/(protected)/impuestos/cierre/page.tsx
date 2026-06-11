@@ -157,7 +157,7 @@ export default function CierreTributarioPage() {
             Congela tu estado tributario cuando estés listo para declarar. Reabre solo si necesitas corregir.
           </p>
         </div>
-        <Link href="/impuestos" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+        <Link href="/mi-situacion" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Volver al centro tributario
         </Link>
       </section>
@@ -360,7 +360,7 @@ export default function CierreTributarioPage() {
               <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
                 ¿Necesitas ver el historial completo, registros de cierre o exportar trazabilidad?
               </p>
-              <Link href="/auditoria" style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none", whiteSpace: "nowrap" }}>
+              <Link href="/panel" style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none", whiteSpace: "nowrap" }}>
                 Ir a Auditoría completa →
               </Link>
             </div>

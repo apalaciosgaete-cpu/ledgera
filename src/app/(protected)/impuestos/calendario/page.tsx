@@ -73,7 +73,7 @@ export default function CalendarioPage() {
             Fechas clave, alertas y obligaciones tributarias del año.
           </p>
         </div>
-        <Link href="/impuestos" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+        <Link href="/mi-situacion" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Volver al centro tributario
         </Link>
       </section>
@@ -132,7 +132,7 @@ export default function CalendarioPage() {
               Las fechas son referenciales para el calendario tributario chileno. Valida con tu contador las fechas exactas del año en curso.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              <Link href="/impuestos" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
+              <Link href="/mi-situacion" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
                 Ver resumen →
               </Link>
               <Link href="/impuestos/simulador" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>

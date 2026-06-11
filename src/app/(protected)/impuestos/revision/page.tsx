@@ -90,7 +90,7 @@ export default function RevisionPage() {
             Eventos tributarios, alertas e inconsistencias. Todo en un solo lugar.
           </p>
         </div>
-        <Link href="/impuestos" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+        <Link href="/mi-situacion" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Volver al centro tributario
         </Link>
       </section>
@@ -206,7 +206,7 @@ export default function RevisionPage() {
             <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 10px" }}>
               Revisa el impacto por activo y las operaciones relevantes en la sección de explicación.
             </p>
-            <Link href="/impuestos" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
+            <Link href="/mi-situacion" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>
               Ver explicación tributaria →
             </Link>
           </section>
