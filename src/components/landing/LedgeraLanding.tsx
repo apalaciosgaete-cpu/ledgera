@@ -32,62 +32,64 @@ const navLinks = [
   { label: "Blog", href: "/blog" },
 ];
 
-const problems = [
-  "Movimientos repartidos entre exchange, banco y archivos sueltos.",
-  "Compras, ventas, depósitos y retiros difíciles de explicar.",
-  "Transferencias bancarias sin contexto financiero crypto.",
-  "Portafolios contaminados por importaciones automáticas o duplicadas.",
-  "Información insuficiente para revisión contable o tributaria.",
+const situations = [
+  {
+    tone: "ok",
+    icon: "✓",
+    title: "Sin acción requerida",
+    text: "No detectamos eventos que requieran declaración con los datos actuales.",
+  },
+  {
+    tone: "warn",
+    icon: "⚠",
+    title: "Revisión recomendada",
+    text: "Hay movimientos que conviene revisar antes de cerrar el período.",
+  },
+  {
+    tone: "alert",
+    icon: "⚠",
+    title: "Declaración requerida",
+    text: "Detectamos ventas con ganancia o staking que debe declararse.",
+  },
 ];
 
-const flow = [
+const howItWorks = [
   {
     step: "01",
-    title: "Importa tus fuentes",
-    text: "Carga movimientos desde exchanges compatibles, cartolas bancarias o registros manuales.",
+    title: "Conecta tus cuentas",
+    text: "Importa movimientos desde exchanges, bancos o registros manuales.",
   },
   {
     step: "02",
-    title: "Revisa antes de confirmar",
-    text: "Cada evento queda en una bandeja de importaciones para evitar duplicados y errores.",
+    title: "Analizamos movimientos",
+    text: "Clasificamos compras, ventas, staking y transferencias automáticamente.",
   },
   {
     step: "03",
-    title: "Concilia banco y crypto",
-    text: "Relaciona transferencias bancarias con movimientos confirmados del portafolio.",
+    title: "Calculamos tu situación",
+    text: "Te decimos si debes declarar, cuánto podrías pagar y por qué.",
   },
   {
     step: "04",
-    title: "Prepara información clara",
-    text: "Obtén portafolio limpio, trazabilidad y una base útil para revisión financiera y tributaria.",
+    title: "Generamos respaldo",
+    text: "Preparamos reportes y evidencia por si el SII pregunta.",
   },
 ];
 
-const modules = [
-  {
-    title: "Importaciones",
-    text: "Revisa datos antes de confirmarlos. Nada entra al portafolio sin control.",
-  },
-  {
-    title: "Banco",
-    text: "Carga cartolas y detecta movimientos que pueden tener relación con actividad crypto.",
-  },
-  {
-    title: "Portafolio",
-    text: "Conserva solo movimientos confirmados para construir una vista financiera limpia.",
-  },
-  {
-    title: "Conciliación",
-    text: "Relaciona banco, exchange y portafolio con revisión humana antes de cerrar coincidencias.",
-  },
-  {
-    title: "Tributario",
-    text: "Prepara una base ordenada para revisar impuestos crypto en Chile.",
-  },
-  {
-    title: "Auditoría",
-    text: "Mantén trazabilidad de decisiones, cambios y movimientos relevantes.",
-  },
+const forWho = [
+  { title: "Inversionistas", text: "Quienes compran y venden activos digitales ocasionalmente." },
+  { title: "Crypto", text: "Bitcoin, Ethereum, stablecoins y tokens en cualquier exchange." },
+  { title: "Staking", text: "Recompensas de staking que generan ingresos tributables." },
+  { title: "Acciones", text: "Inversiones en bolsa con movimientos en moneda extranjera." },
+  { title: "ETFs", text: "Fondos cotizados que requieren seguimiento de costo y ganancia." },
+  { title: "Fondos", text: "Instrumentos de inversión colectiva con múltiples aportes." },
+];
+
+const siPreguntan = [
+  { title: "Auditoría", text: "Trazabilidad completa de decisiones, cambios y movimientos relevantes." },
+  { title: "FIFO", text: "Cálculo de costo histórico por método First-In-First-Out." },
+  { title: "Cadena de custodia", text: "Secuencia verificable desde la operación hasta la declaración." },
+  { title: "Verificaciones", text: "Hashes y registros de integridad para respaldar ante fiscalización." },
 ];
 
 const plans: Plan[] = [
@@ -120,7 +122,7 @@ const plans: Plan[] = [
       "Movimientos ilimitados",
       "Conciliación banco y crypto",
       "Exportación CSV y PDF",
-      "Auditoría de movimientos",
+      "Respaldo ante fiscalización",
     ],
     note: "Disponible mensual y anual.",
   },
@@ -153,7 +155,7 @@ const plans: Plan[] = [
     features: [
       "Todo lo de Profesional",
       "Clientes ilimitados",
-      "Auditoría operacional",
+      "Respaldo operacional",
       "Soporte dedicado",
     ],
     note: "Para empresas, oficinas contables y mayor volumen.",
@@ -162,7 +164,6 @@ const plans: Plan[] = [
 
 function formatClp(value: number) {
   if (value === 0) return "Gratis";
-
   return new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency: "CLP",
@@ -203,7 +204,6 @@ function HeroCarousel() {
     const interval = window.setInterval(() => {
       setCurrent((prev) => (prev + 1) % HERO_IMAGES.length);
     }, 5000);
-
     return () => window.clearInterval(interval);
   }, []);
 
@@ -229,23 +229,36 @@ function HeroCarousel() {
             Declaración crypto simplificada
           </div>
 
-          <h1 className="max-w-4xl font-display text-4xl font-black leading-[0.98] tracking-[-0.07em] text-slate-50 sm:text-5xl lg:text-7xl">
-            Calcula tus impuestos
+          <h1 className="max-w-4xl font-display text-4xl font-black leading-[0.98] tracking-[-0.07em] text-slate-50 sm:text-5xl lg:text-6xl">
+            ¿Debes declarar
             <br />
-            <span className="text-emerald-500">crypto para el SII</span>
+            <span className="text-emerald-500">tus inversiones?</span>
           </h1>
 
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-            Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu
-            ganancia y te dice qué poner en el Formulario 22.
+            LEDGERA analiza automáticamente tu situación frente al SII.
           </p>
+
+          <ul className="mt-5 grid list-none gap-2 p-0">
+            {[
+              "Te dice si debes declarar",
+              "Estima impuestos",
+              "Explica por qué",
+              "Genera respaldo ante fiscalización",
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm text-slate-300">
+                <span className="text-emerald-400">✓</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href="/register"
               className="inline-flex justify-center rounded-xl bg-emerald-600 px-6 py-4 text-sm font-black text-white transition hover:bg-emerald-700"
             >
-              Calcular mi declaración gratis
+              Revisar mi situación
             </Link>
             <Link
               href="/login"
@@ -285,7 +298,6 @@ function HeroCarousel() {
                 ["Portafolio", "Solo movimientos confirmados"],
                 ["Conciliación", "Banco, exchange y portafolio conectados"],
                 ["Tributario", "Base para revisión en Chile"],
-                ["Auditoría", "Trazabilidad de cambios y decisiones"],
               ].map(([title, text]) => (
                 <div
                   key={title}
@@ -319,7 +331,6 @@ export default function LedgeraLanding() {
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 420);
     window.addEventListener("scroll", onScroll, { passive: true });
-
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -353,7 +364,7 @@ export default function LedgeraLanding() {
             href="/register"
             className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
           >
-            Calcular gratis
+            Revisar mi situación
           </Link>
         </div>
 
@@ -393,7 +404,7 @@ export default function LedgeraLanding() {
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-xl bg-emerald-600 px-4 py-3 text-center font-black text-white"
             >
-              Calcular gratis
+              Revisar mi situación
             </Link>
           </div>
         </div>
@@ -401,38 +412,54 @@ export default function LedgeraLanding() {
 
       <HeroCarousel />
 
+      {/* Situación frente al SII */}
       <section className="px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-[1180px]">
           <SectionHeader
-            eyebrow="Problema real"
-            title="Tu información crypto está dispersa antes de llegar a impuestos."
-            description="Exchange, banco, portafolio y reportes tributarios no deberían vivir separados. LEDGERA conecta esas piezas antes de preparar cualquier análisis."
+            eyebrow="Resultado"
+            title="Situación frente al SII"
+            description="LEDGERA clasifica tu posición en segundos para que sepas si debes actuar."
           />
 
-          <div className="mt-9 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {problems.map((problem) => (
-              <div
-                key={problem}
-                className="rounded-2xl border border-white/10 bg-white/[0.04] p-5"
-              >
-                <p className="m-0 text-sm font-semibold leading-6 text-slate-300">
-                  {problem}
-                </p>
-              </div>
-            ))}
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {situations.map((s) => {
+              const border =
+                s.tone === "ok"
+                  ? "border-emerald-500/40 bg-emerald-500/[0.08]"
+                  : s.tone === "warn"
+                    ? "border-amber-400/40 bg-amber-400/[0.08]"
+                    : "border-red-400/40 bg-red-400/[0.08]";
+              const titleColor =
+                s.tone === "ok" ? "text-emerald-300" : s.tone === "warn" ? "text-amber-300" : "text-red-300";
+              return (
+                <div
+                  key={s.title}
+                  className={`rounded-2xl border p-6 ${border}`}
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="text-xl">{s.icon}</span>
+                    <h3 className={`font-display text-xl font-black ${titleColor}`}>
+                      {s.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-6 text-slate-300">{s.text}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
+      {/* Cómo funciona */}
       <section className="bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.03)_12%,rgba(255,255,255,0.03)_88%,transparent_100%)] px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-[1180px]">
           <SectionHeader
             eyebrow="Cómo funciona"
-            title="De datos dispersos a información financiera revisada."
+            title="De datos dispersos a decisión clara."
           />
 
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {flow.map((item) => (
+            {howItWorks.map((item) => (
               <div
                 key={item.step}
                 className="rounded-2xl border border-white/10 bg-[#0F2A3D]/70 p-6"
@@ -452,24 +479,25 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
+      {/* Para quién */}
       <section className="px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-[1180px]">
           <SectionHeader
-            eyebrow="Producto construido"
-            title="LEDGERA no es una extensión de un exchange. Es un sistema de orden financiero crypto."
+            eyebrow="Para quién"
+            title="LEDGERA está pensado para inversionistas reales."
           />
 
-          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {modules.map((module) => (
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {forWho.map((item) => (
               <div
-                key={module.title}
+                key={item.title}
                 className="rounded-2xl border border-white/10 bg-white/[0.045] p-6"
               >
                 <h3 className="font-display text-2xl font-black text-slate-50">
-                  {module.title}
+                  {item.title}
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-slate-400">
-                  {module.text}
+                  {item.text}
                 </p>
               </div>
             ))}
@@ -477,7 +505,35 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
-      <section id="planes" className="bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.03)_12%,rgba(255,255,255,0.03)_88%,transparent_100%)] px-6 py-16 lg:py-20">
+      {/* Si el SII pregunta */}
+      <section className="bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.03)_12%,rgba(255,255,255,0.03)_88%,transparent_100%)] px-6 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1180px]">
+          <SectionHeader
+            eyebrow="Respaldo"
+            title="Si el SII pregunta"
+            description="LEDGERA genera la evidencia técnica que respalda tu declaración."
+          />
+
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {siPreguntan.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-white/10 bg-[#0F2A3D]/70 p-6"
+              >
+                <h3 className="font-display text-xl font-black text-slate-50">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-slate-400">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Planes */}
+      <section id="planes" className="px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-[1180px]">
           <SectionHeader
             eyebrow="Planes"
@@ -532,13 +588,9 @@ export default function LedgeraLanding() {
 
                     <div className="mt-5 flex items-end gap-2">
                       <span className="font-display text-3xl font-black tracking-[-0.04em] text-slate-50">
-                        {plan.key === "personal" ? formatClp(9990) : formatClp(price)}
+                        {formatClp(price)}
                       </span>
-                      {plan.key === "personal" ? (
-                        <span className="pb-1 text-xs font-bold text-slate-500">
-                          por año fiscal
-                        </span>
-                      ) : price > 0 ? (
+                      {price > 0 ? (
                         <span className="pb-1 text-xs font-bold text-slate-500">
                           / {billing === "monthly" ? "mes" : "año"}
                         </span>
@@ -592,16 +644,16 @@ export default function LedgeraLanding() {
         </div>
       </section>
 
+      {/* CTA Final */}
       <section className="px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-[1180px]">
           <div className="grid grid-cols-1 items-center gap-6 rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(22,163,74,0.16),rgba(15,42,61,0.92))] p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:p-8">
             <div>
               <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.045em] text-slate-50 lg:text-4xl">
-                Ordena tu historial crypto antes de tomar decisiones tributarias.
+                Revisa tu situación antes de declarar.
               </h2>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-                Primero importa, revisa y confirma. Después analiza portafolio,
-                conciliación y base tributaria.
+                Importa, analiza y entiende tu posición tributaria en minutos.
               </p>
             </div>
 
@@ -609,7 +661,7 @@ export default function LedgeraLanding() {
               href="/register"
               className="w-full rounded-2xl bg-emerald-600 px-6 py-4 text-center text-sm font-black text-white transition hover:bg-emerald-700 lg:w-auto"
             >
-              Calcular mi declaración gratis
+              Revisar mi situación gratis
             </Link>
           </div>
         </div>
