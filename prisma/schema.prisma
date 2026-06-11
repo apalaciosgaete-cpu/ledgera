@@ -564,6 +564,12 @@ model users {
   subscription_expires_at DateTime? @db.Timestamptz(6)
   twoFactorSecret         String?
   twoFactorEnabled        Boolean   @default(false)
+
+  // CAPA 4.1 — Activación: preparado para migración futura
+  onboardingCompleted     Boolean   @default(false)
+  activatedAt             DateTime? @db.Timestamptz(6)
+  activationSource        String?
+
   rut                     String?
   phone                   String?
   address                 String?

@@ -7,90 +7,91 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import { colors, fonts } from "@/styles/tokens";
 import { httpClient } from "@/shared/http/httpClient";
 
-type OnboardingStep = "WELCOME" | "CONNECT" | "PROCESSING" | "WOW_MOMENT";
+type OnboardingStep = "WELCOME" | "CONNECT" | "PROCESSING" | "DONE";
 
-type TaxSummaryResponse = {
+type ActivationSource = "csv" | "exchange" | "bank" | "manual";
+
+type OnboardingStatusResponse = {
   ok?: boolean;
   data?: {
-    decision?: {
-      status?: string;
-      label?: string;
-      headline?: string;
-    };
-    totals?: {
-      impuestoEstimadoClp?: number;
-    };
-    topAssets?: Array<{ symbol: string }>;
-    keyOperations?: {
-      totalBuys?: number;
-      totalSales?: number;
-      totalStaking?: number;
-    };
+    needsOnboarding?: boolean;
+    hasMovements?: boolean;
+    hasConnections?: boolean;
+    hasBankFiles?: boolean;
+    source?: ActivationSource;
   };
 };
 
-const PROVIDERS = [
-  { id: "binance", name: "Binance", icon: "🔶", href: "/integraciones?tab=exchange" },
-  { id: "crypto", name: "Crypto.com", icon: "🔵", href: "/integraciones?tab=exchange" },
-  { id: "coinbase", name: "Coinbase", icon: "🛡️", href: "/integraciones?tab=exchange" },
-  { id: "kraken", name: "Kraken", icon: "🐙", href: "/integraciones?tab=exchange" },
-  { id: "csv", name: "Archivo CSV", icon: "📄", href: "/import" },
+const EXCHANGE_PROVIDERS = [
+  { id: "binance", name: "Binance", icon: "🔶", source: "exchange" as const },
+  { id: "crypto", name: "Crypto.com", icon: "🔵", source: "exchange" as const },
+  { id: "coinbase", name: "Coinbase", icon: "🛡️", source: "exchange" as const },
+  { id: "kraken", name: "Kraken", icon: "🐙", source: "exchange" as const },
 ];
 
 const PROCESSING_TASKS = [
-  { key: "movements", label: "Analizando movimientos..." },
+  { key: "movements", label: "Analizando movimientos" },
   { key: "buys", label: "Compras" },
   { key: "sales", label: "Ventas" },
   { key: "staking", label: "Staking" },
   { key: "events", label: "Eventos tributarios" },
 ];
 
-function formatCurrency(clp: number): string {
-  return new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-  }).format(clp || 0);
-}
+const STEP_PROGRESS: Record<OnboardingStep, number> = {
+  WELCOME: 25,
+  CONNECT: 50,
+  PROCESSING: 75,
+  DONE: 100,
+};
+
+const STORAGE_SOURCE_KEY = "ledgera_onboarding_source";
+const STORAGE_ACTIVATION_LOGGED_KEY = "ledgera_activation_logged";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshUser } = useAuth();
   const [step, setStep] = useState<OnboardingStep>("WELCOME");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
-  const [summary, setSummary] = useState<TaxSummaryResponse["data"] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [hasPolled, setHasPolled] = useState(false);
+  const [emptyState, setEmptyState] = useState(false);
 
-  // Si el usuario ya completó onboarding, ir al panel.
+  // Si el usuario ya completó onboarding, ir a Mi Situación.
   useEffect(() => {
     if (!isLoading && user && user.needsOnboarding === false) {
-      router.replace("/panel");
+      router.replace("/mi-situacion");
     }
   }, [isLoading, user, router]);
 
-  // En paso CONNECT o PROCESSING, consultar resumen periódicamente.
+  // En paso CONNECT, consultar estado periódicamente.
   useEffect(() => {
-    if (step !== "CONNECT" && step !== "PROCESSING") return;
+    if (step !== "CONNECT") return;
 
     let cancelled = false;
 
     async function poll() {
       try {
-        const res = await httpClient<TaxSummaryResponse>("/api/tax/summary", {
+        const res = await httpClient<OnboardingStatusResponse>("/api/onboarding/status", {
           method: "GET",
           auth: true,
         });
 
         if (cancelled) return;
 
-        const hasMovements =
-          (res.data?.keyOperations?.totalBuys ?? 0) > 0 ||
-          (res.data?.keyOperations?.totalSales ?? 0) > 0 ||
-          (res.data?.keyOperations?.totalStaking ?? 0) > 0;
+        const status = res.data;
+        const hasData =
+          (status?.hasMovements ?? false) ||
+          (status?.hasConnections ?? false) ||
+          (status?.hasBankFiles ?? false);
 
-        if (hasMovements) {
-          setSummary(res.data ?? null);
+        setHasPolled(true);
+
+        if (hasData) {
+          const detectedSource = status?.source ?? "manual";
+          logActivationEvent(detectedSource);
           setStep("PROCESSING");
+        } else if (hasPolled) {
+          setEmptyState(true);
         }
       } catch {
         // Ignorar errores de polling; reintentará.
@@ -103,11 +104,11 @@ export default function OnboardingPage() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [step]);
+  }, [step, hasPolled]);
 
-  // Animación de paso PROCESSING → WOW_MOMENT.
+  // Animación de paso PROCESSING → DONE.
   useEffect(() => {
-    if (step !== "PROCESSING") return;
+    if (step !== "PROCESSING" || !isAnalyzing) return;
 
     let cancelled = false;
     const timeouts: NodeJS.Timeout[] = [];
@@ -119,11 +120,13 @@ export default function OnboardingPage() {
 
         if (index === PROCESSING_TASKS.length - 1) {
           const finalTimeout = setTimeout(() => {
-            if (!cancelled) setStep("WOW_MOMENT");
-          }, 900);
+            if (!cancelled) {
+              setStep("DONE");
+            }
+          }, 800);
           timeouts.push(finalTimeout);
         }
-      }, (index + 1) * 900);
+      }, (index + 1) * 600);
       timeouts.push(timeout);
     });
 
@@ -131,10 +134,59 @@ export default function OnboardingPage() {
       cancelled = true;
       timeouts.forEach(clearTimeout);
     };
-  }, [step]);
+  }, [step, isAnalyzing]);
 
-  function handleProviderClick(href: string) {
+  // Al llegar a DONE, refrescar sesión y redirigir a Mi Situación.
+  useEffect(() => {
+    if (step !== "DONE") return;
+
+    let cancelled = false;
+    const timeout = setTimeout(async () => {
+      await refreshUser();
+      if (!cancelled) {
+        router.push("/mi-situacion");
+      }
+    }, 1800);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [step, refreshUser, router]);
+
+  function setSource(source: ActivationSource) {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_SOURCE_KEY, source);
+    }
+  }
+
+  function logActivationEvent(detectedSource?: ActivationSource) {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(STORAGE_ACTIVATION_LOGGED_KEY) === "1") return;
+
+    const storedSource = localStorage.getItem(STORAGE_SOURCE_KEY);
+    const source: ActivationSource =
+      (storedSource as ActivationSource) ??
+      detectedSource ??
+      "manual";
+
+    localStorage.setItem(STORAGE_ACTIVATION_LOGGED_KEY, "1");
+
+    console.info("[activation]", {
+      event: "first_data_loaded",
+      userId: user?.id,
+      source,
+      occurredAt: new Date().toISOString(),
+    });
+  }
+
+  function handleProviderClick(href: string, source: ActivationSource) {
+    setSource(source);
     router.push(href);
+  }
+
+  function startAnalysis() {
+    setIsAnalyzing(true);
   }
 
   if (isLoading || !user) {
@@ -145,199 +197,229 @@ export default function OnboardingPage() {
     );
   }
 
-  if (step === "WELCOME") {
-    return (
-      <div style={screenStyle}>
-        <div style={{ marginBottom: 32 }}>
-          <Logo variant="light" size="lg" showSubtitle />
-        </div>
-
-        <div style={cardStyle}>
-          <span style={eyebrowStyle}>Paso 1/4</span>
-          <h1 style={headingStyle}>Bienvenido a LEDGERA</h1>
-          <p style={paragraphStyle}>
-            Antes de comenzar, conectemos tus datos para entregarte una visión clara de tu situación tributaria.
-          </p>
-
-          <button
-            onClick={() => setStep("CONNECT")}
-            style={primaryButtonStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.accentHover;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = colors.accent;
-            }}
-          >
-            Conectar datos
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "CONNECT") {
-    return (
-      <div style={screenStyle}>
-        <div style={{ marginBottom: 32 }}>
-          <Logo variant="light" size="lg" showSubtitle />
-        </div>
-
-        <div style={{ ...cardStyle, maxWidth: 640, width: "100%" }}>
-          <span style={eyebrowStyle}>Paso 2/4 · Conecta Exchange</span>
-          <h2 style={headingStyle}>¿De dónde vienen tus datos?</h2>
-          <p style={paragraphStyle}>
-            Elige tu exchange o sube un archivo CSV. En segundos analizaremos tus movimientos.
-          </p>
-
-          <div style={providersGridStyle}>
-            {PROVIDERS.map((provider) => (
-              <button
-                key={provider.id}
-                onClick={() => handleProviderClick(provider.href)}
-                style={providerCardStyle}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = colors.accent;
-                  e.currentTarget.style.backgroundColor = "rgba(22, 163, 74, 0.08)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = colors.borderDark;
-                  e.currentTarget.style.backgroundColor = colors.surfaceDark;
-                }}
-              >
-                <span style={{ fontSize: 28, lineHeight: 1 }}>{provider.icon}</span>
-                <span style={{ color: colors.textLight, fontWeight: 700, fontSize: 15 }}>
-                  {provider.name}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {error && <p style={errorStyle}>{error}</p>}
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "PROCESSING") {
-    return (
-      <div style={screenStyle}>
-        <div style={{ marginBottom: 32 }}>
-          <Logo variant="light" size="lg" showSubtitle />
-        </div>
-
-        <div style={{ ...cardStyle, maxWidth: 420, textAlign: "center" }}>
-          <span style={eyebrowStyle}>Paso 3/4 · Importa historial</span>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              border: `4px solid ${colors.accentMuted}`,
-              borderTopColor: colors.accent,
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-              margin: "0 auto 24px",
-            }}
-          />
-          <h2 style={headingStyle}>Analizando movimientos...</h2>
-
-          <div style={{ textAlign: "left", marginTop: 24, display: "grid", gap: 14 }}>
-            {PROCESSING_TASKS.map((task) => {
-              const done = completedTasks.includes(task.key);
-              return (
-                <div key={task.key} style={{ display: "flex", alignItems: "center", gap: 12, opacity: done ? 1 : 0.45, transition: "opacity 0.3s ease" }}>
-                  <span style={{ fontSize: 18 }}>{done ? "✅" : "⏳"}</span>
-                  <span style={{ color: colors.textLight, fontSize: 14, fontWeight: done ? 700 : 500 }}>
-                    {task.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  // WOW_MOMENT
-  const decision = summary?.decision;
-  const statusColors: Record<string, { bg: string; color: string }> = {
-    EMPTY: { bg: "rgba(148, 163, 184, 0.15)", color: colors.textMuted },
-    NO_TAX_EVENTS: { bg: "rgba(22, 163, 74, 0.15)", color: "#4ADE80" },
-    PAY_REVIEW: { bg: "rgba(245, 158, 11, 0.15)", color: colors.warning },
-    LOSS_REVIEW: { bg: "rgba(14, 165, 233, 0.15)", color: "#7DD3FC" },
-    DECLARE_REVIEW: { bg: "rgba(245, 158, 11, 0.15)", color: colors.warning },
-  };
-  const statusStyle = statusColors[decision?.status ?? "EMPTY"] ?? statusColors.EMPTY;
-  const detectedAssets = summary?.topAssets?.map((a) => a.symbol) ?? [];
+  const progress = STEP_PROGRESS[step];
 
   return (
     <div style={screenStyle}>
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 28 }}>
         <Logo variant="light" size="lg" showSubtitle />
       </div>
 
-      <div style={{ ...cardStyle, maxWidth: 560, textAlign: "center" }}>
-        <span style={eyebrowStyle}>Paso 4/4 · Mi Situación</span>
-        <h2 style={headingStyle}>Tu situación frente al SII</h2>
+      <div style={{ ...cardStyle, maxWidth: step === "CONNECT" ? 640 : 480, width: "100%" }}>
+        <ProgressBar progress={progress} step={step} />
 
+        {step === "WELCOME" && (
+          <>
+            <h1 style={headingStyle}>Bienvenido a LEDGERA</h1>
+            <p style={paragraphStyle}>
+              Antes de comenzar, conectemos tus datos para entregarte una visión clara de tu situación tributaria.
+            </p>
+            <button
+              onClick={() => setStep("CONNECT")}
+              style={primaryButtonStyle}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
+            >
+              Comenzar
+            </button>
+          </>
+        )}
+
+        {step === "CONNECT" && (
+          <>
+            <h2 style={headingStyle}>Conecta tus datos</h2>
+            <p style={paragraphStyle}>
+              Elige cómo quieres importar tus movimientos. El CSV es el camino más rápido.
+            </p>
+
+            {emptyState && (
+              <div style={emptyStateStyle}>
+                <p style={{ margin: "0 0 12px", color: colors.textLight, fontWeight: 700 }}>
+                  Aún no encontramos movimientos
+                </p>
+                <p style={{ margin: "0 0 16px", fontSize: 13 }}>
+                  Para calcular tu situación frente al SII necesitamos tus movimientos de inversión.
+                </p>
+                <button
+                  onClick={() => handleProviderClick("/importaciones", "csv")}
+                  style={{ ...primaryButtonStyle, width: "auto", padding: "10px 20px" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
+                >
+                  Subir archivo
+                </button>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 16 }}>
+              <button
+                onClick={() => handleProviderClick("/import", "csv")}
+                style={primaryButtonStyle}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
+              >
+                📄 Importar CSV / Excel
+              </button>
+              <p style={{ ...paragraphStyle, fontSize: 12, margin: "8px 0 0" }}>
+                Recomendado para comenzar
+              </p>
+            </div>
+
+            <button
+              onClick={() => handleProviderClick("/integraciones?tab=exchange", "exchange")}
+              style={secondaryButtonStyle}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+            >
+              Conectar exchange
+            </button>
+
+            <div style={providersGridStyle}>
+              {EXCHANGE_PROVIDERS.map((provider) => (
+                <button
+                  key={provider.id}
+                  onClick={() => handleProviderClick("/integraciones?tab=exchange", provider.source)}
+                  style={providerCardStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = colors.accent;
+                    e.currentTarget.style.backgroundColor = "rgba(22, 163, 74, 0.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = colors.borderDark;
+                    e.currentTarget.style.backgroundColor = colors.surfaceDark;
+                  }}
+                >
+                  <span style={{ fontSize: 22, lineHeight: 1 }}>{provider.icon}</span>
+                  <span style={{ color: colors.textLight, fontWeight: 700, fontSize: 13 }}>
+                    {provider.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${colors.borderDark}` }}>
+              <p style={{ ...paragraphStyle, fontSize: 13, marginBottom: 12 }}>
+                ¿No tienes exchange conectado? Puedes comenzar subiendo un archivo CSV o Excel.
+              </p>
+              <button
+                onClick={() => handleProviderClick("/importaciones", "csv")}
+                style={{ ...secondaryButtonStyle, fontSize: 13 }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                Subir archivo
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === "PROCESSING" && (
+          <>
+            {!isAnalyzing ? (
+              <>
+                <h2 style={headingStyle}>Datos recibidos</h2>
+                <p style={paragraphStyle}>
+                  Ya detectamos tus movimientos. Ahora los analizaremos para calcular tu situación tributaria.
+                </p>
+                <button
+                  onClick={startAnalysis}
+                  style={primaryButtonStyle}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
+                >
+                  Analizar movimientos
+                </button>
+              </>
+            ) : (
+              <>
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    border: `4px solid ${colors.accentMuted}`,
+                    borderTopColor: colors.accent,
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                    margin: "0 auto 20px",
+                  }}
+                />
+                <h2 style={headingStyle}>Analizando movimientos...</h2>
+
+                <div style={{ textAlign: "left", marginTop: 24, display: "grid", gap: 12 }}>
+                  {PROCESSING_TASKS.map((task) => {
+                    const done = completedTasks.includes(task.key);
+                    return (
+                      <div key={task.key} style={{ display: "flex", alignItems: "center", gap: 12, opacity: done ? 1 : 0.45, transition: "opacity 0.3s ease" }}>
+                        <span style={{ fontSize: 16 }}>{done ? "✅" : "⏳"}</span>
+                        <span style={{ color: colors.textLight, fontSize: 14, fontWeight: done ? 700 : 500 }}>
+                          {task.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <style>{`
+                  @keyframes spin {
+                    to { transform: rotate(360deg); }
+                  }
+                `}</style>
+              </>
+            )}
+          </>
+        )}
+
+        {step === "DONE" && (
+          <>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+            <h2 style={headingStyle}>¡Listo!</h2>
+            <p style={paragraphStyle}>
+              Ya tienes datos cargados. Te llevamos a tu situación tributaria frente al SII.
+            </p>
+            <button
+              onClick={async () => {
+                await refreshUser();
+                router.push("/mi-situacion");
+              }}
+              style={primaryButtonStyle}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
+            >
+              Ver mi situación
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProgressBar({ progress, step }: { progress: number; step: OnboardingStep }) {
+  const stepLabel =
+    step === "WELCOME"
+      ? "Paso 1 de 4 · Conectar datos"
+      : step === "CONNECT"
+        ? "Paso 2 de 4 · Importar movimientos"
+        : step === "PROCESSING"
+          ? "Paso 3 de 4 · Procesamiento"
+          : "Paso 4 de 4 · Mi Situación";
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{stepLabel}</span>
+        <span style={{ color: colors.accent, fontSize: 12, fontWeight: 800 }}>{progress}%</span>
+      </div>
+      <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 999, overflow: "hidden" }}>
         <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            background: statusStyle.bg,
-            color: statusStyle.color,
-            padding: "10px 18px",
+            height: "100%",
+            width: `${progress}%`,
+            background: colors.accent,
             borderRadius: 999,
-            fontWeight: 800,
-            fontSize: 14,
-            marginBottom: 28,
+            transition: "width 0.4s ease",
           }}
-        >
-          <span>🟡</span>
-          {decision?.label ?? "Declaración recomendada"}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 28 }}>
-          <div style={metricCardStyle}>
-            <p style={{ ...metricLabelStyle, color: colors.textMuted }}>Impuesto estimado</p>
-            <p style={metricValueStyle}>
-              {formatCurrency(summary?.totals?.impuestoEstimadoClp ?? 0)}
-            </p>
-          </div>
-          <div style={metricCardStyle}>
-            <p style={{ ...metricLabelStyle, color: colors.textMuted }}>Activos detectados</p>
-            <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-              {detectedAssets.length > 0 ? (
-                detectedAssets.map((symbol) => (
-                  <span key={symbol} style={assetBadgeStyle}>{symbol}</span>
-                ))
-              ) : (
-                <span style={{ color: colors.textLight, fontWeight: 700 }}>—</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => router.push("/panel")}
-          style={primaryButtonStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = colors.accentHover;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = colors.accent;
-          }}
-        >
-          Ir a mi panel
-        </button>
+        />
       </div>
     </div>
   );
@@ -358,26 +440,16 @@ const cardStyle: React.CSSProperties = {
   background: colors.surfaceDark,
   border: `1px solid ${colors.borderDark}`,
   borderRadius: 16,
-  padding: "36px",
+  padding: "32px",
   maxWidth: 480,
   width: "100%",
   textAlign: "center" as const,
 };
 
-const eyebrowStyle: React.CSSProperties = {
-  color: colors.accent,
-  fontSize: 12,
-  fontWeight: 800,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  display: "block",
-  marginBottom: 12,
-};
-
 const headingStyle: React.CSSProperties = {
   color: colors.textLight,
   fontFamily: fonts.display,
-  fontSize: 28,
+  fontSize: 26,
   fontWeight: 800,
   margin: "0 0 12px",
   lineHeight: 1.2,
@@ -387,7 +459,7 @@ const paragraphStyle: React.CSSProperties = {
   color: colors.textMuted,
   fontSize: 15,
   lineHeight: 1.55,
-  margin: "0 0 28px",
+  margin: "0 0 24px",
 };
 
 const primaryButtonStyle: React.CSSProperties = {
@@ -403,19 +475,32 @@ const primaryButtonStyle: React.CSSProperties = {
   transition: "background-color 0.15s ease",
 };
 
+const secondaryButtonStyle: React.CSSProperties = {
+  background: "transparent",
+  color: colors.textLight,
+  border: `1px solid ${colors.borderDark}`,
+  borderRadius: 10,
+  padding: "12px 24px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  width: "100%",
+  transition: "background-color 0.15s ease",
+  marginBottom: 16,
+};
+
 const providersGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-  gap: 12,
-  marginTop: 8,
+  gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+  gap: 10,
 };
 
 const providerCardStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: 10,
-  padding: "18px 12px",
+  gap: 8,
+  padding: "12px 8px",
   background: colors.surfaceDark,
   border: `1px solid ${colors.borderDark}`,
   borderRadius: 12,
@@ -423,37 +508,11 @@ const providerCardStyle: React.CSSProperties = {
   transition: "all 0.15s ease",
 };
 
-const errorStyle: React.CSSProperties = {
-  color: colors.danger,
-  fontSize: 13,
-  marginTop: 16,
-};
-
-const metricCardStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
+const emptyStateStyle: React.CSSProperties = {
+  background: "rgba(239, 68, 68, 0.10)",
+  border: "1px solid rgba(239, 68, 68, 0.25)",
   borderRadius: 12,
-  padding: 20,
+  padding: 18,
+  marginBottom: 20,
   textAlign: "center" as const,
-};
-
-const metricLabelStyle: React.CSSProperties = {
-  fontSize: 13,
-  margin: "0 0 8px",
-};
-
-const metricValueStyle: React.CSSProperties = {
-  color: colors.textLight,
-  fontSize: 28,
-  fontWeight: 800,
-  margin: 0,
-};
-
-const assetBadgeStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.08)",
-  color: colors.textLight,
-  padding: "6px 12px",
-  borderRadius: 8,
-  fontSize: 14,
-  fontWeight: 800,
 };
