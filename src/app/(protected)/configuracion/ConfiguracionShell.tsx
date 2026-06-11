@@ -5,7 +5,7 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import { fonts } from "@/styles/tokens";
 import TwoFASetupPanel from "@/components/auth/TwoFASetupPanel";
 
-export type Section = "tributario" | "persona" | "empresa" | "seguridad" | "facturacion" | "auditoria";
+export type Section = "tributario" | "persona" | "empresa" | "seguridad" | "facturacion" | "auditoria" | "administracion";
 
 export const ALL_SECTIONS: { key: Section; label: string; description: string; roles: string[]; icon: React.ReactNode; href: string }[] = [
   { key: "tributario",  label: "Tributario",  description: "Motor FIFO y reglas SII",       roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>, href: "/configuracion/admin/tributario" },
@@ -13,6 +13,7 @@ export const ALL_SECTIONS: { key: Section; label: string; description: string; r
   { key: "seguridad",   label: "Seguridad",   description: "Sesiones y acceso",             roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, href: "/configuracion/seguridad" },
   { key: "facturacion", label: "Facturación", description: "Plan y suscripción",            roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><line x1="6" y1="15" x2="10" y2="15" /></svg>, href: "/configuracion/facturacion" },
   { key: "auditoria",   label: "Auditoría",   description: "Registro de cambios",           roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>, href: "/configuracion/admin/auditoria" },
+  { key: "administracion", label: "Administración", description: "Gestión de usuarios y suscripciones", roles: ["admin"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>, href: "/admin" },
 ];
 
 const SECTION_PREFIX: Record<Section, string> = {
@@ -22,6 +23,7 @@ const SECTION_PREFIX: Record<Section, string> = {
   seguridad:  "SECURITY_",
   facturacion: "",
   auditoria:  "",
+  administracion: "",
 };
 
 function profilePrefix(role: string) {

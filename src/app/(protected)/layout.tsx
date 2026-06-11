@@ -30,11 +30,10 @@ function LogoutIcon() {
 }
 
 const baseNavItems: { href: string; label: string }[] = [
-  { href: "/panel",         label: "Dashboard" },
+  { href: "/panel",         label: "Inicio" },
+  { href: "/mi-situacion",  label: "Mi Situación" },
   { href: "/inversiones",   label: "Inversiones" },
   { href: "/integraciones", label: "Conexiones" },
-  { href: "/impuestos",     label: "Tributario" },
-  { href: "/auditoria",     label: "Auditoría" },
 ];
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
