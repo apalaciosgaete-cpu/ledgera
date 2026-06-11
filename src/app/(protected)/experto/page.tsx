@@ -5,32 +5,32 @@ import Link from "next/link";
 const areas = [
   {
     title: "Tributario",
-    href: "/impuestos/declaraciones",
+    href: "/experto/tributario",
     desc: "Estado tributario, simulación, cierre y reportes para el SII.",
   },
   {
     title: "Auditoría",
-    href: "/auditoria/fifo",
+    href: "/experto/auditoria",
     desc: "FIFO, operaciones, eventos, integridad y trazabilidad.",
   },
   {
     title: "Reportes",
-    href: "/impuestos/reportes",
+    href: "/experto/reportes",
     desc: "Exportación CSV, PDF y respaldo ante fiscalización.",
   },
   {
     title: "Declaraciones",
-    href: "/impuestos/declaraciones",
+    href: "/experto/declaraciones",
     desc: "Cadena de custodia de declaraciones juradas.",
   },
   {
     title: "Verificaciones",
-    href: "/auditoria/verificacion",
+    href: "/experto/verificaciones",
     desc: "Hashes públicos, estados y revocaciones de documentos.",
   },
   {
     title: "Operaciones",
-    href: "/auditoria/movimientos",
+    href: "/experto/operaciones",
     desc: "Revisión detallada de movimientos auditados.",
   },
 ];

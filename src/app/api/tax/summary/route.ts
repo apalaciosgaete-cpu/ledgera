@@ -517,7 +517,7 @@ export async function GET(request: NextRequest) {
         nextAction: decision.status === "EMPTY"
           ? { label: "Cargar movimientos", href: "/importaciones" }
           : decision.shouldDeclare
-            ? { label: "Revisar eventos", href: "/tax/review" }
+            ? { label: "Revisar eventos", href: "/experto/operaciones" }
             : { label: "Ver inversiones", href: "/inversiones" },
         rows,
         totals: roundedTotals,

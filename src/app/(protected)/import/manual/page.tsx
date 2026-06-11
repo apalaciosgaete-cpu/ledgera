@@ -390,7 +390,7 @@ export default function ManualImportPage() {
           <div className="mt-3 flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => router.push("/tax/review")}
+              onClick={() => router.push("/experto/operaciones")}
               className="rounded border px-3 py-2 text-xs font-medium"
             >
               Revisar tributación

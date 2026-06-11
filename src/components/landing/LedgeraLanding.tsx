@@ -87,9 +87,9 @@ const forWho = [
 
 const siPreguntan = [
   { title: "Auditoría", text: "Trazabilidad completa de decisiones, cambios y movimientos relevantes." },
-  { title: "FIFO", text: "Cálculo de costo histórico por método First-In-First-Out." },
+  { title: "Costo histórico", text: "Cálculo automático de costo de adquisición para cada venta." },
   { title: "Cadena de custodia", text: "Secuencia verificable desde la operación hasta la declaración." },
-  { title: "Verificaciones", text: "Hashes y registros de integridad para respaldar ante fiscalización." },
+  { title: "Verificaciones", text: "Hashes y registros de auditoría para respaldar ante fiscalización." },
 ];
 
 const plans: Plan[] = [

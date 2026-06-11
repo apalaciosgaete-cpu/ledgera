@@ -325,7 +325,7 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_TAX_EVENTS",
       label: "Revisar alertas tributarias",
-      href: "/impuestos",
+      href: "/experto/tributario",
       detail: `Hay ${params.sellWithoutEvent + params.orphanEvents} inconsistencias entre movimientos y eventos tributarios. Resuélvelas antes de generar reportes.`,
     };
   }
@@ -334,7 +334,7 @@ function buildNextAction(params: {
     return {
       code: "REVIEW_TAX_EVENTS",
       label: "Revisar tributario",
-      href: "/impuestos",
+      href: "/experto/tributario",
       detail: "Revisa si corresponde declarar o pagar antes de entrar al detalle técnico.",
     };
   }
@@ -370,7 +370,7 @@ function buildNextAction(params: {
     return {
       code: "GENERATE_REPORT",
       label: "Generar reporte tributario",
-      href: "/tax/reports",
+      href: "/experto/reportes",
       detail: "Tus datos están actualizados y consistentes. Genera un reporte para revisar con tu contador.",
     };
   }
@@ -378,7 +378,7 @@ function buildNextAction(params: {
   return {
     code: "OPEN_TAX_SUMMARY",
     label: "Ver resumen tributario",
-    href: "/impuestos",
+    href: "/experto/tributario",
     detail: "Consulta el resultado fiscal simple del período actual.",
   };
 }

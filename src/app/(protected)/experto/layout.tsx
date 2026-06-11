@@ -5,13 +5,12 @@ import { usePathname } from "next/navigation";
 
 const links = [
   { label: "Resumen", href: "/experto" },
-  { label: "Tributario", href: "/impuestos/declaraciones" },
-  { label: "Auditoría", href: "/auditoria/fifo" },
-  { label: "FIFO", href: "/auditoria/fifo" },
-  { label: "Operaciones", href: "/auditoria/movimientos" },
-  { label: "Declaraciones", href: "/impuestos/declaraciones" },
-  { label: "Verificaciones", href: "/auditoria/verificacion" },
-  { label: "Reportes", href: "/impuestos/reportes" },
+  { label: "Tributario", href: "/experto/tributario" },
+  { label: "Auditoría", href: "/experto/auditoria" },
+  { label: "Operaciones", href: "/experto/operaciones" },
+  { label: "Declaraciones", href: "/experto/declaraciones" },
+  { label: "Verificaciones", href: "/experto/verificaciones" },
+  { label: "Reportes", href: "/experto/reportes" },
 ];
 
 export default function ExpertoLayout({ children }: { children: React.ReactNode }) {

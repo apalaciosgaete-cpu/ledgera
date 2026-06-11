@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
-
-export default function TaxRootPage() {
-  redirect("/impuestos");
+"use client";
+import { useEffect } from "react";
+export default function TaxRootRedirectPage() {
+  useEffect(() => { window.location.href = "/experto/tributario"; }, []);
+  return null;
 }
