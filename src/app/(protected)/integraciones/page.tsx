@@ -61,14 +61,14 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg:
   },
   {
     key: "wallets",
-    label: "Wallets",
+    label: "Más integraciones",
     color: "#7C3AED",
     bg: "rgba(124,58,237,0.07)",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 12V8H6a2 2 0 0 1 0-4h14v4"/>
-        <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/>
-        <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
+        <circle cx="12" cy="12" r="1"/>
+        <circle cx="19" cy="12" r="1"/>
+        <circle cx="5" cy="12" r="1"/>
       </svg>
     ),
   },
@@ -130,6 +130,7 @@ export default function IntegracionesPage() {
   const [isImportingBankFile, setIsImportingBankFile] = useState(false);
   const [bankImportError, setBankImportError] = useState<string | null>(null);
   const [bankImportResult, setBankImportResult] = useState<BankImportResponse | null>(null);
+  const [showMore, setShowMore] = useState(false);
 
   function resetBankImportState() {
     setBankFile(null);
@@ -455,15 +456,26 @@ export default function IntegracionesPage() {
             </div>
           </div>
 
-          <div>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
-              Bancos internacionales
-            </p>
-            <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "2rem", textAlign: "center" }}>
-              <span style={{ display: "inline-block", background: colors.warningMuted, border: "1px solid rgba(245,158,11,0.25)", color: colors.warning, padding: "6px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: 600 }}>
-                Próximamente
-              </span>
-            </div>
+          <div style={{ marginTop: "8px" }}>
+            <button
+              type="button"
+              onClick={() => setShowMore(v => !v)}
+              style={{ background: "transparent", border: "none", color: colors.textSecondary, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "6px 0", fontFamily: fonts.body }}
+            >
+              {showMore ? "← Ocultar opciones avanzadas" : "+ Más integraciones"}
+            </button>
+            {showMore && (
+              <div style={{ marginTop: "12px" }}>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
+                  Bancos internacionales
+                </p>
+                <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "2rem", textAlign: "center" }}>
+                  <span style={{ display: "inline-block", background: colors.warningMuted, border: "1px solid rgba(245,158,11,0.25)", color: colors.warning, padding: "6px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: 600 }}>
+                    Disponible próximamente
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -624,14 +636,14 @@ export default function IntegracionesPage() {
         <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "3rem 2rem", textAlign: "center" }}>
           <p style={{ fontSize: "13px", color: colors.textSecondary, margin: "0 0 1.5rem", lineHeight: 1.7 }}>
             Conecta direcciones de blockchain para importar transacciones on-chain.<br/>
-            Ethereum, Bitcoin y más redes próximamente.
+            Ethereum, Bitcoin y más redes disponibles próximamente.
           </p>
           <span style={{
             display: "inline-block",
             background: colors.warningMuted, border: "1px solid rgba(245,158,11,0.25)",
             color: colors.warning, padding: "6px 16px", borderRadius: "8px",
             fontSize: "12px", fontWeight: 600,
-          }}>Próximamente</span>
+          }}>Disponible próximamente</span>
         </div>
       )}
 

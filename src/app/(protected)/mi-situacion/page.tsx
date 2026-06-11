@@ -275,7 +275,7 @@ export default function MiSituacionPage() {
           </Link>
         ) : (
           <Link
-            href="/impuestos"
+            href="/experto"
             style={{
               background: cfg.tone === "alert" ? "#DC2626" : cfg.tone === "warn" ? "#B45309" : "#16A34A",
               borderRadius: 8,
@@ -287,7 +287,7 @@ export default function MiSituacionPage() {
               textDecoration: "none",
             }}
           >
-            Revisar detalle tributario →
+            Revisar detalle técnico →
           </Link>
         )}
       </section>
