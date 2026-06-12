@@ -17,6 +17,8 @@ export type BillingSubscriptionStatus =
   | "ACTIVE"
   | "PAST_DUE"
   | "CANCELED"
+  | "CANCELLED"
+  | "CANCEL_AT_PERIOD_END"
   | "EXPIRED"
   | "FAILED";
 

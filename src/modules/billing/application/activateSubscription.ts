@@ -53,22 +53,57 @@ function isFailedPayment(
   );
 }
 
-function resolvePlanFromPaymentDescription(
-  description: string,
+function parseMetadata(
+  metadata: string | null,
+): Record<string, unknown> | null {
+  if (!metadata) return null;
+
+  try {
+    return JSON.parse(metadata) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function resolvePlanFromPayment(
+  payment: {
+    description: string;
+    metadata: string | null;
+  },
 ): BillingPlan {
-  const normalizedDescription =
-    description.toLowerCase();
+  const metadata = parseMetadata(payment.metadata);
+  const previousMetadata =
+    typeof metadata?.previousMetadata === "string"
+      ? parseMetadata(metadata.previousMetadata)
+      : null;
+
+  const metadataPlan =
+    metadata?.plan ??
+    metadata?.targetPlan ??
+    previousMetadata?.plan ??
+    previousMetadata?.targetPlan;
 
   if (
-    normalizedDescription.includes("empresa")
+    metadataPlan === "BASICO" ||
+    metadataPlan === "PERSONAL" ||
+    metadataPlan === "PROFESIONAL" ||
+    metadataPlan === "EMPRESA"
   ) {
+    return metadataPlan;
+  }
+
+  const normalizedDescription = payment.description.toLowerCase();
+
+  if (normalizedDescription.includes("empresa")) {
     return "EMPRESA";
   }
 
-  if (
-    normalizedDescription.includes("profesional")
-  ) {
+  if (normalizedDescription.includes("profesional")) {
     return "PROFESIONAL";
+  }
+
+  if (normalizedDescription.includes("personal")) {
+    return "PERSONAL";
   }
 
   return "PROFESIONAL";
@@ -143,10 +178,7 @@ export async function activateSubscriptionFromPayment(
         id: payment.userId,
       },
       data: {
-        subscription_plan:
-          resolvePlanFromPaymentDescription(
-            payment.description,
-          ),
+        subscription_plan: resolvePlanFromPayment(payment),
         subscription_expires_at:
           calculateCurrentPeriodEnd(),
         updated_at: new Date(),

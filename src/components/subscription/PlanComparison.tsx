@@ -1,6 +1,7 @@
 "use client";
 
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
+import { useAuth } from "@/modules/identity/client/authContext";
 import { getPlanLabel, normalizePlan, Plan } from "@/modules/subscription/domain/planFeatures";
 
 const PLANS = [
@@ -56,12 +57,15 @@ type PlanComparisonProps = {
 };
 
 export function PlanComparison({ currentPlan }: PlanComparisonProps) {
+  const { isAuthenticated } = useAuth();
   const normalizedCurrent = normalizePlan(currentPlan);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
       {PLANS.map((plan) => {
         const isCurrent = normalizedCurrent === plan.key;
+        const action = isAuthenticated ? "change-plan" : "checkout";
+
         return (
           <div
             key={plan.key}
@@ -99,6 +103,7 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
             {plan.checkoutPlan && !isCurrent ? (
               <BillingCheckoutButton
                 plan={plan.checkoutPlan}
+                action={action}
                 style={{
                   background: "#0F766E",
                   color: "#FFFFFF",
@@ -108,7 +113,7 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
                   fontWeight: 800,
                 }}
               >
-                Elegir {plan.name}
+                {isAuthenticated ? `Cambiar a ${plan.name}` : `Elegir ${plan.name}`}
               </BillingCheckoutButton>
             ) : (
               <button

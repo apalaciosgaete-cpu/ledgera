@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { fonts } from "@/styles/tokens";
+import { confirmBillingPayment } from "@/modules/billing/client/billingClient";
 
 type CheckoutStatus = "pending" | "success" | "error";
 
@@ -37,9 +39,32 @@ export function BillingCheckoutStatusBanner() {
   const status = normalizeCheckoutStatus(searchParams.get("checkout") ?? searchParams.get("payment"));
   const paymentId = searchParams.get("paymentId");
 
-  if (!status) return null;
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
-  const copy = STATUS_COPY[status];
+  useEffect(() => {
+    if (status === "pending" && paymentId) {
+      setConfirming(true);
+      setConfirmError(null);
+
+      confirmBillingPayment(paymentId)
+        .then(() => {
+          window.location.href = "/configuracion/facturacion?checkout=success";
+        })
+        .catch((error: unknown) => {
+          setConfirming(false);
+          setConfirmError(
+            error instanceof Error
+              ? error.message
+              : "No fue posible confirmar el pago.",
+          );
+        });
+    }
+  }, [status, paymentId]);
+
+  if (!status && !confirmError) return null;
+
+  const copy = STATUS_COPY[status ?? "pending"];
   const colors = {
     info: {
       border: "rgba(14,165,233,0.24)",
@@ -80,7 +105,7 @@ export function BillingCheckoutStatusBanner() {
           margin: "0 0 4px",
         }}
       >
-        {copy.title}
+        {confirming ? "Confirmando pago..." : copy.title}
       </h3>
       <p
         style={{
@@ -90,7 +115,7 @@ export function BillingCheckoutStatusBanner() {
           color: colors.text,
         }}
       >
-        {copy.description}
+        {confirmError ?? copy.description}
       </p>
       {paymentId && (
         <p

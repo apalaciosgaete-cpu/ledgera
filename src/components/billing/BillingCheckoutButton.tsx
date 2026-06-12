@@ -6,16 +6,21 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import {
   createBillingCheckout,
+  createBillingChangePlan,
   type BillingCheckoutPlan,
   type BillingCheckoutProvider,
 } from "@/modules/billing/client/billingClient";
 import { isHttpClientError } from "@/shared/http/httpClient";
+
+type BillingAction = "checkout" | "change-plan";
 
 type BillingCheckoutButtonProps = {
   plan: BillingCheckoutPlan;
   children: React.ReactNode;
   disabled?: boolean;
   provider?: BillingCheckoutProvider;
+  action?: BillingAction;
+  autoConfirm?: boolean;
   style?: React.CSSProperties;
 };
 
@@ -44,6 +49,8 @@ export function BillingCheckoutButton({
   children,
   disabled = false,
   provider = "flow",
+  action = "checkout",
+  autoConfirm = false,
   style,
 }: BillingCheckoutButtonProps) {
   const router = useRouter();
@@ -75,9 +82,30 @@ export function BillingCheckoutButton({
     setLoading(true);
 
     try {
-      const url = await createBillingCheckout(plan, provider);
+      const url =
+        action === "change-plan"
+          ? await createBillingChangePlan(plan, provider)
+          : await createBillingCheckout(plan, provider);
 
       setSuccess(true);
+
+      if (autoConfirm && url.includes("paymentId=")) {
+        const paymentIdMatch = url.match(/[?&]paymentId=([^&]+)/);
+        const paymentId = paymentIdMatch?.[1];
+
+        if (paymentId) {
+          const { confirmBillingPayment } = await import(
+            "@/modules/billing/client/billingClient"
+          );
+          await confirmBillingPayment(paymentId);
+        }
+      }
+
+      if (url.startsWith("/")) {
+        router.push(url);
+        return;
+      }
+
       window.location.href = url;
     } catch (error) {
       setErrorMessage(resolveErrorMessage(error));
