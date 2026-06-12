@@ -21,6 +21,7 @@ type BillingCheckoutButtonProps = {
   provider?: BillingCheckoutProvider;
   action?: BillingAction;
   autoConfirm?: boolean;
+  billing?: "monthly" | "annual";
   style?: React.CSSProperties;
 };
 
@@ -51,6 +52,7 @@ export function BillingCheckoutButton({
   provider = "flow",
   action = "checkout",
   autoConfirm = false,
+  billing = "monthly",
   style,
 }: BillingCheckoutButtonProps) {
   const router = useRouter();
@@ -69,12 +71,21 @@ export function BillingCheckoutButton({
         "pendingCheckout",
         JSON.stringify({
           plan,
-          billing: "monthly",
+          billing,
           provider,
+          action,
+          source: "public_plan_selection",
         }),
       );
 
-      router.push(`/register?plan=${encodeURIComponent(plan)}`);
+      const params = new URLSearchParams({
+        plan,
+        billing,
+        intent: action,
+        provider,
+      });
+
+      router.push(`/register?${params.toString()}`);
 
       return;
     }
