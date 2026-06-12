@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const webhookEvent = existingEvent ?? await prisma.billingWebhookEvent.create({
+    const webhookEvent = existingEvent ?? (await prisma.billingWebhookEvent.create({
       data: {
         provider: normalized.provider,
         providerEventId: normalized.providerEventId,
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         status: "RECEIVED",
         payload: JSON.stringify(payload),
       },
-    });
+    }));
 
     const result = await processBillingWebhook(normalized);
 
