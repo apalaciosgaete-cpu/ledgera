@@ -1,7 +1,13 @@
 "use client";
 
+import { BillingCheckoutStatusBanner } from "@/components/billing/BillingCheckoutStatusBanner";
 import ConfiguracionShell from "../ConfiguracionShell";
 
 export default function FacturacionPage() {
-  return <ConfiguracionShell forcedSection="facturacion" />;
+  return (
+    <>
+      <BillingCheckoutStatusBanner />
+      <ConfiguracionShell forcedSection="facturacion" />
+    </>
+  );
 }
