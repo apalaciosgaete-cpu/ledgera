@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clp } from "@/shared/formatting";
+import { useAuth } from "@/modules/identity/client/authContext";
 
 type TaxStatus = "EMPTY" | "NO_TAX_EVENTS" | "DECLARE_REVIEW" | "PAY_REVIEW" | "LOSS_REVIEW";
 
@@ -95,10 +96,34 @@ function situacionConfig(status: TaxStatus) {
   }
 }
 
+const UNLOCKABLES = [
+  { key: "pdf", label: "Reporte tributario PDF", plan: "Personal" },
+  { key: "csv", label: "Exportación CSV", plan: "Personal" },
+  { key: "declaraciones", label: "Declaraciones", plan: "Personal" },
+  { key: "verificaciones", label: "Verificaciones", plan: "Pro" },
+];
+
+const COMPARISON_ROWS = [
+  { feature: "Estado SII", free: true, personal: true, pro: true },
+  { feature: "Patrimonio", free: true, personal: true, pro: true },
+  { feature: "Activos", free: true, personal: true, pro: true },
+  { feature: "Impuesto estimado", free: false, personal: true, pro: true },
+  { feature: "PDF tributario", free: false, personal: true, pro: true },
+  { feature: "Declaraciones", free: false, personal: true, pro: true },
+  { feature: "Auditoría", free: false, personal: false, pro: true },
+  { feature: "Verificaciones", free: false, personal: false, pro: true },
+  { feature: "Cadena de custodia", free: false, personal: false, pro: true },
+];
+
 export default function MiSituacionPage() {
+  const { user, subscriptionState } = useAuth();
+  const loggedRef = useRef(false);
   const [data, setData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const currentPlan = subscriptionState?.plan ?? "BASICO";
+  const isFreePlan = currentPlan === "BASICO";
 
   useEffect(() => {
     async function load() {
@@ -115,6 +140,23 @@ export default function MiSituacionPage() {
     }
     void load();
   }, []);
+
+  // Evento comercial: plan_upgrade_prompt_viewed
+  useEffect(() => {
+    if (!data || !isFreePlan || data.decision.status === "EMPTY") return;
+    if (loggedRef.current) return;
+
+    loggedRef.current = true;
+
+    console.info("[commercial]", {
+      event: "plan_upgrade_prompt_viewed",
+      userId: user?.id,
+      source: "mi_situacion",
+      plan: "free",
+      detectedAssets: data.topAssets.map((a) => a.symbol),
+      detectedEvents: data.totals.eventsCount,
+    });
+  }, [data, isFreePlan, user?.id]);
 
   if (loading) {
     return (
@@ -146,6 +188,9 @@ export default function MiSituacionPage() {
   const hasSales = data.keyOperations.totalSales > 0;
   const hasStaking = data.keyOperations.totalStaking > 0;
   const topActiveAssets = data.topAssets.filter(a => a.eventsCount > 0 || a.stakingCount > 0).slice(0, 3);
+  const hasData = data.decision.status !== "EMPTY";
+  const totalMovements = Object.values(data.keyOperations).reduce((sum, n) => sum + n, 0);
+  const detectedAssets = data.topAssets.map((a) => a.symbol);
 
   return (
     <div style={{ maxWidth: 800, width: "100%" }}>
@@ -292,6 +337,131 @@ export default function MiSituacionPage() {
         )}
       </section>
 
+      {/* Bloque 1 — Card de Valor */}
+      {hasData && (
+        <section style={{ ...sectionCardStyle, marginBottom: 24 }}>
+          <h3 style={{ ...sectionTitleStyle, marginBottom: 16 }}>Análisis completado</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16 }}>
+            <ValueMetric label="Activos detectados" value={detectedAssets.slice(0, 3).join(", ") || "—"} />
+            <ValueMetric label="Movimientos procesados" value={String(totalMovements)} />
+            <ValueMetric label="Eventos tributarios" value={String(data.totals.eventsCount)} />
+            <ValueMetric label="Año analizado" value={String(new Date().getFullYear())} />
+          </div>
+        </section>
+      )}
+
+      {/* Bloque 2 — Desbloqueables + Bloque 6 — Paywall suave */}
+      {hasData && isFreePlan && (
+        <section style={{ ...sectionCardStyle, marginBottom: 24 }}>
+          <h3 style={{ ...sectionTitleStyle, marginBottom: 16 }}>Desbloquea tu reporte completo</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
+            {UNLOCKABLES.map((item) => (
+              <div
+                key={item.key}
+                style={{
+                  background: "#F8FAFC",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: 10,
+                  padding: 16,
+                  opacity: 0.85,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span>🔒</span>
+                  <span style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 800 }}>{item.label}</span>
+                </div>
+                <span style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>
+                  Disponible en {item.plan}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Bloque 3 — CTA principal */}
+          <Link
+            href="/configuracion/facturacion"
+            style={{
+              background: "#0F766E",
+              borderRadius: 10,
+              color: "#FFFFFF",
+              display: "block",
+              fontSize: 15,
+              fontWeight: 850,
+              padding: "14px 24px",
+              textAlign: "center",
+              textDecoration: "none",
+              marginBottom: 12,
+            }}
+          >
+            Desbloquear reporte completo
+          </Link>
+          <p style={{ color: "#64748B", fontSize: 12, margin: 0, textAlign: "center" }}>
+            Sigue viendo tu situación SII gratis. Solo los reportes y exportaciones avanzadas son de pago.
+          </p>
+        </section>
+      )}
+
+      {/* Bloque 4 — CTA Experto */}
+      {hasData && (
+        <section style={{ ...sectionCardStyle, marginBottom: 24 }}>
+          <h3 style={{ ...sectionTitleStyle, marginBottom: 8 }}>¿Quieres revisar el detalle técnico?</h3>
+          <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.5, margin: "0 0 16px" }}>
+            Revisa operaciones, eventos tributarios y tu posición por activo en modo experto.
+          </p>
+          <Link
+            href="/experto"
+            style={{
+              background: "transparent",
+              border: "1px solid #CBD5E1",
+              borderRadius: 10,
+              color: "#0F2A3D",
+              display: "inline-flex",
+              fontSize: 14,
+              fontWeight: 850,
+              padding: "12px 22px",
+              textDecoration: "none",
+            }}
+          >
+            Abrir modo experto →
+          </Link>
+        </section>
+      )}
+
+      {/* Bloque 5 — Comparador de valor */}
+      {hasData && isFreePlan && (
+        <section style={{ ...sectionCardStyle, marginBottom: 24 }}>
+          <h3 style={{ ...sectionTitleStyle, marginBottom: 16 }}>Compara planes</h3>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Característica</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Gratis</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Personal</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map((row) => (
+                  <tr key={row.feature}>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid #F1F5F9" }}>{row.feature}</td>
+                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #F1F5F9", color: row.free ? "#16A34A" : "#94A3B8" }}>
+                      {row.free ? "✓" : "—"}
+                    </td>
+                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #F1F5F9", color: row.personal ? "#16A34A" : "#94A3B8" }}>
+                      {row.personal ? "✓" : "—"}
+                    </td>
+                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #F1F5F9", color: row.pro ? "#16A34A" : "#94A3B8" }}>
+                      {row.pro ? "✓" : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {/* Nota de confianza */}
       {data.decision.status !== "EMPTY" && (
         <p style={{ color: "#64748B", fontSize: 12, lineHeight: 1.5, margin: 0 }}>
@@ -301,3 +471,30 @@ export default function MiSituacionPage() {
     </div>
   );
 }
+
+function ValueMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: 14 }}>
+      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", textTransform: "uppercase", margin: "0 0 6px" }}>
+        {label}
+      </p>
+      <p style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 800, margin: 0, wordBreak: "break-word" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+const sectionCardStyle: React.CSSProperties = {
+  background: "#FFFFFF",
+  border: "1px solid #E2E8F0",
+  borderRadius: 14,
+  padding: "24px",
+};
+
+const sectionTitleStyle: React.CSSProperties = {
+  color: "#0F2A3D",
+  fontSize: "1.1rem",
+  fontWeight: 850,
+  margin: 0,
+};
