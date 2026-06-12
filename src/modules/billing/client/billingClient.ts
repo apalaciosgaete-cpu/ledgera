@@ -1,6 +1,7 @@
 import { httpClient } from "@/shared/http/httpClient";
 
 export type BillingCheckoutPlan = "PERSONAL" | "PROFESIONAL" | "EMPRESA";
+export type BillingCheckoutProvider = "stripe" | "flow" | "mercadopago";
 
 type BillingCheckoutResponse = {
   ok: boolean;
@@ -14,13 +15,14 @@ type BillingCheckoutResponse = {
 
 export async function createBillingCheckout(
   plan: BillingCheckoutPlan,
+  provider: BillingCheckoutProvider = "flow",
 ): Promise<string> {
   const response = await httpClient<BillingCheckoutResponse>(
     "/api/billing/checkout",
     {
       method: "POST",
       auth: true,
-      body: { plan },
+      body: { plan, provider },
     },
   );
 
