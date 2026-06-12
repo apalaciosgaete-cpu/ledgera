@@ -84,6 +84,16 @@ const nextConfig = {
         destination: "https://ledgera.cl/:path*",
         permanent: true,
       },
+      {
+        source: "/legal/terminos",
+        destination: "/terminos",
+        permanent: false,
+      },
+      {
+        source: "/legal/privacidad",
+        destination: "/privacidad",
+        permanent: false,
+      },
     ];
   },
 
