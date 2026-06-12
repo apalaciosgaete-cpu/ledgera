@@ -284,7 +284,7 @@ function PlanCard({
           {isAuthenticated ? "Ir al panel" : plan.cta}
         </Link>
       ) : shouldUseCheckout && plan.checkoutPlan ? (
-        <BillingCheckoutButton plan={plan.checkoutPlan} style={ctaStyle}>
+        <BillingCheckoutButton plan={plan.checkoutPlan} billing={billing} style={ctaStyle}>
           {plan.cta}
         </BillingCheckoutButton>
       ) : (
