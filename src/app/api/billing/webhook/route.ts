@@ -1,0 +1,138 @@
+// src/app/api/billing/webhook/route.ts
+
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { processBillingWebhook } from "@/modules/billing/application/processBillingWebhook";
+import { normalizeBillingWebhookPayload } from "@/modules/billing/domain/webhook";
+
+function isWebhookSecretConfigured() {
+  return Boolean(process.env.BILLING_WEBHOOK_SECRET?.trim());
+}
+
+function isAuthorizedWebhook(request: NextRequest) {
+  const expectedSecret = process.env.BILLING_WEBHOOK_SECRET?.trim();
+
+  if (!expectedSecret) return true;
+
+  const receivedSecret = request.headers.get("x-ledgera-webhook-secret")?.trim();
+
+  return receivedSecret === expectedSecret;
+}
+
+export async function POST(request: NextRequest) {
+  let payload: unknown = null;
+
+  try {
+    if (!isAuthorizedWebhook(request)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "Webhook no autorizado.",
+          data: null,
+        },
+        { status: 401 },
+      );
+    }
+
+    payload = await request.json();
+
+    const normalized = normalizeBillingWebhookPayload(payload);
+
+    if (!normalized) {
+      await prisma.billingWebhookEvent.create({
+        data: {
+          provider: "unknown",
+          providerEventId: null,
+          eventType: "invalid_payload",
+          status: "FAILED",
+          payload: JSON.stringify(payload),
+          errorMessage: "Payload de webhook inválido o evento no soportado.",
+        },
+      });
+
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "Payload inválido o evento no soportado.",
+          data: null,
+        },
+        { status: 400 },
+      );
+    }
+
+    const existingEvent = normalized.providerEventId
+      ? await prisma.billingWebhookEvent.findFirst({
+          where: {
+            provider: normalized.provider,
+            providerEventId: normalized.providerEventId,
+          },
+        })
+      : null;
+
+    if (existingEvent?.status === "PROCESSED") {
+      return NextResponse.json({
+        ok: true,
+        message: "Evento duplicado ya procesado.",
+        data: {
+          status: "duplicate",
+          webhookEventId: existingEvent.id,
+        },
+      });
+    }
+
+    const webhookEvent = existingEvent ?? await prisma.billingWebhookEvent.create({
+      data: {
+        provider: normalized.provider,
+        providerEventId: normalized.providerEventId,
+        eventType: normalized.eventType,
+        status: "RECEIVED",
+        payload: JSON.stringify(payload),
+      },
+    });
+
+    const result = await processBillingWebhook(normalized);
+
+    await prisma.billingWebhookEvent.update({
+      where: { id: webhookEvent.id },
+      data: {
+        status: result.status === "ignored" ? "IGNORED" : "PROCESSED",
+        processedAt: new Date(),
+        errorMessage: result.status === "ignored" ? result.message : null,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      message: result.message,
+      data: result,
+    });
+  } catch (error) {
+    console.error("[billing/webhook POST]", error);
+
+    try {
+      await prisma.billingWebhookEvent.create({
+        data: {
+          provider: "unknown",
+          providerEventId: null,
+          eventType: "processing_error",
+          status: "FAILED",
+          payload: JSON.stringify(payload),
+          errorMessage: error instanceof Error ? error.message : "Error inesperado.",
+        },
+      });
+    } catch (logError) {
+      console.error("[billing/webhook POST logError]", logError);
+    }
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message: isWebhookSecretConfigured()
+          ? "No fue posible procesar el webhook."
+          : "No fue posible procesar el webhook. BILLING_WEBHOOK_SECRET no está configurado; modo desarrollo permitido.",
+        data: null,
+      },
+      { status: 500 },
+    );
+  }
+}
