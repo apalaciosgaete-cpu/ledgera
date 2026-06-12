@@ -16,7 +16,8 @@ test("public checkout captures plan before registration", () => {
   assert.match(checkoutPage, /Checkout primero/);
   assert.match(checkoutPage, /pendingCheckout/);
   assert.match(checkoutPage, /paidFirstCheckout/);
-  assert.match(checkoutPage, /register_after_payment/);
+  assert.match(checkoutPage, /provider_before_registration/);
+  assert.match(checkoutPage, /Continuar después del pago/);
 });
 
 test("registration recognizes paid first acquisition", () => {
