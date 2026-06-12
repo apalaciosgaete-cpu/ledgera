@@ -310,7 +310,11 @@ function RegisterForm() {
                     {showPassword ? "Ocultar" : "Ver"}
                   </button>
                 </div>
-                <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: 11 }}>{PASSWORD_REQUIREMENTS}</p>
+                <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "#64748B", fontSize: 11 }}>
+                  {PASSWORD_REQUIREMENTS.map((requirement) => (
+                    <li key={requirement.id}>{requirement.label}</li>
+                  ))}
+                </ul>
               </div>
 
               <label style={{ display: "flex", gap: 8, alignItems: "flex-start", color: "#94A3B8", fontSize: 12, lineHeight: 1.5 }}>
