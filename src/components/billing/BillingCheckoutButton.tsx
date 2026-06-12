@@ -7,6 +7,7 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import {
   createBillingCheckout,
   type BillingCheckoutPlan,
+  type BillingCheckoutProvider,
 } from "@/modules/billing/client/billingClient";
 import { isHttpClientError } from "@/shared/http/httpClient";
 
@@ -14,6 +15,7 @@ type BillingCheckoutButtonProps = {
   plan: BillingCheckoutPlan;
   children: React.ReactNode;
   disabled?: boolean;
+  provider?: BillingCheckoutProvider;
   style?: React.CSSProperties;
 };
 
@@ -41,16 +43,19 @@ export function BillingCheckoutButton({
   plan,
   children,
   disabled = false,
+  provider = "flow",
   style,
 }: BillingCheckoutButtonProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleClick() {
     setErrorMessage(null);
+    setSuccess(false);
 
     if (!isAuthenticated) {
       sessionStorage.setItem(
@@ -58,6 +63,7 @@ export function BillingCheckoutButton({
         JSON.stringify({
           plan,
           billing: "monthly",
+          provider,
         }),
       );
 
@@ -69,8 +75,9 @@ export function BillingCheckoutButton({
     setLoading(true);
 
     try {
-      const url = await createBillingCheckout(plan);
+      const url = await createBillingCheckout(plan, provider);
 
+      setSuccess(true);
       window.location.href = url;
     } catch (error) {
       setErrorMessage(resolveErrorMessage(error));
@@ -90,17 +97,30 @@ export function BillingCheckoutButton({
       <button
         type="button"
         onClick={handleClick}
-        disabled={disabled || loading}
+        disabled={disabled || loading || success}
         style={{
           width: "100%",
           border: "none",
-          cursor: disabled || loading ? "not-allowed" : "pointer",
-          opacity: disabled || loading ? 0.72 : 1,
+          cursor: disabled || loading || success ? "not-allowed" : "pointer",
+          opacity: disabled || loading || success ? 0.72 : 1,
           ...style,
         }}
       >
-        {loading ? "Preparando pago..." : children}
+        {loading ? "Preparando pago..." : success ? "Redirigiendo..." : children}
       </button>
+
+      {success && (
+        <p
+          style={{
+            margin: 0,
+            color: "#16A34A",
+            fontSize: "12px",
+            lineHeight: 1.5,
+          }}
+        >
+          Checkout iniciado correctamente. Redirigiendo...
+        </p>
+      )}
 
       {errorMessage && (
         <p
