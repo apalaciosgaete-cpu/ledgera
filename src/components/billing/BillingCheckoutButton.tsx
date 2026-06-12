@@ -75,6 +75,7 @@ export function BillingCheckoutButton({
           provider,
           action,
           source: "public_plan_selection",
+          flow: "checkout_first",
         }),
       );
 
@@ -83,9 +84,10 @@ export function BillingCheckoutButton({
         billing,
         intent: action,
         provider,
+        source: "landing_pricing",
       });
 
-      router.push(`/register?${params.toString()}`);
+      router.push(`/checkout?${params.toString()}`);
 
       return;
     }
