@@ -44,7 +44,7 @@ function mapRowToUser(row: {
     emailVerifiedAt:       row.email_verified_at,
     createdAt:             row.created_at,
     updatedAt:             row.updated_at,
-    subscriptionPlan:      (row.subscription_plan ?? "BASICO") as User["subscriptionPlan"],
+    subscriptionPlan:      (row.subscription_plan ?? "BASICO") as User["subscriptionPlan"], // DB legacy; normalizar al consumir con normalizePlan()
     subscriptionExpiresAt: row.subscription_expires_at,
     twoFactorSecret:       row.twoFactorSecret ?? null,
     twoFactorEnabled:      row.twoFactorEnabled ?? false,

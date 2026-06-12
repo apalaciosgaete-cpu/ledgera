@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { fonts } from "@/styles/tokens";
 import TwoFASetupPanel from "@/components/auth/TwoFASetupPanel";
+import { PlanComparison } from "@/components/subscription/PlanComparison";
+import { getPlanLabel } from "@/modules/subscription/domain/planFeatures";
 
 export type Section = "tributario" | "persona" | "seguridad" | "facturacion" | "preferencias" | "auditoria" | "administracion";
 
@@ -372,7 +374,7 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
                 <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
                   <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Plan</p>
                   <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>
-                    {subscriptionState?.plan ?? user?.subscriptionPlan ?? "—"}
+                    {getPlanLabel(subscriptionState?.plan ?? user?.subscriptionPlan)}
                   </p>
                 </div>
                 <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
@@ -411,12 +413,11 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
                 </div>
               )}
 
-              <div style={{ paddingTop: "6px" }}>
-                <a href="/planes" style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "8px", border: "none", background: "#16A34A", color: "#fff", fontSize: "13px", fontWeight: 700, textDecoration: "none", fontFamily: fonts.body }}>
-                  Cambiar plan →
-                </a>
-              </div>
             </div>
+          </SectionCard>
+
+          <SectionCard title="Comparación de planes" description="Elige el plan que se ajuste a tu operación">
+            <PlanComparison currentPlan={subscriptionState?.plan ?? user?.subscriptionPlan} />
           </SectionCard>
         </>
       )}

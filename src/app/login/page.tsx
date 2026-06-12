@@ -104,7 +104,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !oauth2fa) {
-      router.push("/portafolio");
+      router.push("/panel");
     }
   }, [isAuthenticated, isLoading, router, oauth2fa]);
 
@@ -174,7 +174,7 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-      window.location.href = "/portafolio";
+      window.location.href = "/panel";
     } catch (error) {
       setErrorMessage(
         resolveClientError(
@@ -213,7 +213,7 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-      window.location.href = "/portafolio";
+      window.location.href = "/panel";
     } catch (error) {
       setError2FA(
         resolveClientError(
@@ -273,7 +273,7 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-      window.location.href = "/portafolio";
+      window.location.href = "/panel";
     } catch (error) {
       setErrorSetup(resolveClientError(error, "Error al verificar el código."));
     } finally {

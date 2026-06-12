@@ -34,6 +34,7 @@ const baseNavItems: { href: string; label: string }[] = [
   { href: "/mi-situacion",  label: "Mi Situación" },
   { href: "/inversiones",   label: "Inversiones" },
   { href: "/integraciones", label: "Conexiones" },
+  { href: "/notificaciones", label: "Alertas" },
 ];
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {

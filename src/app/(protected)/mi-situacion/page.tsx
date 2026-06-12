@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { clp } from "@/shared/formatting";
 import { useAuth } from "@/modules/identity/client/authContext";
+import { useFeatureAccess } from "@/modules/subscription/client/useFeatureAccess";
+import { UpgradeModal } from "@/components/subscription/UpgradeModal";
+import { Feature, getPlanLabel, normalizePlan, Plan, requiredPlanForFeature } from "@/modules/subscription/domain/planFeatures";
 
 type TaxStatus = "EMPTY" | "NO_TAX_EVENTS" | "DECLARE_REVIEW" | "PAY_REVIEW" | "LOSS_REVIEW";
 
@@ -96,11 +99,15 @@ function situacionConfig(status: TaxStatus) {
   }
 }
 
+function planLabelForFeature(feature: Feature): string {
+  return getPlanLabel(requiredPlanForFeature(feature));
+}
+
 const UNLOCKABLES = [
-  { key: "pdf", label: "Reporte tributario PDF", plan: "Personal" },
-  { key: "csv", label: "Exportación CSV", plan: "Personal" },
-  { key: "declaraciones", label: "Declaraciones", plan: "Personal" },
-  { key: "verificaciones", label: "Verificaciones", plan: "Pro" },
+  { key: "pdf", label: "Reporte tributario PDF", plan: planLabelForFeature(Feature.PDF_EXPORT), feature: Feature.PDF_EXPORT },
+  { key: "csv", label: "Exportación CSV", plan: planLabelForFeature(Feature.CSV_EXPORT), feature: Feature.CSV_EXPORT },
+  { key: "declaraciones", label: "Declaraciones", plan: planLabelForFeature(Feature.DECLARATIONS), feature: Feature.DECLARATIONS },
+  { key: "verificaciones", label: "Verificaciones", plan: planLabelForFeature(Feature.VERIFICATIONS), feature: Feature.VERIFICATIONS },
 ];
 
 const COMPARISON_ROWS = [
@@ -117,13 +124,14 @@ const COMPARISON_ROWS = [
 
 export default function MiSituacionPage() {
   const { user, subscriptionState } = useAuth();
+  const { requestFeature, blockedFeature, closeUpgrade } = useFeatureAccess();
   const loggedRef = useRef(false);
   const [data, setData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const currentPlan = subscriptionState?.plan ?? "BASICO";
-  const isFreePlan = currentPlan === "BASICO";
+  const currentPlan = normalizePlan(subscriptionState?.plan);
+  const isFreePlan = currentPlan === Plan.FREE;
 
   useEffect(() => {
     async function load() {
@@ -152,7 +160,7 @@ export default function MiSituacionPage() {
       event: "plan_upgrade_prompt_viewed",
       userId: user?.id,
       source: "mi_situacion",
-      plan: "free",
+      plan: currentPlan.toLowerCase(),
       detectedAssets: data.topAssets.map((a) => a.symbol),
       detectedEvents: data.totals.eventsCount,
     });
@@ -356,14 +364,17 @@ export default function MiSituacionPage() {
           <h3 style={{ ...sectionTitleStyle, marginBottom: 16 }}>Desbloquea tu reporte completo</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
             {UNLOCKABLES.map((item) => (
-              <div
+              <button
                 key={item.key}
+                onClick={() => requestFeature(item.feature, item.label)}
                 style={{
                   background: "#F8FAFC",
                   border: "1px solid #E2E8F0",
                   borderRadius: 10,
                   padding: 16,
                   opacity: 0.85,
+                  cursor: "pointer",
+                  textAlign: "left",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -373,17 +384,19 @@ export default function MiSituacionPage() {
                 <span style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>
                   Disponible en {item.plan}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
 
           {/* Bloque 3 — CTA principal */}
-          <Link
-            href="/configuracion/facturacion"
+          <button
+            onClick={() => requestFeature(Feature.PDF_EXPORT, "Reporte completo")}
             style={{
               background: "#0F766E",
+              border: "none",
               borderRadius: 10,
               color: "#FFFFFF",
+              cursor: "pointer",
               display: "block",
               fontSize: 15,
               fontWeight: 850,
@@ -391,10 +404,11 @@ export default function MiSituacionPage() {
               textAlign: "center",
               textDecoration: "none",
               marginBottom: 12,
+              width: "100%",
             }}
           >
             Desbloquear reporte completo
-          </Link>
+          </button>
           <p style={{ color: "#64748B", fontSize: 12, margin: 0, textAlign: "center" }}>
             Sigue viendo tu situación SII gratis. Solo los reportes y exportaciones avanzadas son de pago.
           </p>
@@ -408,13 +422,19 @@ export default function MiSituacionPage() {
           <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.5, margin: "0 0 16px" }}>
             Revisa operaciones, eventos tributarios y tu posición por activo en modo experto.
           </p>
-          <Link
-            href="/experto"
+          <button
+            onClick={() => {
+              const allowed = requestFeature(Feature.EXPERT_MODE, "Modo experto");
+              if (allowed) {
+                window.location.href = "/experto";
+              }
+            }}
             style={{
               background: "transparent",
               border: "1px solid #CBD5E1",
               borderRadius: 10,
               color: "#0F2A3D",
+              cursor: "pointer",
               display: "inline-flex",
               fontSize: 14,
               fontWeight: 850,
@@ -423,7 +443,7 @@ export default function MiSituacionPage() {
             }}
           >
             Abrir modo experto →
-          </Link>
+          </button>
         </section>
       )}
 
@@ -467,6 +487,14 @@ export default function MiSituacionPage() {
         <p style={{ color: "#64748B", fontSize: 12, lineHeight: 1.5, margin: 0 }}>
           Cálculo basado en {data.totals.eventsCount} eventos. Nivel de confianza: {data.totals.confidenceLevel}%.
         </p>
+      )}
+
+      {blockedFeature && (
+        <UpgradeModal
+          feature={blockedFeature.feature}
+          featureLabel={blockedFeature.label}
+          onClose={closeUpgrade}
+        />
       )}
     </div>
   );

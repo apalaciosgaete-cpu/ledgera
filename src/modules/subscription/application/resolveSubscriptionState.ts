@@ -1,3 +1,5 @@
+import { normalizePlan, Plan } from "@/modules/subscription/domain/planFeatures";
+
 export type ResolvedSubscriptionState =
   | "ADMIN"
   | "ACTIVE"
@@ -88,8 +90,8 @@ export function resolveSubscriptionState(
   }
 
   if (!expiresAt) {
-    // Plan BASICO sin fecha de expiración = plan gratuito/base, no un problema
-    if (plan === "BASICO") {
+    // Plan FREE/BASICO sin fecha de expiración = plan gratuito/base, no un problema
+    if (normalizePlan(plan) === Plan.FREE) {
       return {
         state: "ACTIVE",
         isAdmin: false,

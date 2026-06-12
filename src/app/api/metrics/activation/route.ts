@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import { DB_PLAN_VALUE } from "@/modules/subscription/domain/planFeatures";
 
 export async function GET(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
       prisma.users.count({
         where: {
           OR: [
-            { subscription_plan: { not: "BASICO" } },
+            { subscription_plan: { not: DB_PLAN_VALUE.FREE } },
             { subscription_expires_at: { gt: new Date() } },
           ],
         },
