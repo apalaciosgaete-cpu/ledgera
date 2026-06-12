@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { requireFeature } from "@/modules/subscription/application/requireFeature";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
 import { round, normalizeSymbol } from "@/shared/utils/math";
 
 export const dynamic = "force-dynamic";
@@ -132,6 +134,12 @@ export async function GET(req: NextRequest) {
 
   if (!subscriptionCheck.ok) {
     return subscriptionCheck.response;
+  }
+
+  const featureCheck = requireFeature(currentUser, Feature.CSV_EXPORT);
+
+  if (!featureCheck.ok) {
+    return featureCheck.response;
   }
 
   try {

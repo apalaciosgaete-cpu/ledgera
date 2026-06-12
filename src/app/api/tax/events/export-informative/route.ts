@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { round, normalizeSymbol } from "@/shared/utils/math";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import { requireFeature } from "@/modules/subscription/application/requireFeature";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -109,6 +112,21 @@ function evaluateInformativeContext(events: TaxEventRow[]) {
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await getSessionFromRequest(req);
+
+    if (!auth) {
+      return NextResponse.json(
+        { ok: false, message: "No autorizado.", data: null },
+        { status: 401 },
+      );
+    }
+
+    const featureCheck = requireFeature(auth.user, Feature.CSV_EXPORT);
+
+    if (!featureCheck.ok) {
+      return featureCheck.response;
+    }
+
     const { searchParams } = new URL(req.url);
 
     const year = searchParams.get("year");
@@ -129,6 +147,7 @@ export async function GET(req: NextRequest) {
 
     const events = (await prisma.taxEvent.findMany({
       where: {
+        userId: auth.user.id,
         ...(symbol ? { symbol } : {}),
         ...(range ? { executedAt: range } : {}),
       },

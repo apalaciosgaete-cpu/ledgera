@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { prisma } from "@/lib/prisma";
+import { requireFeature } from "@/modules/subscription/application/requireFeature";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
 import PDFDocument from "pdfkit";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -213,6 +216,16 @@ export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth || auth instanceof NextResponse) {
     return new NextResponse("No autorizado", { status: 401 });
+  }
+
+  const currentUser = await getUserById(auth.user.id);
+  if (!currentUser) {
+    return NextResponse.json({ ok: false, message: "Usuario no encontrado." }, { status: 404 });
+  }
+
+  const featureCheck = requireFeature(currentUser, Feature.PDF_EXPORT);
+  if (!featureCheck.ok) {
+    return featureCheck.response;
   }
 
   try {

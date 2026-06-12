@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { FeatureGate } from "@/components/subscription/FeatureGate";
+import { UpgradeCard } from "@/components/subscription/UpgradeCard";
 
 const areas = [
   {
@@ -37,6 +40,15 @@ const areas = [
 
 export default function ExpertoPage() {
   return (
+    <FeatureGate
+      feature={Feature.EXPERT_MODE}
+      source="experto_landing"
+      fallback={
+        <div style={{ maxWidth: 900, width: "100%", display: "flex", justifyContent: "center", paddingTop: 40 }}>
+          <UpgradeCard feature={Feature.EXPERT_MODE} source="experto_landing" />
+        </div>
+      }
+    >
     <div style={{ maxWidth: 900, width: "100%" }}>
       <section style={{ marginBottom: 28 }}>
         <p
@@ -105,5 +117,6 @@ export default function ExpertoPage() {
         ))}
       </div>
     </div>
+    </FeatureGate>
   );
 }

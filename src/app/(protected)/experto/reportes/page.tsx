@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { FeatureGate } from "@/components/subscription/FeatureGate";
+import { UpgradeCard } from "@/components/subscription/UpgradeCard";
 
 type ReportResult = {
   validationCode?: string;
@@ -12,6 +15,7 @@ type ReportItem = {
   key: string;
   title: string;
   description: string;
+  feature: Feature;
   formats: {
     label: string;
     href: string;
@@ -63,6 +67,7 @@ export default function ExpertoReportesPage() {
       key: "pdf-informativo",
       title: "Reporte informativo PDF",
       description: "Resumen visual para el usuario. Incluye ventas, ganancias, pérdidas y recompensas de staking.",
+      feature: Feature.PDF_EXPORT,
       formats: [
         { label: "Descargar PDF", href: `/api/tax/reports/pdf-informative?year=${year}`, mode: "link" },
       ],
@@ -71,6 +76,7 @@ export default function ExpertoReportesPage() {
       key: "pdf-contador",
       title: "Reporte contador PDF",
       description: "Reporte tributario estricto para revisión profesional, con campos técnicos y respaldo de validación.",
+      feature: Feature.ADVANCED_REPORTS,
       formats: [
         { label: "Generar con validación", href: `/api/tax/reports/pdf-strict?year=${year}`, mode: "fetch" },
       ],
@@ -79,6 +85,7 @@ export default function ExpertoReportesPage() {
       key: "csv-eventos",
       title: "Eventos tributarios CSV",
       description: "Exporta los eventos tributarios del período en formato CSV para revisión y respaldo documental.",
+      feature: Feature.CSV_EXPORT,
       formats: [
         { label: "CSV informativo", href: `/api/tax/events/export-informative?year=${year}`, mode: "link" },
         { label: "CSV contador", href: `/api/tax/events/export-strict?year=${year}`, mode: "fetch" },
@@ -88,6 +95,7 @@ export default function ExpertoReportesPage() {
       key: "libro-tributario",
       title: "Libro tributario",
       description: "Libro de apoyo con movimientos, costos y resultados para respaldo contable y auditoría.",
+      feature: Feature.ADVANCED_REPORTS,
       formats: [
         { label: "Descargar CSV", href: `/api/tax/ledger/export/csv?year=${year}`, mode: "link" },
         { label: "Descargar PDF", href: `/api/tax/ledger/export/pdf?year=${year}`, mode: "link" },
@@ -179,7 +187,17 @@ export default function ExpertoReportesPage() {
 
       <section style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", marginBottom: 24 }}>
         {reports.map((report) => (
-          <article key={report.key} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 10, padding: 20 }}>
+          <FeatureGate
+            key={report.key}
+            feature={report.feature}
+            source={`experto_reportes_${report.key}`}
+            fallback={
+              <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 10, padding: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <UpgradeCard feature={report.feature} source={`experto_reportes_${report.key}`} />
+              </article>
+            }
+          >
+          <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 10, padding: 20 }}>
             <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 6px" }}>{report.title}</h3>
             <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 14px" }}>{report.description}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -202,6 +220,7 @@ export default function ExpertoReportesPage() {
               ))}
             </div>
           </article>
+          </FeatureGate>
         ))}
       </section>
 

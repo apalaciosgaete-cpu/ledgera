@@ -6,6 +6,7 @@ import { clp } from "@/shared/formatting";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { useFeatureAccess } from "@/modules/subscription/client/useFeatureAccess";
 import { UpgradeModal } from "@/components/subscription/UpgradeModal";
+import { FeatureGate } from "@/components/subscription/FeatureGate";
 import { Feature, getPlanLabel, normalizePlan, Plan, requiredPlanForFeature } from "@/modules/subscription/domain/planFeatures";
 
 type TaxStatus = "EMPTY" | "NO_TAX_EVENTS" | "DECLARE_REVIEW" | "PAY_REVIEW" | "LOSS_REVIEW";
@@ -237,25 +238,27 @@ export default function MiSituacionPage() {
             : data.decision.detail}
         </p>
 
-        {data.totals.impuestoEstimadoClp > 0 && (
-          <div style={{ marginBottom: 24 }}>
-            <p
-              style={{
-                color: "#64748B",
-                fontSize: 11,
-                fontWeight: 850,
-                letterSpacing: "0.04em",
-                margin: "0 0 4px",
-                textTransform: "uppercase",
-              }}
-            >
-              Impuesto estimado
-            </p>
-            <p style={{ color: "#0F2A3D", fontSize: "2.2rem", fontWeight: 850, lineHeight: 1.1, margin: 0 }}>
-              {clp(data.totals.impuestoEstimadoClp)}
-            </p>
-          </div>
-        )}
+        <FeatureGate feature={Feature.TAX_ESTIMATE} source="mi_situacion_tax_estimate">
+          {data.totals.impuestoEstimadoClp > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <p
+                style={{
+                  color: "#64748B",
+                  fontSize: 11,
+                  fontWeight: 850,
+                  letterSpacing: "0.04em",
+                  margin: "0 0 4px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Impuesto estimado
+              </p>
+              <p style={{ color: "#0F2A3D", fontSize: "2.2rem", fontWeight: 850, lineHeight: 1.1, margin: 0 }}>
+                {clp(data.totals.impuestoEstimadoClp)}
+              </p>
+            </div>
+          )}
+        </FeatureGate>
 
         {/* Motivo */}
         <div style={{ marginBottom: 24 }}>

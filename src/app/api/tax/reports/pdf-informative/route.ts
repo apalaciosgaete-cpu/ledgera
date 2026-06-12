@@ -1,4 +1,6 @@
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { requireFeature } from "@/modules/subscription/application/requireFeature";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -381,6 +383,13 @@ const subscriptionCheck = requireActiveSubscription(currentUser);
 if (!subscriptionCheck.ok) {
   return subscriptionCheck.response;
 }
+
+const featureCheck = requireFeature(currentUser, Feature.PDF_EXPORT);
+
+if (!featureCheck.ok) {
+  return featureCheck.response;
+}
+
     const yearParam = req.nextUrl.searchParams.get("year");
     const year = yearParam ? Number(yearParam) : new Date().getFullYear();
     const symbolParam = req.nextUrl.searchParams.get("symbol");

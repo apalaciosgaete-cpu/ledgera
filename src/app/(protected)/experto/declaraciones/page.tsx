@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ui } from "@/styles/design-system";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { FeatureGate } from "@/components/subscription/FeatureGate";
+import { UpgradeCard } from "@/components/subscription/UpgradeCard";
 
 type Tab = "declaraciones" | "auditoria";
 
@@ -165,6 +168,22 @@ function declarationTypeLabel(type: string) {
 
 /* ──────────────── Page ──────────────── */
 export default function ExpertoDeclaracionesPage() {
+  return (
+    <FeatureGate
+      feature={Feature.DECLARATIONS}
+      source="experto_declaraciones"
+      fallback={
+        <div style={{ maxWidth: 1180, width: "100%", display: "flex", justifyContent: "center", paddingTop: 40 }}>
+          <UpgradeCard feature={Feature.DECLARATIONS} source="experto_declaraciones" />
+        </div>
+      }
+    >
+      <ExpertoDeclaracionesContent />
+    </FeatureGate>
+  );
+}
+
+function ExpertoDeclaracionesContent() {
   const [tab, setTab] = useState<Tab>("declaraciones");
 
   /* Declaraciones state */
@@ -529,3 +548,4 @@ export default function ExpertoDeclaracionesPage() {
     </div>
   );
 }
+

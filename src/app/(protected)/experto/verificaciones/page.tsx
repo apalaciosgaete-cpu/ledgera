@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { FeatureGate } from "@/components/subscription/FeatureGate";
+import { UpgradeCard } from "@/components/subscription/UpgradeCard";
 
 type Tab = "evidencia" | "reportes";
 
@@ -50,6 +53,22 @@ type ValidationsData = {
 
 /* ──────────────── Page ──────────────── */
 export default function ExpertoVerificacionesPage() {
+  return (
+    <FeatureGate
+      feature={Feature.VERIFICATIONS}
+      source="experto_verificaciones"
+      fallback={
+        <div style={{ maxWidth: 1180, width: "100%", display: "flex", justifyContent: "center", paddingTop: 40 }}>
+          <UpgradeCard feature={Feature.VERIFICATIONS} source="experto_verificaciones" />
+        </div>
+      }
+    >
+      <ExpertoVerificacionesContent />
+    </FeatureGate>
+  );
+}
+
+function ExpertoVerificacionesContent() {
   const [tab, setTab] = useState<Tab>("evidencia");
 
   /* Evidencia state */
@@ -313,3 +332,4 @@ export default function ExpertoVerificacionesPage() {
     </div>
   );
 }
+

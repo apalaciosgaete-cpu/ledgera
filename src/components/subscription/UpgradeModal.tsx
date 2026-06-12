@@ -9,6 +9,7 @@ type UpgradeModalProps = {
   feature: Feature;
   featureLabel: string;
   onClose: () => void;
+  source?: string;
 };
 
 const FEATURE_BENEFITS: Partial<Record<Feature, string[]>> = {
@@ -23,7 +24,7 @@ const FEATURE_BENEFITS: Partial<Record<Feature, string[]>> = {
   [Feature.ADVANCED_REPORTS]: ["Reportes avanzados", "Exportaciones avanzadas", "Multiempresa"],
 };
 
-export function UpgradeModal({ feature, featureLabel, onClose }: UpgradeModalProps) {
+export function UpgradeModal({ feature, featureLabel, onClose, source = "upgrade_modal" }: UpgradeModalProps) {
   const { user } = useAuth();
   const loggedRef = useRef(false);
   const requiredPlan = requiredPlanForFeature(feature);
@@ -34,13 +35,14 @@ export function UpgradeModal({ feature, featureLabel, onClose }: UpgradeModalPro
     if (loggedRef.current) return;
     loggedRef.current = true;
 
-    console.info("[commercial]", {
+    console.info("[paywall]", {
       event: "upgrade_prompt_viewed",
       userId: user?.id,
-      source: "upgrade_modal",
+      source,
       feature,
       requiredPlan: normalizePlan(requiredPlan),
       currentPlan: normalizePlan(user?.subscriptionPlan),
+      occurredAt: new Date().toISOString(),
     });
   }, [feature, requiredPlan, user?.id, user?.subscriptionPlan]);
 
@@ -101,12 +103,14 @@ export function UpgradeModal({ feature, featureLabel, onClose }: UpgradeModalPro
         <Link
           href="/configuracion/facturacion"
           onClick={() => {
-            console.info("[commercial]", {
+            console.info("[paywall]", {
               event: "upgrade_clicked",
               userId: user?.id,
-              source: "upgrade_modal",
+              source,
               feature,
               requiredPlan: normalizePlan(requiredPlan),
+              currentPlan: normalizePlan(user?.subscriptionPlan),
+              occurredAt: new Date().toISOString(),
             });
           }}
           style={{

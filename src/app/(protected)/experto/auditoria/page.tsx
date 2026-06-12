@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { FeatureGate } from "@/components/subscription/FeatureGate";
+import { UpgradeCard } from "@/components/subscription/UpgradeCard";
 
 type Tab = "estado" | "hallazgos" | "custodia" | "informe";
 
@@ -151,6 +154,22 @@ function issueTypeToAction(type: string): string {
 
 /* ──────────────── Page ──────────────── */
 export default function ExpertoAuditoriaPage() {
+  return (
+    <FeatureGate
+      feature={Feature.AUDIT}
+      source="experto_auditoria"
+      fallback={
+        <div style={{ maxWidth: 1180, width: "100%", display: "flex", justifyContent: "center", paddingTop: 40 }}>
+          <UpgradeCard feature={Feature.AUDIT} source="experto_auditoria" />
+        </div>
+      }
+    >
+      <ExpertoAuditoriaContent />
+    </FeatureGate>
+  );
+}
+
+function ExpertoAuditoriaContent() {
   const [tab, setTab] = useState<Tab>("estado");
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
@@ -700,3 +719,4 @@ export default function ExpertoAuditoriaPage() {
     </div>
   );
 }
+
