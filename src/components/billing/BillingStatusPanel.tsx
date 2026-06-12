@@ -70,6 +70,8 @@ function statusTone(status: string) {
     case "PAID":
     case "ACTIVE":
       return { background: "rgba(22,163,74,0.10)", color: "#166534", label: status === "PAID" ? "Pagado" : "Activo" };
+    case "CANCEL_AT_PERIOD_END":
+      return { background: "rgba(245,158,11,0.12)", color: "#92400E", label: "Cancela al vencimiento" };
     case "PENDING":
       return { background: "rgba(245,158,11,0.12)", color: "#92400E", label: "Pendiente" };
     case "FAILED":
@@ -156,6 +158,8 @@ export function BillingStatusPanel() {
 
   if (!status) return null;
 
+  const cancelAtPeriodEnd = status.subscription?.status === "CANCEL_AT_PERIOD_END";
+
   return (
     <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1rem" }}>
@@ -166,6 +170,14 @@ export function BillingStatusPanel() {
           Plan actual, suscripción vigente y últimos intentos de pago.
         </p>
       </div>
+
+      {cancelAtPeriodEnd && (
+        <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 10, padding: 12, marginBottom: "1rem" }}>
+          <p style={{ margin: 0, color: "#92400E", fontSize: 13, lineHeight: 1.5 }}>
+            La renovación está cancelada. Mantendrás acceso hasta {formatDate(status.subscription?.currentPeriodEnd ?? null)}.
+          </p>
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: "1rem" }}>
         <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: 12 }}>
