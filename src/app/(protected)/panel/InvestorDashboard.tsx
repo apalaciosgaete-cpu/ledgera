@@ -37,6 +37,18 @@ type TaxData = {
   decision: TaxSummaryDecision;
 };
 
+type UserDashboardData = {
+  risk: { score: number | null; level: string | null };
+  alerts: { open: number; critical: number };
+  tax: { pendingDocuments: number; rejectedDocuments: number };
+  subscription: {
+    status: string | null;
+    plan: string | null;
+    expiresAt: string | null;
+    pendingPayment: boolean;
+  };
+};
+
 function situacionSIIConfig(status: TaxStatus) {
   switch (status) {
     case "NO_TAX_EVENTS":
@@ -118,19 +130,22 @@ function EmptyState() {
 export function InvestorDashboard() {
   const [investor, setInvestor] = useState<InvestorData | null>(null);
   const [tax, setTax] = useState<TaxData | null>(null);
+  const [userDashboard, setUserDashboard] = useState<UserDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
       try {
-        const [investorRes, taxRes] = await Promise.all([
+        const [investorRes, taxRes, userDashboardRes] = await Promise.all([
           fetch("/api/investor/dashboard", { cache: "no-store" }),
           fetch("/api/tax/summary?year=" + new Date().getFullYear(), { cache: "no-store" }),
+          fetch("/api/dashboard/user", { cache: "no-store" }),
         ]);
 
         const investorJson = await investorRes.json();
         const taxJson = await taxRes.json();
+        const userDashboardJson = await userDashboardRes.json();
 
         if (!investorRes.ok || !investorJson.ok) {
           throw new Error(investorJson.message || "Error cargando dashboard.");
@@ -138,6 +153,7 @@ export function InvestorDashboard() {
 
         setInvestor(investorJson.data);
         setTax(taxJson.ok ? taxJson.data : null);
+        setUserDashboard(userDashboardJson.ok ? userDashboardJson.data : null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error cargando Inicio.");
       } finally {
@@ -196,6 +212,22 @@ export function InvestorDashboard() {
           Resumen general de tu posición patrimonial y estado frente al SII.
         </p>
       </section>
+
+      {userDashboard && (
+        <div
+          style={{
+            display: "grid",
+            gap: 16,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
+            marginBottom: 24,
+          }}
+        >
+          <WidgetRisk risk={userDashboard.risk} />
+          <WidgetAlerts alerts={userDashboard.alerts} />
+          <WidgetTax tax={userDashboard.tax} />
+          <WidgetSubscription subscription={userDashboard.subscription} />
+        </div>
+      )}
 
       {/* 4 Cards */}
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", marginBottom: 24 }}>
@@ -289,5 +321,76 @@ export function InvestorDashboard() {
         </article>
       </div>
     </div>
+  );
+}
+
+
+function WidgetRisk({ risk }: { risk: UserDashboardData["risk"] }) {
+  const level = risk.level ?? "—";
+  const color =
+    level === "CRITICAL" ? "#DC2626" : level === "HIGH" ? "#EA580C" : level === "MEDIUM" ? "#CA8A04" : "#16A34A";
+  return (
+    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
+      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
+        Mi Riesgo Tributario
+      </p>
+      <p style={{ color, fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
+        {risk.score ?? "—"}
+      </p>
+      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+        Nivel: <strong style={{ color }}>{level}</strong>
+      </p>
+    </article>
+  );
+}
+
+function WidgetAlerts({ alerts }: { alerts: UserDashboardData["alerts"] }) {
+  return (
+    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
+      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
+        Alertas Abiertas
+      </p>
+      <p style={{ color: alerts.critical > 0 ? "#991B1B" : "#0F2A3D", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
+        {alerts.open}
+      </p>
+      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+        {alerts.critical > 0 ? `${alerts.critical} crítica${alerts.critical === 1 ? "" : "s"}` : "Sin alertas críticas"}
+      </p>
+    </article>
+  );
+}
+
+function WidgetTax({ tax }: { tax: UserDashboardData["tax"] }) {
+  const needsAttention = tax.pendingDocuments > 0 || tax.rejectedDocuments > 0;
+  return (
+    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
+      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
+        Estado Tributario
+      </p>
+      <p style={{ color: needsAttention ? "#B45309" : "#0F2A3D", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
+        {tax.pendingDocuments} pendiente{tax.pendingDocuments === 1 ? "" : "s"}
+      </p>
+      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+        {tax.rejectedDocuments > 0 ? `${tax.rejectedDocuments} rechazado${tax.rejectedDocuments === 1 ? "" : "s"}` : "Sin documentos rechazados"}
+      </p>
+    </article>
+  );
+}
+
+function WidgetSubscription({ subscription }: { subscription: UserDashboardData["subscription"] }) {
+  const isActive = subscription.status === "ACTIVE";
+  return (
+    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
+      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
+        Estado Suscripción
+      </p>
+      <p style={{ color: isActive ? "#15803D" : "#B45309", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
+        {subscription.plan ?? "—"}
+      </p>
+      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+        {subscription.pendingPayment ? "Pago pendiente" : isActive ? "Activa" : subscription.status ?? "Sin suscripción"}
+        {subscription.expiresAt ? ` · vence ${new Date(subscription.expiresAt).toLocaleDateString("es-CL")}` : ""}
+      </p>
+    </article>
   );
 }
