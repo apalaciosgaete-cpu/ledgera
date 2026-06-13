@@ -603,6 +603,7 @@ model users {
   taxEventAuditLogs       TaxEventAuditLog[]
   movementAuditLogs       MovementAuditLog[]
   taxProfile              TaxProfile?
+  taxDocuments            TaxDocument[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -1155,6 +1156,55 @@ model TaxProfile {
 
   @@index([userId])
   @@map("tax_profiles")
+}
+
+model TaxDocument {
+  id                      String   @id @default(cuid())
+  userId                  String
+  paymentId               String?
+  subscriptionId          String?
+  documentType            String
+  status                  String   @default("DRAFT")
+  folio                   String?
+  externalTrackId         String?  @map("external_track_id")
+  issuerRut               String   @map("issuer_rut")
+  issuerLegalName         String   @map("issuer_legal_name")
+  issuerBusinessActivity  String   @map("issuer_business_activity")
+  issuerAddress           String   @map("issuer_address")
+  issuerCommune           String   @map("issuer_commune")
+  issuerCity              String   @map("issuer_city")
+  receiverRut             String   @map("receiver_rut")
+  receiverLegalName       String   @map("receiver_legal_name")
+  receiverBusinessActivity String? @map("receiver_business_activity")
+  receiverAddress         String   @map("receiver_address")
+  receiverCommune         String   @map("receiver_commune")
+  receiverCity            String   @map("receiver_city")
+  receiverDteEmail        String   @map("receiver_dte_email")
+  netAmount               Int      @map("net_amount")
+  exemptAmount            Int      @default(0) @map("exempt_amount")
+  ivaAmount               Int      @map("iva_amount")
+  totalAmount             Int      @map("total_amount")
+  ivaRate                 Decimal  @default(0.19) @db.Decimal(6, 4) @map("iva_rate")
+  lineItemsJson           String   @map("line_items_json")
+  referenceJson           String?  @map("reference_json")
+  xmlPayload              String?  @map("xml_payload")
+  pdfUrl                  String?  @map("pdf_url")
+  externalResponse        String?  @map("external_response")
+  rejectionReason         String?  @map("rejection_reason")
+  sentAt                  DateTime? @map("sent_at")
+  acceptedAt              DateTime? @map("accepted_at")
+  rejectedAt              DateTime? @map("rejected_at")
+  voidedAt                DateTime? @map("voided_at")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([documentType])
+  @@index([createdAt])
+  @@map("tax_documents")
 }
 
 // ── Billing / Coupons ──────────────────────────────────────────────────────────
