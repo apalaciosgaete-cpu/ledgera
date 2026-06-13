@@ -49,6 +49,18 @@ test("checkout page has two-step flow: consent then payment", () => {
   assert.match(source, /Continuar después del pago/);
 });
 
+test("checkout page integrates coupon input and validation", () => {
+  const source = read("src/app/checkout/page.tsx");
+
+  assert.match(source, /Código promocional/);
+  assert.match(source, /\/api\/billing\/coupons\/validate/);
+  assert.match(source, /discountAmount/);
+  assert.match(source, /finalAmount/);
+
+  const apiSource = read("src/app/api/billing/coupons/validate/route.ts");
+  assert.match(apiSource, /coupon_validated/);
+});
+
 test("checkout page disables continue button until all consents are accepted", () => {
   const source = read("src/app/checkout/page.tsx");
 

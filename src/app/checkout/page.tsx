@@ -10,27 +10,52 @@ import { colors, fonts } from "@/styles/tokens";
 type PublicPlan = "PERSONAL" | "PROFESIONAL" | "EMPRESA";
 type CheckoutStep = "consent" | "payment";
 
+interface CouponValidation {
+  valid: boolean;
+  coupon?: {
+    id: string;
+    code: string;
+    name: string;
+    type: "PERCENTAGE" | "FIXED_AMOUNT";
+    value: number;
+  };
+  discountAmount: number;
+  finalAmount: number;
+  message?: string;
+}
+
 const PLAN_COPY: Record<
   PublicPlan,
-  { label: string; price: string; description: string }
+  { label: string; price: string; description: string; amount: number }
 > = {
   PERSONAL: {
     label: "Personal",
     price: "$4.990 / mes",
     description:
       "Para personas naturales que quieren ordenar y declarar su situación tributaria cripto.",
+    amount: 4990,
   },
   PROFESIONAL: {
     label: "Profesional",
     price: "$29.990 / mes",
     description: "Para operación avanzada, reportes y gestión experta.",
+    amount: 29990,
   },
   EMPRESA: {
     label: "Empresa",
     price: "$59.990 / mes",
     description: "Para equipos, multiempresa y administración comercial avanzada.",
+    amount: 59990,
   },
 };
+
+function formatClp(value: number): string {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    minimumFractionDigits: 0,
+  }).format(value);
+}
 
 function normalizePlan(value: string | null): PublicPlan {
   const normalized = value?.toUpperCase();
@@ -72,15 +97,18 @@ function CheckoutShell({ children }: { children: React.ReactNode }) {
 
 function PlanSummary({
   copy,
-  plan,
   provider,
   billing,
+  coupon,
 }: {
-  copy: { label: string; price: string; description: string };
-  plan: PublicPlan;
+  copy: { label: string; price: string; description: string; amount: number };
   provider: string;
   billing: string;
+  coupon: CouponValidation | null;
 }) {
+  const finalAmount = coupon?.valid ? coupon.finalAmount : copy.amount;
+  const discountAmount = coupon?.valid ? coupon.discountAmount : 0;
+
   return (
     <div
       style={{
@@ -120,7 +148,58 @@ function PlanSummary({
             fontWeight: 850,
           }}
         >
-          {copy.price}
+          {formatClp(copy.amount)}
+        </p>
+      </div>
+
+      {coupon?.valid && coupon.coupon && (
+        <>
+          <div
+            style={{
+              height: 1,
+              background: "rgba(148,163,184,0.18)",
+              margin: "14px 0",
+            }}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+            <p style={{ margin: 0, color: "#CBD5E1", fontSize: 13 }}>
+              Cupón: <strong style={{ color: "#F8FAFC" }}>{coupon.coupon.code}</strong>
+            </p>
+            <p style={{ margin: 0, color: "#F87171", fontSize: 13, fontWeight: 700 }}>
+              -{formatClp(discountAmount)}
+            </p>
+          </div>
+        </>
+      )}
+
+      <div
+        style={{
+          height: 1,
+          background: "rgba(148,163,184,0.18)",
+          margin: "14px 0",
+        }}
+      />
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 16,
+          alignItems: "center",
+        }}
+      >
+        <p style={{ margin: 0, color: "#F8FAFC", fontSize: 14, fontWeight: 700 }}>
+          Total a pagar
+        </p>
+        <p
+          style={{
+            margin: 0,
+            color: colors.accent,
+            fontSize: 20,
+            fontWeight: 850,
+          }}
+        >
+          {formatClp(finalAmount)}
         </p>
       </div>
 
@@ -128,7 +207,7 @@ function PlanSummary({
         style={{
           height: 1,
           background: "rgba(148,163,184,0.18)",
-          margin: "16px 0",
+          margin: "14px 0",
         }}
       />
 
@@ -164,19 +243,62 @@ function ConsentStep({
   plan,
   provider,
   billing,
+  coupon,
+  onCouponChange,
   onAccepted,
 }: {
-  copy: { label: string; price: string; description: string };
+  copy: { label: string; price: string; description: string; amount: number };
   plan: PublicPlan;
   provider: string;
   billing: string;
+  coupon: CouponValidation | null;
+  onCouponChange: (coupon: CouponValidation | null) => void;
   onAccepted: () => void;
 }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [acceptedRenewal, setAcceptedRenewal] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   const canContinue = acceptedTerms && acceptedPrivacy && acceptedRenewal;
+
+  async function handleValidateCoupon() {
+    const code = couponCode.trim();
+
+    if (!code) {
+      onCouponChange(null);
+      setCouponError(null);
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponError(null);
+
+    try {
+      const response = await fetch("/api/billing/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, plan, amount: copy.amount }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        onCouponChange(null);
+        setCouponError(result.message ?? "Cupón inválido.");
+        return;
+      }
+
+      onCouponChange(result.data as CouponValidation);
+    } catch {
+      onCouponChange(null);
+      setCouponError("No fue posible validar el cupón.");
+    } finally {
+      setValidatingCoupon(false);
+    }
+  }
 
   function handleContinue() {
     if (!canContinue) return;
@@ -222,7 +344,78 @@ function ConsentStep({
         {copy.description}
       </p>
 
-      <PlanSummary copy={copy} plan={plan} provider={provider} billing={billing} />
+      <PlanSummary copy={copy} provider={provider} billing={billing} coupon={coupon} />
+
+      <div
+        style={{
+          background: "rgba(15,42,61,0.55)",
+          border: "1px solid rgba(148,163,184,0.18)",
+          borderRadius: 14,
+          padding: 18,
+          marginBottom: 18,
+        }}
+      >
+        <p
+          style={{
+            margin: "0 0 14px",
+            color: "#CBD5E1",
+            fontSize: 12,
+            fontWeight: 800,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          Código promocional
+        </p>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <input
+            type="text"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value)}
+            placeholder="Ej: LANZAMIENTO50"
+            disabled={validatingCoupon}
+            style={{
+              flex: 1,
+              padding: "10px 12px",
+              border: "1px solid rgba(148,163,184,0.25)",
+              borderRadius: 8,
+              background: colors.primary,
+              color: "#F8FAFC",
+              fontSize: 14,
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleValidateCoupon}
+            disabled={validatingCoupon || !couponCode.trim()}
+            style={{
+              padding: "10px 14px",
+              border: "none",
+              borderRadius: 8,
+              background: validatingCoupon || !couponCode.trim() ? "#374151" : colors.accent,
+              color: validatingCoupon || !couponCode.trim() ? "#9CA3AF" : "#062016",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: validatingCoupon || !couponCode.trim() ? "not-allowed" : "pointer",
+            }}
+          >
+            {validatingCoupon ? "Validando..." : "Aplicar"}
+          </button>
+        </div>
+
+        {couponError && (
+          <p style={{ margin: "10px 0 0", color: "#F87171", fontSize: 12 }}>
+            {couponError}
+          </p>
+        )}
+
+        {coupon?.valid && coupon.coupon && (
+          <p style={{ margin: "10px 0 0", color: "#34D399", fontSize: 12 }}>
+            Cupón {coupon.coupon.code} aplicado: -{formatClp(coupon.discountAmount)}
+          </p>
+        )}
+      </div>
 
       <div
         style={{
@@ -409,12 +602,14 @@ function PaymentStep({
   plan,
   provider,
   billing,
+  coupon,
   registerUrl,
 }: {
-  copy: { label: string; price: string; description: string };
+  copy: { label: string; price: string; description: string; amount: number };
   plan: PublicPlan;
   provider: string;
   billing: string;
+  coupon: CouponValidation | null;
   registerUrl: string;
 }) {
   const router = useRouter();
@@ -429,6 +624,9 @@ function PaymentStep({
         plan,
         billing,
         provider,
+        coupon: coupon?.coupon?.code ?? null,
+        discountAmount: coupon?.discountAmount ?? 0,
+        finalAmount: coupon?.finalAmount ?? copy.amount,
         completedAt: new Date().toISOString(),
       }),
     );
@@ -438,6 +636,8 @@ function PaymentStep({
       plan,
       billing,
       provider,
+      coupon: coupon?.coupon?.code ?? null,
+      finalAmount: coupon?.finalAmount ?? copy.amount,
     });
 
     router.push(registerUrl);
@@ -483,7 +683,7 @@ function PaymentStep({
         contratado.
       </p>
 
-      <PlanSummary copy={copy} plan={plan} provider={provider} billing={billing} />
+      <PlanSummary copy={copy} provider={provider} billing={billing} coupon={coupon} />
 
       <div
         style={{
@@ -559,6 +759,7 @@ function PaymentStep({
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<CheckoutStep>("consent");
+  const [coupon, setCoupon] = useState<CouponValidation | null>(null);
 
   const plan = normalizePlan(searchParams.get("plan"));
   const provider = searchParams.get("provider") ?? "flow";
@@ -602,6 +803,10 @@ function CheckoutContent() {
         action: "checkout",
         source: "public_checkout_first",
         next: "provider_before_registration",
+        coupon: coupon?.coupon?.code ?? null,
+        originalAmount: copy.amount,
+        discountAmount: coupon?.discountAmount ?? 0,
+        finalAmount: coupon?.finalAmount ?? copy.amount,
       }),
     );
 
@@ -609,6 +814,9 @@ function CheckoutContent() {
       event: "checkout_terms_accepted",
       plan,
       billing,
+      provider,
+      coupon: coupon?.coupon?.code ?? null,
+      finalAmount: coupon?.finalAmount ?? copy.amount,
       acceptedAt,
     });
 
@@ -623,6 +831,8 @@ function CheckoutContent() {
           plan={plan}
           provider={provider}
           billing={billing}
+          coupon={coupon}
+          onCouponChange={setCoupon}
           onAccepted={handleConsentAccepted}
         />
       ) : (
@@ -631,6 +841,7 @@ function CheckoutContent() {
           plan={plan}
           provider={provider}
           billing={billing}
+          coupon={coupon}
           registerUrl={registerUrl}
         />
       )}

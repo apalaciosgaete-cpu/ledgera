@@ -1132,3 +1132,42 @@ model WorkspaceAuditLog {
   @@index([actorId])
   @@map("workspace_audit_logs")
 }
+
+// ── Billing / Coupons ──────────────────────────────────────────────────────────
+
+model BillingCoupon {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  name              String
+  description       String?
+  type              String
+  value             Decimal   @db.Decimal(18, 2)
+  maxRedemptions    Int?
+  currentRedemptions Int      @default(0)
+  validFrom         DateTime
+  validUntil        DateTime?
+  applicablePlans   String
+  status            String    @default("ACTIVE")
+  createdAt         DateTime  @default(now())
+  redemptions       BillingCouponRedemption[]
+
+  @@index([status])
+  @@index([code])
+  @@map("billing_coupons")
+}
+
+model BillingCouponRedemption {
+  id         String    @id @default(cuid())
+  couponId   String
+  userId     String?
+  email      String?
+  checkoutId String?
+  redeemedAt DateTime  @default(now())
+
+  coupon BillingCoupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([checkoutId])
+  @@map("billing_coupon_redemptions")
+}
