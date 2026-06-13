@@ -1167,6 +1167,8 @@ model TaxDocument {
   status                  String   @default("DRAFT")
   folio                   String?
   externalTrackId         String?  @map("external_track_id")
+  trackId                 String?  @map("track_id")
+  submissionStatus        String?  @map("submission_status")
   issuerRut               String   @map("issuer_rut")
   issuerLegalName         String   @map("issuer_legal_name")
   issuerBusinessActivity  String   @map("issuer_business_activity")
@@ -1205,6 +1207,36 @@ model TaxDocument {
   @@index([documentType])
   @@index([createdAt])
   @@map("tax_documents")
+}
+
+model SiiCredential {
+  id                 String   @id @default(cuid())
+  environment        String
+  issuerRut          String   @map("issuer_rut")
+  certificateName    String   @map("certificate_name")
+  certificatePath    String?  @map("certificate_path")
+  certificateExpires DateTime? @map("certificate_expires")
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@index([issuerRut])
+  @@index([environment])
+  @@map("sii_credentials")
+}
+
+model SiiCaf {
+  id           String   @id @default(cuid())
+  documentType String   @map("document_type")
+  folioStart   Int      @map("folio_start")
+  folioEnd     Int      @map("folio_end")
+  currentFolio Int      @map("current_folio")
+  isActive     Boolean  @default(true)
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  @@index([documentType])
+  @@index([isActive])
+  @@map("sii_cafs")
 }
 
 // ── Billing / Coupons ──────────────────────────────────────────────────────────
