@@ -7,13 +7,14 @@ import TwoFASetupPanel from "@/components/auth/TwoFASetupPanel";
 import { PlanComparison } from "@/components/subscription/PlanComparison";
 import { getPlanLabel } from "@/modules/subscription/domain/planFeatures";
 
-export type Section = "tributario" | "persona" | "seguridad" | "facturacion" | "preferencias" | "auditoria" | "administracion";
+export type Section = "tributario" | "persona" | "seguridad" | "facturacion" | "preferencias" | "auditoria" | "administracion" | "identidadTributaria";
 
 export const ALL_SECTIONS: { key: Section; label: string; description: string; roles: string[]; icon: React.ReactNode; href: string }[] = [
   { key: "persona",     label: "Perfil",      description: "Identidad del contribuyente",   roles: ["admin","personal","empresa","contador"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>, href: "/configuracion/perfil" },
   { key: "seguridad",   label: "Seguridad",   description: "Sesiones y acceso",             roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, href: "/configuracion/seguridad" },
   { key: "facturacion", label: "Facturación", description: "Plan y suscripción",            roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><line x1="6" y1="15" x2="10" y2="15" /></svg>, href: "/configuracion/facturacion" },
   { key: "preferencias", label: "Preferencias", description: "Ajustes de experiencia",       roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>, href: "/configuracion/preferencias" },
+  { key: "identidadTributaria", label: "Identidad Tributaria", description: "Datos para documentos electrónicos SII", roles: ["admin","personal","contador","empresa"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>, href: "/configuracion/identidad-tributaria" },
   { key: "tributario",  label: "Tributario",  description: "Parámetros del motor tributario", roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>, href: "/configuracion/admin/tributario" },
   { key: "auditoria",   label: "Auditoría",   description: "Registro de cambios",           roles: ["admin"],                       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>, href: "/configuracion/admin/auditoria" },
   { key: "administracion", label: "Administración", description: "Gestión de usuarios y suscripciones", roles: ["admin"], icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>, href: "/admin" },
@@ -27,6 +28,7 @@ const SECTION_PREFIX: Record<Section, string> = {
   preferencias: "",
   auditoria:  "",
   administracion: "",
+  identidadTributaria: "",
 };
 
 function profilePrefix(role: string) {
@@ -177,6 +179,14 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
   const [audit, setAudit]               = useState<{ id: string; settingKey: string; oldValue: string | null; newValue: string; actorEmail: string | null; createdAt: string }[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
 
+  const [taxProfile, setTaxProfile]     = useState<{ id?: string; documentType: "BOLETA" | "FACTURA"; rut: string; legalName: string; businessActivity: string; address: string; commune: string; city: string; dteEmail: string; isValidated?: boolean } | null>(null);
+  const [taxDraft, setTaxDraft]         = useState<{ documentType: "BOLETA" | "FACTURA"; rut: string; legalName: string; businessActivity: string; address: string; commune: string; city: string; dteEmail: string }>({ documentType: "BOLETA", rut: "", legalName: "", businessActivity: "", address: "", commune: "", city: "", dteEmail: "" });
+  const [taxLoading, setTaxLoading]     = useState(false);
+  const [taxSaving, setTaxSaving]       = useState(false);
+  const [taxSaved, setTaxSaved]         = useState(false);
+  const [taxError, setTaxError]         = useState("");
+  const [taxRutError, setTaxRutError]   = useState("");
+
   const loadSettings = useCallback(async () => {
     setLoading(true);
     try {
@@ -207,8 +217,88 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
     }
   }, []);
 
+  const loadTaxProfile = useCallback(async () => {
+    setTaxLoading(true);
+    setTaxError("");
+    try {
+      const res = await fetch("/api/tax/profile");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message ?? "Error al cargar");
+
+      if (json.data) {
+        const data = json.data;
+        const profile = {
+          id: data.id,
+          documentType: data.documentType,
+          rut: data.rut,
+          legalName: data.legalName,
+          businessActivity: data.businessActivity ?? "",
+          address: data.address,
+          commune: data.commune,
+          city: data.city,
+          dteEmail: data.dteEmail,
+          isValidated: data.isValidated,
+        };
+        setTaxProfile(profile);
+        setTaxDraft({
+          documentType: data.documentType,
+          rut: data.rut,
+          legalName: data.legalName,
+          businessActivity: data.businessActivity ?? "",
+          address: data.address,
+          commune: data.commune,
+          city: data.city,
+          dteEmail: data.dteEmail,
+        });
+      } else {
+        const defaultType = role === "empresa" || role === "contador" ? "FACTURA" : "BOLETA";
+        setTaxDraft({
+          documentType: defaultType,
+          rut: "",
+          legalName: "",
+          businessActivity: "",
+          address: "",
+          commune: "",
+          city: "",
+          dteEmail: user?.email ?? "",
+        });
+      }
+    } catch (e) {
+      console.error("Error cargando perfil tributario:", e);
+      setTaxError(e instanceof Error ? e.message : "Error al cargar perfil tributario.");
+    } finally {
+      setTaxLoading(false);
+    }
+  }, [role, user?.email]);
+
+  const saveTaxProfile = useCallback(async () => {
+    setTaxSaving(true);
+    setTaxSaved(false);
+    setTaxError("");
+    setTaxRutError("");
+
+    try {
+      const res = await fetch("/api/tax/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(taxDraft),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message ?? "Error al guardar");
+
+      setTaxProfile(json.data);
+      setTaxSaved(true);
+      setTimeout(() => setTaxSaved(false), 3000);
+    } catch (err) {
+      setTaxError(err instanceof Error ? err.message : "Error inesperado");
+    } finally {
+      setTaxSaving(false);
+    }
+  }, [taxDraft]);
+
   useEffect(() => { loadSettings(); }, [loadSettings]);
   useEffect(() => { if (section === "auditoria") loadAudit(); }, [section, loadAudit]);
+  useEffect(() => { if (section === "identidadTributaria") loadTaxProfile(); }, [section, loadTaxProfile]);
   useEffect(() => { setSection(forcedSection); }, [forcedSection]);
 
   function set(key: string, value: string) {
@@ -419,6 +509,84 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
           <SectionCard title="Comparación de planes" description="Elige el plan que se ajuste a tu operación">
             <PlanComparison currentPlan={subscriptionState?.plan ?? user?.subscriptionPlan} />
           </SectionCard>
+        </>
+      )}
+
+      {/* IDENTIDAD TRIBUTARIA */}
+      {section === "identidadTributaria" && (
+        <>
+          <SectionCard title="Identidad Tributaria" description="Datos legales para la emisión futura de Boletas, Facturas y Notas de Crédito/Débito electrónicas ante el SII.">
+            {taxLoading ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "#475569", fontSize: "13px" }}>Cargando perfil tributario...</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <Field label="Tipo de documento electrónico">
+                  <SelectInput
+                    value={taxDraft.documentType}
+                    onChange={(v) => {
+                      const plan = subscriptionState?.plan ?? user?.subscriptionPlan;
+                      const canUseInvoice = plan === "PROFESIONAL" || plan === "EMPRESA";
+                      if (v === "FACTURA" && !canUseInvoice) {
+                        setTaxError("El plan actual solo permite Boleta Electrónica.");
+                        return;
+                      }
+                      setTaxError("");
+                      setTaxDraft((prev) => ({ ...prev, documentType: v as "BOLETA" | "FACTURA" }));
+                    }}
+                    options={[
+                      { value: "BOLETA", label: "Boleta Electrónica" },
+                      { value: "FACTURA", label: "Factura Electrónica" },
+                    ]}
+                  />
+                </Field>
+
+                {taxDraft.documentType === "FACTURA" && (
+                  <Field label="Razón social / Nombre completo">
+                    <TextInput value={taxDraft.legalName} onChange={(v) => setTaxDraft((prev) => ({ ...prev, legalName: v }))} placeholder="Ej: Mi Empresa SpA" />
+                  </Field>
+                )}
+
+                {taxDraft.documentType === "BOLETA" && (
+                  <Field label="Nombre completo">
+                    <TextInput value={taxDraft.legalName} onChange={(v) => setTaxDraft((prev) => ({ ...prev, legalName: v }))} placeholder="Ej: Juan Pérez González" />
+                  </Field>
+                )}
+
+                <Field label="RUT" hint="Con puntos y guión. Ej: 12.345.678-9">
+                  <TextInput value={taxDraft.rut} onChange={(v) => { setTaxRutError(""); setTaxDraft((prev) => ({ ...prev, rut: v })); }} placeholder="12.345.678-9" />
+                </Field>
+
+                {taxDraft.documentType === "FACTURA" && (
+                  <Field label="Giro">
+                    <TextInput value={taxDraft.businessActivity} onChange={(v) => setTaxDraft((prev) => ({ ...prev, businessActivity: v }))} placeholder="Ej: Inversión en activos digitales" />
+                  </Field>
+                )}
+
+                <Field label="Dirección">
+                  <TextInput value={taxDraft.address} onChange={(v) => setTaxDraft((prev) => ({ ...prev, address: v }))} placeholder="Ej: Av. Providencia 1234" />
+                </Field>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <Field label="Comuna">
+                    <TextInput value={taxDraft.commune} onChange={(v) => setTaxDraft((prev) => ({ ...prev, commune: v }))} placeholder="Ej: Las Condes" />
+                  </Field>
+                  <Field label="Ciudad">
+                    <TextInput value={taxDraft.city} onChange={(v) => setTaxDraft((prev) => ({ ...prev, city: v }))} placeholder="Ej: Santiago" />
+                  </Field>
+                </div>
+
+                <Field label="Correo DTE" hint="Email donde recibirás los documentos tributarios electrónicos.">
+                  <TextInput value={taxDraft.dteEmail} onChange={(v) => setTaxDraft((prev) => ({ ...prev, dteEmail: v }))} placeholder="dte@empresa.cl" type="email" />
+                </Field>
+
+                {taxRutError && <p style={{ margin: 0, color: "#EF4444", fontSize: "12px" }}>{taxRutError}</p>}
+                {taxError && <p style={{ margin: 0, color: "#EF4444", fontSize: "12px" }}>{taxError}</p>}
+                {taxSaved && <p style={{ margin: 0, color: "#16A34A", fontSize: "12px" }}>Perfil tributario guardado correctamente.</p>}
+                {taxProfile?.isValidated && <p style={{ margin: 0, color: "#16A34A", fontSize: "12px" }}>✓ RUT validado</p>}
+              </div>
+            )}
+          </SectionCard>
+          <SaveBar onSave={saveTaxProfile} saving={taxSaving} saved={taxSaved} onReset={() => { if (taxProfile) setTaxDraft({ documentType: taxProfile.documentType, rut: taxProfile.rut, legalName: taxProfile.legalName, businessActivity: taxProfile.businessActivity, address: taxProfile.address, commune: taxProfile.commune, city: taxProfile.city, dteEmail: taxProfile.dteEmail }); }} error={taxError} />
         </>
       )}
 

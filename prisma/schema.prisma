@@ -602,6 +602,7 @@ model users {
   taxClassificationAuditLogs TaxClassificationAuditLog[]
   taxEventAuditLogs       TaxEventAuditLog[]
   movementAuditLogs       MovementAuditLog[]
+  taxProfile              TaxProfile?
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -1131,6 +1132,29 @@ model WorkspaceAuditLog {
   @@index([workspaceId])
   @@index([actorId])
   @@map("workspace_audit_logs")
+}
+
+// ── Tax / Identity ─────────────────────────────────────────────────────────────
+
+model TaxProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  documentType     String
+  rut              String
+  legalName        String
+  businessActivity String?
+  address          String
+  commune          String
+  city             String
+  dteEmail         String
+  isValidated      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("tax_profiles")
 }
 
 // ── Billing / Coupons ──────────────────────────────────────────────────────────
