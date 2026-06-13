@@ -605,6 +605,7 @@ model users {
   taxProfile              TaxProfile?
   taxDocuments            TaxDocument[]
   alerts                  Alert[]
+  taxRiskScores           TaxRiskScore[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -632,6 +633,23 @@ model Alert {
   @@index([severity])
   @@index([category])
   @@map("alerts")
+}
+
+model TaxRiskScore {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  score       Int
+  level       String
+  breakdown   Json
+  evaluatedAt DateTime @default(now()) @map("evaluated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([level])
+  @@index([evaluatedAt])
+  @@map("tax_risk_scores")
 }
 
 model portfolios {
