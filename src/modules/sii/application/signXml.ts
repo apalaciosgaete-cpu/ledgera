@@ -1,4 +1,9 @@
-export async function signXml(xml: string): Promise<{
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
+
+export async function signXml(
+  xml: string,
+  options?: { userId?: string; taxDocumentId?: string },
+): Promise<{
   signed: boolean;
   xml: string;
 }> {
@@ -9,6 +14,18 @@ export async function signXml(xml: string): Promise<{
   console.info("[sii]", {
     event: "xml_signed_placeholder",
     xmlLength: signedXml.length,
+  });
+
+  await recordAuditEvent({
+    userId: options?.userId ?? null,
+    category: "SII",
+    severity: "INFO",
+    event: "xml_signed",
+    description: "XML firmado (placeholder)",
+    result: "SUCCESS",
+    entityType: options?.taxDocumentId ? "TaxDocument" : null,
+    entityId: options?.taxDocumentId ?? null,
+    metadata: { xmlLength: signedXml.length },
   });
 
   return { signed: true, xml: signedXml };

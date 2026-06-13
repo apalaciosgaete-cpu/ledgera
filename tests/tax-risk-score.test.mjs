@@ -70,8 +70,12 @@ test("calculateTaxRiskScore returns LOW for user with validated profile and SII"
       },
       "@/modules/risk/infrastructure/taxRiskScoreRepository": {
         saveTaxRiskScore: async (input) => ({ id: "r1", ...input, evaluatedAt: new Date() }),
+        getLatestTaxRiskScoreByUserId: async () => null,
       },
       "@/modules/risk/domain/risk": loadTsModule("src/modules/risk/domain/risk.ts"),
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 
@@ -99,8 +103,12 @@ test("calculateTaxRiskScore caps alerts at 25", async () => {
       },
       "@/modules/risk/infrastructure/taxRiskScoreRepository": {
         saveTaxRiskScore: async (input) => ({ id: "r1", ...input, evaluatedAt: new Date() }),
+        getLatestTaxRiskScoreByUserId: async () => null,
       },
       "@/modules/risk/domain/risk": loadTsModule("src/modules/risk/domain/risk.ts"),
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 
@@ -142,8 +150,12 @@ test("calculateTaxRiskScore creates CRITICAL alert for critical level", async ()
       },
       "@/modules/risk/infrastructure/taxRiskScoreRepository": {
         saveTaxRiskScore: async (input) => ({ id: "r1", ...input, evaluatedAt: new Date() }),
+        getLatestTaxRiskScoreByUserId: async () => null,
       },
       "@/modules/risk/domain/risk": loadTsModule("src/modules/risk/domain/risk.ts"),
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 

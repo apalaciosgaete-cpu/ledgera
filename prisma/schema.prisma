@@ -1320,3 +1320,29 @@ model BillingCouponRedemption {
   @@index([checkoutId])
   @@map("billing_coupon_redemptions")
 }
+
+// ── Audit / Compliance ─────────────────────────────────────────────────────────
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  userId      String?  @map("user_id")
+  actorId     String?  @map("actor_id")
+  category    String
+  severity    String
+  event       String
+  description String
+  result      String
+  entityType  String?  @map("entity_type")
+  entityId    String?  @map("entity_id")
+  metadata    Json?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([category])
+  @@index([event])
+  @@index([createdAt])
+  @@map("audit_events")
+}

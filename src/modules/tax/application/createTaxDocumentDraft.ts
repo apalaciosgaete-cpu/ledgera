@@ -7,6 +7,7 @@ import {
 } from "@/modules/tax/domain/dte";
 import { getTaxProfileByUserId } from "@/modules/tax/infrastructure/taxProfileRepository";
 import { createTaxDocumentDraft as persistTaxDocumentDraft } from "@/modules/tax/infrastructure/taxDocumentRepository";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 const DEFAULT_ISSUER = {
   rut: process.env.LEDGERA_ISSUER_RUT ?? "76999999-9",
@@ -80,6 +81,23 @@ export async function createTaxDocumentDraft(input: {
     totalAmount: draft.amounts.totalAmount,
     paymentId: input.paymentId ?? null,
     subscriptionId: input.subscriptionId ?? null,
+  });
+
+  await recordAuditEvent({
+    userId: input.userId,
+    category: "DTE",
+    severity: "INFO",
+    event: "tax_document_created",
+    description: `Documento tributario ${draft.documentType} creado en borrador`,
+    result: "SUCCESS",
+    entityType: "TaxDocument",
+    entityId: saved.id,
+    metadata: {
+      documentType: draft.documentType,
+      totalAmount: draft.amounts.totalAmount,
+      paymentId: input.paymentId ?? null,
+      subscriptionId: input.subscriptionId ?? null,
+    },
   });
 
   return {

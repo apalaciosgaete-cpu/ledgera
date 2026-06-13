@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 import type { SiiDocumentTypeCode } from "@/modules/sii/domain/sii";
 import { createCaf, listCafs } from "@/modules/sii/infrastructure/siiCafRepository";
 
@@ -103,6 +104,24 @@ export async function POST(req: NextRequest) {
       documentType: caf.documentType,
       folioStart: caf.folioStart,
       folioEnd: caf.folioEnd,
+    });
+
+    await recordAuditEvent({
+      actorId: auth.user.id,
+      category: "SII",
+      severity: "INFO",
+      event: "caf_uploaded",
+      description: `CAF cargado para documento tipo ${caf.documentType}`,
+      result: "SUCCESS",
+      entityType: "SiiCaf",
+      entityId: caf.id,
+      metadata: {
+        documentType: caf.documentType,
+        folioStart: caf.folioStart,
+        folioEnd: caf.folioEnd,
+      },
+      ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
+      userAgent: req.headers.get("user-agent") ?? null,
     });
 
     return NextResponse.json({

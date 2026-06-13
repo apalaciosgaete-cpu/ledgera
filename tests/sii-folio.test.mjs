@@ -42,6 +42,9 @@ test("reserveNextFolio service returns folio when available", async () => {
       "@/modules/sii/infrastructure/siiCafRepository": {
         reserveNextFolio: async () => ({ folio: 100001 }),
       },
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 
@@ -57,6 +60,9 @@ test("reserveNextFolio service returns error when CAF exhausted", async () => {
     {
       "@/modules/sii/infrastructure/siiCafRepository": {
         reserveNextFolio: async () => null,
+      },
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
       },
     },
   );

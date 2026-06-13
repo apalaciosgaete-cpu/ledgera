@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { createAlert } from "@/modules/alerts/application/createAlert";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 import type { TaxRiskBreakdownItem, TaxRiskLevel } from "@/modules/risk/domain/risk";
 import {
   capScore,
   resolveTaxRiskLevel,
 } from "@/modules/risk/domain/risk";
-import { saveTaxRiskScore } from "@/modules/risk/infrastructure/taxRiskScoreRepository";
+import {
+  saveTaxRiskScore,
+  getLatestTaxRiskScoreByUserId,
+} from "@/modules/risk/infrastructure/taxRiskScoreRepository";
 
 export type CalculateTaxRiskScoreResult =
   | { ok: true; score: number; level: TaxRiskLevel; breakdown: TaxRiskBreakdownItem[] }
@@ -208,7 +212,35 @@ export async function calculateTaxRiskScore(
   );
   const level = resolveTaxRiskLevel(totalScore);
 
+  const previousScore = await getLatestTaxRiskScoreByUserId(userId);
+
   await saveTaxRiskScore({ userId, score: totalScore, level, breakdown });
+
+  await recordAuditEvent({
+    userId,
+    category: "RISK",
+    severity: level === "CRITICAL" ? "CRITICAL" : level === "HIGH" ? "WARNING" : "INFO",
+    event: "tax_risk_score_calculated",
+    description: `Score de riesgo tributario calculado: ${totalScore}/100 (${level})`,
+    result: "SUCCESS",
+    entityType: "TaxRiskScore",
+    entityId: userId,
+    metadata: { score: totalScore, level, previousLevel: previousScore?.level ?? null, breakdown },
+  });
+
+  if (previousScore && previousScore.level !== level) {
+    await recordAuditEvent({
+      userId,
+      category: "RISK",
+      severity: "WARNING",
+      event: "risk_level_changed",
+      description: `Nivel de riesgo cambió de ${previousScore.level} a ${level}`,
+      result: "SUCCESS",
+      entityType: "TaxRiskScore",
+      entityId: userId,
+      metadata: { previousLevel: previousScore.level, newLevel: level, score: totalScore },
+    });
+  }
 
   if (level === "HIGH" || level === "CRITICAL") {
     await createAlert({

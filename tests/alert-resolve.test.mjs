@@ -58,6 +58,9 @@ test("resolveAlert transitions OPEN to RESOLVED", async () => {
       "@/modules/alerts/infrastructure/alertRepository": {
         resolveAlert: async () => alert,
       },
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 
@@ -81,6 +84,9 @@ test("resolveAlert transitions ACKNOWLEDGED to RESOLVED", async () => {
       "@/modules/alerts/infrastructure/alertRepository": {
         resolveAlert: async () => alert,
       },
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 
@@ -96,6 +102,9 @@ test("resolveAlert fails when alert cannot be resolved", async () => {
     {
       "@/modules/alerts/infrastructure/alertRepository": {
         resolveAlert: async () => null,
+      },
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
       },
     },
   );

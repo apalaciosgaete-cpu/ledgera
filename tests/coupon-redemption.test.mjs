@@ -38,6 +38,9 @@ function loadTsModule(relativePath) {
           incrementCouponRedemptions: async () => {},
         };
       }
+      if (specifier === "@/modules/audit/application/recordAuditEvent") {
+        return { recordAuditEvent: async () => {} };
+      }
       throw new Error(`Unexpected require: ${specifier}`);
     },
   };

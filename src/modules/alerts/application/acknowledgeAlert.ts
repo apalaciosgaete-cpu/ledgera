@@ -1,5 +1,6 @@
 import { acknowledgeAlert as persistAcknowledge } from "@/modules/alerts/infrastructure/alertRepository";
 import type { Alert } from "@/modules/alerts/domain/alert";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export type AcknowledgeAlertResult =
   | { ok: true; alert: Alert }
@@ -22,6 +23,18 @@ export async function acknowledgeAlert(
     alertId: alert.id,
     userId: alert.userId,
     category: alert.category,
+  });
+
+  await recordAuditEvent({
+    userId: alert.userId,
+    category: "ALERT",
+    severity: "INFO",
+    event: "alert_acknowledged",
+    description: `Alerta reconocida: ${alert.title}`,
+    result: "SUCCESS",
+    entityType: "Alert",
+    entityId: alert.id,
+    metadata: { category: alert.category, severity: alert.severity },
   });
 
   return { ok: true, alert };

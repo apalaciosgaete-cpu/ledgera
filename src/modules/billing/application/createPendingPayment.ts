@@ -14,6 +14,7 @@ import {
 import {
   assertPaidBillingPlan,
 } from "@/modules/billing/application/billingPlans";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 type CreatePendingPaymentInput = {
   userId: string;
@@ -73,7 +74,7 @@ export async function createPendingPayment(
       });
   }
 
-  return createBillingPayment({
+  const payment = await createBillingPayment({
     userId: input.userId,
     customerId: customer?.id ?? null,
     subscriptionId: subscription.id,
@@ -95,4 +96,23 @@ export async function createPendingPayment(
       ...input.metadata,
     }),
   });
+
+  await recordAuditEvent({
+    userId: input.userId,
+    category: "BILLING",
+    severity: "INFO",
+    event: "checkout_started",
+    description: `Checkout iniciado para plan ${input.plan}`,
+    result: "SUCCESS",
+    entityType: "BillingPayment",
+    entityId: payment.id,
+    metadata: {
+      plan: input.plan,
+      provider: input.provider,
+      amount: planConfig.amount,
+      subscriptionId: subscription.id,
+    },
+  });
+
+  return payment;
 }

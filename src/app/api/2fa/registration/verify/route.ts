@@ -9,6 +9,7 @@ import {
 } from "@/modules/identity/application/sessionToken";
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { prisma } from "@/lib/prisma";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export const runtime = "nodejs";
 
@@ -163,6 +164,20 @@ export async function POST(req: NextRequest) {
         twoFactorEnabled: true,
         updated_at: new Date(),
       },
+    });
+
+    await recordAuditEvent({
+      userId: user.id,
+      category: "SECURITY",
+      severity: "INFO",
+      event: "2fa_enabled",
+      description: "Seguridad de doble factor activada",
+      result: "SUCCESS",
+      entityType: "User",
+      entityId: user.id,
+      metadata: { source: "registration" },
+      ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
+      userAgent: req.headers.get("user-agent") ?? null,
     });
 
     const sessionToken = generateSessionToken();

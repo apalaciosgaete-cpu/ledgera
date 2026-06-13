@@ -12,6 +12,7 @@ import {
 } from "@/modules/billing/infrastructure/billingRepository";
 
 import { resolveSubscriptionStatusFromPayment } from "@/modules/billing/domain/billing";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 type ActivateSubscriptionInput = {
   paymentId: string;
@@ -196,6 +197,24 @@ export async function activateSubscriptionFromPayment(
       },
     });
   }
+
+  await recordAuditEvent({
+    userId: payment.userId,
+    category: "BILLING",
+    severity: paymentSucceeded ? "INFO" : "WARNING",
+    event: "subscription_created",
+    description: paymentSucceeded
+      ? "Suscripción activada desde pago"
+      : "Intento de activación de suscripción fallido",
+    result: paymentSucceeded ? "SUCCESS" : "FAILED",
+    entityType: "BillingPayment",
+    entityId: payment.id,
+    metadata: {
+      paymentId: payment.id,
+      providerPaymentId: input.providerPaymentId,
+      status: input.status,
+    },
+  });
 
   return updatedPayment;
 }

@@ -79,6 +79,9 @@ test("createAlert validates user existence", async () => {
         getUserById: async () => null,
       },
       "@/modules/alerts/domain/alert": domain,
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 
@@ -105,6 +108,9 @@ test("createAlert validates category and severity", async () => {
         getUserById: async () => ({ id: "u1" }),
       },
       "@/modules/alerts/domain/alert": domain,
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 
@@ -152,6 +158,9 @@ test("createAlert emits alert_created telemetry and returns alert", async () => 
         getUserById: async () => ({ id: "u1" }),
       },
       "@/modules/alerts/domain/alert": domain,
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
     },
   );
 

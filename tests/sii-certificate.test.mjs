@@ -38,6 +38,11 @@ function loadTsModule(relativePath, mocks = {}) {
 test("validateCertificate returns valid for future expiry", async () => {
   const { validateCertificate } = loadTsModule(
     "src/modules/sii/application/validateCertificate.ts",
+    {
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
+    },
   );
 
   const future = new Date();
@@ -62,6 +67,11 @@ test("validateCertificate returns valid for future expiry", async () => {
 test("validateCertificate returns invalid for expired certificate", async () => {
   const { validateCertificate } = loadTsModule(
     "src/modules/sii/application/validateCertificate.ts",
+    {
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
+    },
   );
 
   const past = new Date();
@@ -85,6 +95,11 @@ test("validateCertificate returns invalid for expired certificate", async () => 
 test("validateCertificate returns invalid for inactive credential", async () => {
   const { validateCertificate } = loadTsModule(
     "src/modules/sii/application/validateCertificate.ts",
+    {
+      "@/modules/audit/application/recordAuditEvent": {
+        recordAuditEvent: async () => {},
+      },
+    },
   );
 
   const future = new Date();
@@ -114,7 +129,11 @@ test("SII credential repository exposes getActiveCredential and createCredential
 });
 
 test("signXml service exposes placeholder signing", async () => {
-  const { signXml } = loadTsModule("src/modules/sii/application/signXml.ts");
+  const { signXml } = loadTsModule("src/modules/sii/application/signXml.ts", {
+    "@/modules/audit/application/recordAuditEvent": {
+      recordAuditEvent: async () => {},
+    },
+  });
 
   const result = await signXml("<DTE></DTE>");
 

@@ -1,5 +1,6 @@
 import { resolveAlert as persistResolve } from "@/modules/alerts/infrastructure/alertRepository";
 import type { Alert } from "@/modules/alerts/domain/alert";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export type ResolveAlertResult =
   | { ok: true; alert: Alert }
@@ -20,6 +21,18 @@ export async function resolveAlert(id: string): Promise<ResolveAlertResult> {
     alertId: alert.id,
     userId: alert.userId,
     category: alert.category,
+  });
+
+  await recordAuditEvent({
+    userId: alert.userId,
+    category: "ALERT",
+    severity: "INFO",
+    event: "alert_resolved",
+    description: `Alerta resuelta: ${alert.title}`,
+    result: "SUCCESS",
+    entityType: "Alert",
+    entityId: alert.id,
+    metadata: { category: alert.category, severity: alert.severity },
   });
 
   return { ok: true, alert };

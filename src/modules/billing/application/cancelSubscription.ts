@@ -1,6 +1,7 @@
 // src/modules/billing/application/cancelSubscription.ts
 
 import { prisma } from "@/lib/prisma";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export type CancelSubscriptionMode = "cancel_at_period_end" | "downgrade_now";
 
@@ -58,6 +59,18 @@ export async function cancelSubscription(input: {
       occurredAt: new Date().toISOString(),
     });
 
+    await recordAuditEvent({
+      userId: input.userId,
+      category: "BILLING",
+      severity: "WARNING",
+      event: "subscription_cancelled",
+      description: "Cancelación de suscripción programada al final del período",
+      result: "SUCCESS",
+      entityType: "BillingSubscription",
+      entityId: updated.id,
+      metadata: { mode: input.mode, currentPeriodEnd: updated.currentPeriodEnd },
+    });
+
     return {
       status: "cancel_at_period_end",
       subscriptionId: updated.id,
@@ -96,6 +109,18 @@ export async function cancelSubscription(input: {
     subscriptionId: updated.id,
     targetPlan: "BASICO",
     occurredAt: new Date().toISOString(),
+  });
+
+  await recordAuditEvent({
+    userId: input.userId,
+    category: "BILLING",
+    severity: "WARNING",
+    event: "subscription_cancelled",
+    description: "Suscripción cancelada y plan degradado a Free",
+    result: "SUCCESS",
+    entityType: "BillingSubscription",
+    entityId: updated.id,
+    metadata: { mode: input.mode, targetPlan: "BASICO" },
   });
 
   return {

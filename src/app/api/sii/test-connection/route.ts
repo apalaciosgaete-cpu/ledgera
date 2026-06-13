@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export async function POST(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
@@ -23,6 +24,19 @@ export async function POST(req: NextRequest) {
     event: "sii_connection_tested",
     userId: auth.user.id,
     environment: process.env.SII_ENVIRONMENT ?? "CERTIFICACION",
+  });
+
+  await recordAuditEvent({
+    actorId: auth.user.id,
+    category: "SII",
+    severity: "INFO",
+    event: "sii_connection_tested",
+    description: "Prueba de conexión SII ejecutada",
+    result: "SUCCESS",
+    entityType: "SiiCredential",
+    metadata: { environment: process.env.SII_ENVIRONMENT ?? "CERTIFICACION" },
+    ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
+    userAgent: req.headers.get("user-agent") ?? null,
   });
 
   return NextResponse.json({

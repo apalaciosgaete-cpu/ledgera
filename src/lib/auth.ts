@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 
 import { prisma } from "@/lib/prisma";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma as any),
@@ -34,7 +35,20 @@ export const authOptions: NextAuthConfig = {
 
         const isValid = await bcrypt.compare(password, user.password_hash);
 
-        if (!isValid) return null;
+        if (!isValid) {
+          await recordAuditEvent({
+            userId: user.id,
+            category: "SECURITY",
+            severity: "WARNING",
+            event: "login_failed",
+            description: "Intento de inicio de sesión fallido por credenciales inválidas",
+            result: "FAILED",
+            entityType: "User",
+            entityId: user.id,
+            metadata: { provider: "credentials", email },
+          });
+          return null;
+        }
 
         return {
           id: user.id,
@@ -65,6 +79,25 @@ export const authOptions: NextAuthConfig = {
       }
 
       return session;
+    },
+  },
+  events: {
+    async signIn({ user, account }) {
+      try {
+        await recordAuditEvent({
+          userId: user?.id ?? null,
+          category: "SECURITY",
+          severity: "INFO",
+          event: "login_success",
+          description: `Inicio de sesión exitoso vía ${account?.provider ?? "credentials"}`,
+          result: "SUCCESS",
+          entityType: "User",
+          entityId: user?.id ?? null,
+          metadata: { provider: account?.provider ?? "credentials" },
+        });
+      } catch (error) {
+        console.error("[audit] login_success failed", error);
+      }
     },
   },
   pages: {
