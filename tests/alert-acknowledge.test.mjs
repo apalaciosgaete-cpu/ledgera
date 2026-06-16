@@ -61,6 +61,9 @@ test("acknowledgeAlert transitions OPEN to ACKNOWLEDGED", async () => {
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
       },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
+      },
     },
   );
 
@@ -79,6 +82,9 @@ test("acknowledgeAlert fails when alert cannot be acknowledged", async () => {
       },
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
+      },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
       },
     },
   );

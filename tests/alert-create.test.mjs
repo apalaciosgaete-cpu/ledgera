@@ -82,6 +82,9 @@ test("createAlert validates user existence", async () => {
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
       },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
+      },
     },
   );
 
@@ -110,6 +113,9 @@ test("createAlert validates category and severity", async () => {
       "@/modules/alerts/domain/alert": domain,
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
+      },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
       },
     },
   );
@@ -160,6 +166,9 @@ test("createAlert emits alert_created telemetry and returns alert", async () => 
       "@/modules/alerts/domain/alert": domain,
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
+      },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
       },
     },
   );

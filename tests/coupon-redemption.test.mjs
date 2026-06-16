@@ -41,6 +41,9 @@ function loadTsModule(relativePath) {
       if (specifier === "@/modules/audit/application/recordAuditEvent") {
         return { recordAuditEvent: async () => {} };
       }
+      if (specifier === "@/modules/timeline/application/recordTimelineEvent") {
+        return { recordTimelineEvent: async () => {} };
+      }
       throw new Error(`Unexpected require: ${specifier}`);
     },
   };

@@ -57,6 +57,9 @@ function buildServiceMocks(overrides = {}) {
     "@/modules/audit/application/recordAuditEvent": {
       recordAuditEvent: overrides.recordAuditEvent ?? (async () => {}),
     },
+    "@/modules/timeline/application/recordTimelineEvent": {
+      recordTimelineEvent: overrides.recordTimelineEvent ?? (async () => {}),
+    },
     "@/modules/risk/application/getLatestTaxRiskScore": {
       getLatestTaxRiskScore: overrides.getLatestTaxRiskScore ?? (async () => null),
     },

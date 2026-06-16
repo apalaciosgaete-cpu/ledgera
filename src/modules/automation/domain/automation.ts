@@ -1,6 +1,6 @@
 export type AutomationStatus = "PROPOSED" | "APPROVED" | "REJECTED" | "EXECUTED" | "FAILED";
 
-export type AutomationType = "CREATE_TASK" | "CREATE_RECOMMENDATION" | "CREATE_FOLLOW_UP" | "CREATE_REMINDER";
+export type AutomationType = "CREATE_TASK" | "CREATE_FOLLOW_UP" | "CREATE_REMINDER" | "CREATE_RECOMMENDATION";
 
 export type AutomationPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
@@ -48,7 +48,7 @@ export function isValidAutomationStatus(value: string): value is AutomationStatu
 }
 
 export function isValidAutomationType(value: string): value is AutomationType {
-  return ["CREATE_TASK", "CREATE_RECOMMENDATION", "CREATE_FOLLOW_UP", "CREATE_REMINDER"].includes(value);
+  return ["CREATE_TASK", "CREATE_FOLLOW_UP", "CREATE_REMINDER", "CREATE_RECOMMENDATION"].includes(value);
 }
 
 export function isValidAutomationPriority(value: string): value is AutomationPriority {

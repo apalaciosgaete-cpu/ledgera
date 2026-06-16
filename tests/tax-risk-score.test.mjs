@@ -76,6 +76,9 @@ test("calculateTaxRiskScore returns LOW for user with validated profile and SII"
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
       },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
+      },
     },
   );
 
@@ -108,6 +111,9 @@ test("calculateTaxRiskScore caps alerts at 25", async () => {
       "@/modules/risk/domain/risk": loadTsModule("src/modules/risk/domain/risk.ts"),
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
+      },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
       },
     },
   );
@@ -155,6 +161,9 @@ test("calculateTaxRiskScore creates CRITICAL alert for critical level", async ()
       "@/modules/risk/domain/risk": loadTsModule("src/modules/risk/domain/risk.ts"),
       "@/modules/audit/application/recordAuditEvent": {
         recordAuditEvent: async () => {},
+      },
+      "@/modules/timeline/application/recordTimelineEvent": {
+        recordTimelineEvent: async () => {},
       },
     },
   );

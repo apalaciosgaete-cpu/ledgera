@@ -613,6 +613,7 @@ model users {
   timelineEvents          TimelineEvent[]
   aiConversations         AIConversation[]
   aiInsights              AIInsight[]
+  automationProposals     AutomationProposal[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -1413,6 +1414,42 @@ model TimelineEvent {
   @@index([entityType, entityId])
   @@index([occurredAt])
   @@map("timeline_events")
+}
+
+model AutomationProposal {
+  id              String   @id @default(cuid())
+  userId          String
+
+  type            String
+  priority        String   @default("MEDIUM")
+
+  title           String
+  description     String
+
+  sourceEntity    String?
+  sourceEntityId  String?
+
+  status          String   @default("PROPOSED")
+
+  metadata        Json?
+
+  createdAt       DateTime @default(now())
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  executedAt      DateTime?
+  failureReason   String?
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([sourceEntity, sourceEntityId])
+
+  @@map("automation_proposals")
 }
 
 model AIConversation {

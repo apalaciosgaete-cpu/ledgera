@@ -94,6 +94,7 @@ test("createTask validates required fields", async () => {
     "@/modules/tasks/infrastructure/taskRepository": repository,
     "@/modules/tasks/domain/task": domain,
     "@/modules/audit/application/recordAuditEvent": { recordAuditEvent: async () => {} },
+    "@/modules/timeline/application/recordTimelineEvent": { recordTimelineEvent: async () => {} },
   });
 
   const result = await createTask({
