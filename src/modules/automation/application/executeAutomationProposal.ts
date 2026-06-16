@@ -1,5 +1,8 @@
 import { AutomationProposal } from "@/modules/automation/domain/automation";
-import { AutomationRepository } from "@/modules/automation/infrastructure/automationRepository";
+import {
+  markExecuted,
+  markFailed,
+} from "@/modules/automation/infrastructure/automationRepository";
 
 export interface AutomationDependencies {
   createTask: (data: any) => Promise<any>;
@@ -7,10 +10,7 @@ export interface AutomationDependencies {
 }
 
 export class ExecuteAutomationProposal {
-  constructor(
-    private repository: AutomationRepository,
-    private deps: AutomationDependencies,
-  ) {}
+  constructor(private deps: AutomationDependencies) {}
 
   async execute(proposal: AutomationProposal): Promise<void> {
     try {
@@ -44,9 +44,9 @@ export class ExecuteAutomationProposal {
           });
           break;
       }
-      await this.repository.markExecuted(proposal.id);
+      await markExecuted(proposal.id);
     } catch (error: any) {
-      await this.repository.markFailed(proposal.id, error.message || "Execution error");
+      await markFailed(proposal.id, error.message || "Execution error");
       throw error;
     }
   }
