@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 import type {
   CreateTaxProfileInput,
   TaxProfile,
@@ -52,6 +53,11 @@ export async function getTaxProfileByUserId(
 export async function upsertTaxProfile(
   input: CreateTaxProfileInput | UpdateTaxProfileInput,
 ): Promise<TaxProfile> {
+  const existing = await prisma.taxProfile.findUnique({
+    where: { userId: input.userId },
+    select: { id: true, isValidated: true },
+  });
+
   const profile = await prisma.taxProfile.upsert({
     where: { userId: input.userId },
     create: {
@@ -78,6 +84,46 @@ export async function upsertTaxProfile(
       isValidated: true,
     },
   });
+
+  const isNew = !existing;
+  const wasValidated = existing?.isValidated ?? false;
+
+  if (isNew) {
+    await recordTimelineEvent({
+      userId: input.userId,
+      category: "PROFILE",
+      severity: "INFO",
+      title: "Perfil tributario creado",
+      description: `Se creó el perfil tributario para ${input.legalName} (${input.rut}).`,
+      entityType: "TaxProfile",
+      entityId: profile.id,
+      metadata: { documentType: input.documentType, rut: input.rut },
+    });
+  } else {
+    await recordTimelineEvent({
+      userId: input.userId,
+      category: "PROFILE",
+      severity: "INFO",
+      title: "Perfil tributario actualizado",
+      description: `Se actualizó la información del perfil tributario (${input.rut}).`,
+      entityType: "TaxProfile",
+      entityId: profile.id,
+      metadata: { documentType: input.documentType, rut: input.rut },
+    });
+  }
+
+  if (!wasValidated && profile.isValidated) {
+    await recordTimelineEvent({
+      userId: input.userId,
+      category: "PROFILE",
+      severity: "SUCCESS",
+      title: "Perfil tributario validado",
+      description: `El perfil tributario de ${input.legalName} fue validado correctamente.`,
+      entityType: "TaxProfile",
+      entityId: profile.id,
+      metadata: { documentType: input.documentType, rut: input.rut },
+    });
+  }
 
   return mapTaxProfile(profile);
 }

@@ -56,6 +56,10 @@ function buildPrismaMock(overrides = {}) {
     exchangeConnection: { findMany: async () => [], ...overrides.exchangeConnection },
     exchangeImportRecord: { count: async () => 0, ...overrides.exchangeImportRecord },
     auditEvent: { count: async () => 0, findMany: async () => [], ...overrides.auditEvent },
+    smartTaxScore: { findMany: async () => [], ...overrides.smartTaxScore },
+    recommendation: { count: async () => 0, findMany: async () => [], ...overrides.recommendation },
+    task: { count: async () => 0, findMany: async () => [], ...overrides.task },
+    document: { count: async () => 0, ...overrides.document },
     users: { findUnique: async () => ({ subscription_plan: "BASICO", subscription_expires_at: null }), ...overrides.users },
   };
 }
@@ -65,6 +69,9 @@ function loadDashboardService(prismaMock) {
     "@/lib/prisma": { prisma: prismaMock },
     "@/modules/dashboard/domain/executiveDashboard": domain,
     "./dashboardCache": cache,
+    "@/modules/tax-file/application/listTaxFiles": {
+      listTaxFiles: async () => ({ ok: true, files: [] }),
+    },
   });
 }
 
@@ -165,6 +172,9 @@ test("buildExecutiveDashboard counts degraded connections", async () => {
 
 test("buildUserDashboard returns user scoped data", async () => {
   const prismaMock = buildPrismaMock({
+    document: {
+      count: async () => 0,
+    },
     taxRiskScore: {
       findFirst: async () => ({ score: 72, level: "HIGH" }),
     },
@@ -203,4 +213,27 @@ test("buildUserDashboard returns user scoped data", async () => {
   assert.equal(result.dashboard.tax.rejectedDocuments, 1);
   assert.equal(result.dashboard.subscription.plan, "PRO");
   assert.equal(result.dashboard.subscription.pendingPayment, true);
+});
+
+
+test("buildExecutiveDashboard aggregates Smart Tax Scores", async () => {
+  cache.clearDashboardCache();
+
+  const prismaMock = buildPrismaMock({
+    smartTaxScore: {
+      findMany: async () => [
+        { userId: "u1", score: 35, level: "DEFICIENT", evaluatedAt: new Date("2026-06-12T10:00:00Z") },
+        { userId: "u2", score: 92, level: "OPTIMAL", evaluatedAt: new Date("2026-06-12T11:00:00Z") },
+        { userId: "u1", score: 50, level: "DEVELOPING", evaluatedAt: new Date("2026-06-11T10:00:00Z") },
+      ],
+    },
+  });
+
+  const { buildExecutiveDashboard } = loadDashboardService(prismaMock);
+  const result = await buildExecutiveDashboard();
+
+  assert.equal(result.ok, true);
+  assert.equal(result.snapshot.dashboard.smartTax.averageScore, 64);
+  assert.equal(result.snapshot.dashboard.smartTax.deficientUsers, 1);
+  assert.equal(result.snapshot.dashboard.smartTax.optimalUsers, 1);
 });

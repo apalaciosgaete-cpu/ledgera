@@ -43,3 +43,6 @@ next-env.d.ts
 backups/
 *.dump
 .vercel
+
+# uploaded documents
+/uploads

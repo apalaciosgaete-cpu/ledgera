@@ -13,12 +13,12 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id   = searchParams.get("id")?.trim();
-    const type = searchParams.get("type")?.toUpperCase() as "STAGING" | "BANK" | "PORTFOLIO" | undefined;
+    const type = searchParams.get("type")?.toUpperCase() as "STAGING" | "BANK" | "PORTFOLIO" | "DOCUMENT" | undefined;
 
     if (!id)   return fail("id es obligatorio.", 400);
     if (!type) return fail("type es obligatorio.", 400);
-    if (!["STAGING", "BANK", "PORTFOLIO"].includes(type)) {
-      return fail(`type '${type}' no válido. Usa: STAGING, BANK, PORTFOLIO`, 400);
+    if (!["STAGING", "BANK", "PORTFOLIO", "DOCUMENT"].includes(type)) {
+      return fail(`type '${type}' no válido. Usa: STAGING, BANK, PORTFOLIO, DOCUMENT`, 400);
     }
 
     const result = await buildEntityTimeline(id, type, auth.user.id);

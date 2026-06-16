@@ -13,6 +13,7 @@ import {
 
 import { resolveSubscriptionStatusFromPayment } from "@/modules/billing/domain/billing";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
+import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 
 type ActivateSubscriptionInput = {
   paymentId: string;
@@ -215,6 +216,20 @@ export async function activateSubscriptionFromPayment(
       status: input.status,
     },
   });
+
+  if (paymentSucceeded) {
+    const plan = resolvePlanFromPayment(payment);
+    await recordTimelineEvent({
+      userId: payment.userId,
+      category: "BILLING",
+      severity: "SUCCESS",
+      title: "Suscripción creada",
+      description: `Tu suscripción al plan ${plan} fue activada correctamente.`,
+      entityType: "BillingSubscription",
+      entityId: payment.subscriptionId ?? payment.id,
+      metadata: { plan, paymentId: payment.id },
+    });
+  }
 
   return updatedPayment;
 }

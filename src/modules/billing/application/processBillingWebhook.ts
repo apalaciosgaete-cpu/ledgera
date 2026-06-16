@@ -1,6 +1,7 @@
 // src/modules/billing/application/processBillingWebhook.ts
 
 import { prisma } from "@/lib/prisma";
+import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 import {
   CHECKOUT_PLAN_CONFIG,
   type BillingCheckoutPlan,
@@ -205,6 +206,17 @@ export async function processBillingWebhook(
     targetSubscriptionPlan: config.targetSubscriptionPlan,
     provider: event.provider,
     occurredAt: new Date().toISOString(),
+  });
+
+  await recordTimelineEvent({
+    userId: payment.userId,
+    category: "BILLING",
+    severity: "SUCCESS",
+    title: "Pago confirmado",
+    description: `Tu pago fue confirmado y se activó el plan ${config.targetSubscriptionPlan}.`,
+    entityType: "BillingSubscription",
+    entityId: subscription.id,
+    metadata: { plan, targetSubscriptionPlan: config.targetSubscriptionPlan, paymentId: updatedPayment.id },
   });
 
   return {

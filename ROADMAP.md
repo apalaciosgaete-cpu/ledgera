@@ -589,6 +589,42 @@ Cada bloque tiene:
 
 ---
 
+## Fase F — Capa 6: LEDGERA AI Core
+
+**Objetivo:** Crear la primera IA propia de LEDGERA como copiloto explicativo, no como agente autónomo.
+**Duración estimada:** 2 semanas
+**Equipo:** 1 ML/Backend Engineer + 1 Frontend
+
+### F.1 — LEDGERA AI Core
+
+| Campo | Valor |
+|-------|-------|
+| **Bloque** | 6.1 LEDGERA AI Core |
+| **Entregable** | Copiloto explicativo en `/ai` |
+| **Estimación** | L |
+| **Dependencias** | Capa 1, 2 y 3 (datos de portafolio y tributarios) |
+
+#### Criterios de cierre (DoD)
+
+- [ ] Motor de razonamiento propio (`aiReasoningEngine`) desacoplado de proveedores.
+- [ ] Respuestas en lenguaje simple (Qué pasa, por qué, qué hacer, qué pasa si no).
+- [ ] Insights proactivos (Riesgo, Score, Prioridades).
+- [ ] Auditoría completa de interacciones (categoría `AI`).
+- [ ] No menciona términos técnicos de LLM (ChatGPT, Prompts, etc.).
+
+#### Tickets derivados
+
+| # | Ticket | Tipo | Owner |
+|---|--------|------|-------|
+| F.1.1 | Implementación de `aiContextBuilder` y `aiReasoningEngine` | Backend | Backend |
+| F.1.2 | Repositorio de persistencia `AIConversation` y `AIInsight` | Backend | Backend |
+| F.1.3 | Vista de usuario `/ai` (LEDGERA AI) | Frontend | Frontend |
+| F.1.4 | Vista de experto `/experto/ai` | Frontend | Frontend |
+| F.1.5 | Generación de insights automáticos | Backend | Backend |
+| F.1.6 | Tests de contexto, permisos y razonamiento | QA | Backend |
+
+---
+
 ## Dependencias Cruzadas entre Fases
 
 ```

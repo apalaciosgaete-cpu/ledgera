@@ -5,6 +5,7 @@ import {
   type ExecutiveDashboardSnapshot,
 } from "@/modules/dashboard/domain/executiveDashboard";
 import { getCachedDashboard, setCachedDashboard } from "./dashboardCache";
+import { listTaxFiles } from "@/modules/tax-file/application/listTaxFiles";
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);
@@ -52,6 +53,18 @@ export async function buildExecutiveDashboard(options?: {
       totalEventsToday,
       latestAlerts,
       latestCriticalAuditEvents,
+      allSmartTaxScores,
+      activeRecommendations,
+      criticalRecommendations,
+      activeRecommendationUsers,
+      pendingTasks,
+      overdueTasks,
+      criticalTasks,
+      completedTasksWithDates,
+      totalDocuments,
+      taxDocuments,
+      pendingReviewDocuments,
+      documentsLast30Days,
     ] = await prisma.$transaction([
       prisma.alert.count({ where: { status: "OPEN" } }),
       prisma.alert.count({ where: { status: "OPEN", severity: "CRITICAL" } }),
@@ -113,6 +126,37 @@ export async function buildExecutiveDashboard(options?: {
           createdAt: true,
         },
       }),
+      prisma.smartTaxScore.findMany({ orderBy: { evaluatedAt: "desc" } }),
+      prisma.recommendation.count({ where: { status: "ACTIVE" } }),
+      prisma.recommendation.count({ where: { status: "ACTIVE", priority: "CRITICAL" } }),
+      prisma.recommendation.findMany({
+        where: { status: "ACTIVE" },
+        select: { userId: true },
+        distinct: ["userId"],
+      }),
+      prisma.task.count({
+        where: { status: { notIn: ["COMPLETED", "CANCELLED"] } },
+      }),
+      prisma.task.count({
+        where: {
+          status: { notIn: ["COMPLETED", "CANCELLED"] },
+          dueDate: { lt: now },
+        },
+      }),
+      prisma.task.count({
+        where: { status: { notIn: ["COMPLETED", "CANCELLED"] }, priority: "CRITICAL" },
+      }),
+      prisma.task.findMany({
+        where: { status: "COMPLETED", completedAt: { not: null }, startedAt: { not: null } },
+        select: { startedAt: true, completedAt: true },
+        take: 1000,
+      }),
+      prisma.document.count({ where: { status: { not: "DELETED" } } }),
+      prisma.document.count({ where: { status: { not: "DELETED" }, category: "TAX" } }),
+      prisma.document.count({ where: { status: "ACTIVE", category: "TAX" } }),
+      prisma.document.count({
+        where: { status: { not: "DELETED" }, createdAt: { gte: subtractDays(now, 30) } },
+      }),
     ]);
 
     // Latest risk score per user
@@ -123,6 +167,19 @@ export async function buildExecutiveDashboard(options?: {
       }
     }
     const latestScores = Array.from(latestByUser.values());
+
+    const latestSmartByUser = new Map<string, (typeof allSmartTaxScores)[0]>();
+    for (const score of allSmartTaxScores) {
+      if (!latestSmartByUser.has(score.userId)) {
+        latestSmartByUser.set(score.userId, score);
+      }
+    }
+    const latestSmartScores = Array.from(latestSmartByUser.values());
+    const smartAverage = latestSmartScores.length
+      ? Math.round(latestSmartScores.reduce((sum, s) => sum + s.score, 0) / latestSmartScores.length)
+      : 0;
+    const smartDeficient = latestSmartScores.filter((s) => s.level === "DEFICIENT").length;
+    const smartOptimal = latestSmartScores.filter((s) => s.level === "OPTIMAL").length;
 
     const averageScore = latestScores.length
       ? Math.round(latestScores.reduce((sum, s) => sum + s.score, 0) / latestScores.length)
@@ -168,6 +225,47 @@ export async function buildExecutiveDashboard(options?: {
       errorsToday: failedAuditEvents,
       totalEventsToday,
     };
+    dashboard.smartTax = {
+      averageScore: smartAverage,
+      deficientUsers: smartDeficient,
+      optimalUsers: smartOptimal,
+    };
+    dashboard.recommendations = {
+      active: activeRecommendations,
+      critical: criticalRecommendations,
+      pendingUsers: activeRecommendationUsers.length,
+    };
+
+    const totalResolutionMinutes = completedTasksWithDates.reduce((sum, t) => {
+      if (!t.completedAt || !t.startedAt) return sum;
+      return sum + (t.completedAt.getTime() - t.startedAt.getTime()) / (1000 * 60);
+    }, 0);
+    const averageResolutionMinutes = completedTasksWithDates.length
+      ? Math.round(totalResolutionMinutes / completedTasksWithDates.length)
+      : 0;
+
+    dashboard.tasks = {
+      pending: pendingTasks,
+      overdue: overdueTasks,
+      critical: criticalTasks,
+      averageResolutionMinutes,
+    };
+
+    const taxFilesResult = await listTaxFiles({ limit: 500 });
+    const taxFiles = taxFilesResult.ok ? taxFilesResult.files : [];
+
+    dashboard.taxFiles = {
+      critical: taxFiles.filter((f) => f.status === "CRITICAL").length,
+      attentionRequired: taxFiles.filter((f) => f.status === "ATTENTION_REQUIRED").length,
+      healthy: taxFiles.filter((f) => f.status === "HEALTHY").length,
+    };
+    dashboard.documents = {
+      total: totalDocuments,
+      tax: taxDocuments,
+      pendingReview: Math.max(0, taxDocuments - pendingReviewDocuments),
+      last30Days: documentsLast30Days,
+    };
+
     dashboard.metrics = buildMetrics(dashboard);
 
     const topRisk = latestScores

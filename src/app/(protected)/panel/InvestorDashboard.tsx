@@ -41,6 +41,7 @@ type UserDashboardData = {
   risk: { score: number | null; level: string | null };
   alerts: { open: number; critical: number };
   tax: { pendingDocuments: number; rejectedDocuments: number };
+  documents: { total: number; tax: number; pendingReview: number; last30Days: number };
   subscription: {
     status: string | null;
     plan: string | null;
@@ -225,6 +226,7 @@ export function InvestorDashboard() {
           <WidgetRisk risk={userDashboard.risk} />
           <WidgetAlerts alerts={userDashboard.alerts} />
           <WidgetTax tax={userDashboard.tax} />
+          <WidgetDocuments documents={userDashboard.documents} />
           <WidgetSubscription subscription={userDashboard.subscription} />
         </div>
       )}
@@ -392,5 +394,29 @@ function WidgetSubscription({ subscription }: { subscription: UserDashboardData[
         {subscription.expiresAt ? ` · vence ${new Date(subscription.expiresAt).toLocaleDateString("es-CL")}` : ""}
       </p>
     </article>
+  );
+}
+
+
+function WidgetDocuments({ documents }: { documents: UserDashboardData["documents"] }) {
+  return (
+    <Link
+      href="/documentos"
+      style={{ textDecoration: "none" }}
+    >
+      <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
+        <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
+          Centro Documental
+        </p>
+        <p style={{ color: documents.pendingReview > 0 ? "#B45309" : "#0F2A3D", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
+          {documents.total}
+        </p>
+        <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+          {documents.pendingReview > 0
+            ? `${documents.pendingReview} por revisar`
+            : `${documents.last30Days} subidos en los últimos 30 días`}
+        </p>
+      </article>
+    </Link>
   );
 }

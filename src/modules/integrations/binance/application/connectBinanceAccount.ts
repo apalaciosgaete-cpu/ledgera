@@ -9,6 +9,7 @@ import type {
   BinanceConnection,
   BinanceConnectionStatus,
 } from "@/modules/integrations/binance/domain/BinanceConnection";
+import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 
 type ConnectBinanceAccountInput = {
   userId:    string;
@@ -76,6 +77,17 @@ export async function connectBinanceAccount(
     apiSecretEncrypted,
     status:      "CONNECTED",
     permissions: readonlyValidation.permissions,
+  });
+
+  await recordTimelineEvent({
+    userId,
+    category: "CONNECTION",
+    severity: "SUCCESS",
+    title: "Exchange conectado",
+    description: "Conectaste tu cuenta Binance en modo solo lectura.",
+    entityType: "ExchangeConnection",
+    entityId: connection.id,
+    metadata: { exchange: "BINANCE", permissions: readonlyValidation.permissions },
   });
 
   return {

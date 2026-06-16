@@ -72,6 +72,59 @@ export default function ExpertDashboardPage() {
           display: "grid",
           gap: 16,
           gridTemplateColumns: "repeat(3, 1fr)",
+          marginBottom: 24,
+        }}
+      >
+        <Metric label="Smart Tax Score promedio" value={data.smartTax.averageScore} />
+        <Metric label="Usuarios deficientes" value={data.smartTax.deficientUsers} accent="danger" />
+        <Metric label="Usuarios óptimos" value={data.smartTax.optimalUsers} accent="good" />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 16,
+          gridTemplateColumns: "repeat(3, 1fr)",
+          marginBottom: 24,
+        }}
+      >
+        <Metric label="Recomendaciones activas" value={data.recommendations.active} />
+        <Metric label="Recomendaciones críticas" value={data.recommendations.critical} accent="danger" />
+        <Metric label="Usuarios con recomendaciones" value={data.recommendations.pendingUsers} accent="warn" />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 16,
+          gridTemplateColumns: "repeat(4, 1fr)",
+          marginBottom: 24,
+        }}
+      >
+        <Metric label="Tareas pendientes" value={data.tasks.pending} />
+        <Metric label="Tareas vencidas" value={data.tasks.overdue} accent="danger" />
+        <Metric label="Tareas críticas" value={data.tasks.critical} accent="danger" />
+        <Metric label="Tiempo promedio resolución (min)" value={data.tasks.averageResolutionMinutes} />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 16,
+          gridTemplateColumns: "repeat(3, 1fr)",
+          marginBottom: 24,
+        }}
+      >
+        <Metric label="Expedientes críticos" value={data.taxFiles.critical} accent="danger" />
+        <Metric label="Expedientes con atención" value={data.taxFiles.attentionRequired} accent="warn" />
+        <Metric label="Expedientes saludables" value={data.taxFiles.healthy} accent="good" />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 16,
+          gridTemplateColumns: "repeat(3, 1fr)",
           alignItems: "start",
         }}
       >
@@ -171,6 +224,10 @@ interface ExecutiveDashboardResponse {
     billing: { activeSubscriptions: number; pendingPayments: number; cancelledSubscriptions: number; estimatedMrr: number };
     operations: { degradedConnections: number; failedImports: number; disconnectedExchanges: number };
     audit: { criticalEvents: number; errorsToday: number; totalEventsToday: number };
+    smartTax: { averageScore: number; deficientUsers: number; optimalUsers: number };
+    recommendations: { active: number; critical: number; pendingUsers: number };
+    tasks: { pending: number; overdue: number; critical: number; averageResolutionMinutes: number };
+    taxFiles: { critical: number; attentionRequired: number; healthy: number };
     topRisk: Array<{ userId: string; score: number; level: string; evaluatedAt: string }>;
     latestAlerts: Array<{
       id: string;

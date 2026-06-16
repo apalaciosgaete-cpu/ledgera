@@ -16,6 +16,7 @@ import {
   getLatestBillingSubscriptionByUserId,
   updateBillingSubscription,
 } from "@/modules/billing/infrastructure/billingRepository";
+import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 
 export type ChangePlanInput = {
   userId: string;
@@ -139,6 +140,17 @@ export async function changePlan(
         activationSource: "billing:change_plan:downgrade",
         updated_at: now,
       },
+    });
+
+    await recordTimelineEvent({
+      userId: input.userId,
+      category: "BILLING",
+      severity: "INFO",
+      title: "Plan cambiado",
+      description: `Tu plan fue cambiado a Free.`,
+      entityType: "BillingSubscription",
+      entityId: latestSubscription?.id ?? null,
+      metadata: { previousPlan: currentPlan, newPlan: "BASICO" },
     });
 
     return {

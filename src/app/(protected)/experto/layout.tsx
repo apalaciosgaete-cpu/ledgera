@@ -12,6 +12,10 @@ const links = [
   { label: "Declaraciones", href: "/experto/declaraciones" },
   { label: "Verificaciones", href: "/experto/verificaciones" },
   { label: "Reportes", href: "/experto/reportes" },
+  { label: "Recomendaciones", href: "/experto/recomendaciones" },
+  { label: "Tareas", href: "/experto/tareas" },
+  { label: "Expedientes", href: "/experto/expedientes" },
+  { label: "Documentos", href: "/experto/documentos" },
 ];
 
 export default function ExpertoLayout({ children }: { children: React.ReactNode }) {

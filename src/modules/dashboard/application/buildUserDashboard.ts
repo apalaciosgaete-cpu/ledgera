@@ -13,6 +13,12 @@ export interface UserDashboard {
     pendingDocuments: number;
     rejectedDocuments: number;
   };
+  documents: {
+    total: number;
+    tax: number;
+    pendingReview: number;
+    last30Days: number;
+  };
   subscription: {
     status: string | null;
     plan: string | null;
@@ -25,7 +31,9 @@ export async function buildUserDashboard(
   userId: string,
 ): Promise<{ ok: true; dashboard: UserDashboard } | { ok: false; message: string }> {
   try {
-    const [latestScore, openAlerts, criticalAlerts, pendingDocuments, rejectedDocuments, latestSubscription, pendingPayment] =
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [latestScore, openAlerts, criticalAlerts, pendingDocuments, rejectedDocuments, documentTotal, documentTax, documentPendingReview, documentLast30Days, latestSubscription, pendingPayment] =
       await prisma.$transaction([
         prisma.taxRiskScore.findFirst({
           where: { userId },
@@ -37,6 +45,10 @@ export async function buildUserDashboard(
           where: { userId, status: { in: ["DRAFT", "PENDING"] } },
         }),
         prisma.taxDocument.count({ where: { userId, status: "REJECTED" } }),
+        prisma.document.count({ where: { userId, status: { not: "DELETED" } } }),
+        prisma.document.count({ where: { userId, status: { not: "DELETED" }, category: "TAX" } }),
+        prisma.document.count({ where: { userId, status: "ACTIVE", category: "TAX" } }),
+        prisma.document.count({ where: { userId, status: { not: "DELETED" }, createdAt: { gte: thirtyDaysAgo } } }),
         prisma.billingSubscription.findFirst({
           where: { userId },
           orderBy: { createdAt: "desc" },
@@ -64,6 +76,12 @@ export async function buildUserDashboard(
       tax: {
         pendingDocuments,
         rejectedDocuments,
+      },
+      documents: {
+        total: documentTotal,
+        tax: documentTax,
+        pendingReview: Math.max(0, documentTax - documentPendingReview),
+        last30Days: documentLast30Days,
       },
       subscription: {
         status: latestSubscription?.status ?? null,

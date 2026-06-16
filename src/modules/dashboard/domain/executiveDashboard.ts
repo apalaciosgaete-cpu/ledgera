@@ -46,6 +46,38 @@ export interface ExecutiveDashboard {
     errorsToday: number;
     totalEventsToday: number;
   };
+
+  smartTax: {
+    averageScore: number;
+    deficientUsers: number;
+    optimalUsers: number;
+  };
+
+  recommendations: {
+    active: number;
+    critical: number;
+    pendingUsers: number;
+  };
+
+  tasks: {
+    pending: number;
+    overdue: number;
+    critical: number;
+    averageResolutionMinutes: number;
+  };
+
+  taxFiles: {
+    critical: number;
+    attentionRequired: number;
+    healthy: number;
+  };
+
+  documents: {
+    total: number;
+    tax: number;
+    pendingReview: number;
+    last30Days: number;
+  };
 }
 
 export interface RiskRow {
@@ -105,6 +137,23 @@ export const DASHBOARD_METRIC_KEYS = [
   "critical_audit_events",
   "errors_today",
   "total_audit_events_today",
+  "smart_tax_average",
+  "smart_tax_deficient_users",
+  "smart_tax_optimal_users",
+  "active_recommendations",
+  "critical_recommendations",
+  "users_with_pending_recommendations",
+  "pending_tasks",
+  "overdue_tasks",
+  "critical_tasks",
+  "average_resolution_minutes",
+  "critical_tax_files",
+  "attention_required_tax_files",
+  "healthy_tax_files",
+  "total_documents",
+  "tax_documents",
+  "documents_pending_review",
+  "documents_last_30_days",
 ] as const;
 
 export type DashboardMetricKey = (typeof DASHBOARD_METRIC_KEYS)[number];
@@ -119,6 +168,11 @@ export function createEmptyDashboard(now = new Date()): ExecutiveDashboard {
     billing: { activeSubscriptions: 0, pendingPayments: 0, cancelledSubscriptions: 0, estimatedMrr: 0 },
     operations: { degradedConnections: 0, failedImports: 0, disconnectedExchanges: 0 },
     audit: { criticalEvents: 0, errorsToday: 0, totalEventsToday: 0 },
+    smartTax: { averageScore: 0, deficientUsers: 0, optimalUsers: 0 },
+    recommendations: { active: 0, critical: 0, pendingUsers: 0 },
+    tasks: { pending: 0, overdue: 0, critical: 0, averageResolutionMinutes: 0 },
+    taxFiles: { critical: 0, attentionRequired: 0, healthy: 0 },
+    documents: { total: 0, tax: 0, pendingReview: 0, last30Days: 0 },
   };
 }
 
@@ -144,5 +198,22 @@ export function buildMetrics(dashboard: ExecutiveDashboard): ExecutiveMetric[] {
     { key: "critical_audit_events", label: "Eventos críticos", value: dashboard.audit.criticalEvents },
     { key: "errors_today", label: "Errores últimas 24h", value: dashboard.audit.errorsToday },
     { key: "total_audit_events_today", label: "Eventos totales hoy", value: dashboard.audit.totalEventsToday },
+    { key: "smart_tax_average", label: "Smart Tax Score promedio", value: dashboard.smartTax.averageScore },
+    { key: "smart_tax_deficient_users", label: "Usuarios deficientes", value: dashboard.smartTax.deficientUsers },
+    { key: "smart_tax_optimal_users", label: "Usuarios óptimos", value: dashboard.smartTax.optimalUsers },
+    { key: "active_recommendations", label: "Recomendaciones activas", value: dashboard.recommendations.active },
+    { key: "critical_recommendations", label: "Recomendaciones críticas", value: dashboard.recommendations.critical },
+    { key: "users_with_pending_recommendations", label: "Usuarios con recomendaciones pendientes", value: dashboard.recommendations.pendingUsers },
+    { key: "pending_tasks", label: "Tareas pendientes", value: dashboard.tasks.pending },
+    { key: "overdue_tasks", label: "Tareas vencidas", value: dashboard.tasks.overdue },
+    { key: "critical_tasks", label: "Tareas críticas", value: dashboard.tasks.critical },
+    { key: "average_resolution_minutes", label: "Tiempo promedio resolución (min)", value: dashboard.tasks.averageResolutionMinutes },
+    { key: "critical_tax_files", label: "Expedientes críticos", value: dashboard.taxFiles.critical },
+    { key: "attention_required_tax_files", label: "Expedientes con atención", value: dashboard.taxFiles.attentionRequired },
+    { key: "healthy_tax_files", label: "Expedientes saludables", value: dashboard.taxFiles.healthy },
+    { key: "total_documents", label: "Documentos totales", value: dashboard.documents.total },
+    { key: "tax_documents", label: "Documentos tributarios", value: dashboard.documents.tax },
+    { key: "documents_pending_review", label: "Documentos por revisar", value: dashboard.documents.pendingReview },
+    { key: "documents_last_30_days", label: "Documentos últimos 30 días", value: dashboard.documents.last30Days },
   ];
 }

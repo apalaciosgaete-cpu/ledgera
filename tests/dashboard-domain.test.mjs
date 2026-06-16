@@ -38,10 +38,27 @@ function loadTsModule(relativePath, mocks = {}) {
 const domain = loadTsModule("src/modules/dashboard/domain/executiveDashboard.ts");
 
 test("Dashboard domain defines metric keys", () => {
-  assert.equal(domain.DASHBOARD_METRIC_KEYS.length, 20);
+  assert.equal(domain.DASHBOARD_METRIC_KEYS.length, 37);
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("total_documents"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("tax_documents"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("documents_pending_review"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("documents_last_30_days"));
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("open_alerts"));
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("average_risk_score"));
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("estimated_mrr"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("smart_tax_average"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("smart_tax_deficient_users"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("smart_tax_optimal_users"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("active_recommendations"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("critical_recommendations"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("users_with_pending_recommendations"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("pending_tasks"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("overdue_tasks"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("critical_tasks"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("average_resolution_minutes"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("critical_tax_files"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("attention_required_tax_files"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("healthy_tax_files"));
 });
 
 test("createEmptyDashboard returns zeroed structure", () => {
@@ -53,6 +70,17 @@ test("createEmptyDashboard returns zeroed structure", () => {
   assert.equal(dashboard.billing.activeSubscriptions, 0);
   assert.equal(dashboard.operations.degradedConnections, 0);
   assert.equal(dashboard.audit.criticalEvents, 0);
+  assert.equal(dashboard.smartTax.averageScore, 0);
+  assert.equal(dashboard.recommendations.active, 0);
+  assert.equal(dashboard.recommendations.critical, 0);
+  assert.equal(dashboard.recommendations.pendingUsers, 0);
+  assert.equal(dashboard.tasks.pending, 0);
+  assert.equal(dashboard.tasks.overdue, 0);
+  assert.equal(dashboard.tasks.critical, 0);
+  assert.equal(dashboard.tasks.averageResolutionMinutes, 0);
+  assert.equal(dashboard.taxFiles.critical, 0);
+  assert.equal(dashboard.taxFiles.attentionRequired, 0);
+  assert.equal(dashboard.taxFiles.healthy, 0);
   assert.equal(dashboard.metrics.length, 0);
   assert.equal(typeof dashboard.generatedAt, "object");
   assert.ok(Number.isFinite(dashboard.generatedAt.getTime()));

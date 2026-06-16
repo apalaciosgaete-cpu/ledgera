@@ -19,6 +19,10 @@ const EVENT_LABEL: Record<string, string> = {
   TAX_PERIOD_CLOSED:          "Período tributario cerrado",
   REPORT_ISSUED:              "Reporte emitido",
   ROLLBACK_APPLIED:           "Reversión aplicada",
+  DOCUMENT_UPLOADED:          "Documento subido",
+  DOCUMENT_ARCHIVED:          "Documento archivado",
+  DOCUMENT_DOWNLOADED:        "Documento descargado",
+  DOCUMENT_DELETED:           "Documento eliminado",
 };
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
@@ -254,9 +258,60 @@ async function buildPortfolioTimeline(id: string, userId: string): Promise<Timel
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
+async function buildDocumentTimeline(id: string, userId: string): Promise<TimelineEvent[]> {
+  const events: TimelineEvent[] = [];
+
+  const document = await prisma.document.findFirst({ where: { id, userId } });
+  if (!document) return [];
+
+  events.push({
+    at:       document.createdAt.toISOString(),
+    type:     "DOCUMENT_UPLOADED",
+    label:    EVENT_LABEL.DOCUMENT_UPLOADED,
+    actor:    document.uploadedBy ?? "Usuario",
+    metadata: { category: document.category, type: document.type, fileName: document.fileName, fileSize: document.fileSize },
+  });
+
+  const auditEvents = await prisma.auditEvent.findMany({
+    where:   { entityType: "Document", entityId: id, userId },
+    orderBy: { createdAt: "asc" },
+    select:  { event: true, createdAt: true, actorId: true },
+  });
+
+  for (const ae of auditEvents) {
+    if (ae.event === "document_archived") {
+      events.push({
+        at:       ae.createdAt.toISOString(),
+        type:     "DOCUMENT_ARCHIVED",
+        label:    EVENT_LABEL.DOCUMENT_ARCHIVED,
+        actor:    ae.actorId ?? "Sistema",
+        metadata: {},
+      });
+    } else if (ae.event === "document_downloaded") {
+      events.push({
+        at:       ae.createdAt.toISOString(),
+        type:     "DOCUMENT_DOWNLOADED",
+        label:    EVENT_LABEL.DOCUMENT_DOWNLOADED,
+        actor:    ae.actorId ?? "Usuario",
+        metadata: {},
+      });
+    } else if (ae.event === "document_deleted") {
+      events.push({
+        at:       ae.createdAt.toISOString(),
+        type:     "DOCUMENT_DELETED",
+        label:    EVENT_LABEL.DOCUMENT_DELETED,
+        actor:    ae.actorId ?? "Usuario",
+        metadata: {},
+      });
+    }
+  }
+
+  return events.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+}
+
 export async function buildEntityTimeline(
   entityId:   string,
-  entityType: "STAGING" | "BANK" | "PORTFOLIO",
+  entityType: "STAGING" | "BANK" | "PORTFOLIO" | "DOCUMENT",
   userId:     string,
 ): Promise<EntityTimelineResult> {
   let events: TimelineEvent[] = [];
@@ -264,6 +319,7 @@ export async function buildEntityTimeline(
   if      (entityType === "STAGING")   events = await buildStagingTimeline(entityId, userId);
   else if (entityType === "BANK")      events = await buildBankTimeline(entityId, userId);
   else if (entityType === "PORTFOLIO") events = await buildPortfolioTimeline(entityId, userId);
+  else if (entityType === "DOCUMENT")  events = await buildDocumentTimeline(entityId, userId);
 
   return { entityId, entityType, events };
 }

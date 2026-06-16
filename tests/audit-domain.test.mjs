@@ -38,7 +38,8 @@ function loadTsModule(relativePath, mocks = {}) {
 const domain = loadTsModule("src/modules/audit/domain/audit.ts");
 
 test("Audit domain defines categories", () => {
-  assert.equal(domain.AUDIT_CATEGORIES.length, 12);
+  assert.equal(domain.AUDIT_CATEGORIES.length, 13);
+  assert.ok(domain.AUDIT_CATEGORIES.includes("DOCUMENT"));
   assert.equal(domain.AUDIT_CATEGORIES[0], "AUTH");
   assert.ok(domain.AUDIT_CATEGORIES.includes("RISK"));
   assert.ok(domain.AUDIT_CATEGORIES.includes("SECURITY"));

@@ -13,7 +13,11 @@ export type TimelineEventType =
   | "TAX_PERIOD_CLOSED"
   | "REPORT_ISSUED"
   | "ROLLBACK_APPLIED"
-  | "INTEGRITY_VERIFIED";
+  | "INTEGRITY_VERIFIED"
+  | "DOCUMENT_UPLOADED"
+  | "DOCUMENT_ARCHIVED"
+  | "DOCUMENT_DOWNLOADED"
+  | "DOCUMENT_DELETED";
 
 export type TimelineEvent = {
   at:              string;
@@ -26,6 +30,6 @@ export type TimelineEvent = {
 
 export type EntityTimelineResult = {
   entityId:   string;
-  entityType: "STAGING" | "BANK" | "PORTFOLIO";
+  entityType: "STAGING" | "BANK" | "PORTFOLIO" | "DOCUMENT";
   events:     TimelineEvent[];
 };

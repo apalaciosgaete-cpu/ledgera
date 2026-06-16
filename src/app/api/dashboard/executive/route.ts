@@ -73,6 +73,10 @@ export async function GET(request: NextRequest) {
         billing: snapshot.dashboard.billing,
         operations: snapshot.dashboard.operations,
         audit: snapshot.dashboard.audit,
+        smartTax: snapshot.dashboard.smartTax,
+        recommendations: snapshot.dashboard.recommendations,
+        tasks: snapshot.dashboard.tasks,
+        taxFiles: snapshot.dashboard.taxFiles,
         topRisk: snapshot.topRisk.map((r) => ({
           ...r,
           evaluatedAt: r.evaluatedAt.toISOString(),

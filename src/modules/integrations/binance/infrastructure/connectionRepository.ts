@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 import type { BinanceConnection } from "@/modules/integrations/binance/domain/BinanceConnection";
 
 type PrismaConnection = {
@@ -112,6 +113,17 @@ export async function disconnectBinanceConnection(
       apiSecretEncrypted: "",
       permissions:        JSON.stringify([]),
     },
+  });
+
+  await recordTimelineEvent({
+    userId,
+    category: "CONNECTION",
+    severity: "WARNING",
+    title: "Exchange desconectado",
+    description: "Desconectaste tu cuenta Binance.",
+    entityType: "ExchangeConnection",
+    entityId: existing.id,
+    metadata: { exchange: "BINANCE" },
   });
 
   return mapExchangeConnectionToBinanceConnection(connection);

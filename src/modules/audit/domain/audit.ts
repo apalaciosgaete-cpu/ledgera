@@ -10,7 +10,11 @@ export type AuditCategory =
   | "CONNECTION"
   | "OPERATION"
   | "SECURITY"
-  | "ADMIN";
+  | "COMPLIANCE"
+  | "DOCUMENT"
+  | "ADMIN"
+  | "AUDIT"
+  | "AI";
 
 export type AuditSeverity = "INFO" | "WARNING" | "ERROR" | "CRITICAL";
 
@@ -60,7 +64,11 @@ export const AUDIT_CATEGORIES: AuditCategory[] = [
   "CONNECTION",
   "OPERATION",
   "SECURITY",
+  "COMPLIANCE",
+  "DOCUMENT",
   "ADMIN",
+  "AUDIT",
+  "AI",
 ];
 
 export const AUDIT_SEVERITIES: AuditSeverity[] = ["INFO", "WARNING", "ERROR", "CRITICAL"];

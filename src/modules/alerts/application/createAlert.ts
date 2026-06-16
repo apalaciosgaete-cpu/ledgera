@@ -7,6 +7,7 @@ import {
 import { createAlert as persistAlert } from "@/modules/alerts/infrastructure/alertRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
+import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 
 export type CreateAlertResult =
   | { ok: true; alert: Alert }
@@ -57,6 +58,17 @@ export async function createAlert(input: CreateAlertInput): Promise<CreateAlertR
     event: "alert_created",
     description: `Alerta ${alert.severity} creada: ${alert.title}`,
     result: "SUCCESS",
+    entityType: "Alert",
+    entityId: alert.id,
+    metadata: { category: alert.category, severity: alert.severity, source: alert.source },
+  });
+
+  await recordTimelineEvent({
+    userId: alert.userId,
+    category: "ALERT",
+    severity: alert.severity === "CRITICAL" ? "CRITICAL" : alert.severity === "HIGH" ? "WARNING" : "INFO",
+    title: "Alerta creada",
+    description: alert.title,
     entityType: "Alert",
     entityId: alert.id,
     metadata: { category: alert.category, severity: alert.severity, source: alert.source },
