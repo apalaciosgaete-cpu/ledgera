@@ -3,7 +3,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
@@ -30,9 +29,13 @@ function LogoutIcon() {
 }
 
 const baseNavItems: { href: string; label: string }[] = [
-  { href: "/panel",         label: "Inicio" },
-  { href: "/mi-situacion",  label: "Mi Situación" },
-  { href: "/inversiones",   label: "Inversiones" },
+  { href: "/panel", label: "Inicio" },
+  { href: "/ai-center", label: "Centro AI" },
+  { href: "/asistente", label: "Asistente" },
+  { href: "/memoria-tributaria", label: "Memoria" },
+  { href: "/mi-perfil-tributario", label: "Perfil AI" },
+  { href: "/mi-situacion", label: "Mi Situación" },
+  { href: "/inversiones", label: "Inversiones" },
   { href: "/integraciones", label: "Conexiones" },
   { href: "/notificaciones", label: "Alertas" },
 ];
@@ -40,57 +43,51 @@ const baseNavItems: { href: string; label: string }[] = [
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
   personal: baseNavItems,
   contador: baseNavItems,
-  empresa:  baseNavItems,
-  admin:    baseNavItems,
+  empresa: baseNavItems,
+  admin: baseNavItems,
 };
 
-
-
 const roleTokens: Record<string, {
-  label:          string;
-  badgeBg:        string;
-  badgeColor:     string;
+  label: string;
+  badgeBg: string;
+  badgeColor: string;
   avatarGradient: string;
 }> = {
   personal: {
-    label:          "Personal",
-    badgeBg:        "rgba(22,163,74,0.14)",
-    badgeColor:     "#4ADE80",
+    label: "Personal",
+    badgeBg: "rgba(22,163,74,0.14)",
+    badgeColor: "#4ADE80",
     avatarGradient: "linear-gradient(135deg, #16A34A 0%, #0F766E 100%)",
   },
   contador: {
-    label:          "Profesional",
-    badgeBg:        "rgba(14,165,233,0.14)",
-    badgeColor:     "#7DD3FC",
+    label: "Profesional",
+    badgeBg: "rgba(14,165,233,0.14)",
+    badgeColor: "#7DD3FC",
     avatarGradient: "linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%)",
   },
   empresa: {
-    label:          "Empresa",
-    badgeBg:        "rgba(99,102,241,0.14)",
-    badgeColor:     "#A5B4FC",
+    label: "Empresa",
+    badgeBg: "rgba(99,102,241,0.14)",
+    badgeColor: "#A5B4FC",
     avatarGradient: "linear-gradient(135deg, #6366F1 0%, #4338CA 100%)",
   },
   admin: {
-    label:          "Admin",
-    badgeBg:        "rgba(239,68,68,0.16)",
-    badgeColor:     "#F87171",
+    label: "Admin",
+    badgeBg: "rgba(239,68,68,0.16)",
+    badgeColor: "#F87171",
     avatarGradient: "linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)",
   },
 };
 
 function ProtectedShell({ children }: { children: React.ReactNode }) {
-  const pathname         = usePathname();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
-
-
 
   if (!user) return null;
 
-  const role         = (user as { role?: string })?.role ?? "personal";
-  const navItems     = navItemsByRole[role] ?? navItemsByRole.personal;
-
-
-  const token    = roleTokens[role] ?? roleTokens.personal;
+  const role = (user as { role?: string })?.role ?? "personal";
+  const navItems = navItemsByRole[role] ?? navItemsByRole.personal;
+  const token = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
 
   async function handleLogout() {
@@ -98,46 +95,42 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     window.location.href = "/bienvenida";
   }
 
-
-
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-
-
   return (
     <div style={{ minHeight: "100vh", background: colors.bgApp, fontFamily: fonts.body }}>
       <header style={{
-        background:   "#071B28",
+        background: "#071B28",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
-        boxShadow:    "0 10px 30px rgba(2,6,23,0.16)",
-        position:     "sticky",
-        top:          0,
-        zIndex:       50,
-        height:       "76px",
-        overflowX:    "clip",
+        boxShadow: "0 10px 30px rgba(2,6,23,0.16)",
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        height: "76px",
+        overflowX: "clip",
       }}>
         <div style={{
-          maxWidth:       "1400px",
-          margin:         "0 auto",
-          padding:        "0 24px",
-          height:         "100%",
-          display:        "flex",
-          alignItems:     "center",
+          maxWidth: "1400px",
+          margin: "0 auto",
+          padding: "0 24px",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
           justifyContent: "space-between",
-          gap:            "22px",
-          minWidth:       0,
+          gap: "22px",
+          minWidth: 0,
         }}>
           <Link
             href="/panel"
             aria-label="Ir al consolidado LEDGERA"
             style={{
-              alignItems:     "center",
-              display:        "flex",
-              flexShrink:     0,
+              alignItems: "center",
+              display: "flex",
+              flexShrink: 0,
               justifyContent: "center",
-              minWidth:       "220px",
+              minWidth: "220px",
               textDecoration: "none",
             }}
           >
@@ -145,13 +138,13 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav style={{
-            display:        "flex",
-            alignItems:     "center",
-            gap:            "6px",
-            flex:           1,
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            flex: 1,
             justifyContent: "center",
-            minWidth:       0,
-            overflowX:      "auto",
+            minWidth: 0,
+            overflowX: "auto",
             scrollbarWidth: "none",
           }}>
             {navItems.map(item => {
@@ -161,21 +154,21 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   style={{
-                    display:        "flex",
-                    alignItems:     "center",
+                    display: "flex",
+                    alignItems: "center",
                     justifyContent: "center",
-                    height:         "38px",
-                    padding:        "0 16px",
-                    borderRadius:   "999px",
-                    border:         active ? "1px solid rgba(74,222,128,0.34)" : "1px solid transparent",
-                    fontSize:       "14px",
-                    fontWeight:     active ? 800 : 600,
-                    fontFamily:     fonts.body,
+                    height: "38px",
+                    padding: "0 16px",
+                    borderRadius: "999px",
+                    border: active ? "1px solid rgba(74,222,128,0.34)" : "1px solid transparent",
+                    fontSize: "14px",
+                    fontWeight: active ? 800 : 600,
+                    fontFamily: fonts.body,
                     textDecoration: "none",
-                    whiteSpace:     "nowrap",
-                    background:     active ? "rgba(22,163,74,0.18)" : "transparent",
-                    color:          active ? "#F8FAFC" : "#94A3B8",
-                    transition:     "all 0.15s ease",
+                    whiteSpace: "nowrap",
+                    background: active ? "rgba(22,163,74,0.18)" : "transparent",
+                    color: active ? "#F8FAFC" : "#94A3B8",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {item.label}
