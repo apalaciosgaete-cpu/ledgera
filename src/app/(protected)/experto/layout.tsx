@@ -13,6 +13,7 @@ const links = [
   { label: "Verificaciones", href: "/experto/verificaciones" },
   { label: "Reportes", href: "/experto/reportes" },
   { label: "Memoria Tributaria", href: "/experto/memoria-tributaria" },
+  { label: "Perfiles Adaptativos", href: "/experto/perfiles-adaptativos" },
   { label: "Recomendaciones", href: "/experto/recomendaciones" },
   { label: "Tareas", href: "/experto/tareas" },
   { label: "Expedientes", href: "/experto/expedientes" },

@@ -27,6 +27,11 @@ const areas = [
     desc: "Visión completa e inteligente del historial tributario con insights.",
   },
   {
+    title: "Perfiles Adaptativos",
+    href: "/experto/perfiles-adaptativos",
+    desc: "Distribución de perfiles de usuarios según su comportamiento tributario.",
+  },
+  {
     title: "Declaraciones",
     href: "/experto/declaraciones",
     desc: "Cadena de custodia de declaraciones juradas.",

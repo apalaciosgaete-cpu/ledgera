@@ -65,6 +65,10 @@ export async function buildExecutiveDashboard(options?: {
       taxDocuments,
       pendingReviewDocuments,
       documentsLast30Days,
+      profileOptimized,
+      profileStandard,
+      profileAttentionRequired,
+      profileCritical,
     ] = await prisma.$transaction([
       prisma.alert.count({ where: { status: "OPEN" } }),
       prisma.alert.count({ where: { status: "OPEN", severity: "CRITICAL" } }),
@@ -157,6 +161,11 @@ export async function buildExecutiveDashboard(options?: {
       prisma.document.count({
         where: { status: { not: "DELETED" }, createdAt: { gte: subtractDays(now, 30) } },
       }),
+      // Adaptive profile metrics
+      prisma.adaptiveTaxProfile.count({ where: { profileType: "OPTIMIZED" } }),
+      prisma.adaptiveTaxProfile.count({ where: { profileType: "STANDARD" } }),
+      prisma.adaptiveTaxProfile.count({ where: { profileType: "ATTENTION_REQUIRED" } }),
+      prisma.adaptiveTaxProfile.count({ where: { profileType: "CRITICAL" } }),
     ]);
 
     // Latest risk score per user
@@ -264,6 +273,13 @@ export async function buildExecutiveDashboard(options?: {
       tax: taxDocuments,
       pendingReview: Math.max(0, taxDocuments - pendingReviewDocuments),
       last30Days: documentsLast30Days,
+    };
+
+    dashboard.adaptiveProfiles = {
+      optimized: profileOptimized,
+      standard: profileStandard,
+      attentionRequired: profileAttentionRequired,
+      critical: profileCritical,
     };
 
     dashboard.metrics = buildMetrics(dashboard);

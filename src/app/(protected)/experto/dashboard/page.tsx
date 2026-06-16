@@ -124,6 +124,20 @@ export default function ExpertDashboardPage() {
         style={{
           display: "grid",
           gap: 16,
+          gridTemplateColumns: "repeat(4, 1fr)",
+          marginBottom: 24,
+        }}
+      >
+        <Metric label="Perfiles Optimizados" value={data.adaptiveProfiles.optimized} accent="good" />
+        <Metric label="Perfiles Estándar" value={data.adaptiveProfiles.standard} />
+        <Metric label="Perfiles con Atención" value={data.adaptiveProfiles.attentionRequired} accent="warn" />
+        <Metric label="Perfiles Críticos" value={data.adaptiveProfiles.critical} accent="danger" />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 16,
           gridTemplateColumns: "repeat(3, 1fr)",
           alignItems: "start",
         }}
@@ -228,6 +242,7 @@ interface ExecutiveDashboardResponse {
     recommendations: { active: number; critical: number; pendingUsers: number };
     tasks: { pending: number; overdue: number; critical: number; averageResolutionMinutes: number };
     taxFiles: { critical: number; attentionRequired: number; healthy: number };
+    adaptiveProfiles: { optimized: number; standard: number; attentionRequired: number; critical: number };
     topRisk: Array<{ userId: string; score: number; level: string; evaluatedAt: string }>;
     latestAlerts: Array<{
       id: string;

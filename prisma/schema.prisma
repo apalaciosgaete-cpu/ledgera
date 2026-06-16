@@ -570,6 +570,8 @@ model users {
   activatedAt             DateTime? @db.Timestamptz(6)
   activationSource        String?
 
+  adaptiveTaxProfile      AdaptiveTaxProfile?
+
   rut                     String?
   phone                   String?
   address                 String?
@@ -1450,6 +1452,34 @@ model AutomationProposal {
   @@index([sourceEntity, sourceEntityId])
 
   @@map("automation_proposals")
+}
+
+model AdaptiveTaxProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+
+  complianceScore Float @default(0)
+
+  complianceBehavior String
+  recommendationBehavior String
+  taskBehavior String
+  documentBehavior String
+  riskBehavior String
+
+  profileType String
+
+  confidence Float @default(0)
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([profileType])
+  @@map("adaptive_tax_profiles")
 }
 
 model AIConversation {

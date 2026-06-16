@@ -78,6 +78,13 @@ export interface ExecutiveDashboard {
     pendingReview: number;
     last30Days: number;
   };
+
+  adaptiveProfiles: {
+    optimized: number;
+    standard: number;
+    attentionRequired: number;
+    critical: number;
+  };
 }
 
 export interface RiskRow {
@@ -154,6 +161,10 @@ export const DASHBOARD_METRIC_KEYS = [
   "tax_documents",
   "documents_pending_review",
   "documents_last_30_days",
+  "profiles_optimized",
+  "profiles_standard",
+  "profiles_attention_required",
+  "profiles_critical",
 ] as const;
 
 export type DashboardMetricKey = (typeof DASHBOARD_METRIC_KEYS)[number];
@@ -173,6 +184,7 @@ export function createEmptyDashboard(now = new Date()): ExecutiveDashboard {
     tasks: { pending: 0, overdue: 0, critical: 0, averageResolutionMinutes: 0 },
     taxFiles: { critical: 0, attentionRequired: 0, healthy: 0 },
     documents: { total: 0, tax: 0, pendingReview: 0, last30Days: 0 },
+    adaptiveProfiles: { optimized: 0, standard: 0, attentionRequired: 0, critical: 0 },
   };
 }
 
@@ -215,5 +227,9 @@ export function buildMetrics(dashboard: ExecutiveDashboard): ExecutiveMetric[] {
     { key: "tax_documents", label: "Documentos tributarios", value: dashboard.documents.tax },
     { key: "documents_pending_review", label: "Documentos por revisar", value: dashboard.documents.pendingReview },
     { key: "documents_last_30_days", label: "Documentos últimos 30 días", value: dashboard.documents.last30Days },
+    { key: "profiles_optimized", label: "Perfiles optimizados", value: dashboard.adaptiveProfiles.optimized },
+    { key: "profiles_standard", label: "Perfiles estándar", value: dashboard.adaptiveProfiles.standard },
+    { key: "profiles_attention_required", label: "Perfiles con atención", value: dashboard.adaptiveProfiles.attentionRequired },
+    { key: "profiles_critical", label: "Perfiles críticos", value: dashboard.adaptiveProfiles.critical },
   ];
 }
