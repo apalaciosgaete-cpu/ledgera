@@ -22,6 +22,11 @@ const areas = [
     desc: "Exportación CSV, PDF y respaldo ante fiscalización.",
   },
   {
+    title: "Memoria Tributaria",
+    href: "/experto/memoria-tributaria",
+    desc: "Visión completa e inteligente del historial tributario con insights.",
+  },
+  {
     title: "Declaraciones",
     href: "/experto/declaraciones",
     desc: "Cadena de custodia de declaraciones juradas.",

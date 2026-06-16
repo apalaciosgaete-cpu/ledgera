@@ -375,6 +375,7 @@ export default function ExpertoTributarioPage() {
 
       <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginBottom: 20 }}>
         {[
+          { label: "Memoria Tributaria", href: "/experto/memoria-tributaria", desc: "Historial inteligente con insights" },
           { label: "Operaciones", href: "/experto/operaciones", desc: "Revisar eventos y ledger" },
           { label: "Declaraciones", href: "/experto/declaraciones", desc: "DDJJ y cadena de custodia" },
           { label: "Reportes", href: "/experto/reportes", desc: "PDF y exportaciones" },

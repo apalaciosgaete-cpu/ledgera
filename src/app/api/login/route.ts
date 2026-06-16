@@ -101,11 +101,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("[login] Usuario encontrado:", user.id, "status:", user.status, "2FA:", user.twoFactorEnabled, "hash length:", user.passwordHash?.length);
-
     const passwordIsValid = await verifyPassword(password, user.passwordHash);
-
-    console.log("[login] Password válida:", passwordIsValid);
 
     if (!passwordIsValid) {
       return NextResponse.json(
