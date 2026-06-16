@@ -41,7 +41,7 @@ export async function buildLearningProfile(userId: string): Promise<{ ok: true; 
       description: "Perfil de aprendizaje tributario generado.",
       result: "SUCCESS",
       entityType: "LearningProfile",
-      metadata: profile,
+      metadata: { ...profile, generatedAt: profile.generatedAt.toISOString() },
     });
 
     return { ok: true, profile };

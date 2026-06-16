@@ -25,7 +25,7 @@ const SECTION_PREFIX: Record<Section, string> = {
   persona:    "PN_",
   seguridad:  "SECURITY_",
   facturacion: "",
-  preferencias: "",
+  preferencias: "PREF_",
   auditoria:  "",
   administracion: "",
   identidadTributaria: "",
@@ -587,6 +587,45 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
             )}
           </SectionCard>
           <SaveBar onSave={saveTaxProfile} saving={taxSaving} saved={taxSaved} onReset={() => { if (taxProfile) setTaxDraft({ documentType: taxProfile.documentType, rut: taxProfile.rut, legalName: taxProfile.legalName, businessActivity: taxProfile.businessActivity, address: taxProfile.address, commune: taxProfile.commune, city: taxProfile.city, dteEmail: taxProfile.dteEmail }); }} error={taxError} />
+        </>
+      )}
+
+      {/* PREFERENCIAS */}
+      {section === "preferencias" && (
+        <>
+          <SectionCard title="Idioma y región" description="Configura el idioma, formato de fechas y moneda de visualización">
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <Field label="Idioma de la interfaz" hint="Afecta todos los textos y etiquetas de la plataforma.">
+                <SelectInput value={str("PREF_LANGUAGE") || "es-CL"} onChange={v => set("PREF_LANGUAGE", v)} options={[{ value: "es-CL", label: "Español (Chile)" }, { value: "en-US", label: "English (US)" }]} />
+              </Field>
+              <Field label="Moneda de visualización" hint="Los montos tributarios siempre se exportan en CLP.">
+                <SelectInput value={str("PREF_CURRENCY") || "CLP"} onChange={v => set("PREF_CURRENCY", v)} options={[{ value: "CLP", label: "CLP — Peso Chileno" }, { value: "USD", label: "USD — Dólar" }]} />
+              </Field>
+              <Field label="Formato de fecha" hint="Afecta cómo se muestran las fechas en tablas y reportes.">
+                <SelectInput value={str("PREF_DATE_FORMAT") || "dd/MM/yyyy"} onChange={v => set("PREF_DATE_FORMAT", v)} options={[{ value: "dd/MM/yyyy", label: "dd/MM/yyyy (Ej: 25/12/2026)" }, { value: "MM/dd/yyyy", label: "MM/dd/yyyy (Ej: 12/25/2026)" }, { value: "yyyy-MM-dd", label: "yyyy-MM-dd (Ej: 2026-12-25)" }]} />
+              </Field>
+            </div>
+          </SectionCard>
+          <SectionCard title="Notificaciones" description="Controla qué alertas y recordatorios recibes">
+            <ToggleRow label="Alertas de vencimiento tributario" hint="Recordatorios de plazos de declaración ante el SII (31 de diciembre, etc.)." value={bool("PREF_NOTIFY_TAX_DEADLINE")} onChange={v => set("PREF_NOTIFY_TAX_DEADLINE", String(v))} />
+            <ToggleRow label="Alertas de inconsistencias" hint="Notificación cuando se detectan ventas sin evento tributario o eventos huérfanos." value={bool("PREF_NOTIFY_INCONSISTENCIES")} onChange={v => set("PREF_NOTIFY_INCONSISTENCIES", String(v))} />
+            <ToggleRow label="Resumen semanal de portafolio" hint="Resumen automático con cambio de patrimonio y rentabilidad." value={bool("PREF_NOTIFY_WEEKLY_SUMMARY")} onChange={v => set("PREF_NOTIFY_WEEKLY_SUMMARY", String(v))} badge="Próx." disabled />
+            <ToggleRow label="Actualizaciones de precio" hint="Aviso cuando CoinGecko no pueda actualizar precios de tus activos." value={bool("PREF_NOTIFY_PRICE_ERRORS")} onChange={v => set("PREF_NOTIFY_PRICE_ERRORS", String(v))} />
+          </SectionCard>
+          <SectionCard title="Vista de datos" description="Controla cómo se presentan los datos en tablas y consolidados">
+            <Field label="Método de cálculo por defecto" hint="Método tributario aplicado al calcular ganancias y pérdidas.">
+              <SelectInput value={str("PREF_TAX_METHOD") || "FIFO"} onChange={v => set("PREF_TAX_METHOD", v)} options={[{ value: "FIFO", label: "FIFO — First In, First Out (recomendado)" }, { value: "LIFO", label: "LIFO — Last In, First Out" }]} />
+            </Field>
+            <ToggleRow label="Mostrar valores en USD" hint="Muestra columna adicional de USD junto a los montos en CLP en tablas de portafolio." value={bool("PREF_SHOW_USD")} onChange={v => set("PREF_SHOW_USD", String(v))} />
+            <ToggleRow label="Precisión extendida" hint="Muestra hasta 8 decimales en cantidades de criptomonedas." value={bool("PREF_EXTENDED_PRECISION")} onChange={v => set("PREF_EXTENDED_PRECISION", String(v))} />
+          </SectionCard>
+          <SectionCard title="Exportación" description="Formato por defecto al exportar datos e informes">
+            <Field label="Formato de exportación">
+              <SelectInput value={str("PREF_EXPORT_FORMAT") || "csv"} onChange={v => set("PREF_EXPORT_FORMAT", v)} options={[{ value: "csv", label: "CSV (compatible con Excel)" }, { value: "xlsx", label: "Excel (.xlsx)" }]} />
+            </Field>
+            <ToggleRow label="Incluir columnas técnicas" hint="Al exportar, incluye IDs internos y hashes para auditoría." value={bool("PREF_EXPORT_TECHNICAL")} onChange={v => set("PREF_EXPORT_TECHNICAL", String(v))} />
+          </SectionCard>
+          <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
         </>
       )}
 
