@@ -18,7 +18,7 @@ export async function runExecution(executionId: string, actorId: string) {
     let result: Record<string, unknown> = { type: execution.type };
 
     if (execution.type === "CREATE_TASK") {
-      const task = await createTask({
+      const taskResult = await createTask({
         userId: execution.userId,
         title: execution.title,
         description: execution.description,
@@ -28,7 +28,11 @@ export async function runExecution(executionId: string, actorId: string) {
         sourceId: execution.id,
         metadata: { executionId: execution.id, payload: execution.payload },
       });
-      result = { type: execution.type, taskId: task.id };
+      if (taskResult.ok) {
+        result = { type: execution.type, taskId: taskResult.task.id };
+      } else {
+        result = { type: execution.type, error: taskResult.message };
+      }
     }
 
     if (["CREATE_ALERT", "CREATE_REMINDER", "CREATE_AUTOMATION", "UPDATE_PROFILE", "OPEN_CASE"].includes(execution.type)) {
@@ -65,7 +69,7 @@ export async function runExecution(executionId: string, actorId: string) {
       severity: "ERROR",
       event: "execution_failed",
       description: execution.title,
-      result: "FAILURE",
+      result: "FAILED",
       entityType: "ExecutionRequest",
       entityId: execution.id,
       metadata: { error: message },
