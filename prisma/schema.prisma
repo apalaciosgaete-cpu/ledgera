@@ -616,6 +616,7 @@ model users {
   aiConversations         AIConversation[]
   aiInsights              AIInsight[]
   automationProposals     AutomationProposal[]
+  taxCases               TaxCase[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
@@ -1549,6 +1550,36 @@ model BillingCouponRedemption {
 }
 
 // ── Audit / Compliance ─────────────────────────────────────────────────────────
+
+// ── Tax Cases ─────────────────────────────────────────────────────────────
+
+model TaxCase {
+  id               String   @id @default(cuid())
+
+  userId           String
+
+  title            String
+  description      String
+
+  status           String
+  priority         String
+
+  sourceType       String
+  sourceId         String?
+
+  aiSummary        String   @db.Text
+  aiRecommendation String   @db.Text
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@map("tax_cases")
+}
 
 model AuditEvent {
   id          String   @id @default(cuid())

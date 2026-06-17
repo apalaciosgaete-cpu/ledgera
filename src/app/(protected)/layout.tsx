@@ -12,6 +12,7 @@ import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 const baseNavItems: { href: string; label: string }[] = [
   { href: "/panel", label: "Inicio" },
   { href: "/monitor", label: "Monitor" },
+  { href: "/casos", label: "Casos" },
   { href: "/decisiones", label: "Decisiones" },
   { href: "/ejecuciones", label: "Ejecuciones" },
   { href: "/ai-center", label: "Centro AI" },
