@@ -13,6 +13,7 @@ const baseNavItems: { href: string; label: string }[] = [
   { href: "/panel", label: "Inicio" },
   { href: "/monitor", label: "Monitor" },
   { href: "/decisiones", label: "Decisiones" },
+  { href: "/ejecuciones", label: "Ejecuciones" },
   { href: "/ai-center", label: "Centro AI" },
   { href: "/asistente", label: "Asistente" },
   { href: "/simulador", label: "Simulador" },
