@@ -11,17 +11,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const summary = await buildDecisionCenter(auth.user.id);
+    const queue = await buildDecisionCenter(auth.user.id);
     return ok(
       {
-        ...summary,
-        generatedAt: summary.generatedAt.toISOString(),
-        decisions: summary.decisions.map((decision) => ({
-          ...decision,
-          createdAt: decision.createdAt.toISOString(),
+        ...queue,
+        generatedAt: queue.generatedAt.toISOString(),
+        items: queue.items.map((item) => ({
+          ...item,
+          detectedAt: item.detectedAt.toISOString(),
         })),
       },
-      "Centro de decisiones reconstruido.",
+      "Cola de decisiones reconstruida.",
     );
   } catch (error) {
     return serverError(error);

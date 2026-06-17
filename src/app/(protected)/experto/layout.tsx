@@ -7,6 +7,7 @@ const links = [
   { label: "Resumen", href: "/experto" },
   { label: "Dashboard", href: "/experto/dashboard" },
   { label: "Centro AI", href: "/experto/ai-center" },
+  { label: "Decisiones", href: "/experto/decisiones" },
   { label: "Tributario", href: "/experto/tributario" },
   { label: "Auditoría", href: "/experto/auditoria" },
   { label: "Operaciones", href: "/experto/operaciones" },
