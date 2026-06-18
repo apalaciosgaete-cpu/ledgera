@@ -1,16 +1,16 @@
 // src/app/page.tsx
 import type { Metadata } from "next";
-import LedgeraLanding from "@/components/landing/LedgeraLanding";
+import LandingConversacional from "@/components/landing/LandingConversacional";
 
 export const metadata: Metadata = {
-  title: "LEDGERA — Calcula tus impuestos crypto para el SII en Chile",
+  title: "Tu sistema operativo financiero y tributario",
   description:
-    "Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu ganancia y te dice qué poner en el Formulario 22 del SII.",
+    "Conversa con LEDGERA y entiende las consecuencias financieras y tributarias de tus decisiones antes de actuar. No reemplaza a un contador, te ayuda a decidir mejor.",
   alternates: {
     canonical: "/",
   },
 };
 
 export default function HomePage() {
-  return <LedgeraLanding />;
+  return <LandingConversacional />;
 }

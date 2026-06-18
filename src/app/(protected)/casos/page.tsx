@@ -191,7 +191,7 @@ export default function CasosPage() {
 
           {/* Side Panel */}
           {selectedCase && (
-            <CaseDetailPanel taxCase={selectedCase} onClose={() => setSelectedCase(null)} />
+            <CaseDetailPanel taxCase={selectedCase} onClose={() => setSelectedCase(null)} onStatusChange={fetchCases} />
           )}
         </div>
       )}
@@ -209,7 +209,64 @@ function KpiCard({ label, value, detail, color }: { label: string; value: number
   );
 }
 
-function CaseDetailPanel({ taxCase, onClose }: { taxCase: TaxCase; onClose: () => void }) {
+function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCase; onClose: () => void; onStatusChange?: () => void }) {
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const isTerminal = taxCase.status === "RESOLVED" || taxCase.status === "CLOSED";
+
+  // Available transitions based on current status
+  const transitions: { status: TaxCaseStatus; label: string; color: string; bg: string }[] = [];
+
+  if (!isTerminal) {
+    transitions.push(
+      { status: "INVESTIGATING", label: "En investigación", color: "#B45309", bg: "rgba(180,83,9,0.12)" },
+      { status: "ACTION_REQUIRED", label: "Requiere acción", color: "#B91C1C", bg: "rgba(185,28,28,0.12)" },
+      { status: "WAITING_USER", label: "Esperando usuario", color: "#6D28D9", bg: "rgba(109,40,217,0.12)" },
+      { status: "WAITING_SII", label: "Esperando SII", color: "#0369A1", bg: "rgba(3,105,161,0.12)" },
+      { status: "RESOLVED", label: "✓ Resolver", color: "#047857", bg: "rgba(4,120,87,0.12)" },
+    );
+  }
+
+  if (isTerminal) {
+    transitions.push(
+      { status: "OPEN", label: "↺ Reabrir", color: "#2563EB", bg: "rgba(37,99,235,0.12)" },
+    );
+  }
+
+  if (taxCase.status !== "CLOSED") {
+    transitions.push(
+      { status: "CLOSED", label: "✕ Cerrar", color: "#64748B", bg: "rgba(100,116,139,0.12)" },
+    );
+  }
+
+  async function handleStatusTransition(newStatus: TaxCaseStatus) {
+    setUpdating(newStatus);
+    setError(null);
+    try {
+      // Use reopen endpoint for reopening (preserves tax_case_reopened audit event)
+      const isReopen = isTerminal && newStatus === "OPEN";
+      const url = isReopen
+        ? `/api/tax-cases/${taxCase.id}/reopen`
+        : `/api/tax-cases/${taxCase.id}`;
+      const res = await fetch(url, {
+        method: isReopen ? "POST" : "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: isReopen ? undefined : JSON.stringify({ status: newStatus }),
+      });
+      const json = await res.json();
+      if (json.ok && onStatusChange) {
+        onStatusChange();
+      } else if (!json.ok) {
+        setError(json.message ?? "Error al actualizar estado.");
+      }
+    } catch {
+      setError("Error de conexión.");
+    } finally {
+      setUpdating(null);
+    }
+  }
+
   return (
     <aside style={{
       background: "#FFFFFF",
@@ -293,6 +350,47 @@ function CaseDetailPanel({ taxCase, onClose }: { taxCase: TaxCase; onClose: () =
             <li key={i} style={{ color: "#475569", fontSize: 13, lineHeight: 1.5 }}>{step}</li>
           ))}
         </ul>
+      </div>
+
+      {/* Status Transitions */}
+      <div style={{ display: "grid", gap: 6 }}>
+        <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: 0 }}>
+          Cambiar estado
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+          {transitions.map((t) => {
+            const isLoading = updating === t.status;
+            const isCurrent = taxCase.status === t.status;
+            return (
+              <button
+                key={t.status}
+                onClick={() => handleStatusTransition(t.status)}
+                disabled={isLoading || isCurrent}
+                title={isCurrent ? "Estado actual" : t.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px 6px",
+                  borderRadius: 8,
+                  border: isCurrent ? `2px solid ${t.color}` : "1px solid transparent",
+                  background: isLoading ? "#E2E8F0" : isCurrent ? t.bg : "#F8FAFC",
+                  color: isLoading ? "#94A3B8" : t.color,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: isLoading || isCurrent ? "default" : "pointer",
+                  opacity: isLoading || isCurrent ? 0.6 : 1,
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {isLoading ? "..." : t.label}
+              </button>
+            );
+          })}
+        </div>
+        {error && (
+          <p style={{ color: "#B91C1C", fontSize: 12, margin: 0 }}>{error}</p>
+        )}
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>

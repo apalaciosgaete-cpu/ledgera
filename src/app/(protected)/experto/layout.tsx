@@ -9,6 +9,7 @@ const links = [
   { label: "Centro AI", href: "/experto/ai-center" },
   { label: "Decisiones", href: "/experto/decisiones" },
   { label: "Casos", href: "/experto/casos" },
+  { label: "Workflows", href: "/experto/workflows" },
   { label: "Tributario", href: "/experto/tributario" },
   { label: "Auditoría", href: "/experto/auditoria" },
   { label: "Operaciones", href: "/experto/operaciones" },
@@ -21,6 +22,8 @@ const links = [
   { label: "Tareas", href: "/experto/tareas" },
   { label: "Expedientes", href: "/experto/expedientes" },
   { label: "Documentos", href: "/experto/documentos" },
+  { label: "Multiagente", href: "/experto/multiagente" },
+  { label: "LAIOS", href: "/experto/operating-system" },
 ];
 
 export default function ExpertoLayout({ children }: { children: React.ReactNode }) {

@@ -14,6 +14,8 @@ const baseNavItems: { href: string; label: string }[] = [
   { href: "/monitor", label: "Monitor" },
   { href: "/casos", label: "Casos" },
   { href: "/decisiones", label: "Decisiones" },
+  { href: "/workflows", label: "Workflows" },
+  { href: "/multiagente", label: "Multiagente" },
   { href: "/ejecuciones", label: "Ejecuciones" },
   { href: "/ai-center", label: "Centro AI" },
   { href: "/asistente", label: "Asistente" },
@@ -23,6 +25,7 @@ const baseNavItems: { href: string; label: string }[] = [
   { href: "/mi-situacion", label: "Mi Situación" },
   { href: "/inversiones", label: "Inversiones" },
   { href: "/integraciones", label: "Conexiones" },
+  { href: "/operating-system", label: "LAIOS" },
   { href: "/notificaciones", label: "Alertas" },
 ];
 
