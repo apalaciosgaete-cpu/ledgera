@@ -1,5 +1,5 @@
 // src/components/landing/LandingConversacional.tsx
-// UX 3.0.01 v1.6 — Landing Premium Real
+// UX 3.0.01 v1.6.1 — Hero orientado a activos y claridad
 "use client";
 
 import Link from "next/link";
@@ -14,40 +14,40 @@ const PROMPTS = [
   "Vender Bitcoin",
   "Crear una SpA",
   "Invertir en un inmueble",
-  "Regularizar movimientos",
+  "Regularizar movimientos crypto",
 ] as const;
 
 const TRUST_AREAS = ["Personas", "Empresas", "Profesionales"] as const;
-const DOMAIN_AREAS = ["Finanzas", "Tributación", "Patrimonio", "Cryptoactivos"] as const;
+const DOMAIN_AREAS = ["Cryptoactivos", "Patrimonio", "Tributación", "Finanzas"] as const;
 
 const DECISION_FLOW = [
-  ["01", "Contexto", "Quién eres, qué tienes y qué necesitas resolver."],
-  ["02", "Normativa aplicable", "Reglas tributarias y financieras relevantes para tu caso."],
-  ["03", "Escenarios", "Alternativas posibles antes de ejecutar una decisión."],
-  ["04", "Consecuencias", "Impactos, riesgos y efectos de cada camino."],
-  ["05", "Decisión informada", "Tú decides con claridad y trazabilidad."],
+  ["01", "Activos", "Qué tienes, dónde está y qué movimiento estás evaluando."],
+  ["02", "Contexto", "Tu situación financiera, tributaria y patrimonial."],
+  ["03", "Normativa", "Reglas chilenas aplicables a la operación."],
+  ["04", "Escenarios", "Alternativas posibles antes de ejecutar."],
+  ["05", "Claridad", "Información ordenada para decidir mejor."],
 ] as const;
 
 const PROBLEM_CARDS = [
   ["Cryptoactivos", "Movimientos, tenencia, valorización y tributación."],
   ["Empresas", "Estructura societaria, régimen tributario y obligaciones."],
   ["Patrimonio", "Inversiones, inmuebles, flujos y planificación."],
-  ["Tributación", "Normas, cumplimiento, documentación y consecuencias."],
+  ["Tributación", "Normas, cumplimiento, documentación y criterios aplicables."],
 ] as const;
 
 const PROCESS = [
   ["Entiende", "Recoge contexto financiero, tributario y patrimonial."],
   ["Interpreta", "Conecta la situación con normativa chilena aplicable."],
-  ["Simula", "Compara alternativas y consecuencias posibles."],
+  ["Simula", "Compara alternativas y efectos posibles."],
   ["Explica", "Traduce complejidad a comprensión accionable."],
   ["Decides", "La decisión final permanece siempre en tus manos."],
 ] as const;
 
 const CASES = [
-  ["Venta de Bitcoin", "Problema: vender sin conocer impacto tributario. Consecuencia: riesgo de declarar mal o tarde."],
-  ["Empresa Web3", "Problema: elegir estructura sin claridad. Consecuencia: costos, obligaciones y riesgos futuros."],
-  ["Patrimonio internacional", "Problema: activos fuera de Chile. Consecuencia: obligaciones locales que pueden omitirse."],
-  ["Tokenización", "Problema: modelo financiero y regulatorio complejo. Consecuencia: exposición fiscal y operativa."],
+  ["Venta de Bitcoin", "Evalúa la operación, el registro necesario y el tratamiento tributario antes de mover tu posición."],
+  ["Empresa Web3", "Ordena estructura societaria, régimen tributario y modelo operativo desde el inicio."],
+  ["Patrimonio internacional", "Relaciona activos fuera de Chile con obligaciones locales y documentación necesaria."],
+  ["Tokenización", "Evalúa el modelo financiero, la operación y los criterios tributarios aplicables."],
 ] as const;
 
 const FOOTER_LINKS = [
@@ -113,19 +113,19 @@ function HeroSection() {
       <div className="relative z-10 mx-auto grid max-w-[1380px] items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(500px,0.88fr)]">
         <div>
           <div className="mb-7 inline-flex rounded-full border border-[#16A34A]/35 bg-[#16A34A]/10 px-4 py-2 text-[12px] font-black uppercase tracking-[0.18em] text-[#86EFAC]">
-            IA como interfaz principal
+            Activos · Patrimonio · Tributación
           </div>
           <h1 className="max-w-[790px] font-display text-[44px] font-black leading-[1.02] tracking-[-0.055em] text-[#F6F8FA] sm:text-[62px] lg:text-[74px] xl:text-[82px]">
-            Comprende las consecuencias de tus decisiones antes de ejecutarlas.
+            Claridad para tus activos. Decisiones mejor informadas.
           </h1>
           <p className="mt-6 max-w-[650px] text-[18px] leading-[1.65] text-[#CBD5E1] sm:text-[20px]">
-            LEDGERA interpreta normativa, contexto y consecuencias para ayudarte a tomar mejores decisiones financieras y tributarias.
+            LEDGERA interpreta normativa chilena, contexto patrimonial y movimientos de cryptoactivos para ayudarte a evaluar decisiones financieras y tributarias.
           </p>
           <form onSubmit={(e) => { e.preventDefault(); start(); }} className="mt-8 max-w-[680px]">
             <div className="rounded-2xl border border-[#1e4a6b] bg-[#071B28]/80 p-1.5 shadow-[0_24px_80px_rgba(0,0,0,0.30)] backdrop-blur-xl transition focus-within:border-[#16A34A]/70">
               <div className="flex flex-col gap-2 sm:flex-row">
-                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="¿Qué decisión necesitas evaluar?" className="min-h-[58px] flex-1 rounded-xl border-0 bg-transparent px-5 text-[17px] font-semibold text-[#F6F8FA] outline-none placeholder:text-[#94A3B8]" />
-                <button type="submit" className="min-h-[56px] rounded-xl bg-[#16A34A] px-6 text-[16px] font-black text-white transition hover:bg-[#15803D]">Evaluar decisión →</button>
+                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="¿Qué activo o decisión necesitas evaluar?" className="min-h-[58px] flex-1 rounded-xl border-0 bg-transparent px-5 text-[17px] font-semibold text-[#F6F8FA] outline-none placeholder:text-[#94A3B8]" />
+                <button type="submit" className="min-h-[56px] rounded-xl bg-[#16A34A] px-6 text-[16px] font-black text-white transition hover:bg-[#15803D]">Evaluar con LEDGERA →</button>
               </div>
             </div>
           </form>
@@ -148,7 +148,7 @@ function ProblemSection() {
     <section id="soluciones" className="border-t border-[#1e4a6b]/60 bg-[#06131D] px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
       <div className="mx-auto max-w-[1380px]">
         <p className="text-[13px] font-black uppercase tracking-[0.22em] text-[#4ADE80]">El problema</p>
-        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-[#F6F8FA] sm:text-[48px]">Las decisiones son cada vez más complejas.</h2>
+        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-[#F6F8FA] sm:text-[48px]">Los activos se mueven rápido. La claridad no puede esperar.</h2>
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {PROBLEM_CARDS.map(([title, text]) => (
             <article key={title} className="premium-card min-h-[260px] rounded-3xl border border-[#1e4a6b]/80 bg-[#0F2A3D] p-7 transition hover:-translate-y-1 hover:border-[#16A34A]/65">
@@ -171,7 +171,7 @@ function ProcessSection() {
       <div className="mx-auto grid max-w-[1380px] gap-12 lg:grid-cols-[0.82fr_1.4fr] lg:items-center">
         <div>
           <p className="text-[13px] font-black uppercase tracking-[0.22em] text-[#4ADE80]">Qué hace LEDGERA</p>
-          <h2 className="mt-5 font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-[#F6F8FA] sm:text-[48px]">No entrega respuestas. Entrega comprensión.</h2>
+          <h2 className="mt-5 font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-[#F6F8FA] sm:text-[48px]">Convierte información compleja en claridad accionable.</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-5">
           {PROCESS.map(([title, text], index) => (
@@ -192,7 +192,7 @@ function CasesSection() {
     <section id="casos" className="border-t border-[#1e4a6b]/60 bg-[#06131D] px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
       <div className="mx-auto max-w-[1380px]">
         <p className="text-[13px] font-black uppercase tracking-[0.22em] text-[#4ADE80]">Casos reales</p>
-        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-[#F6F8FA] sm:text-[48px]">Decisiones que LEDGERA te ayuda a evaluar.</h2>
+        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-[#F6F8FA] sm:text-[48px]">Evalúa activos, estructuras y movimientos con mayor claridad.</h2>
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {CASES.map(([title, text]) => (
             <article key={title} className="premium-card min-h-[280px] rounded-3xl border border-[#1e4a6b]/80 bg-[#0F2A3D] p-7 transition hover:-translate-y-1 hover:border-[#16A34A]/65">
@@ -216,9 +216,9 @@ function PrincipleSection() {
         <div>
           <p className="text-[13px] font-black uppercase tracking-[0.22em] text-[#4ADE80]">Principio LEDGERA</p>
           <h2 className="mt-3 font-display text-[32px] font-black tracking-[-0.045em] text-[#F6F8FA] sm:text-[42px]">LEDGERA no decide por ti.</h2>
-          <p className="mt-4 max-w-[820px] text-[17px] leading-[1.7] text-[#CBD5E1]">Te ayuda a entender qué ocurre, qué normas aplican, qué alternativas existen y qué consecuencias tiene cada alternativa.</p>
+          <p className="mt-4 max-w-[820px] text-[17px] leading-[1.7] text-[#CBD5E1]">Te ayuda a ordenar información, interpretar normas aplicables, comparar alternativas y entender cada escenario antes de actuar.</p>
         </div>
-        <Link href="/register" className="inline-flex min-h-[56px] items-center justify-center rounded-xl bg-[#16A34A] px-7 text-[16px] font-black text-white transition hover:bg-[#15803D]">Evaluar una decisión →</Link>
+        <Link href="/register" className="inline-flex min-h-[56px] items-center justify-center rounded-xl bg-[#16A34A] px-7 text-[16px] font-black text-white transition hover:bg-[#15803D]">Evaluar con LEDGERA →</Link>
       </div>
     </section>
   );
@@ -269,13 +269,13 @@ export default function LandingConversacional() {
             <a href="#soluciones" className="text-sm font-semibold text-[#CBD5E1] transition hover:text-white">Soluciones</a>
             <a href="#casos" className="text-sm font-semibold text-[#CBD5E1] transition hover:text-white">Casos de uso</a>
             <Link href="/login" className="text-sm font-black text-[#CBD5E1] transition hover:text-white">Iniciar sesión</Link>
-            <Link href="/register" className="inline-flex items-center gap-2 rounded-xl border border-[#16A34A]/50 bg-[#16A34A]/10 px-6 py-3.5 text-sm font-black text-[#F6F8FA] transition hover:bg-[#16A34A]">Evaluar decisión →</Link>
+            <Link href="/register" className="inline-flex items-center gap-2 rounded-xl border border-[#16A34A]/50 bg-[#16A34A]/10 px-6 py-3.5 text-sm font-black text-[#F6F8FA] transition hover:bg-[#16A34A]">Evaluar con LEDGERA →</Link>
           </div>
           <button type="button" className="rounded-xl border border-[#1e4a6b] bg-[#13364F] px-4 py-3 text-sm font-black text-[#F6F8FA] lg:hidden" onClick={() => setMobileMenuOpen((current) => !current)}>Menú</button>
         </div>
       </nav>
 
-      {mobileMenuOpen ? <div className="sticky top-[78px] z-[90] border-b border-[#1e4a6b]/70 bg-[#06131D]/98 px-6 py-5 backdrop-blur-xl lg:hidden"><div className="grid gap-4"><a href="#soluciones" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#CBD5E1]">Soluciones</a><a href="#casos" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#CBD5E1]">Casos de uso</a><Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#CBD5E1]">Iniciar sesión</Link><Link href="/register" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-center rounded-xl bg-[#16A34A] px-5 py-4 text-center font-black text-white">Evaluar decisión →</Link></div></div> : null}
+      {mobileMenuOpen ? <div className="sticky top-[78px] z-[90] border-b border-[#1e4a6b]/70 bg-[#06131D]/98 px-6 py-5 backdrop-blur-xl lg:hidden"><div className="grid gap-4"><a href="#soluciones" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#CBD5E1]">Soluciones</a><a href="#casos" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#CBD5E1]">Casos de uso</a><Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#CBD5E1]">Iniciar sesión</Link><Link href="/register" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-center rounded-xl bg-[#16A34A] px-5 py-4 text-center font-black text-white">Evaluar con LEDGERA →</Link></div></div> : null}
 
       <HeroSection />
       <ProblemSection />
