@@ -14,7 +14,26 @@ interface UpdateSubscriptionInput {
   expiresAt: Date;
 }
 
-function mapRowToUser(row: {
+const baseUserSelect = {
+  id:                      true,
+  email:                   true,
+  full_name:               true,
+  password_hash:           true,
+  status:                  true,
+  role:                    true,
+  email_verified_at:       true,
+  created_at:              true,
+  updated_at:              true,
+  subscription_plan:       true,
+  subscription_expires_at: true,
+  rut:                     true,
+  phone:                   true,
+  address:                 true,
+  commune:                 true,
+  country:                 true,
+} as const;
+
+type BaseUserRow = {
   id:                      string;
   email:                   string;
   full_name:               string;
@@ -26,14 +45,14 @@ function mapRowToUser(row: {
   updated_at:              Date;
   subscription_plan:       string;
   subscription_expires_at: Date | null;
-  twoFactorSecret:         string | null;
-  twoFactorEnabled:        boolean;
   rut:                     string | null;
   phone:                   string | null;
   address:                 string | null;
   commune:                 string | null;
   country:                 string | null;
-}): User {
+};
+
+function mapRowToUser(row: BaseUserRow): User {
   return {
     id:                    row.id,
     email:                 row.email,
@@ -44,10 +63,10 @@ function mapRowToUser(row: {
     emailVerifiedAt:       row.email_verified_at,
     createdAt:             row.created_at,
     updatedAt:             row.updated_at,
-    subscriptionPlan:      (row.subscription_plan ?? "BASICO") as User["subscriptionPlan"], // DB legacy; normalizar al consumir con normalizePlan()
+    subscriptionPlan:      (row.subscription_plan ?? "BASICO") as User["subscriptionPlan"],
     subscriptionExpiresAt: row.subscription_expires_at,
-    twoFactorSecret:       row.twoFactorSecret ?? null,
-    twoFactorEnabled:      row.twoFactorEnabled ?? false,
+    twoFactorSecret:       null,
+    twoFactorEnabled:      false,
     rut:                   row.rut ?? null,
     phone:                 row.phone ?? null,
     address:               row.address ?? null,
@@ -57,23 +76,37 @@ function mapRowToUser(row: {
 }
 
 export async function getUsers(): Promise<User[]> {
-  const users = await prisma.users.findMany({ orderBy: { created_at: "desc" } });
+  const users = await prisma.users.findMany({
+    orderBy: { created_at: "desc" },
+    select: baseUserSelect,
+  });
   return users.map(mapRowToUser);
 }
 
 export async function getUserById(id: string): Promise<User | null> {
-  const user = await prisma.users.findUnique({ where: { id } });
+  const user = await prisma.users.findUnique({
+    where: { id },
+    select: baseUserSelect,
+  });
   if (!user) return null;
   return mapRowToUser(user);
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   const lowerEmail = email.toLowerCase();
-  const user = await prisma.users.findUnique({ where: { email: lowerEmail } });
+  const user = await prisma.users.findUnique({
+    where: { email: lowerEmail },
+    select: baseUserSelect,
+  });
   if (user) return mapRowToUser(user);
+
   // Fallback para emails con mayúsculas en BD legacy
-  const users = await prisma.users.findMany({ where: { email: { contains: lowerEmail } }, take: 2 });
-  const match = users.find(u => u.email.toLowerCase() === lowerEmail);
+  const users = await prisma.users.findMany({
+    where: { email: { contains: lowerEmail } },
+    take: 2,
+    select: baseUserSelect,
+  });
+  const match = users.find((u) => u.email.toLowerCase() === lowerEmail);
   return match ? mapRowToUser(match) : null;
 }
 
@@ -85,6 +118,7 @@ export async function createUser(input: CreateUserInput): Promise<User> {
       password_hash: input.passwordHash,
       role:          input.role,
     },
+    select: baseUserSelect,
   });
   return mapRowToUser(user);
 }
@@ -106,6 +140,7 @@ export async function updateUserStatus(
     const user = await prisma.users.update({
       where: { id },
       data: { status, updated_at: new Date() },
+      select: baseUserSelect,
     });
     return mapRowToUser(user);
   } catch {
@@ -128,6 +163,7 @@ export async function updateUserSubscription(
         role,
         updated_at:              new Date(),
       },
+      select: baseUserSelect,
     });
     return mapRowToUser(user);
   } catch {
@@ -160,6 +196,7 @@ export async function updateUserProfile(
         country:    input.country,
         updated_at: new Date(),
       },
+      select: baseUserSelect,
     });
     return mapRowToUser(user);
   } catch {
