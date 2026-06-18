@@ -8,6 +8,7 @@ interface LogoProps {
   variant?: LogoVariant;
   size?: LogoSize;
   showSubtitle?: boolean;
+  subtitle?: string;
 }
 
 const sizes = {
@@ -20,10 +21,12 @@ export function Logo({
   variant = "light",
   size = "md",
   showSubtitle = true,
+  subtitle,
 }: LogoProps) {
   const s = sizes[size];
   const nameColor = variant === "light" ? "#F8FAFC" : "#071B28";
   const subtitleColor = variant === "light" ? "#4ADE80" : colors.accent;
+  const subtitleText = subtitle ?? "FINANZAS OS";
 
   const wrap: CSSProperties = {
     display: "inline-flex",
@@ -49,17 +52,18 @@ export function Logo({
   const subStyle: CSSProperties = {
     fontFamily: fonts.body,
     fontSize: `${s.sub}px`,
-    fontWeight: 850,
+    fontWeight: subtitle ? 500 : 850,
     color: subtitleColor,
-    letterSpacing: "0.42em",
+    letterSpacing: subtitle ? "0.28em" : "0.42em",
     lineHeight: 1,
-    paddingLeft: "0.42em",
+    opacity: subtitle ? 0.5 : 1,
+    paddingLeft: subtitle ? "0.14em" : "0.42em",
   };
 
   return (
-    <div style={wrap} aria-label="LEDGERA Finanzas OS">
+    <div style={wrap} aria-label={subtitleText}>
       <span style={nameStyle}>LEDGERA</span>
-      {showSubtitle ? <span style={subStyle}>FINANZAS OS</span> : null}
+      {showSubtitle ? <span style={subStyle}>{subtitleText}</span> : null}
     </div>
   );
 }

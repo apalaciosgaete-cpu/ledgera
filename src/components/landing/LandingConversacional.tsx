@@ -1,21 +1,24 @@
 // src/components/landing/LandingConversacional.tsx
-// UX 3.0.01 — Landing Conversacional
+// UX 3.0.01 v1.1 — Landing Conversacional
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
+import type { CSSProperties } from "react";
+
+/* ─── Brand constant ─────────────────────────────────────────────────────── */
+
+const BRAND_SUBTITLE = "Sistema Operativo Financiero y Tributario";
 
 /* ─── Data ────────────────────────────────────────────────────────────────── */
 
-const EJEMPLOS = [
-  "Quiero iniciar actividades.",
-  "¿Debo crear una SpA o una EIRL?",
-  "¿Cómo pago menos impuestos legalmente?",
-  "Voy a contratar mi primer trabajador.",
+const EJEMPLOS_CHIPS = [
   "¿Me conviene comprar o arrendar?",
+  "Voy a contratar mi primer trabajador",
+  "Quiero iniciar actividades",
 ];
 
 const QUE_HACE = [
@@ -86,64 +89,173 @@ function SectionHeader({
   );
 }
 
+/* ─── Particle Network Background ─────────────────────────────────────────── */
+
+function ParticleNetwork() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId: number;
+    let particles: Array<{
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      radius: number;
+    }> = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initParticles();
+    };
+
+    const initParticles = () => {
+      const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 16000));
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        radius: Math.random() * 2 + 1,
+      }));
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const maxDist = 180;
+          if (dist < maxDist) {
+            const alpha = (1 - dist / maxDist) * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(34, 197, 94, ${alpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw particles
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(34, 197, 94, 0.6)";
+        ctx.fill();
+      }
+
+      // Update positions
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      }
+
+      animId = requestAnimationFrame(draw);
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 z-0"
+      aria-hidden="true"
+    />
+  );
+}
+
+/* ─── Dynamic Glow ────────────────────────────────────────────────────────── */
+
+function DynamicGlow() {
+  const glowStyle: CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    zIndex: 1,
+    pointerEvents: "none",
+    background:
+      "radial-gradient(ellipse 70% 40% at 50% 15%, rgba(34,197,94,0.12) 0%, transparent 60%)," +
+      "radial-gradient(ellipse 50% 30% at 30% 60%, rgba(16,185,129,0.06) 0%, transparent 50%)," +
+      "radial-gradient(ellipse 40% 25% at 70% 40%, rgba(20,184,166,0.05) 0%, transparent 50%)",
+  };
+
+  return <div style={glowStyle} aria-hidden="true" />;
+}
+
 /* ─── Hero ─────────────────────────────────────────────────────────────────── */
 
 function HeroConversacional() {
   const router = useRouter();
-  const [currentExample, setCurrentExample] = useState(0);
   const [inputValue, setInputValue] = useState("");
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setCurrentExample((prev) => (prev + 1) % EJEMPLOS.length);
-    }, 3500);
-    return () => window.clearInterval(interval);
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     router.push("/register");
   };
 
+  const handleChipClick = (text: string) => {
+    setInputValue(text);
+  };
+
   return (
     <section className="relative grid min-h-[calc(100vh-76px)] place-items-center overflow-hidden px-6 py-16 lg:py-20">
-      {/* Gradiente de fondo */}
-      <div className="absolute inset-0 bg-[linear-gradient(160deg,#0F2A3D_0%,#071B28_35%,#061520_65%,#0A1F2E_100%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(22,163,74,0.08)_0%,transparent_60%)]" />
+      {/* Layer 1: Particle network */}
+      <ParticleNetwork />
 
-      {/* Grid decorativo */}
+      {/* Layer 2: Dark overlay */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
+        className="absolute inset-0 z-[2]"
+        style={{ background: "rgba(2,6,23,0.78)" }}
+        aria-hidden="true"
       />
+
+      {/* Layer 3: Dynamic LEDGERA glow */}
+      <DynamicGlow />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[820px] flex-col items-center text-center">
         {/* Logo */}
         <div className="mb-8">
-          <Logo variant="light" size="lg" showSubtitle />
+          <Logo
+            variant="light"
+            size="lg"
+            showSubtitle
+            subtitle={BRAND_SUBTITLE}
+          />
         </div>
 
         {/* Título */}
-        <h1 className="max-w-3xl font-display text-4xl font-black leading-[1.05] tracking-[-0.06em] text-slate-50 sm:text-5xl lg:text-6xl">
-          Tu sistema operativo
+        <h1 className="max-w-3xl font-display text-4xl font-black leading-[1.15] tracking-[-0.06em] text-slate-50 sm:text-5xl lg:text-6xl">
+          Conversa con LEDGERA.
           <br />
-          <span className="text-emerald-400">financiero y tributario.</span>
+          <span className="text-emerald-400">Entiende antes de decidir.</span>
         </h1>
 
-        {/* Subtítulo */}
-        <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-          Conversa con LEDGERA y entiende las consecuencias financieras y
-          tributarias de tus decisiones antes de actuar.
-        </p>
-
-        {/* Input principal */}
+        {/* Input principal — centrado, premium */}
         <form
           onSubmit={handleSubmit}
-          className="mt-8 flex w-full max-w-[600px] flex-col gap-4 sm:flex-row"
+          className="mt-10 flex w-full max-w-[600px] flex-col gap-4 sm:flex-row"
         >
           <div className="relative flex-1">
             <input
@@ -151,52 +263,40 @@ function HeroConversacional() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="¿En qué te puedo ayudar hoy?"
-              className="w-full rounded-2xl border border-white/15 bg-white/[0.06] px-5 py-4 text-sm text-slate-100 placeholder:text-slate-500 backdrop-blur-sm transition focus:border-emerald-500/40 focus:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-2xl border-2 border-white/20 bg-white/[0.08] px-6 py-5 text-lg text-slate-100 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-300 ease-out focus:border-emerald-500/50 focus:bg-white/[0.12] focus:outline-none focus:ring-[3px] focus:ring-emerald-500/20 focus:shadow-[0_0_40px_rgba(16,185,129,0.12)]"
+              style={{ fontSize: "18px" }}
             />
           </div>
           <button
             type="submit"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-4 text-sm font-black text-white transition hover:bg-emerald-700 hover:shadow-[0_0_30px_rgba(22,163,74,0.25)]"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-7 py-5 text-base font-black text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-[0_0_40px_rgba(16,185,129,0.35)] active:scale-[0.97]"
           >
-            <span>Conversar con LEDGERA</span>
-            <span className="text-lg leading-none" aria-hidden="true">
+            <span>Iniciar conversación</span>
+            <span className="text-xl leading-none" aria-hidden="true">
               →
             </span>
           </button>
         </form>
 
-        {/* Ejemplos dinámicos */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm text-slate-400">
-          <span className="text-xs text-slate-500">Ejemplo:</span>
-          <button
-            type="button"
-            onClick={() => setInputValue(EJEMPLOS[currentExample])}
-            className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-slate-300 transition hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-200"
-          >
-            {EJEMPLOS[currentExample]}
-          </button>
-          <span className="flex gap-1.5">
-            {EJEMPLOS.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setCurrentExample(i)}
-                className={`h-1.5 w-1.5 rounded-full transition ${
-                  i === currentExample
-                    ? "bg-emerald-400"
-                    : "bg-white/20 hover:bg-white/40"
-                }`}
-                aria-label={`Ejemplo ${i + 1}`}
-              />
-            ))}
-          </span>
+        {/* Ejemplos — 3 chips estáticos */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {EJEMPLOS_CHIPS.map((text) => (
+            <button
+              key={text}
+              type="button"
+              onClick={() => handleChipClick(text)}
+              className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-300 transition-all duration-200 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-200 hover:shadow-[0_0_20px_rgba(16,185,129,0.08)]"
+            >
+              {text}
+            </button>
+          ))}
         </div>
 
-        {/* Trust line */}
-        <p className="mt-10 max-w-xl text-xs leading-6 text-slate-500">
-          LEDGERA organiza información financiera-tributaria. No reemplaza la
-          revisión profesional de un contador ni constituye asesoría tributaria
-          personalizada.
+        {/* Disclaimer */}
+        <p className="mt-10 max-w-2xl text-xs leading-6 text-slate-500">
+          LEDGERA te ayuda a comprender normas, alternativas y consecuencias
+          financieras y tributarias antes de tomar una decisión. No reemplaza la
+          asesoría profesional especializada.
         </p>
       </div>
     </section>
@@ -276,12 +376,10 @@ function ComoFuncionaSection() {
               key={item.step}
               className="relative rounded-3xl border border-white/10 bg-[#0F2A3D]/70 p-8"
             >
-              {/* Número */}
               <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 text-lg font-black text-emerald-300">
                 {item.step}
               </div>
 
-              {/* Connector line (desktop) */}
               {i < COMO_FUNCIONA.length - 1 ? (
                 <div className="absolute right-0 top-12 hidden h-px w-[calc(50%-4rem)] bg-gradient-to-r from-emerald-500/40 to-transparent lg:block" />
               ) : null}
@@ -321,9 +419,9 @@ function ConfianzaSection() {
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-4 text-sm font-black text-white transition hover:bg-emerald-700 hover:shadow-[0_0_30px_rgba(22,163,74,0.25)]"
+            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-4 text-base font-black text-white transition hover:bg-emerald-700 hover:shadow-[0_0_30px_rgba(22,163,74,0.25)] active:scale-[0.97]"
           >
-            Conversar con LEDGERA
+            Iniciar conversación
             <span className="text-lg leading-none" aria-hidden="true">
               →
             </span>
@@ -347,7 +445,12 @@ function LandingFooter() {
     <footer className="border-t border-white/10 bg-[#040C13] px-6 py-12">
       <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-8 sm:flex-row sm:justify-between">
         <div className="flex flex-col items-center gap-4 sm:items-start">
-          <Logo variant="light" size="sm" showSubtitle />
+          <Logo
+            variant="light"
+            size="sm"
+            showSubtitle
+            subtitle={BRAND_SUBTITLE}
+          />
         </div>
 
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-3">
@@ -401,11 +504,16 @@ export default function LandingConversacional() {
   }, []);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#071B28] text-slate-50">
+    <main className="min-h-screen overflow-x-hidden bg-[#020617] text-slate-50">
       {/* ── Navbar ── */}
-      <nav className="sticky top-0 z-[100] flex h-[76px] items-center justify-between border-b border-white/10 bg-[#0F2A3D]/95 px-5 backdrop-blur-md lg:px-8">
+      <nav className="sticky top-0 z-[100] flex h-[76px] items-center justify-between border-b border-white/10 bg-[#020617]/90 px-5 backdrop-blur-md lg:px-8">
         <Link href="/" aria-label="Inicio LEDGERA">
-          <Logo variant="light" size="lg" showSubtitle />
+          <Logo
+            variant="light"
+            size="lg"
+            showSubtitle
+            subtitle={BRAND_SUBTITLE}
+          />
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">
@@ -417,9 +525,10 @@ export default function LandingConversacional() {
           </Link>
           <Link
             href="/register"
-            className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
           >
-            Conversar con LEDGERA
+            Iniciar conversación
+            <span aria-hidden="true">→</span>
           </Link>
         </div>
 
@@ -435,7 +544,7 @@ export default function LandingConversacional() {
       </nav>
 
       {mobileMenuOpen ? (
-        <div className="sticky top-[76px] z-[90] border-b border-white/10 bg-[#0F2A3D]/98 px-6 py-4 backdrop-blur-md md:hidden">
+        <div className="sticky top-[76px] z-[90] border-b border-white/10 bg-[#020617]/98 px-6 py-4 backdrop-blur-md md:hidden">
           <div className="grid gap-3">
             <Link
               href="/login"
@@ -447,9 +556,10 @@ export default function LandingConversacional() {
             <Link
               href="/register"
               onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl bg-emerald-600 px-4 py-3 text-center font-black text-white"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-3 text-center font-black text-white"
             >
-              Conversar con LEDGERA
+              Iniciar conversación
+              <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
