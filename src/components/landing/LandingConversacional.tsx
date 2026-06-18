@@ -1,5 +1,5 @@
 // src/components/landing/LandingConversacional.tsx
-// UX 3.0.01 v1.2 — Replanteamiento
+// UX 3.0.01 v1.3 — Identidad corporativa + narrativa de decisión
 "use client";
 
 import Link from "next/link";
@@ -8,34 +8,38 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 
-/* ─── Brand constant ─────────────────────────────────────────────────────── */
-
 const BRAND_SUBTITLE = "Sistema Operativo Financiero y Tributario";
 
-/* ─── Data ────────────────────────────────────────────────────────────────── */
+const PROMPTS = [
+  "Tengo activos digitales y quiero ordenar mi situación tributaria",
+  "Quiero crear una empresa y elegir bien el régimen tributario",
+  "Estoy evaluando comprar, arrendar o invertir",
+] as const;
 
-const CHIPS = [
-  "¿Debo formalizar mi empresa?",
-  "¿Conviene comprar o arrendar propiedad?",
-  "¿Cómo optimizar mi carga tributaria?",
-];
-
-const CASOS_REALES = [
+const DECISION_CASES = [
   {
-    area: "Activos Digitales",
-    text: "Analiza tributación, tenencia y movimientos de criptoactivos.",
+    index: "01",
+    title: "Activos digitales",
+    text: "Ordena movimientos, tenencia, valorización e impacto tributario antes de declarar o mover patrimonio.",
+    signal: "Patrimonio · SII · riesgo",
   },
   {
-    area: "Empresas",
-    text: "Evalúa estructuras societarias, costos e impuestos.",
+    index: "02",
+    title: "Empresa y régimen",
+    text: "Evalúa estructura societaria, régimen tributario, costos de cumplimiento y obligaciones futuras.",
+    signal: "SpA · EIRL · régimen",
   },
   {
-    area: "Inversiones",
-    text: "Compara escenarios y consecuencias futuras.",
+    index: "03",
+    title: "Inversión y patrimonio",
+    text: "Compara escenarios financieros y tributarios antes de comprar, vender, reinvertir o retirar fondos.",
+    signal: "escenarios · flujo · impacto",
   },
   {
-    area: "Cumplimiento",
-    text: "Identifica obligaciones y riesgos regulatorios.",
+    index: "04",
+    title: "Cumplimiento",
+    text: "Identifica obligaciones, fechas críticas, documentación necesaria y consecuencias de cada alternativa.",
+    signal: "norma · proceso · trazabilidad",
   },
 ] as const;
 
@@ -46,173 +50,203 @@ const FOOTER_LINKS = [
   { label: "Contacto", href: "mailto:admin@ledgera.cl" },
 ] as const;
 
-/* ─── Abstract Background ──────────────────────────────────────────────────── */
-
-function AbstractFinanceBg() {
+function DecisionFieldBackground() {
   return (
     <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-      {/* Gradient base — deep, premium */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0B1A2E] to-[#020617]" />
+      <div className="absolute inset-0 bg-[#0F2A3D]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_18%,rgba(22,163,74,0.18),transparent_34%),radial-gradient(circle_at_78%_10%,rgba(245,158,11,0.10),transparent_28%),linear-gradient(180deg,rgba(15,42,61,0.08)_0%,rgba(5,15,23,0.72)_72%,rgba(3,9,14,0.96)_100%)]" />
 
-      {/* Gradient orbs — wealth/finance feel */}
-      <div className="absolute -left-[20%] top-[5%] h-[55%] w-[55%] rounded-full opacity-[0.04] blur-[120px]"
-        style={{ background: "radial-gradient(circle, #22c55e 0%, transparent 70%)" }}
-      />
-      <div className="absolute -right-[15%] top-[20%] h-[45%] w-[45%] rounded-full opacity-[0.03] blur-[100px]"
-        style={{ background: "radial-gradient(circle, #0ea5e9 0%, transparent 70%)" }}
-      />
-      <div className="absolute left-[20%] bottom-[10%] h-[35%] w-[35%] rounded-full opacity-[0.025] blur-[90px]"
-        style={{ background: "radial-gradient(circle, #f59e0b 0%, transparent 70%)" }}
-      />
+      <div className="absolute inset-0 opacity-[0.10] [background-image:linear-gradient(rgba(246,248,250,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(246,248,250,0.10)_1px,transparent_1px)] [background-size:96px_96px]" />
 
-      {/* Subtle grid — architectural / Bloomberg */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
-        }}
-      />
+      <svg
+        className="absolute inset-0 h-full w-full opacity-80"
+        viewBox="0 0 1440 860"
+        preserveAspectRatio="none"
+        fill="none"
+      >
+        <path
+          className="ledger-line ledger-line-a"
+          d="M-40 610 C180 520 250 680 420 540 C590 400 680 452 830 330 C990 200 1090 270 1480 120"
+          stroke="#16A34A"
+          strokeWidth="2"
+          strokeOpacity="0.32"
+        />
+        <path
+          className="ledger-line ledger-line-b"
+          d="M-20 280 C190 250 260 340 420 300 C625 248 710 120 930 185 C1120 241 1235 188 1480 242"
+          stroke="#F59E0B"
+          strokeWidth="1.4"
+          strokeOpacity="0.18"
+        />
+        <path
+          className="ledger-line ledger-line-c"
+          d="M60 780 C230 688 355 704 510 618 C696 514 748 590 910 468 C1102 324 1266 398 1420 310"
+          stroke="#F6F8FA"
+          strokeWidth="1.2"
+          strokeOpacity="0.12"
+        />
+      </svg>
 
-      {/* Abstract block shapes — edificios / patrimonio */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-[40%] opacity-[0.012]"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(90deg, transparent 0px, transparent 120px, rgba(255,255,255,0.08) 120px, rgba(255,255,255,0.08) 121px, transparent 121px, transparent 240px)," +
-            "repeating-linear-gradient(0deg, transparent 0px, transparent 180px, rgba(255,255,255,0.06) 180px, rgba(255,255,255,0.06) 181px, transparent 181px, transparent 360px)",
-          backgroundSize: "240px 360px",
-        }}
-      />
+      <div className="decision-orb left-[9%] top-[25%]" />
+      <div className="decision-orb left-[29%] top-[62%] animation-delay-700" />
+      <div className="decision-orb left-[55%] top-[40%] animation-delay-1000" />
+      <div className="decision-orb left-[76%] top-[24%] animation-delay-1500" />
+      <div className="decision-orb left-[87%] top-[68%] animation-delay-2000" />
+
+      <div className="absolute bottom-0 left-0 right-0 h-[34%] opacity-[0.07] [background-image:repeating-linear-gradient(90deg,transparent_0px,transparent_110px,rgba(246,248,250,0.32)_110px,rgba(246,248,250,0.32)_112px,transparent_112px,transparent_220px)]" />
     </div>
   );
 }
-
-/* ─── Hero ─────────────────────────────────────────────────────────────────── */
 
 function HeroConversacional() {
   const router = useRouter();
   const [inputValue, setInputValue] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const startConversation = (value: string) => {
+    const cleanValue = value.trim();
+    if (cleanValue) {
+      window.sessionStorage.setItem("ledgera.initialDecision", cleanValue);
+    }
     router.push("/register");
   };
 
-  const handleChipClick = (text: string) => {
-    setInputValue(text);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    startConversation(inputValue);
   };
 
   return (
-    <section className="relative grid min-h-screen place-items-center overflow-hidden px-6 py-24 lg:py-32">
-      <AbstractFinanceBg />
+    <section className="relative min-h-[calc(100vh-80px)] overflow-hidden px-5 py-16 sm:px-8 lg:px-10 lg:py-24">
+      <DecisionFieldBackground />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[900px] flex-col items-center text-center">
-        {/* Marca — mucho más grande, más respiración, más presencia */}
-        <div className="mb-12 scale-125 sm:scale-150 origin-center">
-          <Logo
-            variant="light"
-            size="lg"
-            showSubtitle
-            subtitle={BRAND_SUBTITLE}
-          />
-        </div>
-
-        {/* Título */}
-        <h1 className="max-w-4xl font-display text-5xl font-black leading-[1.08] tracking-[-0.05em] text-slate-50 sm:text-7xl lg:text-8xl">
-          Comprende el impacto de tus decisiones
-          <br />
-          <span className="text-emerald-400">antes de tomarlas.</span>
-        </h1>
-
-        {/* Subtítulo */}          <p className="mt-6 max-w-2xl text-2xl leading-8 text-slate-400 sm:text-[30px] sm:leading-9">
-          LEDGERA analiza contexto, normativa, impuestos, patrimonio y
-          escenarios futuros para ayudarte a tomar mejores decisiones.
-        </p>
-
-        {/* Input principal — el elemento más importante */}
-        <form
-          onSubmit={handleSubmit}
-          className="mt-12 flex w-full max-w-[680px] flex-col gap-4 sm:flex-row"
-        >
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="¿Qué decisión estás evaluando hoy?"
-              className="w-full rounded-2xl border-2 border-white/20 bg-white/[0.08] px-7 py-6 text-xl text-slate-100 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-300 ease-out focus:border-emerald-500/50 focus:bg-white/[0.12] focus:outline-none focus:ring-[3px] focus:ring-emerald-500/20 focus:shadow-[0_0_50px_rgba(16,185,129,0.12)]"
-            />
+      <div className="relative z-10 mx-auto grid min-h-[calc(100vh-188px)] max-w-[1240px] items-center gap-14 lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,0.78fr)]">
+        <div className="max-w-[860px]">
+          <div className="mb-10 inline-flex rounded-full border border-[#16A34A]/25 bg-[#16A34A]/10 px-5 py-2 text-sm font-extrabold uppercase tracking-[0.24em] text-[#86EFAC]">
+            IA como interfaz principal
           </div>
-          <button
-            type="submit"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 py-6 text-lg font-black text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-[0_0_50px_rgba(16,185,129,0.35)] active:scale-[0.97]"
-          >
-            <span>Comenzar</span>
-            <span className="text-xl leading-none" aria-hidden="true">
-              →
-            </span>
-          </button>
-        </form>
 
-        {/* Chips — 18px */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {CHIPS.map((text) => (
-            <button
-              key={text}
-              type="button"
-              onClick={() => handleChipClick(text)}
-              className="rounded-xl border border-white/10 bg-white/[0.05] px-5 py-3 text-lg text-slate-300 transition-all duration-200 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-200 hover:shadow-[0_0_20px_rgba(16,185,129,0.08)]"
-            >
-              {text}
-            </button>
-          ))}
+          <h1 className="font-display text-[52px] font-black leading-[0.96] tracking-[-0.06em] text-[#F6F8FA] sm:text-[76px] lg:text-[96px]">
+            Comprende el impacto
+            <span className="block text-[#16A34A]">antes de decidir.</span>
+          </h1>
+
+          <p className="mt-8 max-w-[760px] text-[22px] leading-[1.55] text-[#D7E0EA] sm:text-[26px]">
+            LEDGERA interpreta contexto, normativa chilena, patrimonio,
+            impuestos y escenarios futuros para ayudarte a evaluar decisiones
+            financieras y tributarias con claridad.
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-11 max-w-[820px]">
+            <div className="rounded-[28px] border border-[#1e4a6b] bg-[#071B28]/82 p-2 shadow-[0_28px_90px_rgba(0,0,0,0.34)] backdrop-blur-xl transition focus-within:border-[#16A34A]/70 focus-within:shadow-[0_0_70px_rgba(22,163,74,0.18)]">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="¿Qué decisión necesitas evaluar hoy?"
+                  className="min-h-[76px] flex-1 rounded-[22px] border-0 bg-transparent px-6 text-[20px] font-semibold text-[#F6F8FA] outline-none placeholder:text-[#94A3B8] sm:text-[22px]"
+                />
+                <button
+                  type="submit"
+                  className="min-h-[68px] rounded-[22px] bg-[#16A34A] px-8 text-[18px] font-black text-white transition hover:bg-[#15803D] active:scale-[0.98]"
+                >
+                  Evaluar decisión →
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            {PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => setInputValue(prompt)}
+                className="min-h-[76px] rounded-2xl border border-[#1e4a6b] bg-[#13364F]/56 px-5 text-left text-[16px] font-bold leading-snug text-[#E8EEF5] transition hover:border-[#16A34A]/60 hover:bg-[#16A34A]/12 hover:text-white sm:text-[17px]"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Disclaimer — 16px */}
-        <p className="mt-12 max-w-3xl text-base leading-7 text-slate-500 sm:text-lg">
-          LEDGERA te ayuda a comprender normas, alternativas y consecuencias
-          financieras y tributarias antes de tomar una decisión. No reemplaza la
-          asesoría profesional especializada.
-        </p>
+        <aside className="rounded-[34px] border border-[#1e4a6b] bg-[#071B28]/76 p-6 shadow-[0_34px_120px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:p-8">
+          <div className="mb-7 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.22em] text-[#86EFAC]">
+                Mapa de decisión
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.04em] text-[#F6F8FA]">
+                De pregunta a escenario
+              </h2>
+            </div>
+            <div className="grid h-14 w-14 place-items-center rounded-2xl border border-[#16A34A]/25 bg-[#16A34A]/10 text-2xl font-black text-[#86EFAC]">
+              L
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              ["Contexto", "Quién eres, qué tienes y qué quieres resolver."],
+              ["Normativa", "Reglas chilenas aplicables a tu situación."],
+              ["Escenarios", "Alternativas, costos, riesgos y consecuencias."],
+              ["Decisión", "Tú eliges con información clara y trazable."],
+            ].map(([title, text], index) => (
+              <div key={title} className="group flex gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.035] p-5 transition hover:border-[#16A34A]/35 hover:bg-[#16A34A]/[0.07]">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#13364F] text-sm font-black text-[#86EFAC]">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <div>
+                  <h3 className="text-[19px] font-black text-[#F6F8FA]">{title}</h3>
+                  <p className="mt-1 text-[16px] leading-6 text-[#CBD5E1]">{text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </aside>
       </div>
     </section>
   );
 }
-
-/* ─── Casos Reales ──────────────────────────────────────────────────────────── */
 
 function CasosRealesSection() {
   return (
-    <section className="relative border-t border-white/[0.04] bg-[#020617] px-6 py-24 lg:py-32">
-      <div className="mx-auto max-w-[1180px]">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="m-0 text-sm font-black uppercase tracking-[0.18em] text-emerald-400/70">
-            Capacidades
+    <section className="relative border-t border-[#1e4a6b]/60 bg-[#071B28] px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
+      <div className="mx-auto max-w-[1240px]">
+        <div className="max-w-[820px]">
+          <p className="text-base font-black uppercase tracking-[0.22em] text-[#86EFAC]">
+            Casos que sí representan LEDGERA
           </p>
-          <h2 className="mt-5 font-display text-3xl font-black leading-tight tracking-[-0.04em] text-slate-50 sm:text-4xl lg:text-5xl">
-            Analiza casos reales.
+          <h2 className="mt-5 font-display text-[42px] font-black leading-[1.02] tracking-[-0.055em] text-[#F6F8FA] sm:text-[64px]">
+            Decisiones financieras, tributarias y patrimoniales.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg sm:leading-8">
-            LEDGERA evalúa escenarios concretos con contexto normativo,
-            financiero y patrimonial.
+          <p className="mt-6 text-[21px] leading-[1.55] text-[#CBD5E1]">
+            La landing deja de hablar como software genérico. Ahora muestra los
+            problemas reales que LEDGERA debe interpretar.
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {CASOS_REALES.map((caso) => (
-            <div
-              key={caso.area}
-              className="group rounded-3xl border border-white/[0.06] bg-white/[0.02] p-8 transition-all duration-300 hover:border-emerald-500/20 hover:bg-white/[0.04] sm:p-10"
+        <div className="mt-16 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {DECISION_CASES.map((caso) => (
+            <article
+              key={caso.title}
+              className="group min-h-[270px] rounded-[32px] border border-[#1e4a6b] bg-[#0F2A3D] p-8 transition hover:-translate-y-1 hover:border-[#16A34A]/60 hover:bg-[#13364F] sm:p-10"
             >
-              <h3 className="font-display text-2xl font-black tracking-[-0.025em] text-slate-50 transition-colors duration-300 group-hover:text-emerald-300 sm:text-3xl">
-                {caso.area}
+              <div className="mb-9 flex items-center justify-between gap-6">
+                <span className="font-display text-[42px] font-black tracking-[-0.06em] text-[#16A34A]/55">
+                  {caso.index}
+                </span>
+                <span className="rounded-full border border-[#F59E0B]/25 bg-[#F59E0B]/10 px-4 py-2 text-sm font-black uppercase tracking-[0.16em] text-[#FCD34D]">
+                  {caso.signal}
+                </span>
+              </div>
+              <h3 className="font-display text-[32px] font-black tracking-[-0.045em] text-[#F6F8FA] sm:text-[40px]">
+                {caso.title}
               </h3>
-              <p className="mt-4 text-lg leading-7 text-slate-400 sm:text-xl sm:leading-8">
+              <p className="mt-5 text-[20px] leading-[1.55] text-[#D7E0EA]">
                 {caso.text}
               </p>
-            </div>
+            </article>
           ))}
         </div>
       </div>
@@ -220,35 +254,32 @@ function CasosRealesSection() {
   );
 }
 
-/* ─── Principio de confianza ───────────────────────────────────────────────── */
-
 function ConfianzaSection() {
   return (
-    <section className="relative border-t border-white/[0.04] bg-[#020617] px-6 py-24 lg:py-32">
-      <div className="mx-auto max-w-[820px] text-center">
-        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.04em] text-slate-50 sm:text-4xl lg:text-5xl">
-          LEDGERA no toma decisiones por ti.
+    <section className="relative border-t border-[#1e4a6b]/60 bg-[#0F2A3D] px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
+      <div className="mx-auto max-w-[980px] text-center">
+        <p className="text-base font-black uppercase tracking-[0.22em] text-[#86EFAC]">
+          Principio de producto
+        </p>
+        <h2 className="mt-5 font-display text-[42px] font-black leading-[1.04] tracking-[-0.055em] text-[#F6F8FA] sm:text-[64px]">
+          LEDGERA no decide por ti.
         </h2>
-
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg sm:leading-8">
-          Te ayuda a comprender el contexto, las normas aplicables y las
-          consecuencias de cada alternativa para que tomes decisiones
-          informadas.
+        <p className="mx-auto mt-7 max-w-[820px] text-[22px] leading-[1.6] text-[#D7E0EA]">
+          Explica qué ocurre, qué normas aplican, qué alternativas existen y qué
+          consecuencias tiene cada camino. La decisión final siempre pertenece
+          al usuario.
         </p>
 
-        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-7 py-5 text-lg font-black text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-[0_0_40px_rgba(16,185,129,0.30)] active:scale-[0.97]"
+            className="inline-flex min-h-[64px] items-center rounded-2xl bg-[#16A34A] px-8 text-[18px] font-black text-white transition hover:bg-[#15803D] active:scale-[0.98]"
           >
-            Comenzar
-            <span className="text-xl leading-none" aria-hidden="true">
-              →
-            </span>
+            Evaluar una decisión →
           </Link>
           <Link
             href="/login"
-            className="inline-flex items-center rounded-2xl border border-white/20 bg-white/10 px-7 py-5 text-base font-bold text-slate-100 transition hover:bg-white/15"
+            className="inline-flex min-h-[64px] items-center rounded-2xl border border-[#1e4a6b] bg-[#13364F] px-8 text-[17px] font-black text-[#F6F8FA] transition hover:bg-[#1e4a6b]"
           >
             Ya tengo cuenta
           </Link>
@@ -258,28 +289,19 @@ function ConfianzaSection() {
   );
 }
 
-/* ─── Footer ──────────────────────────────────────────────────────────────── */
-
 function LandingFooter() {
   return (
-    <footer className="border-t border-white/[0.04] bg-[#020617] px-6 py-12">
-      <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-8 sm:flex-row sm:justify-between">
-        <div className="flex flex-col items-center gap-4 sm:items-start">
-          <Logo
-            variant="light"
-            size="sm"
-            showSubtitle
-            subtitle={BRAND_SUBTITLE}
-          />
-        </div>
+    <footer className="border-t border-[#1e4a6b]/60 bg-[#071B28] px-5 py-12 sm:px-8 lg:px-10">
+      <div className="mx-auto flex max-w-[1240px] flex-col items-center gap-8 sm:flex-row sm:justify-between">
+        <Logo variant="light" size="sm" showSubtitle subtitle={BRAND_SUBTITLE} />
 
-        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-3">
+        <nav className="flex flex-wrap justify-center gap-x-7 gap-y-3">
           {FOOTER_LINKS.map((link) =>
             link.href.startsWith("mailto:") ? (
               <a
                 key={link.label}
                 href={link.href}
-                className="text-sm text-slate-400 transition hover:text-slate-200"
+                className="text-base font-semibold text-[#CBD5E1] transition hover:text-[#F6F8FA]"
               >
                 {link.label}
               </a>
@@ -287,7 +309,7 @@ function LandingFooter() {
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm text-slate-400 transition hover:text-slate-200"
+                className="text-base font-semibold text-[#CBD5E1] transition hover:text-[#F6F8FA]"
               >
                 {link.label}
               </Link>
@@ -296,14 +318,12 @@ function LandingFooter() {
         </nav>
       </div>
 
-      <div className="mx-auto mt-8 max-w-[1180px] border-t border-white/[0.04] pt-6 text-center text-sm text-slate-500">
+      <div className="mx-auto mt-8 max-w-[1240px] border-t border-[#1e4a6b]/60 pt-6 text-center text-base text-[#94A3B8]">
         © {new Date().getFullYear()} LEDGERA. Todos los derechos reservados.
       </div>
     </footer>
   );
 }
-
-/* ─── Componente principal ────────────────────────────────────────────────── */
 
 export default function LandingConversacional() {
   const router = useRouter();
@@ -324,37 +344,61 @@ export default function LandingConversacional() {
   }, []);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#020617] text-slate-50">
-      {/* ── Navbar ── */}
-      <nav className="sticky top-0 z-[100] flex h-[76px] items-center justify-between border-b border-white/[0.04] bg-[#020617]/90 px-5 backdrop-blur-md lg:px-8">
+    <main className="min-h-screen overflow-x-hidden bg-[#0F2A3D] text-[#F6F8FA]">
+      <style jsx global>{`
+        @keyframes ledgerDash {
+          0% { stroke-dashoffset: 900; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes orbPulse {
+          0%, 100% { transform: scale(1); opacity: 0.48; }
+          50% { transform: scale(1.5); opacity: 1; }
+        }
+        .ledger-line {
+          stroke-dasharray: 18 24;
+          animation: ledgerDash 18s linear infinite;
+        }
+        .ledger-line-b { animation-duration: 24s; }
+        .ledger-line-c { animation-duration: 30s; }
+        .decision-orb {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border-radius: 9999px;
+          background: #16A34A;
+          box-shadow: 0 0 30px rgba(22, 163, 74, 0.62);
+          animation: orbPulse 4.8s ease-in-out infinite;
+        }
+        .animation-delay-700 { animation-delay: 700ms; }
+        .animation-delay-1000 { animation-delay: 1000ms; }
+        .animation-delay-1500 { animation-delay: 1500ms; }
+        .animation-delay-2000 { animation-delay: 2000ms; }
+      `}</style>
+
+      <nav className="sticky top-0 z-[100] flex min-h-[84px] items-center justify-between border-b border-[#1e4a6b]/70 bg-[#071B28]/92 px-5 backdrop-blur-xl lg:px-10">
         <Link href="/" aria-label="Inicio LEDGERA">
-          <Logo
-            variant="light"
-            size="md"
-            showSubtitle
-            subtitle={BRAND_SUBTITLE}
-          />
+          <Logo variant="light" size="md" showSubtitle subtitle={BRAND_SUBTITLE} />
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
           <Link
             href="/login"
-            className="rounded-lg px-4 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+            className="rounded-xl px-5 py-3 text-base font-black text-[#CBD5E1] transition hover:bg-white/8 hover:text-white"
           >
             Iniciar sesión
           </Link>
           <Link
             href="/register"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-6 py-4 text-base font-black text-white transition hover:bg-[#15803D]"
           >
-            Comenzar
+            Evaluar decisión
             <span aria-hidden="true">→</span>
           </Link>
         </div>
 
         <button
           type="button"
-          className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-slate-100 md:hidden"
+          className="rounded-xl border border-[#1e4a6b] bg-[#13364F] px-4 py-3 text-sm font-black text-[#F6F8FA] md:hidden"
           onClick={() => setMobileMenuOpen((current) => !current)}
           aria-expanded={mobileMenuOpen}
           aria-label="Abrir menú"
@@ -364,42 +408,37 @@ export default function LandingConversacional() {
       </nav>
 
       {mobileMenuOpen ? (
-        <div className="sticky top-[76px] z-[90] border-b border-white/[0.04] bg-[#020617]/98 px-6 py-4 backdrop-blur-md md:hidden">
-          <div className="grid gap-3">
+        <div className="sticky top-[84px] z-[90] border-b border-[#1e4a6b]/70 bg-[#071B28]/98 px-6 py-5 backdrop-blur-xl md:hidden">
+          <div className="grid gap-4">
             <Link
               href="/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="font-bold text-slate-300"
+              className="text-base font-black text-[#CBD5E1]"
             >
               Iniciar sesión
             </Link>
             <Link
               href="/register"
               onClick={() => setMobileMenuOpen(false)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-3 text-center font-black text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-5 py-4 text-center font-black text-white"
             >
-              Comenzar
+              Evaluar decisión
               <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
       ) : null}
 
-      {/* ── Secciones ── */}
       <HeroConversacional />
-
       <CasosRealesSection />
-
       <ConfianzaSection />
-
       <LandingFooter />
 
-      {/* ── Scroll to top ── */}
       {showScrollTop ? (
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-5 right-5 z-[80] h-12 w-12 rounded-full border border-white/15 bg-[#13364F] font-black text-white shadow-lg transition hover:bg-[#1e4a6b]"
+          className="fixed bottom-5 right-5 z-[80] h-12 w-12 rounded-full border border-[#1e4a6b] bg-[#13364F] font-black text-white shadow-lg transition hover:bg-[#1e4a6b]"
           aria-label="Volver arriba"
         >
           ↑
