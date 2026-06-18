@@ -15,12 +15,11 @@ export async function buildCopilotContext(userId: string): Promise<CopilotContex
       "SELECT COUNT(*)::bigint AS count FROM tax_memory_patterns WHERE user_id = $1",
       userId,
     ).catch(() => [{ count: BigInt(0) }]),
-    prisma.users.findUnique({ where: { id: userId }, select: { role: true, onboardingData: true } }).catch(() => null),
+    prisma.users.findUnique({ where: { id: userId }, select: { role: true } }).catch(() => null),
   ]);
 
-  // Resolve profile type: prefer onboarding profileType, fallback to user role
-  const rawOnboarding = userRecord?.onboardingData as { profileType?: string } | null | undefined;
-  const profileType = rawOnboarding?.profileType ?? userRecord?.role ?? null;
+  // Resolve profile type from user role (onboardingData column pending migration)
+  const profileType = userRecord?.role ?? null;
 
   return {
     userId,
