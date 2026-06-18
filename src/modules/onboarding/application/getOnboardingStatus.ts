@@ -4,96 +4,57 @@ import { prisma } from "@/lib/prisma";
 
 export type OnboardingStatus = {
   needsOnboarding: boolean;
-  hasMovements: boolean;
-  hasConnections: boolean;
-  hasBankFiles: boolean;
-  /** Fuente más probable de activación (para first_data_loaded). */
-  source: "csv" | "exchange" | "bank" | "manual";
 };
 
 /**
- * CAPA 4.1 — Activación guiada.
+ * UX 3.0.03 — Onboarding Conversacional
  *
- * Un usuario necesita onboarding mientras no tenga datos cargados:
- * - sin movimientos de portafolio
- * - sin conexiones de exchange
- * - sin archivos bancarios importados
+ * Un usuario necesita onboarding si NO ha completado el
+ * flujo conversacional (onboardingCompleted === false).
  *
- * La fuente se infiere del primer canal con datos encontrado.
+ * Fallback para usuarios existentes: si ya tienen datos
+ * (movimientos, conexiones o archivos bancarios) se
+ * considera onboarding completado automáticamente.
  */
 export async function getOnboardingStatus(userId: string): Promise<OnboardingStatus> {
   try {
-    const [movementCount, connectionCount, bankUploadCount, latestMovement] = await Promise.all([
+    const [user, movementCount, connectionCount, bankUploadCount] = await Promise.all([
+      prisma.users.findUnique({
+        where: { id: userId },
+        select: { onboardingCompleted: true },
+      }),
       prisma.portfolioMovement.count({
-        where: {
-          userId,
-          deletedAt: null,
-        },
+        where: { userId, deletedAt: null },
       }),
       prisma.exchangeConnection.count({
-        where: {
-          userId,
-          status: "CONNECTED",
-        },
+        where: { userId, status: "CONNECTED" },
       }),
       prisma.bankFileUpload.count({
-        where: {
-          userId,
-        },
-      }),
-      prisma.portfolioMovement.findFirst({
-        where: {
-          userId,
-          deletedAt: null,
-        },
-        orderBy: {
-          executedAt: "desc",
-        },
-        select: {
-          source: true,
-        },
+        where: { userId },
       }),
     ]);
 
-    const hasMovements = movementCount > 0;
-    const hasConnections = connectionCount > 0;
-    const hasBankFiles = bankUploadCount > 0;
-    const needsOnboarding = !hasMovements && !hasConnections && !hasBankFiles;
-
-    let source: OnboardingStatus["source"] = "manual";
-    if (hasConnections) {
-      source = "exchange";
-    } else if (hasBankFiles) {
-      source = "bank";
-    } else if (latestMovement?.source) {
-      const normalized = String(latestMovement.source).toUpperCase();
-      if (normalized.includes("CSV") || normalized.includes("IMPORT")) {
-        source = "csv";
-      } else if (normalized.includes("BINANCE") || normalized.includes("EXCHANGE")) {
-        source = "exchange";
-      } else if (normalized.includes("BANK")) {
-        source = "bank";
-      } else {
-        source = "manual";
-      }
+    // Si ya completó el onboarding conversacional, no necesita
+    if (user?.onboardingCompleted) {
+      return { needsOnboarding: false };
     }
 
-    return {
-      needsOnboarding,
-      hasMovements,
-      hasConnections,
-      hasBankFiles,
-      source,
-    };
+    // Fallback: usuarios existentes con datos se saltan el onboarding
+    if (movementCount > 0 || connectionCount > 0 || bankUploadCount > 0) {
+      // Auto-marcar como completado para que no lo vuelvan a ver
+      await prisma.users.update({
+        where: { id: userId },
+        data: { onboardingCompleted: true },
+      }).catch(() => {});
+      return { needsOnboarding: false };
+    }
+
+    return { needsOnboarding: true };
   } catch (error) {
     console.error("getOnboardingStatus error:", error);
     // En caso de error, no bloquear al usuario por seguridad.
     return {
       needsOnboarding: false,
-      hasMovements: false,
-      hasConnections: false,
-      hasBankFiles: false,
-      source: "manual",
     };
   }
 }

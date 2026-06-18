@@ -567,6 +567,7 @@ model users {
 
   // CAPA 4.1 — Activación: preparado para migración futura
   onboardingCompleted     Boolean   @default(false)
+  onboardingData          Json?
   activatedAt             DateTime? @db.Timestamptz(6)
   activationSource        String?
 

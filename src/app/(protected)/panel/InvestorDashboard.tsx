@@ -1,422 +1,480 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { clp, usd, percent } from "@/shared/formatting";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/modules/identity/client/authContext";
+import { fonts } from "@/styles/tokens";
 
-/* ─── Investor Dashboard types ─── */
-type InvestorData = {
-  patrimonio: {
-    totalMarketValueClp: number;
-    totalMarketValueUsd: number;
-    assetCount: number;
-  };
-  rentabilidad: {
-    totalReturnClp: number;
-    totalReturnUsd: number;
-    totalReturnPercent: number | null;
-  };
-  proximaAccion: {
-    label: string;
-    href: string;
-    detail: string;
-  };
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const EXAMPLES = [
+  "Vendí Bitcoin el mes pasado",
+  "Quiero crear una SpA",
+  "Recibí fondos desde el extranjero",
+  "Necesito preparar mi declaración",
+  "Compré un inmueble",
+  "Tengo ganancias en staking",
+];
+
+const CASE_STATUS: Record<string, string> = {
+  OPEN: "Análisis inicial",
+  IN_PROGRESS: "Analizando estructura",
+  PENDING_REVIEW: "Recolección de antecedentes",
+  RESOLVED: "Simulación completada",
+  CLOSED: "Completado",
+  DRAFT: "Borrador",
 };
 
-/* ─── Tax Summary types (for SII card only) ─── */
-type TaxStatus = "EMPTY" | "NO_TAX_EVENTS" | "DECLARE_REVIEW" | "PAY_REVIEW" | "LOSS_REVIEW";
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-type TaxSummaryDecision = {
-  status: TaxStatus;
-  label: string;
-  headline: string;
-  detail: string;
-};
-
-type TaxData = {
-  decision: TaxSummaryDecision;
-};
-
-type UserDashboardData = {
+type DashboardData = {
   risk: { score: number | null; level: string | null };
   alerts: { open: number; critical: number };
   tax: { pendingDocuments: number; rejectedDocuments: number };
-  documents: { total: number; tax: number; pendingReview: number; last30Days: number };
-  subscription: {
-    status: string | null;
-    plan: string | null;
-    expiresAt: string | null;
-    pendingPayment: boolean;
-  };
+  documents: { total: number };
+  subscription: { status: string | null; plan: string | null };
 };
 
-function situacionSIIConfig(status: TaxStatus) {
-  switch (status) {
-    case "NO_TAX_EVENTS":
-      return {
-        icon: "✓",
-        iconColor: "#16A34A",
-        border: "#86EFAC",
-        bg: "#F0FDF4",
-        titleColor: "#166534",
-        subtitle: "Sin acción requerida",
-      };
-    case "EMPTY":
-    case "LOSS_REVIEW":
-      return {
-        icon: "⚠",
-        iconColor: "#B45309",
-        border: "#FDE047",
-        bg: "#FEF9C3",
-        titleColor: "#854D0E",
-        subtitle: "Revisión recomendada",
-      };
-    case "DECLARE_REVIEW":
-    case "PAY_REVIEW":
-      return {
-        icon: "⚠",
-        iconColor: "#DC2626",
-        border: "#FECACA",
-        bg: "#FEF2F2",
-        titleColor: "#991B1B",
-        subtitle: "Declaración requerida",
-      };
+type TaxCase = {
+  id: string;
+  title: string;
+  status: string;
+  updatedAt: string;
+};
+
+type Recommendation = {
+  id: string;
+  title: string;
+  category?: string;
+};
+
+// ─── Greeting by role ─────────────────────────────────────────────────────────
+
+function buildGreeting(role: string, name: string) {
+  if (role === "empresa") {
+    return { headline: "Bienvenido.", sub: "¿Qué decisión necesitas evaluar?" };
   }
+  if (role === "contador") {
+    return { headline: "", sub: "¿En qué caso estás trabajando hoy?" };
+  }
+  return {
+    headline: `Hola${name ? `, ${name}` : ""}.`,
+    sub: "¿Qué necesitas resolver hoy?",
+  };
 }
 
-/* ─── Components ─── */
-function MetricCard({
-  label,
-  value,
-  note,
-  tone = "neutral",
+function extractFirstName(email: string): string {
+  const prefix = email.split("@")[0] ?? "";
+  const first = prefix.split(/[._-]/)[0] ?? prefix;
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+// ─── Section components ───────────────────────────────────────────────────────
+
+function SituacionSection({
+  data,
+  activeCases,
 }: {
-  label: string;
-  value: string;
-  note: string;
-  tone?: "neutral" | "good" | "warn";
+  data: DashboardData | null;
+  activeCases: number;
 }) {
-  const valueColor = tone === "good" ? "#15803D" : tone === "warn" ? "#B45309" : "#0F2A3D";
-  return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
-      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
-        {label}
-      </p>
-      <p style={{ color: valueColor, fontSize: "1.8rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>
-        {value}
-      </p>
-      <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.45, margin: 0 }}>{note}</p>
-    </article>
-  );
-}
+  const items: { label: string; value: string }[] = [
+    {
+      label: "Próxima obligación",
+      value: data?.tax?.pendingDocuments
+        ? `${data.tax.pendingDocuments} documento${data.tax.pendingDocuments !== 1 ? "s" : ""} pendiente${data.tax.pendingDocuments !== 1 ? "s" : ""}`
+        : "Declaración mensual",
+    },
+    {
+      label: "Alertas relevantes",
+      value: data ? String(data.alerts.open) : "—",
+    },
+    {
+      label: "Documentos totales",
+      value: data ? String(data.documents.total) : "—",
+    },
+    {
+      label: "Casos activos",
+      value: activeCases > 0 ? String(activeCases) : "—",
+    },
+  ];
 
-function EmptyState() {
   return (
-    <div style={{ background: "#FFFFFF", border: "1px dashed #CBD5E1", borderRadius: 12, padding: "40px 28px", textAlign: "center" }}>
-      <h2 style={{ color: "#0F2A3D", fontSize: "1.25rem", fontWeight: 850, margin: "0 0 10px" }}>Bienvenido a LEDGERA</h2>
-      <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: "0 auto 18px", maxWidth: 480 }}>
-        Aún no tienes movimientos registrados. Carga tu primera operación para ver tu patrimonio y rentabilidad.
-      </p>
-      <Link
-        href="/importaciones"
-        style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "11px 16px", textDecoration: "none" }}
-      >
-        Cargar movimientos →
+    <section style={cardStyle}>
+      <p style={labelStyle}>Situación actual</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {items.map(item => (
+          <div
+            key={item.label}
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}
+          >
+            <span style={{ color: "#4B5563", fontSize: 14, lineHeight: 1.4 }}>{item.label}</span>
+            <span style={{ color: "#E2E8F0", fontSize: 14, fontWeight: 700, textAlign: "right" }}>
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
+      <Link href="/mi-situacion" style={linkStyle}>
+        Ver situación completa →
       </Link>
-    </div>
+    </section>
   );
 }
 
-/* ─── Main Page ─── */
-export function InvestorDashboard() {
-  const [investor, setInvestor] = useState<InvestorData | null>(null);
-  const [tax, setTax] = useState<TaxData | null>(null);
-  const [userDashboard, setUserDashboard] = useState<UserDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const [investorRes, taxRes, userDashboardRes] = await Promise.all([
-          fetch("/api/investor/dashboard", { cache: "no-store" }),
-          fetch("/api/tax/summary?year=" + new Date().getFullYear(), { cache: "no-store" }),
-          fetch("/api/dashboard/user", { cache: "no-store" }),
-        ]);
-
-        const investorJson = await investorRes.json();
-        const taxJson = await taxRes.json();
-        const userDashboardJson = await userDashboardRes.json();
-
-        if (!investorRes.ok || !investorJson.ok) {
-          throw new Error(investorJson.message || "Error cargando dashboard.");
-        }
-
-        setInvestor(investorJson.data);
-        setTax(taxJson.ok ? taxJson.data : null);
-        setUserDashboard(userDashboardJson.ok ? userDashboardJson.data : null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error cargando Inicio.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    void load();
-  }, []);
-
-  if (loading) {
-    return <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando…</p>;
+function TimelineSection({ cases }: { cases: TaxCase[] }) {
+  function formatDate(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+    if (diff === 0) return "Hoy";
+    if (diff === 1) return "Ayer";
+    return d.toLocaleDateString("es-CL", { day: "numeric", month: "long" });
   }
 
-  if (error) {
-    return (
-      <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>
-        {error}
-      </div>
-    );
-  }
-
-  if (!investor) {
-    return <p style={{ color: "#64748B", fontSize: 14 }}>No hay datos para mostrar.</p>;
-  }
-
-  const isEmpty = !tax && investor.patrimonio.assetCount === 0;
-  if (isEmpty) {
-    return (
-      <div style={{ maxWidth: 800, width: "100%" }}>
-        <section style={{ marginBottom: 24 }}>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>
-            Inicio
-          </p>
-          <h1 style={{ color: "#0F2A3D", fontSize: "1.9rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>
-            ¿Cómo estoy?
-          </h1>
-        </section>
-        <EmptyState />
-      </div>
-    );
-  }
-
-  const returnTone = investor.rentabilidad.totalReturnUsd >= 0 ? "good" : "warn";
-  const taxCfg = tax ? situacionSIIConfig(tax.decision.status) : null;
+  const items =
+    cases.length > 0
+      ? cases.map(c => ({ date: formatDate(c.updatedAt), text: c.title }))
+      : [
+          { date: "Hoy", text: "Consulta sobre Bitcoin" },
+          { date: "Ayer", text: "Simulación tributaria" },
+          { date: "15 junio", text: "Análisis patrimonial" },
+        ];
 
   return (
-    <div style={{ maxWidth: 900, width: "100%" }}>
-      <section style={{ marginBottom: 28 }}>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>
-          Inicio
-        </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "1.9rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>
-          ¿Cómo estoy?
-        </h1>
-        <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
-          Resumen general de tu posición patrimonial y estado frente al SII.
-        </p>
-      </section>
+    <section style={cardStyle}>
+      <p style={labelStyle}>Actividad reciente</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+            <span style={{ color: "#334155", fontSize: 12, fontWeight: 700, minWidth: 56, paddingTop: 1, lineHeight: 1.5 }}>
+              {item.date}
+            </span>
+            <span style={{ color: "#CBD5E1", fontSize: 14, lineHeight: 1.5 }}>
+              {item.text}
+            </span>
+          </div>
+        ))}
+      </div>
+      <Link href="/asistente" style={linkStyle}>
+        Ver conversaciones →
+      </Link>
+    </section>
+  );
+}
 
-      {userDashboard && (
-        <div
-          style={{
-            display: "grid",
-            gap: 16,
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
-            marginBottom: 24,
-          }}
-        >
-          <WidgetRisk risk={userDashboard.risk} />
-          <WidgetAlerts alerts={userDashboard.alerts} />
-          <WidgetTax tax={userDashboard.tax} />
-          <WidgetDocuments documents={userDashboard.documents} />
-          <WidgetSubscription subscription={userDashboard.subscription} />
+function CasosSection({ cases }: { cases: TaxCase[] }) {
+  const active = cases.filter(c => c.status !== "CLOSED" && c.status !== "RESOLVED");
+
+  return (
+    <section style={cardStyle}>
+      <p style={labelStyle}>Casos en seguimiento</p>
+      {active.length === 0 ? (
+        <p style={{ color: "#334155", fontSize: 14, margin: "0 0 16px" }}>
+          No hay casos activos en este momento.
+        </p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {active.map((c, i) => (
+            <div key={c.id}>
+              <Link href={`/casos/${c.id}`} style={{ textDecoration: "none" }}>
+                <p style={{ color: "#E2E8F0", fontSize: 14, fontWeight: 700, margin: "0 0 3px", lineHeight: 1.4 }}>
+                  {c.title}
+                </p>
+                <p style={{ color: "#475569", fontSize: 12, margin: 0 }}>
+                  Estado: {CASE_STATUS[c.status] ?? c.status}
+                </p>
+              </Link>
+              {i < active.length - 1 && (
+                <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginTop: 14 }} />
+              )}
+            </div>
+          ))}
         </div>
       )}
+      <Link href="/casos" style={linkStyle}>
+        Ver todos los casos →
+      </Link>
+    </section>
+  );
+}
 
-      {/* 4 Cards */}
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", marginBottom: 24 }}>
-        {/* Card 1: Patrimonio */}
-        <MetricCard
-          label="Patrimonio total"
-          value={clp(investor.patrimonio.totalMarketValueClp)}
-          note={`${usd(investor.patrimonio.totalMarketValueUsd)} valor estimado`}
-        />
+function RecomendacionesSection({ items }: { items: Recommendation[] }) {
+  const defaults = [
+    "Declaración pendiente",
+    "Actualización patrimonial",
+    "Operaciones con cryptoactivos",
+  ];
+  const list = items.length > 0 ? items.map(r => r.title) : defaults;
 
-        {/* Card 2: Resultado acumulado */}
-        <MetricCard
-          label="Resultado acumulado"
-          value={clp(investor.rentabilidad.totalReturnClp)}
-          note={`${percent(investor.rentabilidad.totalReturnPercent)} · realizado + staking`}
-          tone={returnTone}
-        />
-
-        {/* Card 3: Situación SII */}
-        {taxCfg ? (
-          <article
+  return (
+    <section style={{ ...cardStyle, gridColumn: "1 / -1" }}>
+      <p style={labelStyle}>Podrías revisar</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        {list.map((item, i) => (
+          <div
+            key={i}
             style={{
-              background: taxCfg.bg,
-              border: `2px solid ${taxCfg.border}`,
-              borderRadius: 12,
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
+              display: "flex", alignItems: "center", gap: 10,
+              background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.15)",
+              borderRadius: 999, padding: "7px 16px",
             }}
           >
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ color: taxCfg.iconColor, fontSize: 20 }}>{taxCfg.icon}</span>
-                <p style={{ color: taxCfg.titleColor, fontSize: 13, fontWeight: 850, margin: 0 }}>Situación SII</p>
-              </div>
-              <p style={{ color: taxCfg.titleColor, fontSize: "1.15rem", fontWeight: 850, margin: "0 0 4px" }}>
-                {taxCfg.subtitle}
-              </p>
-            </div>
-            <Link
-              href="/mi-situacion"
+            <span style={{ color: "#4ADE80", fontSize: 11 }}>•</span>
+            <span style={{ color: "#CBD5E1", fontSize: 13, fontWeight: 500, fontFamily: fonts.body }}>{item}</span>
+          </div>
+        ))}
+      </div>
+      <Link href="/recomendaciones" style={{ ...linkStyle, marginTop: 18 }}>
+        Ver recomendaciones →
+      </Link>
+    </section>
+  );
+}
+
+// ─── Shared styles ────────────────────────────────────────────────────────────
+
+const cardStyle: React.CSSProperties = {
+  background: "rgba(255,255,255,0.03)",
+  border: "1px solid rgba(255,255,255,0.07)",
+  borderRadius: 18,
+  padding: "26px 28px",
+};
+
+const labelStyle: React.CSSProperties = {
+  color: "#334155",
+  fontSize: 11,
+  fontWeight: 850,
+  letterSpacing: "0.09em",
+  margin: "0 0 18px",
+  textTransform: "uppercase",
+  fontFamily: fonts.body,
+};
+
+const linkStyle: React.CSSProperties = {
+  display: "inline-block",
+  marginTop: 20,
+  color: "#4ADE80",
+  fontSize: 13,
+  fontWeight: 700,
+  textDecoration: "none",
+  fontFamily: fonts.body,
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export function InvestorDashboard() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const [query, setQuery] = useState("");
+  const [exIdx, setExIdx] = useState(0);
+  const [focused, setFocused] = useState(false);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [cases, setCases] = useState<TaxCase[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+
+  const role = ((user as { role?: string })?.role) ?? "personal";
+  const displayName = user?.email ? extractFirstName(user.email) : "";
+  const greeting = buildGreeting(role, displayName);
+
+  // Rotate placeholder
+  useEffect(() => {
+    const t = setInterval(() => setExIdx(i => (i + 1) % EXAMPLES.length), 3500);
+    return () => clearInterval(t);
+  }, []);
+
+  // Fetch data
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/dashboard/user", { cache: "no-store" }).then(r => r.json()).catch(() => null),
+      fetch("/api/tax-cases", { cache: "no-store" }).then(r => r.json()).catch(() => null),
+      fetch("/api/recommendations", { cache: "no-store" }).then(r => r.json()).catch(() => null),
+    ]).then(([ud, tc, rc]) => {
+      if (ud?.ok) setDashboard(ud.data);
+      if (tc?.ok && Array.isArray(tc.data)) setCases(tc.data.slice(0, 4));
+      if (rc?.ok && Array.isArray(rc.data)) setRecommendations(rc.data.slice(0, 5));
+    });
+  }, []);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    router.push(`/asistente?q=${encodeURIComponent(q)}`);
+  }
+
+  function useExample(ex: string) {
+    setQuery(ex);
+    inputRef.current?.focus();
+  }
+
+  const activeCases = cases.filter(c => c.status !== "CLOSED" && c.status !== "RESOLVED").length;
+
+  return (
+    <div
+      style={{
+        minHeight: "calc(100vh - 60px)",
+        background: "#071B28",
+        color: "#E2E8F0",
+        fontFamily: fonts.body,
+      }}
+    >
+      {/* ── HERO: Saludo + Input ── */}
+      <section
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          padding: "clamp(64px, 12vh, 130px) 24px 56px",
+          minHeight: "62vh",
+        }}
+      >
+        {/* Saludo adaptativo */}
+        <div style={{ marginBottom: 40, maxWidth: 640 }}>
+          {greeting.headline && (
+            <h1
               style={{
-                marginTop: 12,
-                color: taxCfg.titleColor,
-                fontSize: 13,
+                color: "#F8FAFC",
+                fontSize: "clamp(2rem, 5vw, 3.4rem)",
                 fontWeight: 850,
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
+                margin: "0 0 8px",
+                lineHeight: 1.06,
+                fontFamily: fonts.body,
+                letterSpacing: "-0.01em",
               }}
             >
-              Ver situación →
-            </Link>
-          </article>
-        ) : (
-          <MetricCard label="Situación SII" value="—" note="No disponible" />
-        )}
-
-        {/* Card 4: Próxima acción */}
-        <article style={{ background: "#FFFFFF", border: "2px solid #0F766E", borderRadius: 12, padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div>
-            <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>
-              Próxima acción
-            </p>
-            <p style={{ color: "#0F2A3D", fontSize: "1.05rem", fontWeight: 850, margin: "0 0 4px", lineHeight: 1.25 }}>
-              {investor.proximaAccion.label}
-            </p>
-            <p style={{ color: "#475569", fontSize: 12, lineHeight: 1.45, margin: 0 }}>
-              {investor.proximaAccion.detail}
-            </p>
-          </div>
-          <Link
-            href={investor.proximaAccion.href}
+              {greeting.headline}
+            </h1>
+          )}
+          <p
             style={{
-              marginTop: 14,
-              background: "#0F766E",
-              borderRadius: 8,
-              color: "#FFFFFF",
-              display: "inline-flex",
-              fontSize: 13,
-              fontWeight: 850,
-              padding: "10px 16px",
-              textDecoration: "none",
-              alignSelf: "flex-start",
+              color: "#64748B",
+              fontSize: "clamp(1rem, 2.5vw, 1.35rem)",
+              fontWeight: 450,
+              margin: 0,
+              lineHeight: 1.45,
             }}
           >
-            {investor.proximaAccion.label} →
-          </Link>
-        </article>
+            {greeting.sub}
+          </p>
+        </div>
+
+        {/* Input principal */}
+        <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: 640, marginBottom: 18 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              background: "rgba(255,255,255,0.04)",
+              border: `1.5px solid ${focused ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.10)"}`,
+              borderRadius: 18,
+              padding: "6px 6px 6px 22px",
+              transition: "border-color 0.2s",
+              boxShadow: focused ? "0 0 0 3px rgba(22,163,74,0.08)" : "none",
+            }}
+          >
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder={EXAMPLES[exIdx]}
+              autoComplete="off"
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "#F8FAFC",
+                fontSize: 16,
+                fontFamily: fonts.body,
+                fontWeight: 500,
+                padding: "12px 0",
+                caretColor: "#4ADE80",
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                background: "#16A34A",
+                border: "none",
+                borderRadius: 12,
+                color: "#FFFFFF",
+                cursor: "pointer",
+                padding: "12px 22px",
+                fontSize: 17,
+                fontWeight: 850,
+                flexShrink: 0,
+                transition: "background 0.15s",
+                lineHeight: 1,
+              }}
+            >
+              →
+            </button>
+          </div>
+        </form>
+
+        {/* Ejemplos dinámicos */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            justifyContent: "center",
+            maxWidth: 640,
+          }}
+        >
+          {EXAMPLES.slice(0, 4).map(ex => (
+            <button
+              key={ex}
+              onClick={() => useExample(ex)}
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 999,
+                color: "#475569",
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 500,
+                padding: "5px 14px",
+                fontFamily: fonts.body,
+                transition: "color 0.15s, border-color 0.15s",
+              }}
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CONTENT: Situación + Timeline + Casos ── */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "0 24px 32px",
+          display: "grid",
+          gap: 18,
+          gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
+        }}
+      >
+        <SituacionSection data={dashboard} activeCases={activeCases} />
+        <TimelineSection cases={cases} />
+        <CasosSection cases={cases} />
+      </div>
+
+      {/* ── RECOMENDACIONES ── */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 72px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr" }}>
+          <RecomendacionesSection items={recommendations} />
+        </div>
       </div>
     </div>
-  );
-}
-
-
-function WidgetRisk({ risk }: { risk: UserDashboardData["risk"] }) {
-  const level = risk.level ?? "—";
-  const color =
-    level === "CRITICAL" ? "#DC2626" : level === "HIGH" ? "#EA580C" : level === "MEDIUM" ? "#CA8A04" : "#16A34A";
-  return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
-      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
-        Mi Riesgo Tributario
-      </p>
-      <p style={{ color, fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
-        {risk.score ?? "—"}
-      </p>
-      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
-        Nivel: <strong style={{ color }}>{level}</strong>
-      </p>
-    </article>
-  );
-}
-
-function WidgetAlerts({ alerts }: { alerts: UserDashboardData["alerts"] }) {
-  return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
-      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
-        Alertas Abiertas
-      </p>
-      <p style={{ color: alerts.critical > 0 ? "#991B1B" : "#0F2A3D", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
-        {alerts.open}
-      </p>
-      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
-        {alerts.critical > 0 ? `${alerts.critical} crítica${alerts.critical === 1 ? "" : "s"}` : "Sin alertas críticas"}
-      </p>
-    </article>
-  );
-}
-
-function WidgetTax({ tax }: { tax: UserDashboardData["tax"] }) {
-  const needsAttention = tax.pendingDocuments > 0 || tax.rejectedDocuments > 0;
-  return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
-      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
-        Estado Tributario
-      </p>
-      <p style={{ color: needsAttention ? "#B45309" : "#0F2A3D", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
-        {tax.pendingDocuments} pendiente{tax.pendingDocuments === 1 ? "" : "s"}
-      </p>
-      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
-        {tax.rejectedDocuments > 0 ? `${tax.rejectedDocuments} rechazado${tax.rejectedDocuments === 1 ? "" : "s"}` : "Sin documentos rechazados"}
-      </p>
-    </article>
-  );
-}
-
-function WidgetSubscription({ subscription }: { subscription: UserDashboardData["subscription"] }) {
-  const isActive = subscription.status === "ACTIVE";
-  return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
-      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
-        Estado Suscripción
-      </p>
-      <p style={{ color: isActive ? "#15803D" : "#B45309", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
-        {subscription.plan ?? "—"}
-      </p>
-      <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
-        {subscription.pendingPayment ? "Pago pendiente" : isActive ? "Activa" : subscription.status ?? "Sin suscripción"}
-        {subscription.expiresAt ? ` · vence ${new Date(subscription.expiresAt).toLocaleDateString("es-CL")}` : ""}
-      </p>
-    </article>
-  );
-}
-
-
-function WidgetDocuments({ documents }: { documents: UserDashboardData["documents"] }) {
-  return (
-    <Link
-      href="/documentos"
-      style={{ textDecoration: "none" }}
-    >
-      <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "22px" }}>
-        <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 10px", textTransform: "uppercase" }}>
-          Centro Documental
-        </p>
-        <p style={{ color: documents.pendingReview > 0 ? "#B45309" : "#0F2A3D", fontSize: "1.8rem", fontWeight: 850, margin: "0 0 6px" }}>
-          {documents.total}
-        </p>
-        <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
-          {documents.pendingReview > 0
-            ? `${documents.pendingReview} por revisar`
-            : `${documents.last30Days} subidos en los últimos 30 días`}
-        </p>
-      </article>
-    </Link>
   );
 }

@@ -1,518 +1,1112 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
-import { colors, fonts } from "@/styles/tokens";
-import { httpClient } from "@/shared/http/httpClient";
+import { fonts } from "@/styles/tokens";
 
-type OnboardingStep = "WELCOME" | "CONNECT" | "PROCESSING" | "DONE";
+// ─── Types ──────────────────────────────────────────────────────────────────
 
-type ActivationSource = "csv" | "exchange" | "bank" | "manual";
+type ProfileType = "persona" | "empresa" | "profesional";
+type OccupationType = "empleado" | "independiente" | "empresario" | "inversionista";
+type TaxExperience = "si" | "no" | "no_estoy_seguro";
+type CompanyType = "spa" | "ltda" | "eirl" | "sa" | "otra";
+type ClientType = "personas" | "empresas" | "ambos";
 
-type OnboardingStatusResponse = {
-  ok?: boolean;
-  data?: {
-    needsOnboarding?: boolean;
-    hasMovements?: boolean;
-    hasConnections?: boolean;
-    hasBankFiles?: boolean;
-    source?: ActivationSource;
-  };
+type OnboardingData = {
+  profileType?: ProfileType;
+  primaryGoal?: string;
+  // Persona
+  occupationType?: OccupationType;
+  assetCategories?: string[];
+  taxExperience?: TaxExperience;
+  // Empresa
+  companyType?: CompanyType;
+  taxRegimeKnown?: boolean;
+  businessOperations?: string[];
+  // Profesional
+  specialty?: string;
+  clientType?: ClientType;
 };
 
-const EXCHANGE_PROVIDERS = [
-  { id: "binance", name: "Binance", icon: "🔶", source: "exchange" as const },
-  { id: "crypto", name: "Crypto.com", icon: "🔵", source: "exchange" as const },
-  { id: "coinbase", name: "Coinbase", icon: "🛡️", source: "exchange" as const },
-  { id: "kraken", name: "Kraken", icon: "🐙", source: "exchange" as const },
-];
+type Step =
+  | "WELCOME"
+  | "PROFILE_TYPE"
+  | "PRIMARY_GOAL"
+  | "OCCUPATION"
+  | "ASSETS"
+  | "TAX_EXPERIENCE"
+  | "COMPANY_TYPE"
+  | "TAX_REGIME"
+  | "BUSINESS_OPS"
+  | "SPECIALTY"
+  | "CLIENT_TYPE"
+  | "SUMMARY"
+  | "DONE";
 
-const PROCESSING_TASKS = [
-  { key: "movements", label: "Analizando movimientos" },
-  { key: "buys", label: "Compras" },
-  { key: "sales", label: "Ventas" },
-  { key: "staking", label: "Staking" },
-  { key: "events", label: "Eventos tributarios" },
-];
-
-const STEP_PROGRESS: Record<OnboardingStep, number> = {
-  WELCOME: 25,
-  CONNECT: 50,
-  PROCESSING: 75,
-  DONE: 100,
+type ChatMessage = {
+  id: string;
+  role: "ledgera" | "user";
+  text: string;
 };
 
-const STORAGE_SOURCE_KEY = "ledgera_onboarding_source";
-const STORAGE_ACTIVATION_LOGGED_KEY = "ledgera_activation_logged";
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const PROFILE_TYPES: { value: ProfileType; label: string }[] = [
+  { value: "persona", label: "Persona" },
+  { value: "empresa", label: "Empresa" },
+  { value: "profesional", label: "Profesional" },
+];
+
+const GOAL_EXAMPLES = [
+  "Cryptoactivos",
+  "Declaración tributaria",
+  "Crear empresa",
+  "Inversiones",
+  "Patrimonio",
+  "Cumplimiento",
+];
+
+const OCCUPATIONS: { value: OccupationType; label: string }[] = [
+  { value: "empleado", label: "Empleado" },
+  { value: "independiente", label: "Independiente" },
+  { value: "empresario", label: "Empresario" },
+  { value: "inversionista", label: "Inversionista" },
+];
+
+const ASSET_OPTIONS = [
+  "Cryptoactivos",
+  "Inmuebles",
+  "Acciones",
+  "Fondos",
+  "Empresa",
+  "Otro",
+];
+
+const TAX_OPTIONS: { value: TaxExperience; label: string }[] = [
+  { value: "si", label: "Sí" },
+  { value: "no", label: "No" },
+  { value: "no_estoy_seguro", label: "No estoy seguro" },
+];
+
+const COMPANY_TYPES: { value: CompanyType; label: string }[] = [
+  { value: "spa", label: "SpA" },
+  { value: "ltda", label: "Ltda" },
+  { value: "eirl", label: "EIRL" },
+  { value: "sa", label: "SA" },
+  { value: "otra", label: "Otra" },
+];
+
+const BUSINESS_OPS = [
+  "Comercio",
+  "Servicios",
+  "Internacional",
+  "Cryptoactivos",
+  "Tecnología",
+];
+
+const SPECIALTIES = [
+  "Contador",
+  "Abogado",
+  "Consultor",
+  "Auditor",
+  "Otro",
+];
+
+const CLIENT_TYPES: { value: ClientType; label: string }[] = [
+  { value: "personas", label: "Personas" },
+  { value: "empresas", label: "Empresas" },
+  { value: "ambos", label: "Ambos" },
+];
+
+let msgIdCounter = 0;
+function nextId() {
+  return `msg_${++msgIdCounter}`;
+}
+
+function labelForProfileType(v: ProfileType) {
+  return PROFILE_TYPES.find(o => o.value === v)?.label ?? v;
+}
+function labelForOccupation(v: OccupationType) {
+  return OCCUPATIONS.find(o => o.value === v)?.label ?? v;
+}
+function labelForTax(v: TaxExperience) {
+  return TAX_OPTIONS.find(o => o.value === v)?.label ?? v;
+}
+function labelForCompany(v: CompanyType) {
+  return COMPANY_TYPES.find(o => o.value === v)?.label ?? v;
+}
+function labelForClient(v: ClientType) {
+  return CLIENT_TYPES.find(o => o.value === v)?.label ?? v;
+}
+
+// ─── Typewriter hook ────────────────────────────────────────────────────────
+
+function useTypewriter(fullText: string, speedMs = 22) {
+  const [displayed, setDisplayed] = useState(0);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed(0);
+    setDone(false);
+    if (!fullText) {
+      setDone(true);
+      return;
+    }
+    const interval = setInterval(() => {
+      setDisplayed(prev => {
+        const next = prev + 1;
+        if (next >= fullText.length) {
+          clearInterval(interval);
+          setDone(true);
+          return fullText.length;
+        }
+        return next;
+      });
+    }, speedMs);
+    return () => clearInterval(interval);
+  }, [fullText, speedMs]);
+
+  return { text: fullText.slice(0, displayed), done };
+}
+
+// ─── Components ─────────────────────────────────────────────────────────────
+
+function Bubble({ msg, typing }: { msg: ChatMessage; typing?: boolean }) {
+  const { text, done } = useTypewriter(
+    typing ? msg.text : "",
+    22,
+  );
+
+  const isLedgera = msg.role === "ledgera";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: isLedgera ? "flex-start" : "flex-end",
+        padding: "4px 0",
+        animation: "msgSlide 0.3s ease-out",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "78%",
+          padding: "13px 18px",
+          borderRadius: isLedgera ? "4px 18px 18px 18px" : "18px 4px 18px 18px",
+          background: isLedgera ? "rgba(255,255,255,0.06)" : "rgba(22,163,74,0.2)",
+          border: isLedgera
+            ? "1px solid rgba(255,255,255,0.06)"
+            : "1px solid rgba(22,163,74,0.2)",
+          color: isLedgera ? "#CBD5E1" : "#F8FAFC",
+          fontSize: 15,
+          lineHeight: 1.55,
+          fontFamily: fonts.body,
+          fontWeight: isLedgera ? 400 : 600,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+        }}
+      >
+        {typing ? text : msg.text}
+        {typing && !done && (
+          <span style={{ animation: "blink 0.7s infinite", marginLeft: 2, opacity: 0.6 }}>
+            ▌
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ─────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, isLoading, refreshUser } = useAuth();
-  const [step, setStep] = useState<OnboardingStep>("WELCOME");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
-  const [hasPolled, setHasPolled] = useState(false);
-  const [emptyState, setEmptyState] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Si el usuario ya completó onboarding, ir a Mi Situación.
+  const [step, setStep] = useState<Step>("WELCOME");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [data, setData] = useState<OnboardingData>({});
+  const [showOptions, setShowOptions] = useState(false);
+  const [goalText, setGoalText] = useState("");
+  const [goalFocused, setGoalFocused] = useState(false);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
+  const [selectedBizOps, setSelectedBizOps] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  // Redirect if already completed
   useEffect(() => {
     if (!isLoading && user && user.needsOnboarding === false) {
-      router.replace("/mi-situacion");
+      router.replace("/panel");
     }
   }, [isLoading, user, router]);
 
-  // En paso CONNECT, consultar estado periódicamente.
+  // Auto-scroll to bottom
   useEffect(() => {
-    if (step !== "CONNECT") return;
-
-    let cancelled = false;
-
-    async function poll() {
-      try {
-        const res = await httpClient<OnboardingStatusResponse>("/api/onboarding/status", {
-          method: "GET",
-          auth: true,
-        });
-
-        if (cancelled) return;
-
-        const status = res.data;
-        const hasData =
-          (status?.hasMovements ?? false) ||
-          (status?.hasConnections ?? false) ||
-          (status?.hasBankFiles ?? false);
-
-        setHasPolled(true);
-
-        if (hasData) {
-          const detectedSource = status?.source ?? "manual";
-          logActivationEvent(detectedSource);
-          setStep("PROCESSING");
-        } else if (hasPolled) {
-          setEmptyState(true);
-        }
-      } catch {
-        // Ignorar errores de polling; reintentará.
-      }
-    }
-
-    void poll();
-    const interval = setInterval(poll, 2500);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [step, hasPolled]);
-
-  // Animación de paso PROCESSING → DONE.
-  useEffect(() => {
-    if (step !== "PROCESSING" || !isAnalyzing) return;
-
-    let cancelled = false;
-    const timeouts: NodeJS.Timeout[] = [];
-
-    PROCESSING_TASKS.forEach((task, index) => {
-      const timeout = setTimeout(() => {
-        if (cancelled) return;
-        setCompletedTasks((prev) => [...prev, task.key]);
-
-        if (index === PROCESSING_TASKS.length - 1) {
-          const finalTimeout = setTimeout(() => {
-            if (!cancelled) {
-              setStep("DONE");
-            }
-          }, 800);
-          timeouts.push(finalTimeout);
-        }
-      }, (index + 1) * 600);
-      timeouts.push(timeout);
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
     });
+  }, [messages, showOptions]);
 
-    return () => {
-      cancelled = true;
-      timeouts.forEach(clearTimeout);
-    };
-  }, [step, isAnalyzing]);
+  function addLedgeraMsg(text: string) {
+    setMessages(prev => [...prev, { id: nextId(), role: "ledgera", text }]);
+  }
 
-  // Al llegar a DONE, refrescar sesión y redirigir a Mi Situación.
-  useEffect(() => {
-    if (step !== "DONE") return;
+  function addUserMsg(text: string) {
+    setMessages(prev => [...prev, { id: nextId(), role: "user", text }]);
+  }
 
-    let cancelled = false;
-    const timeout = setTimeout(async () => {
+  const TYPING_SPEED_MS = 22;
+
+  function advance(
+    nextStep: Step,
+    ledgeraText: string,
+    delayMs = 400,
+  ) {
+    setShowOptions(false);
+    setTimeout(() => {
+      addLedgeraMsg(ledgeraText);
+      setStep(nextStep);
+      setTimeout(() => setShowOptions(true), 300 + ledgeraText.length * TYPING_SPEED_MS);
+    }, delayMs);
+  }
+
+  // ── Handlers per step ──────────────────────────────────────────────────
+
+  function handleWelcome() {
+    setShowOptions(false);
+    addLedgeraMsg("¿Cómo te gustaría usar LEDGERA?");
+    setStep("PROFILE_TYPE");
+    setTimeout(() => setShowOptions(true), 1500);
+  }
+
+  function handleProfileType(value: ProfileType) {
+    setData(prev => ({ ...prev, profileType: value }));
+    const label = labelForProfileType(value);
+    addUserMsg(label);
+    advance("PRIMARY_GOAL", "¿Qué te gustaría resolver primero?", 800);
+  }
+
+  function handleGoalSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
+    const q = goalText.trim();
+    if (!q) return;
+    addUserMsg(q);
+    setData(prev => ({ ...prev, primaryGoal: q }));
+    setGoalText("");
+
+    const profileType = data.profileType;
+    if (profileType === "persona") {
+      setTimeout(() => {
+        addLedgeraMsg("¿Cuál describe mejor tu situación?");
+        setStep("OCCUPATION");
+        setTimeout(() => setShowOptions(true), 1500);
+      }, 800);
+    } else if (profileType === "empresa") {
+      setTimeout(() => {
+        addLedgeraMsg("¿Qué tipo de empresa tienes?");
+        setStep("COMPANY_TYPE");
+        setTimeout(() => setShowOptions(true), 1500);
+      }, 800);
+    } else if (profileType === "profesional") {
+      setTimeout(() => {
+        addLedgeraMsg("¿Cuál es tu especialidad?");
+        setStep("SPECIALTY");
+        setTimeout(() => setShowOptions(true), 1500);
+      }, 800);
+    }
+  }
+
+  function handleOccupation(value: OccupationType) {
+    setData(prev => ({ ...prev, occupationType: value }));
+    addUserMsg(labelForOccupation(value));
+    setShowOptions(false);
+    setTimeout(() => {
+      addLedgeraMsg("¿Tienes alguno de estos activos?");
+      setStep("ASSETS");
+      setTimeout(() => setShowOptions(true), 1500);
+    }, 800);
+  }
+
+  function handleAssetsConfirm() {
+    const items = selectedAssets.length > 0 ? selectedAssets : ["No tengo activos"];
+    addUserMsg(items.join(", "));
+    setData(prev => ({ ...prev, assetCategories: selectedAssets }));
+    setShowOptions(false);
+    setTimeout(() => {
+      addLedgeraMsg("¿Has presentado declaraciones tributarias anteriormente?");
+      setStep("TAX_EXPERIENCE");
+      setTimeout(() => setShowOptions(true), 1500);
+    }, 800);
+  }
+
+  function handleTaxExperience(value: TaxExperience) {
+    setData(prev => ({ ...prev, taxExperience: value }));
+    addUserMsg(labelForTax(value));
+    setShowOptions(false);
+    setTimeout(() => showSummary(), 800);
+  }
+
+  function handleCompanyType(value: CompanyType) {
+    setData(prev => ({ ...prev, companyType: value }));
+    addUserMsg(labelForCompany(value));
+    setShowOptions(false);
+    setTimeout(() => {
+      addLedgeraMsg("¿Conoces tu régimen tributario?");
+      setStep("TAX_REGIME");
+      setTimeout(() => setShowOptions(true), 1500);
+    }, 800);
+  }
+
+  function handleTaxRegime(value: boolean) {
+    setData(prev => ({ ...prev, taxRegimeKnown: value }));
+    addUserMsg(value ? "Sí" : "No");
+    setShowOptions(false);
+    setTimeout(() => {
+      addLedgeraMsg("¿Tu empresa opera con alguno de estos elementos?");
+      setStep("BUSINESS_OPS");
+      setTimeout(() => setShowOptions(true), 1500);
+    }, 800);
+  }
+
+  function handleBizOpsConfirm() {
+    const items = selectedBizOps.length > 0 ? selectedBizOps : ["Ninguna en particular"];
+    addUserMsg(items.join(", "));
+    setData(prev => ({ ...prev, businessOperations: selectedBizOps }));
+    setShowOptions(false);
+    setTimeout(() => showSummary(), 800);
+  }
+
+  function handleSpecialty(value: string) {
+    setData(prev => ({ ...prev, specialty: value }));
+    addUserMsg(value);
+    setShowOptions(false);
+    setTimeout(() => {
+      addLedgeraMsg("¿Con qué tipo de clientes trabajas?");
+      setStep("CLIENT_TYPE");
+      setTimeout(() => setShowOptions(true), 1500);
+    }, 800);
+  }
+
+  function handleClientType(value: ClientType) {
+    setData(prev => ({ ...prev, clientType: value }));
+    addUserMsg(labelForClient(value));
+    setShowOptions(false);
+    setTimeout(() => showSummary(), 800);
+  }
+
+  // ── Summary ───────────────────────────────────────────────────────────────
+
+  function showSummary() {
+    addLedgeraMsg("Perfecto. Esto es lo que entendí:");
+    // Give the user time to see the typing animation before showing the summary card
+    setTimeout(() => {
+      setStep("SUMMARY");
+    }, 1200);
+  }
+
+  function buildSummaryItems(): { label: string; value: string }[] {
+    const items: { label: string; value: string }[] = [];
+    if (data.profileType) items.push({ label: "Perfil", value: labelForProfileType(data.profileType) });
+    if (data.primaryGoal) items.push({ label: "Objetivo", value: data.primaryGoal });
+    if (data.occupationType) items.push({ label: "Situación", value: labelForOccupation(data.occupationType) });
+    if (data.assetCategories && data.assetCategories.length > 0) {
+      items.push({ label: "Activos", value: data.assetCategories.join(", ") });
+    }
+    if (data.taxExperience) items.push({ label: "Experiencia tributaria", value: labelForTax(data.taxExperience) });
+    if (data.companyType) items.push({ label: "Tipo de empresa", value: labelForCompany(data.companyType) });
+    if (data.taxRegimeKnown !== undefined) items.push({ label: "Régimen conocido", value: data.taxRegimeKnown ? "Sí" : "No" });
+    if (data.businessOperations && data.businessOperations.length > 0) {
+      items.push({ label: "Operaciones", value: data.businessOperations.join(", ") });
+    }
+    if (data.specialty) items.push({ label: "Especialidad", value: data.specialty });
+    if (data.clientType) items.push({ label: "Clientes", value: labelForClient(data.clientType) });
+    return items;
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError("");
+    try {
+      const res = await fetch("/api/onboarding/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ onboardingData: data }),
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        setSaveError(json.message || "Error al guardar.");
+        setSaving(false);
+        return;
+      }
       await refreshUser();
-      if (!cancelled) {
-        router.push("/mi-situacion");
-      }
-    }, 1800);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeout);
-    };
-  }, [step, refreshUser, router]);
-
-  function setSource(source: ActivationSource) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_SOURCE_KEY, source);
+      setStep("DONE");
+    } catch {
+      setSaveError("Error de conexión. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
     }
   }
 
-  function logActivationEvent(detectedSource?: ActivationSource) {
-    if (typeof window === "undefined") return;
-    if (localStorage.getItem(STORAGE_ACTIVATION_LOGGED_KEY) === "1") return;
-
-    const storedSource = localStorage.getItem(STORAGE_SOURCE_KEY);
-    const source: ActivationSource =
-      (storedSource as ActivationSource) ??
-      detectedSource ??
-      "manual";
-
-    localStorage.setItem(STORAGE_ACTIVATION_LOGGED_KEY, "1");
-
-    console.info("[activation]", {
-      event: "first_data_loaded",
-      userId: user?.id,
-      source,
-      occurredAt: new Date().toISOString(),
-    });
+  function handleEdit() {
+    setMessages([]);
+    setData({});
+    setShowOptions(false);
+    setGoalText("");
+    setSelectedAssets([]);
+    setSelectedBizOps([]);
+    setStep("WELCOME");
   }
 
-  function handleProviderClick(href: string, source: ActivationSource) {
-    setSource(source);
-    router.push(href);
-  }
-
-  function startAnalysis() {
-    setIsAnalyzing(true);
-  }
+  // ── Render ────────────────────────────────────────────────────────────────
 
   if (isLoading || !user) {
     return (
-      <div style={screenStyle}>
-        <p style={{ color: colors.textMuted }}>Cargando...</p>
+      <div style={fullScreenStyle}>
+        <p style={{ color: "#475569", fontSize: 14 }}>Cargando…</p>
       </div>
     );
   }
 
-  const progress = STEP_PROGRESS[step];
+  const summaryItems = buildSummaryItems();
 
   return (
-    <div style={screenStyle}>
-      <div style={{ marginBottom: 28 }}>
-        <Logo variant="light" size="lg" showSubtitle />
+    <div style={fullScreenStyle}>
+      {/* Injected keyframes */}
+      <style>{`
+        @keyframes msgSlide {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 0.6; }
+          50%      { opacity: 0; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.3); }
+          50%      { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+        }
+      `}</style>
+
+      {/* ── LEDGERA branding ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0,
+        zIndex: 10,
+        display: "flex", justifyContent: "center",
+        padding: "28px 24px 0",
+      }}>
+        <Logo variant="light" size="md" showSubtitle={false} />
       </div>
 
-      <div style={{ ...cardStyle, maxWidth: step === "CONNECT" ? 640 : 480, width: "100%" }}>
-        <ProgressBar progress={progress} step={step} />
+      {/* ── WELCOME screen ── */}
+      {step === "WELCOME" && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            flex: 1,
+            padding: "0 24px",
+            animation: "fadeUp 0.6s ease-out",
+          }}
+        >
+          <p style={{
+            color: "#334155", fontSize: 11, fontWeight: 850,
+            letterSpacing: "0.12em", textTransform: "uppercase",
+            margin: "0 0 12px", fontFamily: fonts.body,
+          }}>
+            Sistema Operativo Financiero y Tributario
+          </p>
 
-        {step === "WELCOME" && (
-          <>
-            <h1 style={headingStyle}>Bienvenido a LEDGERA</h1>
-            <p style={paragraphStyle}>
-              Antes de comenzar, conectemos tus datos para entregarte una visión clara de tu situación tributaria.
-            </p>
-            <button
-              onClick={() => setStep("CONNECT")}
-              style={primaryButtonStyle}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
-            >
-              Comenzar
-            </button>
-          </>
-        )}
+          <h1 style={{
+            color: "#F8FAFC",
+            fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
+            fontWeight: 800,
+            margin: "0 0 10px",
+            lineHeight: 1.15,
+            fontFamily: fonts.body,
+            letterSpacing: "-0.01em",
+          }}>
+            Hola.
+          </h1>
 
-        {step === "CONNECT" && (
-          <>
-            <h2 style={headingStyle}>Conecta tus datos</h2>
-            <p style={paragraphStyle}>
-              Elige cómo quieres importar tus movimientos. El CSV es el camino más rápido.
-            </p>
+          <p style={{
+            color: "#64748B",
+            fontSize: 16,
+            lineHeight: 1.6,
+            margin: "0 auto 36px",
+            maxWidth: 480,
+          }}>
+            Antes de comenzar necesito entender tu situación.
+            <br />
+            Tomará menos de 3 minutos.
+          </p>
 
-            {emptyState && (
-              <div style={emptyStateStyle}>
-                <p style={{ margin: "0 0 12px", color: colors.textLight, fontWeight: 700 }}>
-                  Aún no encontramos movimientos
-                </p>
-                <p style={{ margin: "0 0 16px", fontSize: 13 }}>
-                  Para calcular tu situación frente al SII necesitamos tus movimientos de inversión.
-                </p>
-                <button
-                  onClick={() => handleProviderClick("/importaciones", "csv")}
-                  style={{ ...primaryButtonStyle, width: "auto", padding: "10px 20px" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
-                >
-                  Subir archivo
-                </button>
-              </div>
-            )}
+          <button
+            onClick={handleWelcome}
+            style={{
+              background: "#16A34A",
+              border: "none",
+              borderRadius: 12,
+              color: "#FFFFFF",
+              cursor: "pointer",
+              padding: "14px 40px",
+              fontSize: 16,
+              fontWeight: 800,
+              fontFamily: fonts.body,
+              transition: "background 0.15s, transform 0.15s",
+              animation: "pulseGlow 2s ease-in-out infinite",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "#15803D";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "#16A34A";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            Comenzar
+          </button>
+        </div>
+      )}
 
-            <div style={{ marginBottom: 16 }}>
-              <button
-                onClick={() => handleProviderClick("/import", "csv")}
-                style={primaryButtonStyle}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
-              >
-                📄 Importar CSV / Excel
-              </button>
-              <p style={{ ...paragraphStyle, fontSize: 12, margin: "8px 0 0" }}>
-                Recomendado para comenzar
-              </p>
+      {/* ── CHAT area (all steps except WELCOME, SUMMARY after msg, DONE) ── */}
+      {step !== "WELCOME" && step !== "DONE" && (
+        <div
+          ref={scrollRef}
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            width: "100%",
+            maxWidth: 600,
+            margin: "0 auto",
+            padding: "100px 20px 200px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+          }}
+        >
+          <div>
+            {messages.map((msg, i) => (
+              <Bubble
+                key={msg.id}
+                msg={msg}
+                typing={
+                  msg.role === "ledgera" &&
+                  i === messages.length - 1 &&
+                  step !== "SUMMARY"
+                }
+              />
+            ))}
+          </div>
+
+          {/* ── Options / Input area ── */}
+          {showOptions && (
+            <div style={{ animation: "fadeUp 0.35s ease-out", marginTop: 8 }}>
+              {/* PROFILE_TYPE */}
+              {step === "PROFILE_TYPE" && (
+                <OptionsRow
+                  options={PROFILE_TYPES.map(o => ({ label: o.label, value: o.value }))}
+                  onClick={(v) => handleProfileType(v as ProfileType)}
+                />
+              )}
+
+              {/* PRIMARY_GOAL */}
+              {step === "PRIMARY_GOAL" && (
+                <div>
+                  <div style={{
+                    display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14,
+                    justifyContent: "center",
+                  }}>
+                    {GOAL_EXAMPLES.map(ex => (
+                      <button
+                        key={ex}
+                        onClick={() => {
+                          setGoalText(ex);
+                          setTimeout(() => handleGoalSubmit(), 100);
+                        }}
+                        style={{
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 999,
+                          color: "#475569",
+                          cursor: "pointer",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          padding: "6px 16px",
+                          fontFamily: fonts.body,
+                          transition: "color 0.15s, border-color 0.15s, background 0.15s",
+                        }}
+                      >
+                        {ex}
+                      </button>
+                    ))}
+                  </div>
+                  <form onSubmit={handleGoalSubmit} style={{ display: "flex", gap: 8 }}>
+                    <input
+                      value={goalText}
+                      onChange={e => setGoalText(e.target.value)}
+                      onFocus={() => setGoalFocused(true)}
+                      onBlur={() => setGoalFocused(false)}
+                      placeholder="Escribe tu objetivo..."
+                      autoComplete="off"
+                      style={{
+                        flex: 1,
+                        background: "rgba(255,255,255,0.04)",
+                        border: `1.5px solid ${goalFocused ? "rgba(74,222,128,0.3)" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius: 12,
+                        color: "#F8FAFC",
+                        fontSize: 15,
+                        fontFamily: fonts.body,
+                        fontWeight: 500,
+                        padding: "12px 16px",
+                        outline: "none",
+                        caretColor: "#4ADE80",
+                        transition: "border-color 0.2s",
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!goalText.trim()}
+                      style={{
+                        background: goalText.trim() ? "#16A34A" : "rgba(255,255,255,0.06)",
+                        border: "none",
+                        borderRadius: 12,
+                        color: "#FFFFFF",
+                        cursor: goalText.trim() ? "pointer" : "default",
+                        padding: "12px 18px",
+                        fontSize: 17,
+                        fontWeight: 800,
+                        opacity: goalText.trim() ? 1 : 0.4,
+                        transition: "background 0.15s",
+                        lineHeight: 1,
+                      }}
+                    >
+                      →
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* OCCUPATION */}
+              {step === "OCCUPATION" && (
+                <OptionsRow
+                  options={OCCUPATIONS.map(o => ({ label: o.label, value: o.value }))}
+                  onClick={(v) => handleOccupation(v as OccupationType)}
+                />
+              )}
+
+              {/* ASSETS (multi-select) */}
+              {step === "ASSETS" && (
+                <div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14, justifyContent: "center" }}>
+                    {ASSET_OPTIONS.map(asset => {
+                      const selected = selectedAssets.includes(asset);
+                      return (
+                        <button
+                          key={asset}
+                          onClick={() => {
+                            setSelectedAssets(prev =>
+                              prev.includes(asset)
+                                ? prev.filter(a => a !== asset)
+                                : [...prev, asset]
+                            );
+                          }}
+                          style={{
+                            background: selected ? "rgba(22,163,74,0.18)" : "rgba(255,255,255,0.04)",
+                            border: selected
+                              ? "1px solid rgba(74,222,128,0.35)"
+                              : "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 999,
+                            color: selected ? "#F8FAFC" : "#475569",
+                            cursor: "pointer",
+                            fontSize: 13,
+                            fontWeight: selected ? 700 : 500,
+                            padding: "7px 18px",
+                            fontFamily: fonts.body,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          {selected ? "✓ " : ""}{asset}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={handleAssetsConfirm}
+                    style={{
+                      display: "block",
+                      margin: "0 auto",
+                      background: "#16A34A",
+                      border: "none",
+                      borderRadius: 10,
+                      color: "#FFFFFF",
+                      cursor: "pointer",
+                      padding: "10px 28px",
+                      fontSize: 14,
+                      fontWeight: 800,
+                      fontFamily: fonts.body,
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              )}
+
+              {/* TAX_EXPERIENCE */}
+              {step === "TAX_EXPERIENCE" && (
+                <OptionsRow
+                  options={TAX_OPTIONS.map(o => ({ label: o.label, value: o.value }))}
+                  onClick={(v) => handleTaxExperience(v as TaxExperience)}
+                />
+              )}
+
+              {/* COMPANY_TYPE */}
+              {step === "COMPANY_TYPE" && (
+                <OptionsRow
+                  options={COMPANY_TYPES.map(o => ({ label: o.label, value: o.value }))}
+                  onClick={(v) => handleCompanyType(v as CompanyType)}
+                />
+              )}
+
+              {/* TAX_REGIME */}
+              {step === "TAX_REGIME" && (
+                <OptionsRow
+                  options={[
+                    { label: "Sí", value: "true" },
+                    { label: "No", value: "false" },
+                  ]}
+                  onClick={(v) => handleTaxRegime(v === "true")}
+                />
+              )}
+
+              {/* BUSINESS_OPS (multi-select) */}
+              {step === "BUSINESS_OPS" && (
+                <div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14, justifyContent: "center" }}>
+                    {BUSINESS_OPS.map(op => {
+                      const selected = selectedBizOps.includes(op);
+                      return (
+                        <button
+                          key={op}
+                          onClick={() => {
+                            setSelectedBizOps(prev =>
+                              prev.includes(op)
+                                ? prev.filter(o => o !== op)
+                                : [...prev, op]
+                            );
+                          }}
+                          style={{
+                            background: selected ? "rgba(22,163,74,0.18)" : "rgba(255,255,255,0.04)",
+                            border: selected
+                              ? "1px solid rgba(74,222,128,0.35)"
+                              : "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 999,
+                            color: selected ? "#F8FAFC" : "#475569",
+                            cursor: "pointer",
+                            fontSize: 13,
+                            fontWeight: selected ? 700 : 500,
+                            padding: "7px 18px",
+                            fontFamily: fonts.body,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          {selected ? "✓ " : ""}{op}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={handleBizOpsConfirm}
+                    style={{
+                      display: "block",
+                      margin: "0 auto",
+                      background: "#16A34A",
+                      border: "none",
+                      borderRadius: 10,
+                      color: "#FFFFFF",
+                      cursor: "pointer",
+                      padding: "10px 28px",
+                      fontSize: 14,
+                      fontWeight: 800,
+                      fontFamily: fonts.body,
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              )}
+
+              {/* SPECIALTY */}
+              {step === "SPECIALTY" && (
+                <OptionsRow
+                  options={SPECIALTIES.map(s => ({ label: s, value: s }))}
+                  onClick={handleSpecialty}
+                />
+              )}
+
+              {/* CLIENT_TYPE */}
+              {step === "CLIENT_TYPE" && (
+                <OptionsRow
+                  options={CLIENT_TYPES.map(o => ({ label: o.label, value: o.value }))}
+                  onClick={(v) => handleClientType(v as ClientType)}
+                />
+              )}
             </div>
+          )}
+        </div>
+      )}
 
-            <button
-              onClick={() => handleProviderClick("/integraciones?tab=exchange", "exchange")}
-              style={secondaryButtonStyle}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-            >
-              Conectar exchange
-            </button>
+      {/* ── SUMMARY screen ── */}
+      {step === "SUMMARY" && (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            maxWidth: 520,
+            margin: "0 auto",
+            padding: "100px 20px 40px",
+            animation: "fadeUp 0.5s ease-out",
+          }}
+        >
+          <div style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 20,
+            padding: "32px 28px",
+            width: "100%",
+          }}>
+            <p style={{
+              color: "#334155", fontSize: 11, fontWeight: 850,
+              letterSpacing: "0.09em", textTransform: "uppercase",
+              margin: "0 0 22px", fontFamily: fonts.body,
+            }}>
+              Esto es lo que entendí
+            </p>
 
-            <div style={providersGridStyle}>
-              {EXCHANGE_PROVIDERS.map((provider) => (
-                <button
-                  key={provider.id}
-                  onClick={() => handleProviderClick("/integraciones?tab=exchange", provider.source)}
-                  style={providerCardStyle}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = colors.accent;
-                    e.currentTarget.style.backgroundColor = "rgba(22, 163, 74, 0.08)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = colors.borderDark;
-                    e.currentTarget.style.backgroundColor = colors.surfaceDark;
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {summaryItems.map((item, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                    gap: 12,
+                    paddingBottom: 12,
+                    borderBottom: i < summaryItems.length - 1
+                      ? "1px solid rgba(255,255,255,0.05)"
+                      : "none",
                   }}
                 >
-                  <span style={{ fontSize: 22, lineHeight: 1 }}>{provider.icon}</span>
-                  <span style={{ color: colors.textLight, fontWeight: 700, fontSize: 13 }}>
-                    {provider.name}
+                  <span style={{ color: "#4B5563", fontSize: 14, lineHeight: 1.4 }}>
+                    {item.label}
                   </span>
-                </button>
+                  <span style={{
+                    color: "#E2E8F0", fontSize: 14, fontWeight: 700,
+                    textAlign: "right", maxWidth: "60%",
+                  }}>
+                    {item.value}
+                  </span>
+                </div>
               ))}
             </div>
 
-            <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${colors.borderDark}` }}>
-              <p style={{ ...paragraphStyle, fontSize: 13, marginBottom: 12 }}>
-                ¿No tienes exchange conectado? Puedes comenzar subiendo un archivo CSV o Excel.
-              </p>
+            <div style={{
+              display: "flex", gap: 12, marginTop: 28,
+              justifyContent: "center",
+            }}>
               <button
-                onClick={() => handleProviderClick("/importaciones", "csv")}
-                style={{ ...secondaryButtonStyle, fontSize: 13 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                onClick={handleEdit}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 10,
+                  color: "#94A3B8",
+                  cursor: "pointer",
+                  padding: "11px 24px",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  fontFamily: fonts.body,
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
               >
-                Subir archivo
+                Editar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  background: saving ? "#15803D" : "#16A34A",
+                  border: "none",
+                  borderRadius: 10,
+                  color: "#FFFFFF",
+                  cursor: saving ? "not-allowed" : "pointer",
+                  padding: "11px 28px",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  fontFamily: fonts.body,
+                  transition: "background 0.15s",
+                  opacity: saving ? 0.7 : 1,
+                }}
+              >
+                {saving ? "Guardando…" : "Continuar"}
               </button>
             </div>
-          </>
-        )}
 
-        {step === "PROCESSING" && (
-          <>
-            {!isAnalyzing ? (
-              <>
-                <h2 style={headingStyle}>Datos recibidos</h2>
-                <p style={paragraphStyle}>
-                  Ya detectamos tus movimientos. Ahora los analizaremos para calcular tu situación tributaria.
-                </p>
-                <button
-                  onClick={startAnalysis}
-                  style={primaryButtonStyle}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
-                >
-                  Analizar movimientos
-                </button>
-              </>
-            ) : (
-              <>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    border: `4px solid ${colors.accentMuted}`,
-                    borderTopColor: colors.accent,
-                    borderRadius: "50%",
-                    animation: "spin 1s linear infinite",
-                    margin: "0 auto 20px",
-                  }}
-                />
-                <h2 style={headingStyle}>Analizando movimientos...</h2>
-
-                <div style={{ textAlign: "left", marginTop: 24, display: "grid", gap: 12 }}>
-                  {PROCESSING_TASKS.map((task) => {
-                    const done = completedTasks.includes(task.key);
-                    return (
-                      <div key={task.key} style={{ display: "flex", alignItems: "center", gap: 12, opacity: done ? 1 : 0.45, transition: "opacity 0.3s ease" }}>
-                        <span style={{ fontSize: 16 }}>{done ? "✅" : "⏳"}</span>
-                        <span style={{ color: colors.textLight, fontSize: 14, fontWeight: done ? 700 : 500 }}>
-                          {task.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <style>{`
-                  @keyframes spin {
-                    to { transform: rotate(360deg); }
-                  }
-                `}</style>
-              </>
+            {saveError && (
+              <p style={{
+                color: "#F87171", fontSize: 13, margin: "16px 0 0",
+                textAlign: "center",
+              }}>
+                {saveError}
+              </p>
             )}
-          </>
-        )}
+          </div>
+        </div>
+      )}
 
-        {step === "DONE" && (
-          <>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
-            <h2 style={headingStyle}>¡Listo!</h2>
-            <p style={paragraphStyle}>
-              Ya tienes datos cargados. Te llevamos a tu situación tributaria frente al SII.
-            </p>
-            <button
-              onClick={async () => {
-                await refreshUser();
-                router.push("/mi-situacion");
-              }}
-              style={primaryButtonStyle}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.accentHover; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.accent; }}
-            >
-              Ver mi situación
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ProgressBar({ progress, step }: { progress: number; step: OnboardingStep }) {
-  const stepLabel =
-    step === "WELCOME"
-      ? "Paso 1 de 4 · Conectar datos"
-      : step === "CONNECT"
-        ? "Paso 2 de 4 · Importar movimientos"
-        : step === "PROCESSING"
-          ? "Paso 3 de 4 · Procesamiento"
-          : "Paso 4 de 4 · Mi Situación";
-
-  return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{stepLabel}</span>
-        <span style={{ color: colors.accent, fontSize: 12, fontWeight: 800 }}>{progress}%</span>
-      </div>
-      <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 999, overflow: "hidden" }}>
+      {/* ── DONE screen ── */}
+      {step === "DONE" && (
         <div
           style={{
-            height: "100%",
-            width: `${progress}%`,
-            background: colors.accent,
-            borderRadius: 999,
-            transition: "width 0.4s ease",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: "0 24px",
+            animation: "fadeUp 0.6s ease-out",
           }}
-        />
-      </div>
+        >
+          <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
+          <h2 style={{
+            color: "#F8FAFC",
+            fontSize: "clamp(1.4rem, 3.5vw, 2rem)",
+            fontWeight: 800,
+            margin: "0 0 10px",
+            lineHeight: 1.15,
+            fontFamily: fonts.body,
+          }}>
+            Tu espacio LEDGERA está listo.
+          </h2>
+          <p style={{
+            color: "#64748B",
+            fontSize: 15,
+            lineHeight: 1.6,
+            margin: "0 auto 32px",
+            maxWidth: 420,
+          }}>
+            Ahora puedes comenzar una conversación o explorar tu situación actual.
+          </p>
+          <button
+            onClick={() => router.push("/panel")}
+            style={{
+              background: "#16A34A",
+              border: "none",
+              borderRadius: 12,
+              color: "#FFFFFF",
+              cursor: "pointer",
+              padding: "14px 40px",
+              fontSize: 16,
+              fontWeight: 800,
+              fontFamily: fonts.body,
+              transition: "background 0.15s, transform 0.15s",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "#15803D";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "#16A34A";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            Ir a mi espacio →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-const screenStyle: React.CSSProperties = {
+// ─── Option pills component ────────────────────────────────────────────────
+
+function OptionsRow({
+  options,
+  onClick,
+}: {
+  options: { label: string; value: string }[];
+  onClick: (value: string) => void;
+}) {
+  return (
+    <div style={{
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 10,
+      justifyContent: "center",
+    }}>
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          onClick={() => onClick(opt.value)}
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            borderRadius: 999,
+            color: "#CBD5E1",
+            cursor: "pointer",
+            fontSize: 15,
+            fontWeight: 600,
+            padding: "10px 24px",
+            fontFamily: fonts.body,
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = "rgba(22,163,74,0.14)";
+            e.currentTarget.style.borderColor = "rgba(74,222,128,0.3)";
+            e.currentTarget.style.color = "#F8FAFC";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
+            e.currentTarget.style.color = "#CBD5E1";
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Shared styles ─────────────────────────────────────────────────────────
+
+const fullScreenStyle: React.CSSProperties = {
   minHeight: "100vh",
-  background: colors.primary,
+  background: "#071B28",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  justifyContent: "center",
-  padding: "24px",
   fontFamily: fonts.body,
-};
-
-const cardStyle: React.CSSProperties = {
-  background: colors.surfaceDark,
-  border: `1px solid ${colors.borderDark}`,
-  borderRadius: 16,
-  padding: "32px",
-  maxWidth: 480,
-  width: "100%",
-  textAlign: "center" as const,
-};
-
-const headingStyle: React.CSSProperties = {
-  color: colors.textLight,
-  fontFamily: fonts.display,
-  fontSize: 26,
-  fontWeight: 800,
-  margin: "0 0 12px",
-  lineHeight: 1.2,
-};
-
-const paragraphStyle: React.CSSProperties = {
-  color: colors.textMuted,
-  fontSize: 15,
-  lineHeight: 1.55,
-  margin: "0 0 24px",
-};
-
-const primaryButtonStyle: React.CSSProperties = {
-  background: colors.accent,
-  color: "#FFFFFF",
-  border: "none",
-  borderRadius: 10,
-  padding: "14px 28px",
-  fontSize: 15,
-  fontWeight: 800,
-  cursor: "pointer",
-  width: "100%",
-  transition: "background-color 0.15s ease",
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  background: "transparent",
-  color: colors.textLight,
-  border: `1px solid ${colors.borderDark}`,
-  borderRadius: 10,
-  padding: "12px 24px",
-  fontSize: 14,
-  fontWeight: 700,
-  cursor: "pointer",
-  width: "100%",
-  transition: "background-color 0.15s ease",
-  marginBottom: 16,
-};
-
-const providersGridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
-  gap: 10,
-};
-
-const providerCardStyle: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: 8,
-  padding: "12px 8px",
-  background: colors.surfaceDark,
-  border: `1px solid ${colors.borderDark}`,
-  borderRadius: 12,
-  cursor: "pointer",
-  transition: "all 0.15s ease",
-};
-
-const emptyStateStyle: React.CSSProperties = {
-  background: "rgba(239, 68, 68, 0.10)",
-  border: "1px solid rgba(239, 68, 68, 0.25)",
-  borderRadius: 12,
-  padding: 18,
-  marginBottom: 20,
-  textAlign: "center" as const,
+  position: "relative",
 };
