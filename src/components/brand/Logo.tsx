@@ -12,9 +12,9 @@ interface LogoProps {
 }
 
 const sizes = {
-  sm: { name: 18, sub: 7.5, gap: 3, width: 128 },
-  md: { name: 30, sub: 10.5, gap: 5, width: 220 },
-  lg: { name: 30, sub: 10.5, gap: 5, width: 220 },
+  sm: { name: 20, sub: 8.5, gap: 4, width: 168 },
+  md: { name: 34, sub: 11.5, gap: 6, width: 300 },
+  lg: { name: 42, sub: 13, gap: 7, width: 380 },
 };
 
 export function Logo({
@@ -24,9 +24,9 @@ export function Logo({
   subtitle,
 }: LogoProps) {
   const s = sizes[size];
-  const nameColor = variant === "light" ? "#F8FAFC" : "#071B28";
+  const nameColor = variant === "light" ? colors.textLight : "#071B28";
   const subtitleColor = variant === "light" ? "#4ADE80" : colors.accent;
-  const subtitleText = subtitle ?? "FINANZAS OS";
+  const subtitleText = subtitle ?? "Sistema Operativo Financiero y Tributario";
 
   const wrap: CSSProperties = {
     display: "inline-flex",
@@ -45,19 +45,19 @@ export function Logo({
     fontSize: `${s.name}px`,
     fontWeight: 900,
     color: nameColor,
-    letterSpacing: "0.14em",
+    letterSpacing: "0.16em",
     lineHeight: 0.95,
   };
 
   const subStyle: CSSProperties = {
     fontFamily: fonts.body,
     fontSize: `${s.sub}px`,
-    fontWeight: subtitle ? 500 : 850,
+    fontWeight: 800,
     color: subtitleColor,
-    letterSpacing: subtitle ? "0.28em" : "0.42em",
-    lineHeight: 1,
-    opacity: subtitle ? 0.5 : 1,
-    paddingLeft: subtitle ? "0.14em" : "0.42em",
+    letterSpacing: "0.34em",
+    lineHeight: 1.12,
+    opacity: 0.86,
+    paddingLeft: "0.34em",
   };
 
   return (
@@ -77,7 +77,7 @@ export function LogoIcon({ size = 44 }: { size?: number }) {
     height: size,
     borderRadius: radius,
     background: "#071B28",
-    border: `${stroke}px solid #15384F`,
+    border: `${stroke}px solid ${colors.borderDark}`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -94,8 +94,8 @@ export function LogoIcon({ size = 44 }: { size?: number }) {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        <path d="M176 140 H240 V310 H352 V372 H176 Z" fill="#F8FAFC" />
-        <rect x="252" y="310" width="100" height="18" rx="9" fill="#16A34A" />
+        <path d="M176 140 H240 V310 H352 V372 H176 Z" fill={colors.textLight} />
+        <rect x="252" y="310" width="100" height="18" rx="9" fill={colors.accent} />
       </svg>
     </div>
   );
