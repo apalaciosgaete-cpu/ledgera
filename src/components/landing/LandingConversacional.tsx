@@ -1,13 +1,12 @@
 // src/components/landing/LandingConversacional.tsx
-// UX 3.0.01 v1.1 — Landing Conversacional
+// UX 3.0.01 v1.2 — Replanteamiento
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
-import type { CSSProperties } from "react";
 
 /* ─── Brand constant ─────────────────────────────────────────────────────── */
 
@@ -15,50 +14,29 @@ const BRAND_SUBTITLE = "Sistema Operativo Financiero y Tributario";
 
 /* ─── Data ────────────────────────────────────────────────────────────────── */
 
-const EJEMPLOS_CHIPS = [
-  "¿Me conviene comprar o arrendar?",
-  "Voy a contratar mi primer trabajador",
-  "Quiero iniciar actividades",
+const CHIPS = [
+  "¿Debo formalizar mi empresa?",
+  "¿Conviene comprar o arrendar propiedad?",
+  "¿Cómo optimizar mi carga tributaria?",
 ];
 
-const QUE_HACE = [
+const CASOS_REALES = [
   {
-    icon: "🔍",
-    title: "Entiende",
-    text: "Interpreta contexto, documentos y normativa.",
+    area: "Activos Digitales",
+    text: "Analiza tributación, tenencia y movimientos de criptoactivos.",
   },
   {
-    icon: "💬",
-    title: "Explica",
-    text: "Traduce leyes y regulaciones a lenguaje claro.",
+    area: "Empresas",
+    text: "Evalúa estructuras societarias, costos e impuestos.",
   },
   {
-    icon: "📊",
-    title: "Proyecta",
-    text: "Muestra escenarios y consecuencias antes de decidir.",
-  },
-] as const;
-
-const PARA_QUIEN = [
-  {
-    title: "Persona",
-    text: "Organiza tus decisiones financieras y tributarias.",
+    area: "Inversiones",
+    text: "Compara escenarios y consecuencias futuras.",
   },
   {
-    title: "Empresa",
-    text: "Obtén claridad operativa y cumplimiento normativo.",
+    area: "Cumplimiento",
+    text: "Identifica obligaciones y riesgos regulatorios.",
   },
-  {
-    title: "Profesional",
-    text: "Aumenta capacidad analítica y velocidad de respuesta.",
-  },
-] as const;
-
-const COMO_FUNCIONA = [
-  { step: "01", title: "Cuéntame qué necesitas.", text: "" },
-  { step: "02", title: "Analizo contexto, normativa y alternativas.", text: "" },
-  { step: "03", title: "Te explico escenarios y consecuencias.", text: "" },
-  { step: "04", title: "Tú decides.", text: "" },
 ] as const;
 
 const FOOTER_LINKS = [
@@ -68,140 +46,47 @@ const FOOTER_LINKS = [
   { label: "Contacto", href: "mailto:admin@ledgera.cl" },
 ] as const;
 
-/* ─── Subcomponentes ──────────────────────────────────────────────────────── */
+/* ─── Abstract Background ──────────────────────────────────────────────────── */
 
-function SectionHeader({
-  eyebrow,
-  title,
-}: {
-  eyebrow: string;
-  title: string;
-}) {
+function AbstractFinanceBg() {
   return (
-    <div className="mx-auto max-w-3xl text-center">
-      <p className="m-0 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
-        {eyebrow}
-      </p>
-      <h2 className="mt-4 font-display text-3xl font-black leading-tight tracking-[-0.045em] text-slate-50 sm:text-4xl lg:text-5xl">
-        {title}
-      </h2>
+    <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+      {/* Gradient base — deep, premium */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0B1A2E] to-[#020617]" />
+
+      {/* Gradient orbs — wealth/finance feel */}
+      <div className="absolute -left-[20%] top-[5%] h-[55%] w-[55%] rounded-full opacity-[0.04] blur-[120px]"
+        style={{ background: "radial-gradient(circle, #22c55e 0%, transparent 70%)" }}
+      />
+      <div className="absolute -right-[15%] top-[20%] h-[45%] w-[45%] rounded-full opacity-[0.03] blur-[100px]"
+        style={{ background: "radial-gradient(circle, #0ea5e9 0%, transparent 70%)" }}
+      />
+      <div className="absolute left-[20%] bottom-[10%] h-[35%] w-[35%] rounded-full opacity-[0.025] blur-[90px]"
+        style={{ background: "radial-gradient(circle, #f59e0b 0%, transparent 70%)" }}
+      />
+
+      {/* Subtle grid — architectural / Bloomberg */}
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
+        }}
+      />
+
+      {/* Abstract block shapes — edificios / patrimonio */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[40%] opacity-[0.012]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(90deg, transparent 0px, transparent 120px, rgba(255,255,255,0.08) 120px, rgba(255,255,255,0.08) 121px, transparent 121px, transparent 240px)," +
+            "repeating-linear-gradient(0deg, transparent 0px, transparent 180px, rgba(255,255,255,0.06) 180px, rgba(255,255,255,0.06) 181px, transparent 181px, transparent 360px)",
+          backgroundSize: "240px 360px",
+        }}
+      />
     </div>
   );
-}
-
-/* ─── Particle Network Background ─────────────────────────────────────────── */
-
-function ParticleNetwork() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animId: number;
-    let particles: Array<{
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      radius: number;
-    }> = [];
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initParticles();
-    };
-
-    const initParticles = () => {
-      const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 16000));
-      particles = Array.from({ length: count }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        radius: Math.random() * 2 + 1,
-      }));
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw connections
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const maxDist = 180;
-          if (dist < maxDist) {
-            const alpha = (1 - dist / maxDist) * 0.25;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(34, 197, 94, ${alpha})`;
-            ctx.lineWidth = 0.8;
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Draw particles
-      for (const p of particles) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(34, 197, 94, 0.6)";
-        ctx.fill();
-      }
-
-      // Update positions
-      for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      }
-
-      animId = requestAnimationFrame(draw);
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 z-0"
-      aria-hidden="true"
-    />
-  );
-}
-
-/* ─── Dynamic Glow ────────────────────────────────────────────────────────── */
-
-function DynamicGlow() {
-  const glowStyle: CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    zIndex: 1,
-    pointerEvents: "none",
-    background:
-      "radial-gradient(ellipse 70% 40% at 50% 15%, rgba(34,197,94,0.12) 0%, transparent 60%)," +
-      "radial-gradient(ellipse 50% 30% at 30% 60%, rgba(16,185,129,0.06) 0%, transparent 50%)," +
-      "radial-gradient(ellipse 40% 25% at 70% 40%, rgba(20,184,166,0.05) 0%, transparent 50%)",
-  };
-
-  return <div style={glowStyle} aria-hidden="true" />;
 }
 
 /* ─── Hero ─────────────────────────────────────────────────────────────────── */
@@ -220,23 +105,12 @@ function HeroConversacional() {
   };
 
   return (
-    <section className="relative grid min-h-[calc(100vh-76px)] place-items-center overflow-hidden px-6 py-16 lg:py-20">
-      {/* Layer 1: Particle network */}
-      <ParticleNetwork />
+    <section className="relative grid min-h-screen place-items-center overflow-hidden px-6 py-24 lg:py-32">
+      <AbstractFinanceBg />
 
-      {/* Layer 2: Dark overlay */}
-      <div
-        className="absolute inset-0 z-[2]"
-        style={{ background: "rgba(2,6,23,0.78)" }}
-        aria-hidden="true"
-      />
-
-      {/* Layer 3: Dynamic LEDGERA glow */}
-      <DynamicGlow />
-
-      <div className="relative z-10 mx-auto flex w-full max-w-[820px] flex-col items-center text-center">
-        {/* Logo */}
-        <div className="mb-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-[900px] flex-col items-center text-center">
+        {/* Marca — mucho más grande, más respiración, más presencia */}
+        <div className="mb-12 scale-125 sm:scale-150 origin-center">
           <Logo
             variant="light"
             size="lg"
@@ -246,54 +120,58 @@ function HeroConversacional() {
         </div>
 
         {/* Título */}
-        <h1 className="max-w-3xl font-display text-4xl font-black leading-[1.15] tracking-[-0.06em] text-slate-50 sm:text-5xl lg:text-6xl">
-          Conversa con LEDGERA.
+        <h1 className="max-w-4xl font-display text-5xl font-black leading-[1.08] tracking-[-0.05em] text-slate-50 sm:text-7xl lg:text-8xl">
+          Comprende el impacto de tus decisiones
           <br />
-          <span className="text-emerald-400">Entiende antes de decidir.</span>
+          <span className="text-emerald-400">antes de tomarlas.</span>
         </h1>
 
-        {/* Input principal — centrado, premium */}
+        {/* Subtítulo */}          <p className="mt-6 max-w-2xl text-2xl leading-8 text-slate-400 sm:text-[30px] sm:leading-9">
+          LEDGERA analiza contexto, normativa, impuestos, patrimonio y
+          escenarios futuros para ayudarte a tomar mejores decisiones.
+        </p>
+
+        {/* Input principal — el elemento más importante */}
         <form
           onSubmit={handleSubmit}
-          className="mt-10 flex w-full max-w-[600px] flex-col gap-4 sm:flex-row"
+          className="mt-12 flex w-full max-w-[680px] flex-col gap-4 sm:flex-row"
         >
           <div className="relative flex-1">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="¿En qué te puedo ayudar hoy?"
-              className="w-full rounded-2xl border-2 border-white/20 bg-white/[0.08] px-6 py-5 text-lg text-slate-100 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-300 ease-out focus:border-emerald-500/50 focus:bg-white/[0.12] focus:outline-none focus:ring-[3px] focus:ring-emerald-500/20 focus:shadow-[0_0_40px_rgba(16,185,129,0.12)]"
-              style={{ fontSize: "18px" }}
+              placeholder="¿Qué decisión estás evaluando hoy?"
+              className="w-full rounded-2xl border-2 border-white/20 bg-white/[0.08] px-7 py-6 text-xl text-slate-100 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-300 ease-out focus:border-emerald-500/50 focus:bg-white/[0.12] focus:outline-none focus:ring-[3px] focus:ring-emerald-500/20 focus:shadow-[0_0_50px_rgba(16,185,129,0.12)]"
             />
           </div>
           <button
             type="submit"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-7 py-5 text-base font-black text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-[0_0_40px_rgba(16,185,129,0.35)] active:scale-[0.97]"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 py-6 text-lg font-black text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-[0_0_50px_rgba(16,185,129,0.35)] active:scale-[0.97]"
           >
-            <span>Iniciar conversación</span>
+            <span>Comenzar</span>
             <span className="text-xl leading-none" aria-hidden="true">
               →
             </span>
           </button>
         </form>
 
-        {/* Ejemplos — 3 chips estáticos */}
+        {/* Chips — 18px */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {EJEMPLOS_CHIPS.map((text) => (
+          {CHIPS.map((text) => (
             <button
               key={text}
               type="button"
               onClick={() => handleChipClick(text)}
-              className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-300 transition-all duration-200 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-200 hover:shadow-[0_0_20px_rgba(16,185,129,0.08)]"
+              className="rounded-xl border border-white/10 bg-white/[0.05] px-5 py-3 text-lg text-slate-300 transition-all duration-200 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-200 hover:shadow-[0_0_20px_rgba(16,185,129,0.08)]"
             >
               {text}
             </button>
           ))}
         </div>
 
-        {/* Disclaimer */}
-        <p className="mt-10 max-w-2xl text-xs leading-6 text-slate-500">
+        {/* Disclaimer — 16px */}
+        <p className="mt-12 max-w-3xl text-base leading-7 text-slate-500 sm:text-lg">
           LEDGERA te ayuda a comprender normas, alternativas y consecuencias
           financieras y tributarias antes de tomar una decisión. No reemplaza la
           asesoría profesional especializada.
@@ -303,28 +181,36 @@ function HeroConversacional() {
   );
 }
 
-/* ─── Sección 2: Qué hace LEDGERA ─────────────────────────────────────────── */
+/* ─── Casos Reales ──────────────────────────────────────────────────────────── */
 
-function QueHaceSection() {
+function CasosRealesSection() {
   return (
-    <section className="px-6 py-20 lg:py-28">
+    <section className="relative border-t border-white/[0.04] bg-[#020617] px-6 py-24 lg:py-32">
       <div className="mx-auto max-w-[1180px]">
-        <SectionHeader eyebrow="Qué hace LEDGERA" title="Entiende, explica y proyecta." />
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="m-0 text-sm font-black uppercase tracking-[0.18em] text-emerald-400/70">
+            Capacidades
+          </p>
+          <h2 className="mt-5 font-display text-3xl font-black leading-tight tracking-[-0.04em] text-slate-50 sm:text-4xl lg:text-5xl">
+            Analiza casos reales.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg sm:leading-8">
+            LEDGERA evalúa escenarios concretos con contexto normativo,
+            financiero y patrimonial.
+          </p>
+        </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {QUE_HACE.map((item) => (
+        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {CASOS_REALES.map((caso) => (
             <div
-              key={item.title}
-              className="group relative rounded-3xl border border-white/10 bg-[#0F2A3D]/70 p-8 transition hover:border-emerald-500/25 hover:bg-[#0F2A3D]"
+              key={caso.area}
+              className="group rounded-3xl border border-white/[0.06] bg-white/[0.02] p-8 transition-all duration-300 hover:border-emerald-500/20 hover:bg-white/[0.04] sm:p-10"
             >
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl transition group-hover:bg-emerald-500/15">
-                {item.icon}
-              </div>
-              <h3 className="font-display text-2xl font-black tracking-[-0.03em] text-slate-50">
-                {item.title}
+              <h3 className="font-display text-2xl font-black tracking-[-0.025em] text-slate-50 transition-colors duration-300 group-hover:text-emerald-300 sm:text-3xl">
+                {caso.area}
               </h3>
-              <p className="mt-3 text-base leading-7 text-slate-400">
-                {item.text}
+              <p className="mt-4 text-lg leading-7 text-slate-400 sm:text-xl sm:leading-8">
+                {caso.text}
               </p>
             </div>
           ))}
@@ -334,83 +220,17 @@ function QueHaceSection() {
   );
 }
 
-/* ─── Sección 3: Para quién ───────────────────────────────────────────────── */
-
-function ParaQuienSection() {
-  return (
-    <section className="bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.03)_12%,rgba(255,255,255,0.03)_88%,transparent_100%)] px-6 py-20 lg:py-28">
-      <div className="mx-auto max-w-[1180px]">
-        <SectionHeader eyebrow="Para quién" title="Diseñado para personas, empresas y profesionales." />
-
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {PARA_QUIEN.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-3xl border border-white/10 bg-white/[0.045] p-8 transition hover:bg-white/[0.065]"
-            >
-              <h3 className="font-display text-2xl font-black tracking-[-0.03em] text-slate-50">
-                {item.title}
-              </h3>
-              <p className="mt-3 text-base leading-7 text-slate-400">
-                {item.text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── Sección 4: Cómo funciona ────────────────────────────────────────────── */
-
-function ComoFuncionaSection() {
-  return (
-    <section className="px-6 py-20 lg:py-28">
-      <div className="mx-auto max-w-[1180px]">
-        <SectionHeader eyebrow="Cómo funciona" title="Cuatro pasos simples." />
-
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {COMO_FUNCIONA.map((item, i) => (
-            <div
-              key={item.step}
-              className="relative rounded-3xl border border-white/10 bg-[#0F2A3D]/70 p-8"
-            >
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 text-lg font-black text-emerald-300">
-                {item.step}
-              </div>
-
-              {i < COMO_FUNCIONA.length - 1 ? (
-                <div className="absolute right-0 top-12 hidden h-px w-[calc(50%-4rem)] bg-gradient-to-r from-emerald-500/40 to-transparent lg:block" />
-              ) : null}
-
-              <h3 className="font-display text-xl font-black leading-snug tracking-[-0.025em] text-slate-50">
-                {item.title}
-              </h3>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── Sección 5: Principio de confianza ───────────────────────────────────── */
+/* ─── Principio de confianza ───────────────────────────────────────────────── */
 
 function ConfianzaSection() {
   return (
-    <section className="bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.02)_12%,rgba(255,255,255,0.02)_88%,transparent_100%)] px-6 py-20 lg:py-28">
+    <section className="relative border-t border-white/[0.04] bg-[#020617] px-6 py-24 lg:py-32">
       <div className="mx-auto max-w-[820px] text-center">
-        <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
-          <span className="text-2xl">🛡️</span>
-        </div>
+        <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.04em] text-slate-50 sm:text-4xl lg:text-5xl">
+          LEDGERA no toma decisiones por ti.
+        </h2>
 
-        <SectionHeader
-          eyebrow="Principio de confianza"
-          title="LEDGERA no toma decisiones por ti."
-        />
-
-        <p className="mx-auto mt-8 max-w-2xl text-base leading-8 text-slate-300">
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg sm:leading-8">
           Te ayuda a comprender el contexto, las normas aplicables y las
           consecuencias de cada alternativa para que tomes decisiones
           informadas.
@@ -419,16 +239,16 @@ function ConfianzaSection() {
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-4 text-base font-black text-white transition hover:bg-emerald-700 hover:shadow-[0_0_30px_rgba(22,163,74,0.25)] active:scale-[0.97]"
+            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-7 py-5 text-lg font-black text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-[0_0_40px_rgba(16,185,129,0.30)] active:scale-[0.97]"
           >
-            Iniciar conversación
-            <span className="text-lg leading-none" aria-hidden="true">
+            Comenzar
+            <span className="text-xl leading-none" aria-hidden="true">
               →
             </span>
           </Link>
           <Link
             href="/login"
-            className="inline-flex items-center rounded-2xl border border-white/20 bg-white/10 px-6 py-4 text-sm font-bold text-slate-100 transition hover:bg-white/15"
+            className="inline-flex items-center rounded-2xl border border-white/20 bg-white/10 px-7 py-5 text-base font-bold text-slate-100 transition hover:bg-white/15"
           >
             Ya tengo cuenta
           </Link>
@@ -442,7 +262,7 @@ function ConfianzaSection() {
 
 function LandingFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[#040C13] px-6 py-12">
+    <footer className="border-t border-white/[0.04] bg-[#020617] px-6 py-12">
       <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-8 sm:flex-row sm:justify-between">
         <div className="flex flex-col items-center gap-4 sm:items-start">
           <Logo
@@ -476,7 +296,7 @@ function LandingFooter() {
         </nav>
       </div>
 
-      <div className="mx-auto mt-8 max-w-[1180px] border-t border-white/10 pt-6 text-center text-sm text-slate-500">
+      <div className="mx-auto mt-8 max-w-[1180px] border-t border-white/[0.04] pt-6 text-center text-sm text-slate-500">
         © {new Date().getFullYear()} LEDGERA. Todos los derechos reservados.
       </div>
     </footer>
@@ -506,11 +326,11 @@ export default function LandingConversacional() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#020617] text-slate-50">
       {/* ── Navbar ── */}
-      <nav className="sticky top-0 z-[100] flex h-[76px] items-center justify-between border-b border-white/10 bg-[#020617]/90 px-5 backdrop-blur-md lg:px-8">
+      <nav className="sticky top-0 z-[100] flex h-[76px] items-center justify-between border-b border-white/[0.04] bg-[#020617]/90 px-5 backdrop-blur-md lg:px-8">
         <Link href="/" aria-label="Inicio LEDGERA">
           <Logo
             variant="light"
-            size="lg"
+            size="md"
             showSubtitle
             subtitle={BRAND_SUBTITLE}
           />
@@ -519,15 +339,15 @@ export default function LandingConversacional() {
         <div className="hidden items-center gap-1 md:flex">
           <Link
             href="/login"
-            className="rounded-lg px-3 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+            className="rounded-lg px-4 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             Iniciar sesión
           </Link>
           <Link
             href="/register"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
           >
-            Iniciar conversación
+            Comenzar
             <span aria-hidden="true">→</span>
           </Link>
         </div>
@@ -544,7 +364,7 @@ export default function LandingConversacional() {
       </nav>
 
       {mobileMenuOpen ? (
-        <div className="sticky top-[76px] z-[90] border-b border-white/10 bg-[#020617]/98 px-6 py-4 backdrop-blur-md md:hidden">
+        <div className="sticky top-[76px] z-[90] border-b border-white/[0.04] bg-[#020617]/98 px-6 py-4 backdrop-blur-md md:hidden">
           <div className="grid gap-3">
             <Link
               href="/login"
@@ -558,7 +378,7 @@ export default function LandingConversacional() {
               onClick={() => setMobileMenuOpen(false)}
               className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-3 text-center font-black text-white"
             >
-              Iniciar conversación
+              Comenzar
               <span aria-hidden="true">→</span>
             </Link>
           </div>
@@ -568,19 +388,7 @@ export default function LandingConversacional() {
       {/* ── Secciones ── */}
       <HeroConversacional />
 
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-      <QueHaceSection />
-
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-      <ParaQuienSection />
-
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-      <ComoFuncionaSection />
-
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <CasosRealesSection />
 
       <ConfianzaSection />
 
