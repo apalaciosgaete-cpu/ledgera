@@ -402,7 +402,7 @@ export default function OnboardingPage() {
   // ── Summary ───────────────────────────────────────────────────────────────
 
   function showSummary() {
-    addLedgeraMsg("Perfecto. Esto es lo que entendí:");
+    addLedgeraMsg("Esto es lo que entendí de tu situación:");
     // Give the user time to see the typing animation before showing the summary card
     setTimeout(() => {
       setStep("SUMMARY");
@@ -548,9 +548,9 @@ export default function OnboardingPage() {
             margin: "0 auto 36px",
             maxWidth: 480,
           }}>
-            Antes de comenzar necesito entender tu situación.
+            Cuéntame sobre tu situación para entender cómo
             <br />
-            Tomará menos de 3 minutos.
+            puedo ayudarte mejor.
           </p>
 
           <button
@@ -1007,7 +1007,7 @@ export default function OnboardingPage() {
             lineHeight: 1.15,
             fontFamily: fonts.body,
           }}>
-            Tu espacio LEDGERA está listo.
+            Ya tienes tu espacio LEDGERA configurado.
           </h2>
           <p style={{
             color: "#64748B",
@@ -1016,7 +1016,7 @@ export default function OnboardingPage() {
             margin: "0 auto 32px",
             maxWidth: 420,
           }}>
-            Ahora puedes comenzar una conversación o explorar tu situación actual.
+            Ahora puedes comenzar una conversación o revisar tu situación actual.
           </p>
           <button
             onClick={() => router.push("/panel")}

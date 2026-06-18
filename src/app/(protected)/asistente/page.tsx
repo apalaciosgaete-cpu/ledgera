@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useAuth } from "@/modules/identity/client/authContext";
+import { buildGreeting, resolveProfile } from "@/modules/copilot/domain/ledgeraVoice";
 
 type Message = {
   role: "USER" | "ASSISTANT";
@@ -8,10 +10,15 @@ type Message = {
 };
 
 export default function AsistentePage() {
+  const { user } = useAuth();
+  const role = ((user as { role?: string })?.role) ?? "personal";
+  const profile = resolveProfile(role);
+  const initialGreeting = buildGreeting(profile);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ASSISTANT",
-      content: "Hola. Soy el copiloto tributario de LEDGERA. Puedo ayudarte a revisar urgencias, riesgo, score, memoria y tareas pendientes.",
+      content: initialGreeting,
     },
   ]);
   const [message, setMessage] = useState("");

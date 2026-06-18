@@ -30,6 +30,7 @@ export interface CopilotContext {
   rejectedDocuments: number;
   adaptiveProfileType: string | null;
   memoryPatterns: number;
+  profileType: string | null;
 }
 
 export interface CopilotResponse {

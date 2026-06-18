@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { CopilotContext } from "@/modules/copilot/domain/copilot";
 
 export async function buildCopilotContext(userId: string): Promise<CopilotContext> {
-  const [risk, smartScore, openAlerts, criticalAlerts, pendingTasks, recommendations, rejectedDocuments, adaptiveProfile, memoryPatterns] = await Promise.all([
+  const [risk, smartScore, openAlerts, criticalAlerts, pendingTasks, recommendations, rejectedDocuments, adaptiveProfile, memoryPatterns, userRecord] = await Promise.all([
     prisma.taxRiskScore.findFirst({ where: { userId }, orderBy: { evaluatedAt: "desc" } }),
     prisma.smartTaxScore.findFirst({ where: { userId }, orderBy: { evaluatedAt: "desc" } }),
     prisma.alert.count({ where: { userId, status: { not: "RESOLVED" } } }),
@@ -15,7 +15,12 @@ export async function buildCopilotContext(userId: string): Promise<CopilotContex
       "SELECT COUNT(*)::bigint AS count FROM tax_memory_patterns WHERE user_id = $1",
       userId,
     ).catch(() => [{ count: BigInt(0) }]),
+    prisma.users.findUnique({ where: { id: userId }, select: { role: true, onboardingData: true } }).catch(() => null),
   ]);
+
+  // Resolve profile type: prefer onboarding profileType, fallback to user role
+  const rawOnboarding = userRecord?.onboardingData as { profileType?: string } | null | undefined;
+  const profileType = rawOnboarding?.profileType ?? userRecord?.role ?? null;
 
   return {
     userId,
@@ -29,5 +34,6 @@ export async function buildCopilotContext(userId: string): Promise<CopilotContex
     rejectedDocuments,
     adaptiveProfileType: adaptiveProfile?.profileType ?? null,
     memoryPatterns: Number(memoryPatterns[0]?.count ?? 0),
+    profileType,
   };
 }
