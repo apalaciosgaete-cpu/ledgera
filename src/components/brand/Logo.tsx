@@ -17,16 +17,12 @@ const sizes = {
   lg: { name: 42, sub: 13, gap: 7, width: 380 },
 };
 
-export function Logo({
-  variant = "light",
-  size = "md",
-  showSubtitle = true,
-  subtitle,
-}: LogoProps) {
+const officialSubtitle = "Sistema Operativo Financiero y Tributario";
+
+export function Logo({ variant = "light", size = "md", showSubtitle = true }: LogoProps) {
   const s = sizes[size];
   const nameColor = variant === "light" ? colors.textLight : "#071B28";
   const subtitleColor = variant === "light" ? "#4ADE80" : colors.accent;
-  const subtitleText = subtitle ?? "Sistema Operativo Financiero y Tributario";
 
   const wrap: CSSProperties = {
     display: "inline-flex",
@@ -61,44 +57,29 @@ export function Logo({
   };
 
   return (
-    <div style={wrap} aria-label={subtitleText}>
+    <div style={wrap} aria-label={officialSubtitle}>
       <span style={nameStyle}>LEDGERA</span>
-      {showSubtitle ? <span style={subStyle}>{subtitleText}</span> : null}
+      {showSubtitle ? <span style={subStyle}>{officialSubtitle}</span> : null}
     </div>
   );
 }
 
 export function LogoIcon({ size = 44 }: { size?: number }) {
-  const radius = Math.round(size * 0.22);
-  const stroke = Math.max(2, Math.round(size * 0.035));
-
   const wrap: CSSProperties = {
     width: size,
     height: size,
-    borderRadius: radius,
+    borderRadius: Math.round(size * 0.22),
     background: "#071B28",
-    border: `${stroke}px solid ${colors.borderDark}`,
+    border: `${Math.max(2, Math.round(size * 0.035))}px solid ${colors.borderDark}`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
+    color: colors.textLight,
+    fontFamily: fonts.display,
+    fontWeight: 900,
   };
 
-  return (
-    <div style={wrap} aria-label="LEDGERA">
-      <svg
-        width={Math.round(size * 0.66)}
-        height={Math.round(size * 0.66)}
-        viewBox="0 0 512 512"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path d="M176 140 H240 V310 H352 V372 H176 Z" fill={colors.textLight} />
-        <rect x="252" y="310" width="100" height="18" rx="9" fill={colors.accent} />
-      </svg>
-    </div>
-  );
+  return <div style={wrap} aria-label="LEDGERA">L</div>;
 }
 
 export default Logo;
