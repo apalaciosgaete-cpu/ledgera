@@ -10,7 +10,7 @@ const EXAMPLES = [
   "Vendí Bitcoin el mes pasado",
   "Recibí USDT desde Binance",
   "Tengo fondos en una wallet Ledger",
-  "Necesito regularizar movimientos crypto",
+  "Necesito revisar origen de fondos",
   "Tengo ganancias por staking",
   "Quiero preparar mi declaración por cryptoactivos",
 ];
@@ -42,12 +42,18 @@ function moduleCount(snapshot: Snapshot | null, key: string) {
   if (!snapshot) return "—";
   if (key === "digitalWealth") return String(snapshot.cryptoAssets.length + snapshot.exchangeAccounts.length + snapshot.wallets.length);
   if (key === "cryptoAssets") return String(snapshot.cryptoAssets.length);
-  if (key === "exchanges") return String(snapshot.exchangeAccounts.length);
-  if (key === "wallets") return String(snapshot.wallets.length);
-  if (key === "sourceOfFunds") return String(snapshot.sourcesOfFunds.length);
+  if (key === "sourceOfFunds") return String(snapshot.sourcesOfFunds.length + snapshot.exchangeAccounts.length + snapshot.wallets.length);
   if (key === "taxObligations") return String(snapshot.taxObligations.length);
   if (key === "documentation") return String(snapshot.documents.length);
   return "—";
+}
+
+function moduleMeta(snapshot: Snapshot | null, key: string) {
+  if (!snapshot) return "Pendiente de carga";
+  if (key === "sourceOfFunds") {
+    return `${snapshot.sourcesOfFunds.length} orígenes · ${snapshot.exchangeAccounts.length} exchanges · ${snapshot.wallets.length} wallets`;
+  }
+  return "Crypto First MVP";
 }
 
 export function InvestorDashboard() {
@@ -110,14 +116,15 @@ export function InvestorDashboard() {
       </div>
 
       <section style={{ width: "100%", maxWidth: 980, marginTop: 48 }}>
-        <p style={{ color: "#334155", fontSize: 11, fontWeight: 850, letterSpacing: "0.09em", textTransform: "uppercase", margin: "0 0 16px", fontFamily: fonts.body }}>Patrimonio digital</p>
+        <p style={{ color: "#334155", fontSize: 11, fontWeight: 850, letterSpacing: "0.09em", textTransform: "uppercase", margin: "0 0 16px", fontFamily: fonts.body }}>Flujo Crypto First</p>
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-          {cryptoFirstModules.slice(0, 7).map((item) => (
+          {cryptoFirstModules.map((item) => (
             <Link key={item.href} href={item.href} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 18, textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <h2 style={{ color: "#E2E8F0", fontSize: 16, fontWeight: 850, margin: "0 0 8px", fontFamily: fonts.body }}>{item.label}</h2>
                 <span style={{ color: "#4ADE80", fontSize: 13, fontWeight: 850 }}>{moduleCount(snapshot, item.key)}</span>
               </div>
+              <p style={{ color: "#64748B", fontSize: 12, margin: "0 0 8px", fontFamily: fonts.body }}>{moduleMeta(snapshot, item.key)}</p>
               <p style={{ color: "#475569", fontSize: 13, lineHeight: 1.55, margin: 0, fontFamily: fonts.body }}>{item.description}</p>
             </Link>
           ))}
