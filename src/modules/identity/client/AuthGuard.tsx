@@ -20,30 +20,6 @@ function isPublicRoute(pathname: string): boolean {
   );
 }
 
-const TWOFAGATE_ROUTES = [
-  "/configuracion",
-  "/configuracion/perfil",
-  "/configuracion/seguridad",
-  "/configuracion/facturacion",
-  "/configuracion/admin",
-];
-
-function is2FAGateRoute(pathname: string): boolean {
-  return TWOFAGATE_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-}
-
-/**
- * CAPA 4.1 — Rutas permitidas mientras el usuario está en onboarding.
- *
- * El usuario no debe ver el panel vacío. Solo puede:
- * - completar el wizard de onboarding
- * - conectar exchanges
- * - importar movimientos (manual, Binance CSV, banco)
- * - revisar la bandeja de importaciones
- * - configurar 2FA (controlado por el guard de 2FA antes que este)
- */
 const ONBOARDING_ROUTES = [
   "/onboarding",
   "/integraciones",
@@ -52,6 +28,17 @@ const ONBOARDING_ROUTES = [
   "/import/binance",
   "/import/bank",
   "/importaciones",
+  "/panel",
+  "/patrimonio-digital",
+  "/cryptoactivos",
+  "/exchanges",
+  "/wallets",
+  "/origen-fondos",
+  "/obligaciones-tributarias",
+  "/documentacion",
+  "/casos",
+  "/conversaciones",
+  "/ayuda",
 ];
 
 function isOnboardingRoute(pathname: string): boolean {
@@ -63,13 +50,12 @@ function isOnboardingRoute(pathname: string): boolean {
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router        = useRouter();
   const pathname      = usePathname();
-  const { isAuthenticated, isLoading, needs2FA, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const publicRoute   = isPublicRoute(pathname);
   const wasAuthenticated = useRef(false);
 
   const needsOnboarding = user?.needsOnboarding === true;
 
-  // Trackear si el usuario estaba autenticado antes
   useEffect(() => {
     if (isAuthenticated) {
       wasAuthenticated.current = true;
@@ -78,8 +64,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !publicRoute) {
-      // Si el usuario estaba autenticado y ahora no lo está
-      // significa que hizo logout → no redirigir aquí, el layout lo maneja
       if (wasAuthenticated.current) {
         return;
       }
@@ -87,15 +71,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!isLoading && isAuthenticated && needs2FA && !is2FAGateRoute(pathname)) {
-      router.push("/configuracion/seguridad?setup2fa=1");
-      return;
+    if (!isLoading && isAuthenticated && needsOnboarding && !isOnboardingRoute(pathname)) {
+      router.push("/panel");
     }
-
-    if (!isLoading && isAuthenticated && !needs2FA && needsOnboarding && !isOnboardingRoute(pathname)) {
-      router.push("/onboarding");
-    }
-  }, [isAuthenticated, isLoading, needs2FA, needsOnboarding, pathname, publicRoute, router]);
+  }, [isAuthenticated, isLoading, needsOnboarding, pathname, publicRoute, router]);
 
   if (isLoading) {
     return (
