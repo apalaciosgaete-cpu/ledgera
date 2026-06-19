@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-import { getDigitalOperatingSnapshot, ensureDigitalProfile } from "@/modules/digital-operating-system";
+import { deriveOperatingSummary, ensureDigitalProfile, getDigitalOperatingSnapshot } from "@/modules/digital-operating-system";
 
 function ok(data: unknown, status = 200) {
   return NextResponse.json({ ok: true, data }, { status });
@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
   if (!auth) return fail("No autorizado.", 401);
 
   const snapshot = await getDigitalOperatingSnapshot(auth.user.id);
-  return ok(snapshot);
+  const summary = deriveOperatingSummary(snapshot);
+  return ok({ ...snapshot, summary });
 }
 
 export async function POST(req: NextRequest) {
