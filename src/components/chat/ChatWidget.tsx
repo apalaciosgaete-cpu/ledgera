@@ -194,7 +194,7 @@ export default function ChatWidget() {
               </svg>
             </div>
             <div>
-              <p style={{ margin: 0, fontWeight: 700, color: "#f1f5f9", fontSize: "0.9rem" }}>Soporte LEDGERA</p>
+              <p style={{ margin: 0, fontWeight: 700, color: "#f1f5f9", fontSize: "0.9rem" }}>Soporte</p>
               <p style={{ margin: 0, fontSize: "0.72rem", color: adminOnline ? "#22c55e" : "#94a3b8" }}>
                 {adminOnline ? "● En línea" : "● Responderemos pronto"}
               </p>
