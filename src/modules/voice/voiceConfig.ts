@@ -30,3 +30,17 @@ export const WELCOME_MESSAGE =
 
 /** Clave de sessionStorage para evitar repetir bienvenida */
 export const SESSION_STORAGE_KEY = "ledgera_voice_welcome_played";
+
+// ─── ElevenLabs Neural TTS ──────────────────────────────────────────────────
+
+/** Voz Rachel — profesional, clara, excelente para español */
+export const ELEVENLABS_VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
+
+/** Modelo multilingüe optimizado para español */
+export const ELEVENLABS_MODEL = "eleven_multilingual_v2";
+
+/** Configuración de voz para el proveedor neuronal */
+export const NEURAL_VOICE_SETTINGS = {
+  stability: 0.45,
+  similarityBoost: 0.75,
+};

@@ -1,14 +1,15 @@
 // src/modules/voice/voiceEngine.ts
 // Motor de Voz LEDGERA — orquesta la bienvenida automática al entrar al panel.
 //
-// Flujo:
+// Flujo UX 3.1.2:
 //   Usuario entra a /panel
 //   → VoiceEngine detecta sesión nueva
 //   → Genera bienvenida contextual
-//   → Normaliza pronunciación
-//   → Selecciona voz es-CL / es-LATAM
-//   → Reproduce bienvenida automática
-//   → Si navegador bloquea, muestra aviso discreto
+//   → Normaliza pronunciación y formatea texto
+//   → /api/voice/welcome → ElevenLabs TTS neuronal
+//   → Devuelve audio mp3 → autoplay en panel
+//   → Si falla el proveedor: fallback a speechSynthesis del navegador
+//   → Si el navegador bloquea: muestra aviso discreto
 
 "use client";
 
@@ -30,10 +31,14 @@ export type VoiceEngineCallbacks = {
 /**
  * VoiceEngine — Singleton que maneja el ciclo de vida de la voz.
  *
+ * Orden de reproducción:
+ *   1. TTS neuronal (ElevenLabs vía /api/voice/welcome)
+ *   2. Fallback a speechSynthesis del navegador
+ *   3. Si el navegador bloquea el autoplay → blocked
+ *
  * Uso:
  * ```tsx
  * const engine = useRef(new VoiceEngine());
- *
  * useEffect(() => {
  *   engine.current.playWelcome({ onStateChange: setVoiceState });
  * }, []);
@@ -52,6 +57,7 @@ export class VoiceEngine {
   /**
    * Reproduce la bienvenida automática si es una sesión nueva.
    * Solo se ejecuta una vez por sesión de navegador.
+   * Prioriza TTS neuronal; fallback a speechSynthesis del navegador.
    *
    * @param callbacks — Callbacks opcionales para estado y UI.
    * @returns El estado resultante.
@@ -68,17 +74,18 @@ export class VoiceEngine {
       return this.state;
     }
 
-    // Verificar soporte de SpeechSynthesis
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    // Verificar soporte de audio
+    if (typeof window === "undefined") {
       this.setState("unsupported");
       return this.state;
     }
 
     this.setState("playing");
 
-    // Esperar un momento para asegurar que el motor de voz del navegador esté listo
+    // Pequeña pausa antes de comenzar
     await new Promise((resolve) => setTimeout(resolve, VOICE_CONFIG.startDelay));
 
+    // Intentar reproducir (neuronal primero, fallback a browser)
     const result = await speak(WELCOME_MESSAGE);
 
     if (result.blocked) {
