@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
@@ -14,21 +13,6 @@ type Props = {
   onLogout: () => void;
 };
 
-function menuItemStyle(active: boolean): React.CSSProperties {
-  return {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "9px 12px",
-    borderRadius: "8px",
-    fontSize: "13px",
-    fontWeight: active ? 700 : 600,
-    color: active ? "#F8FAFC" : "#94A3B8",
-    background: active ? "rgba(22,163,74,0.14)" : "transparent",
-    textDecoration: "none",
-    transition: "all 0.15s ease",
-  };
-}
 
 export function UserProfileDropdown({
   name, initials, avatarGradient, badgeBg, badgeColor, roleLabel, isAdmin, onLogout,
@@ -136,17 +120,6 @@ export function UserProfileDropdown({
             <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>
               {roleLabel}
             </p>
-          </div>
-
-          {/* Single action: Configuración */}
-          <div style={{ padding: "6px 0", display: "flex", flexDirection: "column", gap: "2px" }}>
-            <Link href="/configuracion" onClick={() => setOpen(false)} style={menuItemStyle(false)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-              Configuración
-            </Link>
           </div>
 
           <div style={{ paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
