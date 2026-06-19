@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
+import { VoiceEngine, type VoiceEngineState } from "@/modules/voice/voiceEngine";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -11,31 +12,16 @@ const CHIPS = [
   "Preparar declaración crypto",
 ];
 
-const WELCOME_TEXT = "Bienvenido a LEDGERA. Soy tu Sistema Operativo Financiero y Tributario. ¿Cuál es tu situación o qué quieres evaluar?";
-
 export function InvestorDashboard() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const hasSpokenRef = useRef(false);
+  const voiceEngine = useRef(new VoiceEngine());
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [voiceState, setVoiceState] = useState<VoiceEngineState>("idle");
 
   useEffect(() => {
-    if (hasSpokenRef.current) return;
-    hasSpokenRef.current = true;
-
-    const speak = () => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(WELCOME_TEXT);
-      utterance.lang = "es-CL";
-      utterance.rate = 0.96;
-      utterance.pitch = 0.95;
-      window.speechSynthesis.speak(utterance);
-    };
-
-    const timeout = window.setTimeout(speak, 650);
-    return () => window.clearTimeout(timeout);
+    voiceEngine.current.playWelcome({ onStateChange: setVoiceState });
   }, []);
 
   function handleSubmit(e: React.FormEvent) {
@@ -64,19 +50,31 @@ export function InvestorDashboard() {
       }}
     >
       <section style={{ width: "100%", maxWidth: 720, textAlign: "center" }}>
-        <p
-          style={{
-            color: "#4ADE80",
-            fontSize: 12,
-            fontWeight: 850,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            margin: "0 0 22px",
-            fontFamily: fonts.body,
-          }}
-        >
-          Bienvenida LEDGERA
-        </p>
+        {voiceState === "blocked" && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "rgba(234,179,8,0.10)",
+              border: "1px solid rgba(234,179,8,0.20)",
+              borderRadius: 8,
+              padding: "6px 14px",
+              marginBottom: 22,
+              fontSize: 12,
+              color: "#EAB308",
+              fontWeight: 600,
+              fontFamily: fonts.body,
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onClick={() => voiceEngine.current.retryWelcome().then(setVoiceState)}
+            title="Activar audio"
+          >
+            <span>🔇</span>
+            <span>Activa audio para escuchar a LEDGERA</span>
+          </div>
+        )}
 
         <p
           style={{
