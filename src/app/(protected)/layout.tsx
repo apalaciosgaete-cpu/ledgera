@@ -9,7 +9,8 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
-import { cryptoFirstModules } from "@/modules/digital-operating-system";
+
+// UX 3.1.0 — Header: ☰ | LEDGERA (centered) | 👤
 
 const roleTokens: Record<string, {
   label: string;
@@ -43,44 +44,163 @@ const roleTokens: Record<string, {
   },
 };
 
-function Sidebar({ open, onClose, onLogout }: { open: boolean; onClose: () => void; onLogout: () => void }) {
+const SIDEBAR_PRIMARY = [
+  { href: "/portafolio", label: "Patrimonio Digital" },
+  { href: "/inversiones", label: "Cryptoactivos" },
+  { href: "/bank", label: "Origen de Fondos" },
+  { href: "/impuestos", label: "Obligaciones Tributarias" },
+  { href: "/documentos", label: "Documentación" },
+];
+
+const SIDEBAR_SECONDARY = [
+  { href: "/configuracion", label: "Configuración" },
+  { href: "/ayuda", label: "Ayuda" },
+];
+
+function Sidebar({
+  open,
+  onClose,
+  onLogout,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onLogout: () => void;
+}) {
   return (
     <>
-      {open ? (
+      {open && (
         <div
           onClick={onClose}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 100, backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            zIndex: 100,
+            backdropFilter: "blur(3px)",
+            WebkitBackdropFilter: "blur(3px)",
+          }}
         />
-      ) : null}
+      )}
       <nav
-        aria-label="Navegación LEDGERA"
-        style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 304, maxWidth: "calc(100vw - 32px)", background: "#071B28", borderRight: "1px solid rgba(255,255,255,0.08)", zIndex: 101, display: "flex", flexDirection: "column", transform: open ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.26s cubic-bezier(0.4, 0, 0.2, 1)" }}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: 280,
+          background: "#071B28",
+          borderRight: "1px solid rgba(255,255,255,0.08)",
+          zIndex: 101,
+          display: "flex",
+          flexDirection: "column",
+          transform: open ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.26s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <span style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fonts.body }}>
-            Workspace Crypto First
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "20px 24px",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          <span
+            style={{
+              color: "#475569",
+              fontSize: 11,
+              fontWeight: 850,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              fontFamily: fonts.body,
+            }}
+          >
+            Menú
           </span>
-          <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#CBD5E1", cursor: "pointer", fontSize: 14, padding: "4px 9px", lineHeight: 1.4, fontFamily: fonts.body }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 8,
+              color: "#94A3B8",
+              cursor: "pointer",
+              fontSize: 14,
+              padding: "4px 9px",
+              lineHeight: 1.4,
+              fontFamily: fonts.body,
+            }}
+          >
             ✕
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-          {cryptoFirstModules.map((item) => (
-            <Link key={item.href} href={item.href} onClick={onClose} style={{ display: "block", padding: "12px 24px", color: "#E2E8F0", fontSize: 15, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+          {SIDEBAR_PRIMARY.map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClose}
+              style={{
+                display: "block",
+                padding: "12px 24px",
+                color: "#E2E8F0",
+                fontSize: 15,
+                fontWeight: 600,
+                textDecoration: "none",
+                fontFamily: fonts.body,
+                transition: "background 0.1s",
+              }}
+            >
               {item.label}
             </Link>
           ))}
 
-          <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "14px 24px" }} />
+          <div
+            style={{
+              margin: "12px 24px",
+              borderTop: "1px solid rgba(255,255,255,0.07)",
+            }}
+          />
 
-          <Link href="/configuracion" onClick={onClose} style={{ display: "block", padding: "12px 24px", color: "#94A3B8", fontSize: 14, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body }}>
-            Configuración
-          </Link>
-          <Link href="/ayuda" onClick={onClose} style={{ display: "block", padding: "12px 24px", color: "#94A3B8", fontSize: 14, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body }}>
-            Ayuda
-          </Link>
-          <button type="button" onClick={onLogout} style={{ display: "block", width: "100%", textAlign: "left", padding: "12px 24px", color: "#94A3B8", background: "transparent", border: 0, fontSize: 14, fontWeight: 650, cursor: "pointer", fontFamily: fonts.body }}>
+          {SIDEBAR_SECONDARY.map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClose}
+              style={{
+                display: "block",
+                padding: "12px 24px",
+                color: "#94A3B8",
+                fontSize: 14,
+                fontWeight: 500,
+                textDecoration: "none",
+                fontFamily: fonts.body,
+                transition: "background 0.1s",
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          <button
+            onClick={() => { onClose(); onLogout(); }}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              padding: "12px 24px",
+              color: "#94A3B8",
+              fontSize: 14,
+              fontWeight: 500,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: fonts.body,
+              transition: "background 0.1s",
+            }}
+          >
             Cerrar sesión
           </button>
         </div>
@@ -93,10 +213,10 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const isPanel = pathname === "/panel";
 
   if (!user) return null;
 
-  const isHome = pathname === "/panel";
   const role = (user as { role?: string })?.role ?? "personal";
   const token = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
@@ -107,30 +227,100 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: isHome ? "#071B28" : colors.bgApp, fontFamily: fonts.body }}>
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} onLogout={handleLogout} />
+    <div
+      style={{
+        minHeight: "100vh",
+        background: isPanel ? "#071B28" : colors.bgApp,
+        fontFamily: fonts.body,
+      }}
+    >
+      <Sidebar
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onLogout={handleLogout}
+      />
 
-      <header style={{ background: "#071B28", borderBottom: "1px solid rgba(255,255,255,0.06)", position: "sticky", top: 0, zIndex: 50, height: 60 }}>
-        <div style={{ maxWidth: isHome ? "none" : "1400px", margin: "0 auto", padding: "0 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
-            <button type="button" onClick={() => setMenuOpen(true)} title="Menú" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#94A3B8", cursor: "pointer", fontSize: 16, padding: "7px 11px", display: "flex", alignItems: "center", lineHeight: 1, fontFamily: fonts.body }}>
+      <header
+        style={{
+          background: "#071B28",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          height: "60px",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "center",
+            height: "100%",
+            padding: "0 20px",
+          }}
+        >
+          {/* Left: Hamburguesa */}
+          <div style={{ justifySelf: "start" }}>
+            <button
+              onClick={() => setMenuOpen(true)}
+              title="Menú"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 8,
+                color: "#94A3B8",
+                cursor: "pointer",
+                fontSize: 16,
+                padding: "7px 11px",
+                display: "flex",
+                alignItems: "center",
+                lineHeight: 1,
+                fontFamily: fonts.body,
+                transition: "background 0.15s",
+              }}
+            >
               ☰
             </button>
           </div>
 
-          {!isHome ? (
-            <Link href="/panel" aria-label="Ir al inicio LEDGERA" style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
-              <Logo variant="light" size="sm" showSubtitle={false} />
-            </Link>
-          ) : <span aria-hidden="true" />}
+          {/* Center: Logo */}
+          <Link
+            href="/panel"
+            aria-label="Ir al inicio LEDGERA"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+            }}
+          >
+            <Logo variant="light" size="md" showSubtitle={false} />
+          </Link>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-            <UserProfileDropdown name={user.email} initials={initials} avatarGradient={token.avatarGradient} badgeBg={token.badgeBg} badgeColor={token.badgeColor} roleLabel={token.label} isAdmin={role === "admin"} onLogout={handleLogout} />
+          {/* Right: Avatar */}
+          <div style={{ justifySelf: "end" }}>
+            <UserProfileDropdown
+              name={user.email}
+              initials={initials}
+              avatarGradient={token.avatarGradient}
+              badgeBg={token.badgeBg}
+              badgeColor={token.badgeColor}
+              roleLabel={token.label}
+              isAdmin={role === "admin"}
+              onLogout={handleLogout}
+            />
           </div>
         </div>
       </header>
 
-      <main style={{ maxWidth: isHome ? "none" : "1400px", margin: "0 auto", padding: isHome ? 0 : "32px 24px", minWidth: 0, overflowX: "hidden" }}>
+      <main
+        style={{
+          maxWidth: isPanel ? "none" : "1400px",
+          margin: "0 auto",
+          padding: isPanel ? "0" : "32px 24px",
+          minWidth: 0,
+          overflowX: "hidden",
+        }}
+      >
         {children}
       </main>
     </div>
