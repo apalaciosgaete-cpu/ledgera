@@ -7,15 +7,14 @@ import { cryptoFirstModules } from "@/modules/digital-operating-system";
 import { fonts } from "@/styles/tokens";
 
 const EXAMPLES = [
-  "Vendí Bitcoin el mes pasado",
+  "Vendí Bitcoin y retiré fondos al banco",
   "Recibí USDT desde Binance",
-  "Tengo fondos en una wallet Ledger",
-  "Necesito revisar origen de fondos",
-  "Tengo ganancias por staking",
-  "Quiero preparar mi declaración por cryptoactivos",
+  "Necesito justificar origen de fondos",
+  "Quiero preparar mi declaración crypto",
 ];
 
 type Conversation = { id: string; title: string; lastMessageAt: string };
+type EventRow = { id?: string; description?: string; event_type?: string; eventType?: string; created_at?: string; createdAt?: string };
 type Snapshot = {
   cryptoAssets: unknown[];
   exchangeAccounts: unknown[];
@@ -23,9 +22,12 @@ type Snapshot = {
   sourcesOfFunds: unknown[];
   taxObligations: unknown[];
   documents: unknown[];
+  events?: EventRow[];
+  summary?: { readiness?: number; status?: string; missing?: string[] };
 };
 
-function timeAgo(iso: string): string {
+function timeAgo(iso?: string): string {
+  if (!iso) return "Ahora";
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "Ahora";
@@ -34,26 +36,47 @@ function timeAgo(iso: string): string {
   if (hrs < 24) return `Hace ${hrs} h`;
   const days = Math.floor(hrs / 24);
   if (days === 1) return "Ayer";
-  if (days < 7) return `Hace ${days} días`;
-  return new Date(iso).toLocaleDateString("es-CL", { day: "numeric", month: "short" });
+  return `Hace ${days} días`;
 }
 
-function moduleCount(snapshot: Snapshot | null, key: string) {
-  if (!snapshot) return "—";
-  if (key === "digitalWealth") return String(snapshot.cryptoAssets.length + snapshot.exchangeAccounts.length + snapshot.wallets.length);
-  if (key === "cryptoAssets") return String(snapshot.cryptoAssets.length);
-  if (key === "sourceOfFunds") return String(snapshot.sourcesOfFunds.length + snapshot.exchangeAccounts.length + snapshot.wallets.length);
-  if (key === "taxObligations") return String(snapshot.taxObligations.length);
-  if (key === "documentation") return String(snapshot.documents.length);
-  return "—";
+function readiness(snapshot: Snapshot | null) {
+  if (snapshot?.summary?.readiness !== undefined) return snapshot.summary.readiness;
+  if (!snapshot) return 0;
+  const done = [snapshot.cryptoAssets.length, snapshot.sourcesOfFunds.length, snapshot.documents.length].filter((n) => n > 0).length;
+  return Math.round((done / 3) * 100);
 }
 
-function moduleMeta(snapshot: Snapshot | null, key: string) {
-  if (!snapshot) return "Pendiente de carga";
-  if (key === "sourceOfFunds") {
-    return `${snapshot.sourcesOfFunds.length} orígenes · ${snapshot.exchangeAccounts.length} exchanges · ${snapshot.wallets.length} wallets`;
-  }
-  return "Crypto First MVP";
+function riskLabel(snapshot: Snapshot | null) {
+  const missing = snapshot?.summary?.missing?.length ?? 0;
+  if (!snapshot) return "Sin evaluar";
+  if (missing >= 3) return "Alto";
+  if (missing >= 1) return "Medio";
+  return "Bajo";
+}
+
+function pendingItems(snapshot: Snapshot | null) {
+  const missing = snapshot?.summary?.missing;
+  if (missing?.length) return missing.map((item) => `Falta ${item}`);
+  if (!snapshot) return ["Cargar información patrimonial inicial"];
+  return ["Revisar consistencia documental", "Completar trazabilidad si corresponde"];
+}
+
+function recentEvents(snapshot: Snapshot | null, conversations: Conversation[]) {
+  const events = snapshot?.events?.slice(0, 4).map((event) => ({
+    title: event.description ?? event.event_type ?? event.eventType ?? "Evento registrado",
+    time: timeAgo(event.created_at ?? event.createdAt),
+  })) ?? [];
+
+  if (events.length) return events;
+  return conversations.slice(0, 3).map((conv) => ({ title: conv.title, time: timeAgo(conv.lastMessageAt) }));
+}
+
+function recommendedAction(snapshot: Snapshot | null) {
+  const missing = snapshot?.summary?.missing ?? [];
+  if (missing.some((item) => item.includes("origen"))) return "Completar trazabilidad de origen de fondos.";
+  if (missing.some((item) => item.includes("document"))) return "Agregar documentación de respaldo.";
+  if ((snapshot?.cryptoAssets.length ?? 0) === 0) return "Registrar cryptoactivos principales.";
+  return "Revisar obligaciones tributarias asociadas al patrimonio digital.";
 }
 
 export function InvestorDashboard() {
@@ -63,7 +86,6 @@ export function InvestorDashboard() {
   const [exIdx, setExIdx] = useState(0);
   const [focused, setFocused] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loadingConvs, setLoadingConvs] = useState(true);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
 
   useEffect(() => {
@@ -80,8 +102,7 @@ export function InvestorDashboard() {
     fetch("/api/copilot/conversations?limit=5", { cache: "no-store" })
       .then((r) => r.json())
       .then((json) => { if (json.ok && Array.isArray(json.data)) setConversations(json.data); })
-      .catch(() => null)
-      .finally(() => setLoadingConvs(false));
+      .catch(() => null);
   }, []);
 
   function handleSubmit(e: React.FormEvent) {
@@ -96,53 +117,65 @@ export function InvestorDashboard() {
     inputRef.current?.focus();
   }
 
+  const flow = cryptoFirstModules;
+  const events = recentEvents(snapshot, conversations);
+  const pending = pendingItems(snapshot);
+
   return (
-    <div style={{ minHeight: "calc(100vh - 60px)", background: "#071B28", color: "#E2E8F0", fontFamily: fonts.body, display: "flex", flexDirection: "column", alignItems: "center", padding: "clamp(40px, 7vh, 76px) 24px 40px" }}>
-      <div style={{ width: "100%", maxWidth: 720, textAlign: "center" }}>
-        <h1 style={{ color: "#F8FAFC", fontSize: "clamp(2.25rem, 6vw, 4rem)", fontWeight: 900, margin: "0 0 8px", lineHeight: 0.96, fontFamily: fonts.display, letterSpacing: "0.14em" }}>LEDGERA</h1>
+    <div style={{ minHeight: "calc(100vh - 60px)", background: "#071B28", color: "#E2E8F0", fontFamily: fonts.body, display: "flex", flexDirection: "column", alignItems: "center", padding: "clamp(42px, 7vh, 78px) 24px 52px" }}>
+      <section style={{ width: "100%", maxWidth: 760, textAlign: "center" }}>
+        <h1 style={{ color: "#F8FAFC", fontSize: "clamp(2.35rem, 6vw, 4.2rem)", fontWeight: 900, margin: "0 0 8px", lineHeight: 0.96, fontFamily: fonts.display, letterSpacing: "0.14em" }}>LEDGERA</h1>
         <p style={{ color: "#4ADE80", fontSize: "clamp(0.78rem, 2vw, 0.95rem)", fontWeight: 850, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 34px", fontFamily: fonts.body }}>SO Financiero y Tributario</p>
-        <p style={{ color: "#64748B", fontSize: "clamp(1rem, 2.5vw, 1.28rem)", fontWeight: 450, margin: "0 0 22px", lineHeight: 1.45 }}>¿Qué decisión relacionada con cryptoactivos necesitas evaluar?</p>
+        <p style={{ color: "#CBD5E1", fontSize: "clamp(1.1rem, 2.5vw, 1.45rem)", fontWeight: 500, margin: "0 0 22px", lineHeight: 1.45 }}>¿Qué decisión relacionada con cryptoactivos necesitas evaluar?</p>
 
         <form onSubmit={handleSubmit} style={{ marginBottom: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.04)", border: `1.5px solid ${focused ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.10)"}`, borderRadius: 18, padding: "6px 6px 6px 22px", boxShadow: focused ? "0 0 0 3px rgba(22,163,74,0.08)" : "none" }}>
+          <div style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.045)", border: `1.5px solid ${focused ? "rgba(74,222,128,0.38)" : "rgba(255,255,255,0.10)"}`, borderRadius: 18, padding: "6px 6px 6px 22px", boxShadow: focused ? "0 0 0 3px rgba(22,163,74,0.08)" : "none" }}>
             <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder={EXAMPLES[exIdx]} autoComplete="off" style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#F8FAFC", fontSize: 16, fontFamily: fonts.body, fontWeight: 500, padding: "12px 0", caretColor: "#4ADE80" }} />
             <button type="submit" style={{ background: "#16A34A", border: "none", borderRadius: 12, color: "#FFFFFF", cursor: "pointer", padding: "12px 22px", fontSize: 17, fontWeight: 850, flexShrink: 0, lineHeight: 1 }}>→</button>
           </div>
         </form>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-          {EXAMPLES.slice(0, 4).map((ex) => <button key={ex} onClick={() => useExample(ex)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 999, color: "#64748B", cursor: "pointer", fontSize: 13, fontWeight: 550, padding: "6px 14px", fontFamily: fonts.body }}>{ex}</button>)}
+          {EXAMPLES.map((ex) => <button key={ex} onClick={() => useExample(ex)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 999, color: "#94A3B8", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "7px 14px", fontFamily: fonts.body }}>{ex}</button>)}
         </div>
-      </div>
+      </section>
 
-      <section style={{ width: "100%", maxWidth: 980, marginTop: 48 }}>
-        <p style={{ color: "#334155", fontSize: 11, fontWeight: 850, letterSpacing: "0.09em", textTransform: "uppercase", margin: "0 0 16px", fontFamily: fonts.body }}>Flujo Crypto First</p>
-        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-          {cryptoFirstModules.map((item) => (
-            <Link key={item.href} href={item.href} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 18, textDecoration: "none" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <h2 style={{ color: "#E2E8F0", fontSize: 16, fontWeight: 850, margin: "0 0 8px", fontFamily: fonts.body }}>{item.label}</h2>
-                <span style={{ color: "#4ADE80", fontSize: 13, fontWeight: 850 }}>{moduleCount(snapshot, item.key)}</span>
-              </div>
-              <p style={{ color: "#64748B", fontSize: 12, margin: "0 0 8px", fontFamily: fonts.body }}>{moduleMeta(snapshot, item.key)}</p>
-              <p style={{ color: "#475569", fontSize: 13, lineHeight: 1.55, margin: 0, fontFamily: fonts.body }}>{item.description}</p>
-            </Link>
+      <section style={{ width: "100%", maxWidth: 680, marginTop: 54, textAlign: "center" }}>
+        <p style={{ color: "#334155", fontSize: 11, fontWeight: 850, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 18px" }}>Mapa patrimonial</p>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          {flow.map((item, index) => (
+            <div key={item.href} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+              <Link href={item.href} style={{ width: "min(100%, 420px)", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)", borderRadius: 16, padding: "14px 18px", color: "#E2E8F0", textDecoration: "none", fontWeight: 800 }}>
+                {item.label}
+              </Link>
+              {index < flow.length - 1 ? <span style={{ color: "#16A34A", margin: "8px 0 0", fontWeight: 900 }}>↓</span> : null}
+            </div>
           ))}
         </div>
       </section>
 
-      <section style={{ width: "100%", maxWidth: 720, marginTop: 44 }}>
-        <p style={{ color: "#334155", fontSize: 11, fontWeight: 850, letterSpacing: "0.09em", textTransform: "uppercase", margin: "0 0 16px", fontFamily: fonts.body }}>Conversaciones recientes</p>
-        {loadingConvs ? <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>Cargando...</p> : conversations.length === 0 ? (
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)", borderRadius: 14, padding: "28px 24px", textAlign: "center" }}>
-            <p style={{ color: "#475569", fontSize: 14, margin: "0 0 4px" }}>Aún no tienes conversaciones.</p>
-            <p style={{ color: "#334155", fontSize: 13, margin: 0 }}>Describe tu primera situación con cryptoactivos arriba.</p>
+      <section style={{ width: "100%", maxWidth: 860, marginTop: 46, display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))" }}>
+        <article style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.025)", borderRadius: 18, padding: 22 }}>
+          <p style={{ color: "#334155", fontSize: 11, fontWeight: 850, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 16px" }}>Estado actual</p>
+          <div style={{ display: "grid", gap: 12 }}>
+            <div><span style={{ color: "#64748B", fontSize: 13 }}>Completitud</span><strong style={{ display: "block", color: "#4ADE80", fontSize: 28 }}>{readiness(snapshot)}%</strong></div>
+            <div><span style={{ color: "#64748B", fontSize: 13 }}>Riesgo</span><strong style={{ display: "block", color: "#CBD5E1", fontSize: 20 }}>{riskLabel(snapshot)}</strong></div>
+            <div><span style={{ color: "#64748B", fontSize: 13 }}>Pendientes</span><ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{pending.slice(0, 3).map((item) => <li key={item} style={{ color: "#94A3B8", fontSize: 13, lineHeight: 1.6 }}>{item}</li>)}</ul></div>
           </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {conversations.map((conv) => <Link key={conv.id} href={`/conversaciones?conversationId=${conv.id}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 18px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", textDecoration: "none" }}><span style={{ color: "#CBD5E1", fontSize: 14, fontWeight: 600, fontFamily: fonts.body, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textAlign: "left" }}>{conv.title}</span><span style={{ color: "#475569", fontSize: 12, flexShrink: 0, fontFamily: fonts.body }}>{timeAgo(conv.lastMessageAt)}</span></Link>)}
+        </article>
+
+        <article style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.025)", borderRadius: 18, padding: 22 }}>
+          <p style={{ color: "#334155", fontSize: 11, fontWeight: 850, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 16px" }}>Actividad reciente</p>
+          <div style={{ display: "grid", gap: 10 }}>
+            {events.length ? events.map((event) => <div key={`${event.title}-${event.time}`} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><span style={{ color: "#CBD5E1", fontSize: 13 }}>{event.title}</span><span style={{ color: "#475569", fontSize: 12 }}>{event.time}</span></div>) : <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Sin actividad reciente.</p>}
           </div>
-        )}
+        </article>
+
+        <article style={{ border: "1px solid rgba(74,222,128,0.16)", background: "rgba(22,163,74,0.05)", borderRadius: 18, padding: 22, gridColumn: "1 / -1" }}>
+          <p style={{ color: "#4ADE80", fontSize: 11, fontWeight: 850, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 10px" }}>Próximo paso recomendado</p>
+          <p style={{ color: "#E2E8F0", fontSize: 18, fontWeight: 750, margin: "0 0 16px" }}>{recommendedAction(snapshot)}</p>
+          <Link href="/origen-fondos" style={{ display: "inline-flex", border: "1px solid rgba(74,222,128,0.28)", borderRadius: 999, color: "#4ADE80", textDecoration: "none", padding: "8px 14px", fontSize: 13, fontWeight: 800 }}>Revisar</Link>
+        </article>
       </section>
     </div>
   );
