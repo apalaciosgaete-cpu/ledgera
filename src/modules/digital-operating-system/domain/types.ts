@@ -3,8 +3,6 @@ export type DigitalOperatingStatus = "EMPTY" | "PARTIAL" | "IN_REVIEW" | "VALIDA
 export type DigitalModuleKey =
   | "digitalWealth"
   | "cryptoAssets"
-  | "exchanges"
-  | "wallets"
   | "sourceOfFunds"
   | "taxObligations"
   | "documentation";
