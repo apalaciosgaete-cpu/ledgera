@@ -50,6 +50,7 @@ const SIDEBAR_ITEMS = [
   { href: "/casos", label: "Casos" },
   { href: "/asistente", label: "Historial" },
   { href: "/configuracion", label: "Configuración" },
+  { href: "/ayuda", label: "Ayuda" },
 ];
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
