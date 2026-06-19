@@ -47,6 +47,10 @@ function isOnboardingRoute(pathname: string): boolean {
   );
 }
 
+function isConfigurationRoute(pathname: string): boolean {
+  return pathname === "/configuracion" || pathname.startsWith("/configuracion/");
+}
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router        = useRouter();
   const pathname      = usePathname();
@@ -67,12 +71,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       if (wasAuthenticated.current) {
         return;
       }
-      router.push("/login");
+      router.replace("/login");
+      return;
+    }
+
+    if (!isLoading && isAuthenticated && isConfigurationRoute(pathname)) {
+      router.replace("/panel");
       return;
     }
 
     if (!isLoading && isAuthenticated && needsOnboarding && !isOnboardingRoute(pathname)) {
-      router.push("/panel");
+      router.replace("/panel");
     }
   }, [isAuthenticated, isLoading, needsOnboarding, pathname, publicRoute, router]);
 
@@ -85,6 +94,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated && !publicRoute && !wasAuthenticated.current) {
+    return null;
+  }
+
+  if (isAuthenticated && isConfigurationRoute(pathname)) {
     return null;
   }
 
