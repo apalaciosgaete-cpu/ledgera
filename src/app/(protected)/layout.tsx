@@ -9,8 +9,7 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
-
-// CLEANUP 1.2 — OS navigation: no ERP pills, only conversational center + sidebar
+import { cryptoFirstModules } from "@/modules/digital-operating-system";
 
 const roleTokens: Record<string, {
   label: string;
@@ -45,18 +44,16 @@ const roleTokens: Record<string, {
 };
 
 const SIDEBAR_ITEMS = [
-  { href: "/mi-situacion", label: "Expediente" },
-  { href: "/documentos", label: "Documentos" },
+  ...cryptoFirstModules.map(({ href, label }) => ({ href, label })),
   { href: "/casos", label: "Casos" },
-  { href: "/asistente", label: "Historial" },
-  { href: "/configuracion", label: "Configuración" },
+  { href: "/conversaciones", label: "Historial" },
   { href: "/ayuda", label: "Ayuda" },
 ];
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
-      {open && (
+      {open ? (
         <div
           onClick={onClose}
           style={{
@@ -68,55 +65,41 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
             WebkitBackdropFilter: "blur(3px)",
           }}
         />
-      )}
-      <nav style={{
-        position: "fixed", top: 0, right: 0, bottom: 0,
-        width: 280,
-        background: "#071B28",
-        borderLeft: "1px solid rgba(255,255,255,0.08)",
-        zIndex: 101,
-        display: "flex", flexDirection: "column",
-        transform: open ? "translateX(0)" : "translateX(100%)",
-        transition: "transform 0.26s cubic-bezier(0.4, 0, 0.2, 1)",
-      }}>
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          padding: "20px 24px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}>
-          <span style={{
-            color: "#475569", fontSize: 11, fontWeight: 850,
-            letterSpacing: "0.1em", textTransform: "uppercase",
-            fontFamily: fonts.body,
-          }}>
-            Navegación
+      ) : null}
+      <nav
+        aria-label="Navegación Crypto First"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: 304,
+          maxWidth: "calc(100vw - 32px)",
+          background: "#071B28",
+          borderRight: "1px solid rgba(255,255,255,0.08)",
+          zIndex: 101,
+          display: "flex",
+          flexDirection: "column",
+          transform: open ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.26s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <span style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: fonts.body }}>
+            Patrimonio Digital
           </span>
           <button
+            type="button"
             onClick={onClose}
-            style={{
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 8, color: "#94A3B8", cursor: "pointer",
-              fontSize: 14, padding: "4px 9px", lineHeight: 1.4,
-              fontFamily: fonts.body,
-            }}
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#CBD5E1", cursor: "pointer", fontSize: 14, padding: "4px 9px", lineHeight: 1.4, fontFamily: fonts.body }}
           >
             ✕
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          {SIDEBAR_ITEMS.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              style={{
-                display: "block", padding: "12px 24px",
-                color: "#E2E8F0", fontSize: 15, fontWeight: 600,
-                textDecoration: "none", fontFamily: fonts.body,
-                transition: "background 0.1s",
-              }}
-            >
+        <div style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
+          {SIDEBAR_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href} onClick={onClose} style={{ display: "block", padding: "12px 24px", color: "#E2E8F0", fontSize: 15, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body }}>
               {item.label}
             </Link>
           ))}
@@ -133,8 +116,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  if (!user) return null;
-
   const isHome = pathname === "/panel";
   const role = (user as { role?: string })?.role ?? "personal";
   const token = roleTokens[role] ?? roleTokens.personal;
@@ -146,74 +127,29 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: isHome ? "#071B28" : colors.bgApp,
-      fontFamily: fonts.body,
-    }}>
+    <div style={{ minHeight: "100vh", background: isHome ? "#071B28" : colors.bgApp, fontFamily: fonts.body }}>
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <header style={{
-        background: "#071B28",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        height: "60px",
-      }}>
-        <div style={{
-          maxWidth: isHome ? "none" : "1400px",
-          margin: "0 auto",
-          padding: "0 24px",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "16px",
-          minWidth: 0,
-        }}>
-          <Link
-            href="/panel"
-            aria-label="Ir al inicio LEDGERA"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              textDecoration: "none",
-              flexShrink: 0,
-            }}
-          >
-            <Logo variant="light" size="md" showSubtitle={false} />
-          </Link>
+      <header style={{ background: "#071B28", borderBottom: "1px solid rgba(255,255,255,0.06)", position: "sticky", top: 0, zIndex: 50, height: 60 }}>
+        <div style={{ maxWidth: isHome ? "none" : "1400px", margin: "0 auto", padding: "0 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              title="Menú"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#94A3B8", cursor: "pointer", fontSize: 16, padding: "7px 11px", display: "flex", alignItems: "center", lineHeight: 1, fontFamily: fonts.body }}
+            >
+              ☰
+            </button>
+          </div>
 
-          <Link
-            href="/asistente"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 18px",
-              borderRadius: 999,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.10)",
-              color: "#CBD5E1",
-              fontSize: 14,
-              fontWeight: 600,
-              fontFamily: fonts.body,
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-          >
-            <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
-            Nueva conversación
-          </Link>
+          {!isHome ? (
+            <Link href="/panel" aria-label="Ir al inicio LEDGERA" style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+              <Logo variant="light" size="sm" showSubtitle={false} />
+            </Link>
+          ) : <span aria-hidden="true" />}
 
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            flexShrink: 0,
-          }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
             <UserProfileDropdown
               name={user.email}
               initials={initials}
@@ -224,37 +160,11 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               isAdmin={role === "admin"}
               onLogout={handleLogout}
             />
-            <button
-              onClick={() => setMenuOpen(true)}
-              title="Menú"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 8,
-                color: "#94A3B8",
-                cursor: "pointer",
-                fontSize: 16,
-                padding: "7px 11px",
-                display: "flex",
-                alignItems: "center",
-                lineHeight: 1,
-                fontFamily: fonts.body,
-                transition: "background 0.15s",
-              }}
-            >
-              ☰
-            </button>
           </div>
         </div>
       </header>
 
-      <main style={{
-        maxWidth: isHome ? "none" : "1400px",
-        margin: "0 auto",
-        padding: isHome ? "0" : "32px 24px",
-        minWidth: 0,
-        overflowX: "hidden",
-      }}>
+      <main style={{ maxWidth: isHome ? "none" : "1400px", margin: "0 auto", padding: isHome ? 0 : "32px 24px", minWidth: 0, overflowX: "hidden" }}>
         {children}
       </main>
     </div>
