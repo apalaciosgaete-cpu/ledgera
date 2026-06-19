@@ -11,23 +11,11 @@ import { colors, fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
 const baseNavItems: { href: string; label: string }[] = [
-  { href: "/panel", label: "Inicio" },
-  { href: "/monitor", label: "Monitor" },
+  { href: "/asistente", label: "Conversaciones" },
+  { href: "/documentos", label: "Documentos" },
   { href: "/casos", label: "Casos" },
-  { href: "/decisiones", label: "Decisiones" },
-  { href: "/workflows", label: "Workflows" },
-  { href: "/multiagente", label: "Multiagente" },
-  { href: "/ejecuciones", label: "Ejecuciones" },
-  { href: "/ai-center", label: "Centro AI" },
-  { href: "/asistente", label: "Asistente" },
-  { href: "/simulador", label: "Simulador" },
-  { href: "/memoria-tributaria", label: "Memoria" },
-  { href: "/mi-perfil-tributario", label: "Perfil AI" },
   { href: "/mi-situacion", label: "Mi Situación" },
-  { href: "/inversiones", label: "Inversiones" },
-  { href: "/integraciones", label: "Conexiones" },
-  { href: "/operating-system", label: "LAIOS" },
-  { href: "/notificaciones", label: "Alertas" },
+  { href: "/configuracion", label: "Configuración" },
 ];
 
 const navItemsByRole: Record<string, { href: string; label: string }[]> = {
@@ -73,6 +61,7 @@ const SECONDARY_MENU = [
   { href: "/asistente", label: "Conversaciones" },
   { href: "/documentos", label: "Documentos" },
   { href: "/casos", label: "Casos" },
+  { href: "/mi-situacion", label: "Mi Situación" },
   { href: "/configuracion", label: "Configuración" },
   { href: "/inversiones", label: "Inversiones" },
   { href: "/impuestos", label: "Impuestos" },
@@ -83,12 +72,11 @@ const SECONDARY_MENU = [
   { href: "/simulador", label: "Simulador" },
   { href: "/memoria-tributaria", label: "Memoria" },
   { href: "/mi-perfil-tributario", label: "Perfil AI" },
-  { href: "/mi-situacion", label: "Mi Situación" },
   { href: "/integraciones", label: "Conexiones" },
   { href: "/operating-system", label: "LAIOS" },
 ];
 
-const PRIMARY_LINKS = ["/asistente", "/documentos", "/casos", "/configuracion"];
+const PRIMARY_LINKS = ["/asistente", "/documentos", "/casos", "/mi-situacion", "/configuracion"];
 
 function SecondaryMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const primary = SECONDARY_MENU.filter(i => PRIMARY_LINKS.includes(i.href));

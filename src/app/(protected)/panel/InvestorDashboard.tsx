@@ -200,6 +200,20 @@ function CasosSection({ cases }: { cases: TaxCase[] }) {
   );
 }
 
+function DocumentosSection() {
+  return (
+    <section style={cardStyle}>
+      <p style={labelStyle}>Documentos</p>
+      <p style={{ color: "#4B5563", fontSize: 14, lineHeight: 1.5, margin: "0 0 16px" }}>
+        Sube y organiza todos los documentos de tu expediente tributario.
+      </p>
+      <Link href="/documentos" style={linkStyle}>
+        Subir documentos →
+      </Link>
+    </section>
+  );
+}
+
 function RecomendacionesSection({ items }: { items: Recommendation[] }) {
   const defaults = [
     "Declaración pendiente",
@@ -466,6 +480,7 @@ export function InvestorDashboard() {
       >
         <SituacionSection data={dashboard} activeCases={activeCases} />
         <TimelineSection cases={cases} />
+        <DocumentosSection />
         <CasosSection cases={cases} />
       </div>
 
