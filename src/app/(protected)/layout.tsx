@@ -10,20 +10,15 @@ import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
-const baseNavItems: { href: string; label: string }[] = [
-  { href: "/asistente", label: "Conversaciones" },
+type NavItem = { href: string; label: string };
+
+const UX3_NAV_ITEMS: NavItem[] = [
+  { href: "/panel", label: "Mi situación" },
+  { href: "/conversaciones", label: "Conversaciones" },
   { href: "/documentos", label: "Documentos" },
   { href: "/casos", label: "Casos" },
-  { href: "/mi-situacion", label: "Mi Situación" },
   { href: "/configuracion", label: "Configuración" },
 ];
-
-const navItemsByRole: Record<string, { href: string; label: string }[]> = {
-  personal: baseNavItems,
-  contador: baseNavItems,
-  empresa: baseNavItems,
-  admin: baseNavItems,
-};
 
 const roleTokens: Record<string, {
   label: string;
@@ -57,73 +52,80 @@ const roleTokens: Record<string, {
   },
 };
 
-const SECONDARY_MENU = [
-  { href: "/asistente", label: "Conversaciones" },
-  { href: "/documentos", label: "Documentos" },
-  { href: "/casos", label: "Casos" },
-  { href: "/mi-situacion", label: "Mi Situación" },
-  { href: "/configuracion", label: "Configuración" },
-  { href: "/inversiones", label: "Inversiones" },
-  { href: "/impuestos", label: "Impuestos" },
-  { href: "/monitor", label: "Monitor" },
-  { href: "/decisiones", label: "Decisiones" },
-  { href: "/workflows", label: "Workflows" },
-  { href: "/multiagente", label: "Multiagente" },
-  { href: "/simulador", label: "Simulador" },
-  { href: "/memoria-tributaria", label: "Memoria" },
-  { href: "/mi-perfil-tributario", label: "Perfil AI" },
-  { href: "/integraciones", label: "Conexiones" },
-  { href: "/operating-system", label: "LAIOS" },
-];
+function isActivePath(pathname: string, href: string) {
+  if (href === "/panel") return pathname === "/panel" || pathname === "/mi-situacion";
+  if (href === "/conversaciones") return pathname === "/conversaciones" || pathname.startsWith("/asistente");
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
-const PRIMARY_LINKS = ["/asistente", "/documentos", "/casos", "/mi-situacion", "/configuracion"];
-
-function SecondaryMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const primary = SECONDARY_MENU.filter(i => PRIMARY_LINKS.includes(i.href));
-  const secondary = SECONDARY_MENU.filter(i => !PRIMARY_LINKS.includes(i.href));
-
+function DrawerMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
-      {open && (
+      {open ? (
         <div
           onClick={onClose}
           style={{
-            position: "fixed", inset: 0,
-            background: "rgba(0,0,0,0.55)",
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.56)",
             zIndex: 100,
             backdropFilter: "blur(3px)",
             WebkitBackdropFilter: "blur(3px)",
           }}
         />
-      )}
-      <nav style={{
-        position: "fixed", top: 0, right: 0, bottom: 0,
-        width: 280,
-        background: "#071B28",
-        borderLeft: "1px solid rgba(255,255,255,0.08)",
-        zIndex: 101,
-        display: "flex", flexDirection: "column",
-        transform: open ? "translateX(0)" : "translateX(100%)",
-        transition: "transform 0.26s cubic-bezier(0.4, 0, 0.2, 1)",
-      }}>
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          padding: "20px 24px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}>
-          <span style={{
-            color: "#475569", fontSize: 11, fontWeight: 850,
-            letterSpacing: "0.1em", textTransform: "uppercase",
-            fontFamily: fonts.body,
-          }}>
-            Menú
+      ) : null}
+
+      <nav
+        aria-label="Menú LEDGERA"
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: 300,
+          maxWidth: "calc(100vw - 32px)",
+          background: "#071B28",
+          borderLeft: "1px solid rgba(255,255,255,0.08)",
+          zIndex: 101,
+          display: "flex",
+          flexDirection: "column",
+          transform: open ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.26s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "20px 24px",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          <span
+            style={{
+              color: "#94A3B8",
+              fontSize: 11,
+              fontWeight: 850,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              fontFamily: fonts.body,
+            }}
+          >
+            LEDGERA
           </span>
           <button
+            type="button"
             onClick={onClose}
             style={{
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 8, color: "#94A3B8", cursor: "pointer",
-              fontSize: 14, padding: "4px 9px", lineHeight: 1.4,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 8,
+              color: "#CBD5E1",
+              cursor: "pointer",
+              fontSize: 14,
+              padding: "4px 9px",
+              lineHeight: 1.4,
               fontFamily: fonts.body,
             }}
           >
@@ -132,33 +134,19 @@ function SecondaryMenu({ open, onClose }: { open: boolean; onClose: () => void }
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 0" }}>
-          {primary.map(item => (
+          {UX3_NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={onClose}
               style={{
-                display: "block", padding: "12px 24px",
-                color: "#E2E8F0", fontSize: 15, fontWeight: 700,
-                textDecoration: "none", fontFamily: fonts.body,
-                transition: "background 0.1s",
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
-
-          <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "12px 24px" }} />
-
-          {secondary.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              style={{
-                display: "block", padding: "9px 24px",
-                color: "#64748B", fontSize: 13, fontWeight: 600,
-                textDecoration: "none", fontFamily: fonts.body,
+                display: "block",
+                padding: "13px 24px",
+                color: "#E2E8F0",
+                fontSize: 15,
+                fontWeight: 750,
+                textDecoration: "none",
+                fontFamily: fonts.body,
               }}
             >
               {item.label}
@@ -177,50 +165,50 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  const isHome = pathname === "/panel";
   const role = (user as { role?: string })?.role ?? "personal";
-  const navItems = navItemsByRole[role] ?? navItemsByRole.personal;
   const token = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
+  const isPanel = pathname === "/panel";
 
   async function handleLogout() {
     await logout();
     window.location.href = "/bienvenida";
   }
 
-  function isActive(href: string) {
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: isHome ? "#071B28" : colors.bgApp,
-      fontFamily: fonts.body,
-    }}>
-      <SecondaryMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+    <div
+      style={{
+        minHeight: "100vh",
+        background: isPanel ? "#071B28" : colors.bgApp,
+        fontFamily: fonts.body,
+      }}
+    >
+      <DrawerMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <header style={{
-        background: "#071B28",
-        borderBottom: isHome ? "none" : "1px solid rgba(255,255,255,0.08)",
-        boxShadow: isHome ? "none" : "0 10px 30px rgba(2,6,23,0.16)",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        height: isHome ? "60px" : "76px",
-        overflowX: isHome ? "visible" : "clip",
-      }}>
-        <div style={{
-          maxWidth: isHome ? "none" : "1400px",
-          margin: "0 auto",
-          padding: isHome ? "0 28px" : "0 24px",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "22px",
-          minWidth: 0,
-        }}>
+      <header
+        style={{
+          background: "#071B28",
+          borderBottom: isPanel ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(255,255,255,0.08)",
+          boxShadow: isPanel ? "none" : "0 10px 30px rgba(2,6,23,0.16)",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          minHeight: 68,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1400px",
+            margin: "0 auto",
+            padding: "0 24px",
+            minHeight: 68,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "18px",
+            minWidth: 0,
+          }}
+        >
           <Link
             href="/panel"
             aria-label="Ir al inicio LEDGERA"
@@ -229,15 +217,16 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               display: "flex",
               flexShrink: 0,
               justifyContent: "center",
-              minWidth: isHome ? "auto" : "220px",
+              minWidth: 210,
               textDecoration: "none",
             }}
           >
-            <Logo variant="light" size={isHome ? "md" : "lg"} showSubtitle={isHome} />
+            <Logo variant="light" size="md" showSubtitle />
           </Link>
 
-          {!isHome && (
-            <nav style={{
+          <nav
+            aria-label="Navegación principal LEDGERA"
+            style={{
               display: "flex",
               alignItems: "center",
               gap: "6px",
@@ -246,59 +235,47 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               minWidth: 0,
               overflowX: "auto",
               scrollbarWidth: "none",
-            }}>
-              {navItems.map(item => {
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: "38px",
-                      padding: "0 16px",
-                      borderRadius: "999px",
-                      border: active ? "1px solid rgba(74,222,128,0.34)" : "1px solid transparent",
-                      fontSize: "14px",
-                      fontWeight: active ? 800 : 600,
-                      fontFamily: fonts.body,
-                      textDecoration: "none",
-                      whiteSpace: "nowrap",
-                      background: active ? "rgba(22,163,74,0.18)" : "transparent",
-                      color: active ? "#F8FAFC" : "#94A3B8",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
+            }}
+          >
+            {UX3_NAV_ITEMS.map((item) => {
+              const active = isActivePath(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 38,
+                    padding: "0 15px",
+                    borderRadius: 999,
+                    border: active ? "1px solid rgba(74,222,128,0.34)" : "1px solid transparent",
+                    fontSize: 14,
+                    fontWeight: active ? 850 : 650,
+                    fontFamily: fonts.body,
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    background: active ? "rgba(22,163,74,0.18)" : "transparent",
+                    color: active ? "#F8FAFC" : "#94A3B8",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: isHome ? "12px" : "8px",
-            flexShrink: 0,
-            minWidth: 0,
-          }}>
-            {isHome && (
-              <Link
-                href="/configuracion"
-                title="Configuración"
-                style={{
-                  color: "#475569", fontSize: 17, textDecoration: "none",
-                  display: "flex", alignItems: "center", lineHeight: 1,
-                  padding: 4,
-                  transition: "color 0.15s",
-                }}
-              >
-                ⚙
-              </Link>
-            )}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              flexShrink: 0,
+              minWidth: 0,
+            }}
+          >
             <UserProfileDropdown
               name={user.email}
               initials={initials}
@@ -309,39 +286,39 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               isAdmin={role === "admin"}
               onLogout={handleLogout}
             />
-            {isHome && (
-              <button
-                onClick={() => setMenuOpen(true)}
-                title="Menú"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8,
-                  color: "#94A3B8",
-                  cursor: "pointer",
-                  fontSize: 16,
-                  padding: "7px 11px",
-                  display: "flex",
-                  alignItems: "center",
-                  lineHeight: 1,
-                  fontFamily: fonts.body,
-                  transition: "background 0.15s",
-                }}
-              >
-                ☰
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              title="Menú"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 8,
+                color: "#94A3B8",
+                cursor: "pointer",
+                fontSize: 16,
+                padding: "7px 11px",
+                display: "flex",
+                alignItems: "center",
+                lineHeight: 1,
+                fontFamily: fonts.body,
+              }}
+            >
+              ☰
+            </button>
           </div>
         </div>
       </header>
 
-      <main style={{
-        maxWidth: isHome ? "none" : "1400px",
-        margin: "0 auto",
-        padding: isHome ? "0" : "32px 24px",
-        minWidth: 0,
-        overflowX: "hidden",
-      }}>
+      <main
+        style={{
+          maxWidth: isPanel ? "none" : "1400px",
+          margin: "0 auto",
+          padding: isPanel ? 0 : "32px 24px",
+          minWidth: 0,
+          overflowX: "hidden",
+        }}
+      >
         {children}
       </main>
     </div>
