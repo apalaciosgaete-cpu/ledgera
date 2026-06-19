@@ -15,11 +15,13 @@ const CHIPS = [
 ];
 
 const MAP_ITEMS = [
-  { label: "Patrimonio Digital", href: "/portafolio" },
-  { label: "Cryptoactivos", href: "/inversiones" },
-  { label: "Origen de Fondos", href: "/bank" },
-  { label: "Obligaciones Tributarias", href: "/impuestos" },
-  { label: "Documentación", href: "/documentos" },
+  { label: "Patrimonio Digital", href: "/patrimonio-digital" },
+  { label: "Cryptoactivos", href: "/cryptoactivos" },
+  { label: "Exchanges", href: "/exchanges" },
+  { label: "Wallets", href: "/wallets" },
+  { label: "Origen de Fondos", href: "/origen-fondos" },
+  { label: "Obligaciones Tributarias", href: "/obligaciones-tributarias" },
+  { label: "Documentación", href: "/documentacion" },
 ];
 
 type OSState = {
@@ -34,11 +36,12 @@ type OSEvent = {
 };
 
 const DEFAULT_STATE: OSState = {
-  completitud: 72,
+  completitud: 78,
   riesgo: "Medio",
   pendientes: [
     "Falta origen de fondos",
-    "Falta documentación Binance",
+    "Falta CSV Binance",
+    "Falta documentación wallet",
   ],
 };
 

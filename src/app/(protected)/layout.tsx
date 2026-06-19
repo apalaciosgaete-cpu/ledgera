@@ -45,11 +45,11 @@ const roleTokens: Record<string, {
 };
 
 const SIDEBAR_PRIMARY = [
-  { href: "/portafolio", label: "Patrimonio Digital" },
-  { href: "/inversiones", label: "Cryptoactivos" },
-  { href: "/bank", label: "Origen de Fondos" },
-  { href: "/impuestos", label: "Obligaciones Tributarias" },
-  { href: "/documentos", label: "Documentación" },
+  { href: "/patrimonio-digital", label: "Patrimonio Digital" },
+  { href: "/cryptoactivos", label: "Cryptoactivos" },
+  { href: "/origen-fondos", label: "Origen de Fondos" },
+  { href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" },
+  { href: "/documentacion", label: "Documentación" },
 ];
 
 const SIDEBAR_SECONDARY = [
