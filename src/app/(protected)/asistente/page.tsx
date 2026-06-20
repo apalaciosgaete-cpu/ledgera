@@ -5,12 +5,19 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { buildGreeting, resolveProfile } from "@/modules/copilot/domain/ledgeraVoice";
 import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
-import { VoiceInputController } from "@/components/voice/VoiceInputController";
+import { VoiceLoopController } from "@/components/voice/VoiceLoopController";
 
 type Message = {
   role: "USER" | "ASSISTANT";
   content: string;
 };
+
+function estimateReplyPlaybackMs(text: string): number {
+  const normalized = text.trim();
+  if (!normalized) return 2600;
+  const byWords = normalized.split(/\s+/).length * 340;
+  return Math.max(2600, Math.min(byWords, 12000));
+}
 
 export default function AsistentePage() {
   const { user } = useAuth();
@@ -19,6 +26,7 @@ export default function AsistentePage() {
   const profile = resolveProfile(role);
   const initialGreeting = buildGreeting(profile);
   const initialQuery = searchParams.get("q")?.trim() ?? "";
+  const initialSource = searchParams.get("source") ?? "";
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -29,21 +37,48 @@ export default function AsistentePage() {
   const [message, setMessage] = useState("");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(initialSource.includes("voice"));
+  const [autoListenKey, setAutoListenKey] = useState(0);
   const autoSentRef = useRef(false);
+  const relistenTimerRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    return () => stopSpeaking();
+    return () => {
+      stopSpeaking();
+      if (relistenTimerRef.current) {
+        window.clearTimeout(relistenTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading]);
 
-  async function submitMessage(trimmed: string) {
+  function scheduleRelisten(answer: string) {
+    if (!voiceMode) return;
+    if (relistenTimerRef.current) {
+      window.clearTimeout(relistenTimerRef.current);
+    }
+    relistenTimerRef.current = window.setTimeout(() => {
+      setAutoListenKey((current) => current + 1);
+    }, estimateReplyPlaybackMs(answer));
+  }
+
+  async function submitMessage(trimmed: string, source: "text" | "voice" = "text") {
     if (!trimmed || loading) return;
 
+    if (source === "voice") {
+      setVoiceMode(true);
+    }
+
     stopSpeaking();
+
+    if (relistenTimerRef.current) {
+      window.clearTimeout(relistenTimerRef.current);
+      relistenTimerRef.current = null;
+    }
 
     setMessages((current) => [...current, { role: "USER", content: trimmed }]);
     setMessage("");
@@ -53,7 +88,7 @@ export default function AsistentePage() {
       const res = await fetch("/api/copilot/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, conversationId }),
+        body: JSON.stringify({ message: trimmed, conversationId, source }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.message || "Error del asistente.");
@@ -62,10 +97,12 @@ export default function AsistentePage() {
       setConversationId(json.data.conversationId);
       setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
       void speakResponse(answer);
+      scheduleRelisten(answer);
     } catch (error) {
       const fallback = error instanceof Error ? error.message : "No pude responder ahora.";
       setMessages((current) => [...current, { role: "ASSISTANT", content: fallback }]);
       void speakResponse(fallback);
+      scheduleRelisten(fallback);
     } finally {
       setLoading(false);
     }
@@ -75,22 +112,26 @@ export default function AsistentePage() {
     if (!initialQuery || autoSentRef.current) return;
     autoSentRef.current = true;
     setMessage(initialQuery);
-    void submitMessage(initialQuery);
-  }, [initialQuery]);
+    void submitMessage(initialQuery, initialSource.includes("voice") ? "voice" : "text");
+  }, [initialQuery, initialSource]);
 
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = message.trim();
-    await submitMessage(trimmed);
+    await submitMessage(trimmed, "text");
   }
 
   function handleVoiceTranscript(transcript: string) {
     setMessage(transcript);
-    void submitMessage(transcript.trim());
+    void submitMessage(transcript.trim(), "voice");
   }
 
   function handleBeforeListen() {
     stopSpeaking();
+    if (relistenTimerRef.current) {
+      window.clearTimeout(relistenTimerRef.current);
+      relistenTimerRef.current = null;
+    }
   }
 
   return (
@@ -99,9 +140,9 @@ export default function AsistentePage() {
         <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
           LEDGERA AI
         </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>Asistente de Voz</h1>
+        <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>Asistente de Voz Premium</h1>
         <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0 }}>
-          Habla o escribe en lenguaje simple. LEDGERA escucha, analiza tu contexto y responde también por voz.
+          Habla o escribe en lenguaje simple. LEDGERA escucha, analiza, responde por voz y vuelve a quedar listo para seguir conversando.
         </p>
       </section>
 
@@ -133,7 +174,12 @@ export default function AsistentePage() {
         </div>
 
         <div style={{ borderTop: "1px solid #E2E8F0", padding: 14, display: "grid", gap: 10 }}>
-          <VoiceInputController onTranscript={handleVoiceTranscript} onBeforeListen={handleBeforeListen} disabled={loading} />
+          <VoiceLoopController
+            onTranscript={handleVoiceTranscript}
+            onBeforeListen={handleBeforeListen}
+            disabled={loading}
+            autoStartKey={autoListenKey}
+          />
 
           <form onSubmit={send} style={{ display: "flex", gap: 10 }}>
             <input
