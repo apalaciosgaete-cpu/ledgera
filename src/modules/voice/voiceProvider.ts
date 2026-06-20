@@ -33,9 +33,9 @@ export type TTSProviderError = {
   status: number;
 };
 
-// ─── Voz principal de LEDGERA — UX 3.1.3 ────────────────────────────────────
-// Matilda — voz femenina cálida, cercana, excelente entonación natural en español
-export const LEDGERA_ELEVENLABS_VOICE = "XrExE9yKIg1WjnnlVkGX";
+// ─── Voz principal de LEDGERA — UX 3.1.4 ────────────────────────────────────
+// Voz Ledgera — voz personalizada clonada para LEDGERA, tono profesional chileno
+export const LEDGERA_ELEVENLABS_VOICE = "9ZVfdvBemUaGEWZgCiv0";
 
 // Modelo multilingüe optimizado para español
 export const ELEVENLABS_MODEL = "eleven_multilingual_v2";

@@ -41,8 +41,8 @@ export const SESSION_STORAGE_KEY = "ledgera_voice_welcome_played";
 
 // ─── ElevenLabs Neural TTS — Matilda (voz principal LEDGERA) ──────────────
 
-/** Voz Matilda — cálida, cercana, excelente entonación natural en español LATAM */
-export const ELEVENLABS_VOICE_ID = "XrExE9yKIg1WjnnlVkGX";
+/** Voz Ledgera — voz personalizada clonada para LEDGERA, tono profesional chileno */
+export const ELEVENLABS_VOICE_ID = "9ZVfdvBemUaGEWZgCiv0";
 
 /** Modelo multilingüe optimizado para español */
 export const ELEVENLABS_MODEL = "eleven_multilingual_v2";
