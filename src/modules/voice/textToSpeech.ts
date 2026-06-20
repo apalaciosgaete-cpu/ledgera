@@ -1,7 +1,11 @@
 // src/modules/voice/textToSpeech.ts
 // Motor de síntesis de voz — capa sobre TTS neuronal con fallback a SpeechSynthesis.
+//
+// speak()        → para bienvenida automática (/api/voice/welcome)
+// speakResponse() → para respuestas del asistente (/api/voice/speak)
+//
 // Flujo:
-//   1. Intenta /api/voice/welcome (ElevenLabs neuronal)
+//   1. Intenta TTS neuronal (ElevenLabs)
 //   2. Si falla → speechSynthesis del navegador (fallback)
 //   3. Si el navegador bloquea → blocked
 
@@ -85,9 +89,9 @@ function speakWithBrowser(text: string): Promise<SpeakResult> {
 
 // ─── Neural: ElevenLabs via API ──────────────────────────────────────────────
 
-async function speakWithNeural(text: string): Promise<SpeakResult> {
+async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/speak", text: string): Promise<SpeakResult> {
   try {
-    const response = await fetch("/api/voice/welcome", {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -97,7 +101,6 @@ async function speakWithNeural(text: string): Promise<SpeakResult> {
     });
 
     if (!response.ok) {
-      // El backend indica que debemos hacer fallback
       return { success: false, blocked: false, provider: "none" };
     }
 
@@ -117,17 +120,22 @@ async function speakWithNeural(text: string): Promise<SpeakResult> {
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
- * Reproduce texto por voz.
- * 1. Intenta TTS neuronal (ElevenLabs vía /api/voice/welcome)
- * 2. Si falla, usa speechSynthesis del navegador (fallback)
- * 3. Si el navegador bloquea, retorna blocked
+ * Reproduce texto usando el endpoint de bienvenida (/api/voice/welcome).
+ * Sirve para la bienvenida automática del panel.
  */
 export async function speak(text: string): Promise<SpeakResult> {
-  // 1. Intentar neuronal
-  const neural = await speakWithNeural(text);
+  const neural = await speakWithNeural("/api/voice/welcome", text);
   if (neural.success || neural.blocked) return neural;
+  return speakWithBrowser(text);
+}
 
-  // 2. Fallback: browser speechSynthesis
+/**
+ * Reproduce una respuesta del asistente usando /api/voice/speak.
+ * Conecta el chat con voz neuronal ElevenLabs.
+ */
+export async function speakResponse(text: string): Promise<SpeakResult> {
+  const neural = await speakWithNeural("/api/voice/speak", text);
+  if (neural.success || neural.blocked) return neural;
   return speakWithBrowser(text);
 }
 

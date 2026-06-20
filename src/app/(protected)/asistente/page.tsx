@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { buildGreeting, resolveProfile } from "@/modules/copilot/domain/ledgeraVoice";
+import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 
 type Message = {
   role: "USER" | "ASSISTANT";
@@ -25,10 +26,18 @@ export default function AsistentePage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Detener voz al desmontar el componente
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, []);
+
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = message.trim();
     if (!trimmed || loading) return;
+
+    // Detener cualquier voz en curso al enviar nuevo mensaje
+    stopSpeaking();
 
     setMessages((current) => [...current, { role: "USER", content: trimmed }]);
     setMessage("");
@@ -43,8 +52,12 @@ export default function AsistentePage() {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.message || "Error del asistente.");
 
+      const answer = json.data.answer;
       setConversationId(json.data.conversationId);
-      setMessages((current) => [...current, { role: "ASSISTANT", content: json.data.answer }]);
+      setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
+
+      // Reproducir respuesta por voz (neuronal ElevenLabs, fallback a speechSynthesis)
+      speakResponse(answer);
     } catch (error) {
       setMessages((current) => [
         ...current,
