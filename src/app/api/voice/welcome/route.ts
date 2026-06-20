@@ -1,9 +1,9 @@
 // src/app/api/voice/welcome/route.ts
 // API endpoint para sintetizar la bienvenida de LEDGERA usando TTS neuronal
-// Flujo: /panel → VoiceEngine → /api/voice/welcome → ElevenLabs → audio mp3
+// UX 3.1.3 — usa perfil activo desde voiceConfig o recibe profileId desde el frontend
 
 import { NextRequest, NextResponse } from "next/server";
-import { fail, ok, serverError } from "@/shared/apiResponse";
+import { fail } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 import { formatForTTS } from "@/modules/voice/voiceFormatter";
 import { synthesizeWithElevenLabs } from "@/modules/voice/voiceProvider";
@@ -11,7 +11,13 @@ import {
   getCachedAudio,
   setCachedAudio,
 } from "@/modules/voice/voiceCache";
-import { WELCOME_MESSAGE, VOICE_CONFIG } from "@/modules/voice/voiceConfig";
+import {
+  WELCOME_MESSAGE,
+  VOICE_CONFIG,
+  ACTIVE_VOICE_PROFILE,
+  VOICE_PROFILES,
+} from "@/modules/voice/voiceConfig";
+import type { VoiceProfile } from "@/modules/voice/voiceConfig";
 
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -22,11 +28,25 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       text?: string;
+      /** Perfil A/B: "consultiva" | "profesional" | "ejecutiva" */
+      profileId?: string;
       voiceId?: string;
+      stability?: number;
+      similarityBoost?: number;
+      styleExaggeration?: number;
     } | null;
 
     const text = body?.text ?? WELCOME_MESSAGE;
-    const voiceId = body?.voiceId ?? "EXAVITQu4vr4xnSDxMaL"; // Rachel
+
+    // Resolver perfil: si se envió profileId, usar ese; si no, usar el activo
+    let profile: VoiceProfile;
+    if (body?.profileId && VOICE_PROFILES[body.profileId]) {
+      profile = VOICE_PROFILES[body.profileId];
+    } else {
+      profile = ACTIVE_VOICE_PROFILE;
+    }
+
+    const voiceId = body?.voiceId ?? profile.voiceId;
 
     // Formatear texto para TTS (normaliza pronunciación, limpia, estructura pausas)
     const formatted = formatForTTS(text, {
@@ -44,15 +64,17 @@ export async function POST(request: NextRequest) {
           "X-Voice-Provider": "elevenlabs",
           "X-Voice-Cache": "hit",
           "X-Voice-Lang": VOICE_CONFIG.lang,
+          "X-Voice-Profile": profile.id,
         },
       });
     }
 
-    // Sintetizar con ElevenLabs
+    // Sintetizar con ElevenLabs usando parámetros del perfil
     const result = await synthesizeWithElevenLabs(formatted, {
       voiceId,
-      stability: 0.45,
-      similarityBoost: 0.75,
+      stability: body?.stability ?? profile.stability,
+      similarityBoost: body?.similarityBoost ?? profile.similarityBoost,
+      styleExaggeration: body?.styleExaggeration ?? profile.styleExaggeration,
     });
 
     // Almacenar en caché
@@ -70,11 +92,10 @@ export async function POST(request: NextRequest) {
         "X-Voice-Provider": result.provider,
         "X-Voice-Cache": "miss",
         "X-Voice-Lang": VOICE_CONFIG.lang,
+        "X-Voice-Profile": profile.id,
       },
     });
   } catch (error) {
-    // Si el proveedor neuronal falla, responder con error controlado
-    // para que el frontend haga fallback a speechSynthesis
     const err = error as { code?: string; message?: string; status?: number };
     console.error("[voice/welcome] Error:", err.message ?? error);
 
@@ -83,7 +104,7 @@ export async function POST(request: NextRequest) {
         ok: false,
         message: err.message ?? "Error al sintetizar voz",
         data: null,
-        fallback: true, // Indica al frontend que use speechSynthesis como fallback
+        fallback: true,
       },
       { status: err.status ?? 502 },
     );

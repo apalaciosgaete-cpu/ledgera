@@ -1,7 +1,11 @@
 // src/modules/voice/voiceFormatter.ts
-// Formateo de texto para TTS neuronal — limpia, estructura pausas,
-// y aplica el diccionario de pronunciación antes de enviar al proveedor.
-// ElevenLabs no necesita SSML, pero sí texto limpio con marcadores de pausa.
+// Formateo de texto para TTS neuronal — UX 3.1.3 Identidad Vocal Chilena
+//
+// Ajustes para prosodia chilena:
+//   - Frases más cortas (punto por cada salto de línea)
+//   - Pausas naturales entre ideas
+//   - Sin entusiasmo artificial (evita exclamaciones)
+//   - Tono consultivo, no corporativo
 
 import { normalizePronunciation } from "./voiceDictionary";
 
@@ -18,40 +22,51 @@ const DEFAULT_OPTIONS: TextFormatOptions = {
 };
 
 /**
- * Limpia el texto eliminando caracteres de control, URLs, etc.
+ * Limpia el texto eliminando caracteres de control.
  */
 function stripControlChars(text: string): string {
   return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "").trim();
 }
 
 /**
- * Reemplaza saltos de línea dobles con pausas más largas (puntos suspensivos).
- * Los saltos simples se convierten en comas para pausa breve.
+ * Reemplaza saltos de línea con pausas naturales.
+ *
+ * UX 3.1.3 — para tono chileno:
+ *   Doble salto de línea = pausa larga (punto y espacio)
+ *   Salto simple = pausa media (punto, no coma)
+ *   Esto produce frases cortas con pausas marcadas,
+ *   que es más natural para el oído chileno.
  */
 function formatLineBreaks(text: string): string {
-  // Doble salto de línea → punto y pausa
+  // Doble salto → pausa larga (nueva oración)
   let result = text.replace(/\n\n+/g, ". ");
-  // Salto de línea simple → pausa breve con coma
-  result = result.replace(/\n/g, ", ");
+  // Salto simple → punto también, no coma (frases cortas)
+  result = result.replace(/\n/g, ". ");
   return result;
 }
 
 /**
- * Agrega pausas naturales donde el texto las necesita.
- * ElevenLabs maneja bien las pausas con puntuación estándar,
- * pero aseguramos que no falten puntos o comas.
+ * Asegura puntuación adecuada para prosodia natural.
+ *
+ * Para tono chileno:
+ *   - Punto seguido para separar ideas relacionadas
+ *   - Punto aparte para cambio de tema
+ *   - Sin exclamaciones (elimina signos de entusiasmo artificial)
  */
 function ensurePunctuation(text: string): string {
   let result = text;
+
+  // Eliminar exclamaciones — tono chileno no las usa en asesoría
+  result = result.replace(/¡/g, "");
+  result = result.replace(/!/g, ".");
+
+  // Asegurar que las oraciones tengan punto final (pero respetar comas naturales)
+  // Sin reemplazo agresivo de comas — ElevenLabs maneja pausas de coma por sí solo
 
   // Asegurar punto final si no tiene
   if (!/[.!?]\s*$/.test(result)) {
     result += ".";
   }
-
-  // Asegurar comas después de frases introductorias
-  // "Hola" → "Hola," (si no tiene puntuación)
-  result = result.replace(/^(Hola|Bienvenido|Bienvenida)(\s+[A-ZÁÉÍÓÚ])/g, "$1,$2");
 
   return result;
 }
@@ -60,8 +75,8 @@ function ensurePunctuation(text: string): string {
  * Aplica el formato completo para TTS neuronal:
  * 1. Normaliza pronunciación (diccionario)
  * 2. Limpia caracteres de control
- * 3. Formatea saltos de línea
- * 4. Asegura puntuación adecuada
+ * 3. Formatea saltos de línea como pausas
+ * 4. Asegura puntuación para prosodia chilena
  */
 export function formatForTTS(
   text: string,
@@ -76,12 +91,12 @@ export function formatForTTS(
   // 2. Limpiar caracteres de control
   result = stripControlChars(result);
 
-  // 3. Formatear saltos de línea
+  // 3. Formatear saltos de línea como pausas
   if (opts.preserveLineBreaks) {
     result = formatLineBreaks(result);
   }
 
-  // 4. Asegurar puntuación
+  // 4. Asegurar puntuación y prosodia chilena
   if (opts.addPauses) {
     result = ensurePunctuation(result);
   }
