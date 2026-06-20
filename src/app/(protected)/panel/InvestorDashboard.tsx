@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
-import { VoiceEngine, type VoiceEngineState } from "@/modules/voice/voiceEngine";
+import { hasWelcomeBeenPlayed, markWelcomeAsPlayed } from "@/modules/voice/voiceSession";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -12,16 +12,39 @@ const CHIPS = [
   "Preparar declaración crypto",
 ];
 
+const WELCOME_TEXT = "Hola. Soy Lédyera, tu Sistema Operativo Financiero y Tributario. Cuéntame cuál es tu situación, o qué quieres evaluar.";
+
 export function InvestorDashboard() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const voiceEngine = useRef(new VoiceEngine());
+  const hasSpokenRef = useRef(false);
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
-  const [voiceState, setVoiceState] = useState<VoiceEngineState>("idle");
 
+  // Voz de bienvenida — código original que funcionaba
   useEffect(() => {
-    voiceEngine.current.playWelcome({ onStateChange: setVoiceState });
+    if (hasSpokenRef.current) return;
+    hasSpokenRef.current = true;
+
+    if (hasWelcomeBeenPlayed()) return;
+
+    const speak = () => {
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(WELCOME_TEXT);
+        utterance.lang = "es-CL";
+        utterance.rate = 0.94;
+        utterance.pitch = 0.95;
+        window.speechSynthesis.speak(utterance);
+        markWelcomeAsPlayed();
+      } catch (e) {
+        console.error("[voice/direct]", e);
+      }
+    };
+
+    const timeout = window.setTimeout(speak, 800);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   function handleSubmit(e: React.FormEvent) {
@@ -50,55 +73,6 @@ export function InvestorDashboard() {
       }}
     >
       <section style={{ width: "100%", maxWidth: 720, textAlign: "center" }}>
-        {voiceState === "blocked" && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              background: "rgba(234,179,8,0.10)",
-              border: "1px solid rgba(234,179,8,0.20)",
-              borderRadius: 8,
-              padding: "6px 14px",
-              marginBottom: 22,
-              fontSize: 12,
-              color: "#EAB308",
-              fontWeight: 600,
-              fontFamily: fonts.body,
-              cursor: "pointer",
-              transition: "background 0.15s",
-            }}
-            onClick={() => voiceEngine.current.retryWelcome().then(setVoiceState)}
-            title="Activar audio"
-          >
-            <span>🔇</span>
-            <span>Activa audio para escuchar a LEDGERA</span>
-          </div>
-        )}
-
-        {voiceState === "unsupported" && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              background: "rgba(100,116,139,0.10)",
-              border: "1px solid rgba(100,116,139,0.20)",
-              borderRadius: 8,
-              padding: "6px 14px",
-              marginBottom: 22,
-              fontSize: 12,
-              color: "#94A3B8",
-              fontWeight: 600,
-              fontFamily: fonts.body,
-            }}
-            title="Voz no disponible"
-          >
-            <span>🎙️</span>
-            <span>Voz no disponible en este navegador</span>
-          </div>
-        )}
-
         <p
           style={{
             color: "#4ADE80",
