@@ -1,6 +1,5 @@
 // src/app/api/voice/welcome/route.ts
 // API endpoint para sintetizar la bienvenida de LEDGERA usando TTS neuronal
-// UX 3.1.3 — usa perfil activo desde voiceConfig o recibe profileId desde el frontend
 
 import { NextRequest, NextResponse } from "next/server";
 import { fail } from "@/shared/apiResponse";
@@ -14,10 +13,9 @@ import {
 import {
   WELCOME_MESSAGE,
   VOICE_CONFIG,
-  ACTIVE_VOICE_PROFILE,
-  VOICE_PROFILES,
+  ELEVENLABS_VOICE_ID,
+  NEURAL_VOICE_SETTINGS,
 } from "@/modules/voice/voiceConfig";
-import type { VoiceProfile } from "@/modules/voice/voiceConfig";
 
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -28,8 +26,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       text?: string;
-      /** Perfil A/B: "consultiva" | "profesional" | "ejecutiva" */
-      profileId?: string;
       voiceId?: string;
       stability?: number;
       similarityBoost?: number;
@@ -37,16 +33,7 @@ export async function POST(request: NextRequest) {
     } | null;
 
     const text = body?.text ?? WELCOME_MESSAGE;
-
-    // Resolver perfil: si se envió profileId, usar ese; si no, usar el activo
-    let profile: VoiceProfile;
-    if (body?.profileId && VOICE_PROFILES[body.profileId]) {
-      profile = VOICE_PROFILES[body.profileId];
-    } else {
-      profile = ACTIVE_VOICE_PROFILE;
-    }
-
-    const voiceId = body?.voiceId ?? profile.voiceId;
+    const voiceId = body?.voiceId ?? ELEVENLABS_VOICE_ID;
 
     // Formatear texto para TTS (normaliza pronunciación, limpia, estructura pausas)
     const formatted = formatForTTS(text, {
@@ -64,17 +51,16 @@ export async function POST(request: NextRequest) {
           "X-Voice-Provider": "elevenlabs",
           "X-Voice-Cache": "hit",
           "X-Voice-Lang": VOICE_CONFIG.lang,
-          "X-Voice-Profile": profile.id,
         },
       });
     }
 
-    // Sintetizar con ElevenLabs usando parámetros del perfil
+    // Sintetizar con ElevenLabs usando configuración base
     const result = await synthesizeWithElevenLabs(formatted, {
       voiceId,
-      stability: body?.stability ?? profile.stability,
-      similarityBoost: body?.similarityBoost ?? profile.similarityBoost,
-      styleExaggeration: body?.styleExaggeration ?? profile.styleExaggeration,
+      stability: body?.stability ?? NEURAL_VOICE_SETTINGS.stability,
+      similarityBoost: body?.similarityBoost ?? NEURAL_VOICE_SETTINGS.similarityBoost,
+      styleExaggeration: body?.styleExaggeration ?? NEURAL_VOICE_SETTINGS.styleExaggeration,
     });
 
     // Almacenar en caché
@@ -92,7 +78,6 @@ export async function POST(request: NextRequest) {
         "X-Voice-Provider": result.provider,
         "X-Voice-Cache": "miss",
         "X-Voice-Lang": VOICE_CONFIG.lang,
-        "X-Voice-Profile": profile.id,
       },
     });
   } catch (error) {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
+import { VoiceEngine } from "@/modules/voice/voiceEngine";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -11,37 +12,26 @@ const CHIPS = [
   "Preparar declaración crypto",
 ];
 
-const WELCOME_TEXT = "Hola. Soy Lédyera, tu Sistema Operativo Financiero y Tributario. Cuéntame cuál es tu situación, o qué quieres evaluar.";
-
 export function InvestorDashboard() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const hasSpokenRef = useRef(false);
+  const voiceEngineRef = useRef<VoiceEngine | null>(null);
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
-  // Voz de bienvenida — EXACTAMENTE el código original que funcionaba
+  // Voz de bienvenida — VoiceEngine como única fuente de verdad
   useEffect(() => {
-    if (hasSpokenRef.current) return;
-    hasSpokenRef.current = true;
+    const engine = new VoiceEngine();
+    voiceEngineRef.current = engine;
 
-    const speak = () => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-      try {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(WELCOME_TEXT);
-        utterance.lang = "es-CL";
-        utterance.rate = 0.94;
-        utterance.pitch = 0.95;
-        window.speechSynthesis.speak(utterance);
-        console.log("[voice] speak() executed");
-      } catch (e) {
-        console.error("[voice] error:", e);
-      }
+    const timeout = window.setTimeout(() => {
+      engine.playWelcome();
+    }, 800);
+
+    return () => {
+      window.clearTimeout(timeout);
+      engine.stop();
     };
-
-    const timeout = window.setTimeout(speak, 800);
-    return () => window.clearTimeout(timeout);
   }, []);
 
   function handleSubmit(e: React.FormEvent) {

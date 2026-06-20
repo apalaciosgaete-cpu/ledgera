@@ -1,6 +1,6 @@
 // src/modules/voice/audioPlayer.ts
 // Frontend Audio Player — reproduce audio blob desde el backend TTS neuronal
-// Maneja autoplay, detección de bloqueo y reproducción secuencial.
+// Mantiene referencia global al elemento Audio activo para poder detenerlo.
 
 "use client";
 
@@ -9,24 +9,45 @@ export type AudioPlayResult = {
   blocked: boolean;
 };
 
+let activeAudio: HTMLAudioElement | null = null;
+
+/**
+ * Detiene cualquier audio en reproducción y libera recursos.
+ */
+export function stopAudio(): void {
+  if (activeAudio) {
+    try {
+      activeAudio.pause();
+      activeAudio.src = "";
+    } catch {
+      // Ignorar errores al detener
+    }
+    activeAudio = null;
+  }
+}
+
 /**
  * Reproduce un blob de audio (mp3) devuelto por el backend TTS.
+ * Detiene cualquier reproducción previa antes de empezar.
  * @returns AudioPlayResult — éxito o bloqueado por el navegador.
  */
 export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
   return new Promise((resolve) => {
     try {
+      // Detener reproducción previa
+      stopAudio();
+
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
+      activeAudio = audio;
 
       let resolved = false;
 
       const cleanup = () => {
         URL.revokeObjectURL(url);
-      };
-
-      audio.oncanplaythrough = () => {
-        // El audio está listo para reproducirse
+        if (activeAudio === audio) {
+          activeAudio = null;
+        }
       };
 
       audio.onplay = () => {
@@ -56,21 +77,17 @@ export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
       const playPromise = audio.play();
 
       if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            // Inició reproducción
-          })
-          .catch((err: DOMException) => {
-            cleanup();
-            if (!resolved) {
-              resolved = true;
-              if (err.name === "NotAllowedError") {
-                resolve({ success: false, blocked: true });
-              } else {
-                resolve({ success: false, blocked: false });
-              }
+        playPromise.catch((err: DOMException) => {
+          cleanup();
+          if (!resolved) {
+            resolved = true;
+            if (err.name === "NotAllowedError") {
+              resolve({ success: false, blocked: true });
+            } else {
+              resolve({ success: false, blocked: false });
             }
-          });
+          }
+        });
       }
 
       // Timeout de seguridad: 5s
@@ -85,14 +102,4 @@ export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
       resolve({ success: false, blocked: false });
     }
   });
-}
-
-/**
- * Detiene cualquier audio en reproducción.
- */
-export function stopAudio(): void {
-  // No hay API global para detener un Audio(), pero podemos
-  // silenciar todos los elementos audio creados.
-  // Por ahora es un placeholder — la detención real requiere
-  // mantener una referencia al elemento audio.
 }
