@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
 import { VoiceEngine } from "@/modules/voice/voiceEngine";
+import { VoiceInputController } from "@/components/voice/VoiceInputController";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -19,7 +20,6 @@ export function InvestorDashboard() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
-  // Voz de bienvenida — VoiceEngine como única fuente de verdad
   useEffect(() => {
     const engine = new VoiceEngine();
     voiceEngineRef.current = engine;
@@ -34,15 +34,28 @@ export function InvestorDashboard() {
     };
   }, []);
 
+  function goToConversation(text: string) {
+    const q = text.trim();
+    if (!q) return;
+    router.push(`/conversaciones?q=${encodeURIComponent(q)}&scope=crypto-first&source=voice-assistant`);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const q = query.trim();
-    if (!q) return;
-    router.push(`/conversaciones?q=${encodeURIComponent(q)}&scope=crypto-first`);
+    goToConversation(query);
   }
 
   function sendChip(chip: string) {
-    router.push(`/conversaciones?q=${encodeURIComponent(chip)}&scope=crypto-first`);
+    goToConversation(chip);
+  }
+
+  function handleVoiceTranscript(transcript: string) {
+    setQuery(transcript);
+    goToConversation(transcript);
+  }
+
+  function handleBeforeListen() {
+    voiceEngineRef.current?.stop();
   }
 
   return (
@@ -100,7 +113,7 @@ export function InvestorDashboard() {
           Describe una operación, un movimiento, una duda tributaria o una decisión pendiente con cryptoactivos.
         </p>
 
-        <form onSubmit={handleSubmit} style={{ marginBottom: 16 }}>
+        <form onSubmit={handleSubmit} style={{ marginBottom: 10 }}>
           <div
             style={{
               display: "flex",
@@ -155,7 +168,9 @@ export function InvestorDashboard() {
           </div>
         </form>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+        <VoiceInputController onTranscript={handleVoiceTranscript} onBeforeListen={handleBeforeListen} />
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 14 }}>
           {CHIPS.map((chip) => (
             <button
               key={chip}
