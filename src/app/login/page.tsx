@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { saveSessionToken } from "@/modules/identity/client/authStorage";
+import { resetWelcomeSession } from "@/modules/voice/voiceSession";
 import { colors, fonts } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
@@ -92,7 +93,6 @@ function LoginForm() {
   const [validating2FA, setValidating2FA] = useState(false);
   const [error2FA, setError2FA] = useState("");
 
-  // Step 3 — setup 2FA forzado en login
   const [setupQrCode, setSetupQrCode] = useState("");
   const [setupSecret, setSetupSecret] = useState("");
   const [setupToken, setSetupToken] = useState("");
@@ -108,7 +108,6 @@ function LoginForm() {
     }
   }, [isAuthenticated, isLoading, router, oauth2fa]);
 
-  // Cargar configuración 2FA para usuarios OAuth sin 2FA
   useEffect(() => {
     if (oauth2fa && isAuthenticated && user) {
       fetch("/api/2fa/oauth-setup", { credentials: "include" })
@@ -174,6 +173,7 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
+      resetWelcomeSession();
       window.location.href = "/panel";
     } catch (error) {
       setErrorMessage(
@@ -213,6 +213,7 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
+      resetWelcomeSession();
       window.location.href = "/panel";
     } catch (error) {
       setError2FA(
@@ -273,6 +274,7 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
+      resetWelcomeSession();
       window.location.href = "/panel";
     } catch (error) {
       setErrorSetup(resolveClientError(error, "Error al verificar el código."));
@@ -360,388 +362,91 @@ function LoginForm() {
     fontFamily: fonts.body,
   };
 
-  const inputStyle = {
-    width: "100%",
-    padding: "11px 14px",
-    borderRadius: "8px",
-    border: "1px solid rgba(15,42,61,0.2)",
-    background: "rgba(255,255,255,0.9)",
-    fontSize: "14px",
-    fontFamily: fonts.body,
-    color: "#0F2A3D",
-    outline: "none",
-    boxSizing: "border-box" as const,
-  };
-
   return (
     <main style={mainStyle}>
       <div style={overlayStyle} />
-
       <div style={wrapperStyle}>
-        <Logo variant="light" size="lg" showSubtitle />
+        <Logo variant="light" size="lg" />
+        <section style={cardStyle}>
+          <div style={{ display: "grid", gap: "0.5rem" }}>
+            <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 900, color: colors.textPrimary, fontFamily: fonts.display }}>
+              {step === 1 && "Iniciar sesión"}
+              {step === 2 && "Verificación 2FA"}
+              {step === 3 && "Configura tu 2FA"}
+            </h1>
+            <p style={{ margin: 0, fontSize: "14px", color: colors.textSecondary, lineHeight: 1.6, fontFamily: fonts.body }}>
+              {step === 1 && "Ingresa con tu cuenta para continuar con LEDGERA."}
+              {step === 2 && "Introduce el código de tu app autenticadora para ingresar."}
+              {step === 3 && "Escanea el código QR, ingresa el código de 6 dígitos y termina la configuración obligatoria."}
+            </p>
+          </div>
 
-        {step === 1 && (
-          <div style={cardStyle}>
-            <div>
-              <h1
-                style={{
-                  fontFamily: fonts.display,
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "#0F2A3D",
-                  margin: "0 0 4px",
-                }}
-              >
-                Iniciar sesión
-              </h1>
-
-              <p style={{ fontSize: "13px", color: "#64748B", margin: 0 }}>
-                Accede a tu cuenta Ledgera
-              </p>
+          {justRegistered && step === 1 ? (
+            <div style={{ background: "rgba(15,118,110,0.08)", border: "1px solid rgba(15,118,110,0.15)", borderRadius: "10px", padding: "0.9rem 1rem", color: "#0F766E", fontSize: "14px", fontWeight: 600, fontFamily: fonts.body }}>
+              Tu cuenta fue creada. Ahora inicia sesión.
             </div>
+          ) : null}
 
-            {justRegistered && (
-              <div
-                style={{
-                  background: "rgba(22,163,74,0.08)",
-                  border: "1px solid rgba(22,163,74,0.2)",
-                  borderRadius: "8px",
-                  padding: "10px 14px",
-                  fontSize: "13px",
-                  color: "#15803D",
-                }}
-              >
-                Cuenta creada correctamente. Ingresa con tus credenciales.
-              </div>
-            )}
-
-            <form
-              onSubmit={handleSubmit}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
-            >
+          {step === 1 && (
+            <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
               <div>
-                <label style={labelStyle}>Correo electrónico</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="tu@email.com"
-                  required
-                  style={inputStyle}
-                />
+                <label htmlFor="email" style={labelStyle}>Correo</label>
+                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "14px", fontFamily: fonts.body }} />
               </div>
-
               <div>
-                <label style={labelStyle}>Contraseña</label>
-                <div style={{ position: "relative" }}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="••••••••"
-                    required
-                    style={{ ...inputStyle, paddingRight: "44px" }}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      right: "12px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "#64748B",
-                      padding: 0,
-                    }}
-                  >
-                    {showPassword ? "Ocultar" : "Ver"}
+                <label htmlFor="password" style={labelStyle}>Contraseña</label>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required style={{ flex: 1, padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "14px", fontFamily: fonts.body }} />
+                  <button type="button" onClick={() => setShowPassword(v => !v)} style={{ border: "1px solid #D6E0EA", background: "#F8FAFC", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
+                    {showPassword ? "Ocultar" : "Mostrar"}
                   </button>
                 </div>
               </div>
 
-              {errorMessage && (
-                <p
-                  style={{
-                    color: "#DC2626",
-                    fontSize: "13px",
-                    margin: 0,
-                    background: "rgba(239,68,68,0.06)",
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid rgba(239,68,68,0.15)",
-                  }}
-                >
-                  {errorMessage}
-                </p>
-              )}
+              {errorMessage ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
 
-              <button
-                type="submit"
-                disabled={submitting}
-                style={{
-                  width: "100%",
-                  padding: "13px",
-                  background: submitting ? colors.accentHover : colors.accent,
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "#ffffff",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  fontFamily: fonts.body,
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  transition: "background 0.15s ease",
-                }}
-              >
-                {submitting ? "Ingresando..." : "Ingresar"}
+              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.brand, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: submitting ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+                {submitting ? "Ingresando..." : "Entrar"}
               </button>
             </form>
-          </div>
-        )}
+          )}
 
-        {step === 2 && (
-          <div style={cardStyle}>
-            <div style={{ textAlign: "center" }}>
-              <h2
-                style={{
-                  fontFamily: fonts.display,
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: "#0F2A3D",
-                  margin: "0 0 6px",
-                }}
-              >
-                Verificación en dos pasos
-              </h2>
-
-              <p style={{ fontSize: "13px", color: "#64748B", margin: 0 }}>
-                Ingresa el código de 6 dígitos de tu app autenticadora
-              </p>
-            </div>
-
-            <form
-              onSubmit={handle2FA}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
-            >
+          {step === 2 && (
+            <form onSubmit={handle2FA} style={{ display: "grid", gap: "1rem" }}>
               <div>
-                <label style={labelStyle}>Código de verificación</label>
-                <input
-                  type="text"
-                  value={twoFACode}
-                  onChange={(event) =>
-                    setTwoFACode(
-                      event.target.value.replace(/\D/g, "").slice(0, 6),
-                    )
-                  }
-                  placeholder="000000"
-                  maxLength={6}
-                  required
-                  autoFocus
-                  style={{
-                    ...inputStyle,
-                    textAlign: "center",
-                    fontSize: "28px",
-                    fontWeight: 700,
-                    letterSpacing: "0.4em",
-                    fontFamily: "monospace",
-                  }}
-                />
+                <label htmlFor="twofa" style={labelStyle}>Código 2FA</label>
+                <input id="twofa" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={twoFACode} onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
               </div>
-
-              {error2FA && (
-                <p
-                  style={{
-                    color: "#DC2626",
-                    fontSize: "13px",
-                    margin: 0,
-                    background: "rgba(239,68,68,0.06)",
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid rgba(239,68,68,0.15)",
-                  }}
-                >
-                  {error2FA}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={validating2FA || twoFACode.length < 6}
-                style={{
-                  width: "100%",
-                  padding: "13px",
-                  background:
-                    twoFACode.length < 6
-                      ? "#94A3B8"
-                      : validating2FA
-                        ? colors.accentHover
-                        : colors.accent,
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "#ffffff",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  fontFamily: fonts.body,
-                  cursor:
-                    validating2FA || twoFACode.length < 6
-                      ? "not-allowed"
-                      : "pointer",
-                  transition: "background 0.15s ease",
-                }}
-              >
-                {validating2FA ? "Verificando..." : "Verificar"}
+              {error2FA ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
+              <button type="submit" disabled={validating2FA} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.brand, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: validating2FA ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+                {validating2FA ? "Validando..." : "Validar código"}
               </button>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
-                <button
-                  type="button"
-                  onClick={startRecovery}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#0F766E",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    fontFamily: fonts.body,
-                    textDecoration: "underline",
-                    fontWeight: 600,
-                  }}
-                >
-                  Reconfigurar 2FA / perdí acceso a la app
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep(1);
-                    setTwoFACode("");
-                    setError2FA("");
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#64748B",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    fontFamily: fonts.body,
-                    textDecoration: "underline",
-                  }}
-                >
-                  Volver al inicio de sesión
-                </button>
-              </div>
+              <button type="button" onClick={startRecovery} style={{ width: "100%", border: "1px solid #CBD5E1", borderRadius: "12px", padding: "0.9rem 1rem", background: "#FFFFFF", color: colors.textPrimary, fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body }}>
+                Reconfigurar autenticador
+              </button>
             </form>
-          </div>
-        )}
+          )}
 
-        {step === 3 && (
-          <div style={cardStyle}>
-            <div style={{ textAlign: "center" }}>
-              <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 6px" }}>
-                {isRecovery ? "Recuperar acceso con 2FA" : "Seguridad obligatoria"}
-              </h2>
-              <p style={{ fontSize: "13px", color: "#64748B", margin: 0 }}>
-                {isRecovery
-                  ? "Escanea el nuevo QR con tu app de autenticación. Tu código anterior quedará invalidado."
-                  : "Escanea el QR con Google Authenticator, Microsoft Authenticator o Authy."}
-              </p>
-            </div>
-
-            <div style={{ background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.28)", borderRadius: "10px", padding: "12px 14px" }}>
-              <p style={{ color: "#166534", fontSize: "12px", fontWeight: 700, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Seguridad requerida</p>
-              <p style={{ color: "#15803D", fontSize: "12px", margin: 0 }}>Todas las cuentas LEDGERA requieren 2FA para proteger tu información financiera.</p>
-            </div>
-
-            {setupQrCode && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", background: "#F8FAFC", borderRadius: "12px", padding: "16px" }}>
-                <img src={setupQrCode} alt="QR 2FA" style={{ width: "180px", height: "180px", borderRadius: "10px", background: "#fff", padding: "8px" }} />
-                <div style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "8px 12px", textAlign: "center", width: "100%" }}>
-                  <p style={{ color: "#64748B", fontSize: "11px", margin: "0 0 4px" }}>Clave manual</p>
-                  <code style={{ color: "#0F2A3D", fontSize: "11px", letterSpacing: "0.05em", wordBreak: "break-all" }}>{setupSecret}</code>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSetup2FA} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {step === 3 && (
+            <form onSubmit={handleSetup2FA} style={{ display: "grid", gap: "1rem" }}>
+              {setupQrCode ? <img src={setupQrCode} alt="Código QR 2FA" style={{ width: 180, height: 180, objectFit: "contain", justifySelf: "center", background: "#FFFFFF", padding: 8, borderRadius: 12 }} /> : null}
+              {setupSecret ? <p style={{ margin: 0, fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6, fontFamily: fonts.body }}>Clave manual: <strong style={{ color: colors.textPrimary }}>{setupSecret}</strong></p> : null}
               <div>
-                <label style={labelStyle}>Código de 6 dígitos</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={setupCode}
-                  onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="000000"
-                  maxLength={6}
-                  autoFocus
-                  required
-                  style={{ ...inputStyle, textAlign: "center", fontSize: "28px", fontWeight: 700, letterSpacing: "0.4em", fontFamily: "monospace" }}
-                />
+                <label htmlFor="setupCode" style={labelStyle}>Código de 6 dígitos</label>
+                <input id="setupCode" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
               </div>
-
-              {errorSetup && (
-                <p style={{ color: "#DC2626", fontSize: "13px", margin: 0, background: "rgba(239,68,68,0.06)", padding: "8px 12px", borderRadius: "6px", border: "1px solid rgba(239,68,68,0.15)" }}>
-                  {errorSetup}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={verifyingSetup || setupCode.length < 6}
-                style={{
-                  width: "100%",
-                  padding: "13px",
-                  background: setupCode.length < 6 ? "#94A3B8" : verifyingSetup ? colors.accentHover : colors.accent,
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "#fff",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  fontFamily: fonts.body,
-                  cursor: verifyingSetup || setupCode.length < 6 ? "not-allowed" : "pointer",
-                }}
-              >
-                {verifyingSetup
-                  ? "Verificando..."
-                  : isRecovery
-                    ? "Verificar e ingresar"
-                    : "Activar 2FA e ingresar"}
+              {errorSetup ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
+              <button type="submit" disabled={verifyingSetup} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.brand, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: verifyingSetup ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+                {verifyingSetup ? "Verificando..." : "Activar y entrar"}
               </button>
             </form>
-          </div>
-        )}
+          )}
 
-        {step === 1 && (
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.7)",
-              margin: 0,
-            }}
-          >
-            ¿No tienes cuenta?{" "}
-            <Link
-              href="/register"
-              style={{
-                color: "#4ADE80",
-                textDecoration: "none",
-                fontWeight: 600,
-              }}
-            >
-              Crear cuenta gratis
-            </Link>
-          </p>
-        )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", fontSize: "13px", fontFamily: fonts.body }}>
+            <Link href="/register" style={{ color: colors.brand, fontWeight: 700, textDecoration: "none" }}>Crear cuenta</Link>
+            <Link href="/forgot-password" style={{ color: colors.textSecondary, textDecoration: "none" }}>¿Olvidaste tu contraseña?</Link>
+          </div>
+        </section>
       </div>
     </main>
   );
