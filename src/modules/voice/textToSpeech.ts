@@ -91,6 +91,10 @@ function speakWithBrowser(text: string): Promise<SpeakResult> {
 
 async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/speak", text: string): Promise<SpeakResult> {
   try {
+    // Timeout de 4s para no bloquear el fallback si el API route tarda o cuelga
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -98,9 +102,19 @@ async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/spea
         text,
         voiceId: ELEVENLABS_VOICE_ID,
       }),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
+      console.error("[voice/neural] API error:", response.status, response.statusText);
+      return { success: false, blocked: false, provider: "none" };
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("audio")) {
+      console.error("[voice/neural] Response is not audio:", contentType);
       return { success: false, blocked: false, provider: "none" };
     }
 
@@ -112,7 +126,12 @@ async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/spea
       blocked: result.blocked,
       provider: "neural",
     };
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      console.error("[voice/neural] Fetch timed out after 4s");
+    } else {
+      console.error("[voice/neural] Fetch error:", err);
+    }
     return { success: false, blocked: false, provider: "none" };
   }
 }

@@ -76,6 +76,29 @@ export function InvestorDashboard() {
           </div>
         )}
 
+        {voiceState === "unsupported" && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "rgba(100,116,139,0.10)",
+              border: "1px solid rgba(100,116,139,0.20)",
+              borderRadius: 8,
+              padding: "6px 14px",
+              marginBottom: 22,
+              fontSize: 12,
+              color: "#94A3B8",
+              fontWeight: 600,
+              fontFamily: fonts.body,
+            }}
+            title="Voz no disponible"
+          >
+            <span>🎙️</span>
+            <span>Voz no disponible en este navegador</span>
+          </div>
+        )}
+
         <p
           style={{
             color: "#4ADE80",
