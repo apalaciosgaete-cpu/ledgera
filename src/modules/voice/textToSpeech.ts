@@ -26,15 +26,28 @@ function findBestVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null;
 
+  // Priorizar voces naturales/premium por nombre (mucho menos robóticas)
+  const naturalKeywords = ["natural", "premium", "neural", "sabina", "helena"];
+
   const preferred = [VOICE_CONFIG.lang, ...VOICE_CONFIG.fallbacks];
 
+  // 1. Buscar voz natural que coincida con idioma preferido
   for (const lang of preferred) {
-    const match = voices.find(
+    const candidates = voices.filter(
       (v) => v.lang === lang || v.lang.startsWith(lang),
     );
-    if (match) return match;
+    // Priorizar voces con keywords naturales
+    for (const keyword of naturalKeywords) {
+      const match = candidates.find((v) =>
+        v.name.toLowerCase().includes(keyword),
+      );
+      if (match) return match;
+    }
+    // Si no hay voz natural, usar la primera del idioma
+    if (candidates.length > 0) return candidates[0];
   }
 
+  // 2. Fallback: cualquier voz en español
   return voices.find((v) => v.lang.startsWith("es")) ?? null;
 }
 

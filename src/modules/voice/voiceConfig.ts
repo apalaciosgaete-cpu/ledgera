@@ -47,9 +47,16 @@ export const ELEVENLABS_VOICE_ID = "XrExE9yKIg1WjnnlVkGX";
 /** Modelo multilingüe optimizado para español */
 export const ELEVENLABS_MODEL = "eleven_multilingual_v2";
 
-/** Configuración base de voz para el proveedor neuronal */
+/**
+ * Configuración base de voz para ElevenLabs (Matilda).
+ *
+ * Ajustada para español LATAM natural:
+ *   stability:    0.40 — más baja = más variación natural, menos robótico
+ *   similarity:   0.80 — más alta = mantiene identidad de la voz
+ *   styleExagger: 0    — sin exageración para tono serio/profesional
+ */
 export const NEURAL_VOICE_SETTINGS = {
-  stability: 0.45,
-  similarityBoost: 0.70,
+  stability: 0.40,
+  similarityBoost: 0.80,
   styleExaggeration: 0,
 };
