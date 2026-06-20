@@ -10,8 +10,6 @@ import { Logo } from "@/components/brand/Logo";
 import { colors, fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
-// UX 3.1.0 — Header: ☰ | LEDGERA (centered) | 👤
-
 const roleTokens: Record<string, {
   label: string;
   badgeBg: string;
@@ -247,7 +245,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           position: "sticky",
           top: 0,
           zIndex: 50,
-          height: "60px",
+          minHeight: "74px",
         }}
       >
         <div
@@ -255,11 +253,10 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             display: "grid",
             gridTemplateColumns: "1fr auto 1fr",
             alignItems: "center",
-            height: "100%",
+            minHeight: "74px",
             padding: "0 20px",
           }}
         >
-          {/* Left: Hamburguesa */}
           <div style={{ justifySelf: "start" }}>
             <button
               onClick={() => setMenuOpen(true)}
@@ -283,20 +280,19 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
 
-          {/* Center: Logo */}
           <Link
             href="/panel"
             aria-label="Ir al inicio LEDGERA"
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               textDecoration: "none",
             }}
           >
-            <Logo variant="light" size="md" showSubtitle={false} />
+            <Logo variant="light" size="sm" showSubtitle />
           </Link>
 
-          {/* Right: Avatar */}
           <div style={{ justifySelf: "end" }}>
             <UserProfileDropdown
               name={user.email}
