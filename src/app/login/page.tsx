@@ -405,7 +405,7 @@ function LoginForm() {
 
               {errorMessage ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
 
-              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.brand, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: submitting ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.primary, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: submitting ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
                 {submitting ? "Ingresando..." : "Entrar"}
               </button>
             </form>
@@ -418,7 +418,7 @@ function LoginForm() {
                 <input id="twofa" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={twoFACode} onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
               </div>
               {error2FA ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
-              <button type="submit" disabled={validating2FA} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.brand, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: validating2FA ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+              <button type="submit" disabled={validating2FA} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.primary, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: validating2FA ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
                 {validating2FA ? "Validando..." : "Validar código"}
               </button>
               <button type="button" onClick={startRecovery} style={{ width: "100%", border: "1px solid #CBD5E1", borderRadius: "12px", padding: "0.9rem 1rem", background: "#FFFFFF", color: colors.textPrimary, fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body }}>
@@ -436,14 +436,14 @@ function LoginForm() {
                 <input id="setupCode" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
               </div>
               {errorSetup ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
-              <button type="submit" disabled={verifyingSetup} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.brand, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: verifyingSetup ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+              <button type="submit" disabled={verifyingSetup} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.primary, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: verifyingSetup ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
                 {verifyingSetup ? "Verificando..." : "Activar y entrar"}
               </button>
             </form>
           )}
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", fontSize: "13px", fontFamily: fonts.body }}>
-            <Link href="/register" style={{ color: colors.brand, fontWeight: 700, textDecoration: "none" }}>Crear cuenta</Link>
+            <Link href="/register" style={{ color: colors.primary, fontWeight: 700, textDecoration: "none" }}>Crear cuenta</Link>
             <Link href="/forgot-password" style={{ color: colors.textSecondary, textDecoration: "none" }}>¿Olvidaste tu contraseña?</Link>
           </div>
         </section>
