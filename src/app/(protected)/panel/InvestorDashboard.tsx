@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
 import { VoiceEngine } from "@/modules/voice/voiceEngine";
-import { VoiceInputController } from "@/components/voice/VoiceInputController";
+import { startListening } from "@/modules/voice/speechToText";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -17,8 +17,10 @@ export function InvestorDashboard() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const voiceEngineRef = useRef<VoiceEngine | null>(null);
+  const stopListeningRef = useRef<(() => void) | null>(null);
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [listening, setListening] = useState(false);
 
   useEffect(() => {
     const engine = new VoiceEngine();
@@ -31,37 +33,76 @@ export function InvestorDashboard() {
     return () => {
       window.clearTimeout(timeout);
       engine.stop();
+      stopListeningRef.current?.();
     };
   }, []);
 
-  function goToConversation(text: string) {
+  function goToConversation(text: string, source: "text" | "voice") {
     const q = text.trim();
     if (!q) return;
-    router.push(`/conversaciones?q=${encodeURIComponent(q)}&scope=crypto-first&source=voice-assistant`);
+    router.push(`/conversaciones?q=${encodeURIComponent(q)}&scope=crypto-first&source=${source}`);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    goToConversation(query);
+    goToConversation(query, "text");
   }
 
   function sendChip(chip: string) {
-    goToConversation(chip);
+    setQuery(chip);
+    goToConversation(chip, "text");
   }
 
-  function handleVoiceTranscript(transcript: string) {
-    setQuery(transcript);
-    goToConversation(transcript);
+  function stopMic() {
+    stopListeningRef.current?.();
+    stopListeningRef.current = null;
+    setListening(false);
   }
 
-  function handleBeforeListen() {
+  function startMic() {
     voiceEngineRef.current?.stop();
+    stopMic();
+    setListening(true);
+
+    const stop = startListening({
+      onResult: ({ transcript, final }) => {
+        const next = transcript.trim();
+        setQuery(next);
+        if (final && next) {
+          stopMic();
+          goToConversation(next, "voice");
+        }
+      },
+      onStateChange: (state) => {
+        if (state === "idle" || state === "error" || state === "unsupported") {
+          setListening(false);
+        }
+      },
+      onError: () => {
+        setListening(false);
+      },
+    });
+
+    if (!stop) {
+      setListening(false);
+      return;
+    }
+
+    stopListeningRef.current = stop;
+  }
+
+  function toggleMic() {
+    if (listening) {
+      stopMic();
+      return;
+    }
+    startMic();
   }
 
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 60px)",
+        minHeight: "calc(100vh - 74px)",
         background: "#071B28",
         color: "#E2E8F0",
         fontFamily: fonts.body,
@@ -69,59 +110,34 @@ export function InvestorDashboard() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "clamp(36px, 7vh, 72px) 24px",
+        padding: "clamp(28px, 6vh, 56px) 24px",
       }}
     >
-      <section style={{ width: "100%", maxWidth: 720, textAlign: "center" }}>
-        <p
-          style={{
-            color: "#4ADE80",
-            fontSize: 12,
-            fontWeight: 850,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            margin: "0 0 38px",
-            fontFamily: fonts.body,
-          }}
-        >
-          SO Financiero y Tributario
-        </p>
-
+      <section style={{ width: "100%", maxWidth: 760, textAlign: "center" }}>
         <h1
           style={{
             color: "#F8FAFC",
-            fontSize: "clamp(1.8rem, 4vw, 2.55rem)",
+            fontSize: "clamp(1.9rem, 4.6vw, 3.25rem)",
             fontWeight: 850,
-            margin: "0 0 16px",
-            lineHeight: 1.2,
-            letterSpacing: "-0.035em",
+            margin: "0 0 22px",
+            lineHeight: 1.12,
+            letterSpacing: "-0.04em",
             fontFamily: fonts.body,
           }}
         >
           ¿Cuál es tu situación o qué quieres evaluar?
         </h1>
 
-        <p
-          style={{
-            color: "#64748B",
-            fontSize: 16,
-            fontWeight: 450,
-            margin: "0 0 28px",
-            lineHeight: 1.55,
-          }}
-        >
-          Describe una operación, un movimiento, una duda tributaria o una decisión pendiente con cryptoactivos.
-        </p>
-
         <form onSubmit={handleSubmit} style={{ marginBottom: 10 }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
+              gap: 8,
               background: "rgba(255,255,255,0.04)",
               border: `1.5px solid ${focused ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.10)"}`,
               borderRadius: 18,
-              padding: "6px 6px 6px 22px",
+              padding: "6px",
               transition: "border-color 0.2s",
               boxShadow: focused ? "0 0 0 3px rgba(22,163,74,0.08)" : "none",
             }}
@@ -143,10 +159,34 @@ export function InvestorDashboard() {
                 fontSize: 16,
                 fontFamily: fonts.body,
                 fontWeight: 500,
-                padding: "12px 0",
+                padding: "12px 14px",
                 caretColor: "#4ADE80",
               }}
             />
+
+            <button
+              type="button"
+              onClick={toggleMic}
+              aria-label={listening ? "Detener micrófono" : "Activar micrófono"}
+              style={{
+                width: 46,
+                height: 46,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 12,
+                border: `1px solid ${listening ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.08)"}`,
+                background: listening ? "rgba(22,163,74,0.16)" : "rgba(255,255,255,0.04)",
+                color: listening ? "#4ADE80" : "#CBD5E1",
+                cursor: "pointer",
+                flexShrink: 0,
+                fontSize: 17,
+                lineHeight: 1,
+              }}
+            >
+              {listening ? "■" : "🎙"}
+            </button>
+
             <button
               type="submit"
               aria-label="Analizar situación"
@@ -156,8 +196,12 @@ export function InvestorDashboard() {
                 borderRadius: 12,
                 color: "#FFFFFF",
                 cursor: "pointer",
-                padding: "12px 22px",
-                fontSize: 17,
+                width: 58,
+                height: 46,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 22,
                 fontWeight: 850,
                 flexShrink: 0,
                 lineHeight: 1,
@@ -168,9 +212,15 @@ export function InvestorDashboard() {
           </div>
         </form>
 
-        <VoiceInputController onTranscript={handleVoiceTranscript} onBeforeListen={handleBeforeListen} />
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 14 }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            justifyContent: "center",
+            marginTop: 6,
+          }}
+        >
           {CHIPS.map((chip) => (
             <button
               key={chip}
