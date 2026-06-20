@@ -23,7 +23,7 @@ export const VOICE_CONFIG: VoiceQuality = {
   rate: 0.92,
   pitch: 1.0,
   volume: 1.0,
-  startDelay: 750,
+  startDelay: 150,
 };
 
 // ─── Mensaje de bienvenida — UX 3.1.3 ──────────────────────────────────────

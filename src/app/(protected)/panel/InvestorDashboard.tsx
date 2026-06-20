@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
-import { VoiceEngine } from "@/modules/voice/voiceEngine";
+import { VoiceEngine, type VoiceEngineState } from "@/modules/voice/voiceEngine";
 import { startListening } from "@/modules/voice/speechToText";
+import { Logo } from "@/components/brand/Logo";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -12,6 +13,86 @@ const CHIPS = [
   "Necesito justificar fondos",
   "Preparar declaración crypto",
 ];
+
+function VoiceOrb({ state }: { state: VoiceEngineState }) {
+  const active = state === "playing";
+
+  return (
+    <>
+      <style>{`
+        @keyframes orb-idle {
+          0%, 100% { transform: scale(1); opacity: 0.55; }
+          50% { transform: scale(1.08); opacity: 0.80; }
+        }
+        @keyframes orb-ring {
+          0% { transform: scale(0.85); opacity: 0.65; }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes orb-ring-b {
+          0% { transform: scale(0.85); opacity: 0.45; }
+          100% { transform: scale(2.8); opacity: 0; }
+        }
+        @keyframes orb-ring-c {
+          0% { transform: scale(0.85); opacity: 0.25; }
+          100% { transform: scale(3.4); opacity: 0; }
+        }
+        @keyframes orb-core-pulse {
+          0%, 100% { box-shadow: 0 0 28px 6px rgba(74,222,128,0.45), 0 0 60px 14px rgba(22,163,74,0.22); }
+          50% { box-shadow: 0 0 52px 14px rgba(74,222,128,0.75), 0 0 100px 28px rgba(22,163,74,0.38); }
+        }
+        @keyframes orb-rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+
+      <div style={{ position: "relative", width: 120, height: 120, margin: "0 auto" }}>
+        {active && (
+          <>
+            <div style={{
+              position: "absolute", inset: 0, borderRadius: "50%",
+              border: "1.5px solid rgba(74,222,128,0.55)",
+              animation: "orb-ring 1.6s ease-out infinite",
+            }} />
+            <div style={{
+              position: "absolute", inset: 0, borderRadius: "50%",
+              border: "1.5px solid rgba(74,222,128,0.38)",
+              animation: "orb-ring-b 1.6s ease-out 0.45s infinite",
+            }} />
+            <div style={{
+              position: "absolute", inset: 0, borderRadius: "50%",
+              border: "1px solid rgba(74,222,128,0.22)",
+              animation: "orb-ring-c 1.6s ease-out 0.9s infinite",
+            }} />
+          </>
+        )}
+
+        <div style={{
+          position: "absolute", inset: -8, borderRadius: "50%",
+          border: "1px solid rgba(74,222,128,0.18)",
+          animation: active ? "orb-rotate 6s linear infinite" : "none",
+          background: "conic-gradient(from 0deg, rgba(74,222,128,0.12), transparent 60%, rgba(56,189,248,0.08), transparent)",
+        }} />
+
+        <div style={{
+          position: "absolute", inset: 10, borderRadius: "50%",
+          background: "radial-gradient(circle at 38% 35%, rgba(74,222,128,0.9), rgba(22,163,74,0.7) 48%, rgba(15,42,61,0.95) 80%)",
+          animation: active ? "orb-core-pulse 0.8s ease-in-out infinite" : "orb-idle 3.2s ease-in-out infinite",
+          boxShadow: active
+            ? "0 0 40px 10px rgba(74,222,128,0.55), 0 0 80px 22px rgba(22,163,74,0.28)"
+            : "0 0 22px 5px rgba(74,222,128,0.30), 0 0 48px 12px rgba(22,163,74,0.15)",
+        }}>
+          <div style={{
+            position: "absolute", top: "28%", left: "32%",
+            width: 16, height: 16, borderRadius: "50%",
+            background: "rgba(255,255,255,0.55)",
+            filter: "blur(4px)",
+          }} />
+        </div>
+      </div>
+    </>
+  );
+}
 
 export function InvestorDashboard() {
   const router = useRouter();
@@ -21,14 +102,15 @@ export function InvestorDashboard() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [listening, setListening] = useState(false);
+  const [voiceState, setVoiceState] = useState<VoiceEngineState>("idle");
 
   useEffect(() => {
     const engine = new VoiceEngine();
     voiceEngineRef.current = engine;
 
     const timeout = window.setTimeout(() => {
-      engine.playWelcome();
-    }, 800);
+      engine.playWelcome({ onStateChange: setVoiceState });
+    }, 150);
 
     return () => {
       window.clearTimeout(timeout);
@@ -110,16 +192,25 @@ export function InvestorDashboard() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "clamp(28px, 6vh, 56px) 24px",
+        padding: "clamp(24px, 5vh, 56px) 24px",
       }}
     >
-      <section style={{ width: "100%", maxWidth: 760, textAlign: "center" }}>
+      <section style={{ width: "100%", maxWidth: 720, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+
+        <div style={{ marginBottom: 36 }}>
+          <Logo variant="light" size="md" showSubtitle />
+        </div>
+
+        <div style={{ marginBottom: 32 }}>
+          <VoiceOrb state={voiceState} />
+        </div>
+
         <h1
           style={{
             color: "#F8FAFC",
-            fontSize: "clamp(1.9rem, 4.6vw, 3.25rem)",
+            fontSize: "clamp(1.7rem, 4vw, 2.8rem)",
             fontWeight: 850,
-            margin: "0 0 22px",
+            margin: "0 0 20px",
             lineHeight: 1.12,
             letterSpacing: "-0.04em",
             fontFamily: fonts.body,
@@ -128,7 +219,7 @@ export function InvestorDashboard() {
           ¿Cuál es tu situación o qué quieres evaluar?
         </h1>
 
-        <form onSubmit={handleSubmit} style={{ marginBottom: 10 }}>
+        <form onSubmit={handleSubmit} style={{ width: "100%", marginBottom: 10 }}>
           <div
             style={{
               display: "flex",
@@ -212,15 +303,7 @@ export function InvestorDashboard() {
           </div>
         </form>
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            justifyContent: "center",
-            marginTop: 6,
-          }}
-        >
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 6 }}>
           {CHIPS.map((chip) => (
             <button
               key={chip}

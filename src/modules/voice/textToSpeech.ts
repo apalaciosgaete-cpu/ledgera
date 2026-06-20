@@ -106,7 +106,7 @@ export function speakWithBrowser(text: string): Promise<SpeakResult> {
 async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/speak", text: string): Promise<SpeakResult> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
     const response = await fetch(endpoint, {
       method: "POST",
