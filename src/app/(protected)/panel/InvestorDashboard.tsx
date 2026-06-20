@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
-import { hasWelcomeBeenPlayed, markWelcomeAsPlayed } from "@/modules/voice/voiceSession";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -21,12 +20,10 @@ export function InvestorDashboard() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
-  // Voz de bienvenida — código original que funcionaba
+  // Voz de bienvenida — EXACTAMENTE el código original que funcionaba
   useEffect(() => {
     if (hasSpokenRef.current) return;
     hasSpokenRef.current = true;
-
-    if (hasWelcomeBeenPlayed()) return;
 
     const speak = () => {
       if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -37,9 +34,9 @@ export function InvestorDashboard() {
         utterance.rate = 0.94;
         utterance.pitch = 0.95;
         window.speechSynthesis.speak(utterance);
-        markWelcomeAsPlayed();
+        console.log("[voice] speak() executed");
       } catch (e) {
-        console.error("[voice/direct]", e);
+        console.error("[voice] error:", e);
       }
     };
 
