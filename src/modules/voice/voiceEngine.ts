@@ -1,17 +1,10 @@
 // src/modules/voice/voiceEngine.ts
 // Motor de Voz LEDGERA — orquesta la bienvenida automática al entrar al panel.
-//
-// Flujo UX 3.1.4:
-//   Usuario entra a /panel
-//   → VoiceEngine.playWelcome()
-//   → Browser speechSynthesis (rápido, sin API key, mismo enfoque original)
-//   → Si speechSynthesis falla: blocked | unsupported
-//   → TTS neuronal (ElevenLabs) se usa solo en respuestas del asistente via speakResponse()
 
 "use client";
 
 import { VOICE_CONFIG, WELCOME_MESSAGE } from "./voiceConfig";
-import { speakWithBrowser, stopSpeaking } from "./textToSpeech";
+import { speakResponse, stopSpeaking } from "./textToSpeech";
 import { hasWelcomeBeenPlayed, markWelcomeAsPlayed } from "./voiceSession";
 
 export type VoiceEngineState =
@@ -25,11 +18,6 @@ export type VoiceEngineCallbacks = {
   onStateChange?: (state: VoiceEngineState) => void;
 };
 
-/**
- * VoiceEngine — Singleton que maneja la bienvenida automática del panel.
- * Usa speechSynthesis del navegador directamente (mismo enfoque que el código original).
- * El TTS neuronal queda para speakResponse() en el asistente.
- */
 export class VoiceEngine {
   private state: VoiceEngineState = "idle";
   private callbacks: VoiceEngineCallbacks = {};
@@ -51,18 +39,10 @@ export class VoiceEngine {
       return this.state;
     }
 
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      this.setState("unsupported");
-      return this.state;
-    }
-
     this.setState("playing");
-
-    // Pausa inicial para que la página cargue completamente
     await new Promise((resolve) => setTimeout(resolve, VOICE_CONFIG.startDelay));
 
-    // Usar speakWithBrowser de textToSpeech (única fuente de fallback)
-    const result = await speakWithBrowser(WELCOME_MESSAGE);
+    const result = await speakResponse(WELCOME_MESSAGE);
 
     if (result.success) {
       this.setState("played");
