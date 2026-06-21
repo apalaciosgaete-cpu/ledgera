@@ -6,13 +6,7 @@ import { useState } from "react";
 import { fonts } from "@/styles/tokens";
 
 type WealthStepKey = "origen-fondos" | "activos";
-
-type FlowCard = {
-  title: string;
-  description: string;
-  items: string[];
-};
-
+type FlowCard = { title: string; description: string; items: string[] };
 type WealthStep = {
   key: WealthStepKey;
   number: string;
@@ -32,30 +26,14 @@ const WEALTH_STEPS: WealthStep[] = [
     label: "Origen de Fondos",
     href: "/origen-fondos",
     title: "Origen de Fondos",
-    description: "Primero se ordena de dónde vienen los fondos, por dónde circularon y qué archivos respaldan ese recorrido.",
-    question: "¿De dónde vienen los fondos y qué archivo tienes para respaldarlo?",
-    examples: ["Fondos desde banco", "Movimientos desde exchange", "Fondos enviados a wallet", "Tengo PDF o Excel de respaldo"],
+    description: "Registra las conexiones que explican de dónde vienen los fondos y qué archivos respaldan ese recorrido.",
+    question: "¿Qué conexión quieres registrar o revisar?",
+    examples: ["Banco a exchange", "Exchange a wallet", "Wallet a exchange", "Subir PDF o Excel"],
     cards: [
-      {
-        title: "Bancos",
-        description: "Cuentas y movimientos bancarios asociados al origen del dinero.",
-        items: ["Banco", "Cuenta", "Transferencias", "Movimientos"],
-      },
-      {
-        title: "Exchanges",
-        description: "Plataformas donde los fondos entraron, salieron o se convirtieron en activos digitales.",
-        items: ["Binance", "Coinbase", "Buda", "Reportes"],
-      },
-      {
-        title: "Wallets",
-        description: "Direcciones y movimientos usados para trazar circulación de fondos.",
-        items: ["Direcciones", "Transacciones", "Autocustodia", "Relación con exchanges"],
-      },
-      {
-        title: "Documentación",
-        description: "Carga simple de archivos de respaldo. No se clasifican aquí: solo se reciben documentos base.",
-        items: ["PDF", "Excel"],
-      },
+      { title: "Bancos", description: "Entrada o salida de dinero desde cuentas bancarias.", items: ["Cuenta bancaria", "Transferencias", "Movimientos"] },
+      { title: "Exchanges", description: "Plataformas donde entran, salen o se convierten fondos.", items: ["Binance", "Coinbase", "Buda"] },
+      { title: "Wallets", description: "Direcciones usadas para mover o custodiar fondos.", items: ["Dirección", "Transacción", "Autocustodia"] },
+      { title: "Documentación", description: "Carga simple de respaldo documental.", items: ["PDF", "Excel"] },
     ],
   },
   {
@@ -64,30 +42,14 @@ const WEALTH_STEPS: WealthStep[] = [
     label: "Activos",
     href: "/cryptoactivos",
     title: "Activos",
-    description: "Después del origen se registran los activos y lugares de custodia asociados al patrimonio digital.",
-    question: "¿Qué activos o custodias necesitas ordenar?",
+    description: "Registra los activos y lugares de custodia asociados al patrimonio digital.",
+    question: "¿Qué activo o custodia necesitas ordenar?",
     examples: ["Tengo BTC", "Tengo NFTs", "Uso wallet fría", "Tengo activos en exchange"],
     cards: [
-      {
-        title: "Criptoactivos",
-        description: "Activos digitales principales que forman parte del patrimonio.",
-        items: ["BTC", "ETH", "SOL", "Tokens"],
-      },
-      {
-        title: "NFTs",
-        description: "Activos no fungibles vinculados a una wallet, colección u operación.",
-        items: ["Colección", "Wallet", "Compra", "Venta"],
-      },
-      {
-        title: "Wallets Frías",
-        description: "Dispositivos o medios de autocustodia donde se mantienen activos digitales.",
-        items: ["Ledger", "Trezor", "Coldcard", "Tangem"],
-      },
-      {
-        title: "Exchanges",
-        description: "Plataformas donde se mantienen saldos o posiciones activas.",
-        items: ["Binance", "Coinbase", "Buda", "Saldos"],
-      },
+      { title: "Criptoactivos", description: "Activos digitales principales que forman parte del patrimonio.", items: ["BTC", "ETH", "SOL", "Tokens"] },
+      { title: "NFTs", description: "Activos no fungibles vinculados a una wallet, colección u operación.", items: ["Colección", "Wallet", "Compra", "Venta"] },
+      { title: "Wallets Frías", description: "Dispositivos o medios de autocustodia donde se mantienen activos digitales.", items: ["Ledger", "Trezor", "Coldcard", "Tangem"] },
+      { title: "Exchanges", description: "Plataformas donde se mantienen saldos o posiciones activas.", items: ["Binance", "Coinbase", "Buda", "Saldos"] },
     ],
   },
 ];
@@ -95,6 +57,16 @@ const WEALTH_STEPS: WealthStep[] = [
 function getStep(key: WealthStepKey) {
   return WEALTH_STEPS.find((step) => step.key === key) ?? WEALTH_STEPS[0];
 }
+
+const chipStyle = {
+  border: "1px solid #E2E8F0",
+  borderRadius: 999,
+  color: "#475569",
+  fontSize: 11,
+  fontWeight: 700,
+  padding: "4px 8px",
+  fontFamily: fonts.body,
+};
 
 export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   const router = useRouter();
@@ -109,91 +81,42 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   }
 
   return (
-    <main style={{ display: "grid", gap: 20 }}>
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 22, padding: "28px 30px" }}>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 10px", textTransform: "uppercase", fontFamily: fonts.body }}>
-          Mi Patrimonio
-        </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, margin: "0 0 12px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>
-          {step.title}
-        </h1>
-        <p style={{ color: "#64748B", fontSize: 16, lineHeight: 1.7, maxWidth: 820, margin: 0, fontFamily: fonts.body }}>
-          {step.description}
-        </p>
+    <main style={{ display: "grid", gap: 18 }}>
+      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: "22px 24px" }}>
+        <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 8px", textTransform: "uppercase", fontFamily: fonts.body }}>Mi Patrimonio</p>
+        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.45rem, 3vw, 2rem)", fontWeight: 850, margin: "0 0 8px", letterSpacing: "-0.025em", fontFamily: fonts.display }}>{step.title}</h1>
+        <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.55, maxWidth: 760, margin: 0, fontFamily: fonts.body }}>{step.description}</p>
       </section>
 
-      <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+      <section style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         {WEALTH_STEPS.map((item) => {
           const active = item.key === activeStep;
           return (
-            <Link
-              key={item.key}
-              href={item.href}
-              style={{
-                textDecoration: "none",
-                background: active ? "#071B28" : "#FFFFFF",
-                border: active ? "1px solid rgba(74,222,128,0.35)" : "1px solid #E2E8F0",
-                borderRadius: 18,
-                padding: 18,
-                display: "grid",
-                gap: 8,
-              }}
-            >
-              <span style={{ color: active ? "#4ADE80" : "#0F766E", fontSize: 12, fontWeight: 900, fontFamily: fonts.body }}>{item.number}</span>
-              <strong style={{ color: active ? "#F8FAFC" : "#0F2A3D", fontSize: 16, fontFamily: fonts.body }}>{item.label}</strong>
-              <span style={{ color: active ? "#94A3B8" : "#64748B", fontSize: 13, lineHeight: 1.45, fontFamily: fonts.body }}>
-                {item.key === "origen-fondos" && "Bancos, exchanges, wallets y PDF/Excel."}
-                {item.key === "activos" && "Criptoactivos, NFTs, wallets frías y exchanges."}
-              </span>
+            <Link key={item.key} href={item.href} style={{ textDecoration: "none", background: active ? "#071B28" : "#FFFFFF", border: active ? "1px solid rgba(74,222,128,0.35)" : "1px solid #E2E8F0", borderRadius: 14, padding: "11px 14px", color: active ? "#F8FAFC" : "#0F2A3D", fontSize: 14, fontWeight: 800, fontFamily: fonts.body }}>
+              {item.number}. {item.label}
             </Link>
           );
         })}
       </section>
 
-      <section style={{ background: "#071B28", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 22, padding: "26px 28px" }}>
-        <p style={{ color: "#4ADE80", fontSize: 12, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 12px", textTransform: "uppercase", fontFamily: fonts.body }}>
-          Consultar a LEDGERA
-        </p>
-        <h2 style={{ color: "#F8FAFC", fontSize: "1.35rem", fontWeight: 850, margin: "0 0 18px", fontFamily: fonts.body }}>
-          {step.question}
-        </h2>
-        <form onSubmit={submit} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={step.examples[0] ?? "Describe tu situación"}
-            style={{ flex: "1 1 320px", minHeight: 48, borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "#F8FAFC", padding: "0 16px", fontSize: 15, outline: "none", fontFamily: fonts.body }}
-          />
-          <button type="submit" style={{ minHeight: 48, borderRadius: 14, border: "none", background: "#16A34A", color: "#FFFFFF", padding: "0 18px", fontWeight: 850, cursor: "pointer", fontFamily: fonts.body }}>
-            Analizar →
-          </button>
-        </form>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
-          {step.examples.map((example) => (
-            <button key={example} type="button" onClick={() => setQuery(example)} style={{ border: "1px solid rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.04)", color: "#CBD5E1", borderRadius: 999, padding: "7px 12px", fontSize: 13, cursor: "pointer", fontFamily: fonts.body }}>
-              {example}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))" }}>
-        {step.cards.map((card, index) => (
-          <article key={card.title} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 22 }}>
-            <span style={{ color: "#0F766E", fontSize: 12, fontWeight: 850 }}>{String(index + 1).padStart(2, "0")}</span>
-            <h3 style={{ color: "#0F2A3D", fontSize: 18, fontWeight: 850, margin: "10px 0 8px", fontFamily: fonts.body }}>{card.title}</h3>
-            <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: "0 0 12px", fontFamily: fonts.body }}>
-              {card.description}
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-              {card.items.map((item) => (
-                <span key={item} style={{ border: "1px solid #E2E8F0", borderRadius: 999, color: "#475569", fontSize: 12, fontWeight: 700, padding: "5px 9px", fontFamily: fonts.body }}>
-                  {item}
-                </span>
-              ))}
+      <section style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+        {step.cards.map((card) => (
+          <article key={card.title} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 18 }}>
+            <h2 style={{ color: "#0F2A3D", fontSize: 17, fontWeight: 850, margin: "0 0 7px", fontFamily: fonts.body }}>{card.title}</h2>
+            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: "0 0 12px", fontFamily: fonts.body }}>{card.description}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {card.items.map((item) => <span key={item} style={chipStyle}>{item}</span>)}
             </div>
           </article>
         ))}
+      </section>
+
+      <section style={{ background: "#071B28", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "20px 22px" }}>
+        <p style={{ color: "#4ADE80", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 10px", textTransform: "uppercase", fontFamily: fonts.body }}>LEDGERA</p>
+        <form onSubmit={submit} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={step.question} style={{ flex: "1 1 320px", minHeight: 44, borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "#F8FAFC", padding: "0 14px", fontSize: 14, outline: "none", fontFamily: fonts.body }} />
+          <button type="submit" style={{ minHeight: 44, borderRadius: 12, border: "none", background: "#16A34A", color: "#FFFFFF", padding: "0 16px", fontWeight: 850, cursor: "pointer", fontFamily: fonts.body }}>Analizar →</button>
+        </form>
       </section>
     </main>
   );
