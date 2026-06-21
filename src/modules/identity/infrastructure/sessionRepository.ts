@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Session } from "@/modules/identity/domain/session";
+import type { User } from "@/modules/identity/domain/user";
 
 interface CreateSessionInput {
   userId: string;
@@ -23,6 +24,83 @@ function mapRowToSession(row: {
   };
 }
 
+const sessionUserSelect = {
+  id:                      true,
+  email:                   true,
+  full_name:               true,
+  password_hash:           true,
+  status:                  true,
+  role:                    true,
+  email_verified_at:       true,
+  created_at:              true,
+  updated_at:              true,
+  subscription_plan:       true,
+  subscription_expires_at: true,
+  twoFactorSecret:         true,
+  twoFactorEnabled:        true,
+  onboardingCompleted:     true,
+  rut:                     true,
+  phone:                   true,
+  address:                 true,
+  commune:                 true,
+  country:                 true,
+} as const;
+
+type SessionUserRow = {
+  id:                      string;
+  email:                   string;
+  full_name:               string;
+  password_hash:           string;
+  status:                  string;
+  role:                    string;
+  email_verified_at:       Date | null;
+  created_at:              Date;
+  updated_at:              Date;
+  subscription_plan:       string;
+  subscription_expires_at: Date | null;
+  twoFactorSecret:         string | null;
+  twoFactorEnabled:        boolean;
+  onboardingCompleted:     boolean;
+  rut:                     string | null;
+  phone:                   string | null;
+  address:                 string | null;
+  commune:                 string | null;
+  country:                 string | null;
+};
+
+export type SessionUser = User & {
+  onboardingCompleted: boolean;
+};
+
+export type SessionWithUser = {
+  session: Session;
+  user: SessionUser;
+};
+
+function mapRowToSessionUser(row: SessionUserRow): SessionUser {
+  return {
+    id:                    row.id,
+    email:                 row.email,
+    fullName:              row.full_name,
+    passwordHash:          row.password_hash,
+    status:                row.status as User["status"],
+    role:                  row.role as User["role"],
+    emailVerifiedAt:       row.email_verified_at,
+    createdAt:             row.created_at,
+    updatedAt:             row.updated_at,
+    subscriptionPlan:      (row.subscription_plan ?? "BASICO") as User["subscriptionPlan"],
+    subscriptionExpiresAt: row.subscription_expires_at,
+    twoFactorSecret:       row.twoFactorSecret,
+    twoFactorEnabled:      row.twoFactorEnabled,
+    rut:                   row.rut ?? null,
+    phone:                 row.phone ?? null,
+    address:               row.address ?? null,
+    commune:               row.commune ?? null,
+    country:               row.country ?? "Chile",
+    onboardingCompleted:   row.onboardingCompleted,
+  };
+}
+
 export async function createSession(input: CreateSessionInput): Promise<Session> {
   const session = await prisma.sessions.create({
     data: {
@@ -38,6 +116,24 @@ export async function getSessionByToken(token: string): Promise<Session | null> 
   const session = await prisma.sessions.findFirst({ where: { token } });
   if (!session) return null;
   return mapRowToSession(session);
+}
+
+export async function getSessionWithUserByToken(token: string): Promise<SessionWithUser | null> {
+  const session = await prisma.sessions.findFirst({
+    where: { token },
+    include: {
+      users: {
+        select: sessionUserSelect,
+      },
+    },
+  });
+
+  if (!session) return null;
+
+  return {
+    session: mapRowToSession(session),
+    user: mapRowToSessionUser(session.users),
+  };
 }
 
 export async function listSessionsByUserId(userId: string): Promise<Session[]> {
