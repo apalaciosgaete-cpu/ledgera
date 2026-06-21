@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fonts } from "@/styles/tokens";
-import { VoiceEngine } from "@/modules/voice/voiceEngine";
+import { VoiceEngine, type VoiceEngineState } from "@/modules/voice/voiceEngine";
 import { startListening } from "@/modules/voice/speechToText";
 import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
+import { VoiceOrb } from "@/components/voice/VoiceOrb";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -37,17 +38,15 @@ export function InvestorDashboard() {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [voiceState, setVoiceState] = useState<VoiceEngineState>("idle");
 
   useEffect(() => {
     const engine = new VoiceEngine();
     voiceEngineRef.current = engine;
 
-    const timeout = window.setTimeout(() => {
-      engine.playWelcome();
-    }, 150);
+    void engine.playWelcome({ onStateChange: setVoiceState });
 
     return () => {
-      window.clearTimeout(timeout);
       engine.stop();
       stopSpeaking();
       stopListeningRef.current?.();
@@ -118,12 +117,20 @@ export function InvestorDashboard() {
       const answer = String(json.data.answer ?? "Necesito un poco más de contexto para ayudarte.");
       setConversationId(json.data.conversationId ?? conversationId);
       setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
-      void speakResponse(answer);
+
+      setVoiceState("playing");
+      const speakResult = await speakResponse(answer);
+      setVoiceState(speakResult.success ? "played" : "unsupported");
+
       scheduleRelisten(answer);
     } catch (error) {
       const fallback = error instanceof Error ? error.message : "No pude responder ahora.";
       setMessages((current) => [...current, { role: "ASSISTANT", content: fallback }]);
-      void speakResponse(fallback);
+
+      setVoiceState("playing");
+      const speakResult = await speakResponse(fallback);
+      setVoiceState(speakResult.success ? "played" : "unsupported");
+
       scheduleRelisten(fallback);
     } finally {
       setLoading(false);
@@ -185,6 +192,7 @@ export function InvestorDashboard() {
   }
 
   const hasMessages = messages.length > 0;
+  const isPlaying = voiceState === "playing";
 
   return (
     <div
@@ -196,12 +204,53 @@ export function InvestorDashboard() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: hasMessages ? "flex-start" : "center",
-        padding: hasMessages ? "28px 24px 32px" : "clamp(24px, 5vh, 44px) 24px",
+        justifyContent: hasMessages ? "flex-start" : "space-between",
+        padding: hasMessages ? "28px 24px 32px" : "clamp(24px, 4vh, 40px) 24px",
       }}
     >
-      <section style={{ width: "100%", maxWidth: 860, textAlign: "center", display: "grid", gap: 14 }}>
-        {hasMessages ? (
+      {/* Orb — visible solo cuando no hay mensajes */}
+      {!hasMessages && (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "clamp(12px, 2vh, 24px)",
+          }}
+        >
+          <VoiceOrb state={voiceState} />
+          <p
+            style={{
+              margin: 0,
+              fontSize: 14,
+              color: isPlaying ? "#86EFAC" : "#475569",
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+              transition: "color 0.5s ease",
+              minHeight: "1.4em",
+            }}
+          >
+            {isPlaying
+              ? "Hablando..."
+              : voiceState === "played"
+              ? "¿En qué te puedo ayudar?"
+              : ""}
+          </p>
+        </div>
+      )}
+
+      <section
+        style={{
+          width: "100%",
+          maxWidth: 860,
+          textAlign: "center",
+          display: "grid",
+          gap: 14,
+        }}
+      >
+        {hasMessages && (
           <div
             style={{
               minHeight: 320,
@@ -223,7 +272,9 @@ export function InvestorDashboard() {
                     maxWidth: "78%",
                     textAlign: "left",
                     background: isUser ? "#16A34A" : "rgba(255,255,255,0.055)",
-                    border: isUser ? "1px solid rgba(74,222,128,0.22)" : "1px solid rgba(255,255,255,0.08)",
+                    border: isUser
+                      ? "1px solid rgba(74,222,128,0.22)"
+                      : "1px solid rgba(255,255,255,0.08)",
                     color: isUser ? "#FFFFFF" : "#E2E8F0",
                     borderRadius: 18,
                     padding: "12px 14px",
@@ -236,16 +287,23 @@ export function InvestorDashboard() {
                 </div>
               );
             })}
-            {loading ? (
-              <p style={{ color: "#64748B", fontSize: 13, margin: "2px 0 0", textAlign: "left" }}>
+            {loading && (
+              <p
+                style={{
+                  color: "#64748B",
+                  fontSize: 13,
+                  margin: "2px 0 0",
+                  textAlign: "left",
+                }}
+              >
                 LEDGERA está analizando tu contexto…
               </p>
-            ) : null}
+            )}
             <div ref={scrollRef} />
           </div>
-        ) : null}
+        )}
 
-        <form onSubmit={handleSubmit} style={{ marginBottom: 0 }}>
+        <form onSubmit={handleSubmit}>
           <div
             style={{
               display: "flex",
@@ -334,8 +392,15 @@ export function InvestorDashboard() {
           </div>
         </form>
 
-        {!hasMessages ? (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 0 }}>
+        {!hasMessages && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              justifyContent: "center",
+            }}
+          >
             {CHIPS.map((chip) => (
               <button
                 key={chip}
@@ -357,7 +422,7 @@ export function InvestorDashboard() {
               </button>
             ))}
           </div>
-        ) : null}
+        )}
       </section>
     </div>
   );

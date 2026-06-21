@@ -6,6 +6,7 @@
 import { VOICE_CONFIG, WELCOME_MESSAGE } from "./voiceConfig";
 import { stopSpeaking } from "./textToSpeech";
 import { speakWelcomeRobust } from "./welcomeSpeech";
+import { unlockAutoplay } from "./audioPlayer";
 import {
   consumePostLoginWelcomePending,
   hasWelcomeBeenPlayed,
@@ -45,6 +46,10 @@ export class VoiceEngine {
       this.setState("played");
       return this.state;
     }
+
+    // Desbloquear autoplay mientras la user activation (del login) aún es válida,
+    // antes de que el fetch a ElevenLabs consuma el tiempo disponible.
+    unlockAutoplay();
 
     this.setState("playing");
     await new Promise((resolve) => setTimeout(resolve, VOICE_CONFIG.startDelay));

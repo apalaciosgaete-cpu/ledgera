@@ -39,7 +39,7 @@ export const WELCOME_MESSAGE = [
 /** Clave de sessionStorage para evitar repetir bienvenida */
 export const SESSION_STORAGE_KEY = "ledgera_voice_welcome_played";
 
-// ─── ElevenLabs Neural TTS — Matilda (voz principal LEDGERA) ──────────────
+// ─── ElevenLabs Neural TTS — Voz Ledgera (clon personalizado) ─────────────
 
 /** Voz Ledgera — voz personalizada clonada para LEDGERA, tono profesional chileno */
 export const ELEVENLABS_VOICE_ID = "9ZVfdvBemUaGEWZgCiv0";
@@ -48,15 +48,16 @@ export const ELEVENLABS_VOICE_ID = "9ZVfdvBemUaGEWZgCiv0";
 export const ELEVENLABS_MODEL = "eleven_multilingual_v2";
 
 /**
- * Configuración base de voz para ElevenLabs (Matilda).
+ * Configuración base de voz para ElevenLabs — única fuente de verdad.
  *
- * Ajustada para español LATAM natural:
- *   stability:    0.40 — más baja = más variación natural, menos robótico
- *   similarity:   0.80 — más alta = mantiene identidad de la voz
- *   styleExagger: 0    — sin exageración para tono serio/profesional
+ *   stability:        0.40 — variación natural, menos robótico
+ *   similarityBoost:  0.80 — mantiene identidad del clon
+ *   styleExaggeration:0.15 — preserva características del acento del clon
+ *   speakerBoost:     true — mejora calidad de voces clonadas
  */
 export const NEURAL_VOICE_SETTINGS = {
   stability: 0.40,
   similarityBoost: 0.80,
-  styleExaggeration: 0,
+  styleExaggeration: 0.15,
+  speakerBoost: true,
 };
