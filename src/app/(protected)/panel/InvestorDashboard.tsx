@@ -197,7 +197,8 @@ export function InvestorDashboard() {
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 96px)",
+        height: "calc(100vh - 96px)",
+        overflow: "hidden",
         background: "#071B28",
         color: "#E2E8F0",
         fontFamily: fonts.body,
@@ -205,7 +206,8 @@ export function InvestorDashboard() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: hasMessages ? "flex-start" : "space-between",
-        padding: hasMessages ? "28px 24px 32px" : "clamp(24px, 4vh, 40px) 24px",
+        padding: hasMessages ? "20px 24px 24px" : "clamp(12px, 2vh, 24px) 24px",
+        boxSizing: "border-box",
       }}
     >
       {/* Orb — visible solo cuando no hay mensajes */}
@@ -213,11 +215,12 @@ export function InvestorDashboard() {
         <div
           style={{
             flex: 1,
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: "clamp(12px, 2vh, 24px)",
+            gap: "clamp(8px, 1.5vh, 16px)",
           }}
         >
           <VoiceOrb state={voiceState} />
@@ -247,14 +250,15 @@ export function InvestorDashboard() {
           maxWidth: 860,
           textAlign: "center",
           display: "grid",
-          gap: 14,
+          gap: 10,
+          flexShrink: 0,
         }}
       >
         {hasMessages && (
           <div
             style={{
-              minHeight: 320,
-              maxHeight: "calc(100vh - 300px)",
+              minHeight: 200,
+              maxHeight: "calc(100vh - 260px)",
               overflowY: "auto",
               display: "grid",
               alignContent: "start",
