@@ -1,5 +1,5 @@
-import { WealthFlowPage } from "@/components/wealth/WealthFlowPage";
+import { redirect } from "next/navigation";
 
 export default function DocumentacionPage() {
-  return <WealthFlowPage activeStep="documentacion" />;
+  redirect("/origen-fondos");
 }
