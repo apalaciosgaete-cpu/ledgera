@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { fonts } from "@/styles/tokens";
 
-type WealthStepKey = "origen-fondos" | "activos" | "documentacion";
+type WealthStepKey = "origen-fondos" | "activos";
 
 type FlowCard = {
   title: string;
@@ -32,29 +32,29 @@ const WEALTH_STEPS: WealthStep[] = [
     label: "Origen de Fondos",
     href: "/origen-fondos",
     title: "Origen de Fondos",
-    description: "Primero se ordena de dónde vienen los fondos y por dónde circularon antes de convertirse en activos.",
-    question: "¿De dónde vienen los fondos y qué respaldo tienes?",
-    examples: ["Fondos desde banco", "Movimientos desde exchange", "Fondos enviados a wallet", "Cartola y comprobante disponibles"],
+    description: "Primero se ordena de dónde vienen los fondos, por dónde circularon y qué archivos respaldan ese recorrido.",
+    question: "¿De dónde vienen los fondos y qué archivo tienes para respaldarlo?",
+    examples: ["Fondos desde banco", "Movimientos desde exchange", "Fondos enviados a wallet", "Tengo PDF o Excel de respaldo"],
     cards: [
       {
         title: "Bancos",
-        description: "Cuentas, cartolas, transferencias y movimientos bancarios asociados al origen del dinero.",
-        items: ["Cartolas bancarias", "Transferencias", "Comprobantes", "Fechas y montos"],
+        description: "Cuentas y movimientos bancarios asociados al origen del dinero.",
+        items: ["Banco", "Cuenta", "Transferencias", "Movimientos"],
       },
       {
         title: "Exchanges",
-        description: "Entradas y salidas desde plataformas donde se compraron, vendieron o movieron cryptoactivos.",
-        items: ["Binance", "Coinbase", "Buda", "CSV / reportes"],
+        description: "Plataformas donde los fondos entraron, salieron o se convirtieron en activos digitales.",
+        items: ["Binance", "Coinbase", "Buda", "Reportes"],
       },
       {
         title: "Wallets",
-        description: "Trazabilidad entre direcciones, autocustodia y movimientos relevantes del usuario.",
-        items: ["Direcciones", "Hash de transacciones", "Wallet proofs", "Relación con exchanges"],
+        description: "Direcciones y movimientos usados para trazar circulación de fondos.",
+        items: ["Direcciones", "Transacciones", "Autocustodia", "Relación con exchanges"],
       },
       {
-        title: "Documentación de respaldo",
-        description: "La evidencia vive aquí porque respalda el origen del dinero y su recorrido patrimonial.",
-        items: ["Cartolas", "Comprobantes", "Contratos", "Declaraciones", "Informes tributarios"],
+        title: "Documentación",
+        description: "Carga simple de archivos de respaldo. No se clasifican aquí: solo se reciben documentos base.",
+        items: ["PDF", "Excel"],
       },
     ],
   },
@@ -64,61 +64,29 @@ const WEALTH_STEPS: WealthStep[] = [
     label: "Activos",
     href: "/cryptoactivos",
     title: "Activos",
-    description: "Después del origen se registran los activos adquiridos o recibidos, sin mezclar categorías que no pertenecen al MVP crypto first.",
-    question: "¿Qué activos digitales necesitas ordenar?",
-    examples: ["Tengo BTC", "Recibí USDT", "Compré ETH", "Tengo NFTs"],
+    description: "Después del origen se registran los activos y lugares de custodia asociados al patrimonio digital.",
+    question: "¿Qué activos o custodias necesitas ordenar?",
+    examples: ["Tengo BTC", "Tengo NFTs", "Uso wallet fría", "Tengo activos en exchange"],
     cards: [
       {
         title: "Criptoactivos",
-        description: "Activos principales que forman parte del patrimonio digital declarado o por ordenar.",
+        description: "Activos digitales principales que forman parte del patrimonio.",
         items: ["BTC", "ETH", "SOL", "Tokens"],
       },
       {
-        title: "Stablecoins",
-        description: "Activos estables usados como puente, ahorro, pago o transferencia entre plataformas.",
-        items: ["USDT", "USDC", "DAI", "Movimientos asociados"],
-      },
-      {
         title: "NFTs",
-        description: "Activos no fungibles que requieren identificación, origen y documentación básica.",
-        items: ["Colección", "Wallet", "Compra / venta", "Evidencia"],
+        description: "Activos no fungibles vinculados a una wallet, colección u operación.",
+        items: ["Colección", "Wallet", "Compra", "Venta"],
       },
       {
-        title: "Estado documental",
-        description: "Cada activo debe quedar vinculado a su origen y a los respaldos disponibles.",
-        items: ["Origen asociado", "Exchange", "Wallet", "Documento vinculado"],
-      },
-    ],
-  },
-  {
-    key: "documentacion",
-    number: "03",
-    label: "Documentación",
-    href: "/documentacion",
-    title: "Documentación",
-    description: "La documentación no es un módulo aislado: es la evidencia que conecta origen de fondos y activos.",
-    question: "¿Qué respaldo necesitas vincular al origen o a un activo?",
-    examples: ["Subir cartola", "Agregar comprobante", "Vincular contrato", "Adjuntar informe tributario"],
-    cards: [
-      {
-        title: "Cartolas",
-        description: "Respaldo bancario para justificar entrada, salida o disponibilidad de fondos.",
-        items: ["Banco", "Periodo", "Monto", "Movimiento relacionado"],
+        title: "Wallets Frías",
+        description: "Dispositivos o medios de autocustodia donde se mantienen activos digitales.",
+        items: ["Ledger", "Trezor", "Coldcard", "Tangem"],
       },
       {
-        title: "Comprobantes",
-        description: "Soporte directo de transferencias, compras, ventas o retiros.",
-        items: ["Transferencia", "Compra", "Venta", "Retiro"],
-      },
-      {
-        title: "Contratos y declaraciones",
-        description: "Documentos formales que respaldan operaciones o posiciones patrimoniales relevantes.",
-        items: ["Contratos", "Declaraciones", "Informes tributarios", "Anexos"],
-      },
-      {
-        title: "Vinculación probatoria",
-        description: "Cada documento debe conectarse con origen de fondos, activo o movimiento específico.",
-        items: ["Origen", "Activo", "Exchange", "Wallet"],
+        title: "Exchanges",
+        description: "Plataformas donde se mantienen saldos o posiciones activas.",
+        items: ["Binance", "Coinbase", "Buda", "Saldos"],
       },
     ],
   },
@@ -174,9 +142,8 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
               <span style={{ color: active ? "#4ADE80" : "#0F766E", fontSize: 12, fontWeight: 900, fontFamily: fonts.body }}>{item.number}</span>
               <strong style={{ color: active ? "#F8FAFC" : "#0F2A3D", fontSize: 16, fontFamily: fonts.body }}>{item.label}</strong>
               <span style={{ color: active ? "#94A3B8" : "#64748B", fontSize: 13, lineHeight: 1.45, fontFamily: fonts.body }}>
-                {item.key === "origen-fondos" && "Bancos, exchanges, wallets y respaldo."}
-                {item.key === "activos" && "Criptoactivos, stablecoins y NFTs."}
-                {item.key === "documentacion" && "Evidencia vinculada al origen."}
+                {item.key === "origen-fondos" && "Bancos, exchanges, wallets y PDF/Excel."}
+                {item.key === "activos" && "Criptoactivos, NFTs, wallets frías y exchanges."}
               </span>
             </Link>
           );
