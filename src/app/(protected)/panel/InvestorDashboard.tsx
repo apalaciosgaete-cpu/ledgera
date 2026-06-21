@@ -29,12 +29,12 @@ export function InvestorDashboard() {
   const voiceEngineRef = useRef<VoiceEngine | null>(null);
   const stopListeningRef = useRef<(() => void) | null>(null);
   const relistenTimerRef = useRef<number | null>(null);
+  const voiceModeRef = useRef(false);
 
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [listening, setListening] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -67,11 +67,16 @@ export function InvestorDashboard() {
     setListening(false);
   }
 
-  function scheduleRelisten(answer: string) {
-    if (!voiceMode) return;
+  function clearRelistenTimer() {
     if (relistenTimerRef.current) {
       window.clearTimeout(relistenTimerRef.current);
+      relistenTimerRef.current = null;
     }
+  }
+
+  function scheduleRelisten(answer: string) {
+    if (!voiceModeRef.current) return;
+    clearRelistenTimer();
     relistenTimerRef.current = window.setTimeout(() => {
       startMic();
     }, estimateReplyPlaybackMs(answer));
@@ -82,15 +87,12 @@ export function InvestorDashboard() {
     if (!trimmed || loading) return;
 
     if (source === "voice") {
-      setVoiceMode(true);
+      voiceModeRef.current = true;
     }
 
     stopSpeaking();
     stopMic();
-    if (relistenTimerRef.current) {
-      window.clearTimeout(relistenTimerRef.current);
-      relistenTimerRef.current = null;
-    }
+    clearRelistenTimer();
 
     setMessages((current) => [...current, { role: "USER", content: trimmed }]);
     setQuery("");
@@ -144,7 +146,8 @@ export function InvestorDashboard() {
     voiceEngineRef.current?.stop();
     stopSpeaking();
     stopMic();
-    setVoiceMode(true);
+    clearRelistenTimer();
+    voiceModeRef.current = true;
     setListening(true);
 
     const stop = startListening({
