@@ -16,7 +16,7 @@ const PUBLIC_ROUTES = [
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
 
@@ -43,7 +43,7 @@ const ONBOARDING_ROUTES = [
 
 function isOnboardingRoute(pathname: string): boolean {
   return ONBOARDING_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
 
@@ -52,13 +52,14 @@ function isConfigurationRoute(pathname: string): boolean {
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const router        = useRouter();
-  const pathname      = usePathname();
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const publicRoute   = isPublicRoute(pathname);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isAuthenticated, isLoading, isHydratedFromCache, user } = useAuth();
+  const publicRoute = isPublicRoute(pathname);
   const wasAuthenticated = useRef(false);
 
   const needsOnboarding = user?.needsOnboarding === true;
+  const canRenderFromCache = isLoading && isAuthenticated && isHydratedFromCache;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -67,7 +68,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && !publicRoute) {
+    if (isLoading) return;
+
+    if (!isAuthenticated && !publicRoute) {
       if (wasAuthenticated.current) {
         return;
       }
@@ -75,20 +78,31 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!isLoading && isAuthenticated && isConfigurationRoute(pathname)) {
+    if (isAuthenticated && isConfigurationRoute(pathname)) {
       router.replace("/panel");
       return;
     }
 
-    if (!isLoading && isAuthenticated && needsOnboarding && !isOnboardingRoute(pathname)) {
+    if (isAuthenticated && needsOnboarding && !isOnboardingRoute(pathname)) {
       router.replace("/panel");
     }
   }, [isAuthenticated, isLoading, needsOnboarding, pathname, publicRoute, router]);
 
-  if (isLoading) {
+  if (isLoading && !canRenderFromCache) {
     return (
-      <main style={{ padding: "2rem" }}>
-        <p>Validando sesión...</p>
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: "#071B28",
+          color: "#94A3B8",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 650 }}>
+          Validando sesión...
+        </p>
       </main>
     );
   }
