@@ -63,7 +63,6 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
     items: [
       { href: "/origen-fondos", label: "1. Origen de Fondos" },
       { href: "/cryptoactivos", label: "2. Activos" },
-      { href: "/documentacion", label: "3. Documentación" },
     ],
   },
   {
