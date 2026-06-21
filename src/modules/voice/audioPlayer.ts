@@ -14,6 +14,19 @@ let activeAudio: HTMLAudioElement | null = null;
 // Audio context compartido — se desbloquea con user activation
 let audioContext: AudioContext | null = null;
 
+// Analyser para sincronizar el VoiceOrb con el audio real
+let analyser: AnalyserNode | null = null;
+let analyserData: Uint8Array | null = null;
+
+/** Retorna el nivel de amplitud promedio del audio en reproducción (0–1). */
+export function getAudioLevel(): number {
+  if (!analyser || !analyserData) return 0;
+  analyser.getByteFrequencyData(analyserData);
+  let sum = 0;
+  for (let i = 0; i < analyserData.length; i++) sum += analyserData[i];
+  return sum / analyserData.length / 255;
+}
+
 /**
  * Desbloquea el autoplay del navegador usando la user activation actual.
  * Debe llamarse dentro de la ventana de activación (< 1s tras el gesto del usuario).
@@ -66,7 +79,23 @@ export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
 
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
+      audio.crossOrigin = "anonymous";
       activeAudio = audio;
+
+      // Conectar al analyser para sincronizar el VoiceOrb con el audio real
+      try {
+        if (!audioContext) audioContext = new AudioContext();
+        if (audioContext.state === "suspended") void audioContext.resume();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyserData = new Uint8Array(analyser.frequencyBinCount);
+        const src = audioContext.createMediaElementSource(audio);
+        src.connect(analyser);
+        analyser.connect(audioContext.destination);
+      } catch {
+        analyser = null;
+        analyserData = null;
+      }
 
       let resolved = false;
 
