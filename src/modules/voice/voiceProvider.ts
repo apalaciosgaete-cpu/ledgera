@@ -1,7 +1,9 @@
 // src/modules/voice/voiceProvider.ts
 // Interfaz unificada para proveedores de TTS neuronal.
 // Implementación principal: ElevenLabs.
-// UX 3.1.3 — Matilda como voz principal, perfiles A/B, styleExaggeration.
+// Los defaults de voz viven en voiceConfig.ts (NEURAL_VOICE_SETTINGS) — única fuente de verdad.
+
+import { NEURAL_VOICE_SETTINGS } from "./voiceConfig";
 
 export type TTSProvider = "elevenlabs" | "browser";
 
@@ -14,6 +16,8 @@ export type TTSOptions = {
   similarityBoost?: number;
   /** Exageración de estilo: 0-100 (ElevenLabs) — mantener bajo para tono serio */
   styleExaggeration?: number;
+  /** Mejora calidad de voces clonadas */
+  speakerBoost?: boolean;
   /** Modelo (ElevenLabs: eleven_multilingual_v2, eleven_flash_v2) */
   model?: string;
 };
@@ -63,20 +67,18 @@ export async function synthesizeWithElevenLabs(
   const voiceId = options.voiceId ?? LEDGERA_ELEVENLABS_VOICE;
   const model = options.model ?? ELEVENLABS_MODEL;
 
+  const styleExaggeration = options.styleExaggeration ?? NEURAL_VOICE_SETTINGS.styleExaggeration;
+
   const body: Record<string, unknown> = {
     text,
     model_id: model,
     voice_settings: {
-      stability: options.stability ?? 0.45,
-      similarity_boost: options.similarityBoost ?? 0.70,
+      stability: options.stability ?? NEURAL_VOICE_SETTINGS.stability,
+      similarity_boost: options.similarityBoost ?? NEURAL_VOICE_SETTINGS.similarityBoost,
+      speaker_boost: NEURAL_VOICE_SETTINGS.speakerBoost,
+      ...(styleExaggeration > 0 && { style_exaggeration: styleExaggeration }),
     },
   };
-
-  // style_exaggeration solo se envía si es > 0 (ElevenLabs lo omite por defecto)
-  if (options.styleExaggeration !== undefined && options.styleExaggeration > 0) {
-    (body.voice_settings as Record<string, unknown>).style_exaggeration =
-      options.styleExaggeration;
-  }
 
   const response = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
