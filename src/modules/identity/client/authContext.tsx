@@ -22,6 +22,12 @@ import {
   type AuthUser,
 } from "./authClient";
 
+import {
+  clearCachedAuthUser,
+  readCachedAuthUser,
+  writeCachedAuthUser,
+} from "./authSessionCache";
+
 import { isHttpClientError } from "@/shared/http/httpClient";
 
 import {
@@ -33,6 +39,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isHydratedFromCache: boolean;
   lastAuthError: string | null;
   subscriptionState: SubscriptionStateResult | null;
   needs2FA: boolean;
@@ -60,7 +67,10 @@ export function AuthProvider({
   children: React.ReactNode;
 }) {
   const [user, setUser] =
-    useState<AuthUser | null>(null);
+    useState<AuthUser | null>(() => readCachedAuthUser());
+
+  const [isHydratedFromCache, setIsHydratedFromCache] =
+    useState(() => Boolean(readCachedAuthUser()));
 
   const [isLoading, setIsLoading] =
     useState(true);
@@ -74,19 +84,11 @@ export function AuthProvider({
 
   const clearLocalSession = useCallback(() => {
     clearSessionToken();
+    clearCachedAuthUser();
     setUser(null);
+    setIsHydratedFromCache(false);
   }, []);
 
-  /**
-   * IMPORTANTE:
-   *
-   * Antes el sistema dependía de localStorage
-   * para decidir si existía sesión.
-   *
-   * Ahora la fuente principal es la cookie HTTPOnly.
-   *
-   * Por eso SIEMPRE consultamos /api/me.
-   */
   const refreshUser = useCallback(async () => {
     const hadLocalToken =
       Boolean(getSessionToken());
@@ -98,7 +100,8 @@ export function AuthProvider({
         await meRequest();
 
       setUser(currentUser);
-
+      setIsHydratedFromCache(false);
+      writeCachedAuthUser(currentUser);
       setLastAuthError(null);
     } catch (error) {
       clearLocalSession();
@@ -151,16 +154,10 @@ export function AuthProvider({
             password,
           );
 
-        /**
-         * Se mantiene temporalmente
-         * por compatibilidad.
-         *
-         * La cookie HTTPOnly ya es
-         * suficiente para auth real.
-         */
         saveSessionToken(result.token);
-
         setUser(result.user);
+        setIsHydratedFromCache(false);
+        writeCachedAuthUser(result.user);
       } catch (error) {
         if (isHttpClientError(error)) {
           setLastAuthError(error.message);
@@ -182,13 +179,9 @@ export function AuthProvider({
     try {
       await logoutRequest();
     } catch {
-      /**
-       * Si el servidor falla,
-       * igualmente limpiamos cliente.
-       */
+      // Si el servidor falla, igualmente limpiamos cliente.
     } finally {
       clearLocalSession();
-
       setLastAuthError(null);
     }
   }, [clearLocalSession]);
@@ -212,30 +205,32 @@ export function AuthProvider({
   }, [user]);
 
   const value = useMemo<AuthContextValue>(
-  () => ({
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    lastAuthError,
-    subscriptionState,
-    needs2FA,
-    login,
-    logout,
-    refreshUser,
-    clearAuthError,
-  }),
-  [
-    user,
-    isLoading,
-    lastAuthError,
-    subscriptionState,
-    needs2FA,
-    login,
-    logout,
-    refreshUser,
-    clearAuthError,
-  ],
-);
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      isHydratedFromCache,
+      lastAuthError,
+      subscriptionState,
+      needs2FA,
+      login,
+      logout,
+      refreshUser,
+      clearAuthError,
+    }),
+    [
+      user,
+      isLoading,
+      isHydratedFromCache,
+      lastAuthError,
+      subscriptionState,
+      needs2FA,
+      login,
+      logout,
+      refreshUser,
+      clearAuthError,
+    ],
+  );
 
   return (
     <AuthContext.Provider value={value}>
