@@ -4,8 +4,12 @@
 "use client";
 
 import { VOICE_CONFIG, WELCOME_MESSAGE } from "./voiceConfig";
-import { speakResponse, stopSpeaking } from "./textToSpeech";
-import { hasWelcomeBeenPlayed, markWelcomeAsPlayed } from "./voiceSession";
+import { speakWelcome, stopSpeaking } from "./textToSpeech";
+import {
+  consumePostLoginWelcomePending,
+  hasWelcomeBeenPlayed,
+  markWelcomeAsPlayed,
+} from "./voiceSession";
 
 export type VoiceEngineState =
   | "idle"
@@ -34,7 +38,9 @@ export class VoiceEngine {
 
     if (callbacks) this.callbacks = callbacks;
 
-    if (hasWelcomeBeenPlayed()) {
+    const forceAfterLogin = consumePostLoginWelcomePending();
+
+    if (!forceAfterLogin && hasWelcomeBeenPlayed()) {
       this.setState("played");
       return this.state;
     }
@@ -42,7 +48,7 @@ export class VoiceEngine {
     this.setState("playing");
     await new Promise((resolve) => setTimeout(resolve, VOICE_CONFIG.startDelay));
 
-    const result = await speakResponse(WELCOME_MESSAGE);
+    const result = await speakWelcome(WELCOME_MESSAGE);
 
     if (result.success) {
       this.setState("played");
