@@ -61,9 +61,9 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     title: "Mi Patrimonio",
     items: [
-      { href: "/cryptoactivos", label: "Activos" },
-      { href: "/origen-fondos", label: "Origen de Fondos" },
-      { href: "/documentacion", label: "Documentación" },
+      { href: "/origen-fondos", label: "1. Origen de Fondos" },
+      { href: "/cryptoactivos", label: "2. Activos" },
+      { href: "/documentacion", label: "3. Documentación" },
     ],
   },
   {
@@ -201,7 +201,7 @@ function Sidebar({
                   </p>
                 ) : null}
 
-                {group.items.map((item, itemIndex) => (
+                {group.items.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
