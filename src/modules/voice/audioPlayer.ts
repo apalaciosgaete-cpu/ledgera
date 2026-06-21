@@ -11,6 +11,33 @@ export type AudioPlayResult = {
 
 let activeAudio: HTMLAudioElement | null = null;
 
+// Audio context compartido — se desbloquea con user activation
+let audioContext: AudioContext | null = null;
+
+/**
+ * Desbloquea el autoplay del navegador usando la user activation actual.
+ * Debe llamarse dentro de la ventana de activación (< 1s tras el gesto del usuario).
+ */
+export function unlockAutoplay(): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (!audioContext) {
+      audioContext = new AudioContext();
+    }
+    if (audioContext.state === "suspended") {
+      void audioContext.resume();
+    }
+    // Reproducir un buffer silencioso para registrar interacción con audio
+    const buffer = audioContext.createBuffer(1, 1, 22050);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start(0);
+  } catch {
+    // Si falla, el navegador no soporta Web Audio API — no es crítico
+  }
+}
+
 /**
  * Detiene cualquier audio en reproducción y libera recursos.
  */
@@ -90,14 +117,14 @@ export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
         });
       }
 
-      // Timeout de seguridad: 5s
+      // Timeout de seguridad: 15s (suficiente para textos largos)
       setTimeout(() => {
         cleanup();
         if (!resolved) {
           resolved = true;
           resolve({ success: false, blocked: true });
         }
-      }, 5000);
+      }, 15000);
     } catch {
       resolve({ success: false, blocked: false });
     }

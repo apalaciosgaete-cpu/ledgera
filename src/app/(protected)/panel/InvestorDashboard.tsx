@@ -42,12 +42,11 @@ export function InvestorDashboard() {
     const engine = new VoiceEngine();
     voiceEngineRef.current = engine;
 
-    const timeout = window.setTimeout(() => {
-      engine.playWelcome();
-    }, 150);
+    // Llamar inmediatamente para que unlockAutoplay() actúe mientras la
+    // user activation del login aún es válida (expira en ~1s tras navegación).
+    void engine.playWelcome();
 
     return () => {
-      window.clearTimeout(timeout);
       engine.stop();
       stopSpeaking();
       stopListeningRef.current?.();
