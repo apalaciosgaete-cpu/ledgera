@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
 import { VoiceEngine } from "@/modules/voice/voiceEngine";
 import { startListening } from "@/modules/voice/speechToText";
+import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 
 const CHIPS = [
   "Vendí Bitcoin",
@@ -13,14 +13,30 @@ const CHIPS = [
   "Preparar declaración crypto",
 ];
 
+type Message = {
+  role: "USER" | "ASSISTANT";
+  content: string;
+};
+
+function estimateReplyPlaybackMs(text: string): number {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(2600, Math.min(words * 340, 12000));
+}
+
 export function InvestorDashboard() {
-  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const voiceEngineRef = useRef<VoiceEngine | null>(null);
   const stopListeningRef = useRef<(() => void) | null>(null);
+  const relistenTimerRef = useRef<number | null>(null);
+
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [listening, setListening] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     const engine = new VoiceEngine();
@@ -33,25 +49,17 @@ export function InvestorDashboard() {
     return () => {
       window.clearTimeout(timeout);
       engine.stop();
+      stopSpeaking();
       stopListeningRef.current?.();
+      if (relistenTimerRef.current) {
+        window.clearTimeout(relistenTimerRef.current);
+      }
     };
   }, []);
 
-  function goToConversation(text: string, source: "text" | "voice") {
-    const q = text.trim();
-    if (!q) return;
-    router.push(`/conversaciones?q=${encodeURIComponent(q)}&scope=crypto-first&source=${source}`);
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    goToConversation(query, "text");
-  }
-
-  function sendChip(chip: string) {
-    setQuery(chip);
-    goToConversation(chip, "text");
-  }
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, loading]);
 
   function stopMic() {
     stopListeningRef.current?.();
@@ -59,9 +67,84 @@ export function InvestorDashboard() {
     setListening(false);
   }
 
-  function startMic() {
-    voiceEngineRef.current?.stop();
+  function scheduleRelisten(answer: string) {
+    if (!voiceMode) return;
+    if (relistenTimerRef.current) {
+      window.clearTimeout(relistenTimerRef.current);
+    }
+    relistenTimerRef.current = window.setTimeout(() => {
+      startMic();
+    }, estimateReplyPlaybackMs(answer));
+  }
+
+  async function submitMessage(text: string, source: "text" | "voice") {
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+
+    if (source === "voice") {
+      setVoiceMode(true);
+    }
+
+    stopSpeaking();
     stopMic();
+    if (relistenTimerRef.current) {
+      window.clearTimeout(relistenTimerRef.current);
+      relistenTimerRef.current = null;
+    }
+
+    setMessages((current) => [...current, { role: "USER", content: trimmed }]);
+    setQuery("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/copilot/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: trimmed,
+          conversationId,
+          source,
+          scope: "crypto-first",
+        }),
+      });
+
+      const json = await response.json();
+      if (!response.ok || !json.ok) {
+        throw new Error(json.message || "No pude responder ahora.");
+      }
+
+      const answer = String(json.data.answer ?? "Necesito un poco más de contexto para ayudarte.");
+      setConversationId(json.data.conversationId ?? conversationId);
+      setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
+      void speakResponse(answer);
+      scheduleRelisten(answer);
+    } catch (error) {
+      const fallback = error instanceof Error ? error.message : "No pude responder ahora.";
+      setMessages((current) => [...current, { role: "ASSISTANT", content: fallback }]);
+      void speakResponse(fallback);
+      scheduleRelisten(fallback);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    void submitMessage(query, "text");
+  }
+
+  function sendChip(chip: string) {
+    setQuery(chip);
+    void submitMessage(chip, "text");
+  }
+
+  function startMic() {
+    if (loading) return;
+
+    voiceEngineRef.current?.stop();
+    stopSpeaking();
+    stopMic();
+    setVoiceMode(true);
     setListening(true);
 
     const stop = startListening({
@@ -69,8 +152,7 @@ export function InvestorDashboard() {
         const next = transcript.trim();
         setQuery(next);
         if (final && next) {
-          stopMic();
-          goToConversation(next, "voice");
+          void submitMessage(next, "voice");
         }
       },
       onStateChange: (state) => {
@@ -99,22 +181,68 @@ export function InvestorDashboard() {
     startMic();
   }
 
+  const hasMessages = messages.length > 0;
+
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 74px)",
+        minHeight: "calc(100vh - 96px)",
         background: "#071B28",
         color: "#E2E8F0",
         fontFamily: fonts.body,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        padding: "clamp(24px, 5vh, 44px) 24px",
+        justifyContent: hasMessages ? "flex-start" : "center",
+        padding: hasMessages ? "28px 24px 32px" : "clamp(24px, 5vh, 44px) 24px",
       }}
     >
-      <section style={{ width: "100%", maxWidth: 760, textAlign: "center" }}>
-        <form onSubmit={handleSubmit} style={{ marginBottom: 8 }}>
+      <section style={{ width: "100%", maxWidth: 860, textAlign: "center", display: "grid", gap: 14 }}>
+        {hasMessages ? (
+          <div
+            style={{
+              minHeight: 320,
+              maxHeight: "calc(100vh - 300px)",
+              overflowY: "auto",
+              display: "grid",
+              alignContent: "start",
+              gap: 12,
+              padding: "4px 2px 10px",
+            }}
+          >
+            {messages.map((item, index) => {
+              const isUser = item.role === "USER";
+              return (
+                <div
+                  key={`${item.role}-${index}`}
+                  style={{
+                    justifySelf: isUser ? "end" : "start",
+                    maxWidth: "78%",
+                    textAlign: "left",
+                    background: isUser ? "#16A34A" : "rgba(255,255,255,0.055)",
+                    border: isUser ? "1px solid rgba(74,222,128,0.22)" : "1px solid rgba(255,255,255,0.08)",
+                    color: isUser ? "#FFFFFF" : "#E2E8F0",
+                    borderRadius: 18,
+                    padding: "12px 14px",
+                    fontSize: 15,
+                    lineHeight: 1.55,
+                    boxShadow: isUser ? "0 8px 24px rgba(22,163,74,0.12)" : "none",
+                  }}
+                >
+                  {item.content}
+                </div>
+              );
+            })}
+            {loading ? (
+              <p style={{ color: "#64748B", fontSize: 13, margin: "2px 0 0", textAlign: "left" }}>
+                LEDGERA está analizando tu contexto…
+              </p>
+            ) : null}
+            <div ref={scrollRef} />
+          </div>
+        ) : null}
+
+        <form onSubmit={handleSubmit} style={{ marginBottom: 0 }}>
           <div
             style={{
               display: "flex",
@@ -136,6 +264,7 @@ export function InvestorDashboard() {
               onBlur={() => setFocused(false)}
               placeholder="Cuéntame tu situación o qué quieres evaluar"
               autoComplete="off"
+              disabled={loading}
               style={{
                 flex: 1,
                 background: "transparent",
@@ -147,12 +276,14 @@ export function InvestorDashboard() {
                 fontWeight: 500,
                 padding: "12px 14px",
                 caretColor: "#4ADE80",
+                opacity: loading ? 0.65 : 1,
               }}
             />
 
             <button
               type="button"
               onClick={toggleMic}
+              disabled={loading}
               aria-label={listening ? "Detener micrófono" : "Activar micrófono"}
               style={{
                 width: 46,
@@ -164,7 +295,7 @@ export function InvestorDashboard() {
                 border: `1px solid ${listening ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.08)"}`,
                 background: listening ? "rgba(22,163,74,0.16)" : "rgba(255,255,255,0.04)",
                 color: listening ? "#4ADE80" : "#CBD5E1",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 flexShrink: 0,
                 fontSize: 17,
                 lineHeight: 1,
@@ -175,13 +306,14 @@ export function InvestorDashboard() {
 
             <button
               type="submit"
+              disabled={loading}
               aria-label="Analizar situación"
               style={{
                 background: "#16A34A",
                 border: "none",
                 borderRadius: 12,
                 color: "#FFFFFF",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 width: 58,
                 height: 46,
                 display: "inline-flex",
@@ -191,6 +323,7 @@ export function InvestorDashboard() {
                 fontWeight: 850,
                 flexShrink: 0,
                 lineHeight: 1,
+                opacity: loading ? 0.7 : 1,
               }}
             >
               →
@@ -198,28 +331,30 @@ export function InvestorDashboard() {
           </div>
         </form>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 0 }}>
-          {CHIPS.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => sendChip(chip)}
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 999,
-                color: "#94A3B8",
-                cursor: "pointer",
-                fontSize: 13,
-                fontWeight: 600,
-                padding: "6px 14px",
-                fontFamily: fonts.body,
-              }}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
+        {!hasMessages ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 0 }}>
+            {CHIPS.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => sendChip(chip)}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 999,
+                  color: "#94A3B8",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  padding: "6px 14px",
+                  fontFamily: fonts.body,
+                }}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </section>
     </div>
   );
