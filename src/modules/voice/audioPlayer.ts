@@ -16,7 +16,7 @@ let audioContext: AudioContext | null = null;
 
 // Analyser para sincronizar el VoiceOrb con el audio real
 let analyser: AnalyserNode | null = null;
-let analyserData: Uint8Array | null = null;
+let analyserData: Uint8Array<ArrayBuffer> | null = null;
 
 /** Retorna el nivel de amplitud promedio del audio en reproducción (0–1). */
 export function getAudioLevel(): number {
@@ -88,7 +88,7 @@ export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
         if (audioContext.state === "suspended") void audioContext.resume();
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
-        analyserData = new Uint8Array(analyser.frequencyBinCount);
+        analyserData = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
         const src = audioContext.createMediaElementSource(audio);
         src.connect(analyser);
         analyser.connect(audioContext.destination);
