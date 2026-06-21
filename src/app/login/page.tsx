@@ -174,7 +174,7 @@ function LoginForm() {
 
       saveSessionToken(token);
       resetWelcomeSession();
-      window.location.href = "/panel";
+      router.push("/panel");
     } catch (error) {
       setErrorMessage(
         resolveClientError(
@@ -214,7 +214,7 @@ function LoginForm() {
 
       saveSessionToken(token);
       resetWelcomeSession();
-      window.location.href = "/panel";
+      router.push("/panel");
     } catch (error) {
       setError2FA(
         resolveClientError(
@@ -275,7 +275,7 @@ function LoginForm() {
 
       saveSessionToken(token);
       resetWelcomeSession();
-      window.location.href = "/panel";
+      router.push("/panel");
     } catch (error) {
       setErrorSetup(resolveClientError(error, "Error al verificar el código."));
     } finally {
