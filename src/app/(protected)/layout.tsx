@@ -245,7 +245,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           position: "sticky",
           top: 0,
           zIndex: 50,
-          minHeight: "74px",
+          minHeight: "96px",
         }}
       >
         <div
@@ -253,7 +253,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             display: "grid",
             gridTemplateColumns: "1fr auto 1fr",
             alignItems: "center",
-            minHeight: "74px",
+            minHeight: "96px",
             padding: "0 20px",
           }}
         >
@@ -267,8 +267,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
                 borderRadius: 8,
                 color: "#94A3B8",
                 cursor: "pointer",
-                fontSize: 16,
-                padding: "7px 11px",
+                fontSize: 18,
+                padding: "9px 13px",
                 display: "flex",
                 alignItems: "center",
                 lineHeight: 1,
@@ -290,7 +290,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               textDecoration: "none",
             }}
           >
-            <Logo variant="light" size="sm" showSubtitle />
+            <Logo variant="light" size="md" showSubtitle />
           </Link>
 
           <div style={{ justifySelf: "end" }}>
