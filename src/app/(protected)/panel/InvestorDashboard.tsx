@@ -19,9 +19,22 @@ type Message = {
   content: string;
 };
 
+type AssistantStatus = "idle" | "listening" | "thinking" | "speaking" | "blocked" | "error";
+
 function estimateReplyPlaybackMs(text: string): number {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(2600, Math.min(words * 340, 12000));
+  return Math.max(3200, Math.min(words * 390, 15000));
+}
+
+function statusLabel(status: AssistantStatus, voiceState: VoiceEngineState): string {
+  if (status === "listening") return "Escuchando...";
+  if (status === "thinking") return "Analizando tu contexto...";
+  if (status === "speaking") return "Hablando...";
+  if (status === "blocked") return "Activa audio o micrófono para continuar";
+  if (status === "error") return "No pude usar audio o micrófono";
+  if (voiceState === "playing") return "Dando bienvenida...";
+  if (voiceState === "blocked") return "Activa audio para escuchar la bienvenida";
+  return "¿En qué te puedo ayudar?";
 }
 
 export function InvestorDashboard() {
@@ -39,12 +52,22 @@ export function InvestorDashboard() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [voiceState, setVoiceState] = useState<VoiceEngineState>("idle");
+  const [assistantStatus, setAssistantStatus] = useState<AssistantStatus>("idle");
+  const [voiceNotice, setVoiceNotice] = useState("");
 
   useEffect(() => {
     const engine = new VoiceEngine();
     voiceEngineRef.current = engine;
 
-    void engine.playWelcome({ onStateChange: setVoiceState });
+    void engine.playWelcome({
+      onStateChange: (state) => {
+        setVoiceState(state);
+        if (state === "blocked") {
+          setAssistantStatus("blocked");
+          setVoiceNotice("El navegador bloqueó la bienvenida automática. Usa el micrófono o escribe para continuar.");
+        }
+      },
+    });
 
     return () => {
       engine.stop();
@@ -77,8 +100,28 @@ export function InvestorDashboard() {
     if (!voiceModeRef.current) return;
     clearRelistenTimer();
     relistenTimerRef.current = window.setTimeout(() => {
-      startMic();
-    }, estimateReplyPlaybackMs(answer));
+      if (!loading) startMic();
+    }, estimateReplyPlaybackMs(answer) + 450);
+  }
+
+  async function speakAssistantAnswer(answer: string) {
+    setAssistantStatus("speaking");
+    setVoiceState("playing");
+    const result = await speakResponse(answer);
+
+    if (result.success) {
+      setVoiceState("played");
+      setAssistantStatus("idle");
+      setVoiceNotice("");
+    } else if (result.blocked) {
+      setVoiceState("blocked");
+      setAssistantStatus("blocked");
+      setVoiceNotice("El navegador bloqueó el audio. Puedes continuar escribiendo o tocar el micrófono para reactivar la experiencia de voz.");
+    } else {
+      setVoiceState("unsupported");
+      setAssistantStatus("error");
+      setVoiceNotice("No fue posible reproducir la respuesta por voz. La respuesta escrita sigue disponible.");
+    }
   }
 
   async function submitMessage(text: string, source: "text" | "voice") {
@@ -92,10 +135,12 @@ export function InvestorDashboard() {
     stopSpeaking();
     stopMic();
     clearRelistenTimer();
+    setVoiceNotice("");
 
     setMessages((current) => [...current, { role: "USER", content: trimmed }]);
     setQuery("");
     setLoading(true);
+    setAssistantStatus("thinking");
 
     try {
       const response = await fetch("/api/copilot/chat", {
@@ -118,22 +163,17 @@ export function InvestorDashboard() {
       setConversationId(json.data.conversationId ?? conversationId);
       setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
 
-      setVoiceState("playing");
-      const speakResult = await speakResponse(answer);
-      setVoiceState(speakResult.success ? "played" : "unsupported");
-
+      await speakAssistantAnswer(answer);
       scheduleRelisten(answer);
     } catch (error) {
       const fallback = error instanceof Error ? error.message : "No pude responder ahora.";
       setMessages((current) => [...current, { role: "ASSISTANT", content: fallback }]);
 
-      setVoiceState("playing");
-      const speakResult = await speakResponse(fallback);
-      setVoiceState(speakResult.success ? "played" : "unsupported");
-
+      await speakAssistantAnswer(fallback);
       scheduleRelisten(fallback);
     } finally {
       setLoading(false);
+      setAssistantStatus((current) => (current === "thinking" ? "idle" : current));
     }
   }
 
@@ -156,6 +196,8 @@ export function InvestorDashboard() {
     clearRelistenTimer();
     voiceModeRef.current = true;
     setListening(true);
+    setAssistantStatus("listening");
+    setVoiceNotice("");
 
     const stop = startListening({
       onResult: ({ transcript, final }) => {
@@ -166,17 +208,39 @@ export function InvestorDashboard() {
         }
       },
       onStateChange: (state) => {
-        if (state === "idle" || state === "error" || state === "unsupported") {
+        if (state === "listening") {
+          setAssistantStatus("listening");
+          return;
+        }
+
+        if (state === "processing") {
+          setAssistantStatus("thinking");
+          return;
+        }
+
+        if (state === "idle") {
           setListening(false);
+          if (!loading) setAssistantStatus("idle");
+          return;
+        }
+
+        if (state === "error" || state === "unsupported") {
+          setListening(false);
+          setAssistantStatus("blocked");
+          setVoiceNotice("No pude acceder al micrófono. Revisa permisos del navegador o escribe tu consulta.");
         }
       },
       onError: () => {
         setListening(false);
+        setAssistantStatus("blocked");
+        setVoiceNotice("No pude acceder al micrófono. Revisa permisos del navegador o escribe tu consulta.");
       },
     });
 
     if (!stop) {
       setListening(false);
+      setAssistantStatus("blocked");
+      setVoiceNotice("Este navegador no permite usar reconocimiento de voz. Puedes continuar escribiendo.");
       return;
     }
 
@@ -186,13 +250,14 @@ export function InvestorDashboard() {
   function toggleMic() {
     if (listening) {
       stopMic();
+      setAssistantStatus("idle");
       return;
     }
     startMic();
   }
 
   const hasMessages = messages.length > 0;
-  const isPlaying = voiceState === "playing";
+  const activeLabel = statusLabel(assistantStatus, voiceState);
 
   return (
     <div
@@ -210,7 +275,6 @@ export function InvestorDashboard() {
         boxSizing: "border-box",
       }}
     >
-      {/* Orb — visible solo cuando no hay mensajes */}
       {!hasMessages && (
         <div
           style={{
@@ -228,19 +292,20 @@ export function InvestorDashboard() {
             style={{
               margin: 0,
               fontSize: 14,
-              color: isPlaying ? "#86EFAC" : "#475569",
+              color: assistantStatus === "speaking" || voiceState === "playing" || listening ? "#86EFAC" : "#64748B",
               fontWeight: 500,
               letterSpacing: "0.04em",
               transition: "color 0.5s ease",
               minHeight: "1.4em",
             }}
           >
-            {isPlaying
-              ? "Hablando..."
-              : voiceState === "played"
-              ? "¿En qué te puedo ayudar?"
-              : ""}
+            {activeLabel}
           </p>
+          {voiceNotice ? (
+            <p style={{ color: "#FBBF24", fontSize: 12, lineHeight: 1.45, margin: "0 auto", maxWidth: 460 }}>
+              {voiceNotice}
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -255,10 +320,35 @@ export function InvestorDashboard() {
         }}
       >
         {hasMessages && (
+          <>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 8,
+                minHeight: 24,
+                color: assistantStatus === "speaking" || listening ? "#86EFAC" : "#64748B",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+              }}
+            >
+              <span>{activeLabel}</span>
+            </div>
+            {voiceNotice ? (
+              <p style={{ color: "#FBBF24", fontSize: 12, lineHeight: 1.45, margin: "0 auto", maxWidth: 620 }}>
+                {voiceNotice}
+              </p>
+            ) : null}
+          </>
+        )}
+
+        {hasMessages && (
           <div
             style={{
               minHeight: 200,
-              maxHeight: "calc(100vh - 260px)",
+              maxHeight: "calc(100vh - 300px)",
               overflowY: "auto",
               display: "grid",
               alignContent: "start",
@@ -292,14 +382,7 @@ export function InvestorDashboard() {
               );
             })}
             {loading && (
-              <p
-                style={{
-                  color: "#64748B",
-                  fontSize: 13,
-                  margin: "2px 0 0",
-                  textAlign: "left",
-                }}
-              >
+              <p style={{ color: "#64748B", fontSize: 13, margin: "2px 0 0", textAlign: "left" }}>
                 LEDGERA está analizando tu contexto…
               </p>
             )}
@@ -397,14 +480,7 @@ export function InvestorDashboard() {
         </form>
 
         {!hasMessages && (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 8,
-              justifyContent: "center",
-            }}
-          >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
             {CHIPS.map((chip) => (
               <button
                 key={chip}
