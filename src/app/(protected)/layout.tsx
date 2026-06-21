@@ -42,18 +42,55 @@ const roleTokens: Record<string, {
   },
 };
 
-const SIDEBAR_PRIMARY = [
-  { href: "/patrimonio-digital", label: "Patrimonio Digital" },
-  { href: "/cryptoactivos", label: "Cryptoactivos" },
-  { href: "/origen-fondos", label: "Origen de Fondos" },
-  { href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" },
-  { href: "/documentacion", label: "Documentación" },
+type SidebarLink = {
+  href: string;
+  label: string;
+};
+
+type SidebarGroup = {
+  title?: string;
+  items: SidebarLink[];
+};
+
+const SIDEBAR_GROUPS: SidebarGroup[] = [
+  {
+    items: [
+      { href: "/panel", label: "Inicio" },
+    ],
+  },
+  {
+    title: "Mi Patrimonio",
+    items: [
+      { href: "/cryptoactivos", label: "Activos" },
+      { href: "/origen-fondos", label: "Origen de Fondos" },
+      { href: "/documentacion", label: "Documentación" },
+    ],
+  },
+  {
+    title: "Análisis",
+    items: [
+      { href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" },
+      { href: "/reportes", label: "Reportes" },
+    ],
+  },
+  {
+    items: [
+      { href: "/configuracion", label: "Configuración" },
+      { href: "/ayuda", label: "Ayuda" },
+    ],
+  },
 ];
 
-const SIDEBAR_SECONDARY = [
-  { href: "/configuracion", label: "Configuración" },
-  { href: "/ayuda", label: "Ayuda" },
-];
+const linkStyle = (variant: "primary" | "child" | "secondary") => ({
+  display: "block",
+  padding: variant === "child" ? "10px 24px 10px 34px" : "12px 24px",
+  color: variant === "secondary" ? "#94A3B8" : "#E2E8F0",
+  fontSize: variant === "child" ? 14 : 15,
+  fontWeight: variant === "child" ? 550 : 650,
+  textDecoration: "none",
+  fontFamily: fonts.body,
+  transition: "background 0.1s",
+});
 
 function Sidebar({
   open,
@@ -134,53 +171,49 @@ function Sidebar({
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          {SIDEBAR_PRIMARY.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              style={{
-                display: "block",
-                padding: "12px 24px",
-                color: "#E2E8F0",
-                fontSize: 15,
-                fontWeight: 600,
-                textDecoration: "none",
-                fontFamily: fonts.body,
-                transition: "background 0.1s",
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <div style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
+          {SIDEBAR_GROUPS.map((group, groupIndex) => {
+            const isLastGroup = groupIndex === SIDEBAR_GROUPS.length - 1;
+            return (
+              <div key={group.title ?? `group-${groupIndex}`} style={{ padding: groupIndex === 0 ? "0" : "10px 0 0" }}>
+                {groupIndex > 0 ? (
+                  <div
+                    style={{
+                      margin: "0 24px 10px",
+                      borderTop: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  />
+                ) : null}
 
-          <div
-            style={{
-              margin: "12px 24px",
-              borderTop: "1px solid rgba(255,255,255,0.07)",
-            }}
-          />
+                {group.title ? (
+                  <p
+                    style={{
+                      margin: "0 24px 6px",
+                      color: "#4ADE80",
+                      fontSize: 11,
+                      fontWeight: 850,
+                      letterSpacing: "0.11em",
+                      textTransform: "uppercase",
+                      fontFamily: fonts.body,
+                    }}
+                  >
+                    {group.title}
+                  </p>
+                ) : null}
 
-          {SIDEBAR_SECONDARY.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              style={{
-                display: "block",
-                padding: "12px 24px",
-                color: "#94A3B8",
-                fontSize: 14,
-                fontWeight: 500,
-                textDecoration: "none",
-                fontFamily: fonts.body,
-                transition: "background 0.1s",
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
+                {group.items.map((item, itemIndex) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    style={linkStyle(group.title ? "child" : isLastGroup ? "secondary" : "primary")}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            );
+          })}
 
           <button
             onClick={() => { onClose(); onLogout(); }}
