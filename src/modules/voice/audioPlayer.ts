@@ -1,6 +1,5 @@
 // src/modules/voice/audioPlayer.ts
 // Frontend Audio Player — reproduce audio blob desde el backend TTS neuronal
-// Mantiene referencia global al elemento Audio activo para poder detenerlo.
 
 "use client";
 
@@ -9,10 +8,11 @@ export type AudioPlayResult = {
   blocked: boolean;
 };
 
-let activeAudio: HTMLAudioElement | null = null;
-
 // Audio context compartido — se desbloquea con user activation
 let audioContext: AudioContext | null = null;
+
+// Nodo activo para poder detener la reproducción
+let activeSource: AudioBufferSourceNode | null = null;
 
 // Analyser para sincronizar el VoiceOrb con el audio real
 let analyser: AnalyserNode | null = null;
@@ -34,128 +34,91 @@ export function getAudioLevel(): number {
 export function unlockAutoplay(): void {
   if (typeof window === "undefined") return;
   try {
-    if (!audioContext) {
-      audioContext = new AudioContext();
-    }
-    if (audioContext.state === "suspended") {
-      void audioContext.resume();
-    }
-    // Reproducir un buffer silencioso para registrar interacción con audio
+    if (!audioContext) audioContext = new AudioContext();
+    if (audioContext.state === "suspended") void audioContext.resume();
     const buffer = audioContext.createBuffer(1, 1, 22050);
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContext.destination);
     source.start(0);
   } catch {
-    // Si falla, el navegador no soporta Web Audio API — no es crítico
+    // Web Audio API no disponible — no es crítico
   }
 }
 
 /**
- * Detiene cualquier audio en reproducción y libera recursos.
+ * Detiene cualquier audio en reproducción y limpia el analyser.
  */
 export function stopAudio(): void {
-  if (activeAudio) {
-    try {
-      activeAudio.pause();
-      activeAudio.src = "";
-    } catch {
-      // Ignorar errores al detener
-    }
-    activeAudio = null;
+  try {
+    activeSource?.stop();
+  } catch {
+    // ignore
   }
+  activeSource = null;
+  analyser = null;
+  analyserData = null;
 }
 
 /**
  * Reproduce un blob de audio (mp3) devuelto por el backend TTS.
- * Detiene cualquier reproducción previa antes de empezar.
- * @returns AudioPlayResult — éxito o bloqueado por el navegador.
+ * Usa AudioBufferSourceNode para garantizar sincronización real con el AnalyserNode.
  */
 export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
   return new Promise((resolve) => {
-    try {
-      // Detener reproducción previa
-      stopAudio();
+    stopAudio();
 
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.crossOrigin = "anonymous";
-      activeAudio = audio;
-
-      // Conectar al analyser para sincronizar el VoiceOrb con el audio real
-      try {
-        if (!audioContext) audioContext = new AudioContext();
-        if (audioContext.state === "suspended") void audioContext.resume();
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        analyserData = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
-        const src = audioContext.createMediaElementSource(audio);
-        src.connect(analyser);
-        analyser.connect(audioContext.destination);
-      } catch {
-        analyser = null;
-        analyserData = null;
+    blob.arrayBuffer().then((arrayBuffer) => {
+      if (!audioContext) {
+        try {
+          audioContext = new AudioContext();
+        } catch {
+          resolve({ success: false, blocked: false });
+          return;
+        }
       }
 
-      let resolved = false;
+      const resume = audioContext.state === "suspended"
+        ? audioContext.resume()
+        : Promise.resolve();
 
-      const cleanup = () => {
-        URL.revokeObjectURL(url);
-        if (activeAudio === audio) {
-          activeAudio = null;
-        }
-      };
+      resume.then(() => {
+        audioContext!.decodeAudioData(
+          arrayBuffer,
+          (audioBuffer) => {
+            try {
+              // Analyser conectado entre source y destination
+              analyser = audioContext!.createAnalyser();
+              analyser.fftSize = 256;
+              analyserData = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
+              analyser.connect(audioContext!.destination);
 
-      audio.onplay = () => {
-        if (!resolved) {
-          resolved = true;
-          resolve({ success: true, blocked: false });
-        }
-      };
+              const source = audioContext!.createBufferSource();
+              source.buffer = audioBuffer;
+              source.connect(analyser);
+              activeSource = source;
 
-      audio.onended = () => {
-        cleanup();
-        if (!resolved) {
-          resolved = true;
-          resolve({ success: true, blocked: false });
-        }
-      };
+              source.onended = () => {
+                activeSource = null;
+                analyser = null;
+                analyserData = null;
+              };
 
-      audio.onerror = () => {
-        cleanup();
-        if (!resolved) {
-          resolved = true;
-          resolve({ success: false, blocked: false });
-        }
-      };
-
-      // Intentar reproducir (puede lanzar error si el navegador bloquea autoplay)
-      const playPromise = audio.play();
-
-      if (playPromise !== undefined) {
-        playPromise.catch((err: DOMException) => {
-          cleanup();
-          if (!resolved) {
-            resolved = true;
-            if (err.name === "NotAllowedError") {
-              resolve({ success: false, blocked: true });
-            } else {
+              source.start(0);
+              resolve({ success: true, blocked: false });
+            } catch {
               resolve({ success: false, blocked: false });
             }
-          }
-        });
-      }
-
-      // Timeout de seguridad: 15s (suficiente para textos largos)
-      setTimeout(() => {
-        cleanup();
-        if (!resolved) {
-          resolved = true;
-          resolve({ success: false, blocked: true });
-        }
-      }, 15000);
-    } catch {
+          },
+          () => {
+            resolve({ success: false, blocked: false });
+          },
+        );
+      }).catch(() => {
+        resolve({ success: false, blocked: true });
+      });
+    }).catch(() => {
       resolve({ success: false, blocked: false });
-    }
+    });
   });
 }
