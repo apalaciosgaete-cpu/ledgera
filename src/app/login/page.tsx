@@ -76,7 +76,7 @@ function resolveClientError(error: unknown, fallback: string) {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, refreshUser } = useAuth();
 
   const justRegistered = searchParams.get("registered") === "1";
   const oauth2fa = searchParams.get("oauth2fa") === "1";
@@ -174,6 +174,7 @@ function LoginForm() {
 
       saveSessionToken(token);
       resetWelcomeSession();
+      await refreshUser();
       router.push("/panel");
     } catch (error) {
       setErrorMessage(
@@ -214,6 +215,7 @@ function LoginForm() {
 
       saveSessionToken(token);
       resetWelcomeSession();
+      await refreshUser();
       router.push("/panel");
     } catch (error) {
       setError2FA(
@@ -275,6 +277,7 @@ function LoginForm() {
 
       saveSessionToken(token);
       resetWelcomeSession();
+      await refreshUser();
       router.push("/panel");
     } catch (error) {
       setErrorSetup(resolveClientError(error, "Error al verificar el código."));
