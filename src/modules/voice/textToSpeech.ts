@@ -1,14 +1,13 @@
 // src/modules/voice/textToSpeech.ts
-// Motor de síntesis de voz para respuestas del asistente.
+// Motor de síntesis de voz para LEDGERA.
 //
-// speakResponse() → para respuestas del asistente (/api/voice/speak)
+// speakWelcome()  → bienvenida del panel (/api/voice/welcome)
+// speakResponse() → respuestas del asistente (/api/voice/speak)
 //
 // Flujo:
-//   1. Intenta TTS neuronal (ElevenLabs)
-//   2. Si falla → speechSynthesis del navegador (fallback)
+//   1. Intenta TTS neuronal
+//   2. Si falla → speechSynthesis del navegador
 //   3. Si el navegador bloquea → blocked
-//
-// La bienvenida automática del panel usa VoiceEngine (speechSynthesis directo).
 
 import { VOICE_CONFIG, ELEVENLABS_VOICE_ID } from "./voiceConfig";
 import { normalizePronunciation } from "./voiceDictionary";
@@ -20,38 +19,52 @@ export type SpeakResult = {
   provider: "neural" | "browser" | "none";
 };
 
-// ─── Fallback: Browser SpeechSynthesis ──────────────────────────────────────
-
 function findBestVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null;
 
-  // Priorizar voces naturales/premium por nombre (mucho menos robóticas)
   const naturalKeywords = ["natural", "premium", "neural", "sabina", "helena"];
-
   const preferred = [VOICE_CONFIG.lang, ...VOICE_CONFIG.fallbacks];
 
-  // 1. Buscar voz natural que coincida con idioma preferido
   for (const lang of preferred) {
     const candidates = voices.filter(
       (v) => v.lang === lang || v.lang.startsWith(lang),
     );
-    // Priorizar voces con keywords naturales
     for (const keyword of naturalKeywords) {
       const match = candidates.find((v) =>
         v.name.toLowerCase().includes(keyword),
       );
       if (match) return match;
     }
-    // Si no hay voz natural, usar la primera del idioma
     if (candidates.length > 0) return candidates[0];
   }
 
-  // 2. Fallback: cualquier voz en español
   return voices.find((v) => v.lang.startsWith("es")) ?? null;
 }
 
-export function speakWithBrowser(text: string): Promise<SpeakResult> {
+function waitForBrowserVoices(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      resolve();
+      return;
+    }
+
+    if (window.speechSynthesis.getVoices().length > 0) {
+      resolve();
+      return;
+    }
+
+    const timeout = window.setTimeout(() => resolve(), 600);
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.clearTimeout(timeout);
+      resolve();
+    };
+  });
+}
+
+export async function speakWithBrowser(text: string): Promise<SpeakResult> {
+  await waitForBrowserVoices();
+
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       resolve({ success: false, blocked: false, provider: "none" });
@@ -74,19 +87,25 @@ export function speakWithBrowser(text: string): Promise<SpeakResult> {
     let resolved = false;
 
     utterance.onstart = () => {
-      if (!resolved) { resolved = true; resolve({ success: true, blocked: false, provider: "browser" }); }
+      if (!resolved) {
+        resolved = true;
+        resolve({ success: true, blocked: false, provider: "browser" });
+      }
     };
     utterance.onend = () => {
-      if (!resolved) { resolved = true; resolve({ success: true, blocked: false, provider: "browser" }); }
+      if (!resolved) {
+        resolved = true;
+        resolve({ success: true, blocked: false, provider: "browser" });
+      }
     };
     utterance.onerror = (event) => {
       if (!resolved) {
         resolved = true;
-        if (event.error === "not-allowed") {
-          resolve({ success: false, blocked: true, provider: "browser" });
-        } else {
-          resolve({ success: false, blocked: false, provider: "browser" });
-        }
+        resolve({
+          success: false,
+          blocked: event.error === "not-allowed",
+          provider: "browser",
+        });
       }
     };
 
@@ -97,11 +116,9 @@ export function speakWithBrowser(text: string): Promise<SpeakResult> {
         resolved = true;
         resolve({ success: false, blocked: true, provider: "browser" });
       }
-    }, 3000);
+    }, 3500);
   });
 }
-
-// ─── Neural: ElevenLabs via API ──────────────────────────────────────────────
 
 async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/speak", text: string): Promise<SpeakResult> {
   try {
@@ -141,7 +158,7 @@ async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/spea
     };
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
-      console.error("[voice/neural] Fetch timed out after 4s");
+      console.error("[voice/neural] Fetch timed out");
     } else {
       console.error("[voice/neural] Fetch error:", err);
     }
@@ -149,22 +166,18 @@ async function speakWithNeural(endpoint: "/api/voice/welcome" | "/api/voice/spea
   }
 }
 
-// ─── Public API ──────────────────────────────────────────────────────────────
+export async function speakWelcome(text: string): Promise<SpeakResult> {
+  const neural = await speakWithNeural("/api/voice/welcome", text);
+  if (neural.success || neural.blocked) return neural;
+  return speakWithBrowser(text);
+}
 
-/**
- * Reproduce una respuesta del asistente usando /api/voice/speak.
- * Conecta el chat con voz neuronal ElevenLabs.
- * Fallback a speechSynthesis del navegador si no hay API key.
- */
 export async function speakResponse(text: string): Promise<SpeakResult> {
   const neural = await speakWithNeural("/api/voice/speak", text);
   if (neural.success || neural.blocked) return neural;
   return speakWithBrowser(text);
 }
 
-/**
- * Detiene cualquier reproducción de voz en curso.
- */
 export function stopSpeaking(): void {
   stopAudio();
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
