@@ -6,35 +6,9 @@ import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 import { startListening } from "@/modules/voice/speechToText";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
 import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
+import { CHILE_BANKS, getBankLogoUrl } from "@/modules/banking/catalogs/chileBanks";
 
 type AssistantStatus = "idle" | "listening" | "speaking";
-
-type ChileBank = {
-  id: string;
-  name: string;
-  logoUrl: string;
-  url: string;
-};
-
-const CHILE_BANKS: ChileBank[] = [
-  { id: "banco-chile", name: "Banco de Chile", logoUrl: "https://www.bancochile.cl/favicon.ico", url: "https://www.bancochile.cl" },
-  { id: "bancoestado", name: "BancoEstado", logoUrl: "https://www.bancoestado.cl/favicon.ico", url: "https://www.bancoestado.cl" },
-  { id: "santander", name: "Santander", logoUrl: "https://www.santander.cl/favicon.ico", url: "https://www.santander.cl" },
-  { id: "bci", name: "BCI", logoUrl: "https://www.bci.cl/favicon.ico", url: "https://www.bci.cl" },
-  { id: "itau", name: "Itaú", logoUrl: "https://www.itau.cl/favicon.ico", url: "https://www.itau.cl" },
-  { id: "scotiabank", name: "Scotiabank", logoUrl: "https://www.scotiabankchile.cl/favicon.ico", url: "https://www.scotiabankchile.cl" },
-  { id: "falabella", name: "Banco Falabella", logoUrl: "https://www.bancofalabella.cl/favicon.ico", url: "https://www.bancofalabella.cl" },
-  { id: "security", name: "Banco Security", logoUrl: "https://www.bancosecurity.cl/favicon.ico", url: "https://www.bancosecurity.cl" },
-  { id: "bice", name: "Banco BICE", logoUrl: "https://www.bice.cl/favicon.ico", url: "https://www.bice.cl" },
-  { id: "consorcio", name: "Banco Consorcio", logoUrl: "https://www.bancoconsorcio.cl/favicon.ico", url: "https://www.bancoconsorcio.cl" },
-  { id: "internacional", name: "Banco Internacional", logoUrl: "https://www.bancointernacional.cl/favicon.ico", url: "https://www.bancointernacional.cl" },
-  { id: "ripley", name: "Banco Ripley", logoUrl: "https://www.bancoripley.cl/favicon.ico", url: "https://www.bancoripley.cl" },
-  { id: "hsbc", name: "HSBC Chile", logoUrl: "https://www.hsbc.cl/favicon.ico", url: "https://www.hsbc.cl" },
-  { id: "btg-pactual", name: "Banco BTG Pactual Chile", logoUrl: "https://www.btgpactual.cl/favicon.ico", url: "https://www.btgpactual.cl" },
-  { id: "jp-morgan", name: "JP Morgan", logoUrl: "https://www.jpmorgan.com/favicon.ico", url: "https://www.jpmorgan.com/CL/en/about-us" },
-  { id: "do-brasil", name: "Banco do Brasil", logoUrl: "https://www.bb.com.br/favicon.ico", url: "https://www.bb.com.br" },
-  { id: "nacion-argentina", name: "Banco de la Nación Argentina", logoUrl: "https://www.bna.com.ar/favicon.ico", url: "https://www.bna.com.ar" },
-];
 
 function statusCopy(status: AssistantStatus) {
   if (status === "listening") return "Escuchando...";
@@ -47,7 +21,7 @@ export default function BancosOrigenFondosPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<AssistantStatus>("idle");
 
-  const guide = "Estás en Bancos de Chile. Selecciona el banco que quieres conectar para continuar.";
+  const guide = "Estás en Banco en Chile. Selecciona el banco que quieres conectar para continuar.";
 
   useEffect(() => {
     setStatus("speaking");
@@ -80,16 +54,16 @@ export default function BancosOrigenFondosPage() {
   }
 
   return (
-    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto 1fr auto" }}>
+    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 12, gridTemplateRows: "auto 1fr auto" }}>
       <section>
-        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.65rem,3vw,2.05rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>Bancos de Chile</h1>
+        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: "0 0 2px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>Banco en Chile</h1>
       </section>
 
       <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 12, alignContent: "start" }}>
         {CHILE_BANKS.map((bank) => (
-          <button key={bank.id} type="button" onClick={() => { window.location.href = `/origen-fondos/bancos/${bank.id}`; }} style={{ height: 118, borderRadius: 18, border: "1px solid #E2E8F0", background: "#FFFFFF", color: "#0F2A3D", cursor: "pointer", display: "grid", gap: 10, padding: "14px 12px", justifyItems: "center", alignContent: "center", boxShadow: "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "center" }}>
-            <img src={bank.logoUrl} alt={bank.name} style={{ width: 44, height: 44, objectFit: "contain" }} />
-            <strong style={{ fontSize: 13.5, lineHeight: 1.15, fontWeight: 900 }}>{bank.name}</strong>
+          <button key={bank.id} type="button" onClick={() => { window.location.href = `/origen-fondos/bancos/${bank.id}`; }} style={{ height: 112, borderRadius: 18, border: "1px solid #E2E8F0", background: "#FFFFFF", color: "#0F2A3D", cursor: "pointer", display: "grid", gap: 9, padding: "13px 12px", justifyItems: "center", alignContent: "center", boxShadow: "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "center" }}>
+            <img src={getBankLogoUrl(bank.domain)} alt={bank.name} style={{ width: 54, height: 44, objectFit: "contain", display: "block" }} />
+            <strong style={{ fontSize: 13, lineHeight: 1.1, fontWeight: 900 }}>{bank.name}</strong>
           </button>
         ))}
       </section>
