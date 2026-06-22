@@ -277,7 +277,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           position: "sticky",
           top: 0,
           zIndex: 50,
-          minHeight: "96px",
+          minHeight: "60px",
         }}
       >
         <div
@@ -285,7 +285,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             display: "grid",
             gridTemplateColumns: "1fr auto 1fr",
             alignItems: "center",
-            minHeight: "96px",
+            minHeight: "60px",
             padding: "0 20px",
           }}
         >
@@ -344,9 +344,9 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
         style={{
           maxWidth: isPanel ? "none" : "1400px",
           margin: "0 auto",
-          padding: isPanel ? "0" : "32px 24px",
+          padding: isPanel ? "0" : "20px 16px",
           minWidth: 0,
-          overflowX: "hidden",
+          ...(isPanel ? {} : { height: "calc(100vh - 60px)", overflow: "hidden", boxSizing: "border-box" as const }),
         }}
       >
         {children}
