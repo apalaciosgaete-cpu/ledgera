@@ -86,11 +86,26 @@ export default function BankConnectionPage() {
     const clean = query.trim();
     if (!clean) return;
     setStatus("speaking");
-    void speakResponse(`Continuamos con ${bank.name}.`).finally(() => setStatus("idle"));
+    void speakResponse(`Continuamos con ${bank!.name}.`).finally(() => setStatus("idle"));
   }
 
   return (
     <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto auto 1fr auto" }}>
+      {/* Back */}
+      <section>
+        <button
+          onClick={() => window.location.href = "/origen-fondos/bancos"}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: "transparent", border: "none", cursor: "pointer",
+            color: "#475569", fontSize: 13, fontFamily: fonts.body,
+            padding: 0, marginBottom: 4,
+          }}
+        >
+          ← Volver a Bancos
+        </button>
+      </section>
+
       {/* Header */}
       <section style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <img src={getBankLogoUrl(bank.domain)} alt={bank.name} style={{ width: 58, height: 48, objectFit: "contain", display: "block" }} />
