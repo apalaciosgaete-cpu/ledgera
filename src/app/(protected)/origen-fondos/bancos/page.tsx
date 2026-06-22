@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fonts } from "@/styles/tokens";
-import { colors } from "@/styles/tokens";
+import { fonts, colors } from "@/styles/tokens";
 import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 import { startListening } from "@/modules/voice/speechToText";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
@@ -52,31 +51,26 @@ export default function BancosOrigenFondosPage() {
   function submit(event: React.FormEvent) {
     event.preventDefault();
     const clean = query.trim().toLowerCase();
-    const bank = CHILE_BANKS.find((item) => item.name.toLowerCase().includes(clean));
-    if (bank) window.location.href = `/origen-fondos/bancos/${bank.id}`;
+    const bank = CHILE_BANKS.find((item) => item.name.toLowerCase().includes(clean) || item.shortName.toLowerCase().includes(clean));
+    if (bank) router.push(`/origen-fondos/bancos/${bank.id}`);
   }
 
   return (
-    <main style={{ minHeight: "calc(100vh - 160px)", overflow: "visible", display: "grid", gap: 12, gridTemplateRows: "auto auto auto" }}>
+    <main style={{ height: "calc(100vh - 100px)", overflow: "hidden", display: "grid", gap: 8, gridTemplateRows: "auto 1fr auto" }}>
       <section>
         <button
           onClick={() => router.push("/origen-fondos")}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: "transparent", border: "none", cursor: "pointer",
-            color: colors.textSecondary, fontSize: 13, fontFamily: fonts.body,
-            padding: 0, marginBottom: 6,
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 4 }}
         >
           ← Volver a Origen de Fondos
         </button>
-        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: "0 0 2px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>Banco en Chile</h1>
-        <p style={{ color: "#334155", fontSize: 13, lineHeight: 1.3, margin: 0, fontFamily: fonts.body }}>
+        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.25rem,2.1vw,1.55rem)", fontWeight: 900, margin: "0 0 2px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>Banco en Chile</h1>
+        <p style={{ color: "#334155", fontSize: 12.5, lineHeight: 1.2, margin: 0, fontFamily: fonts.body }}>
           {CHILE_BANKS.length} bancos disponibles. Selecciona para conectar tu cuenta.
         </p>
       </section>
 
-      <section style={{ overflow: "visible", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 12, alignContent: "start" }}>
+      <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(6,minmax(0,1fr))", gap: 8, alignContent: "start" }}>
         {CHILE_BANKS.map((bank) => {
           const isAvailable = bank.status === "available";
           return (
@@ -85,59 +79,33 @@ export default function BancosOrigenFondosPage() {
               type="button"
               disabled={!isAvailable}
               onClick={() => router.push(`/origen-fondos/bancos/${bank.id}`)}
-              style={{
-                height: 112,
-                borderRadius: 18,
-                border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`,
-                background: isAvailable ? "#FFFFFF" : colors.surfaceAlt,
-                color: "#0F2A3D",
-                cursor: isAvailable ? "pointer" : "not-allowed",
-                display: "grid",
-                gap: 9,
-                padding: "13px 12px",
-                justifyItems: "center",
-                alignContent: "center",
-                opacity: isAvailable ? 1 : 0.55,
-                boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none",
-                fontFamily: fonts.body,
-                textAlign: "center",
-                transition: "box-shadow 0.15s, transform 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                if (!isAvailable) return;
-                e.currentTarget.style.boxShadow = "0 8px 18px rgba(109,74,255,0.12)";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(15,42,61,0.04)";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              style={{ height: 86, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "grid", gap: 6, padding: "9px 10px", justifyItems: "center", alignContent: "center", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center", transition: "box-shadow 0.15s, transform 0.15s" }}
+              onMouseEnter={(e) => { if (!isAvailable) return; e.currentTarget.style.boxShadow = "0 8px 18px rgba(109,74,255,0.12)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(15,42,61,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <img src={getBankLogoUrl(bank.domain)} alt={bank.name} style={{ width: 48, height: 36, objectFit: "contain", display: "block" }} />
-              <strong style={{ fontSize: 12, lineHeight: 1.1, fontWeight: 900 }}>{bank.shortName}</strong>
-              {!isAvailable && (
-                <span style={{ fontSize: 9, fontWeight: 700, color: colors.textMuted }}>Próximamente</span>
-              )}
+              <img src={getBankLogoUrl(bank.domain)} alt={bank.name} style={{ width: 38, height: 30, objectFit: "contain", display: "block" }} />
+              <strong style={{ fontSize: 11.5, lineHeight: 1.05, fontWeight: 900 }}>{bank.shortName}</strong>
+              {!isAvailable && <span style={{ fontSize: 8.5, fontWeight: 700, color: colors.textMuted }}>Próximamente</span>}
             </button>
           );
         })}
       </section>
 
-      <section style={{ justifySelf: "center", width: "min(100%, 1180px)", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(250px,.82fr) minmax(280px,1fr)", gap: 12, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
-          <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
+      <section style={{ width: "100%", border: "1px solid #DDD6FE", borderRadius: 18, background: "#FFFFFF", padding: 10, display: "grid", gridTemplateColumns: "minmax(280px,.9fr) minmax(360px,.75fr)", gap: 12, alignItems: "center", boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+          <div style={{ width: 46, height: 46, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
           <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: status === "listening" || status === "speaking" ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-            <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
+            <strong style={{ display: "block", color: status === "listening" || status === "speaking" ? "#5B35F5" : "#475569", fontSize: 14, fontWeight: 900, marginBottom: 3, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
+            <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.22, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
           </div>
         </div>
 
-        <form onSubmit={submit}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
+        <form onSubmit={submit} style={{ width: "100%", justifySelf: "end", maxWidth: 620 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
+            <div style={{ flex: 1, minHeight: 44, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
               <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
-              <button type="button" onClick={toggleMic} style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
-              <button type="submit" style={{ width: 40, height: 40, borderRadius: 10, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 18, fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" }}>→</button>
+              <button type="button" onClick={toggleMic} style={{ width: 34, height: 34, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 18, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
+              <button type="submit" style={{ width: 38, height: 38, borderRadius: 10, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 18, fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" }}>→</button>
             </div>
           </div>
         </form>
