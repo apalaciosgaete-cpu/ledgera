@@ -15,7 +15,7 @@ type FlowOption = { key: OptionKey; icon: string; label: string; hint: string; a
 
 const OPTIONS: Record<WealthStepKey, FlowOption[]> = {
   "origen-fondos": [
-    { key: "bancos", icon: "🏦", label: "Bancos", hint: "Abrí Bancos. Ingresa cuenta, banco o movimiento.", accent: "#6D4AFF", bg: "#FBFAFF", border: "#E6E0FF" },
+    { key: "bancos", icon: "🏦", label: "Bancos", hint: "Abrí Bancos. Selecciona tu banco para continuar.", accent: "#6D4AFF", bg: "#FBFAFF", border: "#E6E0FF" },
     { key: "exchanges", icon: "📊", label: "Exchanges", hint: "Abrí Exchanges. Indica plataforma o movimiento.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
     { key: "wallets", icon: "💳", label: "Wallets", hint: "Abrí Wallets. Indica dirección o movimiento on-chain.", accent: "#2483FF", bg: "#F8FBFF", border: "#DCEBFF" },
     { key: "documentacion", icon: "📄", label: "Documentación", hint: "Abrí Documentación. Puedes cargar PDF o Excel.", accent: "#FF7A1A", bg: "#FFFBF6", border: "#FFE8D6" },
@@ -32,8 +32,8 @@ const STEP_COPY: Record<WealthStepKey, { title: string; subtitle: string; guide:
   "origen-fondos": {
     title: "Origen de Fondos",
     subtitle: "Selecciona o indica cómo ingresaron tus fondos. Puedes hablar o escribir.",
-    guide: "Estás en Origen de Fondos. Puedes decir conectar banco, agregar exchange, mis wallets o subir documentos. LEDGERA abrirá la opción correcta.",
-    examples: ["conectar banco", "agregar exchange Binance", "mis wallets", "subir documentos"],
+    guide: "Estás en Origen de Fondos. Puedes decir Bancos, Exchanges, Wallets o Documentación. LEDGERA abrirá la opción correcta.",
+    examples: ["bancos", "exchanges", "wallets", "documentación"],
   },
   activos: {
     title: "Activos",
@@ -87,6 +87,11 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     stopListeningRef.current?.();
     setSelected(option.key);
     setQuery(option.label);
+    if (option.key === "bancos") {
+      setStatus("idle");
+      router.push("/origen-fondos/bancos");
+      return;
+    }
     setStatus("idle");
     if (mode === "auto") {
       setStatus("speaking");
@@ -120,7 +125,6 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     if (stop) { stopListeningRef.current = stop; setStatus("listening"); }
   }
 
-  // Mapea estado local al compatible con VoiceOrb
   function orbState(): VoiceEngineState | "listening" {
     if (status === "speaking") return "playing";
     if (status === "listening") return "listening";
@@ -134,7 +138,6 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
         <p style={{ color: "#334155", fontSize: 14, lineHeight: 1.35, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
       </section>
 
-      {/* Cards: icono centrado arriba, nombre centrado, sin flecha */}
       <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(4,minmax(0,1fr))" }}>
         {options.map((option) => {
           const active = selected === option.key;
@@ -147,55 +150,21 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
         })}
       </section>
 
-      {/* Panel LEDGERA con VoiceOrb e input integrado */}
       <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
-          <div style={{ flexShrink: 0 }}>
-            <div style={{ width: 56, height: 56, display: "grid", placeItems: "center" }}>
-              <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999 }}>
-                <VoiceOrb state={orbState()} />
-              </div>
-            </div>
-          </div>
+          <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
           <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: activeVoice ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body, transition: "color 0.3s" }}>{statusCopy(status)}</strong>
+            <strong style={{ display: "block", color: activeVoice ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
             <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedOption ? selectedOption.hint : `Puedes decir: ${copy.examples.join(", ")}.`}</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid #E2E8F0", borderRadius: 999, padding: "4px 9px", color: "#0F2A3D", fontSize: 12, background: "#FFFFFF" }}>
-                <span style={{ width: 8, height: 8, borderRadius: 999, background: status === "listening" || status === "speaking" ? "#20C878" : "#94A3B8", transition: "background 0.3s" }} />
-                {status === "listening" ? "Escuchando..." : status === "speaking" ? "Hablando..." : "Listo"}
-              </span>
-              {activeVoice && (
-                <span style={{ color: status === "speaking" ? "#5B35F5" : "#A78BFA", fontWeight: 900, letterSpacing: 1, fontSize: 12, transition: "color 0.3s" }}>
-                  ▁▃▆▃▁▂▅▂▁
-                </span>
-              )}
-            </div>
           </div>
         </div>
 
         <form onSubmit={submit}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Habla o escribe aquí..."
-                style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }}
-              />
-              <button
-                type="button"
-                onClick={toggleMic}
-                style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}
-              >
-                {status === "listening" ? "■" : "🎙"}
-              </button>
-              <button
-                type="submit"
-                style={{ width: 40, height: 40, borderRadius: 10, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 18, fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" }}
-              >
-                →
-              </button>
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
+              <button type="button" onClick={toggleMic} style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
+              <button type="submit" style={{ width: 40, height: 40, borderRadius: 10, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 18, fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" }}>→</button>
             </div>
           </div>
         </form>
