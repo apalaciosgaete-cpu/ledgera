@@ -11,7 +11,7 @@
 
 import { VOICE_CONFIG, ELEVENLABS_VOICE_ID } from "./voiceConfig";
 import { normalizePronunciation } from "./voiceDictionary";
-import { playAudioBlob, stopAudio } from "./audioPlayer";
+import { playAudioBlob, stopAudio, setSimulatedAudioLevel, clearSimulatedAudioLevel } from "./audioPlayer";
 
 export type SpeakResult = {
   success: boolean;
@@ -67,6 +67,7 @@ export async function speakWithBrowser(text: string): Promise<SpeakResult> {
 
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      clearSimulatedAudioLevel();
       resolve({ success: false, blocked: false, provider: "none" });
       return;
     }
@@ -84,23 +85,22 @@ export async function speakWithBrowser(text: string): Promise<SpeakResult> {
     const voice = findBestVoice();
     if (voice) utterance.voice = voice;
 
+    // Activar nivel simulado para que el VoiceOrb muestre actividad
+    setSimulatedAudioLevel();
+
     let resolved = false;
 
-    utterance.onstart = () => {
-      if (!resolved) {
-        resolved = true;
-        resolve({ success: true, blocked: false, provider: "browser" });
-      }
-    };
     utterance.onend = () => {
       if (!resolved) {
         resolved = true;
+        clearSimulatedAudioLevel();
         resolve({ success: true, blocked: false, provider: "browser" });
       }
     };
     utterance.onerror = (event) => {
       if (!resolved) {
         resolved = true;
+        clearSimulatedAudioLevel();
         resolve({
           success: false,
           blocked: event.error === "not-allowed",
@@ -114,6 +114,7 @@ export async function speakWithBrowser(text: string): Promise<SpeakResult> {
     setTimeout(() => {
       if (!resolved) {
         resolved = true;
+        clearSimulatedAudioLevel();
         resolve({ success: false, blocked: true, provider: "browser" });
       }
     }, 3500);
@@ -180,6 +181,7 @@ export async function speakResponse(text: string): Promise<SpeakResult> {
 
 export function stopSpeaking(): void {
   stopAudio();
+  clearSimulatedAudioLevel();
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
