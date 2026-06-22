@@ -4,7 +4,7 @@
 
 import { ELEVENLABS_VOICE_ID, VOICE_CONFIG } from "./voiceConfig";
 import { normalizePronunciation } from "./voiceDictionary";
-import { playAudioBlob } from "./audioPlayer";
+import { playAudioBlob, setSimulatedAudioLevel, clearSimulatedAudioLevel } from "./audioPlayer";
 import type { SpeakResult } from "./textToSpeech";
 
 async function speakWelcomeWithNeural(text: string): Promise<SpeakResult> {
@@ -80,17 +80,22 @@ async function speakWelcomeWithBrowser(text: string): Promise<SpeakResult> {
     utterance.pitch = VOICE_CONFIG.pitch;
     utterance.volume = VOICE_CONFIG.volume;
 
+    // Activar nivel simulado para que el VoiceOrb muestre actividad
+    setSimulatedAudioLevel();
+
     let done = false;
 
-    utterance.onstart = () => {
+    utterance.onend = () => {
       if (done) return;
       done = true;
+      clearSimulatedAudioLevel();
       resolve({ success: true, blocked: false, provider: "browser" });
     };
 
     utterance.onerror = () => {
       if (done) return;
       done = true;
+      clearSimulatedAudioLevel();
       resolve({ success: false, blocked: true, provider: "browser" });
     };
 
@@ -100,6 +105,7 @@ async function speakWelcomeWithBrowser(text: string): Promise<SpeakResult> {
     window.setTimeout(() => {
       if (done) return;
       done = true;
+      clearSimulatedAudioLevel();
       resolve({ success: false, blocked: true, provider: "browser" });
     }, 3500);
   });
