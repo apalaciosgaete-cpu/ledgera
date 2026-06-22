@@ -93,6 +93,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
       return;
     }
     setStatus("idle");
+
     if (mode === "auto") {
       setStatus("speaking");
       void speakResponse(option.hint).finally(() => setStatus("idle"));
