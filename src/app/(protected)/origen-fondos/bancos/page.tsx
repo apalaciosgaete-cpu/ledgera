@@ -57,7 +57,7 @@ export default function BancosOrigenFondosPage() {
   }
 
   return (
-    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 12, gridTemplateRows: "auto 1fr auto" }}>
+    <main style={{ minHeight: "calc(100vh - 160px)", overflow: "visible", display: "grid", gap: 12, gridTemplateRows: "auto auto auto" }}>
       <section>
         <button
           onClick={() => router.push("/origen-fondos")}
@@ -76,7 +76,7 @@ export default function BancosOrigenFondosPage() {
         </p>
       </section>
 
-      <section style={{ minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 12, alignContent: "start", paddingRight: 4 }}>
+      <section style={{ overflow: "visible", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 12, alignContent: "start" }}>
         {CHILE_BANKS.map((bank) => {
           const isAvailable = bank.status === "available";
           return (
@@ -123,7 +123,7 @@ export default function BancosOrigenFondosPage() {
         })}
       </section>
 
-      <section style={{ border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
+      <section style={{ justifySelf: "center", width: "min(100%, 1180px)", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(250px,.82fr) minmax(280px,1fr)", gap: 12, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
           <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
           <div style={{ minWidth: 0 }}>
