@@ -18,6 +18,10 @@ let activeSource: AudioBufferSourceNode | null = null;
 let analyser: AnalyserNode | null = null;
 let analyserData: Uint8Array<ArrayBuffer> | null = null;
 
+// Flag para detectar cancelación por stopAudio()
+let playbackCancelled = false;
+let resolvePlayback: ((result: AudioPlayResult) => void) | null = null;
+
 /** Retorna el nivel de amplitud promedio del audio en reproducción (0–1). */
 export function getAudioLevel(): number {
   if (!analyser || !analyserData) return 0;
@@ -55,6 +59,11 @@ export function stopAudio(): void {
   } catch {
     // ignore
   }
+  playbackCancelled = true;
+  if (resolvePlayback) {
+    resolvePlayback({ success: false, blocked: false });
+    resolvePlayback = null;
+  }
   activeSource = null;
   analyser = null;
   analyserData = null;
@@ -67,6 +76,8 @@ export function stopAudio(): void {
 export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
   return new Promise((resolve) => {
     stopAudio();
+    playbackCancelled = false;
+    resolvePlayback = resolve;
 
     blob.arrayBuffer().then((arrayBuffer) => {
       if (!audioContext) {
@@ -99,13 +110,16 @@ export function playAudioBlob(blob: Blob): Promise<AudioPlayResult> {
               activeSource = source;
 
               source.onended = () => {
+                if (!playbackCancelled) {
+                  resolve({ success: true, blocked: false });
+                }
                 activeSource = null;
                 analyser = null;
                 analyserData = null;
+                resolvePlayback = null;
               };
 
               source.start(0);
-              resolve({ success: true, blocked: false });
             } catch {
               resolve({ success: false, blocked: false });
             }

@@ -21,12 +21,7 @@ type Message = {
 
 type AssistantStatus = "idle" | "listening" | "thinking" | "speaking" | "blocked" | "error";
 
-function estimateReplyPlaybackMs(text: string): number {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(3200, Math.min(words * 390, 15000));
-}
-
-function statusLabel(status: AssistantStatus, voiceState: VoiceEngineState): string {
+function statusLabel(status: AssistantStatus, voiceState: VoiceEngineState | "listening"): string {
   if (status === "listening") return "Escuchando...";
   if (status === "thinking") return "Analizando tu contexto...";
   if (status === "speaking") return "Hablando...";
@@ -51,7 +46,7 @@ export function InvestorDashboard() {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [voiceState, setVoiceState] = useState<VoiceEngineState>("idle");
+  const [voiceState, setVoiceState] = useState<VoiceEngineState | "listening">("idle");
   const [assistantStatus, setAssistantStatus] = useState<AssistantStatus>("idle");
   const [voiceNotice, setVoiceNotice] = useState("");
 
@@ -87,6 +82,7 @@ export function InvestorDashboard() {
     stopListeningRef.current?.();
     stopListeningRef.current = null;
     setListening(false);
+    setVoiceState("idle");
   }
 
   function clearRelistenTimer() {
@@ -96,12 +92,13 @@ export function InvestorDashboard() {
     }
   }
 
-  function scheduleRelisten(answer: string) {
+  function scheduleRelisten() {
     if (!voiceModeRef.current) return;
     clearRelistenTimer();
+    // El audio ya terminó — solo esperamos un breve gap antes de re-escuchar
     relistenTimerRef.current = window.setTimeout(() => {
       if (!loading) startMic();
-    }, estimateReplyPlaybackMs(answer) + 450);
+    }, 450);
   }
 
   async function speakAssistantAnswer(answer: string) {
@@ -164,13 +161,13 @@ export function InvestorDashboard() {
       setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
 
       await speakAssistantAnswer(answer);
-      scheduleRelisten(answer);
+      scheduleRelisten();
     } catch (error) {
       const fallback = error instanceof Error ? error.message : "No pude responder ahora.";
       setMessages((current) => [...current, { role: "ASSISTANT", content: fallback }]);
 
       await speakAssistantAnswer(fallback);
-      scheduleRelisten(fallback);
+      scheduleRelisten();
     } finally {
       setLoading(false);
       setAssistantStatus((current) => (current === "thinking" ? "idle" : current));
@@ -197,6 +194,7 @@ export function InvestorDashboard() {
     voiceModeRef.current = true;
     setListening(true);
     setAssistantStatus("listening");
+    setVoiceState("listening");
     setVoiceNotice("");
 
     const stop = startListening({
@@ -220,13 +218,17 @@ export function InvestorDashboard() {
 
         if (state === "idle") {
           setListening(false);
-          if (!loading) setAssistantStatus("idle");
+          if (!loading) {
+            setAssistantStatus("idle");
+            setVoiceState("idle");
+          }
           return;
         }
 
         if (state === "error" || state === "unsupported") {
           setListening(false);
           setAssistantStatus("blocked");
+          setVoiceState("idle");
           setVoiceNotice("No pude acceder al micrófono. Revisa permisos del navegador o escribe tu consulta.");
         }
       },
