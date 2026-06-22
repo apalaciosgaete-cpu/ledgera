@@ -11,6 +11,17 @@ import { CHILE_BANKS, getBankLogoUrl } from "@/modules/banking/catalogs/chileBan
 
 type AssistantStatus = "idle" | "listening" | "speaking";
 
+const LOGO_OVERRIDES: Record<string, string> = {
+  santander: "https://upload.wikimedia.org/wikipedia/commons/b/b8/Banco_Santander_Logotipo.svg",
+  bci: "https://upload.wikimedia.org/wikipedia/commons/7/76/Bci_Logotype.svg",
+  estado: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Logo_BancoEstado.svg",
+  chile: "https://upload.wikimedia.org/wikipedia/commons/8/84/Banco_de_Chile_logo.svg",
+};
+
+function logoUrl(bank: (typeof CHILE_BANKS)[number]) {
+  return LOGO_OVERRIDES[bank.id] ?? getBankLogoUrl(bank.domain);
+}
+
 function statusCopy(status: AssistantStatus) {
   if (status === "listening") return "Escuchando...";
   if (status === "speaking") return "Hablando...";
@@ -58,32 +69,17 @@ export default function BancosOrigenFondosPage() {
   return (
     <main style={{ height: "calc(100vh - 100px)", overflow: "hidden", display: "grid", gap: 8, gridTemplateRows: "auto 1fr auto" }}>
       <section>
-        <button
-          onClick={() => router.push("/origen-fondos")}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 4 }}
-        >
-          ← Volver a Origen de Fondos
-        </button>
+        <button onClick={() => router.push("/origen-fondos")} style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 4 }}>← Volver a Origen de Fondos</button>
         <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.25rem,2.1vw,1.55rem)", fontWeight: 900, margin: "0 0 2px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>Banco en Chile</h1>
-        <p style={{ color: "#334155", fontSize: 12.5, lineHeight: 1.2, margin: 0, fontFamily: fonts.body }}>
-          {CHILE_BANKS.length} bancos disponibles. Selecciona para conectar tu cuenta.
-        </p>
+        <p style={{ color: "#334155", fontSize: 12.5, lineHeight: 1.2, margin: 0, fontFamily: fonts.body }}>{CHILE_BANKS.length} bancos disponibles. Selecciona para conectar tu cuenta.</p>
       </section>
 
       <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(6,minmax(0,1fr))", gap: 8, alignContent: "start" }}>
         {CHILE_BANKS.map((bank) => {
           const isAvailable = bank.status === "available";
           return (
-            <button
-              key={bank.id}
-              type="button"
-              disabled={!isAvailable}
-              onClick={() => router.push(`/origen-fondos/bancos/${bank.id}`)}
-              style={{ height: 86, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "grid", gap: 6, padding: "9px 10px", justifyItems: "center", alignContent: "center", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center", transition: "box-shadow 0.15s, transform 0.15s" }}
-              onMouseEnter={(e) => { if (!isAvailable) return; e.currentTarget.style.boxShadow = "0 8px 18px rgba(109,74,255,0.12)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(15,42,61,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              <img src={getBankLogoUrl(bank.domain)} alt={bank.name} style={{ width: 38, height: 30, objectFit: "contain", display: "block" }} />
+            <button key={bank.id} type="button" disabled={!isAvailable} onClick={() => router.push(`/origen-fondos/bancos/${bank.id}`)} style={{ height: 86, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "grid", gap: 6, padding: "9px 10px", justifyItems: "center", alignContent: "center", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center", transition: "box-shadow 0.15s, transform 0.15s" }}>
+              <img src={logoUrl(bank)} alt={bank.name} style={{ width: 70, height: 34, objectFit: "contain", display: "block" }} />
               <strong style={{ fontSize: 11.5, lineHeight: 1.05, fontWeight: 900 }}>{bank.shortName}</strong>
               {!isAvailable && <span style={{ fontSize: 8.5, fontWeight: 700, color: colors.textMuted }}>Próximamente</span>}
             </button>
@@ -99,7 +95,6 @@ export default function BancosOrigenFondosPage() {
             <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.22, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
           </div>
         </div>
-
         <form onSubmit={submit} style={{ width: "100%", justifySelf: "end", maxWidth: 620 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
             <div style={{ flex: 1, minHeight: 44, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
