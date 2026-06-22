@@ -119,53 +119,49 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   }
 
   return (
-    <main style={{ minHeight: "calc(100vh - 160px)", display: "grid", gap: 24 }}>
-      <section style={{ display: "flex", gap: 11, alignItems: "center", color: "#64748B", fontSize: 15, fontWeight: 700, fontFamily: fonts.body }}>
-        <span>⌂</span><span>›</span><span>Mi Patrimonio</span><span>›</span><span style={{ color: "#5B35F5" }}>{copy.title}</span>
-      </section>
-
+    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto 110px 1fr" }}>
       <section>
-        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(2rem,3.5vw,2.45rem)", fontWeight: 900, margin: "0 0 8px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
-        <p style={{ color: "#334155", fontSize: 16, lineHeight: 1.5, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
+        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.65rem,3vw,2.05rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
+        <p style={{ color: "#334155", fontSize: 14, lineHeight: 1.35, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
       </section>
 
-      <section style={{ display: "grid", gap: 18, gridTemplateColumns: "repeat(4,minmax(0,1fr))" }}>
+      <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(4,minmax(0,1fr))" }}>
         {options.map((option) => {
           const active = selected === option.key;
           return (
-            <button key={option.key} type="button" onClick={() => openOption(option, "manual")} style={{ minHeight: 150, borderRadius: 20, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gridTemplateColumns: "74px 1fr 44px", alignItems: "center", gap: 14, padding: "18px 22px", boxShadow: active ? `0 12px 24px ${option.accent}22` : "0 12px 26px rgba(15,42,61,0.045)", fontFamily: fonts.body, textAlign: "left" }}>
-              <span style={{ fontSize: 54, lineHeight: 1 }}>{option.icon}</span>
-              <strong style={{ fontSize: 17, fontWeight: 900 }}>{option.label}</strong>
-              <span style={{ width: 42, height: 42, borderRadius: 999, background: "#FFFFFF", color: option.accent, display: "grid", placeItems: "center", fontSize: 24, fontWeight: 900, boxShadow: "0 8px 17px rgba(15,42,61,0.10)" }}>→</span>
+            <button key={option.key} type="button" onClick={() => openOption(option, "manual")} style={{ height: 110, borderRadius: 18, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gridTemplateColumns: "48px 1fr 30px", alignItems: "center", gap: 10, padding: "10px 14px", boxShadow: active ? `0 8px 18px ${option.accent}20` : "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "left" }}>
+              <span style={{ fontSize: 38, lineHeight: 1 }}>{option.icon}</span>
+              <strong style={{ fontSize: 15, fontWeight: 900 }}>{option.label}</strong>
+              <span style={{ width: 30, height: 30, borderRadius: 999, background: "#FFFFFF", color: option.accent, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 900, boxShadow: "0 5px 12px rgba(15,42,61,0.09)" }}>→</span>
             </button>
           );
         })}
       </section>
 
-      <section style={{ border: "1px solid #DDD6FE", borderRadius: 24, background: "#FFFFFF", padding: 22, display: "grid", gridTemplateColumns: "minmax(300px,.9fr) minmax(380px,1.2fr)", gap: 24, alignItems: "center", boxShadow: "0 18px 40px rgba(109,74,255,0.06)" }}>
-        <div style={{ display: "flex", gap: 18, alignItems: "center", minWidth: 0 }}>
-          <div style={{ width: 82, height: 82, borderRadius: 999, padding: 8, border: activeVoice ? "2px solid #A78BFA" : "2px solid #DDD6FE", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: activeVoice ? "0 0 0 8px rgba(124,58,237,0.08)" : "none" }}>
-            <div style={{ width: 58, height: 58, borderRadius: 999, background: "#5B35F5", color: "#FFFFFF", display: "grid", placeItems: "center", fontSize: 25, boxShadow: "0 16px 30px rgba(79,70,229,0.28)" }}>≋</div>
+      <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 999, padding: 6, border: activeVoice ? "2px solid #A78BFA" : "2px solid #DDD6FE", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: activeVoice ? "0 0 0 6px rgba(124,58,237,0.07)" : "none" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 999, background: "#5B35F5", color: "#FFFFFF", display: "grid", placeItems: "center", fontSize: 18, boxShadow: "0 10px 20px rgba(79,70,229,0.24)" }}>≋</div>
           </div>
           <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: "#5B35F5", fontSize: 17, fontWeight: 900, marginBottom: 8, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-            <p style={{ margin: 0, color: "#475569", fontSize: 14, lineHeight: 1.45, fontFamily: fonts.body }}>{selectedOption ? selectedOption.hint : `Puedes decir o escribir algo como: ${copy.examples.join(", ")}.`}</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 14 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 7, border: "1px solid #E2E8F0", borderRadius: 999, padding: "6px 12px", color: "#0F2A3D", fontSize: 13, background: "#FFFFFF" }}><span style={{ width: 9, height: 9, borderRadius: 999, background: "#20C878" }} />{status === "listening" ? "Escuchando..." : status === "speaking" ? "Hablando..." : "Listo"}</span>
-              <span style={{ color: activeVoice ? "#5B35F5" : "#A78BFA", fontWeight: 900, letterSpacing: 2 }}>▁▃▆▃▁▂▅▂▁</span>
+            <strong style={{ display: "block", color: "#5B35F5", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
+            <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedOption ? selectedOption.hint : `Puedes decir: ${copy.examples.join(", ")}.`}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid #E2E8F0", borderRadius: 999, padding: "4px 9px", color: "#0F2A3D", fontSize: 12, background: "#FFFFFF" }}><span style={{ width: 8, height: 8, borderRadius: 999, background: "#20C878" }} />{status === "listening" ? "Escuchando..." : status === "speaking" ? "Hablando..." : "Listo"}</span>
+              <span style={{ color: activeVoice ? "#5B35F5" : "#A78BFA", fontWeight: 900, letterSpacing: 1 }}>▁▃▆▃▁▂▅▂▁</span>
             </div>
           </div>
         </div>
 
-        <form onSubmit={submit} style={{ display: "grid", gap: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ flex: 1, minHeight: 58, borderRadius: 18, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 12px 0 18px", gap: 10, minWidth: 0, boxShadow: "0 8px 18px rgba(15,42,61,0.04)" }}>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 16, fontFamily: fonts.body, minWidth: 0 }} />
-              <button type="button" onClick={toggleMic} style={{ border: "none", background: "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 26 }}>{status === "listening" ? "■" : "🎙"}</button>
+        <form onSubmit={submit} style={{ display: "grid", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 10px 0 14px", gap: 8, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0 }} />
+              <button type="button" onClick={toggleMic} style={{ border: "none", background: "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 22 }}>{status === "listening" ? "■" : "🎙"}</button>
             </div>
-            <button type="submit" style={{ width: 58, height: 58, borderRadius: 999, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 28, fontWeight: 900, cursor: "pointer", flexShrink: 0, boxShadow: "0 12px 24px rgba(124,58,237,0.25)" }}>↑</button>
+            <button type="submit" style={{ width: 46, height: 46, borderRadius: 999, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 23, fontWeight: 900, cursor: "pointer", flexShrink: 0, boxShadow: "0 10px 20px rgba(124,58,237,0.22)" }}>↑</button>
           </div>
-          <p style={{ margin: 0, color: "#64748B", fontSize: 13, fontFamily: fonts.body }}>Al interactuar manualmente, se pausará la escucha por voz.</p>
+          <p style={{ margin: 0, color: "#64748B", fontSize: 12, fontFamily: fonts.body }}>Al interactuar manualmente, se pausará la escucha por voz.</p>
         </form>
       </section>
     </main>
