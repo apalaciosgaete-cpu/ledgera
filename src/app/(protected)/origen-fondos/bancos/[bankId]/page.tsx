@@ -7,9 +7,38 @@ import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 import { startListening } from "@/modules/voice/speechToText";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
 import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
-import { findChileBank, getBankLogoUrl } from "@/modules/banking/catalogs/chileBanks";
+import { findBankById, getBankLogoUrl } from "@/modules/banking/catalogs/chileBanks";
+import type { ConnectionMethod } from "@/modules/banking/catalogs/chileBanks";
+import { colors } from "@/styles/tokens";
 
 type AssistantStatus = "idle" | "listening" | "speaking";
+
+const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; description: string; accent: string; bg: string; border: string }> = {
+  api: {
+    icon: "🔐",
+    label: "Conexión segura por API",
+    description: "Conecta directamente mediante API bancaria. Requiere convenio activo con el banco. La sincronización es automática y en tiempo real.",
+    accent: "#7C3AED",
+    bg: "#FBFAFF",
+    border: "#E6E0FF",
+  },
+  aggregator: {
+    icon: "🔄",
+    label: "Conexión vía agregador",
+    description: "Usa un proveedor de open banking para leer tus movimientos de forma segura. No requiere convenio directo con el banco.",
+    accent: "#2483FF",
+    bg: "#F8FBFF",
+    border: "#DCEBFF",
+  },
+  manual_upload: {
+    icon: "📄",
+    label: "Subir cartola bancaria",
+    description: "Carga un PDF, Excel o CSV con tus movimientos. LEDGERA extrae y normaliza los datos automáticamente.",
+    accent: "#20C878",
+    bg: "#F8FFFB",
+    border: "#D9F5E8",
+  },
+};
 
 function statusCopy(status: AssistantStatus) {
   if (status === "listening") return "Escuchando...";
@@ -19,14 +48,15 @@ function statusCopy(status: AssistantStatus) {
 
 export default function BankConnectionPage() {
   const params = useParams<{ bankId: string }>();
-  const bank = findChileBank(params.bankId);
+  const bank = findBankById(params.bankId);
   const stopListeningRef = useRef<(() => void) | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<AssistantStatus>("idle");
 
   if (!bank) notFound();
 
-  const guide = `Estás en la conexión con ${bank.name}. Selecciona conexión bancaria o carga de cartola para continuar.`;
+  const isAvailable = bank.status === "available";
+  const guide = `Estás en la conexión con ${bank.name}. Selecciona el método de conexión para continuar.`;
 
   useEffect(() => {
     setStatus("speaking");
@@ -60,35 +90,106 @@ export default function BankConnectionPage() {
   }
 
   return (
-    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto 1fr auto" }}>
+    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto auto 1fr auto" }}>
+      {/* Header */}
       <section style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <img src={getBankLogoUrl(bank.domain)} alt={bank.name} style={{ width: 58, height: 48, objectFit: "contain", display: "block" }} />
         <div>
-          <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>Conexión {bank.name}</h1>
-          <p style={{ margin: "4px 0 0", color: "#475569", fontSize: 13.5, fontFamily: fonts.body }}>Banco en Chile</p>
+          <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>
+            Conectar {bank.shortName}
+          </h1>
+          <p style={{ margin: "4px 0 0", color: "#475569", fontSize: 13.5, fontFamily: fonts.body }}>
+            {bank.name} · Código CMF: {bank.cmfCode}
+          </p>
         </div>
       </section>
 
-      <section style={{ minHeight: 0, display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 14, alignContent: "start" }}>
-        <button type="button" style={{ minHeight: 150, borderRadius: 20, border: "1px solid #DDD6FE", background: "#FFFFFF", color: "#0F2A3D", cursor: "pointer", padding: 18, textAlign: "left", boxShadow: "0 10px 22px rgba(15,42,61,0.05)", fontFamily: fonts.body }}>
-          <strong style={{ display: "block", fontSize: 17, fontWeight: 900, marginBottom: 8 }}>Conexión bancaria</strong>
-          <span style={{ display: "block", color: "#475569", fontSize: 13.5, lineHeight: 1.35 }}>Iniciar conexión segura con {bank.name}.</span>
-        </button>
-        <button type="button" onClick={() => window.open(bank.website, "_blank", "noopener,noreferrer")} style={{ minHeight: 150, borderRadius: 20, border: "1px solid #E2E8F0", background: "#FFFFFF", color: "#0F2A3D", cursor: "pointer", padding: 18, textAlign: "left", boxShadow: "0 10px 22px rgba(15,42,61,0.05)", fontFamily: fonts.body }}>
-          <strong style={{ display: "block", fontSize: 17, fontWeight: 900, marginBottom: 8 }}>Web del banco</strong>
-          <span style={{ display: "block", color: "#475569", fontSize: 13.5, lineHeight: 1.35 }}>Abrir sitio oficial de {bank.name}.</span>
-        </button>
-        <button type="button" style={{ minHeight: 150, borderRadius: 20, border: "1px solid #E2E8F0", background: "#FFFFFF", color: "#0F2A3D", cursor: "pointer", padding: 18, textAlign: "left", boxShadow: "0 10px 22px rgba(15,42,61,0.05)", fontFamily: fonts.body }}>
-          <strong style={{ display: "block", fontSize: 17, fontWeight: 900, marginBottom: 8 }}>Cargar cartola</strong>
-          <span style={{ display: "block", color: "#475569", fontSize: 13.5, lineHeight: 1.35 }}>Subir documento bancario de {bank.name}.</span>
-        </button>
+      {/* Badges */}
+      <section style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <span style={{
+          fontSize: 11, fontWeight: 700,
+          color: isAvailable ? "#16A34A" : colors.textMuted,
+          background: isAvailable ? "rgba(22,163,74,0.1)" : colors.surfaceAlt,
+          border: `1px solid ${isAvailable ? "rgba(22,163,74,0.2)" : colors.border}`,
+          borderRadius: 999, padding: "4px 10px", fontFamily: fonts.body,
+        }}>
+          {isAvailable ? "Disponible" : "Próximamente"}
+        </span>
+        {bank.connectionMethods.map((m) => (
+          <span key={m} style={{
+            fontSize: 11, fontWeight: 600, color: colors.textSecondary,
+            background: colors.surfaceAlt,
+            border: `1px solid ${colors.border}`, borderRadius: 999,
+            padding: "4px 10px", fontFamily: fonts.body,
+          }}>
+            {METHOD_META[m].label}
+          </span>
+        ))}
       </section>
 
+      {/* Métodos de conexión */}
+      <section style={{ minHeight: 0, overflowY: "auto", paddingRight: 4 }}>
+        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+          {bank.connectionMethods.map((method) => {
+            const meta = METHOD_META[method];
+            return (
+              <button
+                key={method}
+                type="button"
+                disabled={!isAvailable}
+                style={{
+                  borderRadius: 18,
+                  border: `1px solid ${meta.border}`,
+                  background: meta.bg,
+                  color: "#0F2A3D",
+                  cursor: isAvailable ? "pointer" : "not-allowed",
+                  display: "grid",
+                  gap: 10,
+                  padding: "20px 16px",
+                  textAlign: "left",
+                  fontFamily: fonts.body,
+                  opacity: isAvailable ? 1 : 0.55,
+                  transition: "box-shadow 0.15s, transform 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isAvailable) return;
+                  e.currentTarget.style.boxShadow = `0 8px 20px ${meta.accent}18`;
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 28, lineHeight: 1 }}>{meta.icon}</span>
+                  <strong style={{ fontSize: 15, fontWeight: 900 }}>{meta.label}</strong>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: "#475569", lineHeight: 1.45 }}>
+                  {meta.description}
+                </p>
+                {isAvailable && (
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, color: meta.accent,
+                    display: "flex", alignItems: "center", gap: 4,
+                  }}>
+                    {method === "api" && "Configurar API →"}
+                    {method === "aggregator" && "Conectar agregador →"}
+                    {method === "manual_upload" && "Subir archivo →"}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* VoiceOrb + input */}
       <section style={{ border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
           <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
           <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: "#5B35F5", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
+            <strong style={{ display: "block", color: status === "listening" || status === "speaking" ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
             <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
           </div>
         </div>
