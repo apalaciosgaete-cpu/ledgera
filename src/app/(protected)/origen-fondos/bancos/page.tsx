@@ -11,25 +11,22 @@ import { CHILE_BANKS, getBankLogoUrl } from "@/modules/banking/catalogs/chileBan
 
 type AssistantStatus = "idle" | "listening" | "speaking";
 
-const LOCAL_LOGOS: Record<string, string> = {
-  santander: "/santander-symbol.svg",
-  chile: "/bancochile-symbol.svg",
-  bci: "/bci-symbol.svg",
-  estado: "/bancoestado-symbol.svg",
-  itau: "/itau-symbol.svg",
-  scotiabank: "/scotiabank-symbol.svg",
-  falabella: "/falabella-symbol.svg",
-  security: "/security-symbol.svg",
-  bice: "/bice-symbol.svg",
-  consorcio: "/consorcio-symbol.svg",
-  internacional: "/bancointernacional-symbol.svg",
-  ripley: "/ripley-symbol.svg",
-  hsbc: "/hsbc-symbol.svg",
-  "btg-pactual": "/btgpactual-symbol.svg",
+const LOGO_OVERRIDES: Record<string, string> = {
+  santander: "https://upload.wikimedia.org/wikipedia/commons/b/b8/Banco_Santander_Logotipo.svg",
+  chile: "https://upload.wikimedia.org/wikipedia/commons/8/84/Banco_de_Chile_logo.svg",
+  bci: "https://upload.wikimedia.org/wikipedia/commons/7/76/Bci_Logotype.svg",
+  estado: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Logo_BancoEstado.svg",
+  itau: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Ita%C3%BA_logo.svg",
+  scotiabank: "https://upload.wikimedia.org/wikipedia/commons/6/64/Scotiabank_2019_logo.svg",
+  falabella: "https://upload.wikimedia.org/wikipedia/commons/4/45/Banco_Falabella_logo.svg",
+  hsbc: "https://upload.wikimedia.org/wikipedia/commons/a/aa/HSBC_logo_%282018%29.svg",
+  "jp-morgan": "https://upload.wikimedia.org/wikipedia/commons/a/af/J_P_Morgan_Logo_2008_1.svg",
+  "do-brasil": "https://upload.wikimedia.org/wikipedia/commons/0/08/Banco_do_Brasil_logo.svg",
+  "btg-pactual": "https://upload.wikimedia.org/wikipedia/commons/5/5d/BTG_Pactual_logo.svg",
 };
 
 function logoUrl(bank: (typeof CHILE_BANKS)[number]) {
-  return LOCAL_LOGOS[bank.id] ?? getBankLogoUrl(bank.domain);
+  return LOGO_OVERRIDES[bank.id] ?? getBankLogoUrl(bank.domain);
 }
 
 function statusCopy(status: AssistantStatus) {
@@ -84,7 +81,7 @@ export default function BancosOrigenFondosPage() {
         <p style={{ color: "#334155", fontSize: 12.5, lineHeight: 1.2, margin: 0, fontFamily: fonts.body }}>{CHILE_BANKS.length} bancos disponibles. Selecciona para conectar tu cuenta.</p>
       </section>
 
-      <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 10, alignContent: "start" }}>
+      <section style={{ minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 10, alignContent: "start" }}>
         {CHILE_BANKS.map((bank) => {
           const isAvailable = bank.status === "available";
           return (
