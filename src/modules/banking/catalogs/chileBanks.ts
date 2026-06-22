@@ -208,7 +208,7 @@ export function getComingSoonBanks(): ChileBank[] {
   return CHILE_BANKS.filter((b) => b.status === "coming_soon");
 }
 
-/** Retorna URL del favicon del banco vía Google S2 */
+/** Retorna logo del banco desde servicio de logos por dominio */
 export function getBankLogoUrl(domain: string) {
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  return `https://logo.clearbit.com/${domain}`;
 }
