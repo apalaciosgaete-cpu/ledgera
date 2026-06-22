@@ -7,6 +7,7 @@ type RequestOptions = {
   body?: unknown;
   headers?: HeadersInit;
   auth?: boolean;
+  timeoutMs?: number;
 };
 
 type ErrorPayload = {
@@ -41,6 +42,7 @@ export class HttpClientError extends Error {
 
 const CSRF_COOKIE_NAME = "ledgera_csrf";
 const CSRF_HEADER_NAME = "X-LEDGERA-CSRF";
+const DEFAULT_TIMEOUT_MS = 10000;
 
 function isErrorPayload(value: unknown): value is ErrorPayload {
   return typeof value === "object" && value !== null;
@@ -73,6 +75,8 @@ function resolveErrorMessage(payload: unknown, status: number): string {
   }
 
   switch (status) {
+    case 0:
+      return "La solicitud tardó demasiado. Intenta nuevamente.";
     case 401:
       return "Sesión expirada o no autorizada.";
     case 402:
@@ -149,6 +153,7 @@ export async function httpClient<T = unknown>(
     body,
     headers,
     auth = false,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
   } = options;
 
   const finalHeaders = new Headers(headers ?? {});
@@ -173,13 +178,37 @@ export async function httpClient<T = unknown>(
     }
   }
 
-  const response = await fetch(url, {
-    method,
-    headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    cache: "no-store",
-    credentials: "include",
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      method,
+      headers: finalHeaders,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+      credentials: "include",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new HttpClientError({
+        status: 0,
+        message: resolveErrorMessage(null, 0),
+        code: "REQUEST_TIMEOUT",
+      });
+    }
+
+    throw new HttpClientError({
+      status: 0,
+      message: "No fue posible conectar con el servidor.",
+      code: "NETWORK_ERROR",
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   let payload: unknown = null;
 
