@@ -11,15 +11,25 @@ import { CHILE_BANKS, getBankLogoUrl } from "@/modules/banking/catalogs/chileBan
 
 type AssistantStatus = "idle" | "listening" | "speaking";
 
-const LOGO_OVERRIDES: Record<string, string> = {
-  santander: "https://upload.wikimedia.org/wikipedia/commons/b/b8/Banco_Santander_Logotipo.svg",
-  bci: "https://upload.wikimedia.org/wikipedia/commons/7/76/Bci_Logotype.svg",
-  estado: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Logo_BancoEstado.svg",
-  chile: "https://upload.wikimedia.org/wikipedia/commons/8/84/Banco_de_Chile_logo.svg",
+const LOCAL_LOGOS: Record<string, string> = {
+  santander: "/santander-symbol.svg",
+  chile: "/bancochile-symbol.svg",
+  bci: "/bci-symbol.svg",
+  estado: "/bancoestado-symbol.svg",
+  itau: "/itau-symbol.svg",
+  scotiabank: "/scotiabank-symbol.svg",
+  falabella: "/falabella-symbol.svg",
+  security: "/security-symbol.svg",
+  bice: "/bice-symbol.svg",
+  consorcio: "/consorcio-symbol.svg",
+  internacional: "/bancointernacional-symbol.svg",
+  ripley: "/ripley-symbol.svg",
+  hsbc: "/hsbc-symbol.svg",
+  "btg-pactual": "/btgpactual-symbol.svg",
 };
 
 function logoUrl(bank: (typeof CHILE_BANKS)[number]) {
-  return LOGO_OVERRIDES[bank.id] ?? getBankLogoUrl(bank.domain);
+  return LOCAL_LOGOS[bank.id] ?? getBankLogoUrl(bank.domain);
 }
 
 function statusCopy(status: AssistantStatus) {
@@ -74,14 +84,18 @@ export default function BancosOrigenFondosPage() {
         <p style={{ color: "#334155", fontSize: 12.5, lineHeight: 1.2, margin: 0, fontFamily: fonts.body }}>{CHILE_BANKS.length} bancos disponibles. Selecciona para conectar tu cuenta.</p>
       </section>
 
-      <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(6,minmax(0,1fr))", gap: 8, alignContent: "start" }}>
+      <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 10, alignContent: "start" }}>
         {CHILE_BANKS.map((bank) => {
           const isAvailable = bank.status === "available";
           return (
-            <button key={bank.id} type="button" disabled={!isAvailable} onClick={() => router.push(`/origen-fondos/bancos/${bank.id}`)} style={{ height: 86, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "grid", gap: 6, padding: "9px 10px", justifyItems: "center", alignContent: "center", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center", transition: "box-shadow 0.15s, transform 0.15s" }}>
-              <img src={logoUrl(bank)} alt={bank.name} style={{ width: 70, height: 34, objectFit: "contain", display: "block" }} />
-              <strong style={{ fontSize: 11.5, lineHeight: 1.05, fontWeight: 900 }}>{bank.shortName}</strong>
-              {!isAvailable && <span style={{ fontSize: 8.5, fontWeight: 700, color: colors.textMuted }}>Próximamente</span>}
+            <button key={bank.id} type="button" disabled={!isAvailable} onClick={() => router.push(`/origen-fondos/bancos/${bank.id}`)} style={{ height: 108, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "flex", flexDirection: "column", gap: 0, padding: "14px 12px 12px", alignItems: "center", justifyContent: "space-between", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center", transition: "box-shadow 0.15s, transform 0.15s" }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
+                <img src={logoUrl(bank)} alt={bank.name} style={{ width: 80, height: 40, objectFit: "contain", display: "block" }} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                <strong style={{ fontSize: 11.5, lineHeight: 1.1, fontWeight: 900 }}>{bank.shortName}</strong>
+                {!isAvailable && <span style={{ fontSize: 8.5, fontWeight: 700, color: colors.textMuted }}>Próximamente</span>}
+              </div>
             </button>
           );
         })}
