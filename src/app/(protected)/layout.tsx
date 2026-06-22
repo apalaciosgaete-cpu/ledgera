@@ -53,43 +53,14 @@ type SidebarGroup = {
 };
 
 const SIDEBAR_GROUPS: SidebarGroup[] = [
-  {
-    items: [
-      { href: "/panel", label: "Inicio" },
-    ],
-  },
-  {
-    title: "Mi Patrimonio",
-    items: [
-      { href: "/origen-fondos", label: "1. Origen de Fondos" },
-      { href: "/cryptoactivos", label: "2. Activos" },
-    ],
-  },
-  {
-    title: "Análisis",
-    items: [
-      { href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" },
-      { href: "/reportes", label: "Reportes" },
-    ],
-  },
-  {
-    items: [
-      { href: "/configuracion", label: "Configuración" },
-      { href: "/ayuda", label: "Ayuda" },
-    ],
-  },
+  { items: [{ href: "/panel", label: "Inicio" }] },
+  { items: [{ href: "/origen-fondos", label: "Origen de Fondos" }] },
+  { items: [{ href: "/cryptoactivos", label: "Activos" }] },
+  { items: [{ href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" }] },
+  { items: [{ href: "/reportes", label: "Reportes" }] },
+  { items: [{ href: "/configuracion", label: "Configuración" }] },
+  { items: [{ href: "/ayuda", label: "Ayuda" }] },
 ];
-
-const linkStyle = (variant: "primary" | "child" | "secondary") => ({
-  display: "block",
-  padding: variant === "child" ? "10px 24px 10px 34px" : "12px 24px",
-  color: variant === "secondary" ? "#94A3B8" : "#E2E8F0",
-  fontSize: variant === "child" ? 14 : 15,
-  fontWeight: variant === "child" ? 550 : 650,
-  textDecoration: "none",
-  fontFamily: fonts.body,
-  transition: "background 0.1s",
-});
 
 function Sidebar({
   open,
@@ -143,7 +114,7 @@ function Sidebar({
           <span
             style={{
               color: "#475569",
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: 850,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
@@ -170,49 +141,21 @@ function Sidebar({
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-          {SIDEBAR_GROUPS.map((group, groupIndex) => {
-            const isLastGroup = groupIndex === SIDEBAR_GROUPS.length - 1;
-            return (
-              <div key={group.title ?? `group-${groupIndex}`} style={{ padding: groupIndex === 0 ? "0" : "10px 0 0" }}>
-                {groupIndex > 0 ? (
-                  <div
-                    style={{
-                      margin: "0 24px 10px",
-                      borderTop: "1px solid rgba(255,255,255,0.07)",
-                    }}
-                  />
-                ) : null}
-
-                {group.title ? (
-                  <p
-                    style={{
-                      margin: "0 24px 6px",
-                      color: "#4ADE80",
-                      fontSize: 11,
-                      fontWeight: 850,
-                      letterSpacing: "0.11em",
-                      textTransform: "uppercase",
-                      fontFamily: fonts.body,
-                    }}
-                  >
-                    {group.title}
-                  </p>
-                ) : null}
-
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={onClose}
-                    style={linkStyle(group.title ? "child" : isLastGroup ? "secondary" : "primary")}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            );
-          })}
+        <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
+          {SIDEBAR_GROUPS.map((group) => (
+            <div key={group.items[0]?.href ?? "unknown"}>
+              {group.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  style={{ display: "block", padding: "10px 24px", color: "#E2E8F0", fontSize: 15, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body, transition: "background 0.1s" }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          ))}
 
           <button
             onClick={() => { onClose(); onLogout(); }}

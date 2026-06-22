@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
 import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 import { startListening } from "@/modules/voice/speechToText";
+import { VoiceOrb } from "@/components/voice/VoiceOrb";
+import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
 
 type WealthStepKey = "origen-fondos" | "activos";
 type OptionKey = "bancos" | "exchanges" | "wallets" | "documentacion" | "criptoactivos" | "nfts" | "wallets-frias";
@@ -118,6 +120,13 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     if (stop) { stopListeningRef.current = stop; setStatus("listening"); }
   }
 
+  // Mapea estado local al compatible con VoiceOrb
+  function orbState(): VoiceEngineState | "listening" {
+    if (status === "speaking") return "playing";
+    if (status === "listening") return "listening";
+    return "idle";
+  }
+
   return (
     <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto 110px 1fr" }}>
       <section>
@@ -125,43 +134,70 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
         <p style={{ color: "#334155", fontSize: 14, lineHeight: 1.35, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
       </section>
 
+      {/* Cards: icono centrado arriba, nombre centrado, sin flecha */}
       <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(4,minmax(0,1fr))" }}>
         {options.map((option) => {
           const active = selected === option.key;
           return (
-            <button key={option.key} type="button" onClick={() => openOption(option, "manual")} style={{ height: 110, borderRadius: 18, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gridTemplateColumns: "48px 1fr 30px", alignItems: "center", gap: 10, padding: "10px 14px", boxShadow: active ? `0 8px 18px ${option.accent}20` : "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "left" }}>
-              <span style={{ fontSize: 38, lineHeight: 1 }}>{option.icon}</span>
-              <strong style={{ fontSize: 15, fontWeight: 900 }}>{option.label}</strong>
-              <span style={{ width: 30, height: 30, borderRadius: 999, background: "#FFFFFF", color: option.accent, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 900, boxShadow: "0 5px 12px rgba(15,42,61,0.09)" }}>→</span>
+            <button key={option.key} type="button" onClick={() => openOption(option, "manual")} style={{ height: 110, borderRadius: 18, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gap: 6, padding: "12px 10px", justifyItems: "center", alignItems: "center", alignContent: "center", boxShadow: active ? `0 8px 18px ${option.accent}20` : "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "center" }}>
+              <span style={{ fontSize: 36, lineHeight: 1 }}>{option.icon}</span>
+              <strong style={{ fontSize: 14, fontWeight: 900 }}>{option.label}</strong>
             </button>
           );
         })}
       </section>
 
+      {/* Panel LEDGERA con VoiceOrb e input integrado */}
       <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 999, padding: 6, border: activeVoice ? "2px solid #A78BFA" : "2px solid #DDD6FE", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: activeVoice ? "0 0 0 6px rgba(124,58,237,0.07)" : "none" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 999, background: "#5B35F5", color: "#FFFFFF", display: "grid", placeItems: "center", fontSize: 18, boxShadow: "0 10px 20px rgba(79,70,229,0.24)" }}>≋</div>
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ width: 56, height: 56, display: "grid", placeItems: "center" }}>
+              <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999 }}>
+                <VoiceOrb state={orbState()} />
+              </div>
+            </div>
           </div>
           <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: "#5B35F5", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
+            <strong style={{ display: "block", color: activeVoice ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body, transition: "color 0.3s" }}>{statusCopy(status)}</strong>
             <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedOption ? selectedOption.hint : `Puedes decir: ${copy.examples.join(", ")}.`}</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid #E2E8F0", borderRadius: 999, padding: "4px 9px", color: "#0F2A3D", fontSize: 12, background: "#FFFFFF" }}><span style={{ width: 8, height: 8, borderRadius: 999, background: "#20C878" }} />{status === "listening" ? "Escuchando..." : status === "speaking" ? "Hablando..." : "Listo"}</span>
-              <span style={{ color: activeVoice ? "#5B35F5" : "#A78BFA", fontWeight: 900, letterSpacing: 1 }}>▁▃▆▃▁▂▅▂▁</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid #E2E8F0", borderRadius: 999, padding: "4px 9px", color: "#0F2A3D", fontSize: 12, background: "#FFFFFF" }}>
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: status === "listening" || status === "speaking" ? "#20C878" : "#94A3B8", transition: "background 0.3s" }} />
+                {status === "listening" ? "Escuchando..." : status === "speaking" ? "Hablando..." : "Listo"}
+              </span>
+              {activeVoice && (
+                <span style={{ color: status === "speaking" ? "#5B35F5" : "#A78BFA", fontWeight: 900, letterSpacing: 1, fontSize: 12, transition: "color 0.3s" }}>
+                  ▁▃▆▃▁▂▅▂▁
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        <form onSubmit={submit} style={{ display: "grid", gap: 8 }}>
+        <form onSubmit={submit}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 10px 0 14px", gap: 8, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0 }} />
-              <button type="button" onClick={toggleMic} style={{ border: "none", background: "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 22 }}>{status === "listening" ? "■" : "🎙"}</button>
+            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Habla o escribe aquí..."
+                style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }}
+              />
+              <button
+                type="button"
+                onClick={toggleMic}
+                style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}
+              >
+                {status === "listening" ? "■" : "🎙"}
+              </button>
+              <button
+                type="submit"
+                style={{ width: 40, height: 40, borderRadius: 10, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 18, fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" }}
+              >
+                →
+              </button>
             </div>
-            <button type="submit" style={{ width: 46, height: 46, borderRadius: 999, border: "none", background: "#7C3AED", color: "#FFFFFF", fontSize: 23, fontWeight: 900, cursor: "pointer", flexShrink: 0, boxShadow: "0 10px 20px rgba(124,58,237,0.22)" }}>↑</button>
           </div>
-          <p style={{ margin: 0, color: "#64748B", fontSize: 12, fontFamily: fonts.body }}>Al interactuar manualmente, se pausará la escucha por voz.</p>
         </form>
       </section>
     </main>

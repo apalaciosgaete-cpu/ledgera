@@ -5,7 +5,7 @@ import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
 import { getAudioLevel } from "@/modules/voice/audioPlayer";
 
 type Props = {
-  state: VoiceEngineState;
+  state: VoiceEngineState | "listening";
 };
 
 export function VoiceOrb({ state }: Props) {
@@ -14,7 +14,11 @@ export function VoiceOrb({ state }: Props) {
   const phaseRef = useRef(0);
 
   const isPlaying = state === "playing";
+  const isListening = state === "listening";
+  const active = isPlaying || isListening;
 
+  // Escala el orbe más pequeño para WealthFlowPage (gridColumn context)
+  // El caller controla el tamaño via style wrapper si necesita custom
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -31,16 +35,19 @@ export function VoiceOrb({ state }: Props) {
       ctx.clearRect(0, 0, SIZE, SIZE);
 
       const t = phaseRef.current;
-      const level = isPlaying ? getAudioLevel() : 0; // 0–1 sincronizado con audio real
+      const level = isPlaying ? getAudioLevel() : 0;
+      const listeningLevel = isListening ? 0.3 + 0.15 * Math.sin(t * 2.5) : 0;
 
-      // Pulsos externos (solo cuando playing)
-      if (isPlaying) {
+      // Pulsos externos
+      if (active) {
         for (let i = 3; i >= 1; i--) {
-          const pulseR = BASE_R + i * SIZE * 0.07 + Math.sin(t * 1.2 + i) * SIZE * 0.025 * (1 + level);
-          const alpha = (0.06 - i * 0.015) * (0.7 + 0.3 * Math.sin(t + i)) * (1 + level);
+          const pulseMultiplier = isPlaying ? (1 + level) : (0.5 + listeningLevel * 0.3);
+          const pulseR = BASE_R + i * SIZE * 0.07 + Math.sin(t * 1.2 + i) * SIZE * 0.025 * pulseMultiplier;
+          const alpha = (0.06 - i * 0.015) * (0.7 + 0.3 * Math.sin(t + i)) * pulseMultiplier;
+          const pulseColor = isListening ? "rgba(167,139,250," : "rgba(74,222,128,";
           const grad = ctx.createRadialGradient(CX, CY, BASE_R * 0.5, CX, CY, pulseR);
-          grad.addColorStop(0, `rgba(74,222,128,${alpha * 1.5})`);
-          grad.addColorStop(1, "rgba(74,222,128,0)");
+          grad.addColorStop(0, `${pulseColor}${alpha * 1.5})`);
+          grad.addColorStop(1, `${pulseColor}0)`);
           ctx.beginPath();
           ctx.arc(CX, CY, pulseR, 0, Math.PI * 2);
           ctx.fillStyle = grad;
@@ -48,10 +55,12 @@ export function VoiceOrb({ state }: Props) {
         }
       }
 
-      // Orb principal — tamaño pulsando con el audio real
+      // Orb principal
       const wobble = isPlaying
         ? Math.sin(t * 2.1) * SIZE * 0.012 + level * SIZE * 0.045
-        : 0;
+        : isListening
+          ? Math.sin(t * 2.5) * SIZE * 0.008 + listeningLevel * SIZE * 0.015
+          : 0;
       const r = BASE_R + wobble;
 
       const gradient = ctx.createRadialGradient(
@@ -59,7 +68,11 @@ export function VoiceOrb({ state }: Props) {
         CX, CY, r,
       );
 
-      if (isPlaying) {
+      if (isListening) {
+        gradient.addColorStop(0, "rgba(196,181,253,0.92)");
+        gradient.addColorStop(0.45, "rgba(139,92,246,0.85)");
+        gradient.addColorStop(1, "rgba(91,53,245,0.65)");
+      } else if (isPlaying) {
         gradient.addColorStop(0, "rgba(134,239,172,0.95)");
         gradient.addColorStop(0.45, "rgba(22,163,74,0.88)");
         gradient.addColorStop(1, "rgba(15,118,110,0.70)");
@@ -86,29 +99,45 @@ export function VoiceOrb({ state }: Props) {
       ctx.fillStyle = shine;
       ctx.fill();
 
-      // Ondas de sonido sincronizadas con nivel de audio real
-      if (isPlaying) {
+      // Ondas de sonido
+      if (active) {
         ctx.save();
-        ctx.globalAlpha = 0.4 + 0.4 * level + 0.15 * Math.sin(t * 3);
-        const waveCount = 5;
+        const waveAlpha = isPlaying
+          ? 0.4 + 0.4 * level + 0.15 * Math.sin(t * 3)
+          : 0.15 + 0.15 * Math.sin(t * 2);
+        ctx.globalAlpha = waveAlpha;
+        const waveCount = isPlaying ? 5 : 3;
+        const waveColor = isListening ? "rgba(167,139,250," : "rgba(74,222,128,";
         for (let i = 0; i < waveCount; i++) {
-          const waveR = r + (i + 1) * SIZE * 0.045 * (0.5 + level * 1.2 + 0.2 * Math.sin(t * 1.5 + i));
+          const waveMultiplier = isPlaying
+            ? (0.5 + level * 1.2 + 0.2 * Math.sin(t * 1.5 + i))
+            : (0.5 + listeningLevel + 0.1 * Math.sin(t * 1.8 + i));
+          const waveR = r + (i + 1) * SIZE * 0.045 * waveMultiplier;
           ctx.beginPath();
           ctx.arc(CX, CY, waveR, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(74,222,128,${0.22 - i * 0.035 + level * 0.1})`;
-          ctx.lineWidth = 1.2 + level * 1.5;
+          const strokeAlpha = isPlaying
+            ? 0.22 - i * 0.035 + level * 0.1
+            : 0.12 - i * 0.025 + listeningLevel * 0.06;
+          ctx.strokeStyle = `${waveColor}${strokeAlpha})`;
+          ctx.lineWidth = isPlaying ? 1.2 + level * 1.5 : 1;
           ctx.stroke();
         }
         ctx.restore();
       }
 
-      phaseRef.current += isPlaying ? 0.045 : 0.018;
+      phaseRef.current += active ? (isPlaying ? 0.045 : 0.03) : 0.018;
       animRef.current = requestAnimationFrame(draw);
     }
 
     animRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animRef.current);
-  }, [isPlaying]);
+  }, [active, isPlaying, isListening]);
+
+  const glowFilter = isListening
+    ? "drop-shadow(0 0 28px rgba(139,92,246,0.35)) drop-shadow(0 0 56px rgba(91,53,245,0.15))"
+    : isPlaying
+      ? "drop-shadow(0 0 32px rgba(74,222,128,0.40)) drop-shadow(0 0 64px rgba(22,163,74,0.20))"
+      : "drop-shadow(0 0 20px rgba(30,80,140,0.30))";
 
   return (
     <canvas
@@ -119,9 +148,7 @@ export function VoiceOrb({ state }: Props) {
         width: "min(42vw, 260px)",
         height: "min(42vw, 260px)",
         display: "block",
-        filter: isPlaying
-          ? "drop-shadow(0 0 32px rgba(74,222,128,0.40)) drop-shadow(0 0 64px rgba(22,163,74,0.20))"
-          : "drop-shadow(0 0 20px rgba(30,80,140,0.30))",
+        filter: glowFilter,
         transition: "filter 0.6s ease",
       }}
     />
