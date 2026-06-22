@@ -1,0 +1,3 @@
+﻿Fecha operación,Tipo evento,Activo,Cantidad,Clasificación tributaria,Ingreso neto USD,Costo tributario USD,Resultado USD,Tipo cambio,Resultado CLP,Origen clasificación,ID movimiento
+2026-04-26T00:30:00.000Z,SELL,XRP,50,No afecto,499.02,63.78,435.24,950,413474,Usuario,cmof9t3ih0002uit0xys0xwqg
+2026-04-27T16:36:00.000Z,SELL,BTC,1,Mayor valor,75.71,76.25,-0.54,950,-509,Usuario,cmohf6uui0002ui0gz0rhvapg

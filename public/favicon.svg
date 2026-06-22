@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">LEDGERA</title>
+  <desc id="desc">Icono compacto LEDGERA con monograma L.</desc>
+  <rect width="512" height="512" rx="112" fill="#071B28"/>
+  <rect x="34" y="34" width="444" height="444" rx="96" fill="none" stroke="#15384F" stroke-width="18"/>
+  <path d="M176 140 H240 V310 H352 V372 H176 Z" fill="#F8FAFC"/>
+  <rect x="252" y="310" width="100" height="18" rx="9" fill="#16A34A"/>
+</svg>

@@ -1,0 +1,449 @@
+"use client";
+
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ui } from "@/styles/design-system";
+
+type Movement = {
+  id: string;
+  type: string;
+  symbol: string;
+  quantity: number;
+  priceUsd: number;
+  feeUsd: number;
+  executedAt: string;
+  source?: string | null;
+  provider?: string | null;
+  origin?: string | null;
+  deletedAt?: string | null;
+  deletedReason?: string | null;
+};
+
+type MovementsResponse = {
+  ok: boolean;
+  message: string;
+  data: Movement[] | null;
+};
+
+type TypeFilter = "ALL" | "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW" | "STAKING_REWARD" | "AIRDROP" | "TRANSFER";
+type StatusFilter = "ALL" | "ACTIVE" | "DELETED";
+
+function formatUsd(value: number) {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(value || 0);
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("es-CL", {
+    maximumFractionDigits: 8,
+  }).format(value || 0);
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("es-CL", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function normalizeSymbol(value: string) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function movementTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    BUY: "Compra",
+    SELL: "Venta",
+    DEPOSIT: "Depósito",
+    WITHDRAW: "Retiro",
+    STAKING_REWARD: "Recompensa de staking",
+    AIRDROP: "Airdrop",
+    TRANSFER: "Transferencia",
+  };
+
+  return labels[type] || type;
+}
+
+function movementOriginLabel(movement: Movement) {
+  const raw = String(movement.origin || movement.provider || movement.source || "").trim();
+  if (!raw) return "Manual";
+
+  const normalized = raw.toUpperCase();
+  if (normalized.includes("BINANCE")) return "Binance";
+  if (normalized.includes("BANK") || normalized.includes("BANCO")) return "Banco";
+  if (normalized.includes("WALLET")) return "Wallet";
+  if (normalized.includes("MANUAL")) return "Manual";
+
+  return raw;
+}
+
+function MovementTypeBadge({ type }: { type: string }) {
+  if (type === "BUY" || type === "DEPOSIT" || type === "STAKING_REWARD" || type === "AIRDROP") {
+    return (
+      <span className={`rounded px-2 py-1 text-xs font-medium ${ui.badgeOk}`}>
+        {movementTypeLabel(type)}
+      </span>
+    );
+  }
+
+  if (type === "SELL" || type === "WITHDRAW") {
+    return (
+      <span className={`rounded px-2 py-1 text-xs font-medium ${ui.badgeRisk}`}>
+        {movementTypeLabel(type)}
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+      {movementTypeLabel(type)}
+    </span>
+  );
+}
+
+function MovementOriginBadge({ movement }: { movement: Movement }) {
+  return (
+    <span className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
+      {movementOriginLabel(movement)}
+    </span>
+  );
+}
+
+function MovementStatusBadge({ movement }: { movement: Movement }) {
+  if (movement.deletedAt) {
+    return (
+      <span className="rounded border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+        Anulado
+      </span>
+    );
+  }
+  return (
+    <span className="rounded bg-[#2563EB]/10 px-2 py-1 text-xs font-medium text-[#1D4ED8]">
+      Vigente
+    </span>
+  );
+}
+
+function MovementsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+
+  const [movements, setMovements] = useState<Movement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [symbolFilter, setSymbolFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  async function fetchMovements() {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/portfolio/movements", { cache: "no-store", credentials: "include" });
+      const json: MovementsResponse = await res.json();
+      if (!json.ok || !json.data) {
+        setMessage(json.message || "No fue posible cargar el Libro Financiero.");
+        setMovements([]);
+        return;
+      }
+      setMovements(json.data);
+    } catch (error) {
+      console.error("FINANCIAL LEDGER PAGE ERROR:", error);
+      setMessage("Error cargando el Libro Financiero.");
+      setMovements([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void fetchMovements();
+  }, []);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const timeout = setTimeout(() => {
+      const el = document.getElementById(`row-${highlightId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [highlightId, movements]);
+
+  const activeMovements = useMemo(
+    () => movements.filter((m) => !m.deletedAt),
+    [movements],
+  );
+
+  const deletedMovements = useMemo(
+    () => movements.filter((m) => m.deletedAt),
+    [movements],
+  );
+
+  const availableSymbols = useMemo(
+    () => Array.from(new Set(movements.map((m) => normalizeSymbol(m.symbol)).filter(Boolean))).sort(),
+    [movements],
+  );
+
+  const filteredMovements = useMemo(() => {
+    return movements
+      .filter((movement) => {
+        if (typeFilter !== "ALL" && movement.type !== typeFilter) return false;
+        if (statusFilter === "ACTIVE" && movement.deletedAt) return false;
+        if (statusFilter === "DELETED" && !movement.deletedAt) return false;
+        if (symbolFilter && normalizeSymbol(movement.symbol) !== normalizeSymbol(symbolFilter)) return false;
+        const movementTime = new Date(movement.executedAt).getTime();
+        if (dateFrom) {
+          const fromTime = new Date(dateFrom).getTime();
+          if (!Number.isNaN(fromTime) && movementTime < fromTime) return false;
+        }
+        if (dateTo) {
+          const toTime = new Date(dateTo).getTime();
+          if (!Number.isNaN(toTime) && movementTime > toTime) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.executedAt).getTime() - new Date(a.executedAt).getTime());
+  }, [movements, typeFilter, statusFilter, symbolFilter, dateFrom, dateTo]);
+
+  const highlightedMovement = useMemo(() => {
+    if (!highlightId) return null;
+    return movements.find((m) => m.id === highlightId) || null;
+  }, [highlightId, movements]);
+
+  const totals = useMemo(() => {
+    return activeMovements.reduce(
+      (acc, movement) => {
+        if (movement.type === "BUY") acc.buyCount += 1;
+        if (movement.type === "SELL") acc.sellCount += 1;
+        if (movement.type === "DEPOSIT") acc.depositCount += 1;
+        if (movement.type === "WITHDRAW") acc.withdrawCount += 1;
+        if (movement.type === "STAKING_REWARD") acc.stakingCount += 1;
+        acc.totalFeeUsd += movement.feeUsd || 0;
+        acc.totalNotionalUsd += movement.quantity * movement.priceUsd;
+        return acc;
+      },
+      { buyCount: 0, sellCount: 0, depositCount: 0, withdrawCount: 0, stakingCount: 0, totalFeeUsd: 0, totalNotionalUsd: 0 },
+    );
+  }, [activeMovements]);
+
+  function clearFilters() {
+    setTypeFilter("ALL");
+    setStatusFilter("ALL");
+    setSymbolFilter("");
+    setDateFrom("");
+    setDateTo("");
+  }
+
+  return (
+    <section className={ui.page}>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h1 className={ui.title}>Libro Financiero</h1>
+          <p className={ui.label}>
+            Registro financiero operacional que constituye la fuente única de verdad de LEDGERA.
+            Consolidado, Tributario y Auditoría derivan desde este libro.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button type="button" onClick={() => router.push("/panel")} className={ui.buttonSecondary}>
+            Ver Consolidado
+          </button>
+          <button type="button" onClick={() => router.push("/tributario")} className={ui.buttonSecondary}>
+            Revisión tributaria
+          </button>
+        </div>
+      </div>
+
+      {message && (
+        <div className={`rounded p-4 text-sm ${ui.alertRisk}`}>{message}</div>
+      )}
+
+      {highlightId && (
+        <div className={`rounded p-4 text-sm ${ui.alertWarning}`}>
+          {highlightedMovement ? (
+            <p>
+              Movimiento destacado: {" "}
+              <span className="font-medium">
+                {highlightedMovement.symbol} · {formatDate(highlightedMovement.executedAt)}
+              </span>
+            </p>
+          ) : (
+            <p>Movimiento no encontrado en el listado actual.</p>
+          )}
+        </div>
+      )}
+
+      {loading ? (
+        <div className={`${ui.card} p-4 text-sm text-slate-600`}>Cargando Libro Financiero...</div>
+      ) : movements.length === 0 ? (
+        <div className={`${ui.card} space-y-4 p-6`}>
+          <p className="font-medium text-slate-950">No hay movimientos registrados.</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Conecta una fuente de datos o importa información para comenzar.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Movimientos vigentes</p>
+              <p className="text-2xl font-semibold text-slate-950">{activeMovements.length}</p>
+            </div>
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Compras</p>
+              <p className="text-2xl font-semibold text-[#14532D]">{totals.buyCount}</p>
+            </div>
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Ventas</p>
+              <p className="text-2xl font-semibold text-[#991B1B]">{totals.sellCount}</p>
+            </div>
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Anulados</p>
+              <p className="text-2xl font-semibold text-slate-950">{deletedMovements.length}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Volumen bruto USD</p>
+              <p className="text-2xl font-semibold text-slate-950">{formatUsd(totals.totalNotionalUsd)}</p>
+            </div>
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Fees USD</p>
+              <p className="text-2xl font-semibold text-slate-950">{formatUsd(totals.totalFeeUsd)}</p>
+            </div>
+            <div className={`${ui.card} p-4`}>
+              <p className={ui.label}>Staking</p>
+              <p className="text-2xl font-semibold text-[#14532D]">{totals.stakingCount}</p>
+            </div>
+          </div>
+
+          <div className={`${ui.card} space-y-4 p-4`}>
+            <h2 className="text-lg font-semibold text-slate-950">Filtros</h2>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-800">Tipo</label>
+                <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as TypeFilter)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                  <option value="ALL">Todos</option>
+                  <option value="BUY">Compra</option>
+                  <option value="SELL">Venta</option>
+                  <option value="DEPOSIT">Depósito</option>
+                  <option value="WITHDRAW">Retiro</option>
+                  <option value="STAKING_REWARD">Recompensa de staking</option>
+                  <option value="AIRDROP">Airdrop</option>
+                  <option value="TRANSFER">Transferencia</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-800">Estado</label>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                  <option value="ALL">Todos</option>
+                  <option value="ACTIVE">Vigentes</option>
+                  <option value="DELETED">Anulados</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-800">Activo</label>
+                <select value={symbolFilter} onChange={(e) => setSymbolFilter(e.target.value)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                  <option value="">Todos</option>
+                  {availableSymbols.map((symbol) => (
+                    <option key={symbol} value={symbol}>{symbol}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-800">Desde</label>
+                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-800">Hasta</label>
+                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700" />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="button" onClick={clearFilters} className={ui.buttonSecondary}>Limpiar filtros</button>
+              <p className={ui.label}>Mostrando {filteredMovements.length} de {movements.length} movimientos.</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-slate-950">Movimientos del Libro Financiero</h2>
+            {filteredMovements.length === 0 ? (
+              <div className={`${ui.card} p-4 text-sm text-slate-600`}>
+                No hay movimientos que coincidan con los filtros aplicados.
+              </div>
+            ) : (
+              <div className="overflow-auto rounded border border-slate-200 bg-white">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-slate-100 text-left text-slate-700">
+                    <tr>
+                      <th className="p-2">Fecha</th>
+                      <th className="p-2">Origen</th>
+                      <th className="p-2">Tipo financiero</th>
+                      <th className="p-2">Activo</th>
+                      <th className="p-2">Cantidad</th>
+                      <th className="p-2">Precio USD</th>
+                      <th className="p-2">Fee USD</th>
+                      <th className="p-2">Estado</th>
+                      <th className="p-2">Motivo anulacion</th>
+                      <th className="p-2">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredMovements.map((movement) => {
+                      const isHighlighted = movement.id === highlightId;
+                      return (
+                        <tr
+                          key={movement.id}
+                          id={`row-${movement.id}`}
+                          className={`border-t border-slate-200 ${movement.deletedAt ? "bg-slate-50 text-slate-500" : ""} ${isHighlighted ? "border-l-4 border-[#D97706] bg-[#F59E0B20]" : ""}`}
+                        >
+                          <td className="p-2">{formatDate(movement.executedAt)}</td>
+                          <td className="p-2"><MovementOriginBadge movement={movement} /></td>
+                          <td className="p-2"><MovementTypeBadge type={movement.type} /></td>
+                          <td className="p-2 font-medium text-slate-950">{normalizeSymbol(movement.symbol)}</td>
+                          <td className="p-2">{formatNumber(movement.quantity)}</td>
+                          <td className="p-2">{formatUsd(movement.priceUsd)}</td>
+                          <td className="p-2">{formatUsd(movement.feeUsd)}</td>
+                          <td className="p-2"><MovementStatusBadge movement={movement} /></td>
+                          <td className="p-2">{movement.deletedReason || "-"}</td>
+                          <td className="p-2">
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/libro-financiero?highlight=${movement.id}`)}
+                              className={`${ui.buttonSecondary} px-3 py-1 text-xs`}
+                            >
+                              Destacar
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+export default function MovementsPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <MovementsPage />
+    </Suspense>
+  );
+}

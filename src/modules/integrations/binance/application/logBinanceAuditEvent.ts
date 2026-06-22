@@ -1,0 +1,85 @@
+import type { NextRequest } from "next/server";
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+  type AdminAuditAction,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
+
+export type BinanceAuditAction = Extract<
+  AdminAuditAction,
+  | "BINANCE_CONNECTED"
+  | "BINANCE_CONNECTION_TESTED"
+  | "BINANCE_TAX_CONNECTED"
+  | "BINANCE_TAX_CONNECTION_TESTED"
+  | "BINANCE_SYNC_STARTED"
+  | "BINANCE_SYNC_COMPLETED"
+  | "BINANCE_SYNC_FAILED"
+  | "BINANCE_IMPORT_CONFIRMED"
+  | "BINANCE_IMPORT_REJECTED"
+>;
+
+export type BinanceAuditMetadata = {
+  provider:        "BINANCE" | "BINANCE_TAX";
+  status:          "SUCCESS" | "FAILED";
+  connectionId?:   string;
+  importRecordId?: string;
+  externalId?:     string;
+  externalType?:   string;
+  apiKeyHint?:     string;
+  accountType?:    string;
+  canTrade?:       boolean;
+  permissionsCount?: number;
+  balancesWithFunds?: number;
+  stats?: {
+    imported: number;
+    skipped:  number;
+    errors:   number;
+  };
+  error?:             string;
+  failedSymbol?:      string;
+  failedWindowStart?: string;
+  failedWindowEnd?:   string;
+  partialStats?: {
+    imported: number;
+    skipped:  number;
+    errors:   number;
+  };
+  // Period-based sync fields
+  periods?:        string[];
+  imported?:       number;
+  skipped?:        number;
+  errors?:         number;
+  periodResults?:  Array<{ year: number; month: number; imported: number; status: string }>;
+  // Staging group fields
+  reason?:         string;
+  rejectedCount?:  number;
+  totalInGroup?:   number;
+  providers?:      string[];
+  // Decision traceability
+  decisionHash?:   string;
+  source?:         string;
+  beforeStatus?:   string;
+  afterStatus?:    string;
+  recordIds?:      string[];
+};
+
+export async function logBinanceAuditEvent(
+  request:    NextRequest,
+  action:     BinanceAuditAction,
+  actorId:    string,
+  actorEmail: string,
+  metadata:   BinanceAuditMetadata,
+): Promise<void> {
+  const { ipAddress, userAgent } = getAuditRequestContext(request);
+
+  await createAdminAuditLog({
+    action,
+    actorId,
+    actorEmail,
+    targetUserId:    actorId,
+    targetUserEmail: actorEmail,
+    ipAddress,
+    userAgent,
+    metadata: metadata as unknown as Record<string, unknown>,
+  });
+}

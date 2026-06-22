@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180" role="img" aria-labelledby="title desc">
+  <title id="title">LEDGERA</title>
+  <desc id="desc">Wordmark institucional LEDGERA con subtítulo Finanzas OS.</desc>
+  <rect width="720" height="180" fill="transparent"/>
+  <text x="360" y="86" text-anchor="middle" fill="#071B28" font-family="Manrope, Inter, Arial, sans-serif" font-size="66" font-weight="900" letter-spacing="8">LEDGERA</text>
+  <text x="360" y="126" text-anchor="middle" fill="#16A34A" font-family="Inter, Manrope, Arial, sans-serif" font-size="16" font-weight="800" letter-spacing="10">FINANZAS OS</text>
+</svg>
