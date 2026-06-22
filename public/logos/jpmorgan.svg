@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
-  <text x="100" y="38" font-family="Times New Roman, serif" font-size="20" font-weight="bold" fill="#003087" text-anchor="middle">JPMorgan</text>
-  <rect x="20" y="44" width="160" height="3" fill="#003087"/>
-  <text x="100" y="60" font-family="Arial, sans-serif" font-size="10" fill="#555" text-anchor="middle" letter-spacing="2">CHASE &amp; CO.</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60">
+  <rect x="0" y="26" width="220" height="3" fill="#003087"/>
+  <text x="110" y="22" text-anchor="middle" fill="#003087" font-family="Times New Roman, Georgia, serif" font-size="18" font-weight="bold">JPMorgan</text>
+  <text x="110" y="50" text-anchor="middle" fill="#003087" font-family="Arial, sans-serif" font-size="11" letter-spacing="3">CHASE &amp; CO.</text>
 </svg>

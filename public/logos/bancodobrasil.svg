@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
-  <rect x="0" y="0" width="200" height="70" rx="6" fill="#003399"/>
-  <text x="100" y="28" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" text-anchor="middle" font-weight="bold">Banco do</text>
-  <text x="100" y="52" font-family="Arial Black, Arial, sans-serif" font-size="24" font-weight="900" fill="#FFD700" text-anchor="middle">Brasil</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+  <rect x="0" y="0" width="200" height="60" rx="5" fill="#003399"/>
+  <rect x="0" y="20" width="200" height="20" fill="#FFD700"/>
+  <text x="100" y="16" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="700">Banco do</text>
+  <text x="100" y="36" text-anchor="middle" fill="#003399" font-family="Arial Black, sans-serif" font-size="14" font-weight="900">Brasil</text>
+  <text x="100" y="54" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">Chile</text>
 </svg>

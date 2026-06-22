@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 70">
-  <text x="10" y="28" font-family="Arial, sans-serif" font-size="12" fill="#2C5F8A">Banco</text>
-  <text x="10" y="54" font-family="Arial Black, Arial, sans-serif" font-size="24" font-weight="900" fill="#2C5F8A">Consorcio</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60">
+  <rect x="0" y="0" width="8" height="60" fill="#005B9A"/>
+  <rect x="12" y="0" width="8" height="60" fill="#005B9A"/>
+  <text x="118" y="20" text-anchor="middle" fill="#005B9A" font-family="Arial, sans-serif" font-size="12" font-weight="bold">Banco</text>
+  <text x="118" y="46" text-anchor="middle" fill="#005B9A" font-family="Arial Black, sans-serif" font-size="22" font-weight="900">Consorcio</text>
 </svg>
