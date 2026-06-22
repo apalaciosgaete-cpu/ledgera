@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <polygon points="10,10 40,10 50,35 40,60 10,60 0,35" fill="#003087"/>
+  <text x="60" y="25" font-family="Arial, sans-serif" font-size="12" fill="#003087">Banco</text>
+  <text x="60" y="50" font-family="Arial Black, Arial, sans-serif" font-size="22" font-weight="900" fill="#003087">Security</text>
+</svg>
