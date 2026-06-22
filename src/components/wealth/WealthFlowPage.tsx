@@ -9,22 +9,21 @@ import { startListening } from "@/modules/voice/speechToText";
 type WealthStepKey = "origen-fondos" | "activos";
 type OptionKey = "bancos" | "exchanges" | "wallets" | "documentacion" | "criptoactivos" | "nfts" | "wallets-frias";
 type AssistantStatus = "idle" | "listening" | "thinking" | "speaking";
-
 type FlowOption = { key: OptionKey; icon: string; label: string; description: string; hint: string; tone: { border: string; bg: string; accent: string; shadow: string } };
 type WealthStep = { key: WealthStepKey; title: string; subtitle: string; question: string; guide: string; examples: string[]; options: FlowOption[] };
 
 const tones = {
-  blue: { border: "#DCEBFF", bg: "linear-gradient(180deg,#F3FAFF 0%,#FFFFFF 100%)", accent: "#2483FF", shadow: "0 12px 28px rgba(36,131,255,0.10)" },
-  green: { border: "#D9F5E8", bg: "linear-gradient(180deg,#F2FFF8 0%,#FFFFFF 100%)", accent: "#20C878", shadow: "0 12px 28px rgba(32,200,120,0.10)" },
-  purple: { border: "#E6E0FF", bg: "linear-gradient(180deg,#F8F5FF 0%,#FFFFFF 100%)", accent: "#6D4AFF", shadow: "0 12px 28px rgba(109,74,255,0.10)" },
-  orange: { border: "#FFE8D6", bg: "linear-gradient(180deg,#FFF8EF 0%,#FFFFFF 100%)", accent: "#FF7A1A", shadow: "0 12px 28px rgba(255,122,26,0.10)" },
+  blue: { border: "#DCEBFF", bg: "linear-gradient(180deg,#F3FAFF 0%,#FFFFFF 100%)", accent: "#2483FF", shadow: "0 8px 18px rgba(36,131,255,0.09)" },
+  green: { border: "#D9F5E8", bg: "linear-gradient(180deg,#F2FFF8 0%,#FFFFFF 100%)", accent: "#20C878", shadow: "0 8px 18px rgba(32,200,120,0.09)" },
+  purple: { border: "#E6E0FF", bg: "linear-gradient(180deg,#F8F5FF 0%,#FFFFFF 100%)", accent: "#6D4AFF", shadow: "0 8px 18px rgba(109,74,255,0.09)" },
+  orange: { border: "#FFE8D6", bg: "linear-gradient(180deg,#FFF8EF 0%,#FFFFFF 100%)", accent: "#FF7A1A", shadow: "0 8px 18px rgba(255,122,26,0.09)" },
 };
 
 const STEPS: Record<WealthStepKey, WealthStep> = {
   "origen-fondos": {
     key: "origen-fondos",
     title: "Origen de Fondos",
-    subtitle: "Selecciona o indica cómo ingresaron tus fondos. Puedes hablar o escribir.",
+    subtitle: "Selecciona o indica cómo ingresaron tus fondos.",
     question: "Habla o escribe aquí...",
     guide: "Estás en Origen de Fondos. Puedes decir conectar banco, agregar exchange, mis wallets o subir documentos. LEDGERA abrirá la opción correcta.",
     examples: ["conectar banco", "agregar exchange Binance", "mis wallets", "subir documentos"],
@@ -130,51 +129,54 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   }
 
   return (
-    <main style={{ minHeight: "calc(100vh - 160px)", display: "grid", gap: 14, gridTemplateRows: "auto auto minmax(0,1fr) auto" }}>
-      <section style={{ display: "flex", alignItems: "center", gap: 9, color: "#64748B", fontSize: 13, fontWeight: 700, fontFamily: fonts.body }}>
+    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 10, gridTemplateRows: "22px 54px 122px 64px 74px" }}>
+      <section style={{ display: "flex", alignItems: "center", gap: 8, color: "#64748B", fontSize: 12, fontWeight: 700, fontFamily: fonts.body }}>
         <span>⌂</span><span>›</span><span>Mi Patrimonio</span><span>›</span><span style={{ color: "#4F46E5" }}>{step.title}</span>
       </section>
 
-      <section style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
+      <section style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
         <div>
-          <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.55rem, 3vw, 2.05rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{step.title}</h1>
-          <p style={{ color: "#334155", fontSize: 14, lineHeight: 1.4, margin: 0, fontFamily: fonts.body }}>{step.subtitle}</p>
+          <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem, 2.4vw, 1.7rem)", fontWeight: 900, margin: "0 0 2px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{step.title}</h1>
+          <p style={{ color: "#334155", fontSize: 13, lineHeight: 1.25, margin: 0, fontFamily: fonts.body }}>{step.subtitle}</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" style={{ border: "1px solid #E2E8F0", borderRadius: 11, background: "#FFFFFF", color: "#0F2A3D", padding: "8px 13px", fontWeight: 750, fontSize: 13, fontFamily: fonts.body }}>ⓘ Ayuda</button>
-          <button type="button" style={{ border: "1px solid #E2E8F0", borderRadius: 11, background: "#FFFFFF", color: "#0F2A3D", padding: "8px 13px", fontWeight: 750, fontSize: 13, fontFamily: fonts.body }}>↺ Historial</button>
+        <div style={{ display: "flex", gap: 7 }}>
+          <button type="button" style={{ border: "1px solid #E2E8F0", borderRadius: 10, background: "#FFFFFF", color: "#0F2A3D", padding: "6px 11px", fontWeight: 750, fontSize: 12, fontFamily: fonts.body }}>ⓘ Ayuda</button>
+          <button type="button" style={{ border: "1px solid #E2E8F0", borderRadius: 10, background: "#FFFFFF", color: "#0F2A3D", padding: "6px 11px", fontWeight: 750, fontSize: 12, fontFamily: fonts.body }}>↺ Historial</button>
         </div>
       </section>
 
-      <section style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", alignContent: "start" }}>
+      <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
         {step.options.map((option) => {
           const active = selected === option.key;
           return (
-            <button key={option.key} type="button" onClick={() => openOption(option, "manual")} style={{ minHeight: 188, borderRadius: 22, border: `1px solid ${active ? option.tone.accent : option.tone.border}`, background: option.tone.bg, color: "#0F2A3D", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 9, padding: 16, boxShadow: active ? option.tone.shadow : "0 8px 20px rgba(15,42,61,0.045)", fontFamily: fonts.body }}>
-              <span style={{ fontSize: 46, lineHeight: 1, filter: "drop-shadow(0 8px 10px rgba(15,42,61,0.10))" }}>{option.icon}</span>
-              <strong style={{ fontSize: 19, fontWeight: 900 }}>{option.label}</strong>
-              <span style={{ color: "#334155", fontSize: 12.5, lineHeight: 1.35, maxWidth: 190 }}>{option.description}</span>
-              <span style={{ width: 38, height: 38, borderRadius: 999, background: "#FFFFFF", color: option.tone.accent, display: "grid", placeItems: "center", fontSize: 22, fontWeight: 900, boxShadow: "0 7px 16px rgba(15,42,61,0.10)" }}>→</span>
+            <button key={option.key} type="button" onClick={() => openOption(option, "manual")} style={{ height: 118, borderRadius: 18, border: `1px solid ${active ? option.tone.accent : option.tone.border}`, background: option.tone.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gridTemplateRows: "42px 22px 24px", alignItems: "center", justifyItems: "center", gap: 4, padding: 12, boxShadow: active ? option.tone.shadow : "0 7px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body }}>
+              <span style={{ fontSize: 36, lineHeight: 1, filter: "drop-shadow(0 7px 8px rgba(15,42,61,0.09))" }}>{option.icon}</span>
+              <strong style={{ fontSize: 16, fontWeight: 900 }}>{option.label}</strong>
+              <span style={{ width: 28, height: 28, borderRadius: 999, background: "#FFFFFF", color: option.tone.accent, display: "grid", placeItems: "center", fontSize: 17, fontWeight: 900, boxShadow: "0 5px 11px rgba(15,42,61,0.09)" }}>→</span>
             </button>
           );
         })}
       </section>
 
-      <section style={{ border: "1px solid #E2E8F0", borderRadius: 20, background: "#FFFFFF", padding: 16, display: "grid", gridTemplateColumns: "minmax(210px, 0.75fr) minmax(280px, 1.35fr)", gap: 16, alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <div style={{ width: 54, height: 54, borderRadius: 999, background: "linear-gradient(135deg,#4F46E5,#7C3AED)", color: "#FFFFFF", display: "grid", placeItems: "center", fontSize: 22, boxShadow: "0 12px 22px rgba(79,70,229,0.22)" }}>▮▮</div>
-          <div>
-            <strong style={{ display: "block", color: "#4F46E5", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-            <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.35, fontFamily: fonts.body }}>{selectedOption ? selectedOption.hint : `Puedes decir: ${step.examples.map((item) => `“${item}”`).join(", ")}.`}</p>
+      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: "12px 14px", display: "flex", alignItems: "center" }}>
+        <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.35, fontFamily: fonts.body }}>{selectedOption ? selectedOption.hint : "Elige una opción o dilo por voz. LEDGERA reconocerá la intención y abrirá la opción correspondiente."}</p>
+      </section>
+
+      <section style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(190px, 0.65fr) minmax(280px, 1.45fr)", gap: 12, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 999, background: "linear-gradient(135deg,#4F46E5,#7C3AED)", color: "#FFFFFF", display: "grid", placeItems: "center", fontSize: 17, boxShadow: "0 9px 18px rgba(79,70,229,0.20)", flexShrink: 0 }}>▮▮</div>
+          <div style={{ minWidth: 0 }}>
+            <strong style={{ display: "block", color: "#4F46E5", fontSize: 14, fontWeight: 900, marginBottom: 2, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
+            <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.2, fontFamily: fonts.body, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedOption ? selectedOption.hint : `Ej: ${step.examples.join(", ")}.`}</p>
           </div>
         </div>
 
-        <form onSubmit={submit} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ flex: 1, minHeight: 50, borderRadius: 16, border: "1px solid #CBD5E1", display: "flex", alignItems: "center", padding: "0 10px 0 15px", gap: 8 }}>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={step.question} style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 15, fontFamily: fonts.body }} />
-            <button type="button" onClick={toggleMic} style={{ border: "none", background: "transparent", color: status === "listening" ? "#4F46E5" : "#64748B", cursor: "pointer", fontSize: 22 }}>{status === "listening" ? "■" : "🎙"}</button>
+        <form onSubmit={submit} style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <div style={{ flex: 1, minHeight: 44, borderRadius: 14, border: "1px solid #CBD5E1", display: "flex", alignItems: "center", padding: "0 8px 0 13px", gap: 7, minWidth: 0 }}>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={step.question} style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0 }} />
+            <button type="button" onClick={toggleMic} style={{ border: "none", background: "transparent", color: status === "listening" ? "#4F46E5" : "#64748B", cursor: "pointer", fontSize: 20 }}>{status === "listening" ? "■" : "🎙"}</button>
           </div>
-          <button type="submit" style={{ width: 50, height: 50, borderRadius: 999, border: "none", background: "linear-gradient(135deg,#7C3AED,#8B5CF6)", color: "#FFFFFF", fontSize: 24, fontWeight: 900, cursor: "pointer" }}>↑</button>
+          <button type="submit" style={{ width: 44, height: 44, borderRadius: 999, border: "none", background: "linear-gradient(135deg,#7C3AED,#8B5CF6)", color: "#FFFFFF", fontSize: 22, fontWeight: 900, cursor: "pointer", flexShrink: 0 }}>↑</button>
         </form>
       </section>
     </main>
