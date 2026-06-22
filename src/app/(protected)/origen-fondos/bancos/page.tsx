@@ -11,22 +11,28 @@ import { CHILE_BANKS, getBankLogoUrl } from "@/modules/banking/catalogs/chileBan
 
 type AssistantStatus = "idle" | "listening" | "speaking";
 
-const LOGO_OVERRIDES: Record<string, string> = {
-  santander: "https://upload.wikimedia.org/wikipedia/commons/b/b8/Banco_Santander_Logotipo.svg",
-  chile: "https://upload.wikimedia.org/wikipedia/commons/8/84/Banco_de_Chile_logo.svg",
-  bci: "https://upload.wikimedia.org/wikipedia/commons/7/76/Bci_Logotype.svg",
-  estado: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Logo_BancoEstado.svg",
-  itau: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Ita%C3%BA_logo.svg",
-  scotiabank: "https://upload.wikimedia.org/wikipedia/commons/6/64/Scotiabank_2019_logo.svg",
-  falabella: "https://upload.wikimedia.org/wikipedia/commons/4/45/Banco_Falabella_logo.svg",
-  hsbc: "https://upload.wikimedia.org/wikipedia/commons/a/aa/HSBC_logo_%282018%29.svg",
-  "jp-morgan": "https://upload.wikimedia.org/wikipedia/commons/a/af/J_P_Morgan_Logo_2008_1.svg",
-  "do-brasil": "https://upload.wikimedia.org/wikipedia/commons/0/08/Banco_do_Brasil_logo.svg",
-  "btg-pactual": "https://upload.wikimedia.org/wikipedia/commons/5/5d/BTG_Pactual_logo.svg",
+const LOCAL_LOGOS: Record<string, string> = {
+  santander: "/logos/santander.svg",
+  chile: "/logos/bancochile.svg",
+  bci: "/logos/bci.svg",
+  estado: "/logos/bancoestado.svg",
+  itau: "/logos/itau.svg",
+  scotiabank: "/logos/scotiabank.svg",
+  falabella: "/logos/falabella.svg",
+  security: "/logos/security.svg",
+  bice: "/logos/bice.svg",
+  consorcio: "/logos/consorcio.svg",
+  internacional: "/logos/internacional.svg",
+  ripley: "/logos/ripley.svg",
+  hsbc: "/logos/hsbc.svg",
+  "btg-pactual": "/logos/btgpactual.svg",
+  "jp-morgan": "/logos/jpmorgan.svg",
+  "do-brasil": "/logos/bancodobrasil.svg",
+  "nacion-argentina": "/logos/nacionargentina.svg",
 };
 
 function logoUrl(bank: (typeof CHILE_BANKS)[number]) {
-  return LOGO_OVERRIDES[bank.id] ?? getBankLogoUrl(bank.domain);
+  return LOCAL_LOGOS[bank.id] ?? getBankLogoUrl(bank.domain);
 }
 
 function statusCopy(status: AssistantStatus) {
