@@ -32,7 +32,7 @@ export const VOICE_CONFIG: VoiceQuality = {
 export const WELCOME_MESSAGE = [
   "Hola.",
   "Soy Lédyera.",
-  "Te voy a ayudar a entender y evaluar tu situación financiera y tributaria con criptoactivos.",
+  "Te acompaño a entender y evaluar tu situación financiera y tributaria con criptoactivos.",
   "Cuéntame cuál es tu situación o qué quieres evaluar.",
 ].join("\n\n");
 
