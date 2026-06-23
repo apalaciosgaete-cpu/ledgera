@@ -17,6 +17,11 @@ import { createPortfolio } from "@/modules/portfolio/infrastructure/portfolioRep
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+import {
+  apiAuthErrorResponse,
+  isApiAuthError,
+  requireAdmin,
+} from "@/modules/security/application/requireApiUser";
 
 const validRoles = ["personal", "contador", "empresa"] as const;
 type Role = (typeof validRoles)[number];
@@ -25,8 +30,9 @@ function isValidRole(value: unknown): value is Role {
   return validRoles.includes(value as Role);
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    await requireAdmin(request);
     const users = await getUsers();
 
     return ok(
@@ -37,6 +43,7 @@ export async function GET() {
       "Usuarios obtenidos correctamente.",
     );
   } catch (error) {
+    if (isApiAuthError(error)) return apiAuthErrorResponse(error);
     return serverError(error);
   }
 }
