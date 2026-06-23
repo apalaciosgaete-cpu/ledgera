@@ -95,7 +95,6 @@ export function InvestorDashboard() {
   function scheduleRelisten() {
     if (!voiceModeRef.current) return;
     clearRelistenTimer();
-    // El audio ya terminó — solo esperamos un breve gap antes de re-escuchar
     relistenTimerRef.current = window.setTimeout(() => {
       if (!loading) startMic();
     }, 450);
@@ -452,31 +451,6 @@ export function InvestorDashboard() {
               }}
             >
               {listening ? "■" : "🎙"}
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading}
-              aria-label="Analizar situación"
-              style={{
-                background: "#16A34A",
-                border: "none",
-                borderRadius: 12,
-                color: "#FFFFFF",
-                cursor: loading ? "not-allowed" : "pointer",
-                width: 58,
-                height: 46,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                fontWeight: 850,
-                flexShrink: 0,
-                lineHeight: 1,
-                opacity: loading ? 0.7 : 1,
-              }}
-            >
-              →
             </button>
           </div>
         </form>
