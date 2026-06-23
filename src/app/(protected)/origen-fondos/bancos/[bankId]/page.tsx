@@ -9,15 +9,15 @@ import { VoiceOrb } from "@/components/voice/VoiceOrb";
 import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
 import { findBankById, getBankLogoUrl } from "@/modules/banking/catalogs/chileBanks";
 import type { ConnectionMethod } from "@/modules/banking/catalogs/chileBanks";
+
 import { colors } from "@/styles/tokens";
 
 type AssistantStatus = "idle" | "listening" | "speaking";
 
-const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; description: string; accent: string; bg: string; border: string }> = {
+const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; accent: string; bg: string; border: string }> = {
   api: {
     icon: "🔐",
     label: "Conexión segura por API",
-    description: "Conecta directamente mediante API bancaria. Requiere convenio activo con el banco. La sincronización es automática y en tiempo real.",
     accent: "#7C3AED",
     bg: "#FBFAFF",
     border: "#E6E0FF",
@@ -25,7 +25,6 @@ const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; descr
   aggregator: {
     icon: "🔄",
     label: "Conexión vía agregador",
-    description: "Usa un proveedor de open banking para leer tus movimientos de forma segura. No requiere convenio directo con el banco.",
     accent: "#2483FF",
     bg: "#F8FBFF",
     border: "#DCEBFF",
@@ -33,7 +32,6 @@ const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; descr
   manual_upload: {
     icon: "📄",
     label: "Subir cartola bancaria",
-    description: "Carga un PDF, Excel o CSV con tus movimientos. LEDGERA extrae y normaliza los datos automáticamente.",
     accent: "#20C878",
     bg: "#F8FFFB",
     border: "#D9F5E8",
@@ -90,8 +88,7 @@ export default function BankConnectionPage() {
   }
 
   return (
-    <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto auto 1fr auto" }}>
-      {/* Back */}
+    <main style={{ height: "calc(100vh - 92px)", overflow: "hidden", display: "grid", gap: 12, gridTemplateRows: "auto auto 1fr auto" }}>
       <section>
         <button
           onClick={() => window.location.href = "/origen-fondos/bancos"}
@@ -106,45 +103,17 @@ export default function BankConnectionPage() {
         </button>
       </section>
 
-      {/* Header */}
       <section style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <img src={getBankLogoUrl(bank.domain)} alt={bank.name} style={{ width: 58, height: 48, objectFit: "contain", display: "block" }} />
         <div>
           <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>
             Conectar {bank.shortName}
           </h1>
-          <p style={{ margin: "4px 0 0", color: "#475569", fontSize: 13.5, fontFamily: fonts.body }}>
-            {bank.name} · Código CMF: {bank.cmfCode}
-          </p>
         </div>
       </section>
 
-      {/* Badges */}
-      <section style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{
-          fontSize: 11, fontWeight: 700,
-          color: isAvailable ? "#16A34A" : colors.textMuted,
-          background: isAvailable ? "rgba(22,163,74,0.1)" : colors.surfaceAlt,
-          border: `1px solid ${isAvailable ? "rgba(22,163,74,0.2)" : colors.border}`,
-          borderRadius: 999, padding: "4px 10px", fontFamily: fonts.body,
-        }}>
-          {isAvailable ? "Disponible" : "Próximamente"}
-        </span>
-        {bank.connectionMethods.map((m) => (
-          <span key={m} style={{
-            fontSize: 11, fontWeight: 600, color: colors.textSecondary,
-            background: colors.surfaceAlt,
-            border: `1px solid ${colors.border}`, borderRadius: 999,
-            padding: "4px 10px", fontFamily: fonts.body,
-          }}>
-            {METHOD_META[m].label}
-          </span>
-        ))}
-      </section>
-
-      {/* Métodos de conexión */}
-      <section style={{ minHeight: 0, overflowY: "auto", paddingRight: 4 }}>
-        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+      <section style={{ minHeight: 0, overflow: "hidden", paddingRight: 4 }}>
+        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", alignContent: "start" }}>
           {bank.connectionMethods.map((method) => {
             const meta = METHOD_META[method];
             return (
@@ -153,14 +122,15 @@ export default function BankConnectionPage() {
                 type="button"
                 disabled={!isAvailable}
                 style={{
+                  minHeight: 116,
                   borderRadius: 18,
                   border: `1px solid ${meta.border}`,
                   background: meta.bg,
                   color: "#0F2A3D",
                   cursor: isAvailable ? "pointer" : "not-allowed",
                   display: "grid",
-                  gap: 10,
-                  padding: "20px 16px",
+                  gap: 8,
+                  padding: "18px 16px",
                   textAlign: "left",
                   fontFamily: fonts.body,
                   opacity: isAvailable ? 1 : 0.55,
@@ -180,9 +150,6 @@ export default function BankConnectionPage() {
                   <span style={{ fontSize: 28, lineHeight: 1 }}>{meta.icon}</span>
                   <strong style={{ fontSize: 15, fontWeight: 900 }}>{meta.label}</strong>
                 </div>
-                <p style={{ margin: 0, fontSize: 13, color: "#475569", lineHeight: 1.45 }}>
-                  {meta.description}
-                </p>
                 {isAvailable && (
                   <span style={{
                     fontSize: 12, fontWeight: 700, color: meta.accent,
@@ -199,8 +166,7 @@ export default function BankConnectionPage() {
         </div>
       </section>
 
-      {/* VoiceOrb + input */}
-      <section style={{ border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
+      <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
           <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
           <div style={{ minWidth: 0 }}>
