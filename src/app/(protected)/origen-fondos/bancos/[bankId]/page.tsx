@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { notFound, useParams } from "next/navigation";
-import { fonts, colors } from "@/styles/tokens";
+import { fonts } from "@/styles/tokens";
 import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 import { startListening } from "@/modules/voice/speechToText";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
@@ -20,14 +20,6 @@ const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; cta: 
     accent: "#7C3AED",
     bg: "#FBFAFF",
     border: "#E6E0FF",
-  },
-  aggregator: {
-    icon: "🔄",
-    label: "Conexión automática",
-    cta: "Conectar banco →",
-    accent: "#2483FF",
-    bg: "#F8FBFF",
-    border: "#DCEBFF",
   },
   manual_upload: {
     icon: "📄",
@@ -123,7 +115,7 @@ export default function BankConnectionPage() {
       </section>
 
       <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gap: 10, gridTemplateRows: "auto 1fr" }}>
-        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(3, minmax(0, 1fr))", alignContent: "start" }}>
+        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(2, minmax(0, 1fr))", alignContent: "start" }}>
           {bank.connectionMethods.map((method) => {
             const meta = METHOD_META[method];
             const active = activeMethod === method;
@@ -160,13 +152,6 @@ export default function BankConnectionPage() {
                 <button type="submit" style={{ minHeight: 42, borderRadius: 12, border: "none", background: "#7C3AED", color: "#FFFFFF", fontWeight: 900, padding: "0 16px", cursor: "pointer" }}>Conectar API</button>
               </div>
             </form>
-          )}
-
-          {activeMethod === "aggregator" && (
-            <div style={{ display: "grid", gap: 10 }}>
-              <strong style={{ color: "#0F2A3D", fontSize: 15 }}>Conexión automática</strong>
-              <button type="button" style={{ width: 220, minHeight: 42, borderRadius: 12, border: "none", background: "#2483FF", color: "#FFFFFF", fontWeight: 900, cursor: "pointer" }}>Conectar banco</button>
-            </div>
           )}
 
           {activeMethod === "manual_upload" && (
