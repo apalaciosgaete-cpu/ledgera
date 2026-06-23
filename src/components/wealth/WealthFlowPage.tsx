@@ -23,15 +23,11 @@ const SOURCE_OPTIONS: SourceOption[] = [
 ];
 
 const ASSET_VIEWS: AssetView[] = [
-  { key: "transacciones", label: "Todas las transacciones", value: "0", hint: "Movimientos normalizados desde bancos, exchanges, wallets y documentos.", accent: "#6D4AFF", bg: "#FBFAFF", border: "#E6E0FF" },
-  { key: "activos-detectados", label: "Activos detectados", value: "0", hint: "Activos consolidados por moneda, token, custodia y saldo.", accent: "#2483FF", bg: "#F8FBFF", border: "#DCEBFF" },
-  { key: "pendientes", label: "Pendientes de corrección", value: "0", hint: "Movimientos que requieren decisión o clasificación del usuario.", accent: "#FF7A1A", bg: "#FFFBF6", border: "#FFE8D6" },
-  { key: "eventos-tributarios", label: "Eventos tributarios", value: "0", hint: "Operaciones listas para ser evaluadas por el motor tributario.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
+  { key: "transacciones", label: "Transacciones", value: "0", hint: "Todos los movimientos importados en una sola tabla.", accent: "#6D4AFF", bg: "#FBFAFF", border: "#E6E0FF" },
+  { key: "activos-detectados", label: "Activos", value: "0", hint: "Saldos y activos detectados desde las fuentes.", accent: "#2483FF", bg: "#F8FBFF", border: "#DCEBFF" },
+  { key: "pendientes", label: "Por revisar", value: "0", hint: "Datos que requieren corrección o confirmación.", accent: "#FF7A1A", bg: "#FFFBF6", border: "#FFE8D6" },
+  { key: "eventos-tributarios", label: "Eventos tributarios", value: "0", hint: "Operaciones que podrían afectar impuestos.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
 ];
-
-const INGESTION_STEPS = ["Importar fuentes", "Normalizar transacciones", "Corregir inconsistencias", "Validar con usuario", "Enviar a motor tributario"] as const;
-const REVIEW_QUEUE = ["Clasificación de movimientos", "Vinculación de respaldo documental", "Conciliación de saldos"] as const;
-const DECISION_QUEUE = ["Confirmar tipo de operación", "Revisar activo detectado", "Aprobar envío al motor tributario"] as const;
 
 const STEP_COPY: Record<WealthStepKey, { title: string; subtitle: string; guide: string; examples: string[] }> = {
   "origen-fondos": {
@@ -42,8 +38,8 @@ const STEP_COPY: Record<WealthStepKey, { title: string; subtitle: string; guide:
   },
   activos: {
     title: "Activos",
-    subtitle: "Vista consolidada de transacciones, saldos, activos detectados y decisiones pendientes.",
-    guide: "Estás en Activos. Aquí revisarás la información importada, corregirás inconsistencias y validarás datos antes del motor tributario.",
+    subtitle: "Revisa y corrige la información consolidada antes del análisis tributario.",
+    guide: "Estás en Activos. Aquí revisas transacciones, activos detectados y datos pendientes antes de enviarlos al motor tributario.",
     examples: ["ver transacciones", "revisar pendientes", "eventos tributarios", "activos detectados"],
   },
 };
@@ -79,19 +75,19 @@ function statusCopy(status: AssistantStatus) {
 
 function EmptyTransactionsTable() {
   return (
-    <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", overflow: "hidden", minHeight: 0 }}>
+    <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", overflow: "hidden", minHeight: 260 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr", padding: "11px 14px", background: "#F8FAFC", color: "#64748B", fontSize: 11, fontWeight: 900, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: fonts.body }}>
         <span>Fecha</span>
         <span>Fuente</span>
         <span>Activo</span>
         <span>Movimiento</span>
         <span>Estado</span>
-        <span>Decisión</span>
+        <span>Acción</span>
       </div>
-      <div style={{ display: "grid", placeItems: "center", minHeight: 185, padding: 20, textAlign: "center", color: "#64748B", fontFamily: fonts.body }}>
+      <div style={{ display: "grid", placeItems: "center", minHeight: 210, padding: 20, textAlign: "center", color: "#64748B", fontFamily: fonts.body }}>
         <div>
-          <strong style={{ display: "block", color: "#0F2A3D", fontSize: 16, marginBottom: 6 }}>Aún no hay transacciones importadas</strong>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45 }}>Cuando Origen de Fondos capture bancos, exchanges, wallets o documentos, todas las operaciones aparecerán aquí en una sola vista consolidada.</p>
+          <strong style={{ display: "block", color: "#0F2A3D", fontSize: 16, marginBottom: 6 }}>Aún no hay datos importados</strong>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45 }}>Cuando cargues bancos, exchanges, wallets o documentos, las transacciones aparecerán aquí para revisar y corregir.</p>
         </div>
       </div>
     </div>
@@ -190,51 +186,21 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
           {ASSET_VIEWS.map((view) => {
             const active = assetView === view.key;
             return (
-              <button key={view.key} type="button" onClick={() => setAssetView(view.key)} style={{ minHeight: 88, borderRadius: 18, border: `1px solid ${active ? view.accent : view.border}`, background: view.bg, cursor: "pointer", textAlign: "left", padding: "12px 14px", display: "grid", gap: 4, boxShadow: active ? `0 8px 18px ${view.accent}20` : "0 8px 16px rgba(15,42,61,0.035)", fontFamily: fonts.body }}>
-                <span style={{ color: view.accent, fontSize: 22, fontWeight: 950, lineHeight: 1 }}>{view.value}</span>
+              <button key={view.key} type="button" onClick={() => setAssetView(view.key)} style={{ minHeight: 82, borderRadius: 18, border: `1px solid ${active ? view.accent : view.border}`, background: view.bg, cursor: "pointer", textAlign: "left", padding: "12px 14px", display: "grid", gap: 3, boxShadow: active ? `0 8px 18px ${view.accent}20` : "0 8px 16px rgba(15,42,61,0.035)", fontFamily: fonts.body }}>
+                <span style={{ color: view.accent, fontSize: 21, fontWeight: 950, lineHeight: 1 }}>{view.value}</span>
                 <strong style={{ color: "#0F2A3D", fontSize: 13.5, fontWeight: 900 }}>{view.label}</strong>
-                <span style={{ color: "#64748B", fontSize: 11.5, lineHeight: 1.25 }}>{view.hint}</span>
+                <span style={{ color: "#64748B", fontSize: 11.5, lineHeight: 1.2 }}>{view.hint}</span>
               </button>
             );
           })}
         </section>
 
-        <section style={{ minHeight: 0, overflowY: "auto", overflowX: "hidden", display: "grid", gridTemplateColumns: "minmax(0,1.45fr) minmax(260px,.75fr)", gap: 12, paddingBottom: 8, scrollbarGutter: "stable" as const }}>
-          <div style={{ minHeight: 0, display: "grid", gap: 10, gridTemplateRows: "auto 1fr" }}>
-            <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", padding: "12px 14px", fontFamily: fonts.body }}>
-              <strong style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
-              <p style={{ margin: "4px 0 0", color: "#64748B", fontSize: 12.5, lineHeight: 1.35 }}>{selectedAssetView.hint}</p>
-            </div>
-            <EmptyTransactionsTable />
+        <section style={{ minHeight: 0, overflowY: "auto", overflowX: "hidden", display: "grid", gap: 10, alignContent: "start", paddingBottom: 8 }}>
+          <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", padding: "12px 14px", fontFamily: fonts.body }}>
+            <strong style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
+            <p style={{ margin: "4px 0 0", color: "#64748B", fontSize: 12.5, lineHeight: 1.35 }}>{selectedAssetView.hint}</p>
           </div>
-
-          <div style={{ minHeight: 0, overflowY: "auto", display: "grid", gap: 10, gridTemplateRows: "auto auto auto", alignContent: "start", paddingRight: 4 }}>
-            <aside style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", padding: 14, fontFamily: fonts.body }}>
-              <strong style={{ display: "block", color: "#0F2A3D", fontSize: 14, fontWeight: 900, marginBottom: 9 }}>Motor de ingesta tributario</strong>
-              <div style={{ display: "grid", gap: 7 }}>
-                {INGESTION_STEPS.map((step, index) => (
-                  <div key={step} style={{ display: "flex", alignItems: "center", gap: 8, color: index === 0 ? "#6D4AFF" : "#94A3B8", fontSize: 12.5, fontWeight: index === 0 ? 900 : 700 }}>
-                    <span style={{ width: 20, height: 20, borderRadius: 999, display: "grid", placeItems: "center", background: index === 0 ? "#F1EDFF" : "#F8FAFC", color: index === 0 ? "#6D4AFF" : "#CBD5E1", fontSize: 10, fontWeight: 900 }}>{index + 1}</span>
-                    {step}
-                  </div>
-                ))}
-              </div>
-            </aside>
-
-            <aside style={{ border: "1px solid #FFE8D6", borderRadius: 18, background: "#FFFBF6", padding: 14, fontFamily: fonts.body }}>
-              <strong style={{ display: "block", color: "#0F2A3D", fontSize: 14, fontWeight: 900, marginBottom: 8 }}>Pendientes de revisión</strong>
-              <div style={{ display: "grid", gap: 6 }}>
-                {REVIEW_QUEUE.map((item) => <span key={item} style={{ color: "#92400E", fontSize: 12.5, fontWeight: 750 }}>• {item}</span>)}
-              </div>
-            </aside>
-
-            <aside style={{ border: "1px solid #D9F5E8", borderRadius: 18, background: "#F8FFFB", padding: 14, fontFamily: fonts.body }}>
-              <strong style={{ display: "block", color: "#0F2A3D", fontSize: 14, fontWeight: 900, marginBottom: 8 }}>Decisiones del usuario</strong>
-              <div style={{ display: "grid", gap: 8 }}>
-                {DECISION_QUEUE.map((item) => <button key={item} type="button" style={{ border: "1px solid #D9F5E8", borderRadius: 12, background: "#FFFFFF", padding: "9px 10px", textAlign: "left", color: "#0F2A3D", fontSize: 12.5, fontWeight: 850, cursor: "pointer", fontFamily: fonts.body }}>{item}</button>)}
-              </div>
-            </aside>
-          </div>
+          <EmptyTransactionsTable />
         </section>
 
         <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)", flexShrink: 0 }}>
