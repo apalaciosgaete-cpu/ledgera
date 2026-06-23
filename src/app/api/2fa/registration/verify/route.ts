@@ -9,6 +9,7 @@ import {
 } from "@/modules/identity/application/sessionToken";
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { prisma } from "@/lib/prisma";
+import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export const runtime = "nodejs";
@@ -125,10 +126,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const secretPlain = decryptTwoFactorSecret(user.twoFactorSecret);
+
     const expectedSetupToken = signSetupToken(
       user.id,
       user.email,
-      user.twoFactorSecret,
+      secretPlain,
     );
 
     if (!safeEqual(setupToken, expectedSetupToken)) {
@@ -142,7 +145,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isValid = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: secretPlain,
       encoding: "base32",
       token: code,
       window: 1,

@@ -7,6 +7,7 @@ import QRCode from "qrcode";
 
 import { requireAuth } from "@/shared";
 import { prisma } from "@/lib/prisma";
+import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 
 export const runtime = "nodejs";
 
@@ -57,21 +58,23 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const secretPlain = decryptTwoFactorSecret(user.twoFactorSecret);
+
     const otpauthUrl = speakeasy.otpauthURL({
-      secret: user.twoFactorSecret,
+      secret: secretPlain,
       label: `LEDGERA (${user.email})`,
       issuer: "LEDGERA",
       encoding: "base32",
     });
 
     const qrCode = await QRCode.toDataURL(otpauthUrl);
-    const setupToken = signSetupToken(user.id, user.email, user.twoFactorSecret);
+    const setupToken = signSetupToken(user.id, user.email, secretPlain);
 
     return NextResponse.json({
       ok: true,
       data: {
         qrCode,
-        secret: user.twoFactorSecret,
+        secret: secretPlain,
         setupToken,
       },
     });

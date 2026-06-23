@@ -7,6 +7,7 @@ import {
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import {
   buildSessionExpirationDate,
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isValid = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: decryptTwoFactorSecret(user.twoFactorSecret),
       encoding: "base32",
       token: code,
       window: 1,

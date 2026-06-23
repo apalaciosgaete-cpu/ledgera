@@ -5,6 +5,7 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
+import { encryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 
 export const runtime = "nodejs";
 
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
     await prisma.users.update({
       where: { id: user.id },
       data: {
-        twoFactorSecret: secret.base32,
+        twoFactorSecret: encryptTwoFactorSecret(secret.base32),
         twoFactorEnabled: false,
         updated_at: new Date(),
       },

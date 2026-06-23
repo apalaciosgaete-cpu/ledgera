@@ -4,6 +4,7 @@ import speakeasy from "speakeasy";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 export async function POST(req: NextRequest) {
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isValid = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: decryptTwoFactorSecret(user.twoFactorSecret),
       encoding: "base32",
       token: code,
       window: 1,

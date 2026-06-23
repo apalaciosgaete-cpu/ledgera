@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { encryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 export async function POST(req: NextRequest) {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     await prisma.users.update({
       where: { id: user.id },
       data: {
-        twoFactorSecret: secret.base32,
+        twoFactorSecret: encryptTwoFactorSecret(secret.base32),
         twoFactorEnabled: false,
         updated_at: new Date(),
       },

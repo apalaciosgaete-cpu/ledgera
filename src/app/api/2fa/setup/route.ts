@@ -5,6 +5,10 @@ import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import {
+  decryptTwoFactorSecret,
+  encryptTwoFactorSecret,
+} from "@/modules/identity/application/twoFactorSecret";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 export async function GET(req: NextRequest) {
@@ -32,7 +36,9 @@ export async function GET(req: NextRequest) {
     const regenerate = searchParams.get("regenerate") === "1";
 
     const user = await getUserById(session.user.id);
-    const existingSecret = user?.twoFactorSecret;
+    const existingSecret = user?.twoFactorSecret
+      ? decryptTwoFactorSecret(user.twoFactorSecret)
+      : null;
 
     // Si ya tiene secret y no pide regenerar, reutilizarlo
     if (!regenerate && existingSecret) {
@@ -60,7 +66,10 @@ export async function GET(req: NextRequest) {
 
     await prisma.users.update({
       where: { id: session.user.id },
-      data: { twoFactorSecret: secret.base32, updated_at: new Date() },
+      data: {
+        twoFactorSecret: encryptTwoFactorSecret(secret.base32),
+        updated_at: new Date(),
+      },
     });
 
     return NextResponse.json({
