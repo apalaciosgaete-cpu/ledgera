@@ -302,6 +302,50 @@ export function InvestorDashboard() {
           >
             {activeLabel}
           </p>
+          {/* Mic button standalone bajo el orbe */}
+          <button
+            type="button"
+            onClick={toggleMic}
+            disabled={loading}
+            aria-label={listening ? "Detener micrófono" : "Activar micrófono"}
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 999,
+              border: `2px solid ${
+                listening
+                  ? "rgba(74,222,128,0.5)"
+                  : "rgba(255,255,255,0.12)"
+              }`,
+              background: listening
+                ? "rgba(22,163,74,0.18)"
+                : "rgba(255,255,255,0.05)",
+              color: listening ? "#4ADE80" : "#CBD5E1",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontSize: 28,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s ease",
+              boxShadow: listening
+                ? "0 0 24px rgba(74,222,128,0.15)"
+                : "0 0 12px rgba(255,255,255,0.04)",
+            }}
+            onMouseEnter={(e) => {
+              if (!listening && !loading) {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.30)";
+                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!listening && !loading) {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              }
+            }}
+          >
+            {listening ? "■" : "🎙"}
+          </button>
           {voiceNotice ? (
             <p style={{ color: "#FBBF24", fontSize: 12, lineHeight: 1.45, margin: "0 auto", maxWidth: 460 }}>
               {voiceNotice}
