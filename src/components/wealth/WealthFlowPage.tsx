@@ -16,8 +16,8 @@ type FlowOption = { key: OptionKey; icon: string; label: string; hint: string; a
 const OPTIONS: Record<WealthStepKey, FlowOption[]> = {
   "origen-fondos": [
     { key: "bancos", icon: "🏦", label: "Bancos", hint: "Abrí Bancos. Selecciona tu banco para continuar.", accent: "#6D4AFF", bg: "#FBFAFF", border: "#E6E0FF" },
-    { key: "exchanges", icon: "📊", label: "Exchanges", hint: "Abrí Exchanges. Indica plataforma o movimiento.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
-    { key: "wallets", icon: "💳", label: "Wallets", hint: "Abrí Wallets. Indica dirección o movimiento on-chain.", accent: "#2483FF", bg: "#F8FBFF", border: "#DCEBFF" },
+    { key: "exchanges", icon: "📊", label: "Exchanges", hint: "Abrí Exchanges. Selecciona tu exchange para continuar.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
+    { key: "wallets", icon: "💳", label: "Wallets", hint: "Abrí Wallets. Selecciona tu wallet para continuar.", accent: "#2483FF", bg: "#F8FBFF", border: "#DCEBFF" },
     { key: "documentacion", icon: "📄", label: "Documentación", hint: "Abrí Documentación. Puedes cargar PDF o Excel.", accent: "#FF7A1A", bg: "#FFFBF6", border: "#FFE8D6" },
   ],
   activos: [
@@ -87,13 +87,18 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     stopListeningRef.current?.();
     setSelected(option.key);
     setQuery(option.label);
-    if (option.key === "bancos") {
+    const sourceFundsRoutes: Partial<Record<OptionKey, string>> = {
+      bancos: "/origen-fondos/bancos",
+      exchanges: "/origen-fondos/exchanges",
+      wallets: "/origen-fondos/wallets",
+    };
+    const route = activeStep === "origen-fondos" ? sourceFundsRoutes[option.key] : null;
+    if (route) {
       setStatus("idle");
-      router.push("/origen-fondos/bancos");
+      router.push(route);
       return;
     }
     setStatus("idle");
-
     if (mode === "auto") {
       setStatus("speaking");
       void speakResponse(option.hint).finally(() => setStatus("idle"));
