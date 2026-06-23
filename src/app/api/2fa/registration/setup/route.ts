@@ -5,6 +5,7 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
+import { sealTotpSeed } from "@/modules/security/application/totpSecretCrypto";
 
 export const runtime = "nodejs";
 
@@ -14,10 +15,10 @@ const REGISTRATION_2FA_TOKEN_SECRET =
   process.env.AUTH_SECRET ??
   "ledgera-dev-registration-2fa-secret";
 
-function signSetupToken(userId: string, email: string, secret: string) {
+function signSetupToken(userId: string, email: string, seed: string) {
   return crypto
     .createHmac("sha256", REGISTRATION_2FA_TOKEN_SECRET)
-    .update(`${userId}:${email}:${secret}`)
+    .update(`${userId}:${email}:${seed}`)
     .digest("hex");
 }
 
@@ -73,34 +74,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret = speakeasy.generateSecret({
+    const generated = speakeasy.generateSecret({
       name: `LEDGERA (${user.email})`,
       issuer: "LEDGERA",
       length: 20,
     });
 
-    if (!secret.base32 || !secret.otpauth_url) {
+    if (!generated.base32 || !generated.otpauth_url) {
       return NextResponse.json(
         {
           ok: false,
-          message: "No fue posible generar el secreto 2FA.",
+          message: "No fue posible generar el código 2FA.",
         },
         { status: 500 },
       );
     }
 
-    const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+    const seed = generated.base32;
+    const qrCode = await QRCode.toDataURL(generated.otpauth_url);
 
     await prisma.users.update({
       where: { id: user.id },
       data: {
-        twoFactorSecret: secret.base32,
+        twoFactorSecret: sealTotpSeed(seed),
         twoFactorEnabled: false,
         updated_at: new Date(),
       },
     });
 
-    const setupToken = signSetupToken(user.id, user.email, secret.base32);
+    const setupToken = signSetupToken(user.id, user.email, seed);
 
     return NextResponse.json({
       ok: true,
@@ -109,7 +111,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         email: user.email,
         qrCode,
-        secret: secret.base32,
+        secret: seed,
         setupToken,
       },
     });
