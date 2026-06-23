@@ -98,3 +98,12 @@ a {
 .text-body {
   font-family: 'Inter', system-ui, sans-serif;
 }
+
+/* ─── UX: sin barras de texto conversacionales ────────────────────────────── */
+form:has(input[placeholder='Habla o escribe aquí...']),
+form:has(input[placeholder*='Buscar transacción']),
+form:has(input[placeholder*='Cuéntame tu situación']),
+form:has(input[placeholder*='Describe tu situación']),
+form:has(textarea[placeholder*='Escribe']) {
+  display: none !important;
+}
