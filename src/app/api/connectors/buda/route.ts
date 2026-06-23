@@ -1,7 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { decryptSecret, encryptSecret } from "@/modules/security/application/encryption";
+import {
+  apiAuthErrorResponse,
+  isApiAuthError,
+  requireApiUser,
+} from "@/modules/security/application/requireApiUser";
 import { BudaConnector } from "@/services/connectors/budaConnector";
 
 export const runtime = "nodejs";
@@ -9,7 +14,6 @@ export const runtime = "nodejs";
 type BudaAction = "connect" | "import";
 
 type BudaRequestBody = {
-  userId?: string;
   apiKey?: string;
   apiSecret?: string;
   action?: BudaAction;
@@ -21,16 +25,17 @@ function normalizeMarketId(marketId?: string): string {
   return (marketId || "btc-clp").trim().toLowerCase();
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const actor = await requireApiUser(request);
     const body = (await request.json()) as BudaRequestBody;
-    const userId = String(body.userId ?? "").trim();
+    const userId = actor.id;
     const action = body.action;
     const marketId = normalizeMarketId(body.marketId);
 
-    if (!userId || !action) {
+    if (!action) {
       return NextResponse.json(
-        { error: "userId y action son obligatorios" },
+        { error: "action es obligatorio" },
         { status: 400 },
       );
     }
@@ -150,6 +155,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "Accion no valida" }, { status: 400 });
   } catch (error) {
+    if (isApiAuthError(error)) return apiAuthErrorResponse(error);
+
     console.error("[connectors/buda]", error);
 
     return NextResponse.json(
