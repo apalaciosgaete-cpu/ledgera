@@ -2,7 +2,7 @@
 // Catálogo de bancos que operan en Chile, regulados por la CMF (ex SBIF).
 // Fuente: CMF — Comisión para el Mercado Financiero
 
-export type ConnectionMethod = "api" | "aggregator" | "manual_upload";
+export type ConnectionMethod = "api" | "manual_upload";
 export type BankStatus = "available" | "coming_soon";
 
 export interface ChileBank {
@@ -16,7 +16,7 @@ export interface ChileBank {
   domain: string;
 }
 
-const BANK_CONNECTORS: ConnectionMethod[] = ["api", "aggregator", "manual_upload"];
+const BANK_CONNECTORS: ConnectionMethod[] = ["api", "manual_upload"];
 
 /**
  * Bancos que operan en Chile regulados por la CMF.
