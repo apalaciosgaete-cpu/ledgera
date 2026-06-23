@@ -23,7 +23,7 @@ export const cryptoFirstModules: DigitalModuleDefinition[] = [
     key: "taxObligations",
     label: "Obligaciones Tributarias",
     href: "/obligaciones-tributarias",
-    description: "Identificación de eventos con posible efecto tributario y nivel de revisión requerido.",
+    description: "Convierte tus movimientos financieros en obligaciones claras y trazables.",
     primaryQuestion: "¿Qué operación quieres evaluar tributariamente?",
     examples: ["Venta crypto-fiat", "Intercambio entre activos", "Rendimiento por staking", "Airdrop recibido"],
     status: "PARTIAL",

@@ -9,8 +9,7 @@ export default function ObligacionesTributariasPage() {
       module={module}
       sections={[
         "Venta crypto-fiat, swap crypto-crypto, staking, airdrops, DeFi, NFTs, retiros y transferencias entre wallets.",
-        "Evento, periodo, activo, monto, documentación y estado de revisión tributaria.",
-        "Reportes, CSV, cartolas, comprobantes y respaldos que explican cada evento.",
+        "Obligación, periodo, activo, monto, documentación y estado de revisión tributaria.",
         "Detectar eventos con posible efecto tributario y priorizar los que requieren análisis.",
       ]}
     />
