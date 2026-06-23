@@ -3,10 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fonts } from "@/styles/tokens";
 import { startListening, type STTState } from "@/modules/voice/speechToText";
+import { startMicMeter, stopMicMeter, type MicStartResult } from "@/modules/voice/micMeter";
+import { MicWaveform } from "@/components/voice/MicWaveform";
 import {
   VoiceConversationOrchestrator,
   type VoiceConversationSnapshot,
 } from "@/modules/voice/conversationOrchestrator";
+
+const MIC_ERROR_BY_REASON: Record<NonNullable<MicStartResult["reason"]>, string> = {
+  denied: "Permiso de micrófono bloqueado. Actívalo en tu navegador y vuelve a intentar.",
+  "no-device": "No detecté un micrófono conectado.",
+  unsupported: "Tu navegador no permite usar el micrófono aquí.",
+  error: "No fue posible acceder al micrófono.",
+};
 
 const LABEL_BY_STATE: Record<VoiceConversationSnapshot["state"], string> = {
   idle: "Micrófono listo",
@@ -44,6 +53,7 @@ export function VoiceLoopController({ onTranscript, onBeforeListen, disabled = f
 
     return () => {
       stopListeningRef.current?.();
+      stopMicMeter();
       orchestratorRef.current?.reset();
     };
   }, [onTranscript]);
@@ -56,13 +66,23 @@ export function VoiceLoopController({ onTranscript, onBeforeListen, disabled = f
     if (state === "processing") return orchestrator.beginTranscribing(transcript);
     if (state === "unsupported") return orchestrator.block();
     if (state === "error") return orchestrator.setError("No fue posible usar el micrófono.");
-    if (state === "idle") return orchestrator.setState("idle");
+    if (state === "idle") {
+      stopMicMeter();
+      return orchestrator.setState("idle");
+    }
   }
 
-  function startMic() {
+  async function startMic() {
     if (disabled) return;
     onBeforeListen?.();
     stopListeningRef.current?.();
+
+    // Abre el micrófono para mostrar ondas en vivo y confirmar captación.
+    const mic = await startMicMeter();
+    if (!mic.ok) {
+      orchestratorRef.current?.setError(MIC_ERROR_BY_REASON[mic.reason ?? "error"]);
+      return;
+    }
 
     let latestTranscript = "";
 
@@ -76,6 +96,7 @@ export function VoiceLoopController({ onTranscript, onBeforeListen, disabled = f
           orchestrator.beginThinking(latestTranscript);
           stopListeningRef.current?.();
           stopListeningRef.current = null;
+          stopMicMeter();
           return;
         }
 
@@ -86,6 +107,7 @@ export function VoiceLoopController({ onTranscript, onBeforeListen, disabled = f
     });
 
     if (!stop) {
+      stopMicMeter();
       orchestratorRef.current?.block();
       return;
     }
@@ -96,6 +118,7 @@ export function VoiceLoopController({ onTranscript, onBeforeListen, disabled = f
   function stopMic() {
     stopListeningRef.current?.();
     stopListeningRef.current = null;
+    stopMicMeter();
     orchestratorRef.current?.reset();
   }
 
@@ -135,6 +158,8 @@ export function VoiceLoopController({ onTranscript, onBeforeListen, disabled = f
       >
         {isListening ? "■" : "🎙"}
       </button>
+
+      <MicWaveform active={isListening} />
 
       <div style={{ minHeight: 40, textAlign: "center" }}>
         <p style={{ color: "#64748B", fontSize: 12, fontWeight: 700, margin: 0, fontFamily: fonts.body }}>
