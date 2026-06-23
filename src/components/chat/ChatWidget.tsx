@@ -30,6 +30,50 @@ export default function ChatWidget() {
   const lastMessageTime = useRef<string>(new Date(0).toISOString());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Posición flotante del botón (esquina inferior derecha por defecto).
+  const BTN_SIZE = 56;
+  const MARGIN = 28;
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const dragState = useRef<{ dragging: boolean; moved: boolean; offsetX: number; offsetY: number }>({ dragging: false, moved: false, offsetX: 0, offsetY: 0 });
+
+  useEffect(() => {
+    if (pos !== null || typeof window === "undefined") return;
+    setPos({ x: window.innerWidth - BTN_SIZE - MARGIN, y: window.innerHeight - BTN_SIZE - MARGIN });
+  }, [pos]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const clamp = () => setPos((p) => (p ? { x: Math.min(p.x, window.innerWidth - BTN_SIZE), y: Math.min(p.y, window.innerHeight - BTN_SIZE) } : p));
+    window.addEventListener("resize", clamp);
+    return () => window.removeEventListener("resize", clamp);
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!pos) return;
+    dragState.current = { dragging: true, moved: false, offsetX: e.clientX - pos.x, offsetY: e.clientY - pos.y };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = dragState.current;
+    if (!d.dragging) return;
+    const x = e.clientX - d.offsetX;
+    const y = e.clientY - d.offsetY;
+    if (pos && (Math.abs(x - pos.x) > 3 || Math.abs(y - pos.y) > 3)) d.moved = true;
+    setPos({
+      x: Math.max(0, Math.min(x, window.innerWidth - BTN_SIZE)),
+      y: Math.max(0, Math.min(y, window.innerHeight - BTN_SIZE)),
+    });
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    const d = dragState.current;
+    d.dragging = false;
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    if (!d.moved) setOpen((o) => !o);
+  };
+
+  // Ubica el panel arriba o abajo del botón según el espacio disponible.
+  const panelOnTop = pos ? pos.y > window.innerHeight / 2 : true;
+
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const checkAdminStatus = useCallback(async () => {
@@ -141,23 +185,27 @@ export default function ChatWidget() {
     <>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
         aria-label="Abrir soporte humano"
         style={{
           position: "fixed",
-          bottom: 28,
-          right: 28,
-          width: 56,
-          height: 56,
+          left: pos?.x ?? 0,
+          top: pos?.y ?? 0,
+          width: BTN_SIZE,
+          height: BTN_SIZE,
           borderRadius: "50%",
           background: open ? "#1E293B" : "#0F766E",
           border: open ? "1px solid rgba(255,255,255,0.15)" : "none",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          cursor: "pointer",
+          cursor: "grab",
+          touchAction: "none",
           zIndex: 1000,
           boxShadow: "0 4px 16px rgba(15,118,110,0.35)",
+          visibility: pos ? "visible" : "hidden",
         }}
       >
         {unread > 0 && !open ? (
@@ -170,8 +218,8 @@ export default function ChatWidget() {
         )}
       </button>
 
-      {open ? (
-        <div style={{ position: "fixed", bottom: 96, right: 28, width: 340, maxWidth: "calc(100vw - 40px)", height: 460, maxHeight: "calc(100vh - 120px)", background: "#0F172A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, overflow: "hidden" }}>
+      {open && pos ? (
+        <div style={{ position: "fixed", left: Math.max(12, Math.min(pos.x + BTN_SIZE / 2 - 170, (typeof window !== "undefined" ? window.innerWidth : 360) - 352)), ...(panelOnTop ? { bottom: (typeof window !== "undefined" ? window.innerHeight : 0) - pos.y + 12 } : { top: pos.y + BTN_SIZE + 12 }), width: 340, maxWidth: "calc(100vw - 40px)", height: 460, maxHeight: "calc(100vh - 120px)", background: "#0F172A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, overflow: "hidden" }}>
           <div style={{ padding: "1rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#0F766E", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", fontWeight: 800 }}>H</div>
             <div>
