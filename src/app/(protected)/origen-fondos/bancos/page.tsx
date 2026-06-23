@@ -44,7 +44,6 @@ function statusCopy(status: AssistantStatus) {
 export default function BancosOrigenFondosPage() {
   const router = useRouter();
   const stopListeningRef = useRef<(() => void) | null>(null);
-  const [query, setQuery] = useState("");
   const [status, setStatus] = useState<AssistantStatus>("idle");
 
   const guide = "Estás en Banco en Chile. Selecciona el banco que quieres conectar para continuar.";
@@ -65,18 +64,11 @@ export default function BancosOrigenFondosPage() {
     if (status === "listening") { stopListeningRef.current?.(); setStatus("idle"); return; }
     stopSpeaking();
     const stop = startListening({
-      onResult: ({ transcript }) => setQuery(transcript),
+      onResult: () => undefined,
       onStateChange: (state) => setStatus(state === "listening" ? "listening" : "idle"),
       onError: () => setStatus("idle"),
     });
     if (stop) { stopListeningRef.current = stop; setStatus("listening"); }
-  }
-
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-    const clean = query.trim().toLowerCase();
-    const bank = CHILE_BANKS.find((item) => item.name.toLowerCase().includes(clean) || item.shortName.toLowerCase().includes(clean));
-    if (bank) router.push(`/origen-fondos/bancos/${bank.id}`);
   }
 
   return (
@@ -104,22 +96,13 @@ export default function BancosOrigenFondosPage() {
         })}
       </section>
 
-      <section style={{ width: "100%", border: "1px solid #DDD6FE", borderRadius: 18, background: "#FFFFFF", padding: 10, display: "grid", gridTemplateColumns: "minmax(280px,.9fr) minmax(360px,.75fr)", gap: 12, alignItems: "center", boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
-          <div style={{ width: 46, height: 46, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
-          <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: status === "listening" || status === "speaking" ? "#5B35F5" : "#475569", fontSize: 14, fontWeight: 900, marginBottom: 3, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-            <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.22, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
-          </div>
+      <section style={{ width: "100%", border: "1px solid #DDD6FE", borderRadius: 18, background: "#FFFFFF", padding: 10, display: "flex", gap: 12, alignItems: "center", boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
+        <div style={{ width: 46, height: 46, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <strong style={{ display: "block", color: status === "listening" || status === "speaking" ? "#5B35F5" : "#475569", fontSize: 14, fontWeight: 900, marginBottom: 3, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
+          <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.22, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
         </div>
-        <form onSubmit={submit} style={{ width: "100%", justifySelf: "end", maxWidth: 620 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
-            <div style={{ flex: 1, minHeight: 44, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
-              <button type="button" onClick={toggleMic} style={{ width: 34, height: 34, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 18, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
-            </div>
-          </div>
-        </form>
+        <button type="button" onClick={toggleMic} style={{ width: 40, height: 40, borderRadius: 12, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
       </section>
     </main>
   );
