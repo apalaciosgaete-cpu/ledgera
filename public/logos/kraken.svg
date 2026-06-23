@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <g transform="translate(8,8)" fill="#5741D9">
+    <path d="M27 2c14 0 25 11 25 25v22h-9V27a16 16 0 0 0-32 0v22H2V27C2 13 13 2 27 2z"/>
+  </g>
+  <text x="66" y="44" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#5741D9">Kraken</text>
+</svg>

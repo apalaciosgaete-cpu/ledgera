@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <g transform="translate(14,18)" fill="#000000">
+    <rect x="0" y="0" width="11" height="11"/><rect x="22" y="0" width="11" height="11"/>
+    <rect x="11" y="11" width="11" height="11"/>
+    <rect x="0" y="22" width="11" height="11"/><rect x="22" y="22" width="11" height="11"/>
+  </g>
+  <text x="56" y="32" font-family="Arial Black, Arial, sans-serif" font-size="17" font-weight="900" fill="#000">OKX</text>
+  <text x="56" y="52" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#000">Wallet</text>
+</svg>

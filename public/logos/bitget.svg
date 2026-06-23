@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <circle cx="32" cy="35" r="24" fill="#00F0FF"/>
+  <path d="M24 24 L40 24 L30 35 L40 35 L24 50 L30 39 L22 39 Z" fill="#1A1A1A"/>
+  <text x="64" y="44" font-family="Arial, sans-serif" font-size="23" font-weight="bold" fill="#1A1A1A">Bitget</text>
+</svg>

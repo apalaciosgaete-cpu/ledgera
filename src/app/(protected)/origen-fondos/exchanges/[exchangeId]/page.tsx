@@ -2,7 +2,7 @@
 
 import { notFound, useParams, useRouter } from "next/navigation";
 import { fonts, colors } from "@/styles/tokens";
-import { findExchangeById, getLogoUrl } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
+import { findExchangeById } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
 
 export default function ExchangeConnectionPage() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function ExchangeConnectionPage() {
       <section>
         <button onClick={() => router.push("/origen-fondos/exchanges")} style={{ background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 8 }}>← Volver a Exchanges</button>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={getLogoUrl(exchange.domain)} alt={exchange.name} style={{ width: 58, height: 42, objectFit: "contain" }} />
+          <img src={exchange.logoUrl} alt={exchange.name} style={{ width: 58, height: 42, objectFit: "contain" }} />
           <div>
             <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>Conexión {exchange.name}</h1>
             <p style={{ margin: "4px 0 0", color: "#475569", fontSize: 13.5, fontFamily: fonts.body }}>Exchange</p>

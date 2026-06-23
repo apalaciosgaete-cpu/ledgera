@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <g transform="translate(10,12)">
+    <rect x="0" y="0" width="10" height="46" rx="2" fill="#23AF91"/>
+    <path d="M12 23 L34 2 L46 2 L22 23 L46 44 L34 44 Z" fill="#23AF91"/>
+    <circle cx="42" cy="8" r="6" fill="#23AF91"/><circle cx="42" cy="38" r="6" fill="#23AF91"/>
+  </g>
+  <text x="68" y="44" font-family="Arial, sans-serif" font-size="23" font-weight="bold" fill="#17181E">KuCoin</text>
+</svg>

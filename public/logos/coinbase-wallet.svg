@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <circle cx="30" cy="35" r="24" fill="#0052FF"/>
+  <rect x="22" y="27" width="16" height="16" rx="3" fill="white"/>
+  <text x="58" y="32" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#0052FF">Coinbase</text>
+  <text x="58" y="52" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#0052FF">Wallet</text>
+</svg>

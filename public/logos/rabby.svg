@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <ellipse cx="33" cy="35" rx="26" ry="20" fill="#7084FF"/>
+  <circle cx="42" cy="30" r="3" fill="white"/>
+  <text x="66" y="44" font-family="Arial, sans-serif" font-size="23" font-weight="bold" fill="#5A6EF0">Rabby</text>
+</svg>

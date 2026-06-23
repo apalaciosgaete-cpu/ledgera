@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <g transform="translate(10,10)" fill="none" stroke="#00DCFA" stroke-width="5">
+    <path d="M25 2 L48 14 V38 L25 50 L2 38 V14 Z"/>
+  </g>
+  <text x="62" y="44" font-family="Arial, sans-serif" font-size="23" font-weight="bold" fill="#0A2540">Gemini</text>
+</svg>
