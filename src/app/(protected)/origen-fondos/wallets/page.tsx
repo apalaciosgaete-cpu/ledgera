@@ -57,7 +57,7 @@ export default function WalletsSourceFundsPage() {
         {WALLETS.map((wallet) => {
           const isAvailable = wallet.status === "available";
           return (
-            <button key={wallet.id} type="button" disabled={!isAvailable} onClick={() => router.push(`/origen-fondos/wallets/${wallet.id}`)} style={{ height: 108, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "flex", flexDirection: "column", gap: 0, padding: "14px 12px 12px", alignItems: "center", justifyContent: "space-between", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center" }}>
+            <button key={wallet.id} type="button" disabled={!isAvailable} onClick={() => router.push(`/origen-fondos/wallets/${wallet.id}`)} style={{ height: 110, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "flex", flexDirection: "column", gap: 0, padding: "14px 12px 12px", alignItems: "center", justifyContent: "space-between", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center" }}>
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
                 <img src={wallet.logoUrl} alt={wallet.name} style={{ width: 80, height: 40, objectFit: "contain", display: "block" }} />
               </div>
