@@ -44,18 +44,13 @@ export default function ObligacionesTributariasPage() {
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
-                Control tributario
-              </p>
-              <h2 className="mt-1 text-xl font-black text-slate-950">
-                Obligaciones por revisar
-              </h2>
-            </div>
-            <button className="w-fit rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700">
-              Evaluar operación
-            </button>
+          <div className="mb-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
+              Control tributario
+            </p>
+            <h2 className="mt-1 text-xl font-black text-slate-950">
+              Obligaciones por revisar
+            </h2>
           </div>
 
           <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200">
@@ -86,7 +81,7 @@ export default function ObligacionesTributariasPage() {
             Identificar qué aplica
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Ingresa una operación o selecciona una categoría para determinar si existe una obligación tributaria asociada.
+            Selecciona una categoría para determinar si existe una obligación tributaria asociada.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {module.examples.map((example) => (
