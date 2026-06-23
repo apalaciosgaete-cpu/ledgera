@@ -24,11 +24,11 @@ export const EXCHANGES: SourceFundsItem[] = [
   { id: "gate", name: "Gate.io", shortName: "Gate.io", domain: "gate.io", logoUrl: "/logos/gate.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
   { id: "bitfinex", name: "Bitfinex", shortName: "Bitfinex", domain: "bitfinex.com", logoUrl: "/logos/bitfinex.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
   { id: "bitstamp", name: "Bitstamp", shortName: "Bitstamp", domain: "bitstamp.net", logoUrl: "/logos/bitstamp.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
-  { id: "gemini", name: "Gemini", shortName: "Gemini", domain: "gemini.com", logoUrl: "/logos/gemini.svg", status: "coming_soon", connectionMethods: ["api", "manual_upload"] },
-  { id: "bitso", name: "Bitso", shortName: "Bitso", domain: "bitso.com", logoUrl: "/logos/bitso.svg", status: "coming_soon", connectionMethods: ["api", "manual_upload"] },
-  { id: "htx", name: "HTX", shortName: "HTX", domain: "htx.com", logoUrl: "/logos/htx.svg", status: "coming_soon", connectionMethods: ["api", "manual_upload"] },
-  { id: "mexc", name: "MEXC", shortName: "MEXC", domain: "mexc.com", logoUrl: "/logos/mexc.svg", status: "coming_soon", connectionMethods: ["api", "manual_upload"] },
-  { id: "bit2me", name: "Bit2Me", shortName: "Bit2Me", domain: "bit2me.com", logoUrl: "/logos/bit2me.svg", status: "coming_soon", connectionMethods: ["api", "manual_upload"] },
+  { id: "gemini", name: "Gemini", shortName: "Gemini", domain: "gemini.com", logoUrl: "/logos/gemini.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
+  { id: "bitso", name: "Bitso", shortName: "Bitso", domain: "bitso.com", logoUrl: "/logos/bitso.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
+  { id: "htx", name: "HTX", shortName: "HTX", domain: "htx.com", logoUrl: "/logos/htx.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
+  { id: "mexc", name: "MEXC", shortName: "MEXC", domain: "mexc.com", logoUrl: "/logos/mexc.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
+  { id: "bit2me", name: "Bit2Me", shortName: "Bit2Me", domain: "bit2me.com", logoUrl: "/logos/bit2me.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
 ];
 
 export const WALLETS: SourceFundsItem[] = [
@@ -43,10 +43,10 @@ export const WALLETS: SourceFundsItem[] = [
   { id: "electrum", name: "Electrum", shortName: "Electrum", domain: "electrum.org", logoUrl: "/logos/electrum.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"] },
   { id: "bluewallet", name: "BlueWallet", shortName: "BlueWallet", domain: "bluewallet.io", logoUrl: "/logos/bluewallet.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"] },
   { id: "safe", name: "Safe", shortName: "Safe", domain: "safe.global", logoUrl: "/logos/safe.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "argent", name: "Argent", shortName: "Argent", domain: "argent.xyz", logoUrl: "/logos/argent.svg", status: "coming_soon", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "rainbow", name: "Rainbow", shortName: "Rainbow", domain: "rainbow.me", logoUrl: "/logos/rainbow.svg", status: "coming_soon", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "okx-wallet", name: "OKX Wallet", shortName: "OKX Wallet", domain: "okx.com", logoUrl: "/logos/okx-wallet.svg", status: "coming_soon", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "binance-web3-wallet", name: "Binance Web3 Wallet", shortName: "Binance Web3", domain: "binance.com", logoUrl: "/logos/binance-web3-wallet.svg", status: "coming_soon", connectionMethods: ["wallet_connect", "address_scan"] },
+  { id: "argent", name: "Argent", shortName: "Argent", domain: "argent.xyz", logoUrl: "/logos/argent.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
+  { id: "rainbow", name: "Rainbow", shortName: "Rainbow", domain: "rainbow.me", logoUrl: "/logos/rainbow.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
+  { id: "okx-wallet", name: "OKX Wallet", shortName: "OKX Wallet", domain: "okx.com", logoUrl: "/logos/okx-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
+  { id: "binance-web3-wallet", name: "Binance Web3 Wallet", shortName: "Binance Web3", domain: "binance.com", logoUrl: "/logos/binance-web3-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
 ];
 
 /** Retorna el logo local del item por id; cae al servicio de logos por dominio si no existe. */
