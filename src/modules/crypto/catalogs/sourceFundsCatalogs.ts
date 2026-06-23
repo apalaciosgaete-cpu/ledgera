@@ -51,6 +51,7 @@ export const WALLETS: SourceFundsItem[] = [
   { id: "ngrave", name: "NGRAVE", shortName: "NGRAVE", domain: "ngrave.io", logoUrl: "/logos/ngrave.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
   { id: "ellipal", name: "ELLIPAL", shortName: "ELLIPAL", domain: "ellipal.com", logoUrl: "/logos/ellipal.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
   { id: "gridplus", name: "GridPlus Lattice1", shortName: "GridPlus", domain: "gridplus.io", logoUrl: "/logos/gridplus.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "dcent", name: "D'CENT Wallet", shortName: "D'CENT", domain: "dcentwallet.com", logoUrl: "/logos/dcent.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
 ];
 
 /** Retorna el logo local del item por id; cae al servicio de logos por dominio si no existe. */
