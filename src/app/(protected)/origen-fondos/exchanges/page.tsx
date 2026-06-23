@@ -7,7 +7,7 @@ import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
 import { startListening } from "@/modules/voice/speechToText";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
 import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
-import { EXCHANGES, getLogoUrl } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
+import { EXCHANGES } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
 
 type AssistantStatus = "idle" | "listening" | "speaking";
 
@@ -62,14 +62,18 @@ export default function ExchangesSourceFundsPage() {
         <p style={{ color: "#334155", fontSize: 12.5, lineHeight: 1.2, margin: 0, fontFamily: fonts.body }}>{EXCHANGES.length} exchanges disponibles. Selecciona para conectar tu cuenta.</p>
       </section>
 
-      <section style={{ minHeight: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "repeat(6,minmax(0,1fr))", gap: 8, alignContent: "start" }}>
+      <section style={{ minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 10, alignContent: "start" }}>
         {EXCHANGES.map((exchange) => {
           const isAvailable = exchange.status === "available";
           return (
-            <button key={exchange.id} type="button" disabled={!isAvailable} onClick={() => router.push(`/origen-fondos/exchanges/${exchange.id}`)} style={{ height: 86, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "grid", gap: 6, padding: "9px 10px", justifyItems: "center", alignContent: "center", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center", transition: "box-shadow 0.15s, transform 0.15s" }}>
-              <img src={getLogoUrl(exchange.domain)} alt={exchange.name} style={{ width: 48, height: 32, objectFit: "contain", display: "block" }} />
-              <strong style={{ fontSize: 11.5, lineHeight: 1.05, fontWeight: 900 }}>{exchange.shortName}</strong>
-              {!isAvailable && <span style={{ fontSize: 8.5, fontWeight: 700, color: colors.textMuted }}>Próximamente</span>}
+            <button key={exchange.id} type="button" disabled={!isAvailable} onClick={() => router.push(`/origen-fondos/exchanges/${exchange.id}`)} style={{ height: 108, borderRadius: 16, border: `1px solid ${isAvailable ? "#E6E0FF" : colors.border}`, background: isAvailable ? "#FFFFFF" : colors.surfaceAlt, color: "#0F2A3D", cursor: isAvailable ? "pointer" : "not-allowed", display: "flex", flexDirection: "column", gap: 0, padding: "14px 12px 12px", alignItems: "center", justifyContent: "space-between", opacity: isAvailable ? 1 : 0.55, boxShadow: isAvailable ? "0 4px 12px rgba(15,42,61,0.04)" : "none", fontFamily: fonts.body, textAlign: "center", transition: "box-shadow 0.15s, transform 0.15s" }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
+                <img src={exchange.logoUrl} alt={exchange.name} style={{ width: 80, height: 40, objectFit: "contain", display: "block" }} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                <strong style={{ fontSize: 11.5, lineHeight: 1.1, fontWeight: 900 }}>{exchange.shortName}</strong>
+                {!isAvailable && <span style={{ fontSize: 8.5, fontWeight: 700, color: colors.textMuted }}>Próximamente</span>}
+              </div>
             </button>
           );
         })}

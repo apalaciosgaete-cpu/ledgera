@@ -2,7 +2,7 @@
 
 import { notFound, useParams, useRouter } from "next/navigation";
 import { fonts, colors } from "@/styles/tokens";
-import { findWalletById, getLogoUrl } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
+import { findWalletById } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
 
 export default function WalletDetailPage() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function WalletDetailPage() {
       <section>
         <button onClick={() => router.push("/origen-fondos/wallets")} style={{ background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 8 }}>← Volver a Wallets</button>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={getLogoUrl(wallet.domain)} alt={wallet.name} style={{ width: 58, height: 42, objectFit: "contain" }} />
+          <img src={wallet.logoUrl} alt={wallet.name} style={{ width: 58, height: 42, objectFit: "contain" }} />
           <div>
             <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>{wallet.name}</h1>
             <p style={{ margin: "4px 0 0", color: "#475569", fontSize: 13.5, fontFamily: fonts.body }}>Wallet</p>

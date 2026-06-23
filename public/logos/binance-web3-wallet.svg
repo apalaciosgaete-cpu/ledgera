@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <g transform="translate(8,14)" fill="#F3BA2F">
+    <path d="M18 0l5.6 5.7L10 19.5 4.2 14 18 0zM0 18l5.6-5.6L11.2 18l-5.6 5.6L0 18zm25 0l5.6-5.6L36 18l-5.6 5.6L25 18zM18 36l-5.6-5.7L18 24.7l5.6 5.6L18 36z"/>
+    <path d="M18 14l4 4-4 4-4-4 4-4z"/>
+  </g>
+  <text x="48" y="32" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E2026">Binance</text>
+  <text x="48" y="52" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E2026">Web3</text>
+</svg>

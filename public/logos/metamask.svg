@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <g transform="translate(8,14)">
+    <path d="M42 0 L24 13 L27 6 Z" fill="#E2761B"/>
+    <path d="M2 0 L20 13 L17 6 Z" fill="#E4761B"/>
+    <path d="M35 30 L30 38 L41 41 L44 30 Z" fill="#E4761B"/>
+    <path d="M0 30 L3 41 L14 38 L9 30 Z" fill="#E4761B"/>
+    <path d="M13 18 L10 23 L21 24 L20 12 Z" fill="#E4761B"/>
+    <path d="M31 18 L24 12 L23 24 L34 23 Z" fill="#E4761B"/>
+    <path d="M14 38 L20 35 L15 31 Z" fill="#D7C1B3"/>
+    <path d="M24 35 L30 38 L29 31 Z" fill="#D7C1B3"/>
+  </g>
+  <text x="60" y="44" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#161616">MetaMask</text>
+</svg>
