@@ -36,22 +36,21 @@ export const EXCHANGES: SourceFundsItem[] = [
   { id: "bit2me", name: "Bit2Me", shortName: "Bit2Me", domain: "bit2me.com", logoUrl: "/logos/bit2me.svg", status: "available", connectionMethods: ["api", "manual_upload"] },
 ];
 
+// Solo wallets frías (hardware / almacenamiento en frío).
+// Las wallets calientes se gestionan como Exchanges.
 export const WALLETS: SourceFundsItem[] = [
-  { id: "metamask", name: "MetaMask", shortName: "MetaMask", domain: "metamask.io", logoUrl: "/logos/metamask.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "trust-wallet", name: "Trust Wallet", shortName: "Trust Wallet", domain: "trustwallet.com", logoUrl: "/logos/trust-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
   { id: "ledger", name: "Ledger", shortName: "Ledger", domain: "ledger.com", logoUrl: "/logos/ledger.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
   { id: "trezor", name: "Trezor", shortName: "Trezor", domain: "trezor.io", logoUrl: "/logos/trezor.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
-  { id: "phantom", name: "Phantom", shortName: "Phantom", domain: "phantom.app", logoUrl: "/logos/phantom.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "rabby", name: "Rabby Wallet", shortName: "Rabby", domain: "rabby.io", logoUrl: "/logos/rabby.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "coinbase-wallet", name: "Coinbase Wallet", shortName: "Coinbase Wallet", domain: "coinbase.com", logoUrl: "/logos/coinbase-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "exodus", name: "Exodus", shortName: "Exodus", domain: "exodus.com", logoUrl: "/logos/exodus.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "hot" },
-  { id: "electrum", name: "Electrum", shortName: "Electrum", domain: "electrum.org", logoUrl: "/logos/electrum.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "hot" },
-  { id: "bluewallet", name: "BlueWallet", shortName: "BlueWallet", domain: "bluewallet.io", logoUrl: "/logos/bluewallet.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "hot" },
-  { id: "safe", name: "Safe", shortName: "Safe", domain: "safe.global", logoUrl: "/logos/safe.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "argent", name: "Argent", shortName: "Argent", domain: "argent.xyz", logoUrl: "/logos/argent.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "rainbow", name: "Rainbow", shortName: "Rainbow", domain: "rainbow.me", logoUrl: "/logos/rainbow.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "okx-wallet", name: "OKX Wallet", shortName: "OKX Wallet", domain: "okx.com", logoUrl: "/logos/okx-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
-  { id: "binance-web3-wallet", name: "Binance Web3 Wallet", shortName: "Binance Web3", domain: "binance.com", logoUrl: "/logos/binance-web3-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "coldcard", name: "Coldcard", shortName: "Coldcard", domain: "coldcard.com", logoUrl: "/logos/coldcard.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "bitbox", name: "BitBox02", shortName: "BitBox", domain: "bitbox.swiss", logoUrl: "/logos/bitbox.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "tangem", name: "Tangem", shortName: "Tangem", domain: "tangem.com", logoUrl: "/logos/tangem.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "keystone", name: "Keystone", shortName: "Keystone", domain: "keyst.one", logoUrl: "/logos/keystone.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "onekey", name: "OneKey", shortName: "OneKey", domain: "onekey.so", logoUrl: "/logos/onekey.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "keepkey", name: "KeepKey", shortName: "KeepKey", domain: "keepkey.com", logoUrl: "/logos/keepkey.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "safepal", name: "SafePal", shortName: "SafePal", domain: "safepal.com", logoUrl: "/logos/safepal.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "ngrave", name: "NGRAVE", shortName: "NGRAVE", domain: "ngrave.io", logoUrl: "/logos/ngrave.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "ellipal", name: "ELLIPAL", shortName: "ELLIPAL", domain: "ellipal.com", logoUrl: "/logos/ellipal.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "gridplus", name: "GridPlus Lattice1", shortName: "GridPlus", domain: "gridplus.io", logoUrl: "/logos/gridplus.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
 ];
 
 /** Retorna el logo local del item por id; cae al servicio de logos por dominio si no existe. */
@@ -66,11 +65,6 @@ export function findExchangeById(id: string) {
 
 export function findWalletById(id: string) {
   return WALLETS.find((item) => item.id === id);
-}
-
-/** Wallets calientes (conectadas a internet: extensión, móvil, web). */
-export function getHotWallets() {
-  return WALLETS.filter((item) => item.walletType === "hot");
 }
 
 /** Wallets frías (almacenamiento en frío / hardware). */

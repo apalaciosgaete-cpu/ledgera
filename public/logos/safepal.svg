@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <path d="M28 12 L46 20 V36 C46 48 38 54 28 58 C18 54 10 48 10 36 V20 Z" fill="#4A6CF7"/>
+  <rect x="22" y="30" width="12" height="10" rx="2" fill="white"/>
+  <text x="54" y="40" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0A2540">SafePal</text>
+</svg>

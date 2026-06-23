@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <rect x="12" y="18" width="28" height="34" rx="6" fill="#242424"/>
+  <rect x="17" y="23" width="18" height="14" rx="2" fill="#E0B43B"/>
+  <text x="48" y="40" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#242424">KeepKey</text>
+</svg>
