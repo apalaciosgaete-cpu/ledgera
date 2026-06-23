@@ -44,5 +44,12 @@ backups/
 *.dump
 .vercel
 
+# databases & repo bundles (datos personales — Ley 21.719)
+*.db
+*.sqlite
+*.sqlite3
+prisma/dev.db
+*.bundle
+
 # uploaded documents
 /uploads

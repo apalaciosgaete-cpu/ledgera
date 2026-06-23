@@ -14,8 +14,9 @@ const STORAGE_KEY = "ledgera-cookie-consent";
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
-  const [functional, setFunctional] = useState(true);
-  const [analytics, setAnalytics] = useState(true);
+  // Ley 21.719: las categorías no esenciales arrancan desactivadas (opt-in explícito).
+  const [functional, setFunctional] = useState(false);
+  const [analytics, setAnalytics] = useState(false);
 
   useEffect(() => {
     try {
