@@ -1,5 +1,8 @@
 export type SourceFundsItemStatus = "available" | "coming_soon";
 
+/** Tipo de wallet: "hot" (conectada a internet) o "cold" (almacenamiento en frío / hardware). */
+export type WalletType = "hot" | "cold";
+
 export type SourceFundsItem = {
   id: string;
   name: string;
@@ -8,6 +11,8 @@ export type SourceFundsItem = {
   logoUrl: string;
   status: SourceFundsItemStatus;
   connectionMethods: Array<"api" | "aggregator" | "manual_upload" | "wallet_connect" | "address_scan">;
+  /** Solo aplica a wallets: distingue wallets frías de calientes. */
+  walletType?: WalletType;
 };
 
 export const EXCHANGES: SourceFundsItem[] = [
@@ -32,21 +37,21 @@ export const EXCHANGES: SourceFundsItem[] = [
 ];
 
 export const WALLETS: SourceFundsItem[] = [
-  { id: "metamask", name: "MetaMask", shortName: "MetaMask", domain: "metamask.io", logoUrl: "/logos/metamask.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "trust-wallet", name: "Trust Wallet", shortName: "Trust Wallet", domain: "trustwallet.com", logoUrl: "/logos/trust-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "ledger", name: "Ledger", shortName: "Ledger", domain: "ledger.com", logoUrl: "/logos/ledger.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"] },
-  { id: "trezor", name: "Trezor", shortName: "Trezor", domain: "trezor.io", logoUrl: "/logos/trezor.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"] },
-  { id: "phantom", name: "Phantom", shortName: "Phantom", domain: "phantom.app", logoUrl: "/logos/phantom.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "rabby", name: "Rabby Wallet", shortName: "Rabby", domain: "rabby.io", logoUrl: "/logos/rabby.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "coinbase-wallet", name: "Coinbase Wallet", shortName: "Coinbase Wallet", domain: "coinbase.com", logoUrl: "/logos/coinbase-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "exodus", name: "Exodus", shortName: "Exodus", domain: "exodus.com", logoUrl: "/logos/exodus.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"] },
-  { id: "electrum", name: "Electrum", shortName: "Electrum", domain: "electrum.org", logoUrl: "/logos/electrum.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"] },
-  { id: "bluewallet", name: "BlueWallet", shortName: "BlueWallet", domain: "bluewallet.io", logoUrl: "/logos/bluewallet.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"] },
-  { id: "safe", name: "Safe", shortName: "Safe", domain: "safe.global", logoUrl: "/logos/safe.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "argent", name: "Argent", shortName: "Argent", domain: "argent.xyz", logoUrl: "/logos/argent.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "rainbow", name: "Rainbow", shortName: "Rainbow", domain: "rainbow.me", logoUrl: "/logos/rainbow.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "okx-wallet", name: "OKX Wallet", shortName: "OKX Wallet", domain: "okx.com", logoUrl: "/logos/okx-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
-  { id: "binance-web3-wallet", name: "Binance Web3 Wallet", shortName: "Binance Web3", domain: "binance.com", logoUrl: "/logos/binance-web3-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"] },
+  { id: "metamask", name: "MetaMask", shortName: "MetaMask", domain: "metamask.io", logoUrl: "/logos/metamask.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "trust-wallet", name: "Trust Wallet", shortName: "Trust Wallet", domain: "trustwallet.com", logoUrl: "/logos/trust-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "ledger", name: "Ledger", shortName: "Ledger", domain: "ledger.com", logoUrl: "/logos/ledger.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "trezor", name: "Trezor", shortName: "Trezor", domain: "trezor.io", logoUrl: "/logos/trezor.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "cold" },
+  { id: "phantom", name: "Phantom", shortName: "Phantom", domain: "phantom.app", logoUrl: "/logos/phantom.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "rabby", name: "Rabby Wallet", shortName: "Rabby", domain: "rabby.io", logoUrl: "/logos/rabby.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "coinbase-wallet", name: "Coinbase Wallet", shortName: "Coinbase Wallet", domain: "coinbase.com", logoUrl: "/logos/coinbase-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "exodus", name: "Exodus", shortName: "Exodus", domain: "exodus.com", logoUrl: "/logos/exodus.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "hot" },
+  { id: "electrum", name: "Electrum", shortName: "Electrum", domain: "electrum.org", logoUrl: "/logos/electrum.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "hot" },
+  { id: "bluewallet", name: "BlueWallet", shortName: "BlueWallet", domain: "bluewallet.io", logoUrl: "/logos/bluewallet.svg", status: "available", connectionMethods: ["address_scan", "manual_upload"], walletType: "hot" },
+  { id: "safe", name: "Safe", shortName: "Safe", domain: "safe.global", logoUrl: "/logos/safe.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "argent", name: "Argent", shortName: "Argent", domain: "argent.xyz", logoUrl: "/logos/argent.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "rainbow", name: "Rainbow", shortName: "Rainbow", domain: "rainbow.me", logoUrl: "/logos/rainbow.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "okx-wallet", name: "OKX Wallet", shortName: "OKX Wallet", domain: "okx.com", logoUrl: "/logos/okx-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
+  { id: "binance-web3-wallet", name: "Binance Web3 Wallet", shortName: "Binance Web3", domain: "binance.com", logoUrl: "/logos/binance-web3-wallet.svg", status: "available", connectionMethods: ["wallet_connect", "address_scan"], walletType: "hot" },
 ];
 
 /** Retorna el logo local del item por id; cae al servicio de logos por dominio si no existe. */
@@ -61,4 +66,14 @@ export function findExchangeById(id: string) {
 
 export function findWalletById(id: string) {
   return WALLETS.find((item) => item.id === id);
+}
+
+/** Wallets calientes (conectadas a internet: extensión, móvil, web). */
+export function getHotWallets() {
+  return WALLETS.filter((item) => item.walletType === "hot");
+}
+
+/** Wallets frías (almacenamiento en frío / hardware). */
+export function getColdWallets() {
+  return WALLETS.filter((item) => item.walletType === "cold");
 }
