@@ -81,6 +81,24 @@ export async function DELETE(req: NextRequest) {
   // Revocar todas las sesiones activas del titular.
   await deleteSessionsByUserId(userId).catch(() => 0);
 
+  // Registro de la solicitud de supresión (control de plazos). Best-effort.
+  await prisma.dataSubjectRequest
+    .create({
+      data: {
+        userId,
+        email: existing.email,
+        type: "ERASURE",
+        status: "COMPLETED",
+        channel: "IN_APP",
+        dueAt: new Date(),
+        resolvedAt: new Date(),
+        resolution:
+          "Datos identificatorios anonimizados; registros tributarios conservados por retención legal.",
+        ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
+      },
+    })
+    .catch(() => undefined);
+
   await recordAuditEvent({
     userId,
     category: "SECURITY",

@@ -24,7 +24,7 @@ model PortfolioMovement {
   source                  String    @default("MANUAL")
   externalId              String?
 
-  user             users                  @relation(fields: [userId], references: [id])
+  user             users                 @relation(fields: [userId], references: [id])
   taxEvent         TaxEvent?
   importRecord     ExchangeImportRecord?
   taxLedgerEntries TaxLedgerEntry[]
@@ -76,34 +76,34 @@ model TaxEvent {
 }
 
 model TaxLedgerEntry {
-  id                String   @id @default(cuid())
-  userId            String
+  id     String @id @default(cuid())
+  userId String
 
-  movementId        String?
-  taxEventId        String?
+  movementId String?
+  taxEventId String?
 
-  taxYear           Int
-  taxMonth          Int
+  taxYear  Int
+  taxMonth Int
 
-  ledgerType        String
-  ledgerCategory    String
+  ledgerType     String
+  ledgerCategory String
 
-  assetSymbol       String
-  quantity          Float
+  assetSymbol String
+  quantity    Float
 
-  proceedsClp       Float    @default(0)
-  costBasisClp      Float    @default(0)
-  realizedGainClp   Float    @default(0)
+  proceedsClp     Float @default(0)
+  costBasisClp    Float @default(0)
+  realizedGainClp Float @default(0)
 
   taxTreatment      String
   siiClassification String
 
-  source            String   @default("SYSTEM")
-  createdAt         DateTime @default(now())
+  source    String   @default("SYSTEM")
+  createdAt DateTime @default(now())
 
-  user      users              @relation(fields: [userId], references: [id])
-  taxEvent  TaxEvent?          @relation(fields: [taxEventId], references: [id])
-  movement  PortfolioMovement? @relation(fields: [movementId], references: [id])
+  user     users              @relation(fields: [userId], references: [id])
+  taxEvent TaxEvent?          @relation(fields: [taxEventId], references: [id])
+  movement PortfolioMovement? @relation(fields: [movementId], references: [id])
 
   @@index([userId, taxYear])
   @@index([taxTreatment])
@@ -112,24 +112,24 @@ model TaxLedgerEntry {
 }
 
 model AnnualTaxSummary {
-  id                    String   @id @default(cuid())
-  userId                String
-  taxYear               Int
+  id      String @id @default(cuid())
+  userId  String
+  taxYear Int
 
-  grossProceedsClp      Float    @default(0)
-  costBasisClp          Float    @default(0)
-  realizedGainClp       Float    @default(0)
-  realizedLossClp       Float    @default(0)
-  netTaxableGainClp     Float    @default(0)
+  grossProceedsClp  Float @default(0)
+  costBasisClp      Float @default(0)
+  realizedGainClp   Float @default(0)
+  realizedLossClp   Float @default(0)
+  netTaxableGainClp Float @default(0)
 
-  reviewCount           Int      @default(0)
-  taxableEventCount     Int      @default(0)
+  reviewCount       Int @default(0)
+  taxableEventCount Int @default(0)
 
-  preliminaryTaxBaseClp Float    @default(0)
-  source                String   @default("SYSTEM")
+  preliminaryTaxBaseClp Float  @default(0)
+  source                String @default("SYSTEM")
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user users @relation(fields: [userId], references: [id])
 
@@ -268,20 +268,20 @@ model TaxDeclarationAuditLog {
 }
 
 model TaxClassificationAuditLog {
-  id              String   @id @default(cuid())
-  userId          String
-  movementId      String
-  action          String
-  actorId         String?
-  actorEmail      String?
-  beforeState     String?
-  afterState      String?
-  previousHash    String?
-  currentHash     String?
-  ipAddress       String?
-  userAgent       String?
-  metadata        String?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  movementId   String
+  action       String
+  actorId      String?
+  actorEmail   String?
+  beforeState  String?
+  afterState   String?
+  previousHash String?
+  currentHash  String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     String?
+  createdAt    DateTime @default(now())
 
   user users @relation(fields: [userId], references: [id])
 
@@ -294,21 +294,21 @@ model TaxClassificationAuditLog {
 }
 
 model TaxEventAuditLog {
-  id              String   @id @default(cuid())
-  userId          String
-  taxEventId      String
-  action          String
-  actorId         String?
-  actorEmail      String?
-  taxYear         Int
-  beforeState     String?
-  afterState      String?
-  previousHash    String?
-  currentHash     String?
-  ipAddress       String?
-  userAgent       String?
-  metadata        String?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  taxEventId   String
+  action       String
+  actorId      String?
+  actorEmail   String?
+  taxYear      Int
+  beforeState  String?
+  afterState   String?
+  previousHash String?
+  currentHash  String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     String?
+  createdAt    DateTime @default(now())
 
   user users @relation(fields: [userId], references: [id])
 
@@ -322,20 +322,20 @@ model TaxEventAuditLog {
 }
 
 model MovementAuditLog {
-  id              String   @id @default(cuid())
-  userId          String
-  movementId      String
-  action          String
-  actorId         String?
-  actorEmail      String?
-  beforeState     String?
-  afterState      String?
-  previousHash    String?
-  currentHash     String?
-  ipAddress       String?
-  userAgent       String?
-  metadata        String?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  movementId   String
+  action       String
+  actorId      String?
+  actorEmail   String?
+  beforeState  String?
+  afterState   String?
+  previousHash String?
+  currentHash  String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     String?
+  createdAt    DateTime @default(now())
 
   user users @relation(fields: [userId], references: [id])
 
@@ -566,78 +566,103 @@ model users {
   twoFactorEnabled        Boolean   @default(false)
 
   // CAPA 4.1 — Activación: preparado para migración futura
-  onboardingCompleted     Boolean   @default(false)
-  onboardingData          Json?
-  activatedAt             DateTime? @db.Timestamptz(6)
-  activationSource        String?
+  onboardingCompleted Boolean   @default(false)
+  onboardingData      Json?
+  activatedAt         DateTime? @db.Timestamptz(6)
+  activationSource    String?
 
-  adaptiveTaxProfile      AdaptiveTaxProfile?
+  adaptiveTaxProfile AdaptiveTaxProfile?
 
-  rut                     String?
-  phone                   String?
-  address                 String?
-  commune                 String?
-  country                 String?   @default("Chile")
+  rut     String?
+  phone   String?
+  address String?
+  commune String?
+  country String? @default("Chile")
 
-  portfolios              portfolios[]
-  sessions                sessions[]
-  authAccounts            Account[]
-  authSessions            Session[]
-  portfolioMovements      PortfolioMovement[]
-  taxEvents               TaxEvent[]
-  taxPeriodClosures       TaxPeriodClose[]
-  taxPeriodAuditLogs      TaxPeriodAuditLog[]
-  taxPeriodSnapshots      TaxPeriodSnapshot[]
-  taxDeclarations         TaxDeclaration[]
-  taxDeclarationAuditLogs TaxDeclarationAuditLog[]
-  billingCustomers        BillingCustomer[]
-  billingSubscriptions    BillingSubscription[]
-  billingPayments         BillingPayment[]
-  exchangeConnections     ExchangeConnection[]
-  exchangeImportRecords   ExchangeImportRecord[]
-  taxLedgerEntries        TaxLedgerEntry[]
-  annualTaxSummaries      AnnualTaxSummary[]
-  exchangeSyncPeriods     ExchangeSyncPeriod[]
-  bankMovements           BankMovement[]
-  bankFileUploads         BankFileUpload[]
-  bankCsvTemplates        BankCsvTemplate[]
-  chatConversations       ChatConversation[]
+  portfolios                 portfolios[]
+  sessions                   sessions[]
+  authAccounts               Account[]
+  authSessions               Session[]
+  portfolioMovements         PortfolioMovement[]
+  taxEvents                  TaxEvent[]
+  taxPeriodClosures          TaxPeriodClose[]
+  taxPeriodAuditLogs         TaxPeriodAuditLog[]
+  taxPeriodSnapshots         TaxPeriodSnapshot[]
+  taxDeclarations            TaxDeclaration[]
+  taxDeclarationAuditLogs    TaxDeclarationAuditLog[]
+  billingCustomers           BillingCustomer[]
+  billingSubscriptions       BillingSubscription[]
+  billingPayments            BillingPayment[]
+  exchangeConnections        ExchangeConnection[]
+  exchangeImportRecords      ExchangeImportRecord[]
+  taxLedgerEntries           TaxLedgerEntry[]
+  annualTaxSummaries         AnnualTaxSummary[]
+  exchangeSyncPeriods        ExchangeSyncPeriod[]
+  bankMovements              BankMovement[]
+  bankFileUploads            BankFileUpload[]
+  bankCsvTemplates           BankCsvTemplate[]
+  chatConversations          ChatConversation[]
   taxClassificationAuditLogs TaxClassificationAuditLog[]
-  taxEventAuditLogs       TaxEventAuditLog[]
-  movementAuditLogs       MovementAuditLog[]
-  taxProfile              TaxProfile?
-  taxDocuments            TaxDocument[]
-  alerts                  Alert[]
-  taxRiskScores           TaxRiskScore[]
-  smartTaxScores          SmartTaxScore[]
-  recommendations         Recommendation[]
-  tasks                   Task[]
-  documents               Document[]
-  timelineEvents          TimelineEvent[]
-  aiConversations         AIConversation[]
-  aiInsights              AIInsight[]
-  automationProposals     AutomationProposal[]
-  taxCases               TaxCase[]
-  workflows              Workflow[]
+  taxEventAuditLogs          TaxEventAuditLog[]
+  movementAuditLogs          MovementAuditLog[]
+  taxProfile                 TaxProfile?
+  taxDocuments               TaxDocument[]
+  alerts                     Alert[]
+  taxRiskScores              TaxRiskScore[]
+  smartTaxScores             SmartTaxScore[]
+  recommendations            Recommendation[]
+  tasks                      Task[]
+  documents                  Document[]
+  timelineEvents             TimelineEvent[]
+  aiConversations            AIConversation[]
+  aiInsights                 AIInsight[]
+  automationProposals        AutomationProposal[]
+  taxCases                   TaxCase[]
+  workflows                  Workflow[]
+  dataSubjectRequests        DataSubjectRequest[]
 
   @@index([email], map: "idx_users_email")
   @@map("users")
 }
 
+// Registro de solicitudes de derechos del titular (Ley 21.719) para control de plazos.
+model DataSubjectRequest {
+  id         String    @id @default(cuid())
+  userId     String?
+  email      String
+  type       String // ACCESS | RECTIFICATION | ERASURE | PORTABILITY | OPPOSITION | LIMITATION | AUTOMATED_REVIEW
+  status     String    @default("PENDING") // PENDING | IN_PROGRESS | COMPLETED | REJECTED
+  channel    String    @default("IN_APP") // IN_APP | EMAIL
+  details    String?
+  dueAt      DateTime? @db.Timestamptz(6)
+  resolvedAt DateTime? @db.Timestamptz(6)
+  resolution String?
+  ipAddress  String?
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  user users? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@map("data_subject_requests")
+}
+
 model Alert {
-  id             String   @id @default(cuid())
-  userId         String   @map("user_id")
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
   category       String
   severity       String
   title          String
   message        String
-  status         String   @default("OPEN")
+  status         String    @default("OPEN")
   metadata       Json?
   source         String?
   acknowledgedAt DateTime? @map("acknowledged_at")
   resolvedAt     DateTime? @map("resolved_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   user users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -714,26 +739,26 @@ model ExchangeConnection {
 }
 
 model ExchangeImportRecord {
-  id             String    @id @default(cuid())
-  userId         String
-  connectionId   String
-  provider       String
-  externalId     String
-  externalType   String
+  id                  String   @id @default(cuid())
+  userId              String
+  connectionId        String
+  provider            String
+  externalId          String
+  externalType        String
   rawPayload          String
   normalizedJson      String?
   normalizedEventType String?
   taxTreatment        String?
   inventoryEffect     String?
   economicEffect      String?
-  status              String    @default("PENDING")
-  movementId          String?   @unique
+  status              String   @default("PENDING")
+  movementId          String?  @unique
   occurredAt          DateTime
-  createdAt           DateTime  @default(now())
+  createdAt           DateTime @default(now())
 
-  user       users               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  connection ExchangeConnection  @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  movement   PortfolioMovement?  @relation(fields: [movementId], references: [id])
+  user       users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection ExchangeConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  movement   PortfolioMovement? @relation(fields: [movementId], references: [id])
 
   @@unique([userId, provider, externalId])
   @@index([userId])
@@ -745,25 +770,25 @@ model ExchangeImportRecord {
 }
 
 model ExchangeSyncPeriod {
-  id            String    @id @default(cuid())
-  userId        String
-  connectionId  String
-  provider      String
+  id           String @id @default(cuid())
+  userId       String
+  connectionId String
+  provider     String
 
-  year          Int
-  month         Int
+  year  Int
+  month Int
 
-  status        String    @default("PENDING")
+  status String @default("PENDING")
 
-  importedCount Int       @default(0)
-  errorCount    Int       @default(0)
+  importedCount Int @default(0)
+  errorCount    Int @default(0)
 
-  startedAt     DateTime?
-  finishedAt    DateTime?
-  lastError     String?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  lastError  String?
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user       users              @relation(fields: [userId], references: [id], onDelete: Cascade)
   connection ExchangeConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
@@ -792,8 +817,8 @@ model BankFileUpload {
   user      users          @relation(fields: [userId], references: [id])
   movements BankMovement[]
 
-  @@index([userId, createdAt])
   @@unique([userId, fileHash])
+  @@index([userId, createdAt])
   @@map("bank_file_uploads")
 }
 
@@ -825,12 +850,12 @@ model BankMovement {
   user   users           @relation(fields: [userId], references: [id])
   upload BankFileUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
 
+  @@unique([userId, externalId])
   @@index([userId, occurredAt])
   @@index([userId, direction])
   @@index([userId, status])
   @@index([userId, bankName])
   @@index([userId, matchedPortfolioMovementId])
-  @@unique([userId, externalId])
   @@map("bank_movements")
 }
 
@@ -912,7 +937,7 @@ model StagingEvent {
 }
 
 model StagingEventSource {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   stagingEventId String
   provider       String
   recordId       String
@@ -988,15 +1013,15 @@ model LogicalRollback {
 // ── Wallets / on-chain ─────────────────────────────────────────────────────────
 
 model WalletConnection {
-  id          String   @id @default(cuid())
-  userId      String
-  network     String
-  address     String
-  label       String?
-  status      String   @default("ACTIVE")
-  lastSyncAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid())
+  userId     String
+  network    String
+  address    String
+  label      String?
+  status     String    @default("ACTIVE")
+  lastSyncAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   transactions OnchainTransaction[]
 
@@ -1006,22 +1031,22 @@ model WalletConnection {
 }
 
 model OnchainTransaction {
-  id               String   @id @default(cuid())
-  userId           String
-  walletId         String
-  txHash           String
-  network          String
-  blockNumber      Int?
-  blockTimestamp   DateTime?
-  from             String?
-  to               String?
-  value            String?
-  gasUsed          String?
-  status           String   @default("PENDING")
-  rawPayload       String?
-  createdAt        DateTime @default(now())
+  id             String    @id @default(cuid())
+  userId         String
+  walletId       String
+  txHash         String
+  network        String
+  blockNumber    Int?
+  blockTimestamp DateTime?
+  from           String?
+  to             String?
+  value          String?
+  gasUsed        String?
+  status         String    @default("PENDING")
+  rawPayload     String?
+  createdAt      DateTime  @default(now())
 
-  wallet       WalletConnection    @relation(fields: [walletId], references: [id])
+  wallet        WalletConnection      @relation(fields: [walletId], references: [id])
   decodedEvents OnchainDecodedEvent[]
 
   @@unique([network, txHash])
@@ -1032,19 +1057,19 @@ model OnchainTransaction {
 }
 
 model OnchainDecodedEvent {
-  id            String   @id @default(cuid())
-  txId          String
-  userId        String
-  eventType     String
-  contractAddr  String?
-  tokenSymbol   String?
-  tokenAmount   String?
-  fromAddr      String?
-  toAddr        String?
-  usdValue      Float?
-  taxTreatment  String?
-  metadata      String?
-  createdAt     DateTime @default(now())
+  id           String   @id @default(cuid())
+  txId         String
+  userId       String
+  eventType    String
+  contractAddr String?
+  tokenSymbol  String?
+  tokenAmount  String?
+  fromAddr     String?
+  toAddr       String?
+  usdValue     Float?
+  taxTreatment String?
+  metadata     String?
+  createdAt    DateTime @default(now())
 
   transaction OnchainTransaction @relation(fields: [txId], references: [id])
 
@@ -1082,16 +1107,16 @@ model JobQueue {
 // ── Chat interno ──────────────────────────────────────────────────────────────
 
 model ChatConversation {
-  id         String    @id @default(cuid())
+  id         String        @id @default(cuid())
   userId     String?
-  sessionId  String    @unique
-  status     String    @default("OPEN")
+  sessionId  String        @unique
+  status     String        @default("OPEN")
   guestName  String?
   guestEmail String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
   messages   ChatMessage[]
-  user       users?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user       users?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([status])
@@ -1126,18 +1151,18 @@ model ChatPushSubscription {
 // ── Workspaces / B2B ──────────────────────────────────────────────────────────
 
 model Workspace {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  ownerId     String
-  plan        String   @default("FREE")
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  ownerId   String
+  plan      String   @default("FREE")
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  members     WorkspaceMember[]
-  invites     WorkspaceInvite[]
-  auditLogs   WorkspaceAuditLog[]
+  members   WorkspaceMember[]
+  invites   WorkspaceInvite[]
+  auditLogs WorkspaceAuditLog[]
 
   @@index([ownerId])
   @@map("workspaces")
@@ -1150,7 +1175,7 @@ model WorkspaceMember {
   role        String   @default("MEMBER")
   joinedAt    DateTime @default(now())
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@unique([workspaceId, userId])
   @@index([userId])
@@ -1158,17 +1183,17 @@ model WorkspaceMember {
 }
 
 model WorkspaceInvite {
-  id           String    @id @default(cuid())
-  workspaceId  String
-  email        String
-  role         String    @default("MEMBER")
-  token        String    @unique
-  status       String    @default("PENDING")
-  expiresAt    DateTime
-  acceptedAt   DateTime?
-  createdAt    DateTime  @default(now())
+  id          String    @id @default(cuid())
+  workspaceId String
+  email       String
+  role        String    @default("MEMBER")
+  token       String    @unique
+  status      String    @default("PENDING")
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
 
-  workspace    Workspace @relation(fields: [workspaceId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@index([workspaceId])
   @@index([email])
@@ -1184,7 +1209,7 @@ model WorkspaceAuditLog {
   metadata    String?
   createdAt   DateTime @default(now())
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@index([workspaceId])
   @@index([actorId])
@@ -1215,46 +1240,46 @@ model TaxProfile {
 }
 
 model TaxDocument {
-  id                      String   @id @default(cuid())
-  userId                  String
-  paymentId               String?
-  subscriptionId          String?
-  documentType            String
-  status                  String   @default("DRAFT")
-  folio                   String?
-  externalTrackId         String?  @map("external_track_id")
-  trackId                 String?  @map("track_id")
-  submissionStatus        String?  @map("submission_status")
-  issuerRut               String   @map("issuer_rut")
-  issuerLegalName         String   @map("issuer_legal_name")
-  issuerBusinessActivity  String   @map("issuer_business_activity")
-  issuerAddress           String   @map("issuer_address")
-  issuerCommune           String   @map("issuer_commune")
-  issuerCity              String   @map("issuer_city")
-  receiverRut             String   @map("receiver_rut")
-  receiverLegalName       String   @map("receiver_legal_name")
-  receiverBusinessActivity String? @map("receiver_business_activity")
-  receiverAddress         String   @map("receiver_address")
-  receiverCommune         String   @map("receiver_commune")
-  receiverCity            String   @map("receiver_city")
-  receiverDteEmail        String   @map("receiver_dte_email")
-  netAmount               Int      @map("net_amount")
-  exemptAmount            Int      @default(0) @map("exempt_amount")
-  ivaAmount               Int      @map("iva_amount")
-  totalAmount             Int      @map("total_amount")
-  ivaRate                 Decimal  @default(0.19) @db.Decimal(6, 4) @map("iva_rate")
-  lineItemsJson           String   @map("line_items_json")
-  referenceJson           String?  @map("reference_json")
-  xmlPayload              String?  @map("xml_payload")
-  pdfUrl                  String?  @map("pdf_url")
-  externalResponse        String?  @map("external_response")
-  rejectionReason         String?  @map("rejection_reason")
-  sentAt                  DateTime? @map("sent_at")
-  acceptedAt              DateTime? @map("accepted_at")
-  rejectedAt              DateTime? @map("rejected_at")
-  voidedAt                DateTime? @map("voided_at")
-  createdAt               DateTime @default(now()) @map("created_at")
-  updatedAt               DateTime @updatedAt @map("updated_at")
+  id                       String    @id @default(cuid())
+  userId                   String
+  paymentId                String?
+  subscriptionId           String?
+  documentType             String
+  status                   String    @default("DRAFT")
+  folio                    String?
+  externalTrackId          String?   @map("external_track_id")
+  trackId                  String?   @map("track_id")
+  submissionStatus         String?   @map("submission_status")
+  issuerRut                String    @map("issuer_rut")
+  issuerLegalName          String    @map("issuer_legal_name")
+  issuerBusinessActivity   String    @map("issuer_business_activity")
+  issuerAddress            String    @map("issuer_address")
+  issuerCommune            String    @map("issuer_commune")
+  issuerCity               String    @map("issuer_city")
+  receiverRut              String    @map("receiver_rut")
+  receiverLegalName        String    @map("receiver_legal_name")
+  receiverBusinessActivity String?   @map("receiver_business_activity")
+  receiverAddress          String    @map("receiver_address")
+  receiverCommune          String    @map("receiver_commune")
+  receiverCity             String    @map("receiver_city")
+  receiverDteEmail         String    @map("receiver_dte_email")
+  netAmount                Int       @map("net_amount")
+  exemptAmount             Int       @default(0) @map("exempt_amount")
+  ivaAmount                Int       @map("iva_amount")
+  totalAmount              Int       @map("total_amount")
+  ivaRate                  Decimal   @default(0.19) @map("iva_rate") @db.Decimal(6, 4)
+  lineItemsJson            String    @map("line_items_json")
+  referenceJson            String?   @map("reference_json")
+  xmlPayload               String?   @map("xml_payload")
+  pdfUrl                   String?   @map("pdf_url")
+  externalResponse         String?   @map("external_response")
+  rejectionReason          String?   @map("rejection_reason")
+  sentAt                   DateTime? @map("sent_at")
+  acceptedAt               DateTime? @map("accepted_at")
+  rejectedAt               DateTime? @map("rejected_at")
+  voidedAt                 DateTime? @map("voided_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
 
   user users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1266,15 +1291,15 @@ model TaxDocument {
 }
 
 model SiiCredential {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   environment        String
-  issuerRut          String   @map("issuer_rut")
-  certificateName    String   @map("certificate_name")
-  certificatePath    String?  @map("certificate_path")
+  issuerRut          String    @map("issuer_rut")
+  certificateName    String    @map("certificate_name")
+  certificatePath    String?   @map("certificate_path")
   certificateExpires DateTime? @map("certificate_expires")
-  isActive           Boolean  @default(true)
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
   @@index([issuerRut])
   @@index([environment])
@@ -1422,29 +1447,29 @@ model TimelineEvent {
 }
 
 model AutomationProposal {
-  id              String   @id @default(cuid())
-  userId          String
+  id     String @id @default(cuid())
+  userId String
 
-  type            String
-  priority        String   @default("MEDIUM")
+  type     String
+  priority String @default("MEDIUM")
 
-  title           String
-  description     String
+  title       String
+  description String
 
-  sourceEntity    String?
-  sourceEntityId  String?
+  sourceEntity   String?
+  sourceEntityId String?
 
-  status          String   @default("PROPOSED")
+  status String @default("PROPOSED")
 
-  metadata        Json?
+  metadata Json?
 
-  createdAt       DateTime @default(now())
-  approvedAt      DateTime?
-  approvedBy      String?
-  rejectedAt      DateTime?
-  rejectedBy      String?
-  executedAt      DateTime?
-  failureReason   String?
+  createdAt     DateTime  @default(now())
+  approvedAt    DateTime?
+  approvedBy    String?
+  rejectedAt    DateTime?
+  rejectedBy    String?
+  executedAt    DateTime?
+  failureReason String?
 
   user users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1453,7 +1478,6 @@ model AutomationProposal {
   @@index([type])
   @@index([priority])
   @@index([sourceEntity, sourceEntityId])
-
   @@map("automation_proposals")
 }
 
@@ -1464,11 +1488,11 @@ model AdaptiveTaxProfile {
 
   complianceScore Float @default(0)
 
-  complianceBehavior String
+  complianceBehavior     String
   recommendationBehavior String
-  taskBehavior String
-  documentBehavior String
-  riskBehavior String
+  taskBehavior           String
+  documentBehavior       String
+  riskBehavior           String
 
   profileType String
 
@@ -1515,20 +1539,20 @@ model AIInsight {
 // ── Billing / Coupons ──────────────────────────────────────────────────────────
 
 model BillingCoupon {
-  id                String    @id @default(cuid())
-  code              String    @unique
-  name              String
-  description       String?
-  type              String
-  value             Decimal   @db.Decimal(18, 2)
-  maxRedemptions    Int?
-  currentRedemptions Int      @default(0)
-  validFrom         DateTime
-  validUntil        DateTime?
-  applicablePlans   String
-  status            String    @default("ACTIVE")
-  createdAt         DateTime  @default(now())
-  redemptions       BillingCouponRedemption[]
+  id                 String                    @id @default(cuid())
+  code               String                    @unique
+  name               String
+  description        String?
+  type               String
+  value              Decimal                   @db.Decimal(18, 2)
+  maxRedemptions     Int?
+  currentRedemptions Int                       @default(0)
+  validFrom          DateTime
+  validUntil         DateTime?
+  applicablePlans    String
+  status             String                    @default("ACTIVE")
+  createdAt          DateTime                  @default(now())
+  redemptions        BillingCouponRedemption[]
 
   @@index([status])
   @@index([code])
@@ -1536,12 +1560,12 @@ model BillingCoupon {
 }
 
 model BillingCouponRedemption {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   couponId   String
   userId     String?
   email      String?
   checkoutId String?
-  redeemedAt DateTime  @default(now())
+  redeemedAt DateTime @default(now())
 
   coupon BillingCoupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
 
@@ -1556,20 +1580,20 @@ model BillingCouponRedemption {
 // ── Workflows ──────────────────────────────────────────────────────────────
 
 model Workflow {
-  id          String   @id @default(cuid())
-  userId      String
-  caseId      String?
+  id     String  @id @default(cuid())
+  userId String
+  caseId String?
 
   title       String
   description String
 
-  status      String   @default("PENDING")
-  sourceType  String   @default("MANUAL")
+  status     String @default("PENDING")
+  sourceType String @default("MANUAL")
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user users @relation(fields: [userId], references: [id])
+  user  users          @relation(fields: [userId], references: [id])
   steps WorkflowStep[]
 
   @@index([userId])
@@ -1579,21 +1603,21 @@ model Workflow {
 }
 
 model WorkflowStep {
-  id          String   @id @default(cuid())
-  workflowId  String
-  stepOrder   Int
+  id         String @id @default(cuid())
+  workflowId String
+  stepOrder  Int
 
-  actionType  String
-  status      String   @default("PENDING")
+  actionType String
+  status     String @default("PENDING")
 
   title       String
   description String?
 
-  metadata    Json?
-  result      String?
+  metadata Json?
+  result   String?
 
-  executedAt  DateTime?
-  createdAt   DateTime @default(now())
+  executedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
@@ -1605,26 +1629,26 @@ model WorkflowStep {
 // ── Tax Cases ─────────────────────────────────────────────────────────────
 
 model TaxCase {
-  id               String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId           String
+  userId String
 
-  title            String
-  description      String
+  title       String
+  description String
 
-  status           String
-  priority         String
+  status   String
+  priority String
 
-  sourceType       String
-  sourceId         String?
+  sourceType String
+  sourceId   String?
 
-  aiSummary        String   @db.Text
-  aiRecommendation String   @db.Text
+  aiSummary        String @db.Text
+  aiRecommendation String @db.Text
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user             users @relation(fields: [userId], references: [id])
+  user users @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([status])

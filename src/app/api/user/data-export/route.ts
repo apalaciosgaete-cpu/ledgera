@@ -79,6 +79,22 @@ export async function GET(req: NextRequest) {
 
   const filename = `ledgera-datos-${userId}-${new Date().toISOString().slice(0, 10)}.json`;
 
+  // Registro de la solicitud de derechos (control de plazos). Best-effort.
+  await prisma.dataSubjectRequest
+    .create({
+      data: {
+        userId,
+        email: user.email,
+        type: "PORTABILITY",
+        status: "COMPLETED",
+        channel: "IN_APP",
+        dueAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        resolvedAt: new Date(),
+        resolution: "Exportación de datos entregada vía autoservicio.",
+      },
+    })
+    .catch(() => undefined);
+
   return new Response(JSON.stringify(payload, null, 2), {
     status: 200,
     headers: {
