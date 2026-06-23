@@ -10,6 +10,7 @@ import {
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { prisma } from "@/lib/prisma";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
+import { openTotpSeed } from "@/modules/security/application/totpSecretCrypto";
 
 export const runtime = "nodejs";
 
@@ -19,10 +20,10 @@ const REGISTRATION_2FA_TOKEN_SECRET =
   process.env.AUTH_SECRET ??
   "ledgera-dev-registration-2fa-secret";
 
-function signSetupToken(userId: string, email: string, secret: string) {
+function signSetupToken(userId: string, email: string, seed: string) {
   return crypto
     .createHmac("sha256", REGISTRATION_2FA_TOKEN_SECRET)
-    .update(`${userId}:${email}:${secret}`)
+    .update(`${userId}:${email}:${seed}`)
     .digest("hex");
 }
 
@@ -125,11 +126,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const expectedSetupToken = signSetupToken(
-      user.id,
-      user.email,
-      user.twoFactorSecret,
-    );
+    const seed = openTotpSeed(user.twoFactorSecret);
+    const expectedSetupToken = signSetupToken(user.id, user.email, seed);
 
     if (!safeEqual(setupToken, expectedSetupToken)) {
       return NextResponse.json(
@@ -142,7 +140,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isValid = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: seed,
       encoding: "base32",
       token: code,
       window: 1,
@@ -176,7 +174,7 @@ export async function POST(req: NextRequest) {
       entityType: "User",
       entityId: user.id,
       metadata: { source: "registration" },
-      ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
+      ipAddress: req.headers.get("x-forwarded-for") ?? null,
       userAgent: req.headers.get("user-agent") ?? null,
     });
 
