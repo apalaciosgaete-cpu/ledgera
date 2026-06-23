@@ -55,7 +55,12 @@ export async function GET(req: NextRequest) {
 
   // Las conexiones de exchange se exponen SIN las credenciales cifradas.
   const exchangeConnectionsSafe = (exchangeConnections as Array<Record<string, unknown>>).map(
-    ({ apiKeyEncrypted: _k, apiSecretEncrypted: _s, ...rest }) => rest,
+    (conn) => {
+      const copy = { ...conn };
+      delete copy.apiKeyEncrypted;
+      delete copy.apiSecretEncrypted;
+      return copy;
+    },
   );
 
   const payload = {
