@@ -191,61 +191,76 @@ export function InvestorDashboard() {
     stopMic();
     clearRelistenTimer();
     voiceModeRef.current = true;
-    setListening(true);
-    setAssistantStatus("listening");
-    setVoiceState("listening");
-    setVoiceNotice("");
 
-    const stop = startListening({
-      onResult: ({ transcript, final }) => {
-        const next = transcript.trim();
-        setQuery(next);
-        if (final && next) {
-          void submitMessage(next, "voice");
-        }
-      },
-      onStateChange: (state) => {
-        if (state === "listening") {
-          setAssistantStatus("listening");
-          return;
-        }
+    // Probe rápido de permisos antes de arrancar STT
+    void navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      stream.getTracks().forEach((t) => t.stop());
 
-        if (state === "processing") {
-          setAssistantStatus("thinking");
-          return;
-        }
+      setListening(true);
+      setAssistantStatus("listening");
+      setVoiceState("listening");
+      setVoiceNotice("");
 
-        if (state === "idle") {
-          setListening(false);
-          if (!loading) {
-            setAssistantStatus("idle");
-            setVoiceState("idle");
+      const stop = startListening({
+        onResult: ({ transcript, final }) => {
+          const next = transcript.trim();
+          setQuery(next);
+          if (final && next) {
+            void submitMessage(next, "voice");
           }
-          return;
-        }
+        },
+        onStateChange: (state) => {
+          if (state === "listening") {
+            setAssistantStatus("listening");
+            return;
+          }
 
-        if (state === "error" || state === "unsupported") {
+          if (state === "processing") {
+            setAssistantStatus("thinking");
+            return;
+          }
+
+          if (state === "idle") {
+            setListening(false);
+            if (!loading) {
+              setAssistantStatus("idle");
+              setVoiceState("idle");
+            }
+            return;
+          }
+
+          // Estados de error — solo manejan estado, onError provee el mensaje
+          if (state === "error" || state === "unsupported" || state === "denied" || state === "no-device") {
+            setListening(false);
+            setAssistantStatus("blocked");
+            setVoiceState("idle");
+            return;
+          }
+        },
+        onError: (error) => {
           setListening(false);
           setAssistantStatus("blocked");
-          setVoiceState("idle");
-          setVoiceNotice("No pude acceder al micrófono. Revisa permisos del navegador o escribe tu consulta.");
-        }
-      },
-      onError: () => {
+          setVoiceNotice(error || "No pude acceder al micrófono. Revisa permisos del navegador o escribe tu consulta.");
+        },
+      });
+
+      if (!stop) {
         setListening(false);
         setAssistantStatus("blocked");
-        setVoiceNotice("No pude acceder al micrófono. Revisa permisos del navegador o escribe tu consulta.");
-      },
-    });
+        // onError ya seteó el mensaje específico desde startListening()
+        return;
+      }
 
-    if (!stop) {
+      stopListeningRef.current = stop;
+    }).catch((err) => {
+      const isDenied = err instanceof DOMException &&
+        (err.name === "NotAllowedError" || err.name === "PermissionDeniedError");
       setListening(false);
       setAssistantStatus("blocked");
-      setVoiceNotice("Este navegador no permite usar reconocimiento de voz. Puedes continuar escribiendo.");
-      return;
-    }
-
-    stopListeningRef.current = stop;
+      setVoiceNotice(isDenied
+        ? "Permiso de micrófono denegado. Actívalo en la configuración del navegador y recarga."
+        : "No se detectó un micrófono. Conecta uno y vuelve a intentar.");
+    });
   }
 
   function toggleMic() {

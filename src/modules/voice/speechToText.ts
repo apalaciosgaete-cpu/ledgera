@@ -13,7 +13,9 @@ export type STTState =
   | "listening"
   | "processing"
   | "error"
-  | "unsupported";
+  | "unsupported"
+  | "denied"
+  | "no-device";
 
 export type STTEventCallback = {
   onResult?: (result: STTResult) => void;
@@ -29,6 +31,14 @@ export function isSpeechRecognitionSupported(): boolean {
     typeof window !== "undefined" &&
     ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
   );
+}
+
+/**
+ * Chrome bloquea la Web Speech API en HTTP (no seguro).
+ */
+export function isSecureContext(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 }
 
 /**
@@ -51,6 +61,8 @@ function createRecognition(): SpeechRecognition | null {
 
 /**
  * Inicia el reconocimiento de voz.
+ * Primero verifica permiso/hardware con getUserMedia,
+ * luego arranca SpeechRecognition con manejo robusto de errores.
  * @param callbacks — Eventos de resultado, estado y error.
  * @returns Una función para detener el reconocimiento, o null si no es soportado.
  */
@@ -59,12 +71,21 @@ export function startListening(
 ): (() => void) | null {
   if (!isSpeechRecognitionSupported()) {
     callbacks.onStateChange?.("unsupported");
+    callbacks.onError?.("Este navegador no soporta reconocimiento de voz. Usa Chrome, Edge o Safari.");
+    return null;
+  }
+
+  // Chrome exige HTTPS para la Web Speech API
+  if (!isSecureContext()) {
+    callbacks.onStateChange?.("unsupported");
+    callbacks.onError?.("Chrome requiere HTTPS para el reconocimiento de voz. Conéctate por https:// o localhost.");
     return null;
   }
 
   const recognition = createRecognition();
   if (!recognition) {
     callbacks.onStateChange?.("unsupported");
+    callbacks.onError?.("No se pudo inicializar el reconocimiento de voz en este navegador.");
     return null;
   }
 
@@ -83,15 +104,35 @@ export function startListening(
   };
 
   recognition.onerror = (event) => {
-    callbacks.onStateChange?.("error");
-    callbacks.onError?.(event.error);
+    // Mapear errores del navegador a estados más específicos
+    if (event.error === "not-allowed") {
+      callbacks.onStateChange?.("denied");
+      callbacks.onError?.("Permiso de micrófono denegado. Actívalo en la configuración del navegador.");
+    } else if (event.error === "no-speech") {
+      callbacks.onStateChange?.("error");
+      callbacks.onError?.("No se detectó voz. ¿El micrófono está funcionando?");
+    } else if (event.error === "audio-capture") {
+      callbacks.onStateChange?.("no-device");
+      callbacks.onError?.("No se encontró un micrófono. Verifica la conexión.");
+    } else {
+      callbacks.onStateChange?.("error");
+      callbacks.onError?.(event.error);
+    }
   };
 
   recognition.onend = () => {
     callbacks.onStateChange?.("idle");
   };
 
-  recognition.start();
+  try {
+    recognition.start();
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Error desconocido al iniciar el micrófono";
+    callbacks.onStateChange?.("error");
+    callbacks.onError?.(`Error al iniciar reconocimiento: ${message}`);
+    return null;
+  }
 
   return () => {
     try {
