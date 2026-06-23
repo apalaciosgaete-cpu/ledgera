@@ -91,6 +91,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
       bancos: "/origen-fondos/bancos",
       exchanges: "/origen-fondos/exchanges",
       wallets: "/origen-fondos/wallets",
+      documentacion: "/origen-fondos/documentacion",
     };
     const route = activeStep === "origen-fondos" ? sourceFundsRoutes[option.key] : null;
     if (route) {
