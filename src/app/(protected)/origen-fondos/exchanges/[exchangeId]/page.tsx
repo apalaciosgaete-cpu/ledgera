@@ -25,7 +25,7 @@ export default function ExchangeConnectionPage() {
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 14, alignContent: "start" }}>
         {exchange.connectionMethods.map((method) => (
-          <button key={method} type="button" style={{ minHeight: 150, borderRadius: 20, border: "1px solid #DDD6FE", background: "#FFFFFF", color: "#0F2A3D", cursor: "pointer", padding: 18, textAlign: "left", boxShadow: "0 10px 22px rgba(15,42,61,0.05)", fontFamily: fonts.body }}>
+          <button key={method} type="button" style={{ height: 150, borderRadius: 20, border: "1px solid #DDD6FE", background: "#FFFFFF", color: "#0F2A3D", cursor: "pointer", padding: 18, textAlign: "left", boxShadow: "0 10px 22px rgba(15,42,61,0.05)", fontFamily: fonts.body }}>
             <strong style={{ display: "block", fontSize: 17, fontWeight: 900, marginBottom: 8 }}>{method === "api" ? "Conexión por API" : "Subir historial"}</strong>
             <span style={{ display: "block", color: "#475569", fontSize: 13.5, lineHeight: 1.35 }}>{method === "api" ? "Conecta el exchange usando credenciales API de solo lectura." : "Carga CSV, Excel o reporte del exchange para normalizar movimientos."}</span>
           </button>
