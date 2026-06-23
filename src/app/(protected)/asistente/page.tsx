@@ -12,13 +12,6 @@ type Message = {
   content: string;
 };
 
-function estimateReplyPlaybackMs(text: string): number {
-  const normalized = text.trim();
-  if (!normalized) return 2600;
-  const byWords = normalized.split(/\s+/).length * 340;
-  return Math.max(2600, Math.min(byWords, 12000));
-}
-
 export default function AsistentePage() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -40,15 +33,17 @@ export default function AsistentePage() {
   const [voiceMode, setVoiceMode] = useState(initialSource.includes("voice"));
   const [autoListenKey, setAutoListenKey] = useState(0);
   const autoSentRef = useRef(false);
-  const relistenTimerRef = useRef<number | null>(null);
+  // Espejo síncrono de voiceMode para leerlo dentro de callbacks asíncronos.
+  const voiceModeRef = useRef(voiceMode);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    voiceModeRef.current = voiceMode;
+  }, [voiceMode]);
 
   useEffect(() => {
     return () => {
       stopSpeaking();
-      if (relistenTimerRef.current) {
-        window.clearTimeout(relistenTimerRef.current);
-      }
     };
   }, []);
 
@@ -56,14 +51,15 @@ export default function AsistentePage() {
     scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading]);
 
-  function scheduleRelisten(answer: string) {
-    if (!voiceMode) return;
-    if (relistenTimerRef.current) {
-      window.clearTimeout(relistenTimerRef.current);
-    }
-    relistenTimerRef.current = window.setTimeout(() => {
+  // Habla la respuesta y, al terminar REALMENTE el audio, reabre el micrófono
+  // para el siguiente turno — solo en modo voz y si el audio se reprodujo
+  // completo (no fue interrumpido por el usuario). Esto produce el ida y vuelta
+  // natural de una conversación, sin solaparse con la voz de LEDGERA.
+  async function speakAndRelisten(text: string) {
+    const result = await speakResponse(text);
+    if (voiceModeRef.current && result.success) {
       setAutoListenKey((current) => current + 1);
-    }, estimateReplyPlaybackMs(answer));
+    }
   }
 
   async function submitMessage(trimmed: string, source: "text" | "voice" = "text") {
@@ -71,19 +67,17 @@ export default function AsistentePage() {
 
     if (source === "voice") {
       setVoiceMode(true);
+      voiceModeRef.current = true;
     }
 
+    // Interrumpe cualquier audio en curso (barge-in): el usuario tomó el turno.
     stopSpeaking();
-
-    if (relistenTimerRef.current) {
-      window.clearTimeout(relistenTimerRef.current);
-      relistenTimerRef.current = null;
-    }
 
     setMessages((current) => [...current, { role: "USER", content: trimmed }]);
     setMessage("");
     setLoading(true);
 
+    let reply: string;
     try {
       const res = await fetch("/api/copilot/chat", {
         method: "POST",
@@ -93,19 +87,20 @@ export default function AsistentePage() {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.message || "Error del asistente.");
 
-      const answer = json.data.answer;
+      reply = json.data.answer;
       setConversationId(json.data.conversationId);
-      setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
-      void speakResponse(answer);
-      scheduleRelisten(answer);
+      setMessages((current) => [...current, { role: "ASSISTANT", content: reply }]);
     } catch (error) {
-      const fallback = error instanceof Error ? error.message : "No pude responder ahora.";
-      setMessages((current) => [...current, { role: "ASSISTANT", content: fallback }]);
-      void speakResponse(fallback);
-      scheduleRelisten(fallback);
+      reply = error instanceof Error ? error.message : "No pude responder ahora.";
+      setMessages((current) => [...current, { role: "ASSISTANT", content: reply }]);
     } finally {
+      // La red terminó: liberamos el spinner y dejamos el micrófono disponible
+      // (para permitir interrumpir mientras LEDGERA habla).
       setLoading(false);
     }
+
+    // Reproduce la respuesta y encadena el siguiente turno al fin real del audio.
+    await speakAndRelisten(reply);
   }
 
   useEffect(() => {
@@ -127,11 +122,8 @@ export default function AsistentePage() {
   }
 
   function handleBeforeListen() {
+    // Si el usuario activa el micrófono mientras LEDGERA habla, corta el audio.
     stopSpeaking();
-    if (relistenTimerRef.current) {
-      window.clearTimeout(relistenTimerRef.current);
-      relistenTimerRef.current = null;
-    }
   }
 
   return (
