@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+import { openTotpSeed } from "@/modules/security/application/totpSecretCrypto";
 
 export async function POST(req: NextRequest) {
   const rateLimitResponse = enforceRequestRateLimit(req, {
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isValid = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: openTotpSeed(user.twoFactorSecret),
       encoding: "base32",
       token: code,
       window: 1,
