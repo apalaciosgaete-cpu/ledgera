@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
 import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
@@ -29,25 +29,9 @@ const ASSET_VIEWS: AssetView[] = [
   { key: "eventos-tributarios", label: "Eventos tributarios", value: "0", hint: "Operaciones listas para ser evaluadas por el motor tributario.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
 ];
 
-const INGESTION_STEPS = [
-  "Importar fuentes",
-  "Normalizar transacciones",
-  "Corregir inconsistencias",
-  "Validar con usuario",
-  "Enviar a motor tributario",
-] as const;
-
-const REVIEW_QUEUE = [
-  "Clasificación de movimientos",
-  "Vinculación de respaldo documental",
-  "Conciliación de saldos",
-] as const;
-
-const DECISION_QUEUE = [
-  "Confirmar tipo de operación",
-  "Revisar activo detectado",
-  "Aprobar envío al motor tributario",
-] as const;
+const INGESTION_STEPS = ["Importar fuentes", "Normalizar transacciones", "Corregir inconsistencias", "Validar con usuario", "Enviar a motor tributario"] as const;
+const REVIEW_QUEUE = ["Clasificación de movimientos", "Vinculación de respaldo documental", "Conciliación de saldos"] as const;
+const DECISION_QUEUE = ["Confirmar tipo de operación", "Revisar activo detectado", "Aprobar envío al motor tributario"] as const;
 
 const STEP_COPY: Record<WealthStepKey, { title: string; subtitle: string; guide: string; examples: string[] }> = {
   "origen-fondos": {
@@ -64,8 +48,12 @@ const STEP_COPY: Record<WealthStepKey, { title: string; subtitle: string; guide:
   },
 };
 
+function normalize(text: string) {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function resolveSourceIntent(text: string): SourceOptionKey | null {
-  const clean = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const clean = normalize(text);
   if (/banco|cuenta|cartola|deposito|transferencia/.test(clean)) return "bancos";
   if (/exchange|binance|coinbase|buda|plataforma/.test(clean)) return "exchanges";
   if (/wallet|direccion|on.?chain|transaccion|autocustodia/.test(clean)) return "wallets";
@@ -74,7 +62,7 @@ function resolveSourceIntent(text: string): SourceOptionKey | null {
 }
 
 function resolveAssetView(text: string): AssetViewKey | null {
-  const clean = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const clean = normalize(text);
   if (/transaccion|movimiento|historial|operacion/.test(clean)) return "transacciones";
   if (/activo|saldo|posicion|token|moneda/.test(clean)) return "activos-detectados";
   if (/pendiente|corregir|correccion|clasificar|error|inconsistencia/.test(clean)) return "pendientes";
@@ -144,12 +132,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     if (mode === "auto") void speakResponse(option.hint).finally(() => setStatus("idle"));
   }
 
-  function openAssetView(view: AssetViewKey) {
-    setAssetView(view);
-    setStatus("idle");
-  }
-
-  function submit(event: React.FormEvent) {
+  function submit(event: FormEvent) {
     event.preventDefault();
     const clean = query.trim();
     if (!clean) return;
@@ -162,7 +145,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
 
     if (activeStep === "activos") {
       const view = resolveAssetView(clean);
-      if (view) { openAssetView(view); setStatus("idle"); return; }
+      if (view) { setAssetView(view); setStatus("idle"); return; }
     }
 
     router.push(`/panel?q=${encodeURIComponent(clean)}&scope=wealth-flow&step=${activeStep}`);
@@ -181,7 +164,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
           return;
         }
         const view = resolveAssetView(transcript);
-        if (view) openAssetView(view);
+        if (view) setAssetView(view);
       },
       onStateChange: (state) => setStatus(state === "listening" ? "listening" : "idle"),
       onError: () => setStatus("idle"),
@@ -197,7 +180,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
 
   if (activeStep === "activos") {
     return (
-      <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 12, gridTemplateRows: "auto auto 1fr auto" }}>
+      <main style={{ height: "calc(100vh - 92px)", overflow: "hidden", display: "grid", gap: 12, gridTemplateRows: "auto auto minmax(0,1fr) auto" }}>
         <section>
           <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.55rem,2.7vw,1.9rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
           <p style={{ color: "#334155", fontSize: 13.5, lineHeight: 1.32, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
@@ -207,7 +190,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
           {ASSET_VIEWS.map((view) => {
             const active = assetView === view.key;
             return (
-              <button key={view.key} type="button" onClick={() => openAssetView(view.key)} style={{ minHeight: 88, borderRadius: 18, border: `1px solid ${active ? view.accent : view.border}`, background: view.bg, cursor: "pointer", textAlign: "left", padding: "12px 14px", display: "grid", gap: 4, boxShadow: active ? `0 8px 18px ${view.accent}20` : "0 8px 16px rgba(15,42,61,0.035)", fontFamily: fonts.body }}>
+              <button key={view.key} type="button" onClick={() => setAssetView(view.key)} style={{ minHeight: 88, borderRadius: 18, border: `1px solid ${active ? view.accent : view.border}`, background: view.bg, cursor: "pointer", textAlign: "left", padding: "12px 14px", display: "grid", gap: 4, boxShadow: active ? `0 8px 18px ${view.accent}20` : "0 8px 16px rgba(15,42,61,0.035)", fontFamily: fonts.body }}>
                 <span style={{ color: view.accent, fontSize: 22, fontWeight: 950, lineHeight: 1 }}>{view.value}</span>
                 <strong style={{ color: "#0F2A3D", fontSize: 13.5, fontWeight: 900 }}>{view.label}</strong>
                 <span style={{ color: "#64748B", fontSize: 11.5, lineHeight: 1.25 }}>{view.hint}</span>
