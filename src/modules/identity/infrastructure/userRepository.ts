@@ -26,6 +26,8 @@ const baseUserSelect = {
   updated_at:              true,
   subscription_plan:       true,
   subscription_expires_at: true,
+  twoFactorSecret:         true,
+  twoFactorEnabled:        true,
   rut:                     true,
   phone:                   true,
   address:                 true,
@@ -45,6 +47,8 @@ type BaseUserRow = {
   updated_at:              Date;
   subscription_plan:       string;
   subscription_expires_at: Date | null;
+  twoFactorSecret:         string | null;
+  twoFactorEnabled:        boolean;
   rut:                     string | null;
   phone:                   string | null;
   address:                 string | null;
@@ -65,8 +69,8 @@ function mapRowToUser(row: BaseUserRow): User {
     updatedAt:             row.updated_at,
     subscriptionPlan:      (row.subscription_plan ?? "BASICO") as User["subscriptionPlan"],
     subscriptionExpiresAt: row.subscription_expires_at,
-    twoFactorSecret:       null,
-    twoFactorEnabled:      false,
+    twoFactorSecret:       row.twoFactorSecret,
+    twoFactorEnabled:      row.twoFactorEnabled,
     rut:                   row.rut ?? null,
     phone:                 row.phone ?? null,
     address:               row.address ?? null,
