@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <rect x="12" y="18" width="30" height="34" rx="7" fill="#0F1419"/>
+  <path d="M19 44 V26 L35 44 V26" fill="none" stroke="#3DDC97" stroke-width="4"/>
+  <text x="50" y="40" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0F1419">NGRAVE</text>
+</svg>

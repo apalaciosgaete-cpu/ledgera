@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <path d="M28 12 L46 35 L28 58 L10 35 Z" fill="#B79768"/>
+  <path d="M28 24 L37 35 L28 46 L19 35 Z" fill="#FFF"/>
+  <text x="54" y="40" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1A1A1A">Keystone</text>
+</svg>
