@@ -161,6 +161,103 @@ function SecurityCenterPanel({ twoFactorEnabled }: { twoFactorEnabled: boolean }
   );
 }
 
+function readCsrfCookie() {
+  if (typeof document === "undefined") return "";
+  return document.cookie
+    .split(";")
+    .map((entry) => entry.trim())
+    .find((entry) => entry.startsWith("ledgera_csrf="))
+    ?.split("=")[1] ?? "";
+}
+
+// Derechos del titular (Ley 21.719): portabilidad (exportar) y supresión (eliminar).
+function PrivacyDataCard() {
+  const [busy, setBusy] = useState<"export" | "delete" | null>(null);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
+  function exportData() {
+    setErr(""); setMsg("");
+    window.location.assign("/api/user/data-export");
+  }
+
+  async function deleteAccount() {
+    setErr(""); setMsg("");
+    const phrase = window.prompt(
+      "Esta acción anonimiza tus datos personales y cierra tu cuenta. Los registros tributarios se conservan por el plazo legal de retención.\n\nPara confirmar, escribe exactamente: ELIMINAR MI CUENTA",
+    );
+    if (phrase === null) return;
+    if (phrase !== "ELIMINAR MI CUENTA") {
+      setErr("Confirmación incorrecta. La cuenta no fue eliminada.");
+      return;
+    }
+    setBusy("delete");
+    try {
+      await fetch("/api/csrf", { credentials: "include", cache: "no-store" });
+      const res = await fetch("/api/user/account", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", "x-ledgera-csrf": readCsrfCookie() },
+        body: JSON.stringify({ confirmation: "ELIMINAR MI CUENTA" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setErr(data?.message ?? "No se pudo eliminar la cuenta.");
+        setBusy(null);
+        return;
+      }
+      setMsg("Cuenta eliminada. Cerrando sesión…");
+      setTimeout(() => window.location.assign("/"), 1500);
+    } catch {
+      setErr("Error de red al eliminar la cuenta.");
+      setBusy(null);
+    }
+  }
+
+  return (
+    <SectionCard
+      title="Privacidad y mis datos"
+      description="Ejerce tus derechos bajo la Ley N° 21.719 de Protección de Datos Personales"
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
+          <button
+            type="button"
+            onClick={exportData}
+            disabled={busy !== null}
+            style={{
+              padding: "0.6rem 1.1rem", borderRadius: "8px", border: "1px solid #E2E8F0",
+              background: "#FFFFFF", color: "#0F2A3D", fontWeight: 700, fontSize: "0.85rem",
+              cursor: busy ? "not-allowed" : "pointer",
+            }}
+          >
+            Exportar mis datos (JSON)
+          </button>
+          <button
+            type="button"
+            onClick={deleteAccount}
+            disabled={busy !== null}
+            style={{
+              padding: "0.6rem 1.1rem", borderRadius: "8px", border: "1px solid rgba(220,38,38,0.4)",
+              background: "rgba(220,38,38,0.06)", color: "#DC2626", fontWeight: 700, fontSize: "0.85rem",
+              cursor: busy ? "not-allowed" : "pointer",
+            }}
+          >
+            {busy === "delete" ? "Eliminando…" : "Eliminar mi cuenta"}
+          </button>
+        </div>
+        <p style={{ fontSize: "0.78rem", color: "#64748B", margin: 0, lineHeight: 1.6 }}>
+          La exportación entrega tus datos en formato estructurado (portabilidad, Art. 11). La
+          eliminación anonimiza tus datos identificatorios (supresión, Art. 9); los registros
+          tributarios se conservan por el plazo legal de retención.
+        </p>
+        {msg && <p style={{ fontSize: "0.82rem", color: "#16A34A", margin: 0, fontWeight: 600 }}>{msg}</p>}
+        {err && <p style={{ fontSize: "0.82rem", color: "#DC2626", margin: 0, fontWeight: 600 }}>{err}</p>}
+      </div>
+    </SectionCard>
+  );
+}
+
 export default function ConfiguracionShell({ forcedSection }: { forcedSection: Section }) {
   const { user, subscriptionState } = useAuth();
   const role = (user as { role?: string })?.role ?? "personal";
@@ -389,6 +486,7 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
             </div>
           </SectionCard>
           <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
+          <PrivacyDataCard />
         </>
       )}
 
@@ -425,6 +523,7 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
             </div>
           </SectionCard>
           <SaveBar onSave={saveSection} saving={saving} saved={saved} onReset={resetSection} error={saveError} />
+          <PrivacyDataCard />
         </>
       )}
 
