@@ -23,8 +23,8 @@ const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; cta: 
   },
   aggregator: {
     icon: "🔄",
-    label: "Conexión vía agregador",
-    cta: "Conectar agregador →",
+    label: "Conexión automática",
+    cta: "Conectar banco →",
     accent: "#2483FF",
     bg: "#F8FBFF",
     border: "#DCEBFF",
@@ -164,8 +164,8 @@ export default function BankConnectionPage() {
 
           {activeMethod === "aggregator" && (
             <div style={{ display: "grid", gap: 10 }}>
-              <strong style={{ color: "#0F2A3D", fontSize: 15 }}>Conectar vía agregador</strong>
-              <button type="button" style={{ width: 220, minHeight: 42, borderRadius: 12, border: "none", background: "#2483FF", color: "#FFFFFF", fontWeight: 900, cursor: "pointer" }}>Iniciar conexión segura</button>
+              <strong style={{ color: "#0F2A3D", fontSize: 15 }}>Conexión automática</strong>
+              <button type="button" style={{ width: 220, minHeight: 42, borderRadius: 12, border: "none", background: "#2483FF", color: "#FFFFFF", fontWeight: 900, cursor: "pointer" }}>Conectar banco</button>
             </div>
           )}
 
