@@ -100,6 +100,9 @@ a {
 }
 
 /* ─── UX: sin barras de texto conversacionales ────────────────────────────── */
+/* TODO (limpieza): este hack oculta formularios con placeholders conversacionales.
+ * Una vez que todas las pantallas dejen de renderizar inputs de chat embebidos,
+ * eliminar esta regla y los formularios subyacentes de cada componente. */
 form:has(input[placeholder='Habla o escribe aquí...']),
 form:has(input[placeholder*='Buscar transacción']),
 form:has(input[placeholder*='Cuéntame tu situación']),
