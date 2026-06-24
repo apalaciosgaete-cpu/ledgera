@@ -9,14 +9,6 @@ type Props = {
   sections?: string[];
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  EMPTY: "Sin datos",
-  PARTIAL: "Parcial",
-  IN_REVIEW: "En revisión",
-  VALIDATED: "Validado",
-  REQUIRES_ACTION: "Requiere acción",
-};
-
 type TaxEvent = {
   id: string;
   eventType: string;
@@ -42,12 +34,6 @@ const HEALTH_COLORS: Record<TaxHealthStatus, string> = {
   OK: "#16A34A",
   REVIEW: "#F59E0B",
   RISK: "#EF4444",
-};
-
-const HEALTH_LABELS: Record<TaxHealthStatus, string> = {
-  OK: "Saludable",
-  REVIEW: "Requiere revisión",
-  RISK: "Riesgo detectado",
 };
 
 export function CryptoFirstModulePage({ module, sections = [] }: Props) {
@@ -101,7 +87,6 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
 
   const healthStatus = taxHealth?.status ?? null;
   const healthColor = healthStatus ? HEALTH_COLORS[healthStatus] : "#94A3B8";
-  const healthLabel = healthStatus ? HEALTH_LABELS[healthStatus] : "Sin datos";
 
   const buckets = events.reduce<Record<string, number>>((acc, e) => {
     const cat = e.effectiveTaxCategory || "SIN_CLASIFICAR";
@@ -111,7 +96,6 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
 
   return (
     <main style={{ display: "grid", gap: 12, alignContent: "start" }}>
-      {/* Header del módulo */}
       <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 22, padding: "14px 22px" }}>
         <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 6px", textTransform: "uppercase", fontFamily: fonts.body }}>
           Obligaciones Tributarias
@@ -125,20 +109,9 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
               {module.description}
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {healthStatus && (
-              <span style={{ border: `1px solid ${healthColor}33`, background: `${healthColor}10`, color: healthColor, borderRadius: 999, padding: "4px 10px", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", fontFamily: fonts.body }}>
-                {healthLabel}
-              </span>
-            )}
-            <span style={{ border: "1px solid rgba(15,118,110,0.18)", background: "rgba(15,118,110,0.08)", color: "#0F766E", borderRadius: 999, padding: "4px 10px", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", fontFamily: fonts.body }}>
-              {STATUS_LABEL[module.status] ?? module.status}
-            </span>
-          </div>
         </div>
       </section>
 
-      {/* Bandeja de eventos detectados */}
       <section style={{ background: "#071B28", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 22, padding: "12px" }}>
         <p style={{ color: "#4ADE80", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 6px", textTransform: "uppercase", fontFamily: fonts.body }}>
           {module.primaryQuestion}
@@ -150,7 +123,6 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
           <p style={{ color: "#F87171", fontSize: 13, fontFamily: fonts.body }}>Error: {error}</p>
         ) : (
           <>
-            {/* Resumen rápido */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
               <span style={{ background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "8px 14px", color: "#F8FAFC", fontSize: 13, fontFamily: fonts.body }}>
                 <strong>{totalEvents}</strong> eventos totales
@@ -167,7 +139,6 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
               )}
             </div>
 
-            {/* Clasificación por categoría */}
             {Object.keys(buckets).length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {Object.entries(buckets).map(([cat, count]) => (
@@ -191,7 +162,6 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
               </div>
             )}
 
-            {/* Issues de salud tributaria */}
             {taxHealth?.issues && taxHealth.issues.length > 0 && (
               <div style={{ marginTop: 10, display: "grid", gap: 6 }}>
                 {taxHealth.issues.map((issue, i) => (
@@ -222,7 +192,6 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
         )}
       </section>
 
-      {/* 4 tarjetas informativas */}
       <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
         {["Eventos detectados", "Revisión pendiente", "Respaldo documental", "Estado tributario"].map((title, index) => (
           <article key={title} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: "10px 14px", minHeight: "105px", display: "flex", flexDirection: "column" }}>
