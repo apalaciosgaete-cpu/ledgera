@@ -82,11 +82,11 @@ export default function ReportesPage() {
   return (
     <div style={{ maxWidth: 1180, width: "100%", display: "grid", gap: 16 }}>
       <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between" }}>
-        <div>
+        <div style={{ maxWidth: 620 }}>
           <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Reportes</p>
-          <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 900, lineHeight: 1.08, margin: "0 0 8px", letterSpacing: "-0.04em" }}>Genera reportes cuando tus datos estén revisados</h1>
-          <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0, maxWidth: 760 }}>
-            Los reportes ordenan y exportan información validada. No corrigen datos por sí solos: primero revisa Origen de Fondos, Activos y Obligaciones Tributarias.
+          <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 900, lineHeight: 1.08, margin: "0 0 8px", letterSpacing: "-0.04em", maxWidth: 620 }}>Genera reportes cuando tus datos estén revisados</h1>
+          <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0, maxWidth: 520 }}>
+            Los reportes empaquetan información validada para revisarla, guardarla o compartirla.
           </p>
         </div>
         <Link href="/obligaciones-tributarias" style={{ border: "1px solid #CBD5E1", borderRadius: 999, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
