@@ -30,15 +30,50 @@ type TaxHealth = {
   issues: Array<{ type: string; count: number; message: string }>;
 };
 
+type TaxAssistant = {
+  title: string;
+  summary: string;
+  whatIsThis: string;
+  whyItMatters: string;
+  howToOperate: string[];
+  fullFlow: string[];
+  nextBestAction: string;
+  safeDisclaimer: string;
+};
+
 const HEALTH_COLORS: Record<TaxHealthStatus, string> = {
   OK: "#16A34A",
   REVIEW: "#F59E0B",
   RISK: "#EF4444",
 };
 
+const DEFAULT_ASSISTANT: TaxAssistant = {
+  title: "Cómo funciona esta sección",
+  summary: "Obligaciones Tributarias toma información validada desde Activos y muestra solo lo que podría importar para impuestos.",
+  whatIsThis: "Aquí no se ingresan datos manualmente. LEDGERA muestra operaciones que podrían necesitar revisión tributaria.",
+  whyItMatters: "Algunas ventas, intercambios, rendimientos o movimientos sin respaldo pueden necesitar confirmación antes del cálculo.",
+  howToOperate: [
+    "Revisa si hay eventos detectados.",
+    "Abre los eventos pendientes o sin respaldo.",
+    "Confirma si la información es correcta.",
+    "Valida o agrega respaldo cuando corresponda.",
+    "Deja los eventos listos para cálculo.",
+  ],
+  fullFlow: [
+    "Origen de Fondos carga información.",
+    "Activos ordena y valida movimientos.",
+    "Obligaciones Tributarias detecta eventos.",
+    "El usuario confirma o corrige.",
+    "El motor calcula con datos validados.",
+  ],
+  nextBestAction: "Primero revisa Activos. Cuando haya datos clasificados, aparecerán eventos aquí.",
+  safeDisclaimer: "LEDGERA marca posibles efectos tributarios. No reemplaza la revisión final con información completa.",
+};
+
 export function CryptoFirstModulePage({ module, sections = [] }: Props) {
   const [events, setEvents] = useState<TaxEvent[]>([]);
   const [taxHealth, setTaxHealth] = useState<TaxHealth | null>(null);
+  const [assistant, setAssistant] = useState<TaxAssistant>(DEFAULT_ASSISTANT);
   const [totalEvents, setTotalEvents] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -51,12 +86,19 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch("/api/tax/events", { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+
+        const [eventsRes, assistantRes] = await Promise.all([
+          fetch("/api/tax/events", { cache: "no-store" }),
+          fetch("/api/tax/assistant", { cache: "no-store" }),
+        ]);
+
+        if (!eventsRes.ok) throw new Error(`HTTP ${eventsRes.status}`);
+
+        const eventsJson = await eventsRes.json();
+        const assistantJson = assistantRes.ok ? await assistantRes.json() : null;
         if (cancelled) return;
 
-        const data = json?.data;
+        const data = eventsJson?.data;
         const eventList: TaxEvent[] = data?.events ?? [];
         setEvents(eventList);
         setTotalEvents(data?.totals?.totalEvents ?? eventList.length);
@@ -70,7 +112,9 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
             e.effectiveTaxCategory === "" ||
             e.effectiveTaxCategory == null,
         ).length;
-        setPendingCount(pending);
+        setPendingCount(data?.totals?.pendingCount ?? pending);
+
+        if (assistantJson?.data) setAssistant(assistantJson.data);
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Error desconocido");
@@ -106,8 +150,8 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
             <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.3rem, 3.5vw, 1.8rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>
               {module.label}
             </h1>
-            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, maxWidth: 640, margin: 0, fontFamily: fonts.body }}>
-              {module.description}
+            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, maxWidth: 700, margin: 0, fontFamily: fonts.body }}>
+              {assistant.summary}
             </p>
           </div>
         </div>
@@ -125,13 +169,16 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
             </div>
             <div style={{ minWidth: 0 }}>
               <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: "0 0 5px", textTransform: "uppercase", fontFamily: fonts.body }}>
-                Eventos tributarios desde Activos
+                Guía LEDGERA
               </p>
               <h2 style={{ color: "#0F2A3D", fontSize: "clamp(1.15rem,2vw,1.45rem)", fontWeight: 950, letterSpacing: "-0.04em", margin: "0 0 6px", fontFamily: fonts.display }}>
-                Aún no hay eventos tributarios detectados
+                {assistant.title}
               </h2>
-              <p style={{ color: "#475569", fontSize: 13.5, lineHeight: 1.45, margin: 0, maxWidth: 800, fontFamily: fonts.body }}>
-                Cuando Activos tenga transacciones clasificadas, LEDGERA mostrará aquí ventas, swaps, staking, airdrops, retiros y movimientos sin respaldo que podrían afectar impuestos.
+              <p style={{ color: "#475569", fontSize: 13.5, lineHeight: 1.45, margin: 0, maxWidth: 820, fontFamily: fonts.body }}>
+                {assistant.whatIsThis}
+              </p>
+              <p style={{ color: "#475569", fontSize: 13.5, lineHeight: 1.45, margin: "6px 0 0", maxWidth: 820, fontFamily: fonts.body }}>
+                {assistant.nextBestAction}
               </p>
             </div>
           </div>
@@ -151,6 +198,18 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
                   Score: <strong>{taxHealth.score}</strong>/100
                 </span>
               )}
+            </div>
+
+            <div style={{ borderTop: "1px solid #D9F5E8", paddingTop: 12 }}>
+              <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: "0 0 5px", textTransform: "uppercase", fontFamily: fonts.body }}>
+                Qué hacer ahora
+              </p>
+              <h2 style={{ color: "#0F2A3D", fontSize: "clamp(1.05rem,2vw,1.28rem)", fontWeight: 950, letterSpacing: "-0.03em", margin: "0 0 6px", fontFamily: fonts.display }}>
+                {assistant.title}
+              </h2>
+              <p style={{ color: "#475569", fontSize: 13.5, lineHeight: 1.45, margin: 0, fontFamily: fonts.body }}>
+                {assistant.nextBestAction}
+              </p>
             </div>
 
             {Object.keys(buckets).length > 0 && (
@@ -181,12 +240,17 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
       </section>
 
       <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-        {["Eventos detectados", "Revisión pendiente", "Respaldo documental", "Estado tributario"].map((title, index) => (
-          <article key={title} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: "10px 14px", minHeight: "105px", display: "flex", flexDirection: "column" }}>
+        {[
+          { title: "Qué es", text: assistant.whatIsThis },
+          { title: "Por qué importa", text: assistant.whyItMatters },
+          { title: "Cómo usarlo", text: assistant.howToOperate.slice(0, 3).join(" ") },
+          { title: "Importante", text: assistant.safeDisclaimer },
+        ].map((item, index) => (
+          <article key={item.title} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: "10px 14px", minHeight: "105px", display: "flex", flexDirection: "column" }}>
             <span style={{ color: "#0F766E", fontSize: 12, fontWeight: 850 }}>{String(index + 1).padStart(2, "0")}</span>
-            <h3 style={{ color: "#0F2A3D", fontSize: 18, fontWeight: 850, margin: "10px 0 8px", fontFamily: fonts.body }}>{title}</h3>
-            <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: 0, fontFamily: fonts.body }}>
-              {sections[index] ?? "Se alimentará con datos del Sistema Operativo Crypto First."}
+            <h3 style={{ color: "#0F2A3D", fontSize: 18, fontWeight: 850, margin: "10px 0 8px", fontFamily: fonts.body }}>{item.title}</h3>
+            <p style={{ color: "#64748B", fontSize: 13.5, lineHeight: 1.45, margin: 0, fontFamily: fonts.body }}>
+              {item.text}
             </p>
           </article>
         ))}
