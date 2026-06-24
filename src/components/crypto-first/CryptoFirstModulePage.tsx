@@ -96,7 +96,7 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
 
   return (
     <main style={{ display: "grid", gap: 12, alignContent: "start" }}>
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 22, padding: "14px 22px" }}>
+      <section style={{ padding: "0 14px 4px" }}>
         <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 6px", textTransform: "uppercase", fontFamily: fonts.body }}>
           Obligaciones Tributarias
         </p>
