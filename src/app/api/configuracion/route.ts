@@ -67,6 +67,7 @@ export async function PUT(req: NextRequest) {
   try {
     const session = await requireSession(req);
     if (session instanceof NextResponse) return session;
+    if (!session) return NextResponse.json({}, { status: 401 });
 
     const { key, value } = await req.json();
     if (!key || value === undefined || value === null) {
@@ -75,7 +76,7 @@ export async function PUT(req: NextRequest) {
     if (!DEFAULTS[key]) {
       return NextResponse.json({ error: "Clave no reconocida" }, { status: 400 });
     }
-    if (!allowedKeys(session?.user.role).includes(key)) {
+    if (!allowedKeys(session.user.role).includes(key)) {
       return NextResponse.json({ error: "No tienes permiso para modificar esta clave" }, { status: 403 });
     }
 
