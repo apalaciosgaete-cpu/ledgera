@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DigitalModuleDefinition } from "@/modules/digital-operating-system";
 import { fonts } from "@/styles/tokens";
 
@@ -77,57 +77,87 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
   const [totalEvents, setTotalEvents] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildMessage, setRebuildMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const isTaxObligations = module.key === "taxObligations";
 
-    async function fetchEvents() {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadEvents = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      setError(null);
 
-        const [eventsRes, assistantRes] = await Promise.all([
-          fetch("/api/tax/events", { cache: "no-store" }),
-          fetch("/api/tax/assistant", { cache: "no-store" }),
-        ]);
+      const [eventsRes, assistantRes] = await Promise.all([
+        fetch("/api/tax/events", { cache: "no-store", credentials: "include" }),
+        fetch("/api/tax/assistant", { cache: "no-store", credentials: "include" }),
+      ]);
 
-        if (!eventsRes.ok) throw new Error(`HTTP ${eventsRes.status}`);
+      if (!eventsRes.ok) throw new Error(`HTTP ${eventsRes.status}`);
 
-        const eventsJson = await eventsRes.json();
-        const assistantJson = assistantRes.ok ? await assistantRes.json() : null;
-        if (cancelled) return;
+      const eventsJson = await eventsRes.json();
+      const assistantJson = assistantRes.ok ? await assistantRes.json() : null;
 
-        const data = eventsJson?.data;
-        const eventList: TaxEvent[] = data?.events ?? [];
-        setEvents(eventList);
-        setTotalEvents(data?.totals?.totalEvents ?? eventList.length);
+      const data = eventsJson?.data;
+      const eventList: TaxEvent[] = data?.events ?? [];
+      setEvents(eventList);
+      setTotalEvents(data?.totals?.totalEvents ?? eventList.length);
 
-        const health: TaxHealth | undefined = data?.taxHealth;
-        setTaxHealth(health ?? null);
+      const health: TaxHealth | undefined = data?.taxHealth;
+      setTaxHealth(health ?? null);
 
-        const pending = eventList.filter(
-          (e: TaxEvent) =>
-            e.effectiveTaxCategory === "PENDING" ||
-            e.effectiveTaxCategory === "" ||
-            e.effectiveTaxCategory == null,
-        ).length;
-        setPendingCount(data?.totals?.pendingCount ?? pending);
+      const pending = eventList.filter(
+        (e: TaxEvent) =>
+          e.effectiveTaxCategory === "PENDING" ||
+          e.effectiveTaxCategory === "" ||
+          e.effectiveTaxCategory == null,
+      ).length;
+      setPendingCount(data?.totals?.pendingCount ?? pending);
 
-        if (assistantJson?.data) setAssistant(assistantJson.data);
-      } catch (err) {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Error desconocido");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      if (assistantJson?.data) setAssistant(assistantJson.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
+      if (showLoading) setLoading(false);
     }
-
-    fetchEvents();
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
+
+  async function handleRebuildTaxEvents() {
+    setRebuilding(true);
+    setRebuildMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/tax/events/rebuild", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "include",
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || result?.ok === false) {
+        throw new Error(result?.message || `HTTP ${response.status}`);
+      }
+
+      await loadEvents(false);
+
+      const total = result?.data?.totalEvents;
+      setRebuildMessage(
+        typeof total === "number"
+          ? `Eventos tributarios recalculados: ${total}.`
+          : "Eventos tributarios recalculados correctamente.",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No fue posible recalcular eventos tributarios.");
+    } finally {
+      setRebuilding(false);
+    }
+  }
 
   const healthStatus = taxHealth?.status ?? null;
   const healthColor = healthStatus ? HEALTH_COLORS[healthStatus] : "#94A3B8";
@@ -154,10 +184,35 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
               {assistant.summary}
             </p>
           </div>
+          {isTaxObligations && (
+            <button
+              type="button"
+              onClick={handleRebuildTaxEvents}
+              disabled={loading || rebuilding}
+              style={{
+                background: loading || rebuilding ? "#94A3B8" : "#0F766E",
+                border: "none",
+                borderRadius: 999,
+                color: "#FFFFFF",
+                cursor: loading || rebuilding ? "not-allowed" : "pointer",
+                fontFamily: fonts.body,
+                fontSize: 13,
+                fontWeight: 850,
+                padding: "10px 15px",
+              }}
+            >
+              {rebuilding ? "Recalculando…" : "Recalcular eventos"}
+            </button>
+          )}
         </div>
       </section>
 
       <section style={{ background: "linear-gradient(135deg, #FFFFFF 0%, #F8FFFB 100%)", border: "1px solid #D9F5E8", borderRadius: 24, padding: 18, boxShadow: "0 14px 34px rgba(15,42,61,0.06)", display: "grid", gap: 14 }}>
+        {rebuildMessage && (
+          <p style={{ background: "#ECFDF5", border: "1px solid #BBF7D0", borderRadius: 12, color: "#0F766E", fontSize: 13, fontFamily: fonts.body, fontWeight: 750, margin: 0, padding: "9px 12px" }}>
+            {rebuildMessage}
+          </p>
+        )}
         {loading ? (
           <p style={{ color: "#64748B", fontSize: 13, fontFamily: fonts.body, margin: 0 }}>Cargando eventos tributarios…</p>
         ) : error ? (
