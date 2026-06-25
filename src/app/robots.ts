@@ -1,22 +1,7 @@
-// src/app/robots.ts
 import type { MetadataRoute } from "next";
-
-const baseUrl = "https://ledgera.cl";
+import { SITE_BASE_URL } from "@/shared/config/app";
 const isProduction = process.env.NODE_ENV === "production";
-const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE !== "false" && isProduction;
-
+const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE === "true" && isProduction;
 export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: isMaintenanceMode
-      ? {
-          userAgent: "*",
-          disallow: "/",
-        }
-      : {
-          userAgent: "*",
-          allow: "/",
-        },
-    sitemap: `${baseUrl}/sitemap.xml`,
-    host: baseUrl,
-  };
+  return { rules: isMaintenanceMode ? { userAgent: "*", disallow: "/" } : { userAgent: "*", allow: "/" }, sitemap: SITE_BASE_URL + "/sitemap.xml", host: SITE_BASE_URL };
 }
