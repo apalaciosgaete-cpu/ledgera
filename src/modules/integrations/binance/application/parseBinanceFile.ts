@@ -1,7 +1,7 @@
 /**
- * Binance CSV file parser.
+ * Binance CSV/Excel-normalized file parser.
  *
- * Supported formats:
+ * Supported tabular formats:
  *   A) Trade History — Date(UTC), Pair, Side, Price, Executed, Amount, Fee
  *   B) Trade History alt — Date(UTC), Pair, Type, Price, Amount, Total, Fee, Fee Coin
  *   C) Deposit History — Date(UTC), Coin, Amount, TransactionFee, Address, TXID, Status
@@ -32,6 +32,10 @@ export type ParsedBinanceRow = ParsedBinanceTrade | ParsedBinanceTransfer;
 
 type DetectedFormat = "TRADE_A" | "TRADE_B" | "DEPOSIT" | "WITHDRAWAL" | "UNKNOWN";
 
+function normalizeHeader(value: string): string {
+  return value.replace(/[﻿\r]/g, "").trim();
+}
+
 function detectFormat(header: string, kindHint?: "DEPOSIT" | "WITHDRAWAL"): DetectedFormat {
   const h = header.toLowerCase();
   if (h.includes("txid") || h.includes("address")) {
@@ -43,10 +47,29 @@ function detectFormat(header: string, kindHint?: "DEPOSIT" | "WITHDRAWAL"): Dete
   return "UNKNOWN";
 }
 
+function findHeaderRow(
+  raw: string[][],
+  kindHint?: "DEPOSIT" | "WITHDRAWAL",
+): { index: number; format: DetectedFormat } {
+  const scanLimit = Math.min(raw.length, 25);
+
+  for (let i = 0; i < scanLimit; i++) {
+    const row = raw[i] ?? [];
+    const format = detectFormat(row.map(normalizeHeader).join(","), kindHint);
+    if (format !== "UNKNOWN") return { index: i, format };
+  }
+
+  const firstRow = raw[0] ?? [];
+  return {
+    index: 0,
+    format: detectFormat(firstRow.map(normalizeHeader).join(","), kindHint),
+  };
+}
+
 // Strips asset suffix from values like "0.001 BTC" → { value: 0.001, asset: "BTC" }
 function parseValueWithAsset(s: string): { value: number; asset: string } {
   const clean = s.trim().replace(/,/g, "");
-  const match = clean.match(/^([0-9.]+)\s*([A-Z]+)?$/i);
+  const match = clean.match(/^(-?[0-9.]+)\s*([A-Z]+)?$/i);
   if (!match) return { value: 0, asset: "" };
   return { value: parseFloat(match[1] ?? "0") || 0, asset: (match[2] ?? "").toUpperCase() };
 }
@@ -170,12 +193,13 @@ export function parseBinanceFile(
   const raw   = parseCsv(csvText);
   if (raw.length < 2) return { rows: [], format: "UNKNOWN", errors: ["El archivo no contiene datos."] };
 
-  const headers = (raw[0] ?? []).map(h => h.replace(/[﻿\r]/g, "").trim());
-  const data    = raw.slice(1).filter(r => r.some(c => c.trim()));
-  const format  = detectFormat(headers.join(","), opts?.kindHint);
+  const detected = findHeaderRow(raw, opts?.kindHint);
+  const headers = (raw[detected.index] ?? []).map(normalizeHeader);
+  const data    = raw.slice(detected.index + 1).filter(r => r.some(c => c.trim()));
+  const format  = detected.format;
 
   let rows: ParsedBinanceRow[] = [];
-  if (format === "TRADE_A")    rows = parseTradeA(headers, data);
+  if (format === "TRADE_A")         rows = parseTradeA(headers, data);
   else if (format === "TRADE_B")    rows = parseTradeB(headers, data);
   else if (format === "DEPOSIT")    rows = parseDeposit(headers, data);
   else if (format === "WITHDRAWAL") rows = parseWithdrawal(headers, data);
