@@ -68,7 +68,7 @@ export default function DocumentacionOrigenFondosPage() {
 
       const token = getSessionToken() ?? "";
       const csrf = readCsrfCookie();
-      const headers: HeadersInit = { "x-ledgera-csrf": csrf };
+      const headers: Record<string, string> = { "x-ledgera-csrf": csrf };
       if (token) headers.Authorization = `Bearer ${token}`;
 
       const response = await fetch("/api/intake/files", {
@@ -105,7 +105,8 @@ export default function DocumentacionOrigenFondosPage() {
   function addFiles(kind: UploadKind, fileList: FileList | null) {
     if (!fileList) return;
 
-    const incoming = Array.from(fileList).map((file) => ({
+    const selectedFiles = Array.from(fileList);
+    const incoming = selectedFiles.map((file) => ({
       id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
       name: file.name,
       size: file.size,
@@ -115,8 +116,9 @@ export default function DocumentacionOrigenFondosPage() {
 
     setFiles((current) => [...incoming, ...current]);
 
-    Array.from(fileList).forEach((file, index) => {
-      void uploadFile(kind, file, incoming[index].id);
+    selectedFiles.forEach((file, index) => {
+      const entry = incoming[index];
+      if (entry) void uploadFile(kind, file, entry.id);
     });
   }
 
