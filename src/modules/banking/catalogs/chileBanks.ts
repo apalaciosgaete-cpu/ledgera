@@ -16,7 +16,9 @@ export interface ChileBank {
   domain: string;
 }
 
-const BANK_CONNECTORS: ConnectionMethod[] = ["api", "manual_upload"];
+// Document ingestion is centralized in /origen-fondos/documentacion.
+// Bank cards expose API connection only; document uploads must not be duplicated here.
+const BANK_CONNECTORS: ConnectionMethod[] = ["api"];
 
 /**
  * Bancos que operan en Chile regulados por la CMF.
