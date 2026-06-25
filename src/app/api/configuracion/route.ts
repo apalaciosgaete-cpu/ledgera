@@ -4,6 +4,12 @@ import { ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 
 const DEFAULTS: Record<string, { value: string; category: string }> = {
+  TAX_FIFO_ENABLED: { value: "true", category: "tax" },
+  TAX_STRICT_MODE: { value: "false", category: "tax" },
+  TAX_DEFAULT_FIAT: { value: "CLP", category: "tax" },
+  TAX_FX_PROVIDER: { value: "mindicador", category: "tax" },
+  TAX_AUTO_REBUILD: { value: "false", category: "tax" },
+  TAX_ALLOW_NEGATIVE_INVENTORY: { value: "false", category: "tax" },
   PN_NOMBRE: { value: "", category: "persona" },
   PN_RUT: { value: "", category: "persona" },
   PN_DIRECCION: { value: "", category: "persona" },
