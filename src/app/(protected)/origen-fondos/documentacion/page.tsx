@@ -3,13 +3,31 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts, colors } from "@/styles/tokens";
+import { getSessionToken } from "@/modules/identity/client/authStorage";
 
 type UploadKind = "PDF" | "Excel";
+type UploadStatus = "UPLOADING" | "UPLOADED" | "STAGED" | "ERROR";
+
+type IntakeResponse = {
+  ok: boolean;
+  message: string;
+  data?: {
+    redirectTo?: string | null;
+    status?: string;
+    stagingTarget?: string;
+    imported?: number;
+    skipped?: number;
+    errors?: string[];
+  };
+};
 
 type UploadedFile = {
+  id: string;
   name: string;
   size: number;
   kind: UploadKind;
+  status: UploadStatus;
+  message?: string;
 };
 
 function formatBytes(bytes: number) {
@@ -18,20 +36,88 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function readCsrfCookie(): string {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.split("; ").find((c) => c.startsWith("ledgera_csrf="));
+  return match ? decodeURIComponent(match.split("=")[1] ?? "") : "";
+}
+
+function statusLabel(status: UploadStatus): string {
+  if (status === "UPLOADING") return "Subiendo";
+  if (status === "STAGED") return "En revisión";
+  if (status === "ERROR") return "Error";
+  return "Registrado";
+}
+
 export default function DocumentacionOrigenFondosPage() {
   const router = useRouter();
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
+  function updateFile(id: string, patch: Partial<UploadedFile>) {
+    setFiles((current) => current.map((file) => file.id === id ? { ...file, ...patch } : file));
+  }
+
+  async function uploadFile(kind: UploadKind, file: File, id: string) {
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("sourceHint", "DOCUMENTACION");
+      form.append("documentKind", kind === "Excel" ? "SPREADSHEET" : "PDF");
+
+      const token = getSessionToken() ?? "";
+      const csrf = readCsrfCookie();
+      const headers: HeadersInit = { "x-ledgera-csrf": csrf };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const response = await fetch("/api/intake/files", {
+        method: "POST",
+        headers,
+        credentials: "include",
+        cache: "no-store",
+        body: form,
+      });
+
+      const payload = await response.json() as IntakeResponse;
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.message || `HTTP ${response.status}`);
+      }
+
+      const staged = payload.data?.stagingTarget === "EXCHANGE" || payload.data?.status === "STAGED";
+      updateFile(id, {
+        status: staged ? "STAGED" : "UPLOADED",
+        message: payload.message,
+      });
+
+      if (payload.data?.redirectTo) {
+        window.setTimeout(() => router.push(payload.data?.redirectTo ?? "/importaciones"), 900);
+      }
+    } catch (error) {
+      updateFile(id, {
+        status: "ERROR",
+        message: error instanceof Error ? error.message : "No fue posible subir el archivo.",
+      });
+    }
+  }
+
   function addFiles(kind: UploadKind, fileList: FileList | null) {
     if (!fileList) return;
+
     const incoming = Array.from(fileList).map((file) => ({
+      id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
       name: file.name,
       size: file.size,
       kind,
+      status: "UPLOADING" as UploadStatus,
     }));
+
     setFiles((current) => [...incoming, ...current]);
+
+    Array.from(fileList).forEach((file, index) => {
+      void uploadFile(kind, file, incoming[index].id);
+    });
   }
 
   return (
@@ -65,10 +151,10 @@ export default function DocumentacionOrigenFondosPage() {
           <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Aún no hay archivos seleccionados.</p>
         ) : (
           <div style={{ display: "grid", gap: 8, maxHeight: 140, overflow: "auto" }}>
-            {files.map((file, index) => (
-              <div key={`${file.name}-${index}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, border: "1px solid #E2E8F0", borderRadius: 12, padding: "8px 10px", color: "#0F2A3D", fontSize: 13 }}>
+            {files.map((file) => (
+              <div key={file.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, border: "1px solid #E2E8F0", borderRadius: 12, padding: "8px 10px", color: "#0F2A3D", fontSize: 13 }}>
                 <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{file.kind} · {file.name}</span>
-                <span style={{ color: "#64748B", flexShrink: 0 }}>{formatBytes(file.size)}</span>
+                <span style={{ color: file.status === "ERROR" ? "#DC2626" : "#64748B", flexShrink: 0 }}>{statusLabel(file.status)} · {formatBytes(file.size)}</span>
               </div>
             ))}
           </div>
