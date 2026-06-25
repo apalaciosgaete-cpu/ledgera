@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 
+const SEC = "SECURITY_";
 const DEFAULTS: Record<string, { value: string; category: string }> = {
   TAX_FIFO_ENABLED: { value: "true", category: "tax" },
   TAX_STRICT_MODE: { value: "false", category: "tax" },
@@ -24,6 +25,9 @@ const DEFAULTS: Record<string, { value: string; category: string }> = {
   COMPANY_DIRECCION: { value: "", category: "company" },
   COMPANY_REPRESENTANTE: { value: "", category: "company" },
   COMPANY_EMAIL: { value: "", category: "company" },
+  [SEC + "SESSION_HOURS"]: { value: "24", category: "security" },
+  [SEC + "MAX_LOGIN_ATTEMPTS"]: { value: "5", category: "security" },
+  [SEC + "REQUIRE_2FA"]: { value: "false", category: "security" },
 };
 
 function allowedKeys(role = "personal") {
