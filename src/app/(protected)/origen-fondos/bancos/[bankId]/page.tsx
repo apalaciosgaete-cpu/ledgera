@@ -23,11 +23,11 @@ const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; cta: 
   },
   manual_upload: {
     icon: "📄",
-    label: "Subir cartola bancaria",
-    cta: "Subir archivo →",
-    accent: "#20C878",
-    bg: "#F8FFFB",
-    border: "#D9F5E8",
+    label: "Carga documental centralizada",
+    cta: "Usa Documentación en Origen de Fondos",
+    accent: "#64748B",
+    bg: "#F8FAFC",
+    border: "#E2E8F0",
   },
 };
 
@@ -41,7 +41,6 @@ export default function BankConnectionPage() {
   const params = useParams<{ bankId: string }>();
   const bank = findBankById(params.bankId);
   const stopListeningRef = useRef<(() => void) | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<AssistantStatus>("idle");
   const [activeMethod, setActiveMethod] = useState<ConnectionMethod | null>(null);
@@ -87,7 +86,6 @@ export default function BankConnectionPage() {
 
   function handleMethod(method: ConnectionMethod) {
     setActiveMethod(method);
-    if (method === "manual_upload") fileInputRef.current?.click();
   }
 
   function connectApi(event: React.FormEvent) {
@@ -152,14 +150,6 @@ export default function BankConnectionPage() {
                 <button type="submit" style={{ minHeight: 42, borderRadius: 12, border: "none", background: "#7C3AED", color: "#FFFFFF", fontWeight: 900, padding: "0 16px", cursor: "pointer" }}>Conectar API</button>
               </div>
             </form>
-          )}
-
-          {activeMethod === "manual_upload" && (
-            <div style={{ display: "grid", gap: 10 }}>
-              <strong style={{ color: "#0F2A3D", fontSize: 15 }}>Subir cartola bancaria</strong>
-              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ width: 220, minHeight: 42, borderRadius: 12, border: "none", background: "#20C878", color: "#FFFFFF", fontWeight: 900, cursor: "pointer" }}>Seleccionar archivo</button>
-              <input ref={fileInputRef} type="file" hidden accept=".pdf,.csv,.xls,.xlsx,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
-            </div>
           )}
         </div>
       </section>

@@ -29,25 +29,19 @@ export async function POST(request: NextRequest) {
     const result = await processDocumentIntake({
       userId:        auth.user.id,
       file:          file as Blob,
-      sourceHint:    "EXCHANGE",
-      providerHint:  "BINANCE",
-      documentKind:  "EXCHANGE_HISTORY",
+      sourceHint:    String(formData.get("sourceHint") ?? "DOCUMENTACION"),
+      providerHint:  String(formData.get("providerHint") ?? ""),
+      documentKind:  String(formData.get("documentKind") ?? ""),
       kindHint:      resolveKindHint(formData.get("kindHint")),
     });
 
+    const stagedMsg = result.stagingTarget === "EXCHANGE"
+      ? ` ${result.imported} registros enviados a importaciones.`
+      : " Archivo registrado para revisión documental.";
+
     return ok(
-      {
-        imported:       result.imported,
-        skipped:        result.skipped,
-        autoConfirmed:  0,
-        pendingReview:  result.pendingReview,
-        taxRebuilt:     false,
-        format:         result.format,
-        errors:         result.errors,
-        documentId:     result.documentId,
-        redirectTo:     result.redirectTo,
-      },
-      `Archivo recibido (${result.format}): ${result.imported} registros enviados a revisión, ${result.skipped} ya existían.`,
+      result,
+      `Archivo recibido: ${result.fileName}.${stagedMsg}`,
       201,
     );
   } catch (error) {

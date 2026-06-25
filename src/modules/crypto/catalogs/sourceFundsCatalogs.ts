@@ -15,8 +15,10 @@ export type SourceFundsItem = {
   walletType?: WalletType;
 };
 
-const EXCHANGE_CONNECTORS: SourceFundsItem["connectionMethods"] = ["api", "manual_upload"];
-const WALLET_CONNECTORS: SourceFundsItem["connectionMethods"] = ["wallet_connect", "address_scan", "manual_upload"];
+// Document ingestion is centralized in /origen-fondos/documentacion.
+// Exchange and wallet cards must not expose independent file-upload methods.
+const EXCHANGE_CONNECTORS: SourceFundsItem["connectionMethods"] = ["api"];
+const WALLET_CONNECTORS: SourceFundsItem["connectionMethods"] = ["wallet_connect", "address_scan"];
 
 export const EXCHANGES: SourceFundsItem[] = [
   { id: "binance", name: "Binance", shortName: "Binance", domain: "binance.com", logoUrl: "/logos/binance.svg", status: "available", connectionMethods: EXCHANGE_CONNECTORS },
