@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { parseBinanceFile, type ParsedBinanceRow } from "@/modules/integrations/binance/application/parseBinanceFile";
 import { getSessionToken } from "@/modules/identity/client/authStorage";
 
@@ -14,19 +15,38 @@ type PreviewState = {
 };
 
 type ImportResult = {
-  imported:     number;
-  skipped:      number;
-  autoConfirmed: number;
-  pendingReview: number;
-  taxRebuilt:   boolean;
-  format:       string;
-  errors:       string[];
+  imported:       number;
+  skipped:        number;
+  autoConfirmed:  number;
+  pendingReview:  number;
+  taxRebuilt:     boolean;
+  format:         string;
+  errors:         string[];
 };
 
 function readCsrfCookie(): string {
   if (typeof document === "undefined") return "";
   const match = document.cookie.split("; ").find(c => c.startsWith("ledgera_csrf="));
   return match ? decodeURIComponent(match.split("=")[1] ?? "") : "";
+}
+
+function isSpreadsheetFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  const type = file.type.toLowerCase();
+
+  return (
+    name.endsWith(".xlsx") ||
+    name.endsWith(".xls") ||
+    type.includes("spreadsheet") ||
+    type.includes("excel")
+  );
+}
+
+function isCsvFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  const type = file.type.toLowerCase();
+
+  return name.endsWith(".csv") || type.includes("csv") || type === "text/plain";
 }
 
 function formatKind(row: ParsedBinanceRow): string {
@@ -43,15 +63,38 @@ function formatNum(n: number): string {
 }
 
 export default function BinanceImportPage() {
+  const router = useRouter();
   const inputRef   = useRef<HTMLInputElement>(null);
   const [kindHint, setKindHint]     = useState<KindHint>("");
   const [preview,  setPreview]      = useState<PreviewState | null>(null);
   const [loading,  setLoading]      = useState(false);
   const [result,   setResult]       = useState<{ ok: boolean; message: string; data?: ImportResult } | null>(null);
   const [dragOver, setDragOver]     = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   const processFile = useCallback((file: File) => {
     setResult(null);
+    setRedirecting(false);
+
+    if (isSpreadsheetFile(file)) {
+      setPreview({
+        rows: [],
+        format: "EXCEL",
+        errors: [],
+        file,
+      });
+      return;
+    }
+
+    if (!isCsvFile(file)) {
+      setPreview(null);
+      setResult({
+        ok: false,
+        message: "Formato no soportado. Sube un archivo CSV, XLSX o XLS exportado desde Binance.",
+      });
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -60,6 +103,13 @@ export default function BinanceImportPage() {
                  : undefined;
       const parsed = parseBinanceFile(text, { kindHint: hint });
       setPreview({ ...parsed, file });
+    };
+    reader.onerror = () => {
+      setPreview(null);
+      setResult({
+        ok: false,
+        message: "No fue posible leer el archivo seleccionado.",
+      });
     };
     reader.readAsText(file, "utf-8");
   }, [kindHint]);
@@ -80,6 +130,8 @@ export default function BinanceImportPage() {
     if (!preview) return;
     setLoading(true);
     setResult(null);
+    setRedirecting(false);
+
     try {
       const form = new FormData();
       form.append("file", preview.file);
@@ -97,7 +149,24 @@ export default function BinanceImportPage() {
 
       const json = await res.json() as { ok: boolean; message: string; data?: ImportResult };
       setResult(json);
-      if (json.ok) setPreview(null);
+
+      if (json.ok) {
+        setPreview(null);
+        if (inputRef.current) inputRef.current.value = "";
+
+        const processedRows =
+          (json.data?.imported ?? 0) +
+          (json.data?.skipped ?? 0) +
+          (json.data?.autoConfirmed ?? 0) +
+          (json.data?.pendingReview ?? 0);
+
+        if (processedRows > 0) {
+          setRedirecting(true);
+          window.setTimeout(() => {
+            router.push("/cryptoactivos");
+          }, 900);
+        }
+      }
     } catch (err) {
       setResult({ ok: false, message: err instanceof Error ? err.message : "Error al importar." });
     } finally {
@@ -108,18 +177,21 @@ export default function BinanceImportPage() {
   const reset = () => {
     setPreview(null);
     setResult(null);
+    setRedirecting(false);
     if (inputRef.current) inputRef.current.value = "";
   };
 
   const previewRows = preview?.rows.slice(0, 10) ?? [];
   const isAmbiguous = preview?.format === "DEPOSIT" || preview?.format === "WITHDRAWAL";
+  const previewIsSpreadsheet = preview ? isSpreadsheetFile(preview.file) : false;
+  const canImport = Boolean(preview) && (previewRows.length > 0 || previewIsSpreadsheet);
 
   return (
     <section className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Importar historial de Binance</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Sube un archivo CSV exportado desde Binance. Compatible con historial de operaciones (trades), depósitos y retiros.
+          Sube un archivo CSV o Excel exportado desde Binance. Compatible con historial de operaciones, depósitos y retiros.
         </p>
       </div>
 
@@ -151,12 +223,12 @@ export default function BinanceImportPage() {
             dragOver ? "border-black bg-gray-50" : "border-gray-300 hover:border-gray-400"
           }`}
         >
-          <p className="text-sm text-gray-500">Arrastra un archivo CSV aquí o <span className="underline">haz clic para seleccionar</span></p>
-          <p className="text-xs text-gray-400 mt-1">.csv — máx. 10 MB</p>
+          <p className="text-sm text-gray-500">Arrastra un archivo CSV o Excel aquí o <span className="underline">haz clic para seleccionar</span></p>
+          <p className="text-xs text-gray-400 mt-1">.csv, .xlsx o .xls — máx. 10 MB</p>
           <input
             ref={inputRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -175,9 +247,9 @@ export default function BinanceImportPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm font-medium">Vista previa</span>
+              <span className="text-sm font-medium">Archivo seleccionado</span>
               <span className="ml-2 text-xs text-gray-500">
-                {preview.rows.length} filas detectadas · formato {preview.format}
+                {preview.file.name} · {preview.rows.length > 0 ? `${preview.rows.length} filas detectadas · formato ${preview.format}` : `formato ${preview.format}`}
               </span>
             </div>
             <button onClick={reset} className="text-xs text-gray-400 hover:text-gray-600 underline">
@@ -188,6 +260,12 @@ export default function BinanceImportPage() {
           {preview.errors.length > 0 && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 space-y-1">
               {preview.errors.map((e, i) => <p key={i}>{e}</p>)}
+            </div>
+          )}
+
+          {previewIsSpreadsheet && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+              El archivo Excel se procesará en el servidor al confirmar la importación. Si contiene varias hojas, LEDGERA leerá la primera hoja exportada por Binance.
             </div>
           )}
 
@@ -221,7 +299,7 @@ export default function BinanceImportPage() {
                   ))}
                 </tbody>
               </table>
-              {preview.rows.length > 10 && (
+              {preview && preview.rows.length > 10 && (
                 <p className="px-3 py-2 text-xs text-gray-400 border-t border-gray-100">
                   … y {preview.rows.length - 10} filas más
                 </p>
@@ -229,13 +307,13 @@ export default function BinanceImportPage() {
             </div>
           )}
 
-          {preview.rows.length > 0 && (
+          {canImport && (
             <button
               onClick={handleImport}
-              disabled={loading}
+              disabled={loading || redirecting}
               className="px-6 py-2 rounded-lg bg-black text-white text-sm font-medium disabled:opacity-50"
             >
-              {loading ? "Importando…" : `Confirmar importación (${preview.rows.length} filas)`}
+              {loading ? "Importando…" : preview.rows.length > 0 ? `Confirmar importación (${preview.rows.length} filas)` : "Confirmar importación"}
             </button>
           )}
         </div>
@@ -253,7 +331,13 @@ export default function BinanceImportPage() {
               <span>Ya existían: <strong>{result.data.skipped}</strong></span>
               <span>Auto-confirmados: <strong>{result.data.autoConfirmed}</strong></span>
               <span>En revisión manual: <strong>{result.data.pendingReview}</strong></span>
+              <span>Eventos recalculados: <strong>{result.data.taxRebuilt ? "Sí" : "No"}</strong></span>
             </div>
+          )}
+          {redirecting && (
+            <p className="text-xs text-green-600">
+              Redirigiendo a Activos para revisar el resultado importado…
+            </p>
           )}
           {result.data?.errors && result.data.errors.length > 0 && (
             <div className="mt-2 space-y-0.5">
@@ -279,10 +363,10 @@ export default function BinanceImportPage() {
         <ol className="list-decimal list-inside space-y-1">
           <li>Ve a <strong>Cartera → Historial de operaciones</strong> (o Depósitos / Retiros)</li>
           <li>Aplica el filtro de fechas deseado</li>
-          <li>Haz clic en <strong>Exportar → CSV</strong></li>
-          <li>Sube el archivo aquí</li>
+          <li>Haz clic en <strong>Exportar → CSV o Excel</strong></li>
+          <li>Sube el archivo aquí y confirma la importación</li>
         </ol>
-        <p className="mt-2">Formatos compatibles: Trade History (A y B), Deposit History, Withdrawal History.</p>
+        <p className="mt-2">Formatos compatibles: Trade History (A y B), Deposit History, Withdrawal History en CSV, XLSX o XLS.</p>
       </div>
     </section>
   );
