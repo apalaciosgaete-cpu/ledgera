@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as XLSX from "xlsx";
+
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
@@ -13,6 +15,52 @@ import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { generateAnnualTaxSummary } from "@/modules/tax/application/generateAnnualTaxSummary";
 
 export const maxDuration = 60;
+
+function getFileName(file: Blob): string {
+  const maybeFile = file as { name?: unknown };
+  return typeof maybeFile.name === "string" ? maybeFile.name : "";
+}
+
+function isSpreadsheetUpload(file: Blob): boolean {
+  const name = getFileName(file).toLowerCase();
+  const type = file.type.toLowerCase();
+
+  return (
+    name.endsWith(".xlsx") ||
+    name.endsWith(".xls") ||
+    type.includes("spreadsheet") ||
+    type.includes("excel")
+  );
+}
+
+async function readUploadAsCsvText(file: Blob): Promise<string> {
+  if (!isSpreadsheetUpload(file)) {
+    return file.text();
+  }
+
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, {
+    type: "array",
+    cellDates: true,
+  });
+
+  const firstSheetName = workbook.SheetNames[0];
+
+  if (!firstSheetName) {
+    throw new Error("El archivo Excel no contiene hojas.");
+  }
+
+  const sheet = workbook.Sheets[firstSheetName];
+
+  if (!sheet) {
+    throw new Error("No fue posible leer la primera hoja del archivo Excel.");
+  }
+
+  return XLSX.utils.sheet_to_csv(sheet, {
+    FS: ",",
+    RS: "\n",
+  });
+}
 
 async function getOrCreateConnection(userId: string): Promise<string> {
   const existing = await findConnectionByUser(userId, "BINANCE");
@@ -44,10 +92,10 @@ export async function POST(request: NextRequest) {
     const kindHint = formData.get("kindHint");
 
     if (!file || typeof file === "string") {
-      return fail("Se requiere un archivo CSV.", 400);
+      return fail("Se requiere un archivo CSV o Excel.", 400);
     }
 
-    const csvText = await (file as Blob).text();
+    const csvText = await readUploadAsCsvText(file as Blob);
     if (!csvText.trim()) return fail("El archivo está vacío.", 400);
 
     const hint = kindHint === "WITHDRAWAL" ? "WITHDRAWAL"
