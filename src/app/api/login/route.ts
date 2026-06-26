@@ -15,6 +15,10 @@ import {
   checkLoginRateLimit,
   clearLoginRateLimit,
 } from "@/modules/security/infrastructure/loginRateLimitStore";
+import {
+  generateCsrfToken,
+  setCsrfCookie,
+} from "@/modules/security/application/csrfProtection";
 
 export const runtime = "nodejs";
 
@@ -153,6 +157,8 @@ export async function POST(req: NextRequest) {
       path: "/",
       expires: expiresAt,
     });
+
+    setCsrfCookie(response, generateCsrfToken());
 
     return response;
   } catch (error) {

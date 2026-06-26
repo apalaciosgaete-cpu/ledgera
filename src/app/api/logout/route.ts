@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { deleteSessionByToken } from "@/modules/identity/infrastructure/sessionRepository";
+import { clearCsrfCookie } from "@/modules/security/application/csrfProtection";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +23,8 @@ export async function POST(request: NextRequest) {
       path: "/",
       expires: new Date(0),
     });
+
+    clearCsrfCookie(response);
 
     return response;
   } catch (error) {
