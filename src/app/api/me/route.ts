@@ -1,20 +1,19 @@
 // src/app/api/me/route.ts
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import {
+  generateCsrfToken,
+  getCsrfCookieName,
+  setCsrfCookie,
+} from "@/modules/security/application/csrfProtection";
 
 function ok(data: unknown, status = 200) {
-  return new Response(JSON.stringify({ ok: true, data }), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return NextResponse.json({ ok: true, data }, { status });
 }
 
 function fail(message: string, status = 400) {
-  return new Response(JSON.stringify({ ok: false, message, data: null }), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return NextResponse.json({ ok: false, message, data: null }, { status });
 }
 
 export async function GET(req: NextRequest) {
@@ -25,7 +24,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Exponer campos que el middleware y el cliente necesitan para routing.
-    return ok({
+    const response = ok({
       user: {
         id:                    auth.user.id,
         email:                 auth.user.email,
@@ -38,6 +37,12 @@ export async function GET(req: NextRequest) {
       },
       session: auth.session,
     });
+
+    if (!req.cookies.get(getCsrfCookieName())?.value) {
+      setCsrfCookie(response, generateCsrfToken());
+    }
+
+    return response;
   } catch (error) {
     console.error("api/me error:", error);
     return fail("No fue posible obtener la sesión.", 500);
