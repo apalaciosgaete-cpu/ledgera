@@ -67,10 +67,10 @@ export function AuthProvider({
   children: React.ReactNode;
 }) {
   const [user, setUser] =
-    useState<AuthUser | null>(() => readCachedAuthUser());
+    useState<AuthUser | null>(null);
 
   const [isHydratedFromCache, setIsHydratedFromCache] =
-    useState(() => Boolean(readCachedAuthUser()));
+    useState(false);
 
   const [isLoading, setIsLoading] =
     useState(true);
@@ -135,6 +135,13 @@ export function AuthProvider({
   }, [clearLocalSession]);
 
   useEffect(() => {
+    const cachedUser = readCachedAuthUser();
+
+    if (cachedUser) {
+      setUser(cachedUser);
+      setIsHydratedFromCache(true);
+    }
+
     void refreshUser();
   }, [refreshUser]);
 
