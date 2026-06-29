@@ -1,17 +1,21 @@
-import type { ParsedBinanceRow, ParsedBinanceTrade, ParsedBinanceTransfer } from "./parseBinanceFile";
+import type { ParsedBinanceFiatPurchase, ParsedBinanceRow, ParsedBinanceTrade, ParsedBinanceTransfer } from "./parseBinanceFile";
 import type { NormalizedImportRecord } from "../domain/binanceTypes";
 import { classifyBinanceEvent } from "../domain/taxNormalization";
 import { fetchHistoricalCryptoPrice } from "./fetchHistoricalCryptoPrice";
 
 const STABLECOIN_QUOTES = ["USDT", "USDC", "BUSD", "TUSD", "DAI", "FDUSD", "USDP"];
+const USD_LIKE_QUOTES = [...STABLECOIN_QUOTES, "USD"];
 
 const _priceCache = new Map<string, number>();
 
 async function historicalUsd(asset: string, date: Date): Promise<number> {
+  const normalized = asset.toUpperCase();
+  if (USD_LIKE_QUOTES.includes(normalized)) return 1;
+
   const hourTs = Math.floor(date.getTime() / 3_600_000) * 3_600_000;
-  const key    = `${asset}_${hourTs}`;
+  const key    = `${normalized}_${hourTs}`;
   if (_priceCache.has(key)) return _priceCache.get(key)!;
-  const price = await fetchHistoricalCryptoPrice(asset, new Date(hourTs));
+  const price = await fetchHistoricalCryptoPrice(normalized, new Date(hourTs));
   _priceCache.set(key, price);
   return price;
 }
@@ -42,7 +46,7 @@ async function normalizeTrade(row: ParsedBinanceTrade): Promise<NormalizedImport
   let feeUsd = 0;
   if (row.fee > 0) {
     const fa = row.feeAsset.toUpperCase();
-    if (STABLECOIN_QUOTES.includes(fa)) {
+    if (USD_LIKE_QUOTES.includes(fa)) {
       feeUsd = row.fee;
     } else {
       const assetUsd = await historicalUsd(fa, tradeDate);
@@ -93,7 +97,34 @@ function normalizeTransfer(row: ParsedBinanceTransfer): NormalizedImportRecord {
   };
 }
 
+async function normalizeFiatPurchase(row: ParsedBinanceFiatPurchase): Promise<NormalizedImportRecord> {
+  const purchaseDate = new Date(row.date);
+  const tax          = classifyBinanceEvent("TRADE", "BUY");
+  const asset        = row.asset.toUpperCase();
+  const feeAsset     = row.feeAsset.toUpperCase();
+  const priceUsd     = await historicalUsd(asset, purchaseDate);
+  const feeUsd       = USD_LIKE_QUOTES.includes(feeAsset) ? row.fee : 0;
+  const externalId   = row.txId || `FILE-FIAT-PURCHASE-${asset}-${purchaseDate.getTime()}-${row.quantity}`;
+
+  return {
+    externalId:          `FILE-FIAT-PURCHASE-${externalId}`,
+    externalType:        "TRADE",
+    movementType:        "BUY",
+    symbol:              asset,
+    quantity:            row.quantity,
+    priceUsd,
+    feeUsd,
+    occurredAt:          purchaseDate,
+    quoteAsset:          row.fiatAsset,
+    normalizedEventType: tax.normalizedEventType,
+    taxTreatment:        tax.taxTreatment,
+    inventoryEffect:     tax.inventoryEffect,
+    economicEffect:      tax.economicEffect,
+  };
+}
+
 export async function normalizeBinanceFileRow(row: ParsedBinanceRow): Promise<NormalizedImportRecord> {
   if (row.kind === "TRADE") return normalizeTrade(row);
+  if (row.kind === "FIAT_PURCHASE") return normalizeFiatPurchase(row);
   return normalizeTransfer(row);
 }
