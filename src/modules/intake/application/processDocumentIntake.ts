@@ -14,6 +14,10 @@ type UploadedBlob = Blob & {
   name?: string;
 };
 
+type PersistedDocument = {
+  id: string;
+};
+
 export type DocumentIntakeInput = {
   userId:        string;
   file:          UploadedBlob;
@@ -105,6 +109,16 @@ function inferDocumentKind(input: {
   return "DOCUMENT";
 }
 
+function isMissingDocumentTableError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2021" &&
+    JSON.stringify((error as { meta?: unknown }).meta ?? {}).includes("documents")
+  );
+}
+
 async function getOrCreateBinanceConnection(userId: string): Promise<string> {
   const existing = await findConnectionByUser(userId, "BINANCE");
   if (existing) return existing.id;
@@ -135,36 +149,52 @@ async function persistDocument(input: {
   storageKey: string;
   status: string;
 }) {
-  const existing = input.checksum
-    ? await prisma.document.findFirst({
-        where: { userId: input.userId, checksum: input.checksum },
-      })
-    : null;
+  try {
+    const existing = input.checksum
+      ? await prisma.document.findFirst({
+          where: { userId: input.userId, checksum: input.checksum },
+        })
+      : null;
 
-  if (existing) return { document: existing, duplicate: true };
+    if (existing) return { document: existing as PersistedDocument, duplicate: true, persisted: true };
 
-  const document = await prisma.document.create({
-    data: {
-      userId:      input.userId,
-      category:    input.sourceHint,
-      type:        input.documentKind,
-      status:      input.status,
-      name:        input.fileName,
-      fileName:    input.fileName,
-      mimeType:    input.mimeType,
-      fileSize:    input.fileSize,
-      storageKey:  input.storageKey,
-      checksum:    input.checksum,
-      uploadedBy:  input.userId,
-      tags: {
-        sourceHint:       input.sourceHint,
-        providerDetected: input.providerDetected,
-        documentKind:     input.documentKind,
+    const document = await prisma.document.create({
+      data: {
+        userId:      input.userId,
+        category:    input.sourceHint,
+        type:        input.documentKind,
+        status:      input.status,
+        name:        input.fileName,
+        fileName:    input.fileName,
+        mimeType:    input.mimeType,
+        fileSize:    input.fileSize,
+        storageKey:  input.storageKey,
+        checksum:    input.checksum,
+        uploadedBy:  input.userId,
+        tags: {
+          sourceHint:       input.sourceHint,
+          providerDetected: input.providerDetected,
+          documentKind:     input.documentKind,
+        },
       },
-    },
-  });
+    });
 
-  return { document, duplicate: false };
+    return { document: document as PersistedDocument, duplicate: false, persisted: true };
+  } catch (error) {
+    if (!isMissingDocumentTableError(error)) throw error;
+
+    console.warn("[intake] documents table missing; continuing without document persistence", {
+      userId: input.userId,
+      checksum: input.checksum,
+      fileName: input.fileName,
+    });
+
+    return {
+      document: { id: `virtual:${input.checksum}` },
+      duplicate: false,
+      persisted: false,
+    };
+  }
 }
 
 export async function processDocumentIntake(input: DocumentIntakeInput): Promise<DocumentIntakeResult> {
@@ -234,7 +264,7 @@ export async function processDocumentIntake(input: DocumentIntakeInput): Promise
   const hasExchangeStaging = providerDetected === "BINANCE" && (imported > 0 || skipped > 0);
   const documentStatus = hasExchangeStaging ? "STAGED" : errors.length > 0 ? "REVIEW" : "UPLOADED";
 
-  const { document, duplicate } = await persistDocument({
+  const { document, duplicate, persisted } = await persistDocument({
     userId: input.userId,
     fileName,
     mimeType,
@@ -246,6 +276,10 @@ export async function processDocumentIntake(input: DocumentIntakeInput): Promise
     storageKey,
     status: documentStatus,
   });
+
+  if (!persisted) {
+    errors.push("Archivo procesado sin registro documental persistente: tabla documents pendiente en base de datos.");
+  }
 
   return {
     documentId:       document.id,
