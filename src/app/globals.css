@@ -99,6 +99,52 @@ a {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* ─── Importaciones: kanban operativo ───────────────────────────────────────
+ * La bandeja puede tener decenas de pendientes. La vista debe permitir revisar
+ * todos los registros sin que columnas vacías consuman la altura útil. */
+body:has(input[placeholder*='Buscar por título']) div[style*='grid-template-columns: 1fr 1fr 1fr'] {
+  grid-template-columns: minmax(380px, 1.35fr) minmax(260px, 0.82fr) minmax(260px, 0.82fr) !important;
+  align-items: stretch !important;
+}
+
+body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] {
+  height: clamp(520px, calc(100vh - 300px), 780px) !important;
+  min-height: 520px !important;
+  max-height: calc(100vh - 260px) !important;
+  overflow: hidden !important;
+}
+
+body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] > div:nth-child(1) {
+  flex-shrink: 0 !important;
+}
+
+body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] > div:nth-child(2) {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  padding-right: 4px !important;
+}
+
+body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] > div:nth-child(2)::-webkit-scrollbar {
+  width: 8px;
+}
+
+body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] > div:nth-child(2)::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+}
+
+@media (max-width: 1100px) {
+  body:has(input[placeholder*='Buscar por título']) div[style*='grid-template-columns: 1fr 1fr 1fr'] {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] {
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+
 /* ─── UX: sin barras de texto conversacionales ────────────────────────────── */
 /* TODO (limpieza): este hack oculta formularios con placeholders conversacionales.
  * Una vez que todas las pantallas dejen de renderizar inputs de chat embebidos,
