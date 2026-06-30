@@ -430,8 +430,7 @@ function StatusSection({
 
   return (
     <section style={{
-      minHeight: wide ? "520px" : "460px",
-      maxHeight: "calc(100vh - 285px)",
+      minHeight: items.length === 0 ? "280px" : "auto",
       background: "#F8FAFC",
       border: "1px solid #E2E8F0",
       borderRadius: "16px",
@@ -439,7 +438,7 @@ function StatusSection({
       display: "flex",
       flexDirection: "column",
       gap: "12px",
-      overflow: "hidden",
+      overflow: "visible",
     }}>
       <header style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
         <h2 style={{ margin: 0, fontSize: "15px", fontWeight: 900, color: "#0F2A3D" }}>{title}</h2>
@@ -458,13 +457,11 @@ function StatusSection({
       </header>
 
       <div style={{
-        minHeight: 0,
-        overflowY: "auto",
         display: "grid",
         gridTemplateColumns: wide ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr",
         alignContent: "start",
         gap: "8px",
-        paddingRight: "4px",
+        overflow: "visible",
       }}>
         {items.length === 0 ? (
           <p style={{ margin: "auto 0", textAlign: "center", color: "#CBD5E1", fontSize: "12px", padding: "96px 0", gridColumn: "1 / -1" }}>{empty}</p>
@@ -913,24 +910,6 @@ export default function ImportacionesPage() {
             </button>
           );
         })}
-
-        <button
-          type="button"
-          onClick={() => void load()}
-          style={{
-            marginLeft: "auto",
-            minHeight: "38px",
-            padding: "7px 14px",
-            borderRadius: "10px",
-            border: "1px solid #E2E8F0",
-            background: "#FFFFFF",
-            color: "#475569",
-            fontWeight: 800,
-            cursor: "pointer",
-          }}
-        >
-          Actualizar
-        </button>
       </nav>
 
       <section style={{
@@ -1016,7 +995,7 @@ export default function ImportacionesPage() {
           display: "grid",
           gridTemplateColumns: sections.length === 1 ? "1fr" : "repeat(auto-fit, minmax(320px, 1fr))",
           gap: "16px",
-          alignItems: "stretch",
+          alignItems: "start",
         }}>
           {sections.map((section) => (
             <StatusSection
