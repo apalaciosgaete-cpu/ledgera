@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import { fonts } from "@/styles/tokens";
 import { httpClient } from "@/shared/http/httpClient";
@@ -8,6 +14,8 @@ import type { StagingStatus } from "@/modules/staging/domain/StagingStatus";
 import type { StagingSource } from "@/modules/staging/domain/StagingSource";
 
 type CardAction = "CONFIRM" | "REJECT" | "BANK_REVIEW" | "BANK_IGNORE";
+type Tab = "ALL" | "EXCHANGE" | "BANK" | "MANUAL";
+type StatusFilter = "ALL" | "PENDING" | "REVIEW" | "CONFIRMED" | "REJECTED";
 
 type StagingItem = {
   id: string;
@@ -43,8 +51,6 @@ type ApiResponse<T> = {
   message: string;
   data: T;
 };
-
-type Tab = "ALL" | "EXCHANGE" | "BANK" | "MANUAL";
 
 type StagingDetailPm = {
   id: string;
@@ -116,7 +122,7 @@ const STATUS_LABEL: Record<string, string> = {
   IMPORTED: "Importado",
 };
 
-const STATUS_FILTERS = ["ALL", "PENDING", "REVIEW", "CONFIRMED", "REJECTED"] as const;
+const STATUS_FILTERS: StatusFilter[] = ["ALL", "PENDING", "REVIEW", "CONFIRMED", "REJECTED"];
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-CL", {
@@ -132,22 +138,35 @@ function getProviderLabel(provider: string): string {
   return provider || "Fuente";
 }
 
+function toneForStatus(status: string): {
+  bg: string;
+  fg: string;
+  border: string;
+} {
+  if (status === "CONFIRMED" || status === "MATCHED") {
+    return { bg: "rgba(22,163,74,0.10)", fg: "#15803D", border: "rgba(22,163,74,0.24)" };
+  }
+
+  if (status === "REVIEW") {
+    return { bg: "rgba(37,99,235,0.10)", fg: "#1D4ED8", border: "rgba(37,99,235,0.22)" };
+  }
+
+  if (status === "REJECTED" || status === "IGNORED") {
+    return { bg: "rgba(239,68,68,0.08)", fg: "#DC2626", border: "rgba(239,68,68,0.22)" };
+  }
+
+  return { bg: "rgba(245,158,11,0.12)", fg: "#B45309", border: "rgba(245,158,11,0.24)" };
+}
+
 function StatusBadge({ status }: { status: string }) {
-  const color =
-    status === "CONFIRMED" || status === "MATCHED"
-      ? { bg: "rgba(22,163,74,0.10)", fg: "#15803D" }
-      : status === "REVIEW"
-        ? { bg: "rgba(37,99,235,0.10)", fg: "#1D4ED8" }
-        : status === "REJECTED" || status === "IGNORED"
-          ? { bg: "rgba(239,68,68,0.08)", fg: "#DC2626" }
-          : { bg: "rgba(245,158,11,0.12)", fg: "#B45309" };
+  const tone = toneForStatus(status);
 
   return (
     <span style={{
       borderRadius: "999px",
       padding: "2px 8px",
-      background: color.bg,
-      color: color.fg,
+      background: tone.bg,
+      color: tone.fg,
       fontSize: "10px",
       fontWeight: 800,
       whiteSpace: "nowrap",
@@ -159,6 +178,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function SourceBadge({ item }: { item: StagingItem }) {
   const isExchange = item.source === "EXCHANGE";
+
   return (
     <span style={{
       borderRadius: "6px",
@@ -248,6 +268,7 @@ function StagingCard({
       display: "flex",
       flexDirection: "column",
       gap: "7px",
+      minWidth: 0,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
@@ -312,10 +333,79 @@ function StagingCard({
   );
 }
 
-function Column({
-  title,
+function StatusSummary({
+  label,
   count,
-  color,
+  status,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  status: StatusFilter;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const tone = status === "ALL"
+    ? { bg: "#0F2A3D", fg: "#FFFFFF", border: "#0F2A3D" }
+    : toneForStatus(status);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        minHeight: "78px",
+        textAlign: "left",
+        borderRadius: "14px",
+        padding: "13px 15px",
+        border: `1px solid ${active ? "#0F2A3D" : tone.border}`,
+        background: active ? "#0F2A3D" : "#FFFFFF",
+        color: active ? "#FFFFFF" : "#0F2A3D",
+        cursor: "pointer",
+        boxShadow: active ? "0 8px 24px rgba(15,42,61,0.16)" : "none",
+      }}
+    >
+      <span style={{ display: "block", color: active ? "#FFFFFF" : "#64748B", fontSize: "11px", fontWeight: 800, marginBottom: "8px" }}>{label}</span>
+      <span style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: "30px",
+        height: "24px",
+        borderRadius: "999px",
+        background: active ? "rgba(255,255,255,0.16)" : tone.bg,
+        color: active ? "#FFFFFF" : tone.fg,
+        fontSize: "13px",
+        fontWeight: 900,
+      }}>
+        {count}
+      </span>
+    </button>
+  );
+}
+
+function ReviewCompleteBanner({ confirmed, rejected }: { confirmed: number; rejected: number }) {
+  return (
+    <section style={{
+      marginBottom: "14px",
+      padding: "14px 16px",
+      borderRadius: "14px",
+      border: "1px solid rgba(22,163,74,0.24)",
+      background: "rgba(22,163,74,0.08)",
+      color: "#166534",
+    }}>
+      <strong style={{ display: "block", fontSize: "14px", marginBottom: "3px" }}>Revisión terminada para esta vista.</strong>
+      <span style={{ fontSize: "13px" }}>
+        No hay pendientes ni registros en revisión. Se muestran los registros ya resueltos: {confirmed} confirmados{rejected > 0 ? ` y ${rejected} rechazados` : ""}.
+      </span>
+    </section>
+  );
+}
+
+function StatusSection({
+  title,
+  status,
   items,
   empty,
   selectedIds,
@@ -323,10 +413,10 @@ function Column({
   onAction,
   onViewDetail,
   busyIds,
+  wide,
 }: {
   title: string;
-  count: number;
-  color: "amber" | "blue" | "green";
+  status: StatusFilter;
   items: StagingItem[];
   empty: string;
   selectedIds: Set<string>;
@@ -334,18 +424,14 @@ function Column({
   onAction: (item: StagingItem, action: CardAction) => Promise<void>;
   onViewDetail: (item: StagingItem) => Promise<void>;
   busyIds: Set<string>;
+  wide: boolean;
 }) {
-  const colorSet =
-    color === "amber"
-      ? { bg: "rgba(245,158,11,0.12)", fg: "#B45309" }
-      : color === "blue"
-        ? { bg: "rgba(37,99,235,0.10)", fg: "#1D4ED8" }
-        : { bg: "rgba(22,163,74,0.10)", fg: "#15803D" };
+  const tone = toneForStatus(status);
 
   return (
     <section style={{
-      minHeight: "520px",
-      maxHeight: "calc(100vh - 260px)",
+      minHeight: wide ? "520px" : "460px",
+      maxHeight: "calc(100vh - 285px)",
       background: "#F8FAFC",
       border: "1px solid #E2E8F0",
       borderRadius: "16px",
@@ -356,24 +442,32 @@ function Column({
       overflow: "hidden",
     }}>
       <header style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-        <h2 style={{ margin: 0, fontSize: "15px", fontWeight: 800, color: "#0F2A3D" }}>{title}</h2>
+        <h2 style={{ margin: 0, fontSize: "15px", fontWeight: 900, color: "#0F2A3D" }}>{title}</h2>
         <span style={{
           minWidth: "24px",
           textAlign: "center",
           borderRadius: "999px",
           padding: "2px 8px",
-          background: colorSet.bg,
-          color: colorSet.fg,
+          background: tone.bg,
+          color: tone.fg,
           fontSize: "11px",
           fontWeight: 900,
         }}>
-          {count}
+          {items.length}
         </span>
       </header>
 
-      <div style={{ minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
+      <div style={{
+        minHeight: 0,
+        overflowY: "auto",
+        display: "grid",
+        gridTemplateColumns: wide ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr",
+        alignContent: "start",
+        gap: "8px",
+        paddingRight: "4px",
+      }}>
         {items.length === 0 ? (
-          <p style={{ margin: "auto 0", textAlign: "center", color: "#CBD5E1", fontSize: "12px", padding: "96px 0" }}>{empty}</p>
+          <p style={{ margin: "auto 0", textAlign: "center", color: "#CBD5E1", fontSize: "12px", padding: "96px 0", gridColumn: "1 / -1" }}>{empty}</p>
         ) : (
           items.map((item) => (
             <StagingCard
@@ -517,19 +611,19 @@ function DetailPanel({
   );
 }
 
-const panelStyle = {
+const panelStyle: CSSProperties = {
   border: "1px solid #E2E8F0",
   borderRadius: "14px",
   background: "#F8FAFC",
   padding: "14px",
-} satisfies React.CSSProperties;
+};
 
-const panelTitleStyle = {
+const panelTitleStyle: CSSProperties = {
   margin: "0 0 12px",
   color: "#0F2A3D",
   fontSize: "13px",
   fontWeight: 900,
-} satisfies React.CSSProperties;
+};
 
 function Info({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
@@ -581,13 +675,31 @@ function JsonBlock({ label, value }: { label: string; value: string | null }) {
   );
 }
 
+function countByStatus(items: StagingItem[], status: StatusFilter): number {
+  if (status === "ALL") return items.length;
+  return items.filter((item) => item.status === status).length;
+}
+
+function bulkButtonStyle(variant: "green" | "red", busy: boolean): CSSProperties {
+  return {
+    border: variant === "green" ? "1px solid #16A34A" : "1px solid rgba(239,68,68,0.35)",
+    background: variant === "green" ? "#16A34A" : "#FFFFFF",
+    color: variant === "green" ? "#FFFFFF" : "#DC2626",
+    borderRadius: "8px",
+    padding: "7px 14px",
+    fontSize: "12px",
+    fontWeight: 900,
+    cursor: busy ? "wait" : "pointer",
+    opacity: busy ? 0.65 : 1,
+  };
+}
+
 export default function ImportacionesPage() {
   const [data, setData] = useState<StagingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("ALL");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | StagingStatus>("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState<"confirm" | "reject" | null>(null);
@@ -617,31 +729,33 @@ export default function ImportacionesPage() {
 
   const allItems = data?.items ?? [];
 
-  const filtered = useMemo(() => {
-    let items = tab === "ALL" ? allItems : allItems.filter((item) => item.source === tab);
+  const sourceItems = useMemo(() => {
+    if (tab === "ALL") return allItems;
+    return allItems.filter((item) => item.source === tab);
+  }, [allItems, tab]);
 
-    if (search.trim()) {
-      const query = search.trim().toLowerCase();
-      items = items.filter((item) =>
-        item.title.toLowerCase().includes(query) ||
-        item.subtitle.toLowerCase().includes(query) ||
-        item.provider.toLowerCase().includes(query) ||
-        item.amountLabel.toLowerCase().includes(query),
-      );
-    }
-
-    if (statusFilter !== "ALL") {
-      items = items.filter((item) => item.status === statusFilter);
-    }
-
-    return items;
-  }, [allItems, tab, search, statusFilter]);
-
-  const pending = filtered.filter((item) => item.status === "PENDING");
-  const review = filtered
+  const pending = sourceItems.filter((item) => item.status === "PENDING");
+  const review = sourceItems
     .filter((item) => item.status === "REVIEW")
     .sort((a, b) => (b.stagingConfidence ?? -1) - (a.stagingConfidence ?? -1));
-  const confirmed = filtered.filter((item) => item.status === "CONFIRMED");
+  const confirmed = sourceItems.filter((item) => item.status === "CONFIRMED");
+  const rejected = sourceItems.filter((item) => item.status === "REJECTED");
+
+  const sections = useMemo(() => {
+    const allSections = [
+      { status: "PENDING" as const, title: "Pendientes", items: pending, empty: "Sin registros pendientes" },
+      { status: "REVIEW" as const, title: "En revisión", items: review, empty: "Sin registros en revisión" },
+      { status: "CONFIRMED" as const, title: "Confirmados", items: confirmed, empty: "Sin registros confirmados" },
+      { status: "REJECTED" as const, title: "Rechazados", items: rejected, empty: "Sin registros rechazados" },
+    ];
+
+    if (statusFilter === "ALL") {
+      const nonEmpty = allSections.filter((section) => section.items.length > 0);
+      return nonEmpty.length > 0 ? nonEmpty : allSections.slice(0, 1);
+    }
+
+    return allSections.filter((section) => section.status === statusFilter);
+  }, [confirmed, pending, rejected, review, statusFilter]);
 
   const selectablePendingIds = useMemo(
     () => pending.filter((item) => item.source === "EXCHANGE").map((item) => item.id),
@@ -650,6 +764,8 @@ export default function ImportacionesPage() {
 
   const selectedVisiblePending = selectablePendingIds.filter((id) => selectedIds.has(id)).length;
   const allVisiblePendingSelected = selectablePendingIds.length > 0 && selectedVisiblePending === selectablePendingIds.length;
+  const selectedExchangeCount = sourceItems.filter((item) => selectedIds.has(item.id) && item.source === "EXCHANGE").length;
+  const workflowComplete = pending.length === 0 && review.length === 0 && (confirmed.length > 0 || rejected.length > 0);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "ALL", label: "Todos" },
@@ -724,7 +840,7 @@ export default function ImportacionesPage() {
   }
 
   async function runBulk(action: "confirm" | "reject") {
-    const items = allItems.filter((item) => selectedIds.has(item.id) && item.source === "EXCHANGE");
+    const items = sourceItems.filter((item) => selectedIds.has(item.id) && item.source === "EXCHANGE");
     if (items.length === 0) return;
 
     setBulkBusy(action);
@@ -763,18 +879,16 @@ export default function ImportacionesPage() {
     }
   }
 
-  const selectedExchangeCount = allItems.filter((item) => selectedIds.has(item.id) && item.source === "EXCHANGE").length;
-
   return (
     <main style={{ fontFamily: fonts.body }}>
       <header style={{ marginBottom: "22px" }}>
         <h1 style={{ margin: 0, fontSize: "24px", color: "#0F2A3D", fontWeight: 900 }}>Importaciones</h1>
         <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: "14px" }}>
-          Bandeja de revisión unificada · todo pasa por aquí antes de llegar al portafolio.
+          Revisa pendientes, confirma lo válido y consulta el historial resuelto.
         </p>
       </header>
 
-      <nav style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "16px", flexWrap: "wrap" }}>
+      <nav style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "14px", flexWrap: "wrap" }}>
         {tabs.map(({ key, label }) => {
           const active = tab === key;
           const count = key === "ALL" ? allItems.length : allItems.filter((item) => item.source === key).length;
@@ -819,87 +933,46 @@ export default function ImportacionesPage() {
         </button>
       </nav>
 
-      <section style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center", marginBottom: "10px" }}>
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Filtro opcional: activo, monto, proveedor o texto visible…"
-          style={{
-            flex: "1 1 320px",
-            minHeight: "38px",
-            borderRadius: "10px",
-            border: "1px solid #E2E8F0",
-            padding: "8px 13px",
-            color: "#334155",
-            background: "#FFFFFF",
-            outline: "none",
-            fontSize: "13px",
-          }}
-        />
-
-        {STATUS_FILTERS.map((status) => {
-          const active = statusFilter === status;
-          const label = status === "ALL" ? "Todos los estados" : STATUS_LABEL[status] ?? status;
-          return (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setStatusFilter(status)}
-              style={{
-                minHeight: "34px",
-                padding: "6px 12px",
-                borderRadius: "9px",
-                border: `1px solid ${active ? "#0F2A3D" : "#E2E8F0"}`,
-                background: active ? "#0F2A3D" : "#FFFFFF",
-                color: active ? "#FFFFFF" : "#64748B",
-                fontSize: "12px",
-                fontWeight: active ? 900 : 700,
-                cursor: "pointer",
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </section>
-
       <section style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        flexWrap: "wrap",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+        gap: "10px",
         marginBottom: "14px",
-        padding: "11px 14px",
-        borderRadius: "12px",
-        border: "1px solid #BAE6FD",
-        background: "rgba(14,165,233,0.07)",
       }}>
-        <label style={{ display: "flex", alignItems: "center", gap: "9px", color: "#0369A1", fontSize: "13px", fontWeight: 900, cursor: selectablePendingIds.length === 0 ? "not-allowed" : "pointer" }}>
-          <input
-            type="checkbox"
-            checked={allVisiblePendingSelected}
-            disabled={selectablePendingIds.length === 0}
-            onChange={toggleSelectAllVisiblePending}
-            style={{ width: "17px", height: "17px", accentColor: "#0EA5E9" }}
-          />
-          Seleccionar todos los pendientes visibles
-        </label>
-
-        <span style={{ color: "#64748B", fontSize: "12px" }}>
-          {selectedVisiblePending} de {selectablePendingIds.length} pendientes visibles seleccionados.
-        </span>
-
-        {(search || statusFilter !== "ALL") && (
-          <button
-            type="button"
-            onClick={() => { setSearch(""); setStatusFilter("ALL"); }}
-            style={{ marginLeft: "auto", border: "1px solid #CBD5E1", background: "#FFFFFF", borderRadius: "8px", padding: "5px 10px", color: "#64748B", fontSize: "12px", fontWeight: 800, cursor: "pointer" }}
-          >
-            Limpiar filtros
-          </button>
-        )}
+        <StatusSummary label="Todos los estados" status="ALL" count={sourceItems.length} active={statusFilter === "ALL"} onClick={() => setStatusFilter("ALL")} />
+        <StatusSummary label="Pendientes" status="PENDING" count={countByStatus(sourceItems, "PENDING")} active={statusFilter === "PENDING"} onClick={() => setStatusFilter("PENDING")} />
+        <StatusSummary label="En revisión" status="REVIEW" count={countByStatus(sourceItems, "REVIEW")} active={statusFilter === "REVIEW"} onClick={() => setStatusFilter("REVIEW")} />
+        <StatusSummary label="Confirmados" status="CONFIRMED" count={countByStatus(sourceItems, "CONFIRMED")} active={statusFilter === "CONFIRMED"} onClick={() => setStatusFilter("CONFIRMED")} />
+        <StatusSummary label="Rechazados" status="REJECTED" count={countByStatus(sourceItems, "REJECTED")} active={statusFilter === "REJECTED"} onClick={() => setStatusFilter("REJECTED")} />
       </section>
+
+      {selectablePendingIds.length > 0 && (
+        <section style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          flexWrap: "wrap",
+          marginBottom: "14px",
+          padding: "11px 14px",
+          borderRadius: "12px",
+          border: "1px solid #BAE6FD",
+          background: "rgba(14,165,233,0.07)",
+        }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "9px", color: "#0369A1", fontSize: "13px", fontWeight: 900, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={allVisiblePendingSelected}
+              onChange={toggleSelectAllVisiblePending}
+              style={{ width: "17px", height: "17px", accentColor: "#0EA5E9" }}
+            />
+            Seleccionar todos los pendientes visibles
+          </label>
+
+          <span style={{ color: "#64748B", fontSize: "12px" }}>
+            {selectedVisiblePending} de {selectablePendingIds.length} pendientes visibles seleccionados.
+          </span>
+        </section>
+      )}
 
       {selectedExchangeCount > 0 && (
         <section style={{
@@ -926,6 +999,10 @@ export default function ImportacionesPage() {
         </section>
       )}
 
+      {workflowComplete && statusFilter === "ALL" && (
+        <ReviewCompleteBanner confirmed={confirmed.length} rejected={rejected.length} />
+      )}
+
       {error && (
         <div style={{ marginBottom: "14px", padding: "11px 14px", borderRadius: "12px", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)", color: "#B91C1C", fontSize: "13px", fontWeight: 700 }}>
           {error}
@@ -935,43 +1012,27 @@ export default function ImportacionesPage() {
       {loading ? (
         <p style={{ color: "#94A3B8", fontSize: "13px" }}>Cargando bandeja…</p>
       ) : (
-        <section style={{ display: "grid", gridTemplateColumns: "minmax(390px, 1.35fr) minmax(270px, 0.85fr) minmax(270px, 0.85fr)", gap: "16px", alignItems: "stretch" }}>
-          <Column
-            title="Pendientes"
-            count={pending.length}
-            color="amber"
-            items={pending}
-            empty="Sin registros pendientes"
-            selectedIds={selectedIds}
-            onSelect={toggleSelect}
-            onAction={runAction}
-            onViewDetail={openDetail}
-            busyIds={busyIds}
-          />
-          <Column
-            title="En revisión"
-            count={review.length}
-            color="blue"
-            items={review}
-            empty="Sin registros en revisión"
-            selectedIds={selectedIds}
-            onSelect={toggleSelect}
-            onAction={runAction}
-            onViewDetail={openDetail}
-            busyIds={busyIds}
-          />
-          <Column
-            title="Confirmados"
-            count={confirmed.length}
-            color="green"
-            items={confirmed}
-            empty="Sin registros confirmados"
-            selectedIds={selectedIds}
-            onSelect={toggleSelect}
-            onAction={runAction}
-            onViewDetail={openDetail}
-            busyIds={busyIds}
-          />
+        <section style={{
+          display: "grid",
+          gridTemplateColumns: sections.length === 1 ? "1fr" : "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: "16px",
+          alignItems: "stretch",
+        }}>
+          {sections.map((section) => (
+            <StatusSection
+              key={section.status}
+              title={section.title}
+              status={section.status}
+              items={section.items}
+              empty={section.empty}
+              selectedIds={selectedIds}
+              onSelect={toggleSelect}
+              onAction={runAction}
+              onViewDetail={openDetail}
+              busyIds={busyIds}
+              wide={sections.length === 1}
+            />
+          ))}
         </section>
       )}
 
@@ -984,18 +1045,4 @@ export default function ImportacionesPage() {
       )}
     </main>
   );
-}
-
-function bulkButtonStyle(variant: "green" | "red", busy: boolean): React.CSSProperties {
-  return {
-    border: variant === "green" ? "1px solid #16A34A" : "1px solid rgba(239,68,68,0.35)",
-    background: variant === "green" ? "#16A34A" : "#FFFFFF",
-    color: variant === "green" ? "#FFFFFF" : "#DC2626",
-    borderRadius: "8px",
-    padding: "7px 14px",
-    fontSize: "12px",
-    fontWeight: 900,
-    cursor: busy ? "wait" : "pointer",
-    opacity: busy ? 0.65 : 1,
-  };
 }
