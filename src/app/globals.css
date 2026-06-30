@@ -134,6 +134,28 @@ body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px
   border-radius: 999px;
 }
 
+/* Detalle visible: el panel se abre como drawer operativo, no perdido bajo el kanban. */
+body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'][style*='padding: 16px 20px'][style*='background: rgb(248, 250, 252)'] {
+  position: fixed !important;
+  top: 84px !important;
+  right: 24px !important;
+  bottom: 24px !important;
+  width: min(760px, calc(100vw - 48px)) !important;
+  margin-top: 0 !important;
+  overflow-y: auto !important;
+  z-index: 70 !important;
+  box-shadow: 0 24px 80px rgba(15, 42, 61, 0.24) !important;
+}
+
+body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'][style*='padding: 16px 20px'][style*='background: rgb(248, 250, 252)']::-webkit-scrollbar {
+  width: 8px;
+}
+
+body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'][style*='padding: 16px 20px'][style*='background: rgb(248, 250, 252)']::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+}
+
 @media (max-width: 1100px) {
   body:has(input[placeholder*='Buscar por título']) div[style*='grid-template-columns: 1fr 1fr 1fr'] {
     grid-template-columns: 1fr !important;
@@ -142,6 +164,20 @@ body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px
   body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] {
     height: auto !important;
     max-height: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'][style*='padding: 16px 20px'][style*='background: rgb(248, 250, 252)'] {
+    top: 16px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+  }
+
+  body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'][style*='padding: 16px 20px'][style*='background: rgb(248, 250, 252)'] div[style*='grid-template-columns: 1fr 1fr'] {
+    grid-template-columns: 1fr !important;
   }
 }
 
