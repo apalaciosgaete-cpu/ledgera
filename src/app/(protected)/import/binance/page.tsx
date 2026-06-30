@@ -31,6 +31,7 @@ function readCsrfCookie(): string {
 
 function formatKind(row: ParsedBinanceRow): string {
   if (row.kind === "TRADE") return `${row.side} ${row.pair}`;
+  if (row.kind === "FIAT_PURCHASE") return `BUY ${row.asset}`;
   return row.kind;
 }
 
@@ -40,6 +41,24 @@ function formatDate(iso: string): string {
 
 function formatNum(n: number): string {
   return new Intl.NumberFormat("es-CL", { maximumFractionDigits: 8 }).format(n);
+}
+
+function formatQuantity(row: ParsedBinanceRow): string {
+  if (row.kind === "TRADE") return formatNum(row.quantity);
+  if (row.kind === "FIAT_PURCHASE") return `${formatNum(row.quantity)} ${row.asset}`;
+  return formatNum(row.amount);
+}
+
+function formatAmount(row: ParsedBinanceRow): string {
+  if (row.kind === "TRADE") return `$${formatNum(row.price)}`;
+  if (row.kind === "FIAT_PURCHASE") return `${formatNum(row.fiatAmount)} ${row.fiatAsset}`;
+  return `${row.kind === "DEPOSIT" ? "+" : "-"}${formatNum(row.amount)} ${row.coin}`;
+}
+
+function formatFee(row: ParsedBinanceRow): string {
+  if (row.kind === "TRADE") return `${formatNum(row.fee)} ${row.feeAsset}`;
+  if (row.kind === "FIAT_PURCHASE") return `${formatNum(row.fee)} ${row.feeAsset}`;
+  return formatNum(row.fee);
 }
 
 export default function BinanceImportPage() {
@@ -208,15 +227,9 @@ export default function BinanceImportPage() {
                     <tr key={i} className="hover:bg-gray-50">
                       <td className="px-3 py-2 text-gray-500">{formatDate(row.date)}</td>
                       <td className="px-3 py-2 font-medium">{formatKind(row)}</td>
-                      <td className="px-3 py-2 text-right">
-                        {row.kind === "TRADE" ? formatNum(row.quantity) : formatNum(row.amount)}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {row.kind === "TRADE" ? `$${formatNum(row.price)}` : `${row.kind === "DEPOSIT" ? "+" : "-"}${formatNum(row.amount)} ${row.coin}`}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-500">
-                        {row.kind === "TRADE" ? `${formatNum(row.fee)} ${row.feeAsset}` : formatNum(row.fee)}
-                      </td>
+                      <td className="px-3 py-2 text-right">{formatQuantity(row)}</td>
+                      <td className="px-3 py-2 text-right">{formatAmount(row)}</td>
+                      <td className="px-3 py-2 text-right text-gray-500">{formatFee(row)}</td>
                     </tr>
                   ))}
                 </tbody>
