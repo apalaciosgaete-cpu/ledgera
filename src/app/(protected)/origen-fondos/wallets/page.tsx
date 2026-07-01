@@ -1,42 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts, colors } from "@/styles/tokens";
-import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
-import { startListening } from "@/modules/voice/speechToText";
-import { VoiceOrb } from "@/components/voice/VoiceOrb";
-import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
 import { WALLETS } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
-
-type AssistantStatus = "idle" | "listening" | "speaking";
 
 export default function WalletsSourceFundsPage() {
   const router = useRouter();
-  const stopListeningRef = useRef<(() => void) | null>(null);
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<AssistantStatus>("idle");
   const guide = "Estás en Wallets. Selecciona la wallet que quieres conectar para continuar.";
-
-  useEffect(() => {
-    setStatus("speaking");
-    void speakResponse(guide).finally(() => setStatus("idle"));
-    return () => { stopSpeaking(); stopListeningRef.current?.(); };
-  }, []);
-
-  const orbState = (): VoiceEngineState | "listening" => status === "speaking" ? "playing" : status === "listening" ? "listening" : "idle";
-  const statusCopy = status === "listening" ? "Escuchando..." : status === "speaking" ? "Hablando..." : "LEDGERA te escucha";
-
-  function toggleMic() {
-    if (status === "listening") { stopListeningRef.current?.(); setStatus("idle"); return; }
-    stopSpeaking();
-    const stop = startListening({
-      onResult: ({ transcript }) => setQuery(transcript),
-      onStateChange: (state) => setStatus(state === "listening" ? "listening" : "idle"),
-      onError: () => setStatus("idle"),
-    });
-    if (stop) { stopListeningRef.current = stop; setStatus("listening"); }
-  }
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -70,15 +42,11 @@ export default function WalletsSourceFundsPage() {
         })}
       </section>
 
-      <section style={{ width: "100%", border: "1px solid #DDD6FE", borderRadius: 18, background: "#FFFFFF", padding: 10, display: "grid", gridTemplateColumns: "minmax(280px,.9fr) minmax(360px,.75fr)", gap: 12, alignItems: "center", boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
-          <div style={{ width: 46, height: 46, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
-          <div style={{ minWidth: 0 }}><strong style={{ display: "block", color: status !== "idle" ? "#5B35F5" : "#475569", fontSize: 14, fontWeight: 900, marginBottom: 3, fontFamily: fonts.body }}>{statusCopy}</strong><p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.22, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p></div>
-        </div>
-        <form onSubmit={submit} style={{ width: "100%", justifySelf: "end", maxWidth: 620 }}>
-          <div style={{ flex: 1, minHeight: 44, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0 }}>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
-            <button type="button" onClick={toggleMic} style={{ width: 34, height: 34, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 18, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
+      <section style={{ width: "100%", border: "1px solid #DDD6FE", borderRadius: 18, background: "#FFFFFF", padding: 12, display: "grid", gap: 8, boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
+        <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.3, fontFamily: fonts.body }}>{guide}</p>
+        <form onSubmit={submit} style={{ width: "100%" }}>
+          <div style={{ flex: 1, minHeight: 44, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0 }}>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Escribe el nombre de tu wallet..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
           </div>
         </form>
       </section>

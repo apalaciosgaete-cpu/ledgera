@@ -42,7 +42,6 @@ const ONBOARDING_ROUTES = [
   "/experto/reportes",
   "/documentacion",
   "/casos",
-  "/conversaciones",
   "/ayuda",
 ];
 

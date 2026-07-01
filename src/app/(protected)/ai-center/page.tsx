@@ -23,7 +23,6 @@ export default async function AICenterPage() {
           Aquí se reúne tu riesgo, score, memoria tributaria, aprendizaje, recomendaciones y automatizaciones.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link href="/asistente" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Abrir asistente</Link>
           <Link href="/memoria-tributaria" className="rounded-lg border px-4 py-2 text-sm font-semibold text-slate-700">Ver memoria</Link>
           <Link href="/mi-perfil-tributario" className="rounded-lg border px-4 py-2 text-sm font-semibold text-slate-700">Ver perfil</Link>
         </div>

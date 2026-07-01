@@ -1,543 +1,84 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { fonts } from "@/styles/tokens";
-import { VoiceEngine, type VoiceEngineState } from "@/modules/voice/voiceEngine";
-import { startListening } from "@/modules/voice/speechToText";
-import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
-import { VoiceOrb } from "@/components/voice/VoiceOrb";
+import { useAuth } from "@/modules/identity/client/authContext";
 
-const CHIPS = [
-  "Vendí Bitcoin",
-  "Recibí USDT",
-  "Necesito justificar fondos",
-  "Preparar declaración crypto",
-];
-
-type Message = {
-  role: "USER" | "ASSISTANT";
-  content: string;
+type QuickLink = {
+  href: string;
+  label: string;
+  description: string;
 };
 
-type AssistantStatus = "idle" | "listening" | "thinking" | "speaking" | "blocked" | "error";
-
-function statusLabel(status: AssistantStatus, voiceState: VoiceEngineState | "listening"): string {
-  if (status === "listening") return "Escuchando...";
-  if (status === "thinking") return "Analizando tu contexto...";
-  if (status === "speaking") return "Hablando...";
-  if (status === "blocked") return "Activa audio o micrófono para continuar";
-  if (status === "error") return "No pude usar audio o micrófono";
-  if (voiceState === "playing") return "Dando bienvenida...";
-  if (voiceState === "blocked") return "Activa audio para escuchar la bienvenida";
-  return "¿En qué te puedo ayudar?";
-}
+const QUICK_LINKS: QuickLink[] = [
+  { href: "/origen-fondos", label: "Origen de Fondos", description: "Conecta bancos, exchanges, wallets o carga documentación." },
+  { href: "/cryptoactivos", label: "Activos", description: "Revisa y consolida tus movimientos y activos detectados." },
+  { href: "/obligaciones-tributarias", label: "Obligaciones Tributarias", description: "Consulta tus obligaciones y eventos tributarios." },
+  { href: "/declaraciones", label: "Declaraciones", description: "Prepara y revisa tus declaraciones." },
+];
 
 export function InvestorDashboard() {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const voiceEngineRef = useRef<VoiceEngine | null>(null);
-  const stopListeningRef = useRef<(() => void) | null>(null);
-  const relistenTimerRef = useRef<number | null>(null);
-  const voiceModeRef = useRef(false);
-
-  const [query, setQuery] = useState("");
-  const [focused, setFocused] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [voiceState, setVoiceState] = useState<VoiceEngineState | "listening">("idle");
-  const [assistantStatus, setAssistantStatus] = useState<AssistantStatus>("idle");
-  const [voiceNotice, setVoiceNotice] = useState("");
-
-  useEffect(() => {
-    const engine = new VoiceEngine();
-    voiceEngineRef.current = engine;
-
-    void engine.playWelcome({
-      onStateChange: (state) => {
-        setVoiceState(state);
-        if (state === "blocked") {
-          setAssistantStatus("blocked");
-          setVoiceNotice("El navegador bloqueó la bienvenida automática. Usa el micrófono o escribe para continuar.");
-        }
-      },
-    });
-
-    return () => {
-      engine.stop();
-      stopSpeaking();
-      stopListeningRef.current?.();
-      if (relistenTimerRef.current) {
-        window.clearTimeout(relistenTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, loading]);
-
-  function stopMic() {
-    stopListeningRef.current?.();
-    stopListeningRef.current = null;
-    setListening(false);
-    setVoiceState("idle");
-  }
-
-  function clearRelistenTimer() {
-    if (relistenTimerRef.current) {
-      window.clearTimeout(relistenTimerRef.current);
-      relistenTimerRef.current = null;
-    }
-  }
-
-  function scheduleRelisten() {
-    if (!voiceModeRef.current) return;
-    clearRelistenTimer();
-    relistenTimerRef.current = window.setTimeout(() => {
-      if (!loading) startMic();
-    }, 450);
-  }
-
-  async function speakAssistantAnswer(answer: string) {
-    setAssistantStatus("speaking");
-    setVoiceState("playing");
-    const result = await speakResponse(answer);
-
-    if (result.success) {
-      setVoiceState("played");
-      setAssistantStatus("idle");
-      setVoiceNotice("");
-    } else if (result.blocked) {
-      setVoiceState("blocked");
-      setAssistantStatus("blocked");
-      setVoiceNotice("El navegador bloqueó el audio. Puedes continuar escribiendo o tocar el micrófono para reactivar la experiencia de voz.");
-    } else {
-      setVoiceState("unsupported");
-      setAssistantStatus("error");
-      setVoiceNotice("No fue posible reproducir la respuesta por voz. La respuesta escrita sigue disponible.");
-    }
-  }
-
-  async function submitMessage(text: string, source: "text" | "voice") {
-    const trimmed = text.trim();
-    if (!trimmed || loading) return;
-
-    if (source === "voice") {
-      voiceModeRef.current = true;
-    }
-
-    stopSpeaking();
-    stopMic();
-    clearRelistenTimer();
-    setVoiceNotice("");
-
-    setMessages((current) => [...current, { role: "USER", content: trimmed }]);
-    setQuery("");
-    setLoading(true);
-    setAssistantStatus("thinking");
-
-    try {
-      const response = await fetch("/api/copilot/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: trimmed,
-          conversationId,
-          source,
-          scope: "crypto-first",
-        }),
-      });
-
-      const json = await response.json();
-      if (!response.ok || !json.ok) {
-        throw new Error(json.message || "No pude responder ahora.");
-      }
-
-      const answer = String(json.data.answer ?? "Necesito un poco más de contexto para ayudarte.");
-      setConversationId(json.data.conversationId ?? conversationId);
-      setMessages((current) => [...current, { role: "ASSISTANT", content: answer }]);
-
-      await speakAssistantAnswer(answer);
-      scheduleRelisten();
-    } catch (error) {
-      const fallback = error instanceof Error ? error.message : "No pude responder ahora.";
-      setMessages((current) => [...current, { role: "ASSISTANT", content: fallback }]);
-
-      await speakAssistantAnswer(fallback);
-      scheduleRelisten();
-    } finally {
-      setLoading(false);
-      setAssistantStatus((current) => (current === "thinking" ? "idle" : current));
-    }
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    void submitMessage(query, "text");
-  }
-
-  function sendChip(chip: string) {
-    setQuery(chip);
-    void submitMessage(chip, "text");
-  }
-
-  function startMic() {
-    if (loading) return;
-
-    voiceEngineRef.current?.stop();
-    stopSpeaking();
-    stopMic();
-    clearRelistenTimer();
-    voiceModeRef.current = true;
-
-    // Probe rápido de permisos antes de arrancar STT
-    void navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      stream.getTracks().forEach((t) => t.stop());
-
-      setListening(true);
-      setAssistantStatus("listening");
-      setVoiceState("listening");
-      setVoiceNotice("");
-
-      const stop = startListening({
-        onResult: ({ transcript, final }) => {
-          const next = transcript.trim();
-          setQuery(next);
-          if (final && next) {
-            void submitMessage(next, "voice");
-          }
-        },
-        onStateChange: (state) => {
-          if (state === "listening") {
-            setAssistantStatus("listening");
-            return;
-          }
-
-          if (state === "processing") {
-            setAssistantStatus("thinking");
-            return;
-          }
-
-          if (state === "idle") {
-            setListening(false);
-            if (!loading) {
-              setAssistantStatus("idle");
-              setVoiceState("idle");
-            }
-            return;
-          }
-
-          // Estados de error — solo manejan estado, onError provee el mensaje
-          if (state === "error" || state === "unsupported" || state === "denied" || state === "no-device") {
-            setListening(false);
-            setAssistantStatus("blocked");
-            setVoiceState("idle");
-            return;
-          }
-        },
-        onError: (error) => {
-          setListening(false);
-          setAssistantStatus("blocked");
-          setVoiceNotice(error || "No pude acceder al micrófono. Revisa permisos del navegador o escribe tu consulta.");
-        },
-      });
-
-      if (!stop) {
-        setListening(false);
-        setAssistantStatus("blocked");
-        // onError ya seteó el mensaje específico desde startListening()
-        return;
-      }
-
-      stopListeningRef.current = stop;
-    }).catch((err) => {
-      const isDenied = err instanceof DOMException &&
-        (err.name === "NotAllowedError" || err.name === "PermissionDeniedError");
-      setListening(false);
-      setAssistantStatus("blocked");
-      setVoiceNotice(isDenied
-        ? "Permiso de micrófono denegado. Actívalo en la configuración del navegador y recarga."
-        : "No se detectó un micrófono. Conecta uno y vuelve a intentar.");
-    });
-  }
-
-  function toggleMic() {
-    if (listening) {
-      stopMic();
-      setAssistantStatus("idle");
-      return;
-    }
-    startMic();
-  }
-
-  const hasMessages = messages.length > 0;
-  const activeLabel = statusLabel(assistantStatus, voiceState);
+  const { user } = useAuth();
+  const name = user?.email ?? "";
 
   return (
     <div
       style={{
-        height: "calc(100vh - 96px)",
-        overflow: "hidden",
+        minHeight: "calc(100vh - 96px)",
         background: "#071B28",
         color: "#E2E8F0",
         fontFamily: fonts.body,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: hasMessages ? "flex-start" : "space-between",
-        padding: hasMessages ? "20px 24px 24px" : "clamp(12px, 2vh, 24px) 24px",
+        justifyContent: "center",
+        gap: 28,
+        padding: "40px 24px",
         boxSizing: "border-box",
       }}
     >
-      {!hasMessages && (
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "clamp(8px, 1.5vh, 16px)",
-          }}
-        >
-          <VoiceOrb state={voiceState} />
-          <p
-            style={{
-              margin: 0,
-              fontSize: 14,
-              color: assistantStatus === "speaking" || voiceState === "playing" || listening ? "#86EFAC" : "#64748B",
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-              transition: "color 0.5s ease",
-              minHeight: "1.4em",
-            }}
-          >
-            {activeLabel}
-          </p>
-          {/* Mic button standalone bajo el orbe */}
-          <button
-            type="button"
-            onClick={toggleMic}
-            disabled={loading}
-            aria-label={listening ? "Detener micrófono" : "Activar micrófono"}
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 999,
-              border: `2px solid ${
-                listening
-                  ? "rgba(74,222,128,0.5)"
-                  : "rgba(255,255,255,0.12)"
-              }`,
-              background: listening
-                ? "rgba(22,163,74,0.18)"
-                : "rgba(255,255,255,0.05)",
-              color: listening ? "#4ADE80" : "#CBD5E1",
-              cursor: loading ? "not-allowed" : "pointer",
-              fontSize: 28,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease",
-              boxShadow: listening
-                ? "0 0 24px rgba(74,222,128,0.15)"
-                : "0 0 12px rgba(255,255,255,0.04)",
-            }}
-            onMouseEnter={(e) => {
-              if (!listening && !loading) {
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.30)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!listening && !loading) {
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-              }
-            }}
-          >
-            {listening ? "■" : "🎙"}
-          </button>
-          {voiceNotice ? (
-            <p style={{ color: "#FBBF24", fontSize: 12, lineHeight: 1.45, margin: "0 auto", maxWidth: 460 }}>
-              {voiceNotice}
-            </p>
-          ) : null}
-        </div>
-      )}
+      <section style={{ textAlign: "center", maxWidth: 720, display: "grid", gap: 10 }}>
+        <p style={{ margin: 0, color: "#4ADE80", fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          LEDGERA
+        </p>
+        <h1 style={{ margin: 0, fontSize: "2rem", fontWeight: 900, color: "#F8FAFC", letterSpacing: "-0.02em" }}>
+          Bienvenido a tu panel
+        </h1>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#94A3B8" }}>
+          {name ? `Sesión de ${name}. ` : ""}Gestiona tu situación financiera y tributaria con criptoactivos desde un solo lugar.
+        </p>
+      </section>
 
       <section
         style={{
           width: "100%",
           maxWidth: 860,
-          textAlign: "center",
           display: "grid",
-          gap: 10,
-          flexShrink: 0,
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 14,
         }}
       >
-        {hasMessages && (
-          <>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 8,
-                minHeight: 24,
-                color: assistantStatus === "speaking" || listening ? "#86EFAC" : "#64748B",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-              }}
-            >
-              <span>{activeLabel}</span>
-            </div>
-            {voiceNotice ? (
-              <p style={{ color: "#FBBF24", fontSize: 12, lineHeight: 1.45, margin: "0 auto", maxWidth: 620 }}>
-                {voiceNotice}
-              </p>
-            ) : null}
-          </>
-        )}
-
-        {hasMessages && (
-          <div
+        {QUICK_LINKS.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
             style={{
-              minHeight: 200,
-              maxHeight: "calc(100vh - 300px)",
-              overflowY: "auto",
               display: "grid",
+              gap: 6,
               alignContent: "start",
-              gap: 12,
-              padding: "4px 2px 10px",
-            }}
-          >
-            {messages.map((item, index) => {
-              const isUser = item.role === "USER";
-              return (
-                <div
-                  key={`${item.role}-${index}`}
-                  style={{
-                    justifySelf: isUser ? "end" : "start",
-                    maxWidth: "78%",
-                    textAlign: "left",
-                    background: isUser ? "#16A34A" : "rgba(255,255,255,0.055)",
-                    border: isUser
-                      ? "1px solid rgba(74,222,128,0.22)"
-                      : "1px solid rgba(255,255,255,0.08)",
-                    color: isUser ? "#FFFFFF" : "#E2E8F0",
-                    borderRadius: 18,
-                    padding: "12px 14px",
-                    fontSize: 15,
-                    lineHeight: 1.55,
-                    boxShadow: isUser ? "0 8px 24px rgba(22,163,74,0.12)" : "none",
-                  }}
-                >
-                  {item.content}
-                </div>
-              );
-            })}
-            {loading && (
-              <p style={{ color: "#64748B", fontSize: 13, margin: "2px 0 0", textAlign: "left" }}>
-                LEDGERA está analizando tu contexto…
-              </p>
-            )}
-            <div ref={scrollRef} />
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
+              textDecoration: "none",
               background: "rgba(255,255,255,0.04)",
-              border: `1.5px solid ${focused ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.10)"}`,
+              border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 18,
-              padding: "6px",
-              transition: "border-color 0.2s",
-              boxShadow: focused ? "0 0 0 3px rgba(22,163,74,0.08)" : "none",
+              padding: "18px 18px",
+              color: "#E2E8F0",
+              minHeight: 108,
             }}
           >
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              placeholder="Cuéntame tu situación o qué quieres evaluar"
-              autoComplete="off"
-              disabled={loading}
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "#F8FAFC",
-                fontSize: 16,
-                fontFamily: fonts.body,
-                fontWeight: 500,
-                padding: "12px 14px",
-                caretColor: "#4ADE80",
-                opacity: loading ? 0.65 : 1,
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={toggleMic}
-              disabled={loading}
-              aria-label={listening ? "Detener micrófono" : "Activar micrófono"}
-              style={{
-                width: 46,
-                height: 46,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 12,
-                border: `1px solid ${listening ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.08)"}`,
-                background: listening ? "rgba(22,163,74,0.16)" : "rgba(255,255,255,0.04)",
-                color: listening ? "#4ADE80" : "#CBD5E1",
-                cursor: loading ? "not-allowed" : "pointer",
-                flexShrink: 0,
-                fontSize: 17,
-                lineHeight: 1,
-              }}
-            >
-              {listening ? "■" : "🎙"}
-            </button>
-          </div>
-        </form>
-
-        {!hasMessages && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => sendChip(chip)}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 999,
-                  color: "#94A3B8",
-                  cursor: "pointer",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  padding: "6px 14px",
-                  fontFamily: fonts.body,
-                }}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-        )}
+            <strong style={{ fontSize: 15.5, fontWeight: 900, color: "#F8FAFC" }}>{item.label}</strong>
+            <span style={{ fontSize: 13, lineHeight: 1.45, color: "#94A3B8" }}>{item.description}</span>
+          </Link>
+        ))}
       </section>
     </div>
   );

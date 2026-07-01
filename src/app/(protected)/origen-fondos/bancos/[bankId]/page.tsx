@@ -1,16 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import { fonts } from "@/styles/tokens";
-import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
-import { startListening } from "@/modules/voice/speechToText";
-import { VoiceOrb } from "@/components/voice/VoiceOrb";
-import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
 import { findBankById, getBankLogoUrl } from "@/modules/banking/catalogs/chileBanks";
 import type { ConnectionMethod } from "@/modules/banking/catalogs/chileBanks";
-
-type AssistantStatus = "idle" | "listening" | "speaking";
 
 const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; cta: string; accent: string; bg: string; border: string }> = {
   api: {
@@ -31,18 +25,9 @@ const METHOD_META: Record<ConnectionMethod, { icon: string; label: string; cta: 
   },
 };
 
-function statusCopy(status: AssistantStatus) {
-  if (status === "listening") return "Escuchando...";
-  if (status === "speaking") return "Hablando...";
-  return "LEDGERA te escucha";
-}
-
 export default function BankConnectionPage() {
   const params = useParams<{ bankId: string }>();
   const bank = findBankById(params.bankId);
-  const stopListeningRef = useRef<(() => void) | null>(null);
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<AssistantStatus>("idle");
   const [activeMethod, setActiveMethod] = useState<ConnectionMethod | null>(null);
   const [apiClientId, setApiClientId] = useState("");
   const [apiSecret, setApiSecret] = useState("");
@@ -53,45 +38,12 @@ export default function BankConnectionPage() {
   const isAvailable = bank.status === "available";
   const guide = `Estás en la conexión con ${bank.name}. Selecciona el método de conexión para continuar.`;
 
-  useEffect(() => {
-    setStatus("speaking");
-    void speakResponse(guide).finally(() => setStatus("idle"));
-    return () => { stopSpeaking(); stopListeningRef.current?.(); };
-  }, [guide]);
-
-  function orbState(): VoiceEngineState | "listening" {
-    if (status === "speaking") return "playing";
-    if (status === "listening") return "listening";
-    return "idle";
-  }
-
-  function toggleMic() {
-    if (status === "listening") { stopListeningRef.current?.(); setStatus("idle"); return; }
-    stopSpeaking();
-    const stop = startListening({
-      onResult: ({ transcript }) => setQuery(transcript),
-      onStateChange: (state) => setStatus(state === "listening" ? "listening" : "idle"),
-      onError: () => setStatus("idle"),
-    });
-    if (stop) { stopListeningRef.current = stop; setStatus("listening"); }
-  }
-
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-    const clean = query.trim();
-    if (!clean) return;
-    setStatus("speaking");
-    void speakResponse(`Continuamos con ${bank!.name}.`).finally(() => setStatus("idle"));
-  }
-
   function handleMethod(method: ConnectionMethod) {
     setActiveMethod(method);
   }
 
   function connectApi(event: React.FormEvent) {
     event.preventDefault();
-    setStatus("speaking");
-    void speakResponse(`Configuración API recibida para ${bank!.name}. Validaremos las credenciales en modo seguro.`).finally(() => setStatus("idle"));
   }
 
   return (
@@ -154,23 +106,8 @@ export default function BankConnectionPage() {
         </div>
       </section>
 
-      <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
-          <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
-          <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: status === "listening" || status === "speaking" ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-            <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
-          </div>
-        </div>
-
-        <form onSubmit={submit}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
-              <button type="button" onClick={toggleMic} style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
-            </div>
-          </div>
-        </form>
+      <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 14, boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
+        <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.3, fontFamily: fonts.body }}>{guide}</p>
       </section>
     </main>
   );

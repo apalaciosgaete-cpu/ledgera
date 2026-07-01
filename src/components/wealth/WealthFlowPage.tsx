@@ -1,18 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
 import { httpClient } from "@/shared/http/httpClient";
-import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
-import { startListening } from "@/modules/voice/speechToText";
-import { VoiceOrb } from "@/components/voice/VoiceOrb";
-import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
 
 type WealthStepKey = "origen-fondos" | "activos";
 type SourceOptionKey = "bancos" | "exchanges" | "wallets" | "documentacion";
 type AssetViewKey = "transacciones" | "activos-detectados" | "pendientes" | "eventos-tributarios";
-type AssistantStatus = "idle" | "listening" | "thinking" | "speaking";
 type SourceOption = { key: SourceOptionKey; icon: string; label: string; hint: string; accent: string; bg: string; border: string };
 type AssetView = { key: AssetViewKey; label: string; value: string; hint: string; accent: string; bg: string; border: string };
 
@@ -72,8 +67,8 @@ const ASSET_VIEWS: Omit<AssetView, "value">[] = [
 const STEP_COPY: Record<WealthStepKey, { title: string; subtitle: string; guide: string; examples: string[] }> = {
   "origen-fondos": {
     title: "Origen de Fondos",
-    subtitle: "Selecciona o indica cómo ingresaron tus fondos. Puedes hablar o escribir.",
-    guide: "Estás en Origen de Fondos. Puedes decir Bancos, Exchanges, Wallets o Documentación. LEDGERA abrirá la opción correcta.",
+    subtitle: "Selecciona o indica cómo ingresaron tus fondos.",
+    guide: "Estás en Origen de Fondos. Escribe Bancos, Exchanges, Wallets o Documentación y se abrirá la opción correcta.",
     examples: ["bancos", "exchanges", "wallets", "documentación"],
   },
   activos: {
@@ -104,13 +99,6 @@ function resolveAssetView(text: string): AssetViewKey | null {
   if (/pendiente|corregir|correccion|clasificar|error|inconsistencia/.test(clean)) return "pendientes";
   if (/tributario|impuesto|evento|declaracion|renta/.test(clean)) return "eventos-tributarios";
   return null;
-}
-
-function statusCopy(status: AssistantStatus) {
-  if (status === "listening") return "Escuchando...";
-  if (status === "thinking") return "Analizando...";
-  if (status === "speaking") return "Hablando...";
-  return "LEDGERA te escucha";
 }
 
 function formatDate(iso: string): string {
@@ -226,15 +214,12 @@ function AssetsTable({ positions }: { positions: AssetPosition[] }) {
 
 export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   const router = useRouter();
-  const stopListeningRef = useRef<(() => void) | null>(null);
   const [query, setQuery] = useState("");
   const [selectedSource, setSelectedSource] = useState<SourceOptionKey | null>(null);
   const [assetView, setAssetView] = useState<AssetViewKey>("transacciones");
-  const [status, setStatus] = useState<AssistantStatus>("idle");
   const [stagingData, setStagingData] = useState<StagingData | null>(null);
   const copy = STEP_COPY[activeStep];
   const selectedSourceOption = SOURCE_OPTIONS.find((item) => item.key === selectedSource);
-  const activeVoice = status === "listening" || status === "speaking";
 
   const confirmedItems = useMemo(
     () => (stagingData?.items ?? []).filter((item) => item.status === "CONFIRMED"),
@@ -256,12 +241,6 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   const selectedAssetView = assetViews.find((item) => item.key === assetView) ?? assetViews[0];
 
   useEffect(() => {
-    setStatus("speaking");
-    void speakResponse(copy.guide).finally(() => setStatus("idle"));
-    return () => { stopSpeaking(); stopListeningRef.current?.(); };
-  }, [copy.guide]);
-
-  useEffect(() => {
     if (activeStep !== "activos") return;
 
     let cancelled = false;
@@ -272,9 +251,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     return () => { cancelled = true; };
   }, [activeStep]);
 
-  function openSourceOption(option: SourceOption, mode: "manual" | "auto") {
-    stopSpeaking();
-    stopListeningRef.current?.();
+  function openSourceOption(option: SourceOption) {
     setSelectedSource(option.key);
     setQuery(option.label);
     const sourceFundsRoutes: Record<SourceOptionKey, string> = {
@@ -283,55 +260,23 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
       wallets: "/origen-fondos/wallets",
       documentacion: "/origen-fondos/documentacion",
     };
-    setStatus("idle");
     router.push(sourceFundsRoutes[option.key]);
-    if (mode === "auto") void speakResponse(option.hint).finally(() => setStatus("idle"));
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
     const clean = query.trim();
     if (!clean) return;
-    setStatus("thinking");
 
     if (activeStep === "origen-fondos") {
       const option = SOURCE_OPTIONS.find((item) => item.key === resolveSourceIntent(clean));
-      if (option) { openSourceOption(option, "auto"); return; }
+      if (option) { openSourceOption(option); return; }
     }
 
     if (activeStep === "activos") {
       const view = resolveAssetView(clean);
-      if (view) { setAssetView(view); setStatus("idle"); return; }
+      if (view) { setAssetView(view); return; }
     }
-
-    router.push(`/panel?q=${encodeURIComponent(clean)}&scope=wealth-flow&step=${activeStep}`);
-  }
-
-  function toggleMic() {
-    if (status === "listening") { stopListeningRef.current?.(); setStatus("idle"); return; }
-    stopSpeaking();
-    const stop = startListening({
-      onResult: ({ transcript, final }) => {
-        setQuery(transcript);
-        if (!final) return;
-        if (activeStep === "origen-fondos") {
-          const option = SOURCE_OPTIONS.find((item) => item.key === resolveSourceIntent(transcript));
-          if (option) openSourceOption(option, "auto");
-          return;
-        }
-        const view = resolveAssetView(transcript);
-        if (view) setAssetView(view);
-      },
-      onStateChange: (state) => setStatus(state === "listening" ? "listening" : "idle"),
-      onError: () => setStatus("idle"),
-    });
-    if (stop) { stopListeningRef.current = stop; setStatus("listening"); }
-  }
-
-  function orbState(): VoiceEngineState | "listening" {
-    if (status === "speaking") return "playing";
-    if (status === "listening") return "listening";
-    return "idle";
   }
 
   function renderAssetContent() {
@@ -370,20 +315,12 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
           {renderAssetContent()}
         </section>
 
-        <section style={{ alignSelf: "start", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)", flexShrink: 0 }}>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
-            <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
-            <div style={{ minWidth: 0 }}>
-              <strong style={{ display: "block", color: activeVoice ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-              <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedAssetView.hint}</p>
-            </div>
-          </div>
-
+        <section style={{ alignSelf: "start", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gap: 10, boxShadow: "0 12px 28px rgba(109,74,255,0.05)", flexShrink: 0 }}>
+          <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body }}>{selectedAssetView.hint}</p>
           <form onSubmit={submit}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
+              <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar transacción, activo o pendiente..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
-                <button type="button" onClick={toggleMic} style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
               </div>
             </div>
           </form>
@@ -403,7 +340,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
         {SOURCE_OPTIONS.map((option) => {
           const active = selectedSource === option.key;
           return (
-            <button key={option.key} type="button" onClick={() => openSourceOption(option, "manual")} style={{ height: 110, borderRadius: 18, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gap: 6, padding: "12px 10px", justifyItems: "center", alignItems: "center", alignContent: "center", boxShadow: active ? `0 8px 18px ${option.accent}20` : "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "center" }}>
+            <button key={option.key} type="button" onClick={() => openSourceOption(option)} style={{ height: 110, borderRadius: 18, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gap: 6, padding: "12px 10px", justifyItems: "center", alignItems: "center", alignContent: "center", boxShadow: active ? `0 8px 18px ${option.accent}20` : "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "center" }}>
               <span style={{ fontSize: 36, lineHeight: 1 }}>{option.icon}</span>
               <strong style={{ fontSize: 14, fontWeight: 900 }}>{option.label}</strong>
             </button>
@@ -411,20 +348,12 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
         })}
       </section>
 
-      <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
-          <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
-          <div style={{ minWidth: 0 }}>
-            <strong style={{ display: "block", color: activeVoice ? "#5B35F5" : "#475569", fontSize: 15, fontWeight: 900, marginBottom: 4, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-            <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedSourceOption ? selectedSourceOption.hint : `Puedes decir: ${copy.examples.join(", ")}.`}</p>
-          </div>
-        </div>
-
+      <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gap: 10, boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
+        <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body }}>{selectedSourceOption ? selectedSourceOption.hint : `Escribe: ${copy.examples.join(", ")}.`}</p>
         <form onSubmit={submit}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 6px 0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Habla o escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
-              <button type="button" onClick={toggleMic} style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
+            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
             </div>
           </div>
         </form>

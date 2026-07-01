@@ -7,7 +7,6 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { saveSessionToken } from "@/modules/identity/client/authStorage";
-import { resetWelcomeSession } from "@/modules/voice/voiceSession";
 import { colors, fonts } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
@@ -173,7 +172,6 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-      resetWelcomeSession();
       await refreshUser();
       router.push("/panel");
     } catch (error) {
@@ -214,7 +212,6 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-      resetWelcomeSession();
       await refreshUser();
       router.push("/panel");
     } catch (error) {
@@ -276,7 +273,6 @@ function LoginForm() {
       }
 
       saveSessionToken(token);
-      resetWelcomeSession();
       await refreshUser();
       router.push("/panel");
     } catch (error) {

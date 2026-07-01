@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts, colors } from "@/styles/tokens";
-import { speakResponse, stopSpeaking } from "@/modules/voice/textToSpeech";
-import { startListening } from "@/modules/voice/speechToText";
-import { VoiceOrb } from "@/components/voice/VoiceOrb";
-import type { VoiceEngineState } from "@/modules/voice/voiceEngine";
 import { CHILE_BANKS, getBankLogoUrl } from "@/modules/banking/catalogs/chileBanks";
-
-type AssistantStatus = "idle" | "listening" | "speaking";
 
 const LOCAL_LOGOS: Record<string, string> = {
   santander: "/logos/santander.svg",
@@ -35,41 +28,9 @@ function logoUrl(bank: (typeof CHILE_BANKS)[number]) {
   return LOCAL_LOGOS[bank.id] ?? getBankLogoUrl(bank.domain);
 }
 
-function statusCopy(status: AssistantStatus) {
-  if (status === "listening") return "Escuchando...";
-  if (status === "speaking") return "Hablando...";
-  return "LEDGERA te escucha";
-}
-
 export default function BancosOrigenFondosPage() {
   const router = useRouter();
-  const stopListeningRef = useRef<(() => void) | null>(null);
-  const [status, setStatus] = useState<AssistantStatus>("idle");
-
   const guide = "Estás en Banco en Chile. Selecciona el banco que quieres conectar para continuar.";
-
-  useEffect(() => {
-    setStatus("speaking");
-    void speakResponse(guide).finally(() => setStatus("idle"));
-    return () => { stopSpeaking(); stopListeningRef.current?.(); };
-  }, []);
-
-  function orbState(): VoiceEngineState | "listening" {
-    if (status === "speaking") return "playing";
-    if (status === "listening") return "listening";
-    return "idle";
-  }
-
-  function toggleMic() {
-    if (status === "listening") { stopListeningRef.current?.(); setStatus("idle"); return; }
-    stopSpeaking();
-    const stop = startListening({
-      onResult: () => undefined,
-      onStateChange: (state) => setStatus(state === "listening" ? "listening" : "idle"),
-      onError: () => setStatus("idle"),
-    });
-    if (stop) { stopListeningRef.current = stop; setStatus("listening"); }
-  }
 
   return (
     <main style={{ height: "calc(100vh - 100px)", overflow: "hidden", display: "grid", gap: 8, gridTemplateRows: "auto 1fr auto" }}>
@@ -96,13 +57,8 @@ export default function BancosOrigenFondosPage() {
         })}
       </section>
 
-      <section style={{ width: "100%", border: "1px solid #DDD6FE", borderRadius: 18, background: "#FFFFFF", padding: 10, display: "flex", gap: 12, alignItems: "center", boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
-        <div style={{ width: 46, height: 46, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <strong style={{ display: "block", color: status === "listening" || status === "speaking" ? "#5B35F5" : "#475569", fontSize: 14, fontWeight: 900, marginBottom: 3, fontFamily: fonts.body }}>{statusCopy(status)}</strong>
-          <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.22, fontFamily: fonts.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guide}</p>
-        </div>
-        <button type="button" onClick={toggleMic} style={{ width: 40, height: 40, borderRadius: 12, border: "none", background: status === "listening" ? "rgba(91,53,245,0.12)" : "transparent", color: status === "listening" ? "#5B35F5" : "#64748B", cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", flexShrink: 0 }}>{status === "listening" ? "■" : "🎙"}</button>
+      <section style={{ width: "100%", border: "1px solid #DDD6FE", borderRadius: 18, background: "#FFFFFF", padding: 12, display: "flex", gap: 12, alignItems: "center", boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
+        <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.3, fontFamily: fonts.body }}>{guide}</p>
       </section>
     </main>
   );

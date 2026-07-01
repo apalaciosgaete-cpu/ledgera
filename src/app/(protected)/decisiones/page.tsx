@@ -109,7 +109,7 @@ export default function DecisionesPage() {
               Cola de Decisiones Tributarias
             </h1>
             <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
-              LEDGERA unifica señales de Monitor, Copiloto, Automatizaciones, Agente AI y Simulador en una cola priorizada.
+              LEDGERA unifica señales de Monitor, Automatizaciones, Agente AI y Simulador en una cola priorizada.
             </p>
           </div>
           <button
