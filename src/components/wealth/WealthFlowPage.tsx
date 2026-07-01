@@ -343,7 +343,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
 
   if (activeStep === "activos") {
     return (
-      <main style={{ height: "100%", minHeight: 0, overflow: "hidden", display: "grid", gap: 12, gridTemplateRows: "auto auto minmax(0,1fr) auto" }}>
+      <main style={{ minHeight: "calc(100vh - 100px)", overflow: "visible", display: "grid", gap: 12, gridTemplateRows: "auto auto auto auto", paddingBottom: 80 }}>
         <section>
           <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.55rem,2.7vw,1.9rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
           <p style={{ color: "#334155", fontSize: 13.5, lineHeight: 1.32, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
@@ -362,7 +362,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
           })}
         </section>
 
-        <section style={{ minHeight: 0, overflowY: "auto", overflowX: "hidden", display: "grid", gap: 10, alignContent: "start", paddingBottom: 8 }}>
+        <section style={{ overflow: "visible", display: "grid", gap: 10, alignContent: "start", paddingBottom: 8 }}>
           <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", padding: "12px 14px", fontFamily: fonts.body }}>
             <strong style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
             <p style={{ margin: "4px 0 0", color: "#64748B", fontSize: 12.5, lineHeight: 1.35 }}>{selectedAssetView.hint}</p>
@@ -370,7 +370,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
           {renderAssetContent()}
         </section>
 
-        <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)", flexShrink: 0 }}>
+        <section style={{ alignSelf: "start", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gridTemplateColumns: "minmax(260px,.85fr) minmax(320px,1.15fr)", gap: 14, alignItems: "center", boxShadow: "0 12px 28px rgba(109,74,255,0.05)", flexShrink: 0 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
             <div style={{ width: 52, height: 52, overflow: "hidden", borderRadius: 999, flexShrink: 0 }}><VoiceOrb state={orbState()} /></div>
             <div style={{ minWidth: 0 }}>
