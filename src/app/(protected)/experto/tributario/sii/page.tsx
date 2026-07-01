@@ -59,7 +59,7 @@ export default function SiiPanelPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Integración SII
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Estado, certificados, CAF y folios para emisión de DTE.
         </p>
       </header>
@@ -70,8 +70,8 @@ export default function SiiPanelPage() {
         <div style={{ display: "grid", gap: 16 }}>
           <div
             style={{
-              background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               padding: 16,
             }}
@@ -86,10 +86,10 @@ export default function SiiPanelPage() {
             <button
               onClick={handleTestConnection}
               style={{
-                background: "#0F766E",
+                background: "var(--accent)",
                 border: "none",
                 borderRadius: 6,
-                color: "#FFFFFF",
+                color: "var(--text)",
                 cursor: "pointer",
                 fontWeight: 700,
                 padding: "10px 16px",
@@ -98,28 +98,28 @@ export default function SiiPanelPage() {
               Probar conexión
             </button>
             {testResult && (
-              <p style={{ color: "#64748B", margin: "12px 0 0" }}>{testResult}</p>
+              <p style={{ color: "var(--text-soft)", margin: "12px 0 0" }}>{testResult}</p>
             )}
           </div>
 
           <div
             style={{
-              background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               padding: 16,
             }}
           >
             <h2 style={{ fontSize: "1.1rem", margin: "0 0 12px" }}>CAF cargados</h2>
             {cafs.length === 0 ? (
-              <p style={{ color: "#64748B", margin: 0 }}>No hay CAF cargados.</p>
+              <p style={{ color: "var(--text-soft)", margin: 0 }}>No hay CAF cargados.</p>
             ) : (
               <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
                 {cafs.map((caf) => (
                   <li
                     key={caf.id}
                     style={{
-                      borderBottom: "1px solid #E2E8F0",
+                      borderBottom: "1px solid var(--border)",
                       padding: "12px 0",
                     }}
                   >
@@ -127,7 +127,7 @@ export default function SiiPanelPage() {
                       <strong>Tipo {caf.documentType}</strong> — Folios {caf.folioStart} a{" "}
                       {caf.folioEnd}
                     </p>
-                    <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+                    <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>
                       Actual {caf.currentFolio} · Disponibles {caf.available} ·{" "}
                       {caf.isActive ? "Activo" : "Inactivo"}
                     </p>
@@ -139,14 +139,14 @@ export default function SiiPanelPage() {
 
           <div
             style={{
-              background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               padding: 16,
             }}
           >
             <h2 style={{ fontSize: "1.1rem", margin: "0 0 12px" }}>Certificado</h2>
-            <p style={{ color: "#64748B", margin: 0 }}>
+            <p style={{ color: "var(--text-soft)", margin: 0 }}>
               La vigencia del certificado digital se verifica desde las credenciales activas.
             </p>
           </div>

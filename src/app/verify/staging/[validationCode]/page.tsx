@@ -65,40 +65,40 @@ export default function VerifyStagingPage() {
   }, [params.validationCode]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 16px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-sunken)", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 16px" }}>
       <div style={{ width: "100%", maxWidth: "600px" }}>
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <Link href="/" style={{ textDecoration: "none" }}>
-            <p style={{ fontSize: "22px", fontWeight: 800, color: "#0F2A3D", margin: 0 }}>LEDGERA</p>
+            <p style={{ fontSize: "22px", fontWeight: 800, color: "var(--text)", margin: 0 }}>LEDGERA</p>
           </Link>
-          <p style={{ fontSize: "13px", color: "#64748B", marginTop: "4px" }}>Verificación de decisión</p>
+          <p style={{ fontSize: "13px", color: "var(--text-soft)", marginTop: "4px" }}>Verificación de decisión</p>
         </div>
 
         {loading && (
-          <div style={{ background: "#FFFFFF", borderRadius: "16px", border: "1px solid #E2E8F0", padding: "40px", textAlign: "center" }}>
-            <p style={{ color: "#64748B", fontSize: "14px", margin: 0 }}>Verificando código...</p>
+          <div style={{ background: "var(--bg-elev)", borderRadius: "16px", border: "1px solid var(--border)", padding: "40px", textAlign: "center" }}>
+            <p style={{ color: "var(--text-soft)", fontSize: "14px", margin: 0 }}>Verificando código...</p>
           </div>
         )}
 
         {error && (
-          <div style={{ background: "#FFFFFF", borderRadius: "16px", border: "1px solid #FCA5A5", padding: "32px", textAlign: "center" }}>
+          <div style={{ background: "var(--bg-elev)", borderRadius: "16px", border: "1px solid var(--loss)", padding: "32px", textAlign: "center" }}>
             <div style={{ fontSize: "32px", marginBottom: "12px" }}>⚠️</div>
-            <p style={{ fontWeight: 700, color: "#DC2626", margin: 0 }}>{error}</p>
-            <p style={{ fontSize: "13px", color: "#94A3B8", marginTop: "8px" }}>
+            <p style={{ fontWeight: 700, color: "var(--loss)", margin: 0 }}>{error}</p>
+            <p style={{ fontSize: "13px", color: "var(--text-soft)", marginTop: "8px" }}>
               El código de validación no existe o expiró.
             </p>
           </div>
         )}
 
         {data && (
-          <div style={{ background: "#FFFFFF", borderRadius: "16px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+          <div style={{ background: "var(--bg-elev)", borderRadius: "16px", border: "1px solid var(--border)", overflow: "hidden" }}>
 
             {/* Hash status banner */}
             <div style={{
-              background:  data.hashValid ? "#F0FDF4" : "#FFF7ED",
-              borderBottom: `2px solid ${data.hashValid ? "#86EFAC" : "#FCA5A5"}`,
+              background: data.hashValid ? "var(--accent-soft)" : "var(--bg-elev)",
+              borderBottom: `2px solid ${data.hashValid ? "#3FA687" : "#C4634A"}`,
               padding:     "16px 24px",
               display:     "flex",
               alignItems:  "center",
@@ -106,10 +106,10 @@ export default function VerifyStagingPage() {
             }}>
               <span style={{ fontSize: "24px" }}>{data.hashValid ? "✅" : "⚠️"}</span>
               <div>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: "15px", color: data.hashValid ? "#16A34A" : "#EA580C" }}>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: "15px", color: data.hashValid ? "var(--accent)" : "var(--text-soft)" }}>
                   {data.hashValid ? "Hash verificado — decisión íntegra" : "Hash no coincide — datos modificados"}
                 </p>
-                <p style={{ margin: 0, fontSize: "12px", color: "#64748B", marginTop: "2px" }}>
+                <p style={{ margin: 0, fontSize: "12px", color: "var(--text-soft)", marginTop: "2px" }}>
                   Código: {data.validationCode}
                 </p>
               </div>
@@ -128,8 +128,8 @@ export default function VerifyStagingPage() {
               {data.afterStatus && (
                 <Row label="Estado resultante" value={STATUS_LABELS[data.afterStatus] ?? data.afterStatus} />
               )}
-              <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #F1F5F9" }}>
-                <p style={{ margin: 0, fontSize: "11px", color: "#94A3B8", fontFamily: "monospace", wordBreak: "break-all" }}>
+              <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
+                <p style={{ margin: 0, fontSize: "11px", color: "var(--text-soft)", fontFamily: "monospace", wordBreak: "break-all" }}>
                   {data.decisionHash}
                 </p>
               </div>
@@ -144,9 +144,9 @@ export default function VerifyStagingPage() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #F8FAFC", gap: "12px" }}>
-      <span style={{ fontSize: "13px", color: "#94A3B8", flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: "13px", color: "#0F2A3D", fontWeight: 500, textAlign: "right" }}>{value}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid var(--border)", gap: "12px" }}>
+      <span style={{ fontSize: "13px", color: "var(--text-soft)", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: "13px", color: "var(--text)", fontWeight: 500, textAlign: "right" }}>{value}</span>
     </div>
   );
 }

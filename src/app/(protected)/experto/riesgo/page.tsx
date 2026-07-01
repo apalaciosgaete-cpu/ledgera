@@ -37,13 +37,13 @@ export default function ExpertRiskPage() {
   function levelColor(level: string) {
     switch (level) {
       case "CRITICAL":
-        return "#DC2626";
+        return "#C4634A";
       case "HIGH":
-        return "#EA580C";
+        return "#E8B84B";
       case "MEDIUM":
-        return "#CA8A04";
+        return "#E8B84B";
       default:
-        return "#16A34A";
+        return "#3FA687";
     }
   }
 
@@ -53,15 +53,15 @@ export default function ExpertRiskPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Panel de Riesgo Tributario
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Usuarios con mayor riesgo tributario y desglose resumido.
         </p>
       </header>
 
       <div
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
           marginBottom: 24,
           padding: 16,
@@ -73,7 +73,7 @@ export default function ExpertRiskPage() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             style={{
-              border: "1px solid #E2E8F0",
+              border: "1px solid var(--border)",
               borderRadius: 4,
               fontSize: 13,
               padding: "6px 8px",
@@ -92,9 +92,9 @@ export default function ExpertRiskPage() {
         <Link
           href="/experto/alertas"
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             borderRadius: 6,
-            color: "#FFFFFF",
+            color: "var(--text)",
             display: "inline-block",
             fontWeight: 700,
             padding: "10px 16px",
@@ -108,15 +108,15 @@ export default function ExpertRiskPage() {
       {loading ? (
         <p>Cargando...</p>
       ) : scores.length === 0 ? (
-        <p style={{ color: "#64748B" }}>No hay scores registrados.</p>
+        <p style={{ color: "var(--text-soft)" }}>No hay scores registrados.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {scores.map((item) => (
             <li
               key={item.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: 8,
                 marginBottom: 12,
                 padding: 16,
@@ -134,7 +134,7 @@ export default function ExpertRiskPage() {
                   {item.score}
                 </span>
               </div>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+              <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>
                 Nivel {item.level} · Evaluado{" "}
                 {new Date(item.evaluatedAt).toLocaleDateString("es-CL")}
               </p>

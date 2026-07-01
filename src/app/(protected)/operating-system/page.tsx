@@ -58,7 +58,7 @@ export default function OperatingSystemPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <p style={{ color: "#94A3B8", fontSize: 16 }}>Cargando sistema operativo LAIOS...</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 16 }}>Cargando sistema operativo LAIOS...</p>
       </div>
     );
   }
@@ -68,22 +68,22 @@ export default function OperatingSystemPage() {
   return (
     <div style={{ display: "grid", gap: 24, maxWidth: 1100, margin: "0 auto" }}>
       {/* Header */}
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 24 }}>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
           <div>
-            <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+            <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
               LEDGERA AI Operating System
             </p>
-            <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
+            <h1 style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
               Estado Operativo
             </h1>
-            <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
               LAIOS coordina todos los motores tributarios bajo un estado operativo unificado.
             </p>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             {cycleResult && (
-              <span style={{ fontSize: 13, color: cycleResult.startsWith("✅") ? "#047857" : "#B91C1C", fontWeight: 700 }}>
+              <span style={{ fontSize: 13, color: cycleResult.startsWith("✅") ? "var(--accent)" : "var(--loss)", fontWeight: 700 }}>
                 {cycleResult}
               </span>
             )}
@@ -94,8 +94,8 @@ export default function OperatingSystemPage() {
                 padding: "10px 22px",
                 borderRadius: 999,
                 border: "none",
-                background: rebuilding ? "#94A3B8" : "#0F766E",
-                color: "#FFFFFF",
+                background: rebuilding ? "var(--bg-elev)" : "var(--accent)",
+                color: "var(--text)",
                 fontSize: 14,
                 fontWeight: 800,
                 cursor: rebuilding ? "not-allowed" : "pointer",
@@ -108,8 +108,8 @@ export default function OperatingSystemPage() {
       </section>
 
       {!state ? (
-        <section style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 18, padding: 32, textAlign: "center" }}>
-          <p style={{ color: "#64748B", fontSize: 15, margin: 0 }}>
+        <section style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 18, padding: 32, textAlign: "center" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 15, margin: 0 }}>
             No hay datos de estado LAIOS. Ejecuta un ciclo operativo para generar el primer estado.
           </p>
         </section>
@@ -117,7 +117,7 @@ export default function OperatingSystemPage() {
         <>
           {/* Operating Status */}
           <section style={{
-            background: "#FFFFFF",
+            background: "var(--bg-elev)",
             border: `2px solid ${operatingColor(state.operatingStatus)}44`,
             borderRadius: 20,
             padding: 28,
@@ -139,39 +139,39 @@ export default function OperatingSystemPage() {
           </section>
 
           {/* Executive Summary */}
-          <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 22 }}>
-            <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 8px" }}>
+          <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 22 }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 8px" }}>
               Resumen Ejecutivo
             </p>
-            <p style={{ color: "#0F2A3D", fontSize: 15, lineHeight: 1.7, margin: 0 }}>
+            <p style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.7, margin: 0 }}>
               {state.executiveSummary}
             </p>
-            <p style={{ color: "#94A3B8", fontSize: 11, margin: "12px 0 0" }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 11, margin: "12px 0 0" }}>
               Generado: {new Date(state.generatedAt).toLocaleString("es-CL")}
             </p>
           </section>
 
           {/* KPIs */}
           <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
-            <Kpi label="Casos activos" value={state.activeCases} color="#2563EB" />
-            <Kpi label="Workflows" value={state.activeWorkflows} color="#0F766E" />
-            <Kpi label="Decisiones" value={state.pendingDecisions} color="#B45309" />
-            <Kpi label="Ejecuciones" value={state.pendingExecutions} color="#6D28D9" />
+            <Kpi label="Casos activos" value={state.activeCases} color="#3FA687" />
+            <Kpi label="Workflows" value={state.activeWorkflows} color="#3FA687" />
+            <Kpi label="Decisiones" value={state.pendingDecisions} color="#E8B84B" />
+            <Kpi label="Ejecuciones" value={state.pendingExecutions} color="#3FA687" />
             <Kpi
               label="Tax Health"
               value={state.taxHealthScore ?? "—"}
-              color={state.taxHealthScore != null && state.taxHealthScore < 50 ? "#B91C1C" : "#047857"}
+              color={state.taxHealthScore != null && state.taxHealthScore < 50 ? "#C4634A" : "#3FA687"}
             />
             <Kpi
               label="Perfil Adaptativo"
               value={state.adaptiveProfileScore != null ? `${Math.round(state.adaptiveProfileScore * 100)}%` : "—"}
-              color={state.adaptiveProfileScore != null && state.adaptiveProfileScore < 0.3 ? "#B45309" : "#047857"}
+              color={state.adaptiveProfileScore != null && state.adaptiveProfileScore < 0.3 ? "#E8B84B" : "#3FA687"}
             />
           </section>
 
           {/* Engine States */}
-          <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 22, display: "grid", gap: 12 }}>
-            <h2 style={{ color: "#0F2A3D", fontSize: 17, fontWeight: 900, margin: 0 }}>Estado de Motores</h2>
+          <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 22, display: "grid", gap: 12 }}>
+            <h2 style={{ color: "var(--text)", fontSize: 17, fontWeight: 900, margin: 0 }}>Estado de Motores</h2>
             <div style={{ display: "grid", gap: 10 }}>
               {engines.map((engine) => (
                 <div
@@ -182,16 +182,16 @@ export default function OperatingSystemPage() {
                     alignItems: "center",
                     padding: "14px 18px",
                     borderRadius: 12,
-                    background: engine.status === "CRITICAL" ? "#FEF2F2" : engine.status === "ATTENTION" ? "#FFFBEB" : "#F8FAFC",
+                    background: engine.status === "CRITICAL" ? "rgba(196,99,74,0.14)" : engine.status === "ATTENTION" ? "rgba(232,184,75,0.14)" : "var(--bg-sunken)",
                     border: "1px solid",
-                    borderColor: engine.status === "CRITICAL" ? "#FECACA" : engine.status === "ATTENTION" ? "#FDE68A" : "#E2E8F0",
+                    borderColor: engine.status === "CRITICAL" ? "rgba(196,99,74,0.14)" : engine.status === "ATTENTION" ? "rgba(232,184,75,0.14)" : "var(--border)",
                   }}
                 >
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                     <span style={{ fontSize: 22 }}>{ENGINE_EMOJIS[engine.name] ?? "🔧"}</span>
                     <div>
-                      <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 800, margin: 0 }}>{engine.name}</p>
-                      <p style={{ color: "#64748B", fontSize: 12, margin: "2px 0 0" }}>{engine.summary}</p>
+                      <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 800, margin: 0 }}>{engine.name}</p>
+                      <p style={{ color: "var(--text-soft)", fontSize: 12, margin: "2px 0 0" }}>{engine.summary}</p>
                     </div>
                   </div>
                   <span style={{
@@ -216,8 +216,8 @@ export default function OperatingSystemPage() {
 
 function Kpi({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 18 }}>
-      <p style={{ color: "#64748B", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 16, padding: 18 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
       <p style={{ color, fontSize: 26, fontWeight: 900, margin: 0 }}>{value}</p>
     </article>
   );

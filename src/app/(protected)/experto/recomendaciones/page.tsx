@@ -82,7 +82,7 @@ export default function ExpertRecommendationsPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Recomendaciones
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Vista centralizada de recomendaciones generadas para los usuarios.
         </p>
       </header>
@@ -111,10 +111,10 @@ export default function ExpertRecommendationsPage() {
       {error && (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             marginBottom: 24,
             padding: 16,
@@ -125,21 +125,21 @@ export default function ExpertRecommendationsPage() {
       )}
 
       {loading ? (
-        <p style={{ color: "#64748B" }}>Cargando recomendaciones…</p>
+        <p style={{ color: "var(--text-soft)" }}>Cargando recomendaciones…</p>
       ) : recommendations.length === 0 ? (
-        <p style={{ color: "#64748B" }}>Sin recomendaciones para los filtros seleccionados.</p>
+        <p style={{ color: "var(--text-soft)" }}>Sin recomendaciones para los filtros seleccionados.</p>
       ) : (
         <div
           style={{
-            background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
             overflow: "hidden",
           }}
         >
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#F8FAFC", color: "#64748B", textAlign: "left" }}>
+              <tr style={{ background: "var(--bg-sunken)", color: "var(--text-soft)", textAlign: "left" }}>
                 <th style={{ padding: "12px 16px" }}>Usuario</th>
                 <th style={{ padding: "12px 16px" }}>Recomendación</th>
                 <th style={{ padding: "12px 16px" }}>Prioridad</th>
@@ -149,13 +149,13 @@ export default function ExpertRecommendationsPage() {
             </thead>
             <tbody>
               {recommendations.map((r) => (
-                <tr key={r.id} style={{ borderTop: "1px solid #E2E8F0" }}>
-                  <td style={{ padding: "12px 16px", color: "#0F2A3D", fontWeight: 600 }}>
+                <tr key={r.id} style={{ borderTop: "1px solid var(--border)" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--text)", fontWeight: 600 }}>
                     {r.userId}
                   </td>
                   <td style={{ padding: "12px 16px" }}>
-                    <div style={{ fontWeight: 700, color: "#0F2A3D" }}>{r.title}</div>
-                    <div style={{ color: "#64748B", fontSize: 12, marginTop: 4 }}>
+                    <div style={{ fontWeight: 700, color: "var(--text)" }}>{r.title}</div>
+                    <div style={{ color: "var(--text-soft)", fontSize: 12, marginTop: 4 }}>
                       {r.description}
                     </div>
                   </td>
@@ -165,7 +165,7 @@ export default function ExpertRecommendationsPage() {
                   <td style={{ padding: "12px 16px" }}>
                     <StatusBadge status={r.status} />
                   </td>
-                  <td style={{ padding: "12px 16px", color: "#64748B" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--text-soft)" }}>
                     {categoryLabel(r.category)}
                   </td>
                 </tr>
@@ -191,15 +191,15 @@ function Select({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180 }}>
-      <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>{label}</label>
+      <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #CBD5E1",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: 14,
           padding: "8px 12px",
         }}
@@ -217,12 +217,12 @@ function Select({
 function PriorityBadge({ priority }: { priority: Recommendation["priority"] }) {
   const color =
     priority === "CRITICAL"
-      ? "#991B1B"
+      ? "#C4634A"
       : priority === "HIGH"
-      ? "#DC2626"
+      ? "#C4634A"
       : priority === "MEDIUM"
-      ? "#B45309"
-      : "#64748B";
+      ? "#E8B84B"
+      : "var(--text-soft)";
 
   const label =
     priority === "CRITICAL"
@@ -240,14 +240,14 @@ function PriorityBadge({ priority }: { priority: Recommendation["priority"] }) {
 
 function StatusBadge({ status }: { status: Recommendation["status"] }) {
   const color =
-    status === "ACTIVE" ? "#15803D" : status === "DISMISSED" ? "#64748B" : "#0F766E";
+    status === "ACTIVE" ? "#3FA687" : status === "DISMISSED" ? "var(--text-soft)" : "#3FA687";
   const label =
     status === "ACTIVE" ? "Activa" : status === "DISMISSED" ? "Descartada" : "Completada";
 
   return (
     <span
       style={{
-        background: status === "ACTIVE" ? "#F0FDF4" : "#F8FAFC",
+        background: status === "ACTIVE" ? "var(--accent-soft)" : "var(--bg-sunken)",
         borderRadius: 12,
         color,
         fontSize: 11,

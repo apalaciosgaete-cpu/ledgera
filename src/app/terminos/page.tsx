@@ -16,9 +16,8 @@ export default function TerminosPage() {
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #0a0a0f 100%)",
-        color: "#e2e8f0",
+        background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 50%, var(--bg-elev) 100%)",
+        color: "var(--text)",
         fontFamily: "'Inter', sans-serif",
       }}
     >
@@ -46,15 +45,15 @@ export default function TerminosPage() {
         <Link
           href="/"
           style={{
-            color: "#94a3b8",
+            color: "var(--text-soft)",
             fontSize: "0.85rem",
             textDecoration: "none",
             display: "flex",
             alignItems: "center",
             gap: "0.4rem",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#e2e8f0")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-soft)")}
         >
           ← Volver al inicio
         </Link>
@@ -72,7 +71,7 @@ export default function TerminosPage() {
               borderRadius: "999px",
               padding: "0.3rem 1rem",
               fontSize: "0.78rem",
-              color: "#818cf8",
+              color: "var(--accent)",
               marginBottom: "1.5rem",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -85,14 +84,14 @@ export default function TerminosPage() {
               fontFamily: "'Manrope', sans-serif",
               fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
               fontWeight: 800,
-              color: "#f8fafc",
+              color: "var(--text)",
               margin: "0 0 1rem",
               lineHeight: 1.15,
             }}
           >
             Términos y Condiciones de Uso
           </h1>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: "0.9rem" }}>
             Última actualización: 29 de mayo de 2026 · Versión 1.0 · Plataforma v0.1.0.26
           </p>
         </div>
@@ -107,15 +106,15 @@ export default function TerminosPage() {
             marginBottom: "2.5rem",
           }}
         >
-          <p style={{ color: "#a5b4fc", fontSize: "0.88rem", margin: 0, lineHeight: 1.7 }}>
+          <p style={{ color: "var(--text-faint)", fontSize: "0.88rem", margin: 0, lineHeight: 1.7 }}>
             Los presentes Términos y Condiciones de Uso constituyen un contrato legalmente
             vinculante entre el titular de LEDGERA y toda persona que acceda o utilice la
             Plataforma. Al registrarse, acceder o utilizar el Servicio, el Usuario declara
             haber leído, comprendido y aceptado íntegramente estos Términos. Este documento
             se rige por la legislación de la{" "}
-            <strong style={{ color: "#c7d2fe" }}>República de Chile</strong>. Su aceptación
+            <strong style={{ color: "var(--text-faint)" }}>República de Chile</strong>. Su aceptación
             electrónica produce los efectos previstos en la{" "}
-            <strong style={{ color: "#c7d2fe" }}>Ley N° 19.799</strong> sobre Documentos
+            <strong style={{ color: "var(--text-faint)" }}>Ley N° 19.799</strong> sobre Documentos
             Electrónicos, Firma Electrónica y Servicios de Certificación de dicha Firma.
           </p>
         </div>
@@ -126,45 +125,45 @@ export default function TerminosPage() {
           <p>Para los efectos de estos Términos, se entenderá por:</p>
           <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Plataforma o Servicio:</strong> el conjunto
+              <strong style={{ color: "var(--text)" }}>Plataforma o Servicio:</strong> el conjunto
               de funcionalidades de software de LEDGERA accesibles mediante navegador web u
               otros medios habilitados, destinadas al registro, normalización, cálculo,
               clasificación y reporte de información contable y tributaria asociada a
               criptoactivos.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Usuario:</strong> toda persona natural o
+              <strong style={{ color: "var(--text)" }}>Usuario:</strong> toda persona natural o
               jurídica que crea una cuenta o utiliza el Servicio.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Criptoactivo o activo financiero virtual:</strong>{" "}
+              <strong style={{ color: "var(--text)" }}>Criptoactivo o activo financiero virtual:</strong>{" "}
               representación digital de unidades de valor, bienes o servicios, con excepción
               del dinero en moneda nacional o divisas, que puede ser transferida, almacenada
               o intercambiada digitalmente, conforme a la definición incorporada por la Ley
               N° 21.521.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Movimientos de portafolio:</strong> los
+              <strong style={{ color: "var(--text)" }}>Movimientos de portafolio:</strong> los
               registros de transacciones que el Usuario ingresa o que se ingieren desde
               fuentes externas, y que constituyen la fuente de verdad del sistema.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Evento tributario:</strong> resultado
+              <strong style={{ color: "var(--text)" }}>Evento tributario:</strong> resultado
               derivado de forma determinística por la Plataforma a partir de los movimientos,
               conforme al método FIFO y a la lógica de cálculo del sistema.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Conectores de exchange:</strong> módulos
+              <strong style={{ color: "var(--text)" }}>Conectores de exchange:</strong> módulos
               de ingestión que importan información desde plataformas de intercambio de
               terceros hacia los movimientos de portafolio.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Contenido del Usuario:</strong> todo dato,
+              <strong style={{ color: "var(--text)" }}>Contenido del Usuario:</strong> todo dato,
               archivo, registro o información que el Usuario ingrese, cargue o conecte a la
               Plataforma.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Datos personales:</strong> los definidos
+              <strong style={{ color: "var(--text)" }}>Datos personales:</strong> los definidos
               en la Ley N° 19.628 y, a partir de su entrada en vigencia, en la Ley N° 21.719.
             </li>
           </ul>
@@ -178,14 +177,14 @@ export default function TerminosPage() {
             posiciona como una capa contable de las finanzas digitales.
           </p>
           <InfoBox color="amber">
-            <strong style={{ color: "#fcd34d" }}>LEDGERA NO es ni presta los siguientes servicios:</strong>{" "}
+            <strong style={{ color: "var(--warn)" }}>LEDGERA NO es ni presta los siguientes servicios:</strong>{" "}
             no es exchange, casa de cambio ni mercado de criptoactivos; no custodia ni
             administra criptoactivos o fondos; no intermedia ni ejecuta operaciones de compra
             o venta; no presta asesoría de inversión, contable, tributaria ni legal
             personalizada.
           </InfoBox>
           <p>
-            <strong style={{ color: "#e2e8f0" }}>Exclusión del perímetro regulado por la Ley N° 21.521 (Ley Fintec).</strong>{" "}
+            <strong style={{ color: "var(--text)" }}>Exclusión del perímetro regulado por la Ley N° 21.521 (Ley Fintec).</strong>{" "}
             LEDGERA no presta ninguno de los servicios financieros regulados taxativamente
             por dicha ley (plataformas de financiamiento colectivo, sistemas alternativos de
             transacción, asesoría crediticia y de inversión, custodia de instrumentos
@@ -194,7 +193,7 @@ export default function TerminosPage() {
             Servicios Financieros.
           </p>
           <p>
-            <strong style={{ color: "#e2e8f0" }}>Etapa de desarrollo.</strong> El Usuario
+            <strong style={{ color: "var(--text)" }}>Etapa de desarrollo.</strong> El Usuario
             reconoce que la Plataforma se encuentra en etapa de desarrollo activo
             (versión v0.1.0.x). Las funcionalidades pueden cambiar, ser corregidas,
             suspendidas o discontinuadas sin previo aviso. El Servicio se entrega en su
@@ -206,7 +205,7 @@ export default function TerminosPage() {
           <p>
             Los eventos tributarios, resúmenes, indicadores (incluyendo Tax Health y Tax
             Overview), declaraciones de apoyo y exportaciones generados por la Plataforma
-            tienen <strong style={{ color: "#e2e8f0" }}>carácter informativo y referencial</strong>.
+            tienen <strong style={{ color: "var(--text)" }}>carácter informativo y referencial</strong>.
             Se calculan de manera determinística a partir de la información ingresada por el
             Usuario o ingerida desde fuentes externas, aplicando el método FIFO y la lógica
             vigente del sistema.
@@ -217,7 +216,7 @@ export default function TerminosPage() {
             de las transacciones ni la titularidad de los activos.
           </p>
           <InfoBox color="red">
-            <strong style={{ color: "#fca5a5" }}>El Usuario es el único y exclusivo responsable</strong>{" "}
+            <strong style={{ color: "var(--loss)" }}>El Usuario es el único y exclusivo responsable</strong>{" "}
             del cumplimiento de sus obligaciones tributarias ante el SII y cualquier otra
             autoridad competente, incluyendo la presentación correcta y oportuna de
             declaraciones y el pago de los tributos que correspondan.
@@ -262,7 +261,7 @@ export default function TerminosPage() {
           <p>
             Sujeto al cumplimiento de estos Términos y, cuando corresponda, al pago de la
             suscripción, LEDGERA concede al Usuario una licencia{" "}
-            <strong style={{ color: "#e2e8f0" }}>
+            <strong style={{ color: "var(--text)" }}>
               limitada, personal, revocable, no exclusiva, no transferible y no sublicenciable
             </strong>{" "}
             para utilizar el Servicio con fines lícitos.
@@ -308,7 +307,7 @@ export default function TerminosPage() {
             El Usuario declara y garantiza que los criptoactivos, fondos y transacciones
             registrados en la Plataforma provienen de fuentes lícitas y que su uso del
             Servicio cumple la legislación aplicable, incluyendo la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 19.913</strong> que crea la Unidad
+            <strong style={{ color: "var(--text)" }}>Ley N° 19.913</strong> que crea la Unidad
             de Análisis Financiero (UAF) y la normativa sobre prevención de lavado de activos
             y financiamiento del terrorismo.
           </p>
@@ -331,7 +330,7 @@ export default function TerminosPage() {
             Usuario concede a LEDGERA una licencia limitada para procesar, almacenar y
             tratar dicho contenido con la única finalidad de prestar el Servicio, conforme
             a la{" "}
-            <Link href="/privacidad" style={{ color: "#818cf8" }}>
+            <Link href="/privacidad" style={{ color: "var(--accent)" }}>
               Política de Privacidad
             </Link>
             .
@@ -368,7 +367,7 @@ export default function TerminosPage() {
             El acceso a determinadas funcionalidades puede requerir el pago de una
             suscripción. Los precios, planes, periodicidad y condiciones serán informados de
             manera previa, clara y oportuna, conforme a la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 19.496</strong> sobre Protección de
+            <strong style={{ color: "var(--text)" }}>Ley N° 19.496</strong> sobre Protección de
             los Derechos de los Consumidores cuando esta resulte aplicable.
           </p>
           <p>
@@ -393,11 +392,11 @@ export default function TerminosPage() {
         <LegalSection title="11. Protección de datos personales">
           <p>
             El tratamiento de datos personales por parte de LEDGERA se rige por la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 19.628</strong> sobre Protección de
+            <strong style={{ color: "var(--text)" }}>Ley N° 19.628</strong> sobre Protección de
             la Vida Privada y, a partir de su entrada en vigencia plena el 1 de diciembre de
             2026, por la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 21.719</strong>, así como por la{" "}
-            <Link href="/privacidad" style={{ color: "#818cf8" }}>
+            <strong style={{ color: "var(--text)" }}>Ley N° 21.719</strong>, así como por la{" "}
+            <Link href="/privacidad" style={{ color: "var(--accent)" }}>
               Política de Privacidad
             </Link>{" "}
             de LEDGERA, que forma parte integrante de estos Términos.
@@ -419,7 +418,7 @@ export default function TerminosPage() {
             de infraestructura tecnológica, sus datos pueden ser almacenados o procesados
             en servidores ubicados fuera de Chile, adoptándose los resguardos adecuados
             conforme a la normativa aplicable.{" "}
-            <strong style={{ color: "#e2e8f0" }}>LEDGERA no vende los datos personales del Usuario a terceros.</strong>
+            <strong style={{ color: "var(--text)" }}>LEDGERA no vende los datos personales del Usuario a terceros.</strong>
           </p>
         </LegalSection>
 
@@ -440,8 +439,8 @@ export default function TerminosPage() {
         <LegalSection title="13. Garantías y exención de responsabilidad">
           <p>
             El Servicio se proporciona{" "}
-            <strong style={{ color: "#e2e8f0" }}>"en su estado actual"</strong> y{" "}
-            <strong style={{ color: "#e2e8f0" }}>"según disponibilidad"</strong>, sin
+            <strong style={{ color: "var(--text)" }}>"en su estado actual"</strong> y{" "}
+            <strong style={{ color: "var(--text)" }}>"según disponibilidad"</strong>, sin
             garantías de ningún tipo más allá de las que la ley imponga de manera imperativa.
           </p>
           <p>
@@ -454,9 +453,9 @@ export default function TerminosPage() {
             Ninguna disposición de estos Términos excluye o limita responsabilidades que,
             conforme a la ley chilena, no puedan ser excluidas ni limitadas, incluyendo las
             derivadas de{" "}
-            <strong style={{ color: "#c7d2fe" }}>dolo o culpa grave</strong> y, cuando
+            <strong style={{ color: "var(--text-faint)" }}>dolo o culpa grave</strong> y, cuando
             resulte aplicable, las garantías legales de la{" "}
-            <strong style={{ color: "#c7d2fe" }}>Ley N° 19.496</strong>.
+            <strong style={{ color: "var(--text-faint)" }}>Ley N° 19.496</strong>.
           </InfoBox>
         </LegalSection>
 
@@ -472,7 +471,7 @@ export default function TerminosPage() {
             En aquellos casos en que LEDGERA deba responder y la limitación sea legalmente
             admisible, su responsabilidad total acumulada quedará limitada al monto
             efectivamente pagado por el Usuario en concepto de suscripción durante los{" "}
-            <strong style={{ color: "#e2e8f0" }}>doce (12) meses</strong> anteriores al
+            <strong style={{ color: "var(--text)" }}>doce (12) meses</strong> anteriores al
             hecho que origina la responsabilidad.
           </p>
           <p>
@@ -558,7 +557,7 @@ export default function TerminosPage() {
           </p>
           <p>
             Estos Términos, junto con la{" "}
-            <Link href="/privacidad" style={{ color: "#818cf8" }}>
+            <Link href="/privacidad" style={{ color: "var(--accent)" }}>
               Política de Privacidad
             </Link>{" "}
             y las condiciones específicas de cada plan, constituyen el acuerdo íntegro entre
@@ -574,37 +573,37 @@ export default function TerminosPage() {
           </p>
           <InfoBox>
             <strong>Correo:</strong>{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+            <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
             </a>
                       </InfoBox>
           <p>
             LEDGERA dirigirá sus comunicaciones al correo electrónico u otros datos de
             contacto registrados por el Usuario. Respondemos consultas en un plazo máximo
-            de <strong style={{ color: "#e2e8f0" }}>5 días hábiles</strong>.
+            de <strong style={{ color: "var(--text)" }}>5 días hábiles</strong>.
           </p>
         </LegalSection>
 
         <LegalSection title="22. Legislación aplicable y jurisdicción">
           <p>
             Estos Términos se rigen por las leyes de la{" "}
-            <strong style={{ color: "#e2e8f0" }}>República de Chile</strong>.
+            <strong style={{ color: "var(--text)" }}>República de Chile</strong>.
           </p>
           <p>
             Toda controversia derivada de estos Términos se someterá a los tribunales
             ordinarios de justicia con asiento en la{" "}
-            <strong style={{ color: "#e2e8f0" }}>comuna de Santiago</strong>, sin perjuicio
+            <strong style={{ color: "var(--text)" }}>comuna de Santiago</strong>, sin perjuicio
             de los derechos que la Ley N° 19.496 reconozca al Usuario consumidor, incluida
             la competencia que corresponda a los juzgados de su domicilio y la facultad de
             recurrir al{" "}
-            <strong style={{ color: "#e2e8f0" }}>Servicio Nacional del Consumidor (SERNAC)</strong>.
+            <strong style={{ color: "var(--text)" }}>Servicio Nacional del Consumidor (SERNAC)</strong>.
           </p>
         </LegalSection>
 
         <LegalSection title="23. Idioma">
           <p>
             Estos Términos se otorgan en idioma{" "}
-            <strong style={{ color: "#e2e8f0" }}>español</strong>, lengua que prevalecerá
+            <strong style={{ color: "var(--text)" }}>español</strong>, lengua que prevalecerá
             ante cualquier traducción.
           </p>
         </LegalSection>
@@ -619,7 +618,7 @@ export default function TerminosPage() {
             borderRadius: "8px",
           }}
         >
-          <p style={{ color: "#475569", fontSize: "0.8rem", margin: 0, lineHeight: 1.6 }}>
+          <p style={{ color: "var(--text)", fontSize: "0.8rem", margin: 0, lineHeight: 1.6 }}>
             Documento redactado sobre la base del marco legal chileno vigente a la fecha de
             actualización. No constituye asesoría legal. Se recomienda su revisión y
             validación por un abogado habilitado en Chile.
@@ -639,18 +638,18 @@ export default function TerminosPage() {
             gap: "1rem",
           }}
         >
-          <span style={{ color: "#64748b", fontSize: "0.85rem", alignSelf: "center" }}>
+          <span style={{ color: "var(--text-soft)", fontSize: "0.85rem", alignSelf: "center" }}>
             Ver también:
           </span>
           <Link
             href="/privacidad"
-            style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}
+            style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}
           >
             Política de Privacidad →
           </Link>
           <Link
             href="/cookies"
-            style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}
+            style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}
           >
             Política de Cookies →
           </Link>
@@ -660,7 +659,7 @@ export default function TerminosPage() {
       {/* FOOTER */}
       <footer
         style={{
-          background: "#040C13",
+          background: "var(--bg-elev)",
           padding: "3rem 2.5rem",
           borderTop: "1px solid rgba(255,255,255,0.05)",
         }}
@@ -683,7 +682,7 @@ export default function TerminosPage() {
               <p
                 style={{
                   fontSize: "13px",
-                  color: "#475569",
+                  color: "var(--text)",
                   margin: 0,
                   maxWidth: "260px",
                   lineHeight: 1.6,
@@ -698,7 +697,7 @@ export default function TerminosPage() {
                   style={{
                     fontSize: "11px",
                     fontWeight: 700,
-                    color: "#475569",
+                    color: "var(--text)",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
                     margin: "0 0 12px",
@@ -707,13 +706,13 @@ export default function TerminosPage() {
                   Producto
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/register" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                  <Link href="/register" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>
                     Comenzar gratis
                   </Link>
-                  <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                  <Link href="/login" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>
                     Iniciar sesión
                   </Link>
-                  <Link href="/blog" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                  <Link href="/blog" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>
                     Blog
                   </Link>
                 </div>
@@ -723,7 +722,7 @@ export default function TerminosPage() {
                   style={{
                     fontSize: "11px",
                     fontWeight: 700,
-                    color: "#475569",
+                    color: "var(--text)",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
                     margin: "0 0 12px",
@@ -732,13 +731,13 @@ export default function TerminosPage() {
                   Legal
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                  <Link href="/terminos" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>
                     Términos y condiciones
                   </Link>
-                  <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                  <Link href="/privacidad" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>
                     Política de privacidad
                   </Link>
-                  <Link href="/cookies" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>
+                  <Link href="/cookies" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>
                     Política de cookies
                   </Link>
                 </div>
@@ -748,7 +747,7 @@ export default function TerminosPage() {
                   style={{
                     fontSize: "11px",
                     fontWeight: 700,
-                    color: "#475569",
+                    color: "var(--text)",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
                     margin: "0 0 12px",
@@ -759,7 +758,7 @@ export default function TerminosPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <a
                     href="mailto:admin@ledgera.cl"
-                    style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}
+                    style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}
                   >
                     admin@ledgera.cl
                   </a>
@@ -778,10 +777,10 @@ export default function TerminosPage() {
               gap: "1rem",
             }}
           >
-            <span style={{ fontSize: "12px", color: "#334155" }}>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>
               © {new Date().getFullYear()} Ledgera SpA · Chile · Ley 19.496 · Ley 21.719
             </span>
-            <span style={{ fontSize: "12px", color: "#334155" }}>ledgera.cl</span>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>ledgera.cl</span>
           </div>
         </div>
       </footer>
@@ -810,7 +809,7 @@ export default function TerminosPage() {
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 13V5M5 9l4-4 4 4"
-              stroke="#94A3B8"
+              stroke="var(--text-faint)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -830,7 +829,7 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
           fontFamily: "'Manrope', sans-serif",
           fontSize: "1.1rem",
           fontWeight: 700,
-          color: "#f1f5f9",
+          color: "var(--text)",
           marginBottom: "1rem",
           paddingBottom: "0.5rem",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
@@ -843,7 +842,7 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
           display: "flex",
           flexDirection: "column",
           gap: "0.85rem",
-          color: "#94a3b8",
+          color: "var(--text-soft)",
           fontSize: "0.92rem",
           lineHeight: 1.75,
         }}
@@ -865,17 +864,17 @@ function InfoBox({
     indigo: {
       bg: "rgba(99,102,241,0.06)",
       border: "rgba(99,102,241,0.15)",
-      text: "#a5b4fc",
+      text: "var(--text-faint)",
     },
     amber: {
       bg: "rgba(245,158,11,0.06)",
       border: "rgba(245,158,11,0.18)",
-      text: "#fcd34d",
+      text: "var(--warn)",
     },
     red: {
       bg: "rgba(239,68,68,0.06)",
       border: "rgba(239,68,68,0.18)",
-      text: "#fca5a5",
+      text: "var(--loss)",
     },
   };
   const p = palette[color];

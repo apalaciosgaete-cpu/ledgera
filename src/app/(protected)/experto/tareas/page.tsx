@@ -85,7 +85,7 @@ export default function ExpertTasksPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Tareas tributarias
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Seguimiento centralizado de tareas generadas para los usuarios.
         </p>
       </header>
@@ -95,17 +95,17 @@ export default function ExpertTasksPage() {
         <Select label="Prioridad" value={priority} options={priorities} onChange={setPriority} />
         <Select label="Categoría" value={category} options={categories} onChange={setCategory} />
         <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 200 }}>
-          <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>Usuario</label>
+          <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>Usuario</label>
           <input
             type="text"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
             placeholder="Filtrar por userId"
             style={{
-              background: "#FFFFFF",
-              border: "1px solid #CBD5E1",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
-              color: "#0F2A3D",
+              color: "var(--text)",
               fontSize: 14,
               padding: "8px 12px",
             }}
@@ -116,10 +116,10 @@ export default function ExpertTasksPage() {
       {error && (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             marginBottom: 24,
             padding: 16,
@@ -130,21 +130,21 @@ export default function ExpertTasksPage() {
       )}
 
       {loading ? (
-        <p style={{ color: "#64748B" }}>Cargando tareas…</p>
+        <p style={{ color: "var(--text-soft)" }}>Cargando tareas…</p>
       ) : tasks.length === 0 ? (
-        <p style={{ color: "#64748B" }}>Sin tareas para los filtros seleccionados.</p>
+        <p style={{ color: "var(--text-soft)" }}>Sin tareas para los filtros seleccionados.</p>
       ) : (
         <div
           style={{
-            background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
             overflow: "hidden",
           }}
         >
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#F8FAFC", color: "#64748B", textAlign: "left" }}>
+              <tr style={{ background: "var(--bg-sunken)", color: "var(--text-soft)", textAlign: "left" }}>
                 <th style={{ padding: "12px 16px" }}>Usuario</th>
                 <th style={{ padding: "12px 16px" }}>Tarea</th>
                 <th style={{ padding: "12px 16px" }}>Prioridad</th>
@@ -154,13 +154,13 @@ export default function ExpertTasksPage() {
             </thead>
             <tbody>
               {tasks.map((t) => (
-                <tr key={t.id} style={{ borderTop: "1px solid #E2E8F0" }}>
-                  <td style={{ padding: "12px 16px", color: "#0F2A3D", fontWeight: 600 }}>
+                <tr key={t.id} style={{ borderTop: "1px solid var(--border)" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--text)", fontWeight: 600 }}>
                     {t.userId}
                   </td>
                   <td style={{ padding: "12px 16px" }}>
-                    <div style={{ fontWeight: 700, color: "#0F2A3D" }}>{t.title}</div>
-                    <div style={{ color: "#64748B", fontSize: 12, marginTop: 4 }}>
+                    <div style={{ fontWeight: 700, color: "var(--text)" }}>{t.title}</div>
+                    <div style={{ color: "var(--text-soft)", fontSize: 12, marginTop: 4 }}>
                       {t.description}
                     </div>
                   </td>
@@ -170,7 +170,7 @@ export default function ExpertTasksPage() {
                   <td style={{ padding: "12px 16px" }}>
                     <StatusBadge status={t.status} />
                   </td>
-                  <td style={{ padding: "12px 16px", color: "#64748B" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--text-soft)" }}>
                     {t.dueDate ? new Date(t.dueDate).toLocaleDateString("es-CL") : "—"}
                   </td>
                 </tr>
@@ -196,15 +196,15 @@ function Select({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 160 }}>
-      <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>{label}</label>
+      <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #CBD5E1",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: 14,
           padding: "8px 12px",
         }}
@@ -222,12 +222,12 @@ function Select({
 function PriorityBadge({ priority }: { priority: Task["priority"] }) {
   const color =
     priority === "CRITICAL"
-      ? "#991B1B"
+      ? "#C4634A"
       : priority === "HIGH"
-      ? "#DC2626"
+      ? "#C4634A"
       : priority === "MEDIUM"
-      ? "#B45309"
-      : "#64748B";
+      ? "#E8B84B"
+      : "var(--text-soft)";
 
   const label =
     priority === "CRITICAL"
@@ -243,11 +243,11 @@ function PriorityBadge({ priority }: { priority: Task["priority"] }) {
 
 function StatusBadge({ status }: { status: Task["status"] }) {
   const color: Record<Task["status"], string> = {
-    PENDING: "#B45309",
-    IN_PROGRESS: "#0F766E",
-    BLOCKED: "#991B1B",
-    COMPLETED: "#15803D",
-    CANCELLED: "#64748B",
+    PENDING: "var(--warn)",
+    IN_PROGRESS: "var(--accent)",
+    BLOCKED: "var(--loss)",
+    COMPLETED: "var(--accent)",
+    CANCELLED: "var(--bg-elev)",
   };
 
   const label: Record<Task["status"], string> = {

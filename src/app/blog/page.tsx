@@ -68,7 +68,7 @@ export default function BlogPage() {
           <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
             <p
               style={{
-                color: "#4ADE80",
+                color: "var(--accent)",
                 fontSize: "12px",
                 fontWeight: 850,
                 letterSpacing: "0.12em",
@@ -184,7 +184,7 @@ export default function BlogPage() {
           <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
             <p
               style={{
-                color: "#4ADE80",
+                color: "var(--accent)",
                 fontSize: "12px",
                 fontWeight: 850,
                 letterSpacing: "0.12em",
@@ -233,7 +233,7 @@ export default function BlogPage() {
               >
                 <p
                   style={{
-                    color: "#4ADE80",
+                    color: "var(--accent)",
                     fontSize: "11px",
                     fontWeight: 850,
                     letterSpacing: "0.11em",

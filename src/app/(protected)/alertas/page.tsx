@@ -55,12 +55,12 @@ export default function AlertsPage() {
   function severityDot(severity: string) {
     const color =
       severity === "CRITICAL"
-        ? "#DC2626"
+        ? "#C4634A"
         : severity === "HIGH"
-          ? "#EA580C"
+          ? "#E8B84B"
           : severity === "MEDIUM"
-            ? "#CA8A04"
-            : "#16A34A";
+            ? "#E8B84B"
+            : "#3FA687";
     return (
       <span
         style={{
@@ -81,7 +81,7 @@ export default function AlertsPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Centro de Alertas
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Monitoreo preventivo de eventos relevantes para tu situación tributaria.
         </p>
       </header>
@@ -89,15 +89,15 @@ export default function AlertsPage() {
       {loading ? (
         <p>Cargando alertas...</p>
       ) : alerts.length === 0 ? (
-        <p style={{ color: "#64748B" }}>No tienes alertas pendientes.</p>
+        <p style={{ color: "var(--text-soft)" }}>No tienes alertas pendientes.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {alerts.map((alert) => (
             <li
               key={alert.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: 8,
                 marginBottom: 12,
                 padding: 16,
@@ -108,9 +108,9 @@ export default function AlertsPage() {
                 <strong style={{ flex: 1 }}>{alert.title}</strong>
                 <span
                   style={{
-                    background: "#F1F5F9",
+                    background: "var(--bg-sunken)",
                     borderRadius: 4,
-                    color: "#475569",
+                    color: "var(--text)",
                     fontSize: 12,
                     padding: "2px 8px",
                   }}
@@ -118,19 +118,19 @@ export default function AlertsPage() {
                   {alert.status}
                 </span>
               </div>
-              <p style={{ color: "#475569", margin: "0 0 12px" }}>{alert.message}</p>
+              <p style={{ color: "var(--text)", margin: "0 0 12px" }}>{alert.message}</p>
               <div style={{ alignItems: "center", display: "flex", gap: 8 }}>
-                <span style={{ color: "#64748B", fontSize: 12 }}>
+                <span style={{ color: "var(--text-soft)", fontSize: 12 }}>
                   {alert.category} · {new Date(alert.createdAt).toLocaleDateString("es-CL")}
                 </span>
                 {alert.status === "OPEN" && (
                   <button
                     onClick={() => handleAcknowledge(alert.id)}
                     style={{
-                      background: "#F1F5F9",
+                      background: "var(--bg-sunken)",
                       border: "none",
                       borderRadius: 4,
-                      color: "#475569",
+                      color: "var(--text)",
                       cursor: "pointer",
                       fontSize: 12,
                       padding: "4px 8px",
@@ -143,10 +143,10 @@ export default function AlertsPage() {
                   <button
                     onClick={() => handleResolve(alert.id)}
                     style={{
-                      background: "#0F766E",
+                      background: "var(--accent)",
                       border: "none",
                       borderRadius: 4,
-                      color: "#FFFFFF",
+                      color: "var(--text)",
                       cursor: "pointer",
                       fontSize: 12,
                       padding: "4px 8px",

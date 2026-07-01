@@ -26,10 +26,10 @@ const priorityLabel: Record<Recommendation["priority"], string> = {
 };
 
 const priorityColor: Record<Recommendation["priority"], string> = {
-  LOW: "#64748B",
-  MEDIUM: "#B45309",
-  HIGH: "#DC2626",
-  CRITICAL: "#991B1B",
+  LOW: "var(--bg-elev)",
+  MEDIUM: "var(--warn)",
+  HIGH: "var(--loss)",
+  CRITICAL: "var(--loss)",
 };
 
 export default function RecommendationsPage() {
@@ -91,7 +91,7 @@ export default function RecommendationsPage() {
       <header style={{ marginBottom: 24 }}>
         <p
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 850,
             letterSpacing: "0.06em",
@@ -103,7 +103,7 @@ export default function RecommendationsPage() {
         </p>
         <h1
           style={{
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: "1.9rem",
             fontWeight: 850,
             lineHeight: 1.12,
@@ -112,7 +112,7 @@ export default function RecommendationsPage() {
         >
           Qué hacer ahora
         </h1>
-        <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
           Acciones claras para mantener tu situación tributaria en orden.
         </p>
       </header>
@@ -122,10 +122,10 @@ export default function RecommendationsPage() {
           onClick={regenerate}
           disabled={loading}
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             border: "none",
             borderRadius: 8,
-            color: "#FFFFFF",
+            color: "var(--text)",
             cursor: "pointer",
             fontSize: 14,
             fontWeight: 850,
@@ -139,10 +139,10 @@ export default function RecommendationsPage() {
       {error && (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             marginBottom: 24,
             padding: 16,
@@ -153,7 +153,7 @@ export default function RecommendationsPage() {
       )}
 
       {loading ? (
-        <p style={{ color: "#64748B", fontSize: 14 }}>Cargando recomendaciones…</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 14 }}>Cargando recomendaciones…</p>
       ) : recommendations.length === 0 ? (
         <EmptyState onRefresh={regenerate} />
       ) : (
@@ -184,8 +184,8 @@ function RecommendationCard({
   return (
     <article
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderLeft: `4px solid ${priorityColor[recommendation.priority]}`,
         borderRadius: 12,
         padding: "20px",
@@ -204,12 +204,12 @@ function RecommendationCard({
         >
           {priorityLabel[recommendation.priority]}
         </span>
-        <span style={{ color: "#94A3B8", fontSize: 11 }}>• {categoryLabel(recommendation.category)}</span>
+        <span style={{ color: "var(--text-soft)", fontSize: 11 }}>• {categoryLabel(recommendation.category)}</span>
       </div>
 
       <h2
         style={{
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: "1.15rem",
           fontWeight: 850,
           lineHeight: 1.25,
@@ -218,7 +218,7 @@ function RecommendationCard({
       >
         {recommendation.title}
       </h2>
-      <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.55, margin: "0 0 16px" }}>
+      <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.55, margin: "0 0 16px" }}>
         {recommendation.description}
       </p>
 
@@ -227,9 +227,9 @@ function RecommendationCard({
           href={recommendation.actionUrl}
           onClick={onComplete}
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             borderRadius: 8,
-            color: "#FFFFFF",
+            color: "var(--text)",
             display: "inline-flex",
             fontSize: 14,
             fontWeight: 850,
@@ -243,9 +243,9 @@ function RecommendationCard({
           onClick={onDismiss}
           style={{
             background: "transparent",
-            border: "1px solid #CBD5E1",
+            border: "1px solid var(--border)",
             borderRadius: 8,
-            color: "#64748B",
+            color: "var(--text-soft)",
             cursor: "pointer",
             fontSize: 13,
             fontWeight: 750,
@@ -263,8 +263,8 @@ function EmptyState({ onRefresh }: { onRefresh: () => void }) {
   return (
     <div
       style={{
-        background: "#F0FDF4",
-        border: "1px solid #86EFAC",
+        background: "var(--accent-soft)",
+        border: "1px solid var(--accent)",
         borderRadius: 12,
         padding: "32px 24px",
         textAlign: "center",
@@ -273,7 +273,7 @@ function EmptyState({ onRefresh }: { onRefresh: () => void }) {
       <p style={{ fontSize: 28, margin: "0 0 10px" }}>✅</p>
       <h2
         style={{
-          color: "#166534",
+          color: "var(--accent)",
           fontSize: "1.15rem",
           fontWeight: 850,
           margin: "0 0 8px",
@@ -281,16 +281,16 @@ function EmptyState({ onRefresh }: { onRefresh: () => void }) {
       >
         Todo en orden
       </h2>
-      <p style={{ color: "#166534", fontSize: 14, lineHeight: 1.55, margin: "0 0 18px" }}>
+      <p style={{ color: "var(--accent)", fontSize: 14, lineHeight: 1.55, margin: "0 0 18px" }}>
         No tienes recomendaciones activas. Sigue así.
       </p>
       <button
         onClick={onRefresh}
         style={{
-          background: "#166534",
+          background: "var(--accent)",
           border: "none",
           borderRadius: 8,
-          color: "#FFFFFF",
+          color: "var(--text)",
           cursor: "pointer",
           fontSize: 14,
           fontWeight: 850,

@@ -1,9 +1,23 @@
 # LEDGERA — Migración al sistema de diseño (Propuesta B "Cierre")
 
-Generado como guía para la migración por pantallas. El **fundamento** del sistema ya está
-instalado (fuentes, tokens de Tailwind y variables de `globals.css`); este documento lista
-los archivos que aún contienen **colores/fuentes hardcodeadas** para reemplazarlos por los
-tokens de forma consistente, sin tocar lógica de negocio ni endpoints.
+> **ESTADO: COMPLETADA.** Todas las pantallas y componentes de `src/app`,
+> `src/components` y `src/shared` fueron migrados a los tokens del sistema
+> (fundamento + landing + auth + chrome de la app + componentes compartidos +
+> páginas públicas/legales/admin + ~70 pantallas protegidas). El mapeo se hizo
+> por **rol de propiedad + semántica de matiz** (texto→claro, fondo→oscuro,
+> borde→borde, verde/rojo/ámbar→accent/loss/warn).
+>
+> **Excepciones intencionales (no se migran, son funcionales/de marca):**
+> - Fondos blancos de códigos **QR** (necesarios para escaneo).
+> - Colores de marca: logo de **Google** (sign-in), **Binance**, logos de activos.
+> - Acentos de **identidad de rol** en `(protected)/layout.tsx` (personal/
+>   profesional/empresa/admin) — escala de identidad, no del sistema semántico.
+> - Rutas de generación de **PDF**, `icon`/`apple-icon`/`opengraph-image`/`manifest`.
+
+Este documento se conserva como guía histórica del mapeo aplicado.
+El **fundamento** del sistema (fuentes, tokens de Tailwind y variables de
+`globals.css`) quedó instalado, y los colores/fuentes hardcodeadas se
+reemplazaron por los tokens sin tocar lógica de negocio ni endpoints.
 
 ## Estado — instalado en esta entrega
 

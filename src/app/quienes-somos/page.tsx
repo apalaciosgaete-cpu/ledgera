@@ -42,19 +42,19 @@ const principles = [
     title: "Trazabilidad",
     description:
       "Cada dato debe poder explicarse desde su movimiento original hasta su resultado financiero o tributario.",
-    color: "#4ADE80",
+    color: "var(--accent)",
   },
   {
     title: "Orden operacional",
     description:
       "La plataforma separa importación, revisión, confirmación, conciliación y reporte para evitar errores silenciosos.",
-    color: "#67E8F9",
+    color: "var(--text-faint)",
   },
   {
     title: "Contexto Chile",
     description:
       "LEDGERA está diseñada pensando en usuarios, contadores y empresas que operan desde Chile.",
-    color: "#FBBF24",
+    color: "var(--warn)",
   },
 ];
 

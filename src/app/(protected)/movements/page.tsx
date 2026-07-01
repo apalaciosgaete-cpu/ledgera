@@ -124,7 +124,7 @@ function MovementStatusBadge({ movement }: { movement: Movement }) {
     );
   }
   return (
-    <span className="rounded bg-[#2563EB]/10 px-2 py-1 text-xs font-medium text-[#1D4ED8]">
+    <span className="rounded bg-[var(--text-soft)]/10 px-2 py-1 text-xs font-medium text-[var(--text-soft)]">
       Vigente
     </span>
   );
@@ -301,11 +301,11 @@ function MovementsPage() {
             </div>
             <div className={`${ui.card} p-4`}>
               <p className={ui.label}>Compras</p>
-              <p className="text-2xl font-semibold text-[#14532D]">{totals.buyCount}</p>
+              <p className="text-2xl font-semibold text-[var(--text-faint)]">{totals.buyCount}</p>
             </div>
             <div className={`${ui.card} p-4`}>
               <p className={ui.label}>Ventas</p>
-              <p className="text-2xl font-semibold text-[#991B1B]">{totals.sellCount}</p>
+              <p className="text-2xl font-semibold text-[var(--text-soft)]">{totals.sellCount}</p>
             </div>
             <div className={`${ui.card} p-4`}>
               <p className={ui.label}>Anulados</p>
@@ -324,7 +324,7 @@ function MovementsPage() {
             </div>
             <div className={`${ui.card} p-4`}>
               <p className={ui.label}>Staking</p>
-              <p className="text-2xl font-semibold text-[#14532D]">{totals.stakingCount}</p>
+              <p className="text-2xl font-semibold text-[var(--text-faint)]">{totals.stakingCount}</p>
             </div>
           </div>
 
@@ -406,7 +406,7 @@ function MovementsPage() {
                         <tr
                           key={movement.id}
                           id={`row-${movement.id}`}
-                          className={`border-t border-slate-200 ${movement.deletedAt ? "bg-slate-50 text-slate-500" : ""} ${isHighlighted ? "border-l-4 border-[#D97706] bg-[#F59E0B20]" : ""}`}
+                          className={`border-t border-slate-200 ${movement.deletedAt ? "bg-slate-50 text-slate-500" : ""} ${isHighlighted ? "border-l-4 border-[var(--text-faint)] bg-[#E8B84B20]" : ""}`}
                         >
                           <td className="p-2">{formatDate(movement.executedAt)}</td>
                           <td className="p-2"><MovementOriginBadge movement={movement} /></td>

@@ -36,14 +36,14 @@ const cards = [
 export default function ExpertoAICenterPage() {
   return (
     <main style={{ display: "grid", gap: 24 }}>
-      <section style={{ background: "#0B1D2C", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24 }}>
-        <p style={{ color: "#4ADE80", fontSize: 12, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 8px", textTransform: "uppercase" }}>
+      <section style={{ background: "var(--bg-sunken)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24 }}>
+        <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 8px", textTransform: "uppercase" }}>
           LEDGERA AI · Experto
         </p>
-        <h1 style={{ color: "#F8FAFC", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
+        <h1 style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
           Centro AI Experto
         </h1>
-        <p style={{ color: "#94A3B8", maxWidth: 760, lineHeight: 1.65, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", maxWidth: 760, lineHeight: 1.65, margin: 0 }}>
           Acceso rápido a memoria tributaria, perfiles adaptativos, recomendaciones, tareas, auditoría y centro AI de usuario.
         </p>
       </section>
@@ -51,10 +51,10 @@ export default function ExpertoAICenterPage() {
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
         {cards.map((card) => (
           <Link key={card.href} href={card.href} style={{ textDecoration: "none" }}>
-            <article style={{ height: "100%", background: "#0F2537", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: 20 }}>
-              <h2 style={{ color: "#F8FAFC", fontSize: 18, fontWeight: 850, margin: "0 0 8px" }}>{card.title}</h2>
-              <p style={{ color: "#94A3B8", fontSize: 14, lineHeight: 1.55, margin: "0 0 16px" }}>{card.description}</p>
-              <span style={{ color: "#4ADE80", fontSize: 13, fontWeight: 850 }}>Abrir →</span>
+            <article style={{ height: "100%", background: "var(--bg-elev)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: 20 }}>
+              <h2 style={{ color: "var(--text)", fontSize: 18, fontWeight: 850, margin: "0 0 8px" }}>{card.title}</h2>
+              <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: "0 0 16px" }}>{card.description}</p>
+              <span style={{ color: "var(--accent)", fontSize: 13, fontWeight: 850 }}>Abrir →</span>
             </article>
           </Link>
         ))}

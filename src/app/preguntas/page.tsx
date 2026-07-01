@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 const categories = [
   {
     label: "Tributación",
-    color: "#4ADE80",
+    color: "var(--accent)",
     faqs: [
       {
         q: "¿LEDGERA reemplaza a un contador?",
@@ -40,7 +40,7 @@ const categories = [
   },
   {
     label: "Plataforma",
-    color: "#67E8F9",
+    color: "var(--text-faint)",
     faqs: [
       {
         q: "¿Puedo importar datos desde exchanges?",
@@ -58,7 +58,7 @@ const categories = [
   },
   {
     label: "Planes",
-    color: "#FBBF24",
+    color: "var(--warn)",
     faqs: [
       {
         q: "¿Existe plan gratuito?",

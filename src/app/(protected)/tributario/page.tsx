@@ -276,8 +276,8 @@ export default function TributarioPage() {
   return (
     <section className="space-y-6">
       <div>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>Declaraciones Juradas</h1>
-        <p style={{ color: "#94A3B8", margin: 0, fontSize: "0.875rem" }}>Borradores tributarios auditables por año.</p>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.375rem", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>Declaraciones Juradas</h1>
+        <p style={{ color: "var(--text-soft)", margin: 0, fontSize: "0.875rem" }}>Borradores tributarios auditables por año.</p>
       </div>
 
       <div className={`${ui.card} p-4`}>

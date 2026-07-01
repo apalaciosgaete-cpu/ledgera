@@ -49,46 +49,46 @@ type Declaration = { id: string; taxYear: number; declarationType: string; statu
 /* ──────────────── Helpers ──────────────── */
 function summaryConfig(status: TaxStatus) {
   switch (status) {
-    case "EMPTY": return { icon: "◌", iconColor: "#64748B", titleColor: "#475569", bg: "#F8FAFC", border: "#CBD5E1", subtitle: "Sin movimientos registrados" };
-    case "NO_TAX_EVENTS": return { icon: "✓", iconColor: "#16A34A", titleColor: "#166534", bg: "#F0FDF4", border: "#86EFAC", subtitle: "Sin acción requerida" };
-    case "PAY_REVIEW": return { icon: "✕", iconColor: "#991B1B", titleColor: "#991B1B", bg: "#FEF2F2", border: "#FECACA", subtitle: "Declaración requerida" };
+    case "EMPTY": return { icon: "◌", iconColor: "var(--text-soft)", titleColor: "var(--text)", bg: "var(--bg-sunken)", border: "var(--border)", subtitle: "Sin movimientos registrados" };
+    case "NO_TAX_EVENTS": return { icon: "✓", iconColor: "var(--accent)", titleColor: "var(--accent)", bg: "var(--accent-soft)", border: "var(--accent)", subtitle: "Sin acción requerida" };
+    case "PAY_REVIEW": return { icon: "✕", iconColor: "var(--loss)", titleColor: "var(--loss)", bg: "rgba(196,99,74,0.14)", border: "rgba(196,99,74,0.14)", subtitle: "Declaración requerida" };
     case "LOSS_REVIEW":
-    case "DECLARE_REVIEW": return { icon: "⚠", iconColor: "#B45309", titleColor: "#B45309", bg: "#FFFBEB", border: "#FCD34D", subtitle: "Revisión recomendada" };
-    default: return { icon: "✓", iconColor: "#16A34A", titleColor: "#166534", bg: "#F0FDF4", border: "#86EFAC", subtitle: "Sin acción requerida" };
+    case "DECLARE_REVIEW": return { icon: "⚠", iconColor: "var(--warn)", titleColor: "var(--warn)", bg: "rgba(232,184,75,0.14)", border: "var(--warn)", subtitle: "Revisión recomendada" };
+    default: return { icon: "✓", iconColor: "var(--accent)", titleColor: "var(--accent)", bg: "var(--accent-soft)", border: "var(--accent)", subtitle: "Sin acción requerida" };
   }
 }
 
 function reviewHealthToken(health: ReviewData["health"]) {
   switch (health) {
-    case "OK": return { bg: "#F0FDF4", border: "#86EFAC", color: "#166534", label: "Saludable", icon: "✓" };
-    case "REVIEW": return { bg: "#FEF9C3", border: "#FDE047", color: "#854D0E", label: "Requiere revisión", icon: "!" };
-    case "RISK": return { bg: "#FEF2F2", border: "#FCA5A5", color: "#991B1B", label: "Crítico", icon: "⚠" };
+    case "OK": return { bg: "var(--accent-soft)", border: "var(--accent)", color: "var(--accent)", label: "Saludable", icon: "✓" };
+    case "REVIEW": return { bg: "rgba(232,184,75,0.14)", border: "var(--warn)", color: "var(--text)", label: "Requiere revisión", icon: "!" };
+    case "RISK": return { bg: "rgba(196,99,74,0.14)", border: "var(--loss)", color: "var(--loss)", label: "Crítico", icon: "⚠" };
   }
 }
 
 function alertToken(type: CalendarAlert["type"]) {
   switch (type) {
-    case "urgent": return { bg: "#FEF2F2", border: "#FCA5A5", color: "#991B1B", icon: "⚠" };
-    case "warning": return { bg: "#FEF9C3", border: "#FDE047", color: "#854D0E", icon: "!" };
-    case "info": return { bg: "#F0FDF4", border: "#86EFAC", color: "#166534", icon: "i" };
+    case "urgent": return { bg: "rgba(196,99,74,0.14)", border: "var(--loss)", color: "var(--loss)", icon: "⚠" };
+    case "warning": return { bg: "rgba(232,184,75,0.14)", border: "var(--warn)", color: "var(--text)", icon: "!" };
+    case "info": return { bg: "var(--accent-soft)", border: "var(--accent)", color: "var(--accent)", icon: "i" };
   }
 }
 
 function milestoneColor(type: CalendarMilestone["type"], passed: boolean) {
-  if (passed) return { bg: "#F1F5F9", border: "#CBD5E1", color: "#94A3B8" };
-  if (type === "today") return { bg: "#0F766E", border: "#0F766E", color: "#FFFFFF" };
-  if (type === "payment") return { bg: "#FEF9C3", border: "#FDE047", color: "#854D0E" };
-  return { bg: "#E0F2FE", border: "#7DD3FC", color: "#075985" };
+  if (passed) return { bg: "var(--bg-sunken)", border: "var(--border)", color: "var(--text-soft)" };
+  if (type === "today") return { bg: "var(--accent)", border: "var(--accent)", color: "var(--text)" };
+  if (type === "payment") return { bg: "rgba(232,184,75,0.14)", border: "var(--warn)", color: "var(--text)" };
+  return { bg: "var(--accent-soft)", border: "var(--accent)", color: "var(--text)" };
 }
 
 function declStatusLabel(status: string) {
   switch (status) {
-    case "DRAFT": return { text: "Borrador", bg: "#F1F5F9", color: "#475569" };
-    case "REVIEWED": return { text: "Revisada", bg: "#E0F2FE", color: "#075985" };
-    case "CONFIRMED": return { text: "Confirmada", bg: "#F0FDF4", color: "#166534" };
-    case "VOIDED": return { text: "Anulada", bg: "#FEF2F2", color: "#991B1B" };
-    case "EXPORTED": return { text: "Exportada", bg: "#FFFBEB", color: "#92400E" };
-    default: return { text: status, bg: "#F1F5F9", color: "#475569" };
+    case "DRAFT": return { text: "Borrador", bg: "var(--bg-sunken)", color: "var(--text)" };
+    case "REVIEWED": return { text: "Revisada", bg: "var(--accent-soft)", color: "var(--text)" };
+    case "CONFIRMED": return { text: "Confirmada", bg: "var(--accent-soft)", color: "var(--accent)" };
+    case "VOIDED": return { text: "Anulada", bg: "rgba(196,99,74,0.14)", color: "var(--loss)" };
+    case "EXPORTED": return { text: "Exportada", bg: "rgba(232,184,75,0.14)", color: "var(--warn)" };
+    default: return { text: status, bg: "var(--bg-sunken)", color: "var(--text)" };
   }
 }
 
@@ -98,12 +98,12 @@ function resolveNextHref(href: string) {
 }
 
 function Metric({ label, value, note, accent = "neutral" }: { label: string; value: string; note: string; accent?: "neutral" | "good" | "warn" | "info" }) {
-  const color = accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : accent === "info" ? "#0F766E" : "#0F2A3D";
+  const color = accent === "good" ? "#3FA687" : accent === "warn" ? "#E8B84B" : accent === "info" ? "#3FA687" : "var(--text)";
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, minHeight: 112, padding: 16 }}>
-      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, minHeight: 112, padding: 16 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>{label}</p>
       <p style={{ color, fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{value}</p>
-      <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.45, margin: 0 }}>{note}</p>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.45, margin: 0 }}>{note}</p>
     </article>
   );
 }
@@ -117,15 +117,15 @@ function EstadoHeader({ summary }: { summary: SummaryData }) {
         <span style={{ color: cfg.iconColor, fontSize: 20 }}>{cfg.icon}</span>
         <h2 style={{ color: cfg.titleColor, fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{cfg.subtitle}</h2>
       </div>
-      <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.55, margin: "0 0 20px", maxWidth: 640 }}>{summary.decision.detail}</p>
+      <p style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.55, margin: "0 0 20px", maxWidth: 640 }}>{summary.decision.detail}</p>
       {summary.decision.status !== "EMPTY" && summary.totals.impuestoEstimadoClp > 0 && (
         <div style={{ marginBottom: 20 }}>
-          <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 4px", textTransform: "uppercase" }}>Impuesto estimado</p>
-          <p style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 850, lineHeight: 1.1, margin: 0 }}>{clp(summary.totals.impuestoEstimadoClp)}</p>
+          <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 4px", textTransform: "uppercase" }}>Impuesto estimado</p>
+          <p style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 850, lineHeight: 1.1, margin: 0 }}>{clp(summary.totals.impuestoEstimadoClp)}</p>
         </div>
       )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-        <Link href={resolveNextHref(summary.nextAction.href)} style={{ background: cfg.titleColor, borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none" }}>
+        <Link href={resolveNextHref(summary.nextAction.href)} style={{ background: cfg.titleColor, borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none" }}>
           {summary.nextAction.label} →
         </Link>
       </div>
@@ -138,19 +138,19 @@ function RevisionHeader({ review }: { review: ReviewData }) {
   return (
     <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginBottom: 20 }}>
       <article style={{ background: health.bg, border: `2px solid ${health.border}`, borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Estado</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Estado</p>
         <p style={{ color: health.color, fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{health.icon} {health.label}</p>
-        <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{review.totalEvents} eventos revisados</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>{review.totalEvents} eventos revisados</p>
       </article>
-      <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Resultado neto</p>
-        <p style={{ color: review.totalPnlClp >= 0 ? "#15803D" : "#B45309", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{clp(review.totalPnlClp)}</p>
-        <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Suma de eventos filtrados</p>
+      <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 16 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Resultado neto</p>
+        <p style={{ color: review.totalPnlClp >= 0 ? "var(--accent)" : "var(--warn)", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{clp(review.totalPnlClp)}</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>Suma de eventos filtrados</p>
       </article>
-      <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Ventas sin evento</p>
-        <p style={{ color: review.sellWithoutEvent > 0 ? "#B45309" : "#15803D", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{review.sellWithoutEvent}</p>
-        <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{review.sellWithoutEvent > 0 ? "Revisar inconsistencias" : "Sin inconsistencias"}</p>
+      <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 16 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Ventas sin evento</p>
+        <p style={{ color: review.sellWithoutEvent > 0 ? "var(--warn)" : "var(--accent)", fontSize: "1.45rem", fontWeight: 850, lineHeight: 1.15, margin: "0 0 6px" }}>{review.sellWithoutEvent}</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>{review.sellWithoutEvent > 0 ? "Revisar inconsistencias" : "Sin inconsistencias"}</p>
       </article>
     </section>
   );
@@ -355,7 +355,7 @@ export default function ExpertoTributarioPage() {
       <button
         key={key}
         onClick={() => setTab(key)}
-        style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: active ? "rgba(22,163,74,0.18)" : "transparent", color: active ? "#4ADE80" : "#94A3B8", fontSize: 13, fontWeight: active ? 700 : 500, cursor: "pointer" }}
+        style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: active ? "rgba(22,163,74,0.18)" : "transparent", color: active ? "var(--accent)" : "var(--text-soft)", fontSize: 13, fontWeight: active ? 700 : 500, cursor: "pointer" }}
       >
         {label}
       </button>
@@ -366,11 +366,11 @@ export default function ExpertoTributarioPage() {
     <div style={{ maxWidth: 1180, width: "100%" }}>
       <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Modo Experto</p>
-          <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Tributario</h1>
-          <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>Estado completo, revisión, simulador, declaraciones y calendario en un solo lugar.</p>
+          <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Modo Experto</p>
+          <h1 style={{ color: "var(--text)", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Tributario</h1>
+          <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>Estado completo, revisión, simulador, declaraciones y calendario en un solo lugar.</p>
         </div>
-        <Link href="/experto" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>Volver a Experto</Link>
+        <Link href="/experto" style={{ border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>Volver a Experto</Link>
       </section>
 
       <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginBottom: 20 }}>
@@ -383,14 +383,14 @@ export default function ExpertoTributarioPage() {
           { label: "Auditoría", href: "/experto/auditoria", desc: "Integridad y hallazgos" },
           { label: "Verificaciones", href: "/experto/verificaciones", desc: "Hashes y códigos públicos" },
         ].map((a) => (
-          <Link key={a.href} href={a.href} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16, textDecoration: "none", display: "block" }}>
-            <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850, margin: "0 0 4px" }}>{a.label} →</p>
-            <p style={{ color: "#64748B", fontSize: 12, lineHeight: 1.45, margin: 0 }}>{a.desc}</p>
+          <Link key={a.href} href={a.href} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 16, textDecoration: "none", display: "block" }}>
+            <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 850, margin: "0 0 4px" }}>{a.label} →</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 12, lineHeight: 1.45, margin: 0 }}>{a.desc}</p>
           </Link>
         ))}
       </section>
 
-      <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#FFFFFF", borderRadius: 10, padding: 4, border: "1px solid #E2E8F0" }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "var(--bg-elev)", borderRadius: 10, padding: 4, border: "1px solid var(--border)" }}>
         {tabBtn("estado", "Estado")}
         {tabBtn("revision", "Revisión")}
         {tabBtn("simulador", "Simulador")}
@@ -401,15 +401,15 @@ export default function ExpertoTributarioPage() {
       {tab === "estado" && (
         <>
           {summaryLoading && !summary ? (
-            <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando estado tributario…</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando estado tributario…</p>
           ) : summaryError ? (
-            <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{summaryError}</div>
+            <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>{summaryError}</div>
           ) : summary ? (
             <>
-              <section style={{ alignItems: "end", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginBottom: 20, padding: 16 }}>
-                <label style={{ color: "#475569", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
+              <section style={{ alignItems: "end", background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginBottom: 20, padding: 16 }}>
+                <label style={{ color: "var(--text)", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
                   Año
-                  <select value={year} onChange={(e) => setYear(e.target.value)} style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", minHeight: 40, padding: "0 10px" }}>
+                  <select value={year} onChange={(e) => setYear(e.target.value)} style={{ border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", minHeight: 40, padding: "0 10px" }}>
                     {[currentYear, currentYear - 1, currentYear - 2].map((y) => (<option key={y} value={String(y)}>{y}</option>))}
                   </select>
                 </label>
@@ -428,34 +428,34 @@ export default function ExpertoTributarioPage() {
 
               {summary.decision.status !== "EMPTY" && (
                 <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", marginBottom: 24 }}>
-                  <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-                    <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Operaciones</p>
+                  <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 18 }}>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Operaciones</p>
                     <div style={{ display: "grid", gap: 6 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "#475569", fontSize: 13 }}>Ventas</span><span style={{ color: "#0F2A3D", fontWeight: 750 }}>{summary.keyOperations.totalSales}</span></div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "#475569", fontSize: 13 }}>Compras</span><span style={{ color: "#0F2A3D", fontWeight: 750 }}>{summary.keyOperations.totalBuys}</span></div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "#475569", fontSize: 13 }}>Staking</span><span style={{ color: "#0F2A3D", fontWeight: 750 }}>{summary.keyOperations.totalStaking}</span></div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "#475569", fontSize: 13 }}>Otras</span><span style={{ color: "#0F2A3D", fontWeight: 750 }}>{summary.keyOperations.totalOther}</span></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--text)", fontSize: 13 }}>Ventas</span><span style={{ color: "var(--text)", fontWeight: 750 }}>{summary.keyOperations.totalSales}</span></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--text)", fontSize: 13 }}>Compras</span><span style={{ color: "var(--text)", fontWeight: 750 }}>{summary.keyOperations.totalBuys}</span></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--text)", fontSize: 13 }}>Staking</span><span style={{ color: "var(--text)", fontWeight: 750 }}>{summary.keyOperations.totalStaking}</span></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--text)", fontSize: 13 }}>Otras</span><span style={{ color: "var(--text)", fontWeight: 750 }}>{summary.keyOperations.totalOther}</span></div>
                     </div>
                   </article>
 
                   {summary.topAssets.length > 0 && (
-                    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-                      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 12px", textTransform: "uppercase" }}>Top activos</p>
+                    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 18 }}>
+                      <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 12px", textTransform: "uppercase" }}>Top activos</p>
                       <div style={{ display: "grid", gap: 8 }}>
                         {summary.topAssets.slice(0, 5).map((asset) => (
                           <div key={asset.symbol} style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850 }}>{asset.symbol}</span>
-                            <span style={{ color: asset.realizedPnlClp >= 0 ? "#15803D" : "#B45309", fontSize: 13, fontWeight: 750 }}>{clp(asset.realizedPnlClp)}</span>
+                            <span style={{ color: "var(--text)", fontSize: 14, fontWeight: 850 }}>{asset.symbol}</span>
+                            <span style={{ color: asset.realizedPnlClp >= 0 ? "var(--accent)" : "var(--warn)", fontSize: 13, fontWeight: 750 }}>{clp(asset.realizedPnlClp)}</span>
                           </div>
                         ))}
                       </div>
                     </article>
                   )}
 
-                  <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 18 }}>
-                    <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 12px", textTransform: "uppercase" }}>Próximo paso</p>
-                    <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 750, margin: "0 0 8px" }}>{summary.decision.shouldDeclare ? "Revisar operaciones antes de declarar" : "Revisar movimientos registrados"}</p>
-                    <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, margin: 0 }}>Cierre anual: <strong>31 de diciembre</strong></p>
+                  <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 18 }}>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 12px", textTransform: "uppercase" }}>Próximo paso</p>
+                    <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 750, margin: "0 0 8px" }}>{summary.decision.shouldDeclare ? "Revisar operaciones antes de declarar" : "Revisar movimientos registrados"}</p>
+                    <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>Cierre anual: <strong>31 de diciembre</strong></p>
                   </article>
                 </section>
               )}
@@ -467,9 +467,9 @@ export default function ExpertoTributarioPage() {
       {tab === "revision" && (
         <>
           {reviewLoading && !review ? (
-            <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando revisión…</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando revisión…</p>
           ) : reviewError ? (
-            <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{reviewError}</div>
+            <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>{reviewError}</div>
           ) : review ? (
             <>
               <RevisionHeader review={review} />
@@ -477,7 +477,7 @@ export default function ExpertoTributarioPage() {
               {review.alerts.length > 0 && (
                 <section style={{ marginBottom: 20 }}>
                   {review.alerts.map((alert, i) => (
-                    <div key={i} style={{ background: alert.severity === "high" ? "#FEF2F2" : "#FEF9C3", border: `1px solid ${alert.severity === "high" ? "#FCA5A5" : "#FDE047"}`, borderRadius: 8, color: alert.severity === "high" ? "#991B1B" : "#854D0E", fontWeight: 750, marginBottom: 8, padding: "14px 16px" }}>
+                    <div key={i} style={{ background: alert.severity === "high" ? "rgba(196,99,74,0.14)" : "rgba(232,184,75,0.14)", border: `1px solid ${alert.severity === "high" ? "#C4634A" : "#E8B84B"}`, borderRadius: 8, color: alert.severity === "high" ? "var(--loss)" : "var(--text)", fontWeight: 750, marginBottom: 8, padding: "14px 16px" }}>
                       <p style={{ margin: "0 0 4px" }}>{alert.label}</p>
                       <p style={{ fontSize: 13, fontWeight: 400, lineHeight: 1.5, margin: 0 }}>{alert.detail}</p>
                     </div>
@@ -485,34 +485,34 @@ export default function ExpertoTributarioPage() {
                 </section>
               )}
 
-              <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 20, padding: 16 }}>
+              <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, marginBottom: 20, padding: 16 }}>
                 <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 14, justifyContent: "space-between" }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                    <label style={{ alignItems: "center", color: "#475569", display: "inline-flex", fontSize: 13, fontWeight: 750, gap: 8 }}>
+                    <label style={{ alignItems: "center", color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 750, gap: 8 }}>
                       Año
-                      <select value={reviewYear} onChange={(e) => setReviewYear(e.target.value)} style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", fontSize: 13, fontWeight: 750, minHeight: 38, padding: "0 10px" }}>
+                      <select value={reviewYear} onChange={(e) => setReviewYear(e.target.value)} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 13, fontWeight: 750, minHeight: 38, padding: "0 10px" }}>
                         <option value="">Todos</option>
                         {review.availableYears.map((y) => (<option key={y} value={String(y)}>{y}</option>))}
                       </select>
                     </label>
-                    <label style={{ alignItems: "center", color: "#475569", display: "inline-flex", fontSize: 13, fontWeight: 750, gap: 8 }}>
+                    <label style={{ alignItems: "center", color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 750, gap: 8 }}>
                       Activo
-                      <select value={reviewSymbol} onChange={(e) => setReviewSymbol(e.target.value)} style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", fontSize: 13, fontWeight: 750, minHeight: 38, padding: "0 10px" }}>
+                      <select value={reviewSymbol} onChange={(e) => setReviewSymbol(e.target.value)} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 13, fontWeight: 750, minHeight: 38, padding: "0 10px" }}>
                         <option value="">Todos</option>
                         {review.availableSymbols.map((s) => (<option key={s} value={s}>{s}</option>))}
                       </select>
                     </label>
                   </div>
-                  <Link href="/experto/operaciones" style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 16px", textDecoration: "none" }}>Abrir operaciones</Link>
+                  <Link href="/experto/operaciones" style={{ background: "var(--bg-elev)", borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 16px", textDecoration: "none" }}>Abrir operaciones</Link>
                 </div>
 
                 {review.events.length === 0 ? (
-                  <p style={{ color: "#64748B", fontSize: 14, margin: 0, textAlign: "center" }}>No hay eventos tributarios con los filtros seleccionados.</p>
+                  <p style={{ color: "var(--text-soft)", fontSize: 14, margin: 0, textAlign: "center" }}>No hay eventos tributarios con los filtros seleccionados.</p>
                 ) : (
                   <div style={{ overflowX: "auto" }}>
                     <table style={{ borderCollapse: "collapse", minWidth: 780, width: "100%" }}>
                       <thead>
-                        <tr style={{ background: "#0F2A3D", color: "#F8FAFC", textAlign: "left" }}>
+                        <tr style={{ background: "var(--bg-elev)", color: "var(--text)", textAlign: "left" }}>
                           <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Fecha</th>
                           <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Activo</th>
                           <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px", textAlign: "right" }}>Cantidad</th>
@@ -525,13 +525,13 @@ export default function ExpertoTributarioPage() {
                         {review.events.map((event) => {
                           const positive = event.realizedPnlClp >= 0;
                           return (
-                            <tr key={event.movementId} style={{ borderTop: "1px solid #E2E8F0" }}>
-                              <td style={{ color: "#334155", fontSize: 13, padding: "14px" }}>{new Date(event.executedAt).toLocaleDateString("es-CL")}</td>
-                              <td style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850, padding: "14px" }}>{event.symbol}</td>
-                              <td style={{ color: "#334155", fontSize: 13, padding: "14px", textAlign: "right" }}>{event.quantity}</td>
-                              <td style={{ color: "#334155", fontSize: 13, padding: "14px", textAlign: "right" }}>{usd(event.priceUsd)}</td>
-                              <td style={{ color: "#334155", fontSize: 13, padding: "14px", textAlign: "right" }}>{usd(event.costBasisUsd)}</td>
-                              <td style={{ color: positive ? "#15803D" : "#B45309", fontSize: 13, fontWeight: 850, padding: "14px", textAlign: "right" }}>{clp(event.realizedPnlClp)}</td>
+                            <tr key={event.movementId} style={{ borderTop: "1px solid var(--border)" }}>
+                              <td style={{ color: "var(--text)", fontSize: 13, padding: "14px" }}>{new Date(event.executedAt).toLocaleDateString("es-CL")}</td>
+                              <td style={{ color: "var(--text)", fontSize: 14, fontWeight: 850, padding: "14px" }}>{event.symbol}</td>
+                              <td style={{ color: "var(--text)", fontSize: 13, padding: "14px", textAlign: "right" }}>{event.quantity}</td>
+                              <td style={{ color: "var(--text)", fontSize: 13, padding: "14px", textAlign: "right" }}>{usd(event.priceUsd)}</td>
+                              <td style={{ color: "var(--text)", fontSize: 13, padding: "14px", textAlign: "right" }}>{usd(event.costBasisUsd)}</td>
+                              <td style={{ color: positive ? "var(--accent)" : "var(--warn)", fontSize: 13, fontWeight: 850, padding: "14px", textAlign: "right" }}>{clp(event.realizedPnlClp)}</td>
                             </tr>
                           );
                         })}
@@ -542,7 +542,7 @@ export default function ExpertoTributarioPage() {
               </section>
 
               <section style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                <Link href="/experto/operaciones" style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none" }}>Reconstruir eventos en Operaciones</Link>
+                <Link href="/experto/operaciones" style={{ background: "var(--bg-elev)", borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none" }}>Reconstruir eventos en Operaciones</Link>
               </section>
             </>
           ) : null}
@@ -552,48 +552,48 @@ export default function ExpertoTributarioPage() {
       {tab === "simulador" && (
         <>
           {simulatorLoading ? (
-            <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando simulador…</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando simulador…</p>
           ) : simError && assets.length === 0 ? (
-            <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{simError}</div>
+            <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>{simError}</div>
           ) : assets.length === 0 ? (
-            <section style={{ background: "#FFFFFF", border: "1px dashed #CBD5E1", borderRadius: 8, padding: 28, textAlign: "center" }}>
-              <h2 style={{ color: "#0F2A3D", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 8px" }}>Aún no hay activos para simular</h2>
-              <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.55, margin: "0 auto 16px", maxWidth: 520 }}>Carga movimientos de compra o depósito para tener activos disponibles en el simulador.</p>
-              <Link href="/importaciones" style={{ background: "#0F766E", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>Cargar movimientos</Link>
+            <section style={{ background: "var(--bg-elev)", border: "1px dashed var(--border)", borderRadius: 8, padding: 28, textAlign: "center" }}>
+              <h2 style={{ color: "var(--text)", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 8px" }}>Aún no hay activos para simular</h2>
+              <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: "0 auto 16px", maxWidth: 520 }}>Carga movimientos de compra o depósito para tener activos disponibles en el simulador.</p>
+              <Link href="/importaciones" style={{ background: "var(--accent)", borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>Cargar movimientos</Link>
             </section>
           ) : (
             <>
-              <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 20, padding: 20 }}>
+              <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, marginBottom: 20, padding: 20 }}>
                 <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
                   <div>
-                    <label style={{ color: "#475569", display: "block", fontSize: 13, fontWeight: 750, marginBottom: 6 }}>Activo</label>
-                    <select value={selectedSymbol} onChange={(e) => setSelectedSymbol(e.target.value)} style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", fontSize: 14, fontWeight: 750, minHeight: 44, padding: "0 12px", width: "100%" }}>
+                    <label style={{ color: "var(--text)", display: "block", fontSize: 13, fontWeight: 750, marginBottom: 6 }}>Activo</label>
+                    <select value={selectedSymbol} onChange={(e) => setSelectedSymbol(e.target.value)} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 14, fontWeight: 750, minHeight: 44, padding: "0 12px", width: "100%" }}>
                       {assets.map((a) => (<option key={a.symbol} value={a.symbol}>{a.symbol} — {usd(a.currentPriceUsd)} — {a.quantity} disp.</option>))}
                     </select>
                   </div>
                   <div>
-                    <label style={{ color: "#475569", display: "block", fontSize: 13, fontWeight: 750, marginBottom: 6 }}>Cantidad a vender</label>
-                    <input type="number" step="any" min="0" max={selectedAsset?.quantity} value={quantityInput} onChange={(e) => setQuantityInput(e.target.value)} placeholder={`Máx: ${selectedAsset?.quantity ?? 0}`} style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", fontSize: 14, fontWeight: 750, minHeight: 44, padding: "0 12px", width: "100%" }} />
+                    <label style={{ color: "var(--text)", display: "block", fontSize: 13, fontWeight: 750, marginBottom: 6 }}>Cantidad a vender</label>
+                    <input type="number" step="any" min="0" max={selectedAsset?.quantity} value={quantityInput} onChange={(e) => setQuantityInput(e.target.value)} placeholder={`Máx: ${selectedAsset?.quantity ?? 0}`} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 14, fontWeight: 750, minHeight: 44, padding: "0 12px", width: "100%" }} />
                     {selectedAsset && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
                         {quickPercentages.map((q) => (
-                          <button key={q.label} type="button" onClick={() => setQuantityInput(String(round(q.value, 8)))} style={{ background: "#F1F5F9", border: "1px solid #CBD5E1", borderRadius: 6, color: "#475569", cursor: "pointer", fontSize: 12, fontWeight: 750, padding: "5px 10px" }}>{q.label}</button>
+                          <button key={q.label} type="button" onClick={() => setQuantityInput(String(round(q.value, 8)))} style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text)", cursor: "pointer", fontSize: 12, fontWeight: 750, padding: "5px 10px" }}>{q.label}</button>
                         ))}
                       </div>
                     )}
                   </div>
                   <div>
-                    <label style={{ color: "#475569", display: "block", fontSize: 13, fontWeight: 750, marginBottom: 6 }}>Precio estimado (USD)</label>
-                    <input type="number" step="any" min="0" value={priceInput} onChange={(e) => setPriceInput(e.target.value)} placeholder="Precio estimado" style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", fontSize: 14, fontWeight: 750, minHeight: 44, padding: "0 12px", width: "100%" }} />
-                    {selectedAsset && selectedAsset.currentPriceUsd > 0 && <p style={{ color: "#64748B", fontSize: 12, margin: "6px 0 0" }}>Precio actual: {usd(selectedAsset.currentPriceUsd)}</p>}
+                    <label style={{ color: "var(--text)", display: "block", fontSize: 13, fontWeight: 750, marginBottom: 6 }}>Precio estimado (USD)</label>
+                    <input type="number" step="any" min="0" value={priceInput} onChange={(e) => setPriceInput(e.target.value)} placeholder="Precio estimado" style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 14, fontWeight: 750, minHeight: 44, padding: "0 12px", width: "100%" }} />
+                    {selectedAsset && selectedAsset.currentPriceUsd > 0 && <p style={{ color: "var(--text-soft)", fontSize: 12, margin: "6px 0 0" }}>Precio actual: {usd(selectedAsset.currentPriceUsd)}</p>}
                   </div>
                 </div>
                 <div style={{ marginTop: 18 }}>
-                  <button type="button" onClick={handleSimulate} disabled={simulating || !quantityInput || !priceInput} style={{ background: simulating || !quantityInput || !priceInput ? "#94A3B8" : "#0F766E", border: "none", borderRadius: 8, color: "#FFFFFF", cursor: simulating || !quantityInput || !priceInput ? "not-allowed" : "pointer", fontSize: 14, fontWeight: 850, padding: "12px 20px" }}>
+                  <button type="button" onClick={handleSimulate} disabled={simulating || !quantityInput || !priceInput} style={{ background: simulating || !quantityInput || !priceInput ? "var(--bg-elev)" : "var(--accent)", border: "none", borderRadius: 8, color: "var(--text)", cursor: simulating || !quantityInput || !priceInput ? "not-allowed" : "pointer", fontSize: 14, fontWeight: 850, padding: "12px 20px" }}>
                     {simulating ? "Simulando…" : "Simular venta"}
                   </button>
                 </div>
-                {simError && <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, marginTop: 14, padding: 12 }}>{simError}</div>}
+                {simError && <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, marginTop: 14, padding: 12 }}>{simError}</div>}
               </section>
 
               {simResult && (
@@ -605,8 +605,8 @@ export default function ExpertoTributarioPage() {
                     <Metric label="Neto después de impuesto" value={clp(simResult.proceedsGrossClp - simResult.taxClp)} note={`${usd(simResult.proceedsGrossUsd - simResult.taxUsd)} estimado`} accent="neutral" />
                   </section>
 
-                  <section style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: 8, marginBottom: 20, padding: 16 }}>
-                    <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 850, margin: "0 0 6px" }}>Detalle de la simulación</p>
+                  <section style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 8, marginBottom: 20, padding: 16 }}>
+                    <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 850, margin: "0 0 6px" }}>Detalle de la simulación</p>
                     <div style={{ display: "grid", gap: 8 }}>
                       {[
                         { label: "Activo", value: simResult.symbol },
@@ -618,8 +618,8 @@ export default function ExpertoTributarioPage() {
                         { label: "Tipo de cambio", value: clp(simResult.usdClp) },
                       ].map((row) => (
                         <div key={row.label} style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ color: "#475569", fontSize: 13 }}>{row.label}</span>
-                          <strong style={{ color: "#0F2A3D", fontSize: 13 }}>{row.value}</strong>
+                          <span style={{ color: "var(--text)", fontSize: 13 }}>{row.label}</span>
+                          <strong style={{ color: "var(--text)", fontSize: 13 }}>{row.value}</strong>
                         </div>
                       ))}
                     </div>
@@ -634,45 +634,45 @@ export default function ExpertoTributarioPage() {
       {tab === "declaracion" && (
         <>
           {declLoading ? (
-            <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando declaraciones…</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando declaraciones…</p>
           ) : declError ? (
-            <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{declError}</div>
+            <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>{declError}</div>
           ) : (
             <>
               <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", marginBottom: 24 }}>
-                <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16, textAlign: "center" }}>
-                  <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>DDJJ {currentYear}</p>
-                  <p style={{ color: "#0F2A3D", fontSize: "1.45rem", fontWeight: 850, margin: 0 }}>{declarations.length}</p>
+                <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 16, textAlign: "center" }}>
+                  <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>DDJJ {currentYear}</p>
+                  <p style={{ color: "var(--text)", fontSize: "1.45rem", fontWeight: 850, margin: 0 }}>{declarations.length}</p>
                 </article>
-                <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16, textAlign: "center" }}>
-                  <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Confirmadas</p>
-                  <p style={{ color: "#16A34A", fontSize: "1.45rem", fontWeight: 850, margin: 0 }}>{declarations.filter((d) => d.status === "CONFIRMED").length}</p>
+                <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 16, textAlign: "center" }}>
+                  <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Confirmadas</p>
+                  <p style={{ color: "var(--accent)", fontSize: "1.45rem", fontWeight: 850, margin: 0 }}>{declarations.filter((d) => d.status === "CONFIRMED").length}</p>
                 </article>
-                <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 16, textAlign: "center" }}>
-                  <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Pendientes</p>
-                  <p style={{ color: "#B45309", fontSize: "1.45rem", fontWeight: 850, margin: 0 }}>{declarations.filter((d) => d.status === "DRAFT" || d.status === "REVIEWED").length}</p>
+                <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 16, textAlign: "center" }}>
+                  <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 8px", textTransform: "uppercase" }}>Pendientes</p>
+                  <p style={{ color: "var(--warn)", fontSize: "1.45rem", fontWeight: 850, margin: 0 }}>{declarations.filter((d) => d.status === "DRAFT" || d.status === "REVIEWED").length}</p>
                 </article>
               </section>
 
               {declarations.length === 0 ? (
-                <section style={{ background: "#FFFFFF", border: "1px dashed #CBD5E1", borderRadius: 8, padding: 28, textAlign: "center" }}>
-                  <h2 style={{ color: "#0F2A3D", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 8px" }}>Sin declaraciones para {currentYear}</h2>
-                  <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.55, margin: "0 auto 16px", maxWidth: 520 }}>Genera tu primera declaración desde el centro de declaraciones.</p>
-                  <Link href="/experto/declaraciones" style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 16px", textDecoration: "none" }}>Abrir declaraciones</Link>
+                <section style={{ background: "var(--bg-elev)", border: "1px dashed var(--border)", borderRadius: 8, padding: 28, textAlign: "center" }}>
+                  <h2 style={{ color: "var(--text)", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 8px" }}>Sin declaraciones para {currentYear}</h2>
+                  <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: "0 auto 16px", maxWidth: 520 }}>Genera tu primera declaración desde el centro de declaraciones.</p>
+                  <Link href="/experto/declaraciones" style={{ background: "var(--bg-elev)", borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 16px", textDecoration: "none" }}>Abrir declaraciones</Link>
                 </section>
               ) : (
-                <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, marginBottom: 24, overflow: "hidden" }}>
-                  <div style={{ padding: "16px 18px", borderBottom: "1px solid #E2E8F0" }}>
-                    <h3 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Declaraciones recientes</h3>
+                <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, marginBottom: 24, overflow: "hidden" }}>
+                  <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--border)" }}>
+                    <h3 style={{ color: "var(--text)", fontSize: "1rem", fontWeight: 850, margin: 0 }}>Declaraciones recientes</h3>
                   </div>
                   <div style={{ display: "grid", gap: 0 }}>
                     {declarations.slice(0, 5).map((d) => {
                       const cfg = declStatusLabel(d.status);
                       return (
-                        <div key={d.id} style={{ alignItems: "center", borderTop: "1px solid #E2E8F0", display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", padding: "14px 18px" }}>
+                        <div key={d.id} style={{ alignItems: "center", borderTop: "1px solid var(--border)", display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", padding: "14px 18px" }}>
                           <div>
-                            <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 750, margin: "0 0 2px" }}>{d.declarationType} · Año {d.taxYear}</p>
-                            <p style={{ color: "#94A3B8", fontSize: 12, fontFamily: "monospace", margin: 0 }}>Hash: {d.contentHash.slice(0, 14)}…</p>
+                            <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 750, margin: "0 0 2px" }}>{d.declarationType} · Año {d.taxYear}</p>
+                            <p style={{ color: "var(--text-soft)", fontSize: 12, fontFamily: "monospace", margin: 0 }}>Hash: {d.contentHash.slice(0, 14)}…</p>
                           </div>
                           <span style={{ background: cfg.bg, borderRadius: 999, color: cfg.color, fontSize: 12, fontWeight: 800, padding: "4px 12px" }}>{cfg.text}</span>
                         </div>
@@ -683,7 +683,7 @@ export default function ExpertoTributarioPage() {
               )}
 
               <section style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                <Link href="/experto/declaraciones" style={{ background: "#0F2A3D", borderRadius: 8, color: "#FFFFFF", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none" }}>Gestionar declaraciones</Link>
+                <Link href="/experto/declaraciones" style={{ background: "var(--bg-elev)", borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 14, fontWeight: 850, padding: "12px 22px", textDecoration: "none" }}>Gestionar declaraciones</Link>
               </section>
             </>
           )}
@@ -693,9 +693,9 @@ export default function ExpertoTributarioPage() {
       {tab === "calendario" && (
         <>
           {calendarLoading ? (
-            <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando calendario…</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando calendario…</p>
           ) : calendarError ? (
-            <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{calendarError}</div>
+            <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>{calendarError}</div>
           ) : calendar ? (
             <>
               {calendar.alerts.length > 0 && (
@@ -713,7 +713,7 @@ export default function ExpertoTributarioPage() {
               )}
 
               <section style={{ marginBottom: 24 }}>
-                <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 14px" }}>Línea de tiempo {calendar.year}</h2>
+                <h2 style={{ color: "var(--text)", fontSize: "1rem", fontWeight: 850, margin: "0 0 14px" }}>Línea de tiempo {calendar.year}</h2>
                 <div style={{ display: "grid", gap: 10 }}>
                   {calendar.milestones.map((m, i) => {
                     const token = milestoneColor(m.type, m.passed);
@@ -724,9 +724,9 @@ export default function ExpertoTributarioPage() {
                         <div style={{ flex: 1, minWidth: 160 }}>
                           <p style={{ color: token.color, fontSize: 14, fontWeight: 850, margin: 0 }}>{m.label}</p>
                         </div>
-                        <p style={{ color: m.passed ? "#94A3B8" : "#475569", fontSize: 13, fontWeight: 750, margin: 0 }}>{dateStr}</p>
+                        <p style={{ color: m.passed ? "var(--text-soft)" : "var(--text)", fontSize: 13, fontWeight: 750, margin: 0 }}>{dateStr}</p>
                         {m.type !== "today" && (
-                          <p style={{ color: m.passed ? "#94A3B8" : m.daysUntil <= 30 ? "#B45309" : "#64748B", fontSize: 12, fontWeight: 750, margin: 0 }}>
+                          <p style={{ color: m.passed ? "var(--text-soft)" : m.daysUntil <= 30 ? "#E8B84B" : "var(--text-soft)", fontSize: 12, fontWeight: 750, margin: 0 }}>
                             {m.passed ? "Completado" : m.daysUntil === 0 ? "Hoy" : `En ${m.daysUntil} días`}
                           </p>
                         )}
@@ -736,13 +736,13 @@ export default function ExpertoTributarioPage() {
                 </div>
               </section>
 
-              <section style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: 8, padding: 18 }}>
-                <h2 style={{ color: "#0F2A3D", fontSize: "1rem", fontWeight: 850, margin: "0 0 10px" }}>¿Necesitas ayuda?</h2>
-                <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.55, margin: "0 0 10px" }}>Las fechas son referenciales para el calendario tributario chileno. Valida con tu contador las fechas exactas del año en curso.</p>
+              <section style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 8, padding: 18 }}>
+                <h2 style={{ color: "var(--text)", fontSize: "1rem", fontWeight: 850, margin: "0 0 10px" }}>¿Necesitas ayuda?</h2>
+                <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.55, margin: "0 0 10px" }}>Las fechas son referenciales para el calendario tributario chileno. Valida con tu contador las fechas exactas del año en curso.</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                  <Link href="/experto/tributario" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver resumen →</Link>
-                  <Link href="/experto/tributario?tab=simulador" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Simular venta →</Link>
-                  <Link href="/experto/operaciones" style={{ color: "#0F766E", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Revisar eventos →</Link>
+                  <Link href="/experto/tributario" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Ver resumen →</Link>
+                  <Link href="/experto/tributario?tab=simulador" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Simular venta →</Link>
+                  <Link href="/experto/operaciones" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 850, textDecoration: "none" }}>Revisar eventos →</Link>
                 </div>
               </section>
             </>

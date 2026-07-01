@@ -73,38 +73,38 @@ export default function ReportesPage() {
     <div style={{ maxWidth: 1180, width: "100%", display: "grid", gap: 16 }}>
       <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between" }}>
         <div style={{ maxWidth: 680 }}>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Declaraciones</p>
-          <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 900, lineHeight: 1.08, margin: "0 0 8px", letterSpacing: "-0.04em", maxWidth: 680 }}>Genera PDF y Excel de respaldo tributario</h1>
-          <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0, maxWidth: 620 }}>
+          <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Declaraciones</p>
+          <h1 style={{ color: "var(--text)", fontSize: "1.85rem", fontWeight: 900, lineHeight: 1.08, margin: "0 0 8px", letterSpacing: "-0.04em", maxWidth: 680 }}>Genera PDF y Excel de respaldo tributario</h1>
+          <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0, maxWidth: 620 }}>
             LEDGERA empaqueta la trazabilidad de tus activos y separa taxativamente si corresponde declarar/respaldar o si también existe impuesto estimado a pagar.
           </p>
         </div>
-        <Link href="/obligaciones-tributarias" style={{ border: "1px solid #CBD5E1", borderRadius: 999, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+        <Link href="/obligaciones-tributarias" style={{ border: "1px solid var(--border)", borderRadius: 999, color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Revisar situación tributaria primero
         </Link>
       </section>
 
-      <section style={{ alignItems: "center", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", padding: 16 }}>
-        <label style={{ alignItems: "center", color: "#475569", display: "inline-flex", fontSize: 13, fontWeight: 800, gap: 8 }}>
+      <section style={{ alignItems: "center", background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", padding: 16 }}>
+        <label style={{ alignItems: "center", color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 800, gap: 8 }}>
           Año para versión filtrada
-          <select value={year} onChange={(e) => setYear(e.target.value)} style={{ background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 10, color: "#0F2A3D", fontSize: 13, fontWeight: 800, minHeight: 38, padding: "0 10px" }}>
+          <select value={year} onChange={(e) => setYear(e.target.value)} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: 13, fontWeight: 800, minHeight: 38, padding: "0 10px" }}>
             {availableYears.length > 0 ? availableYears.map((y) => <option key={y} value={String(y)}>{y}</option>) : <option value={String(new Date().getFullYear())}>{new Date().getFullYear()}</option>}
           </select>
         </label>
-        <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.4, margin: 0 }}>También puedes descargar el paquete completo sin filtro de año.</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.4, margin: 0 }}>También puedes descargar el paquete completo sin filtro de año.</p>
       </section>
 
       <section style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,260px),1fr))" }}>
         {reports.map((report) => (
-          <article key={report.key} style={{ background: "#FFFFFF", border: report.key === "declaracion-respaldo" ? "1px solid #BBF7D0" : "1px solid #E2E8F0", borderRadius: 20, padding: 18, display: "grid", gap: 10 }}>
+          <article key={report.key} style={{ background: "var(--bg-elev)", border: report.key === "declaracion-respaldo" ? "1px solid var(--accent-soft)" : "1px solid var(--border)", borderRadius: 20, padding: 18, display: "grid", gap: 10 }}>
             <div>
-              <h3 style={{ color: "#0F2A3D", fontSize: 19, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 6px" }}>{report.title}</h3>
-              <p style={{ color: "#64748B", fontSize: 13.5, lineHeight: 1.45, margin: 0 }}>{report.description}</p>
+              <h3 style={{ color: "var(--text)", fontSize: 19, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 6px" }}>{report.title}</h3>
+              <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.45, margin: 0 }}>{report.description}</p>
             </div>
-            <p style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 12, color: "#475569", fontSize: 12.5, lineHeight: 1.4, margin: 0, padding: 10 }}>{report.whenToUse}</p>
+            <p style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text)", fontSize: 12.5, lineHeight: 1.4, margin: 0, padding: 10 }}>{report.whenToUse}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {report.formats.map((fmt) => (
-                <a key={fmt.label} href={fmt.href} target="_blank" rel="noopener noreferrer" style={{ background: "#0F766E", borderRadius: 999, color: "#FFFFFF", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "9px 14px", textDecoration: "none" }}>
+                <a key={fmt.label} href={fmt.href} target="_blank" rel="noopener noreferrer" style={{ background: "var(--accent)", borderRadius: 999, color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "9px 14px", textDecoration: "none" }}>
                   {fmt.label}
                 </a>
               ))}
@@ -113,9 +113,9 @@ export default function ReportesPage() {
         ))}
       </section>
 
-      <section style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 18, padding: 16 }}>
-        <h2 style={{ color: "#92400E", fontSize: 15, fontWeight: 900, margin: "0 0 6px" }}>Importante</h2>
-        <p style={{ color: "#92400E", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+      <section style={{ background: "rgba(232,184,75,0.14)", border: "1px solid rgba(232,184,75,0.14)", borderRadius: 18, padding: 16 }}>
+        <h2 style={{ color: "var(--warn)", fontSize: 15, fontWeight: 900, margin: "0 0 6px" }}>Importante</h2>
+        <p style={{ color: "var(--warn)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
           El archivo explicita la conclusión de LEDGERA con los datos confirmados. Antes de presentar una declaración final, debe revisarse junto con los demás antecedentes tributarios del contribuyente.
         </p>
       </section>

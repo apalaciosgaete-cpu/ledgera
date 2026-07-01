@@ -26,7 +26,7 @@ const steps = [
     description:
       "Carga archivos, registra operaciones manuales o conecta fuentes en una etapa revisable antes de confirmar datos en tu historial financiero.",
     bullets: ["Compras y ventas", "Transferencias", "Comisiones", "Movimientos bancarios"],
-    color: "#4ADE80",
+    color: "var(--accent)",
   },
   {
     number: "02",
@@ -34,7 +34,7 @@ const steps = [
     description:
       "LEDGERA ayuda a separar datos pendientes, detectar inconsistencias y relacionar banco, exchange y portafolio sin perder trazabilidad.",
     bullets: ["Revisión previa", "Conciliación banco/exchange", "Clasificación", "Alertas de integridad"],
-    color: "#67E8F9",
+    color: "var(--text-faint)",
   },
   {
     number: "03",
@@ -42,7 +42,7 @@ const steps = [
     description:
       "Desde movimientos confirmados, la plataforma construye información clara para revisión financiera, contable o tributaria.",
     bullets: ["FIFO trazable", "Eventos tributarios", "CSV/PDF", "Auditoría y verificación"],
-    color: "#FBBF24",
+    color: "var(--warn)",
   },
 ];
 

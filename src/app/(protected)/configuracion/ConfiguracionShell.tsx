@@ -33,21 +33,21 @@ function profilePrefix(role: string) {
 function Toggle({ value, onChange, disabled }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
     <button type="button" onClick={() => !disabled && onChange(!value)}
-      style={{ width: "44px", height: "24px", borderRadius: "12px", border: "none", cursor: disabled ? "not-allowed" : "pointer", background: value ? "#16A34A" : "#CBD5E1", position: "relative", transition: "background 0.2s ease", flexShrink: 0, opacity: disabled ? 0.5 : 1, padding: 0 }}>
-      <div style={{ position: "absolute", top: "3px", left: value ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#ffffff", transition: "left 0.2s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+      style={{ width: "44px", height: "24px", borderRadius: "12px", border: "none", cursor: disabled ? "not-allowed" : "pointer", background: value ? "var(--accent)" : "var(--bg-elev)", position: "relative", transition: "background 0.2s ease", flexShrink: 0, opacity: disabled ? 0.5 : 1, padding: 0 }}>
+      <div style={{ position: "absolute", top: "3px", left: value ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "var(--bg-elev)", transition: "left 0.2s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
     </button>
   );
 }
 
 function ToggleRow({ label, hint, value, onChange, badge, disabled }: { label: string; hint: string; value: boolean; onChange: (v: boolean) => void; badge?: string; disabled?: boolean }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.5rem", padding: "1rem 0", borderBottom: "1px solid #E2E8F0" }}>
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.5rem", padding: "1rem 0", borderBottom: "1px solid var(--border)" }}>
       <div style={{ flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "#0F172A" }}>{label}</span>
-          {badge && <span style={{ fontSize: "9px", fontWeight: 700, color: "#F59E0B", background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.06em", textTransform: "uppercase" }}>{badge}</span>}
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{label}</span>
+          {badge && <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--warn)", background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.06em", textTransform: "uppercase" }}>{badge}</span>}
         </div>
-        <span style={{ fontSize: "12px", color: "#475569", lineHeight: 1.5 }}>{hint}</span>
+        <span style={{ fontSize: "12px", color: "var(--text)", lineHeight: 1.5 }}>{hint}</span>
       </div>
       <Toggle value={value} onChange={onChange} disabled={disabled} />
     </div>
@@ -57,8 +57,8 @@ function ToggleRow({ label, hint, value, onChange, badge, disabled }: { label: s
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569" }}>{label}</label>
-      {hint && <span style={{ fontSize: "11px", color: "#475569", lineHeight: 1.4 }}>{hint}</span>}
+      <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{label}</label>
+      {hint && <span style={{ fontSize: "11px", color: "var(--text)", lineHeight: 1.4 }}>{hint}</span>}
       {children}
     </div>
   );
@@ -67,7 +67,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 function TextInput({ value, onChange, placeholder, type = "text", style }: { value: string; onChange: (v: string) => void; placeholder?: string; type?: string; style?: React.CSSProperties }) {
   return (
     <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-      style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "8px", padding: "10px 12px", color: "#0F172A", fontSize: "14px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box", ...style }}
+      style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box", ...style }}
     />
   );
 }
@@ -75,7 +75,7 @@ function TextInput({ value, onChange, placeholder, type = "text", style }: { val
 function SelectInput({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
     <select value={value} onChange={e => onChange(e.target.value)}
-      style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "8px", padding: "10px 12px", color: "#0F172A", fontSize: "14px", fontFamily: fonts.body, outline: "none", width: "100%", cursor: "pointer" }}>
+      style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: fonts.body, outline: "none", width: "100%", cursor: "pointer" }}>
       {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
     </select>
   );
@@ -83,10 +83,10 @@ function SelectInput({ value, onChange, options }: { value: string; onChange: (v
 
 function SectionCard({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
+    <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1.25rem" }}>
-        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>{title}</h3>
-        <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>{description}</p>
+        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>{title}</h3>
+        <p style={{ fontSize: "12px", color: "var(--text)", margin: 0 }}>{description}</p>
       </div>
       {children}
     </div>
@@ -95,11 +95,11 @@ function SectionCard({ title, description, children }: { title: string; descript
 
 function SaveBar({ onSave, saving, saved, onReset, error }: { onSave: () => void; saving: boolean; saved: boolean; onReset: () => void; error?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px", paddingTop: "1.5rem", marginTop: "0.5rem", borderTop: "1px solid #E2E8F0" }}>
-      {saved && <span style={{ fontSize: "13px", color: "#4ADE80", display: "flex", alignItems: "center", gap: "6px" }}><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#4ADE80" strokeWidth="1.2" /><path d="M5 8l2 2 4-4" stroke="#4ADE80" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>Guardado correctamente</span>}
-      {error && <span style={{ fontSize: "13px", color: "#EF4444" }}>{error}</span>}
-      <button type="button" onClick={onReset} disabled={saving} style={{ padding: "9px 16px", borderRadius: "8px", border: "1px solid #E2E8F0", background: "transparent", color: "#64748B", fontSize: "13px", fontWeight: 500, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>Descartar</button>
-      <button type="button" onClick={onSave} disabled={saving} style={{ padding: "9px 20px", borderRadius: "8px", border: "none", background: saving ? "#15803D" : "#16A34A", color: "#ffffff", fontSize: "13px", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px", paddingTop: "1.5rem", marginTop: "0.5rem", borderTop: "1px solid var(--border)" }}>
+      {saved && <span style={{ fontSize: "13px", color: "var(--accent)", display: "flex", alignItems: "center", gap: "6px" }}><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="var(--accent)" strokeWidth="1.2" /><path d="M5 8l2 2 4-4" stroke="#3FA687" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>Guardado correctamente</span>}
+      {error && <span style={{ fontSize: "13px", color: "var(--loss)" }}>{error}</span>}
+      <button type="button" onClick={onReset} disabled={saving} style={{ padding: "9px 16px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-soft)", fontSize: "13px", fontWeight: 500, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>Descartar</button>
+      <button type="button" onClick={onSave} disabled={saving} style={{ padding: "9px 20px", borderRadius: "8px", border: "none", background: saving ? "var(--accent)" : "var(--accent)", color: "var(--text)", fontSize: "13px", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
         {saving ? "Guardando..." : "Guardar cambios"}
       </button>
     </div>
@@ -108,9 +108,9 @@ function SaveBar({ onSave, saving, saved, onReset, error }: { onSave: () => void
 
 function SecurityCheckItem({ label, status }: { label: string; status: "ok" | "warn" | "info" }) {
   const colors = {
-    ok:   { bg: "rgba(22,163,74,0.06)", border: "rgba(22,163,74,0.15)", icon: "#4ADE80", text: "#0F2A3D" },
-    warn: { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.15)", icon: "#F59E0B", text: "#0F2A3D" },
-    info: { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.15)", icon: "#0EA5E9", text: "#0F2A3D" },
+    ok:   { bg: "rgba(22,163,74,0.06)", border: "rgba(22,163,74,0.15)", icon: "var(--accent)", text: "var(--text)" },
+    warn: { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.15)", icon: "var(--warn)", text: "var(--text)" },
+    info: { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.15)", icon: "var(--accent)", text: "var(--text)" },
   };
   const c = colors[status];
   const icon = status === "ok" ? "✓" : status === "warn" ? "⚠" : "ℹ";
@@ -124,12 +124,12 @@ function SecurityCheckItem({ label, status }: { label: string; status: "ok" | "w
 
 function SecurityCenterPanel({ twoFactorEnabled }: { twoFactorEnabled: boolean }) {
   return (
-    <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
+    <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1.25rem" }}>
-        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>
+        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>
           Estado de seguridad
         </h3>
-        <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>
+        <p style={{ fontSize: "12px", color: "var(--text)", margin: 0 }}>
           LEDGERA requiere verificación en dos pasos para proteger tu información financiera y tributaria.
         </p>
       </div>
@@ -142,18 +142,18 @@ function SecurityCenterPanel({ twoFactorEnabled }: { twoFactorEnabled: boolean }
 
       {!twoFactorEnabled && (
         <div style={{ marginTop: "16px", padding: "14px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "10px" }}>
-          <p style={{ margin: "0 0 8px", fontSize: "13px", fontWeight: 700, color: "#92400E" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "13px", fontWeight: 700, color: "var(--warn)" }}>
             Debes activar 2FA para usar LEDGERA
           </p>
-          <p style={{ margin: 0, fontSize: "12px", color: "#78350F", lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: "12px", color: "var(--warn)", lineHeight: 1.5 }}>
             Por seguridad, todas las funciones de la plataforma requieren autenticación en dos pasos.
             Configúralo desde tu app de autenticación (Google Authenticator, Authy, etc.) escaneando el código QR.
           </p>
         </div>
       )}
 
-      <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E2E8F0" }}>
-        <a href="/configuracion/seguridad" style={{ fontSize: "13px", color: "#0EA5E9", textDecoration: "none", fontWeight: 700 }}>
+      <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
+        <a href="/configuracion/seguridad" style={{ fontSize: "13px", color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>
           Gestionar sesiones activas →
         </a>
       </div>
@@ -226,8 +226,8 @@ function PrivacyDataCard() {
             onClick={exportData}
             disabled={busy !== null}
             style={{
-              padding: "0.6rem 1.1rem", borderRadius: "8px", border: "1px solid #E2E8F0",
-              background: "#FFFFFF", color: "#0F2A3D", fontWeight: 700, fontSize: "0.85rem",
+              padding: "0.6rem 1.1rem", borderRadius: "8px", border: "1px solid var(--border)",
+              background: "var(--bg-elev)", color: "var(--text)", fontWeight: 700, fontSize: "0.85rem",
               cursor: busy ? "not-allowed" : "pointer",
             }}
           >
@@ -239,20 +239,20 @@ function PrivacyDataCard() {
             disabled={busy !== null}
             style={{
               padding: "0.6rem 1.1rem", borderRadius: "8px", border: "1px solid rgba(220,38,38,0.4)",
-              background: "rgba(220,38,38,0.06)", color: "#DC2626", fontWeight: 700, fontSize: "0.85rem",
+              background: "rgba(220,38,38,0.06)", color: "var(--loss)", fontWeight: 700, fontSize: "0.85rem",
               cursor: busy ? "not-allowed" : "pointer",
             }}
           >
             {busy === "delete" ? "Eliminando…" : "Eliminar mi cuenta"}
           </button>
         </div>
-        <p style={{ fontSize: "0.78rem", color: "#64748B", margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--text-soft)", margin: 0, lineHeight: 1.6 }}>
           La exportación entrega tus datos en formato estructurado (portabilidad, Art. 11). La
           eliminación anonimiza tus datos identificatorios (supresión, Art. 9); los registros
           tributarios se conservan por el plazo legal de retención.
         </p>
-        {msg && <p style={{ fontSize: "0.82rem", color: "#16A34A", margin: 0, fontWeight: 600 }}>{msg}</p>}
-        {err && <p style={{ fontSize: "0.82rem", color: "#DC2626", margin: 0, fontWeight: 600 }}>{err}</p>}
+        {msg && <p style={{ fontSize: "0.82rem", color: "var(--accent)", margin: 0, fontWeight: 600 }}>{msg}</p>}
+        {err && <p style={{ fontSize: "0.82rem", color: "var(--loss)", margin: 0, fontWeight: 600 }}>{err}</p>}
       </div>
     </SectionCard>
   );
@@ -435,9 +435,9 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", flexDirection: "column", gap: "12px" }}>
-        <div style={{ width: "32px", height: "32px", border: "2px solid #E2E8F0", borderTop: "2px solid #16A34A", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <div style={{ width: "32px", height: "32px", border: "2px solid var(--border)", borderTop: "2px solid var(--accent)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <span style={{ color: "#475569", fontSize: "13px" }}>Cargando configuración...</span>
+        <span style={{ color: "var(--text)", fontSize: "13px" }}>Cargando configuración...</span>
       </div>
     );
   }
@@ -445,8 +445,8 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
   return (
     <>
       <div style={{ marginBottom: "1.5rem" }}>
-        <h2 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 4px" }}>{ALL_SECTIONS.find(s => s.key === section)?.label}</h2>
-        <p style={{ fontSize: "13px", color: "#475569", margin: 0 }}>{ALL_SECTIONS.find(s => s.key === section)?.description}</p>
+        <h2 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>{ALL_SECTIONS.find(s => s.key === section)?.label}</h2>
+        <p style={{ fontSize: "13px", color: "var(--text)", margin: 0 }}>{ALL_SECTIONS.find(s => s.key === section)?.description}</p>
       </div>
 
       {/* TRIBUTARIO */}
@@ -555,21 +555,21 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
           <SectionCard title="Suscripción actual" description="Estado de tu plan y próxima renovación">
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Plan</p>
-                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>
+                <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 14px" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: "11px", color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Plan</p>
+                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
                     {getPlanLabel(subscriptionState?.plan ?? user?.subscriptionPlan)}
                   </p>
                 </div>
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Estado</p>
-                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: subscriptionState?.isActive ? "#16A34A" : "#EF4444" }}>
+                <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 14px" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: "11px", color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Estado</p>
+                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: subscriptionState?.isActive ? "#3FA687" : "#C4634A" }}>
                     {subscriptionState?.label ?? "Desconocido"}
                   </p>
                 </div>
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "12px 14px" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Próxima renovación</p>
-                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>
+                <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 14px" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: "11px", color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Próxima renovación</p>
+                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>
                     {subscriptionState?.expiresAt
                       ? new Date(subscriptionState.expiresAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })
                       : user?.subscriptionExpiresAt
@@ -587,7 +587,7 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
                   border: `1px solid ${subscriptionState.daysRemaining <= 7 ? "rgba(245,158,11,0.2)" : "rgba(22,163,74,0.15)"}`,
                 }}>
                   <span style={{ fontSize: "16px" }}>{subscriptionState.daysRemaining <= 7 ? "⚠️" : "✓"}</span>
-                  <span style={{ fontSize: "13px", color: "#475569" }}>
+                  <span style={{ fontSize: "13px", color: "var(--text)" }}>
                     {subscriptionState.daysRemaining <= 0
                       ? "Tu suscripción ha vencido. Renueva para continuar."
                       : subscriptionState.daysRemaining <= 7
@@ -611,7 +611,7 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
         <>
           <SectionCard title="Identidad Tributaria" description="Datos legales para la emisión futura de Boletas, Facturas y Notas de Crédito/Débito electrónicas ante el SII.">
             {taxLoading ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "#475569", fontSize: "13px" }}>Cargando perfil tributario...</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "var(--text)", fontSize: "13px" }}>Cargando perfil tributario...</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <Field label="Tipo de documento electrónico">
@@ -673,10 +673,10 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
                   <TextInput value={taxDraft.dteEmail} onChange={(v) => setTaxDraft((prev) => ({ ...prev, dteEmail: v }))} placeholder="dte@empresa.cl" type="email" />
                 </Field>
 
-                {taxRutError && <p style={{ margin: 0, color: "#EF4444", fontSize: "12px" }}>{taxRutError}</p>}
-                {taxError && <p style={{ margin: 0, color: "#EF4444", fontSize: "12px" }}>{taxError}</p>}
-                {taxSaved && <p style={{ margin: 0, color: "#16A34A", fontSize: "12px" }}>Perfil tributario guardado correctamente.</p>}
-                {taxProfile?.isValidated && <p style={{ margin: 0, color: "#16A34A", fontSize: "12px" }}>✓ RUT validado</p>}
+                {taxRutError && <p style={{ margin: 0, color: "var(--loss)", fontSize: "12px" }}>{taxRutError}</p>}
+                {taxError && <p style={{ margin: 0, color: "var(--loss)", fontSize: "12px" }}>{taxError}</p>}
+                {taxSaved && <p style={{ margin: 0, color: "var(--accent)", fontSize: "12px" }}>Perfil tributario guardado correctamente.</p>}
+                {taxProfile?.isValidated && <p style={{ margin: 0, color: "var(--accent)", fontSize: "12px" }}>✓ RUT validado</p>}
               </div>
             )}
           </SectionCard>
@@ -725,34 +725,34 @@ export default function ConfiguracionShell({ forcedSection }: { forcedSection: S
 
       {/* AUDITORÍA */}
       {section === "auditoria" && (
-        <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", overflow: "hidden" }}>
-          <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid #E2E8F0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
+          <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: "0 0 2px" }}>Registro de cambios</h3>
-              <p style={{ fontSize: "11px", color: "#475569", margin: 0 }}>Cada modificación queda registrada con actor, valores y timestamp.</p>
+              <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "var(--text)", margin: "0 0 2px" }}>Registro de cambios</h3>
+              <p style={{ fontSize: "11px", color: "var(--text)", margin: 0 }}>Cada modificación queda registrada con actor, valores y timestamp.</p>
             </div>
-            <button type="button" onClick={loadAudit} disabled={auditLoading} style={{ background: "transparent", border: "1px solid #E2E8F0", borderRadius: "6px", color: "#64748B", fontSize: "12px", padding: "6px 12px", cursor: auditLoading ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+            <button type="button" onClick={loadAudit} disabled={auditLoading} style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "6px", color: "var(--text-soft)", fontSize: "12px", padding: "6px 12px", cursor: auditLoading ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
               {auditLoading ? "Cargando..." : "Actualizar"}
             </button>
           </div>
           {auditLoading ? (
-            <div style={{ padding: "3rem", textAlign: "center", color: "#475569", fontSize: "13px" }}>Cargando registros...</div>
+            <div style={{ padding: "3rem", textAlign: "center", color: "var(--text)", fontSize: "13px" }}>Cargando registros...</div>
           ) : audit.length === 0 ? (
-            <div style={{ padding: "4rem 2rem", textAlign: "center", color: "#334155", fontSize: "13px" }}>No hay cambios registrados aún.</div>
+            <div style={{ padding: "4rem 2rem", textAlign: "center", color: "var(--text)", fontSize: "13px" }}>No hay cambios registrados aún.</div>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                 <thead>
-                  <tr>{["Parámetro", "Valor anterior", "Valor nuevo", "Actor", "Fecha"].map(h => <th key={h} style={{ textAlign: "left", padding: "10px 16px", borderBottom: "1px solid #E2E8F0", color: "#64748B", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>)}</tr>
+                  <tr>{["Parámetro", "Valor anterior", "Valor nuevo", "Actor", "Fecha"].map(h => <th key={h} style={{ textAlign: "left", padding: "10px 16px", borderBottom: "1px solid var(--border)", color: "var(--text-soft)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {audit.map((entry, i) => (
-                    <tr key={entry.id} style={{ background: i % 2 === 0 ? "#F8FAFC" : "transparent" }}>
-                      <td style={{ padding: "10px 16px", color: "#475569", fontFamily: "monospace", fontSize: "11px" }}>{entry.settingKey}</td>
-                      <td style={{ padding: "10px 16px", color: "#EF4444" }}>{entry.oldValue ?? "—"}</td>
-                      <td style={{ padding: "10px 16px", color: "#4ADE80" }}>{entry.newValue}</td>
-                      <td style={{ padding: "10px 16px", color: "#94A3B8" }}>{entry.actorEmail ?? "sistema"}</td>
-                      <td style={{ padding: "10px 16px", color: "#64748B", whiteSpace: "nowrap" }}>{new Date(entry.createdAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}</td>
+                    <tr key={entry.id} style={{ background: i % 2 === 0 ? "var(--bg-sunken)" : "transparent" }}>
+                      <td style={{ padding: "10px 16px", color: "var(--text)", fontFamily: "monospace", fontSize: "11px" }}>{entry.settingKey}</td>
+                      <td style={{ padding: "10px 16px", color: "var(--loss)" }}>{entry.oldValue ?? "—"}</td>
+                      <td style={{ padding: "10px 16px", color: "var(--accent)" }}>{entry.newValue}</td>
+                      <td style={{ padding: "10px 16px", color: "var(--text-soft)" }}>{entry.actorEmail ?? "sistema"}</td>
+                      <td style={{ padding: "10px 16px", color: "var(--text-soft)", whiteSpace: "nowrap" }}>{new Date(entry.createdAt).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}</td>
                     </tr>
                   ))}
                 </tbody>

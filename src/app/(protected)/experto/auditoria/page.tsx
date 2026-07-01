@@ -57,13 +57,13 @@ export default function ExpertAuditPage() {
   function severityColor(severity: string) {
     switch (severity) {
       case "CRITICAL":
-        return "#DC2626";
+        return "#C4634A";
       case "ERROR":
-        return "#EA580C";
+        return "#E8B84B";
       case "WARNING":
-        return "#CA8A04";
+        return "#E8B84B";
       default:
-        return "#16A34A";
+        return "#3FA687";
     }
   }
 
@@ -105,7 +105,7 @@ export default function ExpertAuditPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Auditoría Continua
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Trazabilidad completa de acciones relevantes del sistema.
         </p>
       </header>
@@ -126,8 +126,8 @@ export default function ExpertAuditPage() {
 
       <div
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
           marginBottom: 24,
           padding: 16,
@@ -158,10 +158,10 @@ export default function ExpertAuditPage() {
           <button
             onClick={exportCsv}
             style={{
-              background: "#F1F5F9",
+              background: "var(--bg-sunken)",
               border: "none",
               borderRadius: 4,
-              color: "#475569",
+              color: "var(--text)",
               cursor: "pointer",
               fontSize: 13,
               padding: "8px 12px",
@@ -172,10 +172,10 @@ export default function ExpertAuditPage() {
           <button
             onClick={exportJson}
             style={{
-              background: "#F1F5F9",
+              background: "var(--bg-sunken)",
               border: "none",
               borderRadius: 4,
-              color: "#475569",
+              color: "var(--text)",
               cursor: "pointer",
               fontSize: 13,
               padding: "8px 12px",
@@ -189,15 +189,15 @@ export default function ExpertAuditPage() {
       {loading ? (
         <p>Cargando...</p>
       ) : events.length === 0 ? (
-        <p style={{ color: "#64748B" }}>No hay eventos que coincidan con los filtros.</p>
+        <p style={{ color: "var(--text-soft)" }}>No hay eventos que coincidan con los filtros.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {events.map((event) => (
             <li
               key={event.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: 8,
                 marginBottom: 12,
                 padding: 16,
@@ -209,8 +209,8 @@ export default function ExpertAuditPage() {
                   {event.severity}
                 </span>
               </div>
-              <p style={{ color: "#475569", margin: "0 0 8px" }}>{event.description}</p>
-              <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>
+              <p style={{ color: "var(--text)", margin: "0 0 8px" }}>{event.description}</p>
+              <p style={{ color: "var(--text-soft)", fontSize: 12, margin: 0 }}>
                 {event.category} · {event.result} · Usuario {event.userId ?? "—"} · Actor{" "}
                 {event.actorId ?? "—"} · {new Date(event.createdAt).toLocaleString("es-CL")}
               </p>
@@ -231,20 +231,20 @@ function Metric({
   value: number;
   accent?: "neutral" | "danger";
 }) {
-  const color = accent === "danger" ? "#991B1B" : "#0F2A3D";
+  const color = accent === "danger" ? "#C4634A" : "var(--text)";
 
   return (
     <article
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 8,
         padding: 16,
       }}
     >
       <p
         style={{
-          color: "#64748B",
+          color: "var(--text-soft)",
           fontSize: 11,
           fontWeight: 850,
           letterSpacing: "0.04em",
@@ -277,7 +277,7 @@ function FilterSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          border: "1px solid #E2E8F0",
+          border: "1px solid var(--border)",
           borderRadius: 4,
           fontSize: 13,
           padding: "6px 8px",

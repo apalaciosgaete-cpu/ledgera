@@ -111,25 +111,25 @@ export default function AdminChatPage() {
   const selectedConv = conversations.find((c) => c.id === selected);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e2e8f0", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-elev)", color: "var(--text)", display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9" }}>
+        <h1 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
           💬 Chat — Panel Admin
         </h1>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           {pushSupported && !pushEnabled && (
             <button
               onClick={enablePush}
-              style={{ background: "#3a76f0", border: "none", borderRadius: "8px", padding: "0.45rem 0.9rem", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}
+              style={{ background: "var(--bg-elev)", border: "none", borderRadius: "8px", padding: "0.45rem 0.9rem", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}
             >
               🔔 Activar notificaciones push
             </button>
           )}
-          {pushEnabled && <span style={{ color: "#22c55e", fontSize: "0.8rem" }}>🔔 Push activo</span>}
+          {pushEnabled && <span style={{ color: "var(--accent)", fontSize: "0.8rem" }}>🔔 Push activo</span>}
           <button
             onClick={loadConversations}
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "0.45rem 0.8rem", color: "#94a3b8", fontSize: "0.8rem", cursor: "pointer" }}
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "0.45rem 0.8rem", color: "var(--text-soft)", fontSize: "0.8rem", cursor: "pointer" }}
           >
             ↻ Actualizar
           </button>
@@ -140,7 +140,7 @@ export default function AdminChatPage() {
         {/* Lista conversaciones */}
         <div style={{ width: "280px", borderRight: "1px solid rgba(255,255,255,0.08)", overflowY: "auto" }}>
           {conversations.length === 0 && (
-            <p style={{ color: "#475569", fontSize: "0.85rem", padding: "1.5rem", textAlign: "center" }}>
+            <p style={{ color: "var(--text)", fontSize: "0.85rem", padding: "1.5rem", textAlign: "center" }}>
               Sin conversaciones aún
             </p>
           )}
@@ -152,19 +152,19 @@ export default function AdminChatPage() {
                 padding: "0.85rem 1rem", cursor: "pointer",
                 background: selected === c.id ? "rgba(58,118,240,0.15)" : "transparent",
                 borderBottom: "1px solid rgba(255,255,255,0.05)",
-                borderLeft: selected === c.id ? "3px solid #3a76f0" : "3px solid transparent",
+                borderLeft: selected === c.id ? "3px solid var(--border-strong)" : "3px solid transparent",
               }}
             >
-              <p style={{ margin: "0 0 2px", fontWeight: 600, fontSize: "0.88rem", color: "#f1f5f9" }}>
+              <p style={{ margin: "0 0 2px", fontWeight: 600, fontSize: "0.88rem", color: "var(--text)" }}>
                 {c.guestName}
               </p>
-              {c.guestEmail && <p style={{ margin: "0 0 4px", fontSize: "0.75rem", color: "#64748b" }}>{c.guestEmail}</p>}
+              {c.guestEmail && <p style={{ margin: "0 0 4px", fontSize: "0.75rem", color: "var(--text-soft)" }}>{c.guestEmail}</p>}
               {c.lastMessage && (
-                <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--text-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {c.lastMessage.sender === "ADMIN" ? "Tú: " : ""}{c.lastMessage.content}
                 </p>
               )}
-              <p style={{ margin: "4px 0 0", fontSize: "0.7rem", color: "#334155" }}>
+              <p style={{ margin: "4px 0 0", fontSize: "0.7rem", color: "var(--text)" }}>
                 {new Date(c.updatedAt).toLocaleString("es-CL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
               </p>
             </div>
@@ -174,15 +174,15 @@ export default function AdminChatPage() {
         {/* Panel mensajes */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {!selected ? (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#334155" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)" }}>
               Selecciona una conversación
             </div>
           ) : (
             <>
               {/* Sub-header */}
               <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                <p style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem", color: "#f1f5f9" }}>{selectedConv?.guestName}</p>
-                {selectedConv?.guestEmail && <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>{selectedConv.guestEmail}</p>}
+                <p style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>{selectedConv?.guestName}</p>
+                {selectedConv?.guestEmail && <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--text-soft)" }}>{selectedConv.guestEmail}</p>}
               </div>
 
               {/* Mensajes */}
@@ -192,8 +192,8 @@ export default function AdminChatPage() {
                     <div style={{
                       maxWidth: "70%", padding: "0.5rem 0.8rem",
                       borderRadius: m.sender === "ADMIN" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-                      background: m.sender === "ADMIN" ? "#3a76f0" : "rgba(255,255,255,0.08)",
-                      color: "#f1f5f9", fontSize: "0.88rem", lineHeight: 1.5,
+                      background: m.sender === "ADMIN" ? "var(--bg-elev)" : "rgba(255,255,255,0.08)",
+                      color: "var(--text)", fontSize: "0.88rem", lineHeight: 1.5,
                     }}>
                       {m.content}
                       <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "2px", textAlign: "right" }}>
@@ -216,7 +216,7 @@ export default function AdminChatPage() {
                   style={{
                     flex: 1, resize: "none", background: "rgba(255,255,255,0.06)",
                     border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px",
-                    padding: "0.6rem 0.8rem", color: "#f1f5f9", fontSize: "0.85rem",
+                    padding: "0.6rem 0.8rem", color: "var(--text)", fontSize: "0.85rem",
                     outline: "none", fontFamily: "inherit",
                   }}
                 />
@@ -224,7 +224,7 @@ export default function AdminChatPage() {
                   onClick={sendReply}
                   disabled={!reply.trim() || sending}
                   style={{
-                    background: reply.trim() ? "#3a76f0" : "rgba(255,255,255,0.06)",
+                    background: reply.trim() ? "var(--bg-elev)" : "rgba(255,255,255,0.06)",
                     border: "none", borderRadius: "8px", padding: "0.6rem 1rem",
                     cursor: reply.trim() ? "pointer" : "default", color: "#fff",
                   }}

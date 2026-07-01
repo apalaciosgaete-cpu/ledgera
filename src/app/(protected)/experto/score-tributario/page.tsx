@@ -39,15 +39,15 @@ export default function ExpertSmartTaxScorePage() {
   function levelColor(level: string) {
     switch (level) {
       case "DEFICIENT":
-        return "#DC2626";
+        return "#C4634A";
       case "DEVELOPING":
-        return "#CA8A04";
+        return "#E8B84B";
       case "HEALTHY":
-        return "#16A34A";
+        return "#3FA687";
       case "OPTIMAL":
-        return "#0F766E";
+        return "#3FA687";
       default:
-        return "#64748B";
+        return "var(--text-soft)";
     }
   }
 
@@ -62,7 +62,7 @@ export default function ExpertSmartTaxScorePage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Score Tributario Inteligente
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Madurez tributaria por usuario y distribución general.
         </p>
       </header>
@@ -83,8 +83,8 @@ export default function ExpertSmartTaxScorePage() {
 
       <div
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
           marginBottom: 24,
           padding: 16,
@@ -96,7 +96,7 @@ export default function ExpertSmartTaxScorePage() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             style={{
-              border: "1px solid #E2E8F0",
+              border: "1px solid var(--border)",
               borderRadius: 4,
               fontSize: 13,
               padding: "6px 8px",
@@ -115,9 +115,9 @@ export default function ExpertSmartTaxScorePage() {
         <Link
           href="/experto/riesgo"
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             borderRadius: 6,
-            color: "#FFFFFF",
+            color: "var(--text)",
             display: "inline-block",
             fontWeight: 700,
             padding: "10px 16px",
@@ -129,9 +129,9 @@ export default function ExpertSmartTaxScorePage() {
         <Link
           href="/experto/alertas"
           style={{
-            background: "#F1F5F9",
+            background: "var(--bg-sunken)",
             borderRadius: 6,
-            color: "#475569",
+            color: "var(--text)",
             display: "inline-block",
             fontWeight: 700,
             padding: "10px 16px",
@@ -145,15 +145,15 @@ export default function ExpertSmartTaxScorePage() {
       {loading ? (
         <p>Cargando...</p>
       ) : scores.length === 0 ? (
-        <p style={{ color: "#64748B" }}>No hay scores registrados.</p>
+        <p style={{ color: "var(--text-soft)" }}>No hay scores registrados.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {scores.map((item) => (
             <li
               key={item.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: 8,
                 marginBottom: 12,
                 padding: 16,
@@ -171,7 +171,7 @@ export default function ExpertSmartTaxScorePage() {
                   {item.score}
                 </span>
               </div>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>
+              <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>
                 Nivel {item.level} · Evaluado{" "}
                 {new Date(item.evaluatedAt).toLocaleDateString("es-CL")}
               </p>
@@ -193,20 +193,20 @@ function Metric({
   accent?: "neutral" | "good" | "warn" | "danger";
 }) {
   const color =
-    accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : accent === "danger" ? "#991B1B" : "#0F2A3D";
+    accent === "good" ? "#3FA687" : accent === "warn" ? "#E8B84B" : accent === "danger" ? "#C4634A" : "var(--text)";
 
   return (
     <article
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 8,
         padding: 16,
       }}
     >
       <p
         style={{
-          color: "#64748B",
+          color: "var(--text-soft)",
           fontSize: 11,
           fontWeight: 850,
           letterSpacing: "0.04em",

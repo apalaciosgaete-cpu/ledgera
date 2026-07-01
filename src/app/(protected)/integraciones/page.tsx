@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { colors, fonts } from "@/styles/tokens";
+import { fonts } from "@/styles/tokens";
 import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 
 type Tab = "exchange" | "banco" | "wallets" | "staking";
@@ -35,7 +35,7 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg:
   {
     key: "exchange",
     label: "Exchange",
-    color: "#F0B90B",
+    color: "var(--text-faint)",
     bg: "rgba(240,185,11,0.08)",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -49,7 +49,7 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg:
   {
     key: "banco",
     label: "Banco",
-    color: "#0052FF",
+    color: "var(--text)",
     bg: "rgba(0,82,255,0.07)",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -62,7 +62,7 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg:
   {
     key: "wallets",
     label: "Más integraciones",
-    color: "#7C3AED",
+    color: "var(--accent)",
     bg: "rgba(124,58,237,0.07)",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -75,7 +75,7 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; color: string; bg:
   {
     key: "staking",
     label: "Staking",
-    color: "#0F766E",
+    color: "var(--accent)",
     bg: "rgba(15,118,110,0.08)",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -204,10 +204,10 @@ export default function IntegracionesPage() {
     return (
       <div>
         <div style={{ marginBottom: "40px" }}>
-          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 4px" }}>
+          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>
             Integraciones
           </h1>
-          <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>
+          <p style={{ fontSize: "13px", color: "var(--text-soft)", margin: 0 }}>
             Conecta tus fuentes de datos. Cada integración alimenta automáticamente la piscina de movimientos.
           </p>
         </div>
@@ -218,8 +218,8 @@ export default function IntegracionesPage() {
               key={t.key}
               onClick={() => setTab(t.key)}
               style={{
-                width: "220px", background: colors.surface,
-                border: `1px solid ${colors.border}`,
+                width: "220px", background: "var(--bg-elev)",
+                border: `1px solid ${"var(--border)"}`,
                 borderRadius: "16px", padding: "2rem 1.5rem",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: "16px",
                 cursor: "pointer", fontFamily: fonts.body,
@@ -242,7 +242,7 @@ export default function IntegracionesPage() {
               }}>
                 {t.icon}
               </div>
-              <span style={{ fontSize: "16px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display }}>
+              <span style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", fontFamily: fonts.display }}>
                 {t.label}
               </span>
             </button>
@@ -266,7 +266,7 @@ export default function IntegracionesPage() {
         style={{
           display: "flex", alignItems: "center", gap: "6px",
           background: "transparent", border: "none", cursor: "pointer",
-          color: colors.textSecondary, fontSize: "13px", fontFamily: fonts.body,
+          color: "var(--text-soft)", fontSize: "13px", fontFamily: fonts.body,
           padding: "0 0 20px", marginBottom: "4px",
         }}
       >
@@ -282,10 +282,10 @@ export default function IntegracionesPage() {
           {current.icon}
         </div>
         <div>
-          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 2px" }}>
+          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "var(--text)", margin: "0 0 2px" }}>
             {current.label}
           </h1>
-          <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>
+          <p style={{ fontSize: "13px", color: "var(--text-soft)", margin: 0 }}>
             {tab === "exchange" && "Conecta tus exchanges de criptomonedas"}
             {tab === "banco"    && "Importa cartolas o movimientos bancarios desde PDF, Excel o CSV"}
             {tab === "wallets"  && "Conecta tus wallets on-chain"}
@@ -297,7 +297,7 @@ export default function IntegracionesPage() {
       {tab === "exchange" && !exchange && (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
           <div>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
               Exchanges que operan en Chile
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "10px" }}>
@@ -306,7 +306,7 @@ export default function IntegracionesPage() {
                 { name: "Orionx",   domain: "orionx.com" },
               ].map(ex => (
                 <div key={ex.name} style={{
-                  background: colors.surface, border: `1px solid ${colors.border}`,
+                  background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`,
                   borderRadius: "12px", padding: "14px 16px",
                   display: "flex", alignItems: "center", gap: "12px",
                   opacity: 0.65, cursor: "default",
@@ -317,22 +317,22 @@ export default function IntegracionesPage() {
                     style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${ex.domain}&size=128`; }}
                   />
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, flex: 1 }}>{ex.name}</span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>Próx.</span>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)", fontFamily: fonts.display, flex: 1 }}>{ex.name}</span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-faint)", background: "var(--bg-sunken)", border: `1px solid ${"var(--border)"}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>Próx.</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
               Exchanges internacionales
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "10px" }}>
               <button
                 onClick={() => setExchange("binance")}
                 style={{
-                  background: "#1E2026", border: "1px solid rgba(243,186,47,0.35)",
+                  background: "var(--bg-elev)", border: "1px solid rgba(243,186,47,0.35)",
                   borderRadius: "12px", padding: "0.75rem 1.5rem",
                   display: "flex", alignItems: "center", gap: "10px",
                   cursor: "pointer", fontFamily: fonts.body,
@@ -342,8 +342,8 @@ export default function IntegracionesPage() {
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(243,186,47,0.35)"; e.currentTarget.style.boxShadow = "none"; }}
               >
                 <img src="/binance-symbol.svg" alt="Binance" width="28" height="28" />
-                <span style={{ fontSize: "15px", fontWeight: 700, color: "#F3BA2F", fontFamily: fonts.display }}>Binance</span>
-                <span style={{ fontSize: "9px", fontWeight: 700, color: "#16A34A", background: "rgba(22,163,74,0.15)", border: "1px solid rgba(22,163,74,0.3)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
+                <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-faint)", fontFamily: fonts.display }}>Binance</span>
+                <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--accent)", background: "rgba(22,163,74,0.15)", border: "1px solid rgba(22,163,74,0.3)", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: "6px" }}>
                   Activo
                 </span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F3BA2F" strokeWidth="2" strokeLinecap="round" style={{ marginLeft: "4px", opacity: 0.6 }}>
@@ -357,7 +357,7 @@ export default function IntegracionesPage() {
                 { name: "CoinGecko", domain: "coingecko.com" },
               ].map(ex => (
                 <div key={ex.name} style={{
-                  background: colors.surface, border: `1px solid ${colors.border}`,
+                  background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`,
                   borderRadius: "12px", padding: "14px 16px",
                   display: "flex", alignItems: "center", gap: "12px",
                   opacity: 0.65, cursor: "default",
@@ -368,8 +368,8 @@ export default function IntegracionesPage() {
                     style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${ex.domain}&size=128`; }}
                   />
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, flex: 1 }}>{ex.name}</span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: colors.textMuted, background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>Próx.</span>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)", fontFamily: fonts.display, flex: 1 }}>{ex.name}</span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-faint)", background: "var(--bg-sunken)", border: `1px solid ${"var(--border)"}`, borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>Próx.</span>
                 </div>
               ))}
             </div>
@@ -381,17 +381,17 @@ export default function IntegracionesPage() {
         <div>
           <button
             onClick={() => setExchange(null)}
-            style={{ display: "flex", alignItems: "center", gap: "6px", background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "13px", fontFamily: fonts.body, padding: "0 0 24px", marginBottom: "4px" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", background: "transparent", border: "none", cursor: "pointer", color: "var(--text-soft)", fontSize: "13px", fontFamily: fonts.body, padding: "0 0 24px", marginBottom: "4px" }}
           >
             ← Volver a Exchanges
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "28px" }}>
-            <div style={{ background: "#1E2026", border: "1px solid rgba(243,186,47,0.3)", borderRadius: "12px", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "var(--bg-elev)", border: "1px solid rgba(243,186,47,0.3)", borderRadius: "12px", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <img src="/binance-symbol.svg" alt="Binance" width="28" height="28" />
             </div>
             <div>
-              <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 2px" }}>Binance</h2>
-              <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>Conecta tus APIs de Binance para importar movimientos automáticamente</p>
+              <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: "var(--text)", margin: "0 0 2px" }}>Binance</h2>
+              <p style={{ fontSize: "13px", color: "var(--text-soft)", margin: 0 }}>Conecta tus APIs de Binance para importar movimientos automáticamente</p>
             </div>
           </div>
           <BinanceIntegrationPanel />
@@ -401,7 +401,7 @@ export default function IntegracionesPage() {
       {tab === "banco" && !selectedBank && (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
           <div>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
               Bancos que operan en Chile
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "10px" }}>
@@ -410,8 +410,8 @@ export default function IntegracionesPage() {
                   key={bank.name}
                   onClick={() => handleBankSelect(bank)}
                   style={{
-                    background: colors.surface,
-                    border: `1px solid ${colors.border}`,
+                    background: "var(--bg-elev)",
+                    border: `1px solid ${"var(--border)"}`,
                     borderRadius: "12px",
                     padding: "14px 16px",
                     display: "flex",
@@ -428,7 +428,7 @@ export default function IntegracionesPage() {
                     e.currentTarget.style.transform = "translateY(-1px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = colors.border;
+                    e.currentTarget.style.borderColor = "var(--border)";
                     e.currentTarget.style.boxShadow = "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
@@ -437,7 +437,7 @@ export default function IntegracionesPage() {
                     src={bank.logo ?? `https://cdn.brandfetch.io/${bank.domain}/w/128/h/128`}
                     alt={bank.name}
                     width="36" height="36"
-                    style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain", background: "#f8fafc" }}
+                    style={{ borderRadius: "8px", flexShrink: 0, objectFit: "contain", background: "var(--bg-sunken)" }}
                     onError={(e) => {
                       const el = e.target as HTMLImageElement;
                       if (!el.src.includes("clearbit")) {
@@ -445,10 +445,10 @@ export default function IntegracionesPage() {
                       }
                     }}
                   />
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: colors.textPrimary, fontFamily: fonts.display, flex: 1 }}>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)", fontFamily: fonts.display, flex: 1 }}>
                     {bank.name}
                   </span>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#0052FF", background: "rgba(0,82,255,0.08)", border: "1px solid rgba(0,82,255,0.18)", borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--text)", background: "rgba(0,82,255,0.08)", border: "1px solid rgba(0,82,255,0.18)", borderRadius: "4px", padding: "2px 6px", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>
                     Importar
                   </span>
                 </button>
@@ -460,17 +460,17 @@ export default function IntegracionesPage() {
             <button
               type="button"
               onClick={() => setShowMore(v => !v)}
-              style={{ background: "transparent", border: "none", color: colors.textSecondary, fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "6px 0", fontFamily: fonts.body }}
+              style={{ background: "transparent", border: "none", color: "var(--text-soft)", fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "6px 0", fontFamily: fonts.body }}
             >
               {showMore ? "← Ocultar opciones avanzadas" : "+ Más integraciones"}
             </button>
             {showMore && (
               <div style={{ marginTop: "12px" }}>
-                <p style={{ fontSize: "12px", fontWeight: 700, color: colors.textPrimary, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 16px" }}>
                   Bancos internacionales
                 </p>
-                <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "2rem", textAlign: "center" }}>
-                  <span style={{ display: "inline-block", background: colors.warningMuted, border: "1px solid rgba(245,158,11,0.25)", color: colors.warning, padding: "6px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: 600 }}>
+                <div style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "2rem", textAlign: "center" }}>
+                  <span style={{ display: "inline-block", background: "rgba(232,184,75,0.15)", border: "1px solid rgba(245,158,11,0.25)", color: "var(--warn)", padding: "6px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: 600 }}>
                     Disponible próximamente
                   </span>
                 </div>
@@ -487,20 +487,20 @@ export default function IntegracionesPage() {
               setSelectedBank(null);
               resetBankImportState();
             }}
-            style={{ display: "flex", alignItems: "center", gap: "6px", background: "transparent", border: "none", cursor: "pointer", color: colors.textSecondary, fontSize: "13px", fontFamily: fonts.body, padding: "0 0 24px", marginBottom: "4px" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", background: "transparent", border: "none", cursor: "pointer", color: "var(--text-soft)", fontSize: "13px", fontFamily: fonts.body, padding: "0 0 24px", marginBottom: "4px" }}
           >
             ← Volver a Bancos
           </button>
 
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)", gap: "20px", alignItems: "start" }}>
-            <section style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "16px", padding: "24px" }}>
+            <section style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "16px", padding: "24px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px" }}>
                 <img
                   src={selectedBank.logo ?? `https://cdn.brandfetch.io/${selectedBank.domain}/w/128/h/128`}
                   alt={selectedBank.name}
                   width="42"
                   height="42"
-                  style={{ borderRadius: "10px", flexShrink: 0, objectFit: "contain", background: "#f8fafc" }}
+                  style={{ borderRadius: "10px", flexShrink: 0, objectFit: "contain", background: "var(--bg-sunken)" }}
                   onError={(e) => {
                     const el = e.target as HTMLImageElement;
                     if (!el.src.includes("clearbit")) {
@@ -509,8 +509,8 @@ export default function IntegracionesPage() {
                   }}
                 />
                 <div>
-                  <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 800, color: colors.textPrimary, margin: "0 0 2px" }}>{selectedBank.name}</h2>
-                  <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>Sube una cartola o archivo de movimientos para iniciar la ingesta bancaria.</p>
+                  <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 800, color: "var(--text)", margin: "0 0 2px" }}>{selectedBank.name}</h2>
+                  <p style={{ fontSize: "13px", color: "var(--text-soft)", margin: 0 }}>Sube una cartola o archivo de movimientos para iniciar la ingesta bancaria.</p>
                 </div>
               </div>
 
@@ -534,8 +534,8 @@ export default function IntegracionesPage() {
                   gap: "12px",
                   minHeight: "220px",
                   borderRadius: "16px",
-                  border: isDraggingBankFile ? "1.5px dashed rgba(0,82,255,0.75)" : `1.5px dashed ${colors.border}`,
-                  background: isDraggingBankFile ? "rgba(0,82,255,0.07)" : colors.surfaceAlt,
+                  border: isDraggingBankFile ? "1.5px dashed rgba(0,82,255,0.75)" : `1.5px dashed ${"var(--border)"}`,
+                  background: isDraggingBankFile ? "rgba(0,82,255,0.07)" : "var(--bg-sunken)",
                   cursor: "pointer",
                   padding: "28px",
                   textAlign: "center",
@@ -549,7 +549,7 @@ export default function IntegracionesPage() {
                   style={{ display: "none" }}
                   onChange={(event) => handleBankFile(event.target.files?.[0])}
                 />
-                <div style={{ width: "54px", height: "54px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", color: "#0052FF", background: "rgba(0,82,255,0.08)" }}>
+                <div style={{ width: "54px", height: "54px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)", background: "rgba(0,82,255,0.08)" }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
@@ -557,28 +557,28 @@ export default function IntegracionesPage() {
                   </svg>
                 </div>
                 <div>
-                  <p style={{ fontFamily: fonts.display, fontSize: "15px", fontWeight: 800, color: colors.textPrimary, margin: "0 0 6px" }}>
+                  <p style={{ fontFamily: fonts.display, fontSize: "15px", fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
                     Arrastra tu PDF, Excel o CSV aquí
                   </p>
-                  <p style={{ fontSize: "13px", color: colors.textSecondary, margin: 0 }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-soft)", margin: 0 }}>
                     También puedes hacer click para seleccionar el archivo desde tu equipo.
                   </p>
                 </div>
                 {bankFile && (
-                  <div style={{ marginTop: "8px", padding: "10px 12px", borderRadius: "10px", background: colors.surface, border: `1px solid ${colors.border}`, color: colors.textPrimary, fontSize: "13px", fontWeight: 700 }}>
+                  <div style={{ marginTop: "8px", padding: "10px 12px", borderRadius: "10px", background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, color: "var(--text)", fontSize: "13px", fontWeight: 700 }}>
                     {bankFile.name} · {formatFileSize(bankFile.size)}
                   </div>
                 )}
               </label>
 
               {bankImportError && (
-                <div style={{ marginTop: "16px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)", color: "#B91C1C", borderRadius: "12px", padding: "12px 14px", fontSize: "13px", fontWeight: 600 }}>
+                <div style={{ marginTop: "16px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)", color: "var(--loss)", borderRadius: "12px", padding: "12px 14px", fontSize: "13px", fontWeight: 600 }}>
                   {bankImportError}
                 </div>
               )}
 
               {bankImportResult && (
-                <div style={{ marginTop: "16px", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.22)", color: "#166534", borderRadius: "12px", padding: "12px 14px", fontSize: "13px", fontWeight: 600 }}>
+                <div style={{ marginTop: "16px", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.22)", color: "var(--accent)", borderRadius: "12px", padding: "12px 14px", fontSize: "13px", fontWeight: 600 }}>
                   {bankImportResult.message}
                 </div>
               )}
@@ -588,7 +588,7 @@ export default function IntegracionesPage() {
                   type="button"
                   onClick={() => resetBankImportState()}
                   disabled={isImportingBankFile}
-                  style={{ border: `1px solid ${colors.border}`, background: colors.surface, color: colors.textSecondary, borderRadius: "10px", padding: "10px 14px", fontSize: "13px", fontWeight: 700, cursor: isImportingBankFile ? "not-allowed" : "pointer" }}
+                  style={{ border: `1px solid ${"var(--border)"}`, background: "var(--bg-elev)", color: "var(--text-soft)", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", fontWeight: 700, cursor: isImportingBankFile ? "not-allowed" : "pointer" }}
                 >
                   Limpiar
                 </button>
@@ -596,16 +596,16 @@ export default function IntegracionesPage() {
                   type="button"
                   onClick={submitBankFileImport}
                   disabled={!bankFile || isImportingBankFile}
-                  style={{ border: "1px solid rgba(0,82,255,0.45)", background: !bankFile || isImportingBankFile ? "rgba(0,82,255,0.35)" : "#0052FF", color: "white", borderRadius: "10px", padding: "10px 16px", fontSize: "13px", fontWeight: 800, cursor: !bankFile || isImportingBankFile ? "not-allowed" : "pointer" }}
+                  style={{ border: "1px solid rgba(0,82,255,0.45)", background: !bankFile || isImportingBankFile ? "rgba(0,82,255,0.35)" : "var(--bg-elev)", color: "white", borderRadius: "10px", padding: "10px 16px", fontSize: "13px", fontWeight: 800, cursor: !bankFile || isImportingBankFile ? "not-allowed" : "pointer" }}
                 >
                   {isImportingBankFile ? "Importando..." : "Guardar e importar"}
                 </button>
               </div>
             </section>
 
-            <aside style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "16px", padding: "20px" }}>
-              <h3 style={{ fontFamily: fonts.display, fontSize: "15px", fontWeight: 800, color: colors.textPrimary, margin: "0 0 10px" }}>Qué hace LEDGERA</h3>
-              <ul style={{ display: "flex", flexDirection: "column", gap: "10px", margin: 0, paddingLeft: "18px", color: colors.textSecondary, fontSize: "13px", lineHeight: 1.55 }}>
+            <aside style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "16px", padding: "20px" }}>
+              <h3 style={{ fontFamily: fonts.display, fontSize: "15px", fontWeight: 800, color: "var(--text)", margin: "0 0 10px" }}>Qué hace LEDGERA</h3>
+              <ul style={{ display: "flex", flexDirection: "column", gap: "10px", margin: 0, paddingLeft: "18px", color: "var(--text-soft)", fontSize: "13px", lineHeight: 1.55 }}>
                 <li>Lee archivos PDF, XLS, XLSX o CSV del banco seleccionado.</li>
                 <li>Normaliza fecha, descripción, monto, dirección y saldo cuando esté disponible.</li>
                 <li>Deduplica por hash de archivo y por identificador externo del movimiento.</li>
@@ -613,16 +613,16 @@ export default function IntegracionesPage() {
               </ul>
 
               {bankImportResult?.data && (
-                <div style={{ marginTop: "18px", borderTop: `1px solid ${colors.border}`, paddingTop: "16px" }}>
-                  <p style={{ fontSize: "12px", color: colors.textSecondary, margin: "0 0 8px" }}>Resultado de ingesta</p>
+                <div style={{ marginTop: "18px", borderTop: `1px solid ${"var(--border)"}`, paddingTop: "16px" }}>
+                  <p style={{ fontSize: "12px", color: "var(--text-soft)", margin: "0 0 8px" }}>Resultado de ingesta</p>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                    <div style={{ background: colors.surfaceAlt, borderRadius: "10px", padding: "10px" }}>
-                      <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.textMuted }}>Importados</p>
-                      <strong style={{ color: colors.textPrimary, fontSize: "18px" }}>{bankImportResult.data.importedRows ?? 0}</strong>
+                    <div style={{ background: "var(--bg-sunken)", borderRadius: "10px", padding: "10px" }}>
+                      <p style={{ margin: "0 0 4px", fontSize: "11px", color: "var(--text-faint)" }}>Importados</p>
+                      <strong style={{ color: "var(--text)", fontSize: "18px" }}>{bankImportResult.data.importedRows ?? 0}</strong>
                     </div>
-                    <div style={{ background: colors.surfaceAlt, borderRadius: "10px", padding: "10px" }}>
-                      <p style={{ margin: "0 0 4px", fontSize: "11px", color: colors.textMuted }}>Errores</p>
-                      <strong style={{ color: colors.textPrimary, fontSize: "18px" }}>{bankImportResult.data.errorRows ?? 0}</strong>
+                    <div style={{ background: "var(--bg-sunken)", borderRadius: "10px", padding: "10px" }}>
+                      <p style={{ margin: "0 0 4px", fontSize: "11px", color: "var(--text-faint)" }}>Errores</p>
+                      <strong style={{ color: "var(--text)", fontSize: "18px" }}>{bankImportResult.data.errorRows ?? 0}</strong>
                     </div>
                   </div>
                 </div>
@@ -633,15 +633,15 @@ export default function IntegracionesPage() {
       )}
 
       {tab === "wallets" && (
-        <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "3rem 2rem", textAlign: "center" }}>
-          <p style={{ fontSize: "13px", color: colors.textSecondary, margin: "0 0 1.5rem", lineHeight: 1.7 }}>
+        <div style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "3rem 2rem", textAlign: "center" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-soft)", margin: "0 0 1.5rem", lineHeight: 1.7 }}>
             Conecta direcciones de blockchain para importar transacciones on-chain.<br/>
             Ethereum, Bitcoin y más redes disponibles próximamente.
           </p>
           <span style={{
             display: "inline-block",
-            background: colors.warningMuted, border: "1px solid rgba(245,158,11,0.25)",
-            color: colors.warning, padding: "6px 16px", borderRadius: "8px",
+            background: "rgba(232,184,75,0.15)", border: "1px solid rgba(245,158,11,0.25)",
+            color: "var(--warn)", padding: "6px 16px", borderRadius: "8px",
             fontSize: "12px", fontWeight: 600,
           }}>Disponible próximamente</span>
         </div>
@@ -650,8 +650,8 @@ export default function IntegracionesPage() {
       {tab === "staking" && (
         <div
           style={{
-            background: colors.surface,
-            border: `1px solid ${colors.border}`,
+            background: "var(--bg-elev)",
+            border: `1px solid ${"var(--border)"}`,
             borderRadius: "16px",
             padding: "24px",
           }}
@@ -661,7 +661,7 @@ export default function IntegracionesPage() {
               fontFamily: fonts.display,
               fontSize: "18px",
               fontWeight: 700,
-              color: colors.textPrimary,
+              color: "var(--text)",
               margin: "0 0 8px",
             }}
           >
@@ -671,7 +671,7 @@ export default function IntegracionesPage() {
           <p
             style={{
               fontSize: "13px",
-              color: colors.textSecondary,
+              color: "var(--text-soft)",
               lineHeight: 1.6,
               margin: "0 0 20px",
             }}
@@ -690,8 +690,8 @@ export default function IntegracionesPage() {
               height: "40px",
               padding: "0 16px",
               borderRadius: "10px",
-              background: "#0F766E",
-              color: "#FFFFFF",
+              background: "var(--accent)",
+              color: "var(--text)",
               fontSize: "13px",
               fontWeight: 800,
               textDecoration: "none",

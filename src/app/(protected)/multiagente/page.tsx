@@ -113,7 +113,7 @@ export default function MultiAgentePage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <p style={{ color: "#94A3B8", fontSize: 16 }}>Cargando análisis multiagente...</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 16 }}>Cargando análisis multiagente...</p>
       </div>
     );
   }
@@ -121,21 +121,21 @@ export default function MultiAgentePage() {
   return (
     <div style={{ display: "grid", gap: 24, maxWidth: 1100, margin: "0 auto" }}>
       {/* Header */}
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 24 }}>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 24 }}>
+        <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
           Multiagente Tributario
         </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
+        <h1 style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
           Análisis Multiagente Especializado
         </h1>
-        <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
           5 agentes especializados analizan riesgo, cumplimiento, documentos, impacto financiero y ejecución.
         </p>
       </section>
 
       {/* Quick review */}
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 22, display: "grid", gap: 14 }}>
-        <h2 style={{ color: "#0F2A3D", fontSize: 17, fontWeight: 900, margin: 0 }}>Nueva revisión</h2>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 22, display: "grid", gap: 14 }}>
+        <h2 style={{ color: "var(--text)", fontSize: 17, fontWeight: 900, margin: 0 }}>Nueva revisión</h2>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <select
             value={subjectType}
@@ -143,11 +143,11 @@ export default function MultiAgentePage() {
             style={{
               padding: "10px 16px",
               borderRadius: 10,
-              border: "1px solid #E2E8F0",
+              border: "1px solid var(--border)",
               fontSize: 14,
               fontWeight: 600,
-              color: "#0F2A3D",
-              background: "#FFFFFF",
+              color: "var(--text)",
+              background: "var(--bg-elev)",
             }}
           >
             <option value="TaxCase">Caso Tributario</option>
@@ -162,8 +162,8 @@ export default function MultiAgentePage() {
               padding: "10px 24px",
               borderRadius: 999,
               border: "none",
-              background: reviewing ? "#94A3B8" : "#0F766E",
-              color: "#FFFFFF",
+              background: reviewing ? "var(--bg-elev)" : "var(--accent)",
+              color: "var(--text)",
               fontSize: 14,
               fontWeight: 800,
               cursor: reviewing ? "not-allowed" : "pointer",
@@ -177,7 +177,7 @@ export default function MultiAgentePage() {
       {/* Report */}
       {report && (
         <section style={{
-          background: "#FFFFFF",
+          background: "var(--bg-elev)",
           border: `1px solid ${severityColor(report.finalSeverity as AgentAssessmentSeverity)}33`,
           borderLeft: `4px solid ${severityColor(report.finalSeverity as AgentAssessmentSeverity)}`,
           borderRadius: 18,
@@ -186,7 +186,7 @@ export default function MultiAgentePage() {
           gap: 14,
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h2 style={{ color: "#0F2A3D", fontSize: 17, fontWeight: 900, margin: 0 }}>
+            <h2 style={{ color: "var(--text)", fontSize: 17, fontWeight: 900, margin: 0 }}>
               Reporte multiagente
             </h2>
             <span style={{
@@ -200,12 +200,12 @@ export default function MultiAgentePage() {
               {SEVERITY_LABELS[report.finalSeverity as AgentAssessmentSeverity]}
             </span>
           </div>
-          <p style={{ color: "#475569", fontSize: 14, margin: 0 }}>{report.finalSummary}</p>
+          <p style={{ color: "var(--text)", fontSize: 14, margin: 0 }}>{report.finalSummary}</p>
           <div>
-            <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 6px" }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 6px" }}>
               Recomendación consolidada
             </p>
-            <p style={{ color: "#0F2A3D", fontSize: 14, lineHeight: 1.55, margin: 0, whiteSpace: "pre-line" }}>
+            <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.55, margin: 0, whiteSpace: "pre-line" }}>
               {report.finalRecommendation}
             </p>
           </div>
@@ -214,23 +214,23 @@ export default function MultiAgentePage() {
 
       {/* KPIs */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
-        <Kpi label="Evaluaciones" value={assessments.length} color="#0F2A3D" />
-        <Kpi label="Críticas" value={criticalCount} color="#B91C1C" />
-        <Kpi label="Altas" value={highCount} color="#B45309" />
-        <Kpi label="Sujetos" value={sortedSubjects.length} color="#2563EB" />
+        <Kpi label="Evaluaciones" value={assessments.length} color="var(--text)" />
+        <Kpi label="Críticas" value={criticalCount} color="#C4634A" />
+        <Kpi label="Altas" value={highCount} color="#E8B84B" />
+        <Kpi label="Sujetos" value={sortedSubjects.length} color="#3FA687" />
       </section>
 
       {/* Assessments by subject */}
       {sortedSubjects.length === 0 ? (
-        <section style={{ background: "#ECFDF5", border: "1px solid #BBF7D0", borderRadius: 18, padding: 24, textAlign: "center" }}>
-          <p style={{ color: "#166534", fontSize: 16, fontWeight: 800, margin: 0 }}>
+        <section style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 18, padding: 24, textAlign: "center" }}>
+          <p style={{ color: "var(--accent)", fontSize: 16, fontWeight: 800, margin: 0 }}>
             Sin evaluaciones multiagente aún. Ejecuta un análisis desde el panel superior.
           </p>
         </section>
       ) : (
         sortedSubjects.map(([key, items]) => (
-          <section key={key} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 22, display: "grid", gap: 12 }}>
-            <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: 0 }}>
+          <section key={key} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 22, display: "grid", gap: 12 }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: 0 }}>
               {key}
             </p>
             {items.map((a) => (
@@ -242,15 +242,15 @@ export default function MultiAgentePage() {
                   alignItems: "flex-start",
                   padding: "12px 16px",
                   borderRadius: 12,
-                  background: a.severity === "CRITICAL" ? "#FEF2F2" : a.severity === "HIGH" ? "#FFFBEB" : "#F8FAFC",
+                  background: a.severity === "CRITICAL" ? "rgba(196,99,74,0.14)" : a.severity === "HIGH" ? "rgba(232,184,75,0.14)" : "var(--bg-sunken)",
                   border: "1px solid",
-                  borderColor: a.severity === "CRITICAL" ? "#FECACA" : a.severity === "HIGH" ? "#FDE68A" : "#E2E8F0",
+                  borderColor: a.severity === "CRITICAL" ? "rgba(196,99,74,0.14)" : a.severity === "HIGH" ? "rgba(232,184,75,0.14)" : "var(--border)",
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
                     <span style={{ fontSize: 16 }}>{AGENT_EMOJIS[a.agentType]}</span>
-                    <span style={{ color: "#0F2A3D", fontSize: 13, fontWeight: 800 }}>
+                    <span style={{ color: "var(--text)", fontSize: 13, fontWeight: 800 }}>
                       {AGENT_LABELS[a.agentType]}
                     </span>
                     <span style={{
@@ -264,16 +264,16 @@ export default function MultiAgentePage() {
                       {SEVERITY_LABELS[a.severity]}
                     </span>
                   </div>
-                  <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>{a.summary}</p>
-                  <p style={{ color: "#0F766E", fontSize: 12, margin: "4px 0 0" }}>
+                  <p style={{ color: "var(--text)", fontSize: 13, margin: 0 }}>{a.summary}</p>
+                  <p style={{ color: "var(--accent)", fontSize: 12, margin: "4px 0 0" }}>
                     {a.recommendation}
                   </p>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 900, margin: 0 }}>
+                  <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 900, margin: 0 }}>
                     {Math.round(a.confidence * 100)}%
                   </p>
-                  <p style={{ color: "#94A3B8", fontSize: 10, margin: 0 }}>confianza</p>
+                  <p style={{ color: "var(--text-soft)", fontSize: 10, margin: 0 }}>confianza</p>
                 </div>
               </div>
             ))}
@@ -286,8 +286,8 @@ export default function MultiAgentePage() {
 
 function Kpi({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 18 }}>
-      <p style={{ color: "#64748B", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 16, padding: 18 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
       <p style={{ color, fontSize: 24, fontWeight: 900, margin: 0 }}>{value}</p>
     </article>
   );

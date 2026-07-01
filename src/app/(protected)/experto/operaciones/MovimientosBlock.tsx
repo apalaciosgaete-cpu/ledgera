@@ -40,12 +40,12 @@ type EventsData = { events: TaxEvent[] };
 
 function typeLabel(type: string) {
   switch (type) {
-    case "BUY": return { text: "Compra", color: "#166534", bg: "#F0FDF4" };
-    case "SELL": return { text: "Venta", color: "#991B1B", bg: "#FEF2F2" };
-    case "DEPOSIT": return { text: "Depósito", color: "#075985", bg: "#E0F2FE" };
-    case "WITHDRAW": return { text: "Retiro", color: "#92400E", bg: "#FFFBEB" };
-    case "STAKING_REWARD": return { text: "Staking", color: "#0F766E", bg: "#ECFDF5" };
-    default: return { text: type, color: "#475569", bg: "#F1F5F9" };
+    case "BUY": return { text: "Compra", color: "var(--accent)", bg: "var(--accent-soft)" };
+    case "SELL": return { text: "Venta", color: "var(--loss)", bg: "rgba(196,99,74,0.14)" };
+    case "DEPOSIT": return { text: "Depósito", color: "var(--text)", bg: "var(--accent-soft)" };
+    case "WITHDRAW": return { text: "Retiro", color: "var(--warn)", bg: "rgba(232,184,75,0.14)" };
+    case "STAKING_REWARD": return { text: "Staking", color: "var(--accent)", bg: "var(--accent-soft)" };
+    default: return { text: type, color: "var(--text)", bg: "var(--bg-sunken)" };
   }
 }
 
@@ -87,18 +87,18 @@ export function MovimientosBlock() {
 
   return (
     <div>
-      <section style={{ alignItems: "end", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginBottom: 20, padding: 16 }}>
-        <label style={{ color: "#475569", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
+      <section style={{ alignItems: "end", background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginBottom: 20, padding: 16 }}>
+        <label style={{ color: "var(--text)", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
           Año
-          <select value={year} onChange={(e) => { setYear(e.target.value); setPage(1); }} style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", minHeight: 40, padding: "0 10px" }}>
+          <select value={year} onChange={(e) => { setYear(e.target.value); setPage(1); }} style={{ border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", minHeight: 40, padding: "0 10px" }}>
             <option value={String(currentYear)}>{currentYear}</option>
             <option value={String(currentYear - 1)}>{currentYear - 1}</option>
             <option value={String(currentYear - 2)}>{currentYear - 2}</option>
           </select>
         </label>
-        <label style={{ color: "#475569", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
+        <label style={{ color: "var(--text)", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
           Tipo
-          <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }} style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", minHeight: 40, padding: "0 10px" }}>
+          <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }} style={{ border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", minHeight: 40, padding: "0 10px" }}>
             <option value="">Todos</option>
             <option value="BUY">Compra</option>
             <option value="SELL">Venta</option>
@@ -106,41 +106,41 @@ export function MovimientosBlock() {
             <option value="WITHDRAW">Retiro</option>
           </select>
         </label>
-        <label style={{ color: "#475569", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
+        <label style={{ color: "var(--text)", display: "grid", fontSize: 13, fontWeight: 750, gap: 6 }}>
           Activo
-          <input type="text" value={symbolFilter} onChange={(e) => { setSymbolFilter(e.target.value.toUpperCase()); setPage(1); }} placeholder="BTC, ETH…" style={{ border: "1px solid #CBD5E1", borderRadius: 8, color: "#0F2A3D", fontSize: 14, minHeight: 40, padding: "0 10px" }} />
+          <input type="text" value={symbolFilter} onChange={(e) => { setSymbolFilter(e.target.value.toUpperCase()); setPage(1); }} placeholder="BTC, ETH…" style={{ border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontSize: 14, minHeight: 40, padding: "0 10px" }} />
         </label>
       </section>
 
-      {loading && <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando movimientos…</p>}
-      {error && <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{error}</div>}
+      {loading && <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando movimientos…</p>}
+      {error && <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>{error}</div>}
 
       {!loading && movementsData && (
         <>
           <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", marginBottom: 20 }}>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 14 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Total</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{movementsData.total}</p>
+            <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 14 }}>
+              <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Total</p>
+              <p style={{ color: "var(--text)", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{movementsData.total}</p>
             </article>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 14 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Compras</p>
-              <p style={{ color: "#166534", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{movementsData.stats.buys}</p>
+            <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 14 }}>
+              <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Compras</p>
+              <p style={{ color: "var(--accent)", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{movementsData.stats.buys}</p>
             </article>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 14 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Ventas</p>
-              <p style={{ color: "#991B1B", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{movementsData.stats.sells}</p>
+            <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 14 }}>
+              <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Ventas</p>
+              <p style={{ color: "var(--loss)", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{movementsData.stats.sells}</p>
             </article>
-            <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: 14 }}>
-              <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Eventos</p>
-              <p style={{ color: "#0F2A3D", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{eventsData?.events.length ?? 0}</p>
+            <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, padding: 14 }}>
+              <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Eventos</p>
+              <p style={{ color: "var(--text)", fontSize: "1.35rem", fontWeight: 850, margin: 0 }}>{eventsData?.events.length ?? 0}</p>
             </article>
           </section>
 
-          <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, overflow: "hidden" }}>
+          <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
             <div style={{ overflowX: "auto" }}>
               <table style={{ borderCollapse: "collapse", minWidth: 900, width: "100%" }}>
                 <thead>
-                  <tr style={{ background: "#0F2A3D", color: "#F8FAFC", textAlign: "left" }}>
+                  <tr style={{ background: "var(--bg-elev)", color: "var(--text)", textAlign: "left" }}>
                     <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Fecha</th>
                     <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Activo</th>
                     <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Tipo</th>
@@ -157,24 +157,24 @@ export function MovimientosBlock() {
                     const t = typeLabel(m.type);
                     const isAnulled = !!m.deletedAt;
                     return (
-                      <tr key={m.id} style={{ borderTop: "1px solid #E2E8F0", opacity: isAnulled ? 0.5 : 1 }}>
-                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 14px", whiteSpace: "nowrap" }}>{m.executedAt ? new Date(m.executedAt).toLocaleDateString("es-CL") : "—"}</td>
-                        <td style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 750, padding: "12px 14px" }}>{m.symbol}</td>
+                      <tr key={m.id} style={{ borderTop: "1px solid var(--border)", opacity: isAnulled ? 0.5 : 1 }}>
+                        <td style={{ color: "var(--text)", fontSize: 13, padding: "12px 14px", whiteSpace: "nowrap" }}>{m.executedAt ? new Date(m.executedAt).toLocaleDateString("es-CL") : "—"}</td>
+                        <td style={{ color: "var(--text)", fontSize: 14, fontWeight: 750, padding: "12px 14px" }}>{m.symbol}</td>
                         <td style={{ padding: "12px 14px" }}><span style={{ background: t.bg, borderRadius: 999, color: t.color, fontSize: 12, fontWeight: 800, padding: "2px 10px" }}>{t.text}</span></td>
-                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 14px" }}>{m.quantity}</td>
-                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 14px" }}>{m.priceUsd ?? "—"}</td>
-                        <td style={{ color: "#334155", fontSize: 13, padding: "12px 14px" }}>{m.feeUsd ?? "—"}</td>
+                        <td style={{ color: "var(--text)", fontSize: 13, padding: "12px 14px" }}>{m.quantity}</td>
+                        <td style={{ color: "var(--text)", fontSize: 13, padding: "12px 14px" }}>{m.priceUsd ?? "—"}</td>
+                        <td style={{ color: "var(--text)", fontSize: 13, padding: "12px 14px" }}>{m.feeUsd ?? "—"}</td>
                         <td style={{ padding: "12px 14px" }}>
                           {event ? (
                             <span style={{ alignItems: "center", display: "inline-flex", gap: 6 }}>
-                              <span style={{ color: "#16A34A", fontSize: 13 }}>✓</span>
-                              <span style={{ color: "#0F2A3D", fontSize: 12, fontWeight: 750 }}>{event.effectiveTaxCategory}</span>
-                              <span style={{ color: "#64748B", fontSize: 11 }}>{event.realizedPnlUsd >= 0 ? "+" : ""}{event.realizedPnlUsd.toFixed(2)} USD</span>
+                              <span style={{ color: "var(--accent)", fontSize: 13 }}>✓</span>
+                              <span style={{ color: "var(--text)", fontSize: 12, fontWeight: 750 }}>{event.effectiveTaxCategory}</span>
+                              <span style={{ color: "var(--text-soft)", fontSize: 11 }}>{event.realizedPnlUsd >= 0 ? "+" : ""}{event.realizedPnlUsd.toFixed(2)} USD</span>
                             </span>
-                          ) : m.type === "SELL" ? <span style={{ color: "#DC2626", fontSize: 12, fontWeight: 750 }}>⚠ Sin evento</span> : <span style={{ color: "#94A3B8", fontSize: 12 }}>—</span>}
+                          ) : m.type === "SELL" ? <span style={{ color: "var(--loss)", fontSize: 12, fontWeight: 750 }}>⚠ Sin evento</span> : <span style={{ color: "var(--text-soft)", fontSize: 12 }}>—</span>}
                         </td>
                         <td style={{ padding: "12px 14px" }}>
-                          {isAnulled ? <span style={{ background: "#FEF2F2", borderRadius: 999, color: "#991B1B", fontSize: 11, fontWeight: 800, padding: "2px 8px" }}>Anulado</span> : <span style={{ background: "#F0FDF4", borderRadius: 999, color: "#166534", fontSize: 11, fontWeight: 800, padding: "2px 8px" }}>Activo</span>}
+                          {isAnulled ? <span style={{ background: "rgba(196,99,74,0.14)", borderRadius: 999, color: "var(--loss)", fontSize: 11, fontWeight: 800, padding: "2px 8px" }}>Anulado</span> : <span style={{ background: "var(--accent-soft)", borderRadius: 999, color: "var(--accent)", fontSize: 11, fontWeight: 800, padding: "2px 8px" }}>Activo</span>}
                         </td>
                       </tr>
                     );
@@ -184,17 +184,17 @@ export function MovimientosBlock() {
             </div>
             {movementsData.movements.length === 0 && (
               <div style={{ padding: "2rem", textAlign: "center" }}>
-                <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>Sin movimientos para los filtros seleccionados</p>
-                <p style={{ color: "#CBD5E1", fontSize: 13, margin: 0 }}>Ajusta el año, tipo o activo para ver resultados.</p>
+                <p style={{ color: "var(--text-soft)", fontWeight: 600, margin: "0 0 4px" }}>Sin movimientos para los filtros seleccionados</p>
+                <p style={{ color: "var(--text-faint)", fontSize: 13, margin: 0 }}>Ajusta el año, tipo o activo para ver resultados.</p>
               </div>
             )}
           </section>
 
           {movementsData.totalPages > 1 && (
             <section style={{ alignItems: "center", display: "flex", gap: 10, justifyContent: "center", marginTop: 16 }}>
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ background: page <= 1 ? "#F1F5F9" : "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: page <= 1 ? "#94A3B8" : "#0F2A3D", cursor: page <= 1 ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 750, padding: "8px 14px" }}>← Anterior</button>
-              <span style={{ color: "#64748B", fontSize: 13, fontWeight: 750 }}>Página {page} de {movementsData.totalPages}</span>
-              <button onClick={() => setPage((p) => Math.min(movementsData.totalPages, p + 1))} disabled={page >= movementsData.totalPages} style={{ background: page >= movementsData.totalPages ? "#F1F5F9" : "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 8, color: page >= movementsData.totalPages ? "#94A3B8" : "#0F2A3D", cursor: page >= movementsData.totalPages ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 750, padding: "8px 14px" }}>Siguiente →</button>
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ background: page <= 1 ? "var(--bg-sunken)" : "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: page <= 1 ? "var(--text-soft)" : "var(--text)", cursor: page <= 1 ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 750, padding: "8px 14px" }}>← Anterior</button>
+              <span style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 750 }}>Página {page} de {movementsData.totalPages}</span>
+              <button onClick={() => setPage((p) => Math.min(movementsData.totalPages, p + 1))} disabled={page >= movementsData.totalPages} style={{ background: page >= movementsData.totalPages ? "var(--bg-sunken)" : "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: page >= movementsData.totalPages ? "var(--text-soft)" : "var(--text)", cursor: page >= movementsData.totalPages ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 750, padding: "8px 14px" }}>Siguiente →</button>
             </section>
           )}
         </>

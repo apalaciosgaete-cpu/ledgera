@@ -91,15 +91,15 @@ function statusTitle(status: StatusFilter): string {
 
 function tone(status: string) {
   if (status === "CONFIRMED" || status === "MATCHED") {
-    return { bg: "rgba(22,163,74,0.10)", fg: "#15803D", border: "rgba(22,163,74,0.24)" };
+    return { bg: "rgba(22,163,74,0.10)", fg: "var(--accent)", border: "rgba(22,163,74,0.24)" };
   }
   if (status === "REVIEW") {
-    return { bg: "rgba(37,99,235,0.10)", fg: "#1D4ED8", border: "rgba(37,99,235,0.22)" };
+    return { bg: "rgba(37,99,235,0.10)", fg: "var(--accent)", border: "rgba(37,99,235,0.22)" };
   }
   if (status === "REJECTED" || status === "IGNORED") {
-    return { bg: "rgba(239,68,68,0.08)", fg: "#DC2626", border: "rgba(239,68,68,0.22)" };
+    return { bg: "rgba(239,68,68,0.08)", fg: "var(--loss)", border: "rgba(239,68,68,0.22)" };
   }
-  return { bg: "rgba(245,158,11,0.12)", fg: "#B45309", border: "rgba(245,158,11,0.24)" };
+  return { bg: "rgba(245,158,11,0.12)", fg: "var(--warn)", border: "rgba(245,158,11,0.24)" };
 }
 
 function statusCount(items: StagingItem[], status: StatusFilter): number {
@@ -132,7 +132,7 @@ function SourceBadge({ item }: { item: StagingItem }) {
       padding: "2px 7px",
       border: `1px solid ${isExchange ? "rgba(245,158,11,0.35)" : "rgba(37,99,235,0.22)"}`,
       background: isExchange ? "rgba(245,158,11,0.10)" : "rgba(37,99,235,0.08)",
-      color: isExchange ? "#B45309" : "#1D4ED8",
+      color: isExchange ? "var(--warn)" : "var(--accent)",
       fontSize: 10,
       fontWeight: 850,
       whiteSpace: "nowrap",
@@ -153,7 +153,7 @@ function StatusFilterPill({
   active: boolean;
   onClick: () => void;
 }) {
-  const t = status === "ALL" ? { bg: "#0F2A3D", fg: "#FFFFFF", border: "#0F2A3D" } : tone(status);
+  const t = status === "ALL" ? { bg: "var(--bg-elev)", fg: "var(--bg-elev)", border: "var(--border-strong)" } : tone(status);
   return (
     <button
       type="button"
@@ -162,9 +162,9 @@ function StatusFilterPill({
         minHeight: 34,
         borderRadius: 999,
         padding: "6px 12px",
-        border: `1px solid ${active ? "#0F2A3D" : t.border}`,
-        background: active ? "#0F2A3D" : "#FFFFFF",
-        color: active ? "#FFFFFF" : "#334155",
+        border: `1px solid ${active ? "var(--border-strong)" : t.border}`,
+        background: active ? "var(--bg-elev)" : "var(--bg-elev)",
+        color: active ? "var(--text)" : "var(--text)",
         display: "inline-flex",
         alignItems: "center",
         gap: 8,
@@ -184,7 +184,7 @@ function StatusFilterPill({
         alignItems: "center",
         justifyContent: "center",
         background: active ? "rgba(255,255,255,0.16)" : t.bg,
-        color: active ? "#FFFFFF" : t.fg,
+        color: active ? "var(--text)" : t.fg,
         fontSize: 11,
         fontWeight: 900,
       }}>
@@ -207,10 +207,10 @@ function ActionButton({
 }) {
   const style =
     variant === "green"
-      ? { bg: "#16A34A", fg: "#FFFFFF", border: "#16A34A" }
+      ? { bg: "var(--accent)", fg: "var(--bg-elev)", border: "var(--accent)" }
       : variant === "red"
-        ? { bg: "#FFFFFF", fg: "#DC2626", border: "rgba(239,68,68,0.38)" }
-        : { bg: "#FFFFFF", fg: "#475569", border: "#CBD5E1" };
+        ? { bg: "var(--bg-elev)", fg: "var(--loss)", border: "rgba(239,68,68,0.38)" }
+        : { bg: "var(--bg-elev)", fg: "var(--bg-elev)", border: "var(--border)" };
 
   return (
     <button
@@ -251,12 +251,12 @@ function StagingCard({
   onDetail: (item: StagingItem) => Promise<void>;
 }) {
   const active = item.status === "PENDING" || item.status === "REVIEW";
-  const amountColor = item.direction === "INFLOW" ? "#16A34A" : item.direction === "OUTFLOW" ? "#DC2626" : "#334155";
+  const amountColor = item.direction === "INFLOW" ? "#3FA687" : item.direction === "OUTFLOW" ? "#C4634A" : "var(--text)";
 
   return (
     <article style={{
-      border: `1px solid ${selected ? "#7DD3FC" : "#E2E8F0"}`,
-      background: selected ? "rgba(14,165,233,0.05)" : "#FFFFFF",
+      border: `1px solid ${selected ? "#3FA687" : "var(--border)"}`,
+      background: selected ? "rgba(14,165,233,0.05)" : "var(--bg-elev)",
       borderRadius: 12,
       padding: "12px 14px",
       minWidth: 0,
@@ -272,23 +272,23 @@ function StagingCard({
               checked={selected}
               onChange={() => onSelect(item.id)}
               aria-label={`Seleccionar ${item.title}`}
-              style={{ width: 16, height: 16, accentColor: "#0EA5E9", cursor: "pointer", flexShrink: 0 }}
+              style={{ width: 16, height: 16, accentColor: "var(--accent)", cursor: "pointer", flexShrink: 0 }}
             />
           )}
           <SourceBadge item={item} />
           <StatusBadge status={item.status} />
         </div>
-        <span style={{ fontSize: 11, color: "#94A3B8", whiteSpace: "nowrap" }}>{formatDate(item.occurredAt)}</span>
+        <span style={{ fontSize: 11, color: "var(--text-soft)", whiteSpace: "nowrap" }}>{formatDate(item.occurredAt)}</span>
       </div>
 
       <div>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 850, color: "#0F2A3D", lineHeight: 1.25 }}>{item.title}</p>
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748B", lineHeight: 1.35 }}>{item.subtitle}</p>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 850, color: "var(--text)", lineHeight: 1.25 }}>{item.title}</p>
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-soft)", lineHeight: 1.35 }}>{item.subtitle}</p>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
         <span style={{ fontSize: 12, fontWeight: 850, color: amountColor }}>{item.amountLabel}</span>
-        {item.allIds.length > 1 && <span style={{ fontSize: 10, color: "#94A3B8" }}>{item.allIds.length} fuentes</span>}
+        {item.allIds.length > 1 && <span style={{ fontSize: 10, color: "var(--text-soft)" }}>{item.allIds.length} fuentes</span>}
       </div>
 
       {item.source === "EXCHANGE" && active && (
@@ -314,7 +314,7 @@ function StagingCard({
           padding: 0,
           border: "none",
           background: "none",
-          color: "#64748B",
+          color: "var(--text-soft)",
           fontSize: 11,
           textAlign: "left",
           textDecoration: "underline",
@@ -350,14 +350,14 @@ function Section({
 
   return (
     <section style={{
-      border: "1px solid #E2E8F0",
+      border: "1px solid var(--border)",
       borderRadius: 16,
-      background: "#F8FAFC",
+      background: "var(--bg-sunken)",
       padding: 16,
       overflow: "visible",
     }}>
       <header style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: "#0F2A3D" }}>{title}</h2>
+        <h2 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: "var(--text)" }}>{title}</h2>
         <span style={{
           minWidth: 24,
           textAlign: "center",
@@ -408,7 +408,7 @@ function NextStepCta({ confirmed, rejected }: { confirmed: number; rejected: num
       gap: 12,
       flexWrap: "wrap",
     }}>
-      <div style={{ color: "#166534", fontSize: 13, lineHeight: 1.35 }}>
+      <div style={{ color: "var(--accent)", fontSize: 13, lineHeight: 1.35 }}>
         <strong>IA: revisión completada.</strong>{" "}
         {confirmed} confirmados{rejected > 0 ? ` · ${rejected} rechazados` : ""}. Siguiente recomendado: revisar los activos generados.
       </div>
@@ -426,9 +426,9 @@ function ctaLinkStyle(variant: "primary" | "secondary"): CSSProperties {
     minHeight: 34,
     padding: "8px 12px",
     borderRadius: 9,
-    border: variant === "primary" ? "1px solid #16A34A" : "1px solid #CBD5E1",
-    background: variant === "primary" ? "#16A34A" : "#FFFFFF",
-    color: variant === "primary" ? "#FFFFFF" : "#475569",
+    border: variant === "primary" ? "1px solid var(--accent)" : "1px solid var(--border)",
+    background: variant === "primary" ? "var(--accent)" : "var(--bg-elev)",
+    color: variant === "primary" ? "var(--text)" : "var(--text)",
     fontSize: 12,
     fontWeight: 900,
     textDecoration: "none",
@@ -457,20 +457,20 @@ function DetailDrawer({
       zIndex: 80,
       overflowY: "auto",
       borderRadius: 18,
-      border: "1px solid #CBD5E1",
-      background: "#FFFFFF",
+      border: "1px solid var(--border)",
+      background: "var(--bg-elev)",
       boxShadow: "0 24px 80px rgba(15,42,61,0.25)",
       padding: 20,
       fontFamily: fonts.body,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 18 }}>
         <div>
-          <p style={{ margin: 0, fontSize: 11, color: "#64748B", fontWeight: 850, textTransform: "uppercase" }}>Detalle del registro</p>
-          <h2 style={{ margin: "4px 0 6px", fontSize: 20, color: "#0F2A3D" }}>{item.title}</h2>
+          <p style={{ margin: 0, fontSize: 11, color: "var(--text-soft)", fontWeight: 850, textTransform: "uppercase" }}>Detalle del registro</p>
+          <h2 style={{ margin: "4px 0 6px", fontSize: 20, color: "var(--text)" }}>{item.title}</h2>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <SourceBadge item={item} />
             <StatusBadge status={item.status} />
-            <span style={{ color: "#64748B", fontSize: 12 }}>{formatDate(item.occurredAt)}</span>
+            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>{formatDate(item.occurredAt)}</span>
           </div>
         </div>
         <button
@@ -479,9 +479,9 @@ function DetailDrawer({
           style={{
             padding: "7px 12px",
             borderRadius: 9,
-            border: "1px solid #CBD5E1",
-            background: "#FFFFFF",
-            color: "#475569",
+            border: "1px solid var(--border)",
+            background: "var(--bg-elev)",
+            color: "var(--text)",
             cursor: "pointer",
             fontSize: 12,
             fontWeight: 850,
@@ -495,11 +495,11 @@ function DetailDrawer({
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         margin: 0,
-        border: "1px solid #E2E8F0",
+        border: "1px solid var(--border)",
         borderRadius: 12,
         padding: 14,
-        background: "#F8FAFC",
-        color: "#334155",
+        background: "var(--bg-sunken)",
+        color: "var(--text)",
         fontSize: 11,
         lineHeight: 1.5,
       }}>
@@ -511,9 +511,9 @@ function DetailDrawer({
 
 function bulkButtonStyle(variant: "green" | "red", busy: boolean): CSSProperties {
   return {
-    border: variant === "green" ? "1px solid #16A34A" : "1px solid rgba(239,68,68,0.35)",
-    background: variant === "green" ? "#16A34A" : "#FFFFFF",
-    color: variant === "green" ? "#FFFFFF" : "#DC2626",
+    border: variant === "green" ? "1px solid var(--accent)" : "1px solid rgba(239,68,68,0.35)",
+    background: variant === "green" ? "var(--accent)" : "var(--bg-elev)",
+    color: variant === "green" ? "var(--text)" : "var(--loss)",
     borderRadius: 8,
     padding: "7px 14px",
     fontSize: 12,
@@ -689,8 +689,8 @@ export default function ImportacionesPage() {
       overflow: "visible",
     }}>
       <header style={{ marginBottom: 18 }}>
-        <h1 style={{ margin: 0, fontSize: 24, color: "#0F2A3D", fontWeight: 900 }}>Importaciones</h1>
-        <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: 14 }}>
+        <h1 style={{ margin: 0, fontSize: 24, color: "var(--text)", fontWeight: 900 }}>Importaciones</h1>
+        <p style={{ margin: "6px 0 0", color: "var(--text-soft)", fontSize: 14 }}>
           Revisa pendientes, confirma lo válido y consulta el historial resuelto.
         </p>
       </header>
@@ -708,9 +708,9 @@ export default function ImportacionesPage() {
                 minHeight: 38,
                 padding: "7px 16px",
                 borderRadius: 10,
-                background: active ? "#0F2A3D" : "#FFFFFF",
-                color: active ? "#FFFFFF" : "#64748B",
-                border: `1px solid ${active ? "#0F2A3D" : "#E2E8F0"}`,
+                background: active ? "var(--bg-elev)" : "var(--bg-elev)",
+                color: active ? "var(--text)" : "var(--text-soft)",
+                border: `1px solid ${active ? "var(--border-strong)" : "var(--border)"}`,
                 fontWeight: active ? 900 : 700,
                 cursor: "pointer",
               }}
@@ -751,19 +751,19 @@ export default function ImportacionesPage() {
           marginBottom: 14,
           padding: "11px 14px",
           borderRadius: 12,
-          border: "1px solid #BAE6FD",
+          border: "1px solid var(--border)",
           background: "rgba(14,165,233,0.07)",
         }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 9, color: "#0369A1", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 9, color: "var(--accent)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
             <input
               type="checkbox"
               checked={allVisiblePendingSelected}
               onChange={toggleSelectAllVisiblePending}
-              style={{ width: 17, height: 17, accentColor: "#0EA5E9" }}
+              style={{ width: 17, height: 17, accentColor: "var(--accent)" }}
             />
             Seleccionar todos los pendientes visibles
           </label>
-          <span style={{ color: "#64748B", fontSize: 12 }}>
+          <span style={{ color: "var(--text-soft)", fontSize: 12 }}>
             {selectedVisiblePending} de {selectablePendingIds.length} pendientes visibles seleccionados.
           </span>
         </section>
@@ -778,32 +778,32 @@ export default function ImportacionesPage() {
           marginBottom: 14,
           padding: "11px 14px",
           borderRadius: 12,
-          border: "1px solid #7DD3FC",
+          border: "1px solid var(--accent)",
           background: "rgba(14,165,233,0.10)",
         }}>
-          <strong style={{ color: "#0369A1", fontSize: 13 }}>{selectedExchangeItems.length} seleccionado{selectedExchangeItems.length !== 1 ? "s" : ""}</strong>
+          <strong style={{ color: "var(--accent)", fontSize: 13 }}>{selectedExchangeItems.length} seleccionado{selectedExchangeItems.length !== 1 ? "s" : ""}</strong>
           <button type="button" disabled={bulkBusy !== null} onClick={() => void runBulk("confirm")} style={bulkButtonStyle("green", bulkBusy !== null)}>
             {bulkBusy === "confirm" ? "Confirmando…" : "Confirmar seleccionados"}
           </button>
           <button type="button" disabled={bulkBusy !== null} onClick={() => void runBulk("reject")} style={bulkButtonStyle("red", bulkBusy !== null)}>
             {bulkBusy === "reject" ? "Rechazando…" : "Rechazar seleccionados"}
           </button>
-          <button type="button" onClick={() => setSelectedIds(new Set())} style={{ marginLeft: "auto", border: "1px solid #CBD5E1", background: "#FFFFFF", borderRadius: 8, padding: "6px 10px", color: "#64748B", fontSize: 12, fontWeight: 850, cursor: "pointer" }}>
+          <button type="button" onClick={() => setSelectedIds(new Set())} style={{ marginLeft: "auto", border: "1px solid var(--border)", background: "var(--bg-elev)", borderRadius: 8, padding: "6px 10px", color: "var(--text-soft)", fontSize: 12, fontWeight: 850, cursor: "pointer" }}>
             Limpiar selección
           </button>
         </section>
       )}
 
       {error && (
-        <div style={{ marginBottom: 14, padding: "11px 14px", borderRadius: 12, background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)", color: "#B91C1C", fontSize: 13, fontWeight: 750 }}>
+        <div style={{ marginBottom: 14, padding: "11px 14px", borderRadius: 12, background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)", color: "var(--loss)", fontSize: 13, fontWeight: 750 }}>
           {error}
         </div>
       )}
 
       {loading ? (
-        <p style={{ color: "#94A3B8", fontSize: 13 }}>Cargando bandeja…</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 13 }}>Cargando bandeja…</p>
       ) : visibleSections.length === 0 ? (
-        <section style={{ border: "1px solid #E2E8F0", background: "#FFFFFF", borderRadius: 16, padding: 24, color: "#64748B" }}>
+        <section style={{ border: "1px solid var(--border)", background: "var(--bg-elev)", borderRadius: 16, padding: 24, color: "var(--text-soft)" }}>
           No hay registros para esta vista.
         </section>
       ) : (

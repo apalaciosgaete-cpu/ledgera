@@ -62,7 +62,7 @@ export default function BlockedPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#F6F8FA",
+        background: "var(--bg-sunken)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -72,9 +72,9 @@ export default function BlockedPage() {
     >
       <div
         style={{
-          background: "#ffffff",
+          background: "var(--bg-elev)",
           borderRadius: "16px",
-          border: "1px solid #E2E8F0",
+          border: "1px solid var(--border)",
           padding: "48px",
           maxWidth: "520px",
           width: "100%",
@@ -89,10 +89,10 @@ export default function BlockedPage() {
             viewBox="0 0 64 56"
             style={{ margin: "0 auto" }}
           >
-            <rect x="4" y="44" width="10" height="12" rx="2" fill="#16A34A" fillOpacity="0.4" />
-            <rect x="18" y="32" width="10" height="24" rx="2" fill="#16A34A" fillOpacity="0.65" />
-            <rect x="32" y="18" width="10" height="38" rx="2" fill="#16A34A" />
-            <rect x="46" y="4" width="10" height="52" rx="2" fill="#F59E0B" />
+            <rect x="4" y="44" width="10" height="12" rx="2" fill="#3FA687" fillOpacity="0.4" />
+            <rect x="18" y="32" width="10" height="24" rx="2" fill="#3FA687" fillOpacity="0.65" />
+            <rect x="32" y="18" width="10" height="38" rx="2" fill="#3FA687" />
+            <rect x="46" y="4" width="10" height="52" rx="2" fill="#E8B84B" />
           </svg>
         </div>
 
@@ -113,7 +113,7 @@ export default function BlockedPage() {
             height="28"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#EF4444"
+            stroke="#C4634A"
             strokeWidth="1.75"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -128,7 +128,7 @@ export default function BlockedPage() {
             fontFamily: "var(--font-display)",
             fontSize: "24px",
             fontWeight: 700,
-            color: "#0F172A",
+            color: "var(--text)",
             margin: "0 0 12px",
           }}
         >
@@ -138,7 +138,7 @@ export default function BlockedPage() {
         <p
           style={{
             fontSize: "15px",
-            color: "#64748B",
+            color: "var(--text-soft)",
             lineHeight: "1.6",
             margin: "0 0 8px",
           }}
@@ -150,7 +150,7 @@ export default function BlockedPage() {
           <p
             style={{
               fontSize: "14px",
-              color: "#94A3B8",
+              color: "var(--text-soft)",
               margin: "0 0 32px",
             }}
           >
@@ -160,8 +160,8 @@ export default function BlockedPage() {
 
         <div
           style={{
-            background: "#F8FAFC",
-            border: "1px solid #E2E8F0",
+            background: "var(--bg-sunken)",
+            border: "1px solid var(--border)",
             borderRadius: "12px",
             padding: "20px",
             marginBottom: "32px",
@@ -172,7 +172,7 @@ export default function BlockedPage() {
             style={{
               fontSize: "13px",
               fontWeight: 600,
-              color: "#334155",
+              color: "var(--text)",
               margin: "0 0 12px",
               textTransform: "uppercase",
               letterSpacing: "0.05em",
@@ -185,7 +185,7 @@ export default function BlockedPage() {
             style={{
               margin: 0,
               padding: "0 0 0 16px",
-              color: "#475569",
+              color: "var(--text)",
               fontSize: "14px",
               lineHeight: "1.8",
             }}
@@ -202,9 +202,9 @@ export default function BlockedPage() {
             width: "100%",
             padding: "12px 24px",
             borderRadius: "10px",
-            border: "1px solid #E2E8F0",
+            border: "1px solid var(--border)",
             background: "transparent",
-            color: "#64748B",
+            color: "var(--text-soft)",
             fontSize: "14px",
             fontFamily: "var(--font-body)",
             cursor: "pointer",

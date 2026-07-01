@@ -30,26 +30,26 @@ type TaxFileSummary = {
 const statusConfig: Record<TaxFileSummary["status"], { label: string; color: string; bg: string; icon: string }> = {
   HEALTHY: {
     label: "Todo en orden",
-    color: "#166534",
-    bg: "#F0FDF4",
+    color: "var(--accent)",
+    bg: "var(--accent-soft)",
     icon: "✅",
   },
   ATTENTION_REQUIRED: {
     label: "Revisión recomendada",
-    color: "#B45309",
-    bg: "#FEF9C3",
+    color: "var(--warn)",
+    bg: "rgba(232,184,75,0.14)",
     icon: "⚠️",
   },
   HIGH_RISK: {
     label: "Riesgo alto",
-    color: "#DC2626",
-    bg: "#FEF2F2",
+    color: "var(--loss)",
+    bg: "rgba(196,99,74,0.14)",
     icon: "🚨",
   },
   CRITICAL: {
     label: "Requiere acción inmediata",
-    color: "#991B1B",
-    bg: "#FEE2E2",
+    color: "var(--loss)",
+    bg: "rgba(196,99,74,0.14)",
     icon: "⛔",
   },
 };
@@ -77,17 +77,17 @@ export default function MyTaxFilePage() {
   }, []);
 
   if (loading) {
-    return <p style={{ color: "#64748B", fontSize: 14 }}>Cargando expediente tributario…</p>;
+    return <p style={{ color: "var(--text-soft)", fontSize: 14 }}>Cargando expediente tributario…</p>;
   }
 
   if (error) {
     return (
       <div
         style={{
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
+          background: "rgba(196,99,74,0.14)",
+          border: "1px solid rgba(196,99,74,0.14)",
           borderRadius: 8,
-          color: "#991B1B",
+          color: "var(--loss)",
           fontWeight: 750,
           padding: 16,
         }}
@@ -98,7 +98,7 @@ export default function MyTaxFilePage() {
   }
 
   if (!summary) {
-    return <p style={{ color: "#64748B" }}>No hay información disponible.</p>;
+    return <p style={{ color: "var(--text-soft)" }}>No hay información disponible.</p>;
   }
 
   const status = statusConfig[summary.status];
@@ -108,7 +108,7 @@ export default function MyTaxFilePage() {
       <header style={{ marginBottom: 24 }}>
         <p
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 850,
             letterSpacing: "0.06em",
@@ -120,7 +120,7 @@ export default function MyTaxFilePage() {
         </p>
         <h1
           style={{
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: "1.9rem",
             fontWeight: 850,
             lineHeight: 1.12,
@@ -129,7 +129,7 @@ export default function MyTaxFilePage() {
         >
           Tu resumen tributario en LEDGERA
         </h1>
-        <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
           Aquí ves el estado de tu información tributaria de forma sencilla.
         </p>
       </header>
@@ -193,7 +193,7 @@ export default function MyTaxFilePage() {
         />
       </div>
 
-      <p style={{ color: "#94A3B8", fontSize: 12, margin: 0 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 12, margin: 0 }}>
         Última actualización: {new Date(summary.generatedAt).toLocaleString("es-CL")}
       </p>
     </section>
@@ -210,15 +210,15 @@ function SimpleCard({
   return (
     <div
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 12,
         padding: "18px",
       }}
     >
       <h2
         style={{
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: "1rem",
           fontWeight: 850,
           margin: "0 0 12px",
@@ -229,8 +229,8 @@ function SimpleCard({
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {items.map((item) => (
           <div key={item.label} style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: "#64748B", fontSize: 14 }}>{item.label}</span>
-            <span style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 700 }}>{item.value}</span>
+            <span style={{ color: "var(--text-soft)", fontSize: 14 }}>{item.label}</span>
+            <span style={{ color: "var(--text)", fontSize: 14, fontWeight: 700 }}>{item.value}</span>
           </div>
         ))}
       </div>

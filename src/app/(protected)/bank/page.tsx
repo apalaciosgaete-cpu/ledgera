@@ -65,22 +65,22 @@ export default function BankPage() {
 
         {/* Header */}
         <div style={{ marginBottom: "28px" }}>
-          <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#0F2A3D", margin: 0 }}>
+          <h1 style={{ fontSize: "22px", fontWeight: 700, color: "var(--text)", margin: 0 }}>
             Resumen bancario
           </h1>
-          <p style={{ fontSize: "14px", color: "#64748B", marginTop: "6px", marginBottom: 0 }}>
+          <p style={{ fontSize: "14px", color: "var(--text-soft)", marginTop: "6px", marginBottom: 0 }}>
             Estado actual de tus movimientos e importaciones bancarias.
           </p>
         </div>
 
         {loading && (
-          <p style={{ color: "#64748B", fontSize: "14px" }}>Cargando...</p>
+          <p style={{ color: "var(--text-soft)", fontSize: "14px" }}>Cargando...</p>
         )}
 
         {error && (
           <div style={{
             background: "rgba(239,68,68,0.06)", border: "1px solid rgba(220,38,38,0.2)",
-            borderRadius: "8px", padding: "12px 16px", color: "#EF4444", fontSize: "13px",
+            borderRadius: "8px", padding: "12px 16px", color: "var(--loss)", fontSize: "13px",
           }}>
             {error}
           </div>
@@ -95,10 +95,10 @@ export default function BankPage() {
               gap:                 "14px",
               marginBottom:        "28px",
             }}>
-              <StatCard label="Total movimientos" value={summary.totalBankMovements} color="#0F2A3D" />
-              <StatCard label="Pendientes"         value={summary.pending}            color="#D97706" />
-              <StatCard label="Conciliados"        value={summary.matched}            color="#16A34A" />
-              <StatCard label="Ignorados"          value={summary.ignored}            color="#64748B" />
+              <StatCard label="Total movimientos" value={summary.totalBankMovements} color="var(--text)" />
+              <StatCard label="Pendientes"         value={summary.pending}            color="#E8B84B" />
+              <StatCard label="Conciliados"        value={summary.matched}            color="#3FA687" />
+              <StatCard label="Ignorados"          value={summary.ignored}            color="var(--text-soft)" />
             </div>
 
             {/* Accesos rápidos */}
@@ -124,23 +124,23 @@ export default function BankPage() {
             {/* Últimas importaciones */}
             {summary.uploads.length > 0 && (
               <div style={{
-                background:   "#FFFFFF",
-                border:       "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: "14px",
                 overflow:     "hidden",
               }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #F1F5F9" }}>
-                  <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#0F2A3D" }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
+                  <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>
                     Últimas importaciones
                   </p>
                 </div>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                   <thead>
-                    <tr style={{ background: "#F8FAFC" }}>
+                    <tr style={{ background: "var(--bg-sunken)" }}>
                       {["Banco", "Archivo", "Importados", "Errores", "Fecha"].map(h => (
                         <th key={h} style={{
                           padding: "10px 16px", textAlign: "left", fontSize: "11px",
-                          fontWeight: 700, color: "#94A3B8", textTransform: "uppercase",
+                          fontWeight: 700, color: "var(--text-soft)", textTransform: "uppercase",
                           letterSpacing: "0.05em",
                         }}>
                           {h}
@@ -150,20 +150,20 @@ export default function BankPage() {
                   </thead>
                   <tbody>
                     {summary.uploads.map((u, i) => (
-                      <tr key={u.id} style={{ borderTop: i > 0 ? "1px solid #F1F5F9" : "none" }}>
-                        <td style={{ padding: "12px 16px", color: "#334155", fontWeight: 500 }}>
+                      <tr key={u.id} style={{ borderTop: i > 0 ? "1px solid var(--border)" : "none" }}>
+                        <td style={{ padding: "12px 16px", color: "var(--text)", fontWeight: 500 }}>
                           {u.bankName ?? "—"}
                         </td>
-                        <td style={{ padding: "12px 16px", color: "#64748B", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <td style={{ padding: "12px 16px", color: "var(--text-soft)", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {u.fileName}
                         </td>
-                        <td style={{ padding: "12px 16px", color: "#16A34A", fontWeight: 600 }}>
+                        <td style={{ padding: "12px 16px", color: "var(--accent)", fontWeight: 600 }}>
                           {u.importedRows}
                         </td>
-                        <td style={{ padding: "12px 16px", color: u.errorRows > 0 ? "#EF4444" : "#94A3B8" }}>
+                        <td style={{ padding: "12px 16px", color: u.errorRows > 0 ? "var(--loss)" : "var(--text-soft)" }}>
                           {u.errorRows}
                         </td>
-                        <td style={{ padding: "12px 16px", color: "#94A3B8" }}>
+                        <td style={{ padding: "12px 16px", color: "var(--text-soft)" }}>
                           {formatDate(u.createdAt)}
                         </td>
                       </tr>
@@ -175,12 +175,12 @@ export default function BankPage() {
 
             {summary.uploads.length === 0 && (
               <div style={{
-                background: "#F8FAFC", border: "1px dashed #CBD5E1",
+                background: "var(--bg-sunken)", border: "1px dashed var(--border)",
                 borderRadius: "12px", padding: "32px 24px", textAlign: "center",
               }}>
-                <p style={{ margin: 0, fontSize: "14px", color: "#94A3B8" }}>
+                <p style={{ margin: 0, fontSize: "14px", color: "var(--text-soft)" }}>
                   Aún no has importado ninguna cartola.{" "}
-                  <Link href="/import/bank" style={{ color: "#2563EB", textDecoration: "none", fontWeight: 600 }}>
+                  <Link href="/import/bank" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
                     Importar ahora →
                   </Link>
                 </p>
@@ -197,12 +197,12 @@ export default function BankPage() {
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div style={{
-      background:   "#FFFFFF",
-      border:       "1px solid #E2E8F0",
+      background: "var(--bg-elev)",
+      border: "1px solid var(--border)",
       borderRadius: "12px",
       padding:      "18px 20px",
     }}>
-      <p style={{ margin: 0, fontSize: "11px", fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      <p style={{ margin: 0, fontSize: "11px", fontWeight: 700, color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
         {label}
       </p>
       <p style={{ margin: "8px 0 0", fontSize: "28px", fontWeight: 700, color, lineHeight: 1 }}>
@@ -221,8 +221,8 @@ function QuickLink({ href, label, description, icon }: {
   return (
     <Link href={href} style={{ textDecoration: "none" }}>
       <div style={{
-        background:   "#FFFFFF",
-        border:       "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: "12px",
         padding:      "18px 20px",
         display:      "flex",
@@ -232,18 +232,18 @@ function QuickLink({ href, label, description, icon }: {
         transition:   "border-color 0.15s, box-shadow 0.15s",
       }}
         onMouseEnter={e => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "#93C5FD";
+          (e.currentTarget as HTMLDivElement).style.borderColor = "#3FA687";
           (e.currentTarget as HTMLDivElement).style.boxShadow  = "0 2px 8px rgba(37,99,235,0.08)";
         }}
         onMouseLeave={e => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "#E2E8F0";
+          (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border)";
           (e.currentTarget as HTMLDivElement).style.boxShadow  = "none";
         }}
       >
         <span style={{ fontSize: "22px", lineHeight: 1, marginTop: "2px" }}>{icon}</span>
         <div>
-          <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#0F2A3D" }}>{label}</p>
-          <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#64748B" }}>{description}</p>
+          <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>{label}</p>
+          <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-soft)" }}>{description}</p>
         </div>
       </div>
     </Link>

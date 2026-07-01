@@ -63,7 +63,7 @@ export default function ExpertoPage() {
       <section style={{ marginBottom: 28 }}>
         <p
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 850,
             letterSpacing: "0.06em",
@@ -75,7 +75,7 @@ export default function ExpertoPage() {
         </p>
         <h1
           style={{
-            color: "#F8FAFC",
+            color: "var(--text)",
             fontSize: "1.9rem",
             fontWeight: 850,
             lineHeight: 1.12,
@@ -84,7 +84,7 @@ export default function ExpertoPage() {
         >
           Detalle técnico
         </h1>
-        <p style={{ color: "#94A3B8", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
           Herramientas de profundidad para contadores, auditores y usuarios avanzados.
         </p>
       </section>
@@ -112,7 +112,7 @@ export default function ExpertoPage() {
           >
             <h3
               style={{
-                color: "#F8FAFC",
+                color: "var(--text)",
                 fontSize: "1.05rem",
                 fontWeight: 850,
                 margin: "0 0 6px",
@@ -120,7 +120,7 @@ export default function ExpertoPage() {
             >
               {a.title}
             </h3>
-            <p style={{ color: "#94A3B8", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
               {a.desc}
             </p>
           </Link>

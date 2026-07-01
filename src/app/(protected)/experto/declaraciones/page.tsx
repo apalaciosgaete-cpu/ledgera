@@ -27,12 +27,12 @@ type DeclarationsData = { declarations: Declaration[] };
 
 function statusLabel(status: string) {
   switch (status) {
-    case "DRAFT": return { text: "Borrador", bg: "#F1F5F9", color: "#475569" };
-    case "REVIEWED": return { text: "Revisada", bg: "#E0F2FE", color: "#075985" };
-    case "CONFIRMED": return { text: "Confirmada", bg: "#F0FDF4", color: "#166534" };
-    case "VOIDED": return { text: "Anulada", bg: "#FEF2F2", color: "#991B1B" };
-    case "EXPORTED": return { text: "Exportada", bg: "#FFFBEB", color: "#92400E" };
-    default: return { text: status, bg: "#F1F5F9", color: "#475569" };
+    case "DRAFT": return { text: "Borrador", bg: "var(--bg-sunken)", color: "var(--text)" };
+    case "REVIEWED": return { text: "Revisada", bg: "var(--accent-soft)", color: "var(--text)" };
+    case "CONFIRMED": return { text: "Confirmada", bg: "var(--accent-soft)", color: "var(--accent)" };
+    case "VOIDED": return { text: "Anulada", bg: "rgba(196,99,74,0.14)", color: "var(--loss)" };
+    case "EXPORTED": return { text: "Exportada", bg: "rgba(232,184,75,0.14)", color: "var(--warn)" };
+    default: return { text: status, bg: "var(--bg-sunken)", color: "var(--text)" };
   }
 }
 
@@ -296,7 +296,7 @@ function ExpertoDeclaracionesContent() {
           borderRadius: 8,
           border: "none",
           background: active ? "rgba(22,163,74,0.18)" : "transparent",
-          color: active ? "#4ADE80" : "#94A3B8",
+          color: active ? "var(--accent)" : "var(--text-soft)",
           fontSize: 13,
           fontWeight: active ? 700 : 500,
           cursor: "pointer",
@@ -311,13 +311,13 @@ function ExpertoDeclaracionesContent() {
     <div style={{ maxWidth: 1180, width: "100%" }}>
       <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Modo Experto</p>
-          <h1 style={{ color: "#F8FAFC", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Declaraciones</h1>
-          <p style={{ color: "#94A3B8", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
+          <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Modo Experto</p>
+          <h1 style={{ color: "var(--text)", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>Declaraciones</h1>
+          <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
             Historial de declaraciones juradas y cadena de custodia operacional.
           </p>
         </div>
-        <Link href="/experto" style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#F8FAFC", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
+        <Link href="/experto" style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "var(--text)", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Volver a Experto
         </Link>
       </section>
@@ -330,48 +330,48 @@ function ExpertoDeclaracionesContent() {
       {tab === "declaraciones" && (
         <>
           {decLoading ? (
-            <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando declaraciones…</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando declaraciones…</p>
           ) : decError ? (
-            <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>{decError}</div>
+            <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>{decError}</div>
           ) : decData ? (
             <>
               {counts && (
                 <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", marginBottom: 20 }}>
                   <article style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: 14 }}>
-                    <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Total</p>
-                    <p style={{ color: "#F8FAFC", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.total}</p>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Total</p>
+                    <p style={{ color: "var(--text)", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.total}</p>
                   </article>
                   <article style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: 14 }}>
-                    <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Borradores</p>
-                    <p style={{ color: "#F8FAFC", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.draft}</p>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Borradores</p>
+                    <p style={{ color: "var(--text)", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.draft}</p>
                   </article>
                   <article style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: 14 }}>
-                    <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Revisadas</p>
-                    <p style={{ color: "#F8FAFC", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.reviewed}</p>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Revisadas</p>
+                    <p style={{ color: "var(--text)", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.reviewed}</p>
                   </article>
                   <article style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: 14 }}>
-                    <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Confirmadas</p>
-                    <p style={{ color: "#4ADE80", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.confirmed}</p>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Confirmadas</p>
+                    <p style={{ color: "var(--accent)", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.confirmed}</p>
                   </article>
                   <article style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: 14 }}>
-                    <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Exportadas</p>
-                    <p style={{ color: "#FBBF24", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.exported}</p>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Exportadas</p>
+                    <p style={{ color: "var(--warn)", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.exported}</p>
                   </article>
                   <article style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: 14 }}>
-                    <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Anuladas</p>
-                    <p style={{ color: "#F87171", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.voided}</p>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", margin: "0 0 6px", textTransform: "uppercase" }}>Anuladas</p>
+                    <p style={{ color: "var(--loss)", fontSize: "1.4rem", fontWeight: 850, margin: 0 }}>{counts.voided}</p>
                   </article>
                 </section>
               )}
 
               {availableYears.length > 0 && (
                 <section style={{ marginBottom: 16 }}>
-                  <label style={{ alignItems: "center", color: "#94A3B8", display: "inline-flex", fontSize: 13, fontWeight: 750, gap: 8 }}>
+                  <label style={{ alignItems: "center", color: "var(--text-soft)", display: "inline-flex", fontSize: 13, fontWeight: 750, gap: 8 }}>
                     Año
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
-                      style={{ background: "#0B1D2C", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "#F8FAFC", fontSize: 13, fontWeight: 750, minHeight: 38, padding: "0 10px" }}
+                      style={{ background: "var(--bg-sunken)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "var(--text)", fontSize: 13, fontWeight: 750, minHeight: 38, padding: "0 10px" }}
                     >
                       <option value="">Todos</option>
                       {availableYears.map((y) => (<option key={y} value={String(y)}>{y}</option>))}
@@ -382,15 +382,15 @@ function ExpertoDeclaracionesContent() {
 
               {decData.declarations.length === 0 ? (
                 <section style={{ background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: 8, padding: 28, textAlign: "center" }}>
-                  <h2 style={{ color: "#F8FAFC", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 8px" }}>Sin declaraciones registradas</h2>
-                  <p style={{ color: "#94A3B8", fontSize: 14, lineHeight: 1.55, margin: "0 auto", maxWidth: 520 }}>Las declaraciones se generan automáticamente desde el panel de administración o al exportar reportes.</p>
+                  <h2 style={{ color: "var(--text)", fontSize: "1.15rem", fontWeight: 850, margin: "0 0 8px" }}>Sin declaraciones registradas</h2>
+                  <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: "0 auto", maxWidth: 520 }}>Las declaraciones se generan automáticamente desde el panel de administración o al exportar reportes.</p>
                 </section>
               ) : (
                 <section style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, overflow: "hidden" }}>
                   <div style={{ overflowX: "auto" }}>
                     <table style={{ borderCollapse: "collapse", minWidth: 900, width: "100%" }}>
                       <thead>
-                        <tr style={{ background: "#0F2A3D", color: "#F8FAFC", textAlign: "left" }}>
+                        <tr style={{ background: "var(--bg-elev)", color: "var(--text)", textAlign: "left" }}>
                           <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Año</th>
                           <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Tipo</th>
                           <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Estado</th>
@@ -405,15 +405,15 @@ function ExpertoDeclaracionesContent() {
                           const st = statusLabel(d.status);
                           return (
                             <tr key={d.id} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                              <td style={{ color: "#F8FAFC", fontSize: 14, fontWeight: 750, padding: "14px" }}>{d.taxYear}</td>
-                              <td style={{ color: "#CBD5E1", fontSize: 13, padding: "14px" }}>{typeLabel(d.declarationType)}</td>
+                              <td style={{ color: "var(--text)", fontSize: 14, fontWeight: 750, padding: "14px" }}>{d.taxYear}</td>
+                              <td style={{ color: "var(--text-faint)", fontSize: 13, padding: "14px" }}>{typeLabel(d.declarationType)}</td>
                               <td style={{ padding: "14px" }}>
                                 <span style={{ background: st.bg, borderRadius: 999, color: st.color, fontSize: 12, fontWeight: 800, padding: "2px 10px" }}>{st.text}</span>
                               </td>
-                              <td style={{ color: "#94A3B8", fontSize: 12, fontFamily: "monospace", padding: "14px" }}>{hashShort(d.contentHash)}</td>
-                              <td style={{ color: "#CBD5E1", fontSize: 13, padding: "14px" }}>{new Date(d.generatedAt).toLocaleDateString("es-CL")}</td>
-                              <td style={{ color: "#CBD5E1", fontSize: 13, padding: "14px" }}>{d.confirmedAt ? new Date(d.confirmedAt).toLocaleDateString("es-CL") : "—"}</td>
-                              <td style={{ color: "#CBD5E1", fontSize: 13, padding: "14px" }}>{d.voidedAt ? new Date(d.voidedAt).toLocaleDateString("es-CL") : "—"}</td>
+                              <td style={{ color: "var(--text-soft)", fontSize: 12, fontFamily: "monospace", padding: "14px" }}>{hashShort(d.contentHash)}</td>
+                              <td style={{ color: "var(--text-faint)", fontSize: 13, padding: "14px" }}>{new Date(d.generatedAt).toLocaleDateString("es-CL")}</td>
+                              <td style={{ color: "var(--text-faint)", fontSize: 13, padding: "14px" }}>{d.confirmedAt ? new Date(d.confirmedAt).toLocaleDateString("es-CL") : "—"}</td>
+                              <td style={{ color: "var(--text-faint)", fontSize: 13, padding: "14px" }}>{d.voidedAt ? new Date(d.voidedAt).toLocaleDateString("es-CL") : "—"}</td>
                             </tr>
                           );
                         })}

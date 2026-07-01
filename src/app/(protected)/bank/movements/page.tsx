@@ -156,10 +156,10 @@ export default function BankMovementsPage() {
       <BankTabs />
 
       <div style={{ marginBottom: "26px" }}>
-        <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "#0F2A3D" }}>
+        <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "var(--text)" }}>
           Movimientos bancarios
         </h1>
-        <p style={{ margin: "6px 0 0", fontSize: "14px", color: "#64748B" }}>
+        <p style={{ margin: "6px 0 0", fontSize: "14px", color: "var(--text-soft)" }}>
           Listado persistente de movimientos importados desde cartolas bancarias.
         </p>
       </div>
@@ -168,8 +168,8 @@ export default function BankMovementsPage() {
         className="grid gap-3 md:grid-cols-5"
         style={{
           marginBottom: "18px",
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: "14px",
           padding: "16px",
         }}
@@ -239,7 +239,7 @@ export default function BankMovementsPage() {
         </div>
       </div>
 
-      <div style={{ marginBottom: "12px", fontSize: "13px", color: "#64748B" }}>
+      <div style={{ marginBottom: "12px", fontSize: "13px", color: "var(--text-soft)" }}>
         {loading ? "Cargando..." : `${movements.length} de ${total} movimiento${total !== 1 ? "s" : ""}`}
       </div>
 
@@ -251,7 +251,7 @@ export default function BankMovementsPage() {
             borderRadius: "12px",
             background: "rgba(239,68,68,0.08)",
             border: "1px solid rgba(239,68,68,0.22)",
-            color: "#B91C1C",
+            color: "var(--loss)",
             fontSize: "13px",
           }}
         >
@@ -261,32 +261,32 @@ export default function BankMovementsPage() {
 
       <section
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: "16px",
           overflow: "hidden",
         }}
       >
         {loading ? (
-          <div style={{ padding: "36px 20px", color: "#94A3B8", fontSize: "14px" }}>
+          <div style={{ padding: "36px 20px", color: "var(--text-soft)", fontSize: "14px" }}>
             Cargando movimientos bancarios…
           </div>
         ) : movements.length === 0 ? (
-          <div style={{ padding: "36px 20px", textAlign: "center", color: "#94A3B8", fontSize: "14px" }}>
+          <div style={{ padding: "36px 20px", textAlign: "center", color: "var(--text-soft)", fontSize: "14px" }}>
             No hay movimientos bancarios para los filtros seleccionados.
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
               <thead>
-                <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                <tr style={{ background: "var(--bg-sunken)", borderBottom: "1px solid var(--border)" }}>
                   {["Fecha", "Banco", "Descripción", "Monto", "Dirección", "Estado", "Conciliación"].map((col) => (
                     <th
                       key={col}
                       style={{
                         padding: "12px 16px",
                         textAlign: "left",
-                        color: "#64748B",
+                        color: "var(--text-soft)",
                         fontSize: "12px",
                         fontWeight: 700,
                         whiteSpace: "nowrap",
@@ -300,7 +300,7 @@ export default function BankMovementsPage() {
 
               <tbody>
                 {movements.map((movement) => (
-                  <tr key={movement.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                  <tr key={movement.id} style={{ borderBottom: "1px solid var(--border)" }}>
                     <td style={tdStyle}>{formatDate(movement.occurredAt)}</td>
                     <td style={tdStyle}>{movement.bankName ?? "—"}</td>
                     <td
@@ -318,7 +318,7 @@ export default function BankMovementsPage() {
                       style={{
                         ...tdStyle,
                         fontWeight: 700,
-                        color: movement.direction === "INFLOW" ? "#15803D" : "#B91C1C",
+                        color: movement.direction === "INFLOW" ? "var(--accent)" : "var(--loss)",
                       }}
                     >
                       {movement.direction === "INFLOW" ? "+" : "-"}
@@ -330,13 +330,13 @@ export default function BankMovementsPage() {
                     </td>
                     <td style={tdStyle}>
                       {movement.matchedPortfolioMovementId ? (
-                        <span style={{ color: "#15803D", fontWeight: 700 }}>
+                        <span style={{ color: "var(--accent)", fontWeight: 700 }}>
                           {movement.matchedConfidence !== null
                             ? `${Math.round(movement.matchedConfidence * 100)}%`
                             : "Conciliado"}
                         </span>
                       ) : (
-                        <span style={{ color: "#94A3B8" }}>Sin match</span>
+                        <span style={{ color: "var(--text-soft)" }}>Sin match</span>
                       )}
                     </td>
                   </tr>
@@ -356,7 +356,7 @@ function Label({ children }: { children: React.ReactNode }) {
       style={{
         display: "block",
         marginBottom: "6px",
-        color: "#64748B",
+        color: "var(--text-soft)",
         fontSize: "11px",
         fontWeight: 700,
         textTransform: "uppercase",
@@ -370,16 +370,16 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function Badge({ label, tone }: { label: string; tone: string }) {
   const color =
-    tone === "MATCHED" ? "#15803D" :
-    tone === "IGNORED" ? "#64748B" :
-    tone === "REVIEW" ? "#B45309" :
-    "#2563EB";
+    tone === "MATCHED" ? "#3FA687" :
+    tone === "IGNORED" ? "var(--text-soft)" :
+    tone === "REVIEW" ? "#E8B84B" :
+    "#3FA687";
 
   const background =
-    tone === "MATCHED" ? "#F0FDF4" :
-    tone === "IGNORED" ? "#F1F5F9" :
-    tone === "REVIEW" ? "#FFFBEB" :
-    "#EFF6FF";
+    tone === "MATCHED" ? "#1D2C27" :
+    tone === "IGNORED" ? "var(--text)" :
+    tone === "REVIEW" ? "rgba(232,184,75,0.14)" :
+    "#1D2C27";
 
   return (
     <span
@@ -403,10 +403,10 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   height: "38px",
   borderRadius: "10px",
-  border: "1px solid #CBD5E1",
-  background: "#FFFFFF",
+  border: "1px solid var(--border)",
+  background: "var(--bg-elev)",
   padding: "0 10px",
-  color: "#0F2A3D",
+  color: "var(--text)",
   fontSize: "13px",
   outline: "none",
 };
@@ -415,9 +415,9 @@ const buttonPrimary: React.CSSProperties = {
   height: "38px",
   padding: "0 14px",
   borderRadius: "10px",
-  border: "1px solid #0F2A3D",
-  background: "#0F2A3D",
-  color: "#FFFFFF",
+  border: "1px solid var(--border-strong)",
+  background: "var(--bg-elev)",
+  color: "var(--text)",
   fontSize: "13px",
   fontWeight: 700,
   cursor: "pointer",
@@ -427,9 +427,9 @@ const buttonSecondary: React.CSSProperties = {
   height: "38px",
   padding: "0 14px",
   borderRadius: "10px",
-  border: "1px solid #CBD5E1",
-  background: "#FFFFFF",
-  color: "#475569",
+  border: "1px solid var(--border)",
+  background: "var(--bg-elev)",
+  color: "var(--text)",
   fontSize: "13px",
   fontWeight: 700,
   cursor: "pointer",
@@ -437,6 +437,6 @@ const buttonSecondary: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   padding: "13px 16px",
-  color: "#475569",
+  color: "var(--text)",
   whiteSpace: "nowrap",
 };

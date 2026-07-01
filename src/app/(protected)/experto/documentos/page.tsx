@@ -62,9 +62,9 @@ const statusLabel: Record<string, string> = {
 };
 
 const statusColor: Record<string, string> = {
-  ACTIVE: "#15803D",
-  ARCHIVED: "#B45309",
-  DELETED: "#991B1B",
+  ACTIVE: "var(--accent)",
+  ARCHIVED: "var(--warn)",
+  DELETED: "var(--loss)",
 };
 
 export default function ExpertDocumentsPage() {
@@ -112,7 +112,7 @@ export default function ExpertDocumentsPage() {
     <section style={{ padding: "24px 0" }}>
       <header style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>Centro Documental</h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Vista centralizada de todos los documentos almacenados por los usuarios.
         </p>
       </header>
@@ -122,17 +122,17 @@ export default function ExpertDocumentsPage() {
         <Select label="Estado" value={status} options={statuses} onChange={setStatus} />
         <Select label="Tipo" value={type} options={types} onChange={setType} />
         <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 200 }}>
-          <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>Usuario</label>
+          <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>Usuario</label>
           <input
             type="text"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
             placeholder="Filtrar por userId"
             style={{
-              background: "#FFFFFF",
-              border: "1px solid #CBD5E1",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
-              color: "#0F2A3D",
+              color: "var(--text)",
               fontSize: 14,
               padding: "8px 12px",
             }}
@@ -143,10 +143,10 @@ export default function ExpertDocumentsPage() {
       {error && (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             marginBottom: 24,
             padding: 16,
@@ -157,21 +157,21 @@ export default function ExpertDocumentsPage() {
       )}
 
       {loading ? (
-        <p style={{ color: "#64748B" }}>Cargando documentos…</p>
+        <p style={{ color: "var(--text-soft)" }}>Cargando documentos…</p>
       ) : documents.length === 0 ? (
-        <p style={{ color: "#64748B" }}>Sin documentos para los filtros seleccionados.</p>
+        <p style={{ color: "var(--text-soft)" }}>Sin documentos para los filtros seleccionados.</p>
       ) : (
         <div
           style={{
-            background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
             overflow: "hidden",
           }}
         >
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#F8FAFC", color: "#64748B", textAlign: "left" }}>
+              <tr style={{ background: "var(--bg-sunken)", color: "var(--text-soft)", textAlign: "left" }}>
                 <th style={{ padding: "12px 16px" }}>Usuario</th>
                 <th style={{ padding: "12px 16px" }}>Nombre</th>
                 <th style={{ padding: "12px 16px" }}>Categoría</th>
@@ -184,11 +184,11 @@ export default function ExpertDocumentsPage() {
             </thead>
             <tbody>
               {documents.map((d) => (
-                <tr key={d.id} style={{ borderTop: "1px solid #E2E8F0" }}>
-                  <td style={{ padding: "12px 16px", color: "#0F2A3D", fontWeight: 600 }}>{d.userId}</td>
+                <tr key={d.id} style={{ borderTop: "1px solid var(--border)" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--text)", fontWeight: 600 }}>{d.userId}</td>
                   <td style={{ padding: "12px 16px" }}>
-                    <div style={{ fontWeight: 700, color: "#0F2A3D" }}>{d.name}</div>
-                    <div style={{ color: "#94A3B8", fontSize: 12 }}>{d.fileName}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text)" }}>{d.name}</div>
+                    <div style={{ color: "var(--text-soft)", fontSize: 12 }}>{d.fileName}</div>
                   </td>
                   <td style={{ padding: "12px 16px" }}>{categoryLabel[d.category] ?? d.category}</td>
                   <td style={{ padding: "12px 16px" }}>{d.type}</td>
@@ -208,7 +208,7 @@ export default function ExpertDocumentsPage() {
                     </span>
                   </td>
                   <td style={{ padding: "12px 16px" }}>{formatSize(d.fileSize)}</td>
-                  <td style={{ padding: "12px 16px", color: "#64748B" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--text-soft)" }}>
                     {new Date(d.createdAt).toLocaleDateString("es-CL")}
                   </td>
                   <td style={{ padding: "12px 16px" }}>
@@ -217,9 +217,9 @@ export default function ExpertDocumentsPage() {
                       target="_blank"
                       rel="noreferrer"
                       style={{
-                        background: "#F1F5F9",
+                        background: "var(--bg-sunken)",
                         borderRadius: 6,
-                        color: "#0F2A3D",
+                        color: "var(--text)",
                         fontSize: 12,
                         fontWeight: 700,
                         padding: "6px 10px",
@@ -252,15 +252,15 @@ function Select({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 160 }}>
-      <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>{label}</label>
+      <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #CBD5E1",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: 14,
           padding: "8px 12px",
         }}
