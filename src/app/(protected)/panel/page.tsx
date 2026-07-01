@@ -1,3 +1,3 @@
 export default function PanelPage() {
-  return <main>Panel LEDGERA</main>;
+  return <main>Panel LEDGERA actualizado.</main>;
 }
