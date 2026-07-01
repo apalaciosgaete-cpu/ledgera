@@ -1,7 +1,3 @@
-"use client";
-
-import { InvestorDashboard } from "./InvestorDashboard";
-
 export default function PanelPage() {
-  return <InvestorDashboard />;
+  return <main>Panel LEDGERA</main>;
 }
