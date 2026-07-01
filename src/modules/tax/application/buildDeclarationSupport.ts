@@ -318,6 +318,46 @@ function writeRows(doc: PDFKit.PDFDocument, rows: Array<[string, string]>) {
   doc.moveDown(0.5);
 }
 
+function writeAssetTraceTable(doc: PDFKit.PDFDocument, rows: AssetTrace[]) {
+  const leftX = doc.page.margins.left;
+  const columns = [
+    { label: "Activo", x: leftX, width: 72 },
+    { label: "Cantidad detectada", x: leftX + 88, width: 150 },
+    { label: "Operaciones", x: leftX + 255, width: 82 },
+    { label: "Última fecha", x: leftX + 356, width: 110 },
+  ];
+
+  const writeHeader = () => {
+    checkPage(doc, 700);
+    const y = doc.y;
+    doc.font("Helvetica-Bold").fontSize(8.4).fillColor("#0F766E");
+    for (const column of columns) {
+      doc.text(column.label, column.x, y, { width: column.width });
+    }
+    doc.y = y + 16;
+  };
+
+  if (rows.length === 0) {
+    doc.font("Helvetica").fontSize(9).fillColor("#64748B").text("Sin activos confirmados.");
+    return;
+  }
+
+  writeHeader();
+  for (const asset of rows) {
+    if (doc.y > 720) {
+      doc.addPage();
+      writeHeader();
+    }
+    const y = doc.y;
+    doc.font("Helvetica-Bold").fontSize(8.6).fillColor("#0F2A3D").text(asset.symbol, columns[0].x, y, { width: columns[0].width });
+    doc.font("Helvetica").fontSize(8.6).fillColor("#334155").text(asset.quantity.toLocaleString("es-CL", { maximumFractionDigits: 8 }), columns[1].x, y, { width: columns[1].width });
+    doc.text(String(asset.operations), columns[2].x, y, { width: columns[2].width });
+    doc.text(formatDate(asset.lastDate), columns[3].x, y, { width: columns[3].width });
+    doc.y = y + 15;
+  }
+  doc.moveDown(0.7);
+}
+
 export async function renderDeclarationSupportPdf(payload: DeclarationSupportPayload): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ margin: 48, size: "A4" });
@@ -339,11 +379,6 @@ export async function renderDeclarationSupportPdf(payload: DeclarationSupportPay
     ]);
 
     sectionTitle(doc, "IGC detectado");
-    doc.font("Helvetica").fontSize(8.8).fillColor("#475569").text(
-      "IGC detectado es la estimacion del Impuesto Global Complementario sobre la base imponible que LEDGERA identifica desde los movimientos confirmados. Si la base detectada esta en tramo exento o es cero, el pago estimado es $0.",
-      { lineGap: 2 },
-    );
-    doc.moveDown(0.55);
     writeRows(doc, [
       ["Base imponible IGC detectada", formatClp(payload.summary.taxableBaseClp)],
       ["Tramo IGC aplicado", formatBracket(payload.summary.igcBracketFromClp, payload.summary.igcBracketToClp)],
@@ -353,13 +388,7 @@ export async function renderDeclarationSupportPdf(payload: DeclarationSupportPay
     ]);
 
     sectionTitle(doc, "Trazabilidad por activo");
-    if (payload.assetTrace.length === 0) {
-      doc.font("Helvetica").fontSize(9).fillColor("#64748B").text("Sin activos confirmados.");
-    }
-    writeRows(doc, payload.assetTrace.map((asset) => [
-      asset.symbol,
-      `Cantidad detectada: ${asset.quantity.toLocaleString("es-CL", { maximumFractionDigits: 8 })} · Operaciones: ${asset.operations} · Ultima fecha: ${formatDate(asset.lastDate)}`,
-    ]));
+    writeAssetTraceTable(doc, payload.assetTrace);
 
     sectionTitle(doc, "Detalle de operaciones confirmadas");
     writeRows(doc, payload.traceRows.slice(0, 160).map((row) => [
@@ -373,9 +402,9 @@ export async function renderDeclarationSupportPdf(payload: DeclarationSupportPay
     }
 
     sectionTitle(doc, "Alcance del documento");
-    doc.font("Helvetica").fontSize(8.5).fillColor("#64748B").text("Documento generado automaticamente desde datos confirmados en LEDGERA. La conclusion se limita a la informacion importada y validada en la plataforma. Debe revisarse junto con los demas antecedentes tributarios del contribuyente antes de presentar una declaracion final.", { lineGap: 2 });
+    doc.font("Helvetica").fontSize(8.5).fillColor("#64748B").text("Documento generado automáticamente desde datos confirmados en LEDGERA. La conclusión se limita a la información importada y validada en la plataforma. Debe revisarse junto con los demás antecedentes tributarios del contribuyente antes de presentar una declaración final.", { lineGap: 2 });
 
-    sectionTitle(doc, "Conclusion expresa LEDGERA");
+    sectionTitle(doc, "Conclusión expresa LEDGERA");
     doc.font("Helvetica").fontSize(10).fillColor("#334155").text(payload.summary.conclusion, { lineGap: 2 });
 
     doc.end();
