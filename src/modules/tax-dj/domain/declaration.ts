@@ -1,3 +1,5 @@
+import type { GlobalComplementaryTaxBracket } from "@/modules/tax/domain/globalComplementaryTax";
+
 export type TaxDeclarationType =
   | "DJ_CRYPTO_SUMMARY"
   | "DJ_REALIZED_GAINS"
@@ -68,6 +70,13 @@ export type TaxDeclarationMetadata = {
       igcMaxRatePct: number;
       capitalGainFlatRatePct: number;
       firstCategoryRatePct: number;
+    };
+    globalComplementaryTax: {
+      currentTaxYear: number;
+      legalReference: "LIR_ART_52";
+      source: "SII";
+      sourceUrl: string;
+      brackets: GlobalComplementaryTaxBracket[];
     };
     utm: {
       valueClp: number;
