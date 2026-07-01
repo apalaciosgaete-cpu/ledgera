@@ -88,14 +88,14 @@ function HealthBadge({ status }: { status: TaxHealthStatus }) {
 }
 
 const CATEGORIES: { value: TaxCategory; label: string; color: string; bg: string }[] = [
-  { value: "CAPITAL_GAIN", label: "Mayor valor", color: "#1D4ED8", bg: "rgba(37,99,235,0.08)" },
-  { value: "ORDINARY_INCOME", label: "Renta ordinaria", color: "#475569", bg: "rgba(71,85,105,0.08)" },
-  { value: "NON_TAXABLE", label: "No afecto", color: "#15803D", bg: "rgba(21,128,61,0.08)" },
-  { value: "UNCLASSIFIED", label: "Sin clasificar", color: "#92400E", bg: "rgba(146,64,14,0.08)" },
+  { value: "CAPITAL_GAIN", label: "Mayor valor", color: "var(--accent)", bg: "rgba(37,99,235,0.08)" },
+  { value: "ORDINARY_INCOME", label: "Renta ordinaria", color: "var(--text)", bg: "rgba(71,85,105,0.08)" },
+  { value: "NON_TAXABLE", label: "No afecto", color: "var(--accent)", bg: "rgba(21,128,61,0.08)" },
+  { value: "UNCLASSIFIED", label: "Sin clasificar", color: "var(--warn)", bg: "rgba(146,64,14,0.08)" },
 ];
 
 function getCategoryStyle(category: string) {
-  return CATEGORIES.find((c) => c.value === category) ?? { color: "#92400E", bg: "rgba(146,64,14,0.08)", label: getCategoryLabel(category) };
+  return CATEGORIES.find((c) => c.value === category) ?? { color: "var(--warn)", bg: "rgba(146,64,14,0.08)", label: getCategoryLabel(category) };
 }
 
 function CategoryBadge({ category, movementId, onClassified }: { category: string; movementId: string; onClassified: (movementId: string, newCategory: string) => void }) {
@@ -120,7 +120,7 @@ function CategoryBadge({ category, movementId, onClassified }: { category: strin
       {open && (
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
-          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 50, background: "#ffffff", border: "1px solid #E2E8F0", borderRadius: "10px", boxShadow: "0 4px 16px rgba(15,42,61,0.12)", padding: "6px", minWidth: "170px" }}>
+          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 50, background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: "10px", boxShadow: "0 4px 16px rgba(15,42,61,0.12)", padding: "6px", minWidth: "170px" }}>
             {CATEGORIES.map((cat) => (
               <button key={cat.value} type="button" onClick={() => handleSelect(cat.value)} style={{ display: "block", width: "100%", textAlign: "left", padding: "6px 10px", borderRadius: "6px", fontSize: "0.8125rem", fontWeight: cat.value === category ? 700 : 400, color: cat.color, background: cat.value === category ? cat.bg : "transparent", border: "none", cursor: "pointer" }}>
                 {cat.value === category ? `✓ ${cat.label}` : cat.label}
@@ -232,14 +232,14 @@ export function RevisionBlock() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-        {[{ label: "Eventos", value: events.length, color: "text-slate-950" }, { label: "Críticos", value: issueSummary.HIGH, color: "text-[#991B1B]" }, { label: "Medios", value: issueSummary.MEDIUM, color: "text-[#92400E]" }, { label: "Bajos", value: issueSummary.LOW, color: "text-slate-950" }, { label: "Sin clasificar", value: taxTotals.unclassifiedCount, color: "text-slate-950" }].map((item) => (
+        {[{ label: "Eventos", value: events.length, color: "text-slate-950" }, { label: "Críticos", value: issueSummary.HIGH, color: "text-[var(--loss)]" }, { label: "Medios", value: issueSummary.MEDIUM, color: "text-[var(--warn)]" }, { label: "Bajos", value: issueSummary.LOW, color: "text-slate-950" }, { label: "Sin clasificar", value: taxTotals.unclassifiedCount, color: "text-slate-950" }].map((item) => (
           <div key={item.label} className={`${ui.card} p-4`}><p className={ui.label}>{item.label}</p><p className={`text-2xl font-semibold ${item.color}`}>{item.value}</p></div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className={`${ui.card} p-4`}><p className={ui.label}>Resultado realizado USD</p><p className={`text-2xl font-semibold ${taxTotals.realizedPnlUsd >= 0 ? "text-[#14532D]" : "text-[#991B1B]"}`}>{formatUsd(taxTotals.realizedPnlUsd)}</p></div>
-        <div className={`${ui.card} p-4`}><p className={ui.label}>Resultado realizado CLP</p><p className={`text-2xl font-semibold ${taxTotals.realizedPnlClp >= 0 ? "text-[#14532D]" : "text-[#991B1B]"}`}>{formatClp(taxTotals.realizedPnlClp)}</p></div>
+        <div className={`${ui.card} p-4`}><p className={ui.label}>Resultado realizado USD</p><p className={`text-2xl font-semibold ${taxTotals.realizedPnlUsd >= 0 ? "text-[var(--text-faint)]" : "text-[var(--text-soft)]"}`}>{formatUsd(taxTotals.realizedPnlUsd)}</p></div>
+        <div className={`${ui.card} p-4`}><p className={ui.label}>Resultado realizado CLP</p><p className={`text-2xl font-semibold ${taxTotals.realizedPnlClp >= 0 ? "text-[var(--text-faint)]" : "text-[var(--text-soft)]"}`}>{formatClp(taxTotals.realizedPnlClp)}</p></div>
       </div>
 
       <div className="space-y-3">
@@ -268,7 +268,7 @@ export function RevisionBlock() {
         {filteredEvents.length === 0 ? <div className={`${ui.card} p-4 text-sm text-slate-600`}>No hay eventos para los filtros seleccionados.</div> : (
           <div className="overflow-auto rounded border border-slate-200 bg-white">
             <table className="min-w-full text-sm"><thead className="bg-slate-100 text-left text-slate-700"><tr><th className="p-2">Fecha</th><th className="p-2">Activo</th><th className="p-2">Cantidad</th><th className="p-2">PnL USD</th><th className="p-2">PnL CLP</th><th className="p-2">Categoría</th><th className="p-2">Movimiento</th></tr></thead>
-              <tbody>{filteredEvents.map((event) => (<tr key={event.id} className="border-t border-slate-200"><td className="p-2">{formatDate(event.executedAt)}</td><td className="p-2 font-medium text-slate-950">{event.symbol}</td><td className="p-2">{formatNumber(event.quantity)}</td><td className={`p-2 ${event.realizedPnlUsd >= 0 ? "text-[#14532D]" : "text-[#991B1B]"}`}>{formatUsd(event.realizedPnlUsd)}</td><td className={`p-2 ${event.realizedPnlClp >= 0 ? "text-[#14532D]" : "text-[#991B1B]"}`}>{formatClp(event.realizedPnlClp)}</td><td className="p-2"><CategoryBadge category={event.effectiveTaxCategory} movementId={event.movementId} onClassified={handleClassified} /></td><td className="p-2"><button type="button" onClick={() => router.push(`/movements?highlight=${event.movementId}`)} className={`${ui.buttonSecondary} px-3 py-1 text-xs`}>Ver movimiento</button></td></tr>))}</tbody>
+              <tbody>{filteredEvents.map((event) => (<tr key={event.id} className="border-t border-slate-200"><td className="p-2">{formatDate(event.executedAt)}</td><td className="p-2 font-medium text-slate-950">{event.symbol}</td><td className="p-2">{formatNumber(event.quantity)}</td><td className={`p-2 ${event.realizedPnlUsd >= 0 ? "text-[var(--text-faint)]" : "text-[var(--text-soft)]"}`}>{formatUsd(event.realizedPnlUsd)}</td><td className={`p-2 ${event.realizedPnlClp >= 0 ? "text-[var(--text-faint)]" : "text-[var(--text-soft)]"}`}>{formatClp(event.realizedPnlClp)}</td><td className="p-2"><CategoryBadge category={event.effectiveTaxCategory} movementId={event.movementId} onClassified={handleClassified} /></td><td className="p-2"><button type="button" onClick={() => router.push(`/movements?highlight=${event.movementId}`)} className={`${ui.buttonSecondary} px-3 py-1 text-xs`}>Ver movimiento</button></td></tr>))}</tbody>
             </table>
           </div>
         )}

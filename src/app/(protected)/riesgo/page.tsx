@@ -38,13 +38,13 @@ export default function RiskPage() {
   function levelColor(level: string) {
     switch (level) {
       case "CRITICAL":
-        return "#DC2626";
+        return "#C4634A";
       case "HIGH":
-        return "#EA580C";
+        return "#E8B84B";
       case "MEDIUM":
-        return "#CA8A04";
+        return "#E8B84B";
       default:
-        return "#16A34A";
+        return "#3FA687";
     }
   }
 
@@ -54,7 +54,7 @@ export default function RiskPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Riesgo Tributario
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Evaluación preventiva de tu situación tributaria.
         </p>
       </header>
@@ -65,14 +65,14 @@ export default function RiskPage() {
         <div style={{ display: "grid", gap: 16 }}>
           <div
             style={{
-              background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               padding: 24,
               textAlign: "center",
             }}
           >
-            <p style={{ color: "#64748B", fontSize: 12, margin: "0 0 8px" }}>Score actual</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 12, margin: "0 0 8px" }}>Score actual</p>
             <p
               style={{
                 color: levelColor(score.level),
@@ -82,7 +82,7 @@ export default function RiskPage() {
               }}
             >
               {score.score}
-              <span style={{ color: "#64748B", fontSize: "1rem" }}>/100</span>
+              <span style={{ color: "var(--text-soft)", fontSize: "1rem" }}>/100</span>
             </p>
             <p style={{ color: levelColor(score.level), fontWeight: 700, margin: 0 }}>
               {score.level}
@@ -91,10 +91,10 @@ export default function RiskPage() {
               onClick={handleRecalculate}
               disabled={loading}
               style={{
-                background: "#0F766E",
+                background: "var(--accent)",
                 border: "none",
                 borderRadius: 6,
-                color: "#FFFFFF",
+                color: "var(--text)",
                 cursor: "pointer",
                 fontWeight: 700,
                 marginTop: 16,
@@ -107,8 +107,8 @@ export default function RiskPage() {
 
           <div
             style={{
-              background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               padding: 16,
             }}
@@ -119,7 +119,7 @@ export default function RiskPage() {
                 <li
                   key={index}
                   style={{
-                    borderBottom: "1px solid #E2E8F0",
+                    borderBottom: "1px solid var(--border)",
                     padding: "12px 0",
                   }}
                 >
@@ -129,7 +129,7 @@ export default function RiskPage() {
                       {String(item.score)} / {String(item.maxScore)}
                     </span>
                   </div>
-                  <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{String(item.message)}</p>
+                  <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>{String(item.message)}</p>
                 </li>
               ))}
             </ul>
@@ -137,14 +137,14 @@ export default function RiskPage() {
         </div>
       ) : (
         <div>
-          <p style={{ color: "#64748B" }}>No hay score calculado.</p>
+          <p style={{ color: "var(--text-soft)" }}>No hay score calculado.</p>
           <button
             onClick={handleRecalculate}
             style={{
-              background: "#0F766E",
+              background: "var(--accent)",
               border: "none",
               borderRadius: 6,
-              color: "#FFFFFF",
+              color: "var(--text)",
               cursor: "pointer",
               fontWeight: 700,
               padding: "10px 16px",

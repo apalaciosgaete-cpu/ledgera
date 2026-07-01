@@ -23,10 +23,10 @@ interface QueueData {
 }
 
 function priorityColor(priority: DecisionPriority) {
-  if (priority === "CRITICAL") return "#B91C1C";
-  if (priority === "HIGH") return "#B45309";
-  if (priority === "MEDIUM") return "#0F766E";
-  return "#64748B";
+  if (priority === "CRITICAL") return "#C4634A";
+  if (priority === "HIGH") return "#E8B84B";
+  if (priority === "MEDIUM") return "#3FA687";
+  return "var(--text-soft)";
 }
 
 function priorityBg(priority: DecisionPriority) {
@@ -38,13 +38,13 @@ function priorityBg(priority: DecisionPriority) {
 
 function categoryColor(cat: DecisionCategory) {
   switch (cat) {
-    case "RIESGO": return "#B91C1C";
-    case "CUMPLIMIENTO": return "#B45309";
-    case "AHORRO_TRIBUTARIO": return "#047857";
-    case "INVERSION": return "#0369A1";
-    case "DOCUMENTACION": return "#6D28D9";
-    case "AUTOMATIZACION": return "#0F766E";
-    case "AI": return "#9333EA";
+    case "RIESGO": return "#C4634A";
+    case "CUMPLIMIENTO": return "#E8B84B";
+    case "AHORRO_TRIBUTARIO": return "#3FA687";
+    case "INVERSION": return "#3FA687";
+    case "DOCUMENTACION": return "#3FA687";
+    case "AUTOMATIZACION": return "#3FA687";
+    case "AI": return "#3FA687";
   }
 }
 
@@ -91,7 +91,7 @@ export default function DecisionesPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <p style={{ color: "#94A3B8", fontSize: 16 }}>Cargando decisiones...</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 16 }}>Cargando decisiones...</p>
       </div>
     );
   }
@@ -99,16 +99,16 @@ export default function DecisionesPage() {
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gap: 24 }}>
       {/* Header */}
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 24 }}>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
           <div>
-            <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+            <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
               Centro de Decisiones
             </p>
-            <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
+            <h1 style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
               Cola de Decisiones Tributarias
             </h1>
-            <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
               LEDGERA unifica señales de Monitor, Automatizaciones, Agente AI y Simulador en una cola priorizada.
             </p>
           </div>
@@ -119,8 +119,8 @@ export default function DecisionesPage() {
               padding: "10px 22px",
               borderRadius: 999,
               border: "none",
-              background: rebuilding ? "#94A3B8" : "#0F766E",
-              color: "#FFFFFF",
+              background: rebuilding ? "var(--bg-elev)" : "var(--accent)",
+              color: "var(--text)",
               fontSize: 14,
               fontWeight: 800,
               cursor: rebuilding ? "not-allowed" : "pointer",
@@ -138,25 +138,25 @@ export default function DecisionesPage() {
           label="Total decisiones"
           value={data?.total ?? 0}
           detail="En cola ahora"
-          color="#0F2A3D"
+          color="var(--text)"
         />
         <MetricCard
           label="🔥 Urgentes"
           value={data?.urgentCount ?? 0}
           detail="Requieren acción inmediata"
-          color="#B91C1C"
+          color="#C4634A"
         />
         <MetricCard
           label="⚠️ Atención"
           value={data?.attentionCount ?? 0}
           detail="Prioridad alta"
-          color="#B45309"
+          color="#E8B84B"
         />
         <MetricCard
           label="💡 Oportunidades"
           value={data?.opportunityCount ?? 0}
           detail="Mejora continua"
-          color="#0F766E"
+          color="#3FA687"
         />
       </section>
 
@@ -176,14 +176,14 @@ export default function DecisionesPage() {
       )}
 
       {data?.items.length === 0 && (
-        <section style={{ background: "#ECFDF5", border: "1px solid #BBF7D0", borderRadius: 18, padding: 24, textAlign: "center" }}>
-          <p style={{ color: "#166534", fontSize: 18, fontWeight: 800, margin: "0 0 6px" }}>✅ Sin decisiones pendientes</p>
-          <p style={{ color: "#166534", fontSize: 14, margin: 0 }}>LEDGERA no detectó señales que requieran tu atención ahora.</p>
+        <section style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 18, padding: 24, textAlign: "center" }}>
+          <p style={{ color: "var(--accent)", fontSize: 18, fontWeight: 800, margin: "0 0 6px" }}>✅ Sin decisiones pendientes</p>
+          <p style={{ color: "var(--accent)", fontSize: 14, margin: 0 }}>LEDGERA no detectó señales que requieran tu atención ahora.</p>
         </section>
       )}
 
       {data && data.items.length > 0 && (
-        <p style={{ color: "#94A3B8", fontSize: 12, textAlign: "center", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 12, textAlign: "center", margin: 0 }}>
           Última actualización: {new Date(data.generatedAt).toLocaleString("es-CL")}
         </p>
       )}
@@ -193,10 +193,10 @@ export default function DecisionesPage() {
 
 function MetricCard({ label, value, detail, color }: { label: string; value: number | string; detail: string; color: string }) {
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 18 }}>
-      <p style={{ color: "#64748B", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 16, padding: 18 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
       <p style={{ color, fontSize: 26, fontWeight: 900, margin: 0 }}>{value}</p>
-      <p style={{ color: "#94A3B8", fontSize: 13, margin: "4px 0 0" }}>{detail}</p>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, margin: "4px 0 0" }}>{detail}</p>
     </article>
   );
 }
@@ -205,15 +205,15 @@ function DecisionSection({ title, description, items }: { title: string; descrip
   return (
     <section style={{ display: "grid", gap: 14 }}>
       <div>
-        <h2 style={{ color: "#0F2A3D", fontSize: 20, fontWeight: 900, margin: "0 0 4px" }}>{title}</h2>
-        <p style={{ color: "#64748B", fontSize: 14, margin: 0 }}>{description}</p>
+        <h2 style={{ color: "var(--text)", fontSize: 20, fontWeight: 900, margin: "0 0 4px" }}>{title}</h2>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, margin: 0 }}>{description}</p>
       </div>
       <div style={{ display: "grid", gap: 12 }}>
         {items.map((item) => (
           <article
             key={item.id}
             style={{
-              background: "#FFFFFF",
+              background: "var(--bg-elev)",
               border: `1px solid ${priorityColor(item.priority)}22`,
               borderLeft: `4px solid ${priorityColor(item.priority)}`,
               borderRadius: 14,
@@ -251,17 +251,17 @@ function DecisionSection({ title, description, items }: { title: string; descrip
                   >
                     {PRIORITY_LABELS[item.priority]}
                   </span>
-                  <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>
+                  <span style={{ fontSize: 11, color: "var(--text-soft)", fontWeight: 600 }}>
                     {item.source.replace("_", " ")}
                   </span>
                 </div>
-                <h3 style={{ color: "#0F2A3D", fontSize: 17, fontWeight: 900, margin: "0 0 4px" }}>{item.title}</h3>
-                <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.55, margin: 0 }}>{item.description}</p>
+                <h3 style={{ color: "var(--text)", fontSize: 17, fontWeight: 900, margin: "0 0 4px" }}>{item.title}</h3>
+                <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: 0 }}>{item.description}</p>
               </div>
               {item.impact && (
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <p style={{ color: "#0F2A3D", fontSize: 22, fontWeight: 900, margin: 0 }}>{item.impact.value}</p>
-                  <p style={{ color: "#94A3B8", fontSize: 11, margin: 0 }}>{item.impact.label}</p>
+                  <p style={{ color: "var(--text)", fontSize: 22, fontWeight: 900, margin: 0 }}>{item.impact.value}</p>
+                  <p style={{ color: "var(--text-soft)", fontSize: 11, margin: 0 }}>{item.impact.label}</p>
                 </div>
               )}
             </div>
@@ -269,7 +269,7 @@ function DecisionSection({ title, description, items }: { title: string; descrip
               <Link
                 href={item.actionHref}
                 style={{
-                  color: "#0F766E",
+                  color: "var(--accent)",
                   fontSize: 14,
                   fontWeight: 850,
                   textDecoration: "none",

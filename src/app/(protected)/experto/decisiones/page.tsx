@@ -22,21 +22,21 @@ interface QueueData {
 }
 
 function priorityColor(priority: DecisionPriority) {
-  if (priority === "CRITICAL") return "#B91C1C";
-  if (priority === "HIGH") return "#B45309";
-  if (priority === "MEDIUM") return "#0F766E";
-  return "#64748B";
+  if (priority === "CRITICAL") return "#C4634A";
+  if (priority === "HIGH") return "#E8B84B";
+  if (priority === "MEDIUM") return "#3FA687";
+  return "var(--text-soft)";
 }
 
 function categoryColor(cat: DecisionCategory) {
   switch (cat) {
-    case "RIESGO": return "#B91C1C";
-    case "CUMPLIMIENTO": return "#B45309";
-    case "AHORRO_TRIBUTARIO": return "#047857";
-    case "INVERSION": return "#0369A1";
-    case "DOCUMENTACION": return "#6D28D9";
-    case "AUTOMATIZACION": return "#0F766E";
-    case "AI": return "#9333EA";
+    case "RIESGO": return "#C4634A";
+    case "CUMPLIMIENTO": return "#E8B84B";
+    case "AHORRO_TRIBUTARIO": return "#3FA687";
+    case "INVERSION": return "#3FA687";
+    case "DOCUMENTACION": return "#3FA687";
+    case "AUTOMATIZACION": return "#3FA687";
+    case "AI": return "#3FA687";
   }
 }
 
@@ -82,7 +82,7 @@ export default function ExpertoDecisionesPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <p style={{ color: "#94A3B8", fontSize: 16 }}>Cargando decisiones...</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 16 }}>Cargando decisiones...</p>
       </div>
     );
   }
@@ -92,10 +92,10 @@ export default function ExpertoDecisionesPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: 0, textTransform: "uppercase" }}>
+          <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: 0, textTransform: "uppercase" }}>
             Centro de Decisiones
           </p>
-          <h1 style={{ color: "#0F2A3D", fontSize: "1.5rem", fontWeight: 900, margin: "4px 0 0" }}>
+          <h1 style={{ color: "var(--text)", fontSize: "1.5rem", fontWeight: 900, margin: "4px 0 0" }}>
             Dashboard de Decisiones Tributarias
           </h1>
         </div>
@@ -106,8 +106,8 @@ export default function ExpertoDecisionesPage() {
             padding: "10px 22px",
             borderRadius: 999,
             border: "none",
-            background: rebuilding ? "#94A3B8" : "#0F766E",
-            color: "#FFFFFF",
+            background: rebuilding ? "var(--bg-elev)" : "var(--accent)",
+            color: "var(--text)",
             fontSize: 14,
             fontWeight: 800,
             cursor: rebuilding ? "not-allowed" : "pointer",
@@ -119,10 +119,10 @@ export default function ExpertoDecisionesPage() {
 
       {/* Expert KPI cards */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
-        <KpiCard label="Usuarios críticos" value={data?.urgentCount ?? 0} detail="Requieren intervención" color="#B91C1C" />
-        <KpiCard label="Decisiones pendientes" value={data?.total ?? 0} detail="En cola total" color="#0F2A3D" />
-        <KpiCard label="Ahorro potencial" value="—" detail="Por calcular" color="#047857" />
-        <KpiCard label="Riesgo agregado" value={data?.urgentCount ?? 0} detail="Señales críticas" color="#B45309" />
+        <KpiCard label="Usuarios críticos" value={data?.urgentCount ?? 0} detail="Requieren intervención" color="#C4634A" />
+        <KpiCard label="Decisiones pendientes" value={data?.total ?? 0} detail="En cola total" color="var(--text)" />
+        <KpiCard label="Ahorro potencial" value="—" detail="Por calcular" color="#3FA687" />
+        <KpiCard label="Riesgo agregado" value={data?.urgentCount ?? 0} detail="Señales críticas" color="#E8B84B" />
       </section>
 
       {/* Category filter */}
@@ -134,9 +134,9 @@ export default function ExpertoDecisionesPage() {
             style={{
               padding: "6px 14px",
               borderRadius: 999,
-              border: filter === cat ? "2px solid #0F766E" : "1px solid #E2E8F0",
-              background: filter === cat ? "rgba(15,118,110,0.10)" : "#FFFFFF",
-              color: filter === cat ? "#0F766E" : "#64748B",
+              border: filter === cat ? "2px solid var(--accent)" : "1px solid var(--border)",
+              background: filter === cat ? "rgba(15,118,110,0.10)" : "var(--bg-elev)",
+              color: filter === cat ? "var(--accent)" : "var(--text-soft)",
               fontSize: 13,
               fontWeight: filter === cat ? 800 : 600,
               cursor: "pointer",
@@ -149,9 +149,9 @@ export default function ExpertoDecisionesPage() {
 
       {/* Decision items table for expert */}
       {filteredItems.length === 0 ? (
-        <section style={{ background: "#ECFDF5", border: "1px solid #BBF7D0", borderRadius: 14, padding: 20, textAlign: "center" }}>
-          <p style={{ color: "#166534", fontSize: 16, fontWeight: 800, margin: "0 0 4px" }}>Sin decisiones pendientes</p>
-          <p style={{ color: "#166534", fontSize: 14, margin: 0 }}>
+        <section style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 14, padding: 20, textAlign: "center" }}>
+          <p style={{ color: "var(--accent)", fontSize: 16, fontWeight: 800, margin: "0 0 4px" }}>Sin decisiones pendientes</p>
+          <p style={{ color: "var(--accent)", fontSize: 14, margin: 0 }}>
             {filter === "ALL" ? "No hay señales que requieran atención." : "No hay decisiones en esta categoría."}
           </p>
         </section>
@@ -161,8 +161,8 @@ export default function ExpertoDecisionesPage() {
             <article
               key={item.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderLeft: `4px solid ${priorityColor(item.priority)}`,
                 borderRadius: 12,
                 padding: "14px 18px",
@@ -180,21 +180,21 @@ export default function ExpertoDecisionesPage() {
                   <span style={{ fontSize: 11, color: priorityColor(item.priority), fontWeight: 800 }}>
                     [{PRIORITY_LABELS[item.priority]}]
                   </span>
-                  <span style={{ fontSize: 11, color: "#94A3B8" }}>{item.source.replace("_", " ")}</span>
+                  <span style={{ fontSize: 11, color: "var(--text-soft)" }}>{item.source.replace("_", " ")}</span>
                 </div>
-                <p style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 800, margin: 0 }}>{item.title}</p>
-                <p style={{ color: "#64748B", fontSize: 13, margin: "2px 0 0" }}>{item.description}</p>
+                <p style={{ color: "var(--text)", fontSize: 15, fontWeight: 800, margin: 0 }}>{item.title}</p>
+                <p style={{ color: "var(--text-soft)", fontSize: 13, margin: "2px 0 0" }}>{item.description}</p>
               </div>
               {item.impact && (
                 <div style={{ textAlign: "right" }}>
-                  <p style={{ color: "#0F2A3D", fontSize: 18, fontWeight: 900, margin: 0 }}>{item.impact.value}</p>
-                  <p style={{ color: "#94A3B8", fontSize: 11, margin: 0 }}>{item.impact.label}</p>
+                  <p style={{ color: "var(--text)", fontSize: 18, fontWeight: 900, margin: 0 }}>{item.impact.value}</p>
+                  <p style={{ color: "var(--text-soft)", fontSize: 11, margin: 0 }}>{item.impact.label}</p>
                 </div>
               )}
               <Link
                 href={item.actionHref}
                 style={{
-                  color: "#0F766E",
+                  color: "var(--accent)",
                   fontSize: 13,
                   fontWeight: 850,
                   textDecoration: "none",
@@ -209,7 +209,7 @@ export default function ExpertoDecisionesPage() {
       )}
 
       {data && (
-        <p style={{ color: "#94A3B8", fontSize: 12, textAlign: "center", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 12, textAlign: "center", margin: 0 }}>
           {filteredItems.length} de {data.total} decisiones — Última actualización: {new Date(data.generatedAt).toLocaleString("es-CL")}
         </p>
       )}
@@ -219,10 +219,10 @@ export default function ExpertoDecisionesPage() {
 
 function KpiCard({ label, value, detail, color }: { label: string; value: number | string; detail: string; color: string }) {
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: 14 }}>
-      <p style={{ color: "#64748B", fontSize: 12, fontWeight: 800, margin: "0 0 6px" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 12, padding: 14 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 800, margin: "0 0 6px" }}>{label}</p>
       <p style={{ color, fontSize: 22, fontWeight: 900, margin: 0 }}>{value}</p>
-      <p style={{ color: "#94A3B8", fontSize: 12, margin: "2px 0 0" }}>{detail}</p>
+      <p style={{ color: "var(--text-soft)", fontSize: 12, margin: "2px 0 0" }}>{detail}</p>
     </article>
   );
 }

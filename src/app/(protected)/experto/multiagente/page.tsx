@@ -46,7 +46,7 @@ export default function ExpertMultiAgentePage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <p style={{ color: "#94A3B8", fontSize: 16 }}>Cargando panel multiagente...</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 16 }}>Cargando panel multiagente...</p>
       </div>
     );
   }
@@ -57,42 +57,42 @@ export default function ExpertMultiAgentePage() {
   return (
     <div style={{ display: "grid", gap: 24 }}>
       {/* Header */}
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 24 }}>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 24 }}>
+        <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
           Panel Experto • Multiagente
         </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "1.8rem", fontWeight: 900, margin: "0 0 6px" }}>
+        <h1 style={{ color: "var(--text)", fontSize: "1.8rem", fontWeight: 900, margin: "0 0 6px" }}>
           Evaluaciones Multiagente
         </h1>
-        <p style={{ color: "#64748B", fontSize: 14, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, margin: 0 }}>
           Consolidado de evaluaciones de los 5 agentes especializados: Riesgo, Cumplimiento, Documental, Financiero y Ejecución.
         </p>
       </section>
 
       {/* KPIs */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
-        <Kpi label="Total evaluaciones" value={data?.total ?? 0} color="#0F2A3D" />
-        <Kpi label="Usuarios" value={data?.uniqueUsers ?? 0} color="#2563EB" />
-        <Kpi label="Críticas" value={dist.CRITICAL ?? 0} color="#B91C1C" />
-        <Kpi label="Altas" value={dist.HIGH ?? 0} color="#B45309" />
-        <Kpi label="Medias" value={dist.MEDIUM ?? 0} color="#0F766E" />
-        <Kpi label="Bajas" value={dist.LOW ?? 0} color="#64748B" />
+        <Kpi label="Total evaluaciones" value={data?.total ?? 0} color="var(--text)" />
+        <Kpi label="Usuarios" value={data?.uniqueUsers ?? 0} color="#3FA687" />
+        <Kpi label="Críticas" value={dist.CRITICAL ?? 0} color="#C4634A" />
+        <Kpi label="Altas" value={dist.HIGH ?? 0} color="#E8B84B" />
+        <Kpi label="Medias" value={dist.MEDIUM ?? 0} color="#3FA687" />
+        <Kpi label="Bajas" value={dist.LOW ?? 0} color="var(--text-soft)" />
       </section>
 
       {/* Filters */}
       <section style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ color: "#64748B", fontSize: 13, fontWeight: 700 }}>Filtros:</span>
+        <span style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 700 }}>Filtros:</span>
         <select
           value={agentFilter}
           onChange={(e) => { setAgentFilter(e.target.value); setLoading(true); }}
           style={{
             padding: "8px 14px",
             borderRadius: 8,
-            border: "1px solid #E2E8F0",
-            background: "#FFFFFF",
+            border: "1px solid var(--border)",
+            background: "var(--bg-elev)",
             fontSize: 13,
             fontWeight: 600,
-            color: "#0F2A3D",
+            color: "var(--text)",
           }}
         >
           <option value="ALL">Todos los agentes</option>
@@ -106,11 +106,11 @@ export default function ExpertMultiAgentePage() {
           style={{
             padding: "8px 14px",
             borderRadius: 8,
-            border: "1px solid #E2E8F0",
-            background: "#FFFFFF",
+            border: "1px solid var(--border)",
+            background: "var(--bg-elev)",
             fontSize: 13,
             fontWeight: 600,
-            color: "#0F2A3D",
+            color: "var(--text)",
           }}
         >
           <option value="ALL">Todas las severidades</option>
@@ -121,8 +121,8 @@ export default function ExpertMultiAgentePage() {
       </section>
 
       {items.length === 0 ? (
-        <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 32, textAlign: "center" }}>
-          <p style={{ color: "#64748B", fontSize: 15, margin: 0 }}>No se encontraron evaluaciones con los filtros seleccionados.</p>
+        <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 32, textAlign: "center" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 15, margin: 0 }}>No se encontraron evaluaciones con los filtros seleccionados.</p>
         </section>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
@@ -130,9 +130,9 @@ export default function ExpertMultiAgentePage() {
             <div
               key={a.id}
               style={{
-                background: "#FFFFFF",
+                background: "var(--bg-elev)",
                 border: "1px solid",
-                borderColor: a.severity === "CRITICAL" ? "#FECACA" : a.severity === "HIGH" ? "#FDE68A" : "#E2E8F0",
+                borderColor: a.severity === "CRITICAL" ? "rgba(196,99,74,0.14)" : a.severity === "HIGH" ? "rgba(232,184,75,0.14)" : "var(--border)",
                 borderRadius: 14,
                 padding: "16px 20px",
                 display: "grid",
@@ -143,10 +143,10 @@ export default function ExpertMultiAgentePage() {
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <span style={{ fontSize: 20 }}>{AGENT_EMOJIS[a.agentType]}</span>
                   <div>
-                    <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 800, margin: 0 }}>
+                    <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 800, margin: 0 }}>
                       {AGENT_LABELS[a.agentType]}
                     </p>
-                    <p style={{ color: "#94A3B8", fontSize: 11, margin: 0 }}>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, margin: 0 }}>
                       {a.subjectType} • Usuario: {a.userId.slice(0, 8)}...
                     </p>
                   </div>
@@ -162,19 +162,19 @@ export default function ExpertMultiAgentePage() {
                   }}>
                     {SEVERITY_LABELS[a.severity]}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: "#0F2A3D" }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>
                     {Math.round(a.confidence * 100)}%
                   </span>
                 </div>
               </div>
-              <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>{a.summary}</p>
-              <p style={{ color: "#0F766E", fontSize: 13, margin: 0 }}>{a.recommendation}</p>
-              <p style={{ color: "#94A3B8", fontSize: 11, margin: 0 }}>
+              <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>{a.summary}</p>
+              <p style={{ color: "var(--accent)", fontSize: 13, margin: 0 }}>{a.recommendation}</p>
+              <p style={{ color: "var(--text-soft)", fontSize: 11, margin: 0 }}>
                 {new Date(a.createdAt).toLocaleDateString("es-CL")}
               </p>
             </div>
           ))}
-          <p style={{ color: "#94A3B8", fontSize: 12, textAlign: "center", margin: 0 }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 12, textAlign: "center", margin: 0 }}>
             {items.length} evaluación(es) • {data?.uniqueUsers ?? 0} usuario(s)
           </p>
         </div>
@@ -185,8 +185,8 @@ export default function ExpertMultiAgentePage() {
 
 function Kpi({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 18 }}>
-      <p style={{ color: "#64748B", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 16, padding: 18 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
       <p style={{ color, fontSize: 24, fontWeight: 900, margin: 0 }}>{value}</p>
     </article>
   );

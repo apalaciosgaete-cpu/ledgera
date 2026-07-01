@@ -26,10 +26,10 @@ const statusLabel: Record<TaxFileListItem["status"], string> = {
 };
 
 const statusColor: Record<TaxFileListItem["status"], string> = {
-  HEALTHY: "#15803D",
-  ATTENTION_REQUIRED: "#B45309",
-  HIGH_RISK: "#DC2626",
-  CRITICAL: "#991B1B",
+  HEALTHY: "var(--accent)",
+  ATTENTION_REQUIRED: "var(--warn)",
+  HIGH_RISK: "var(--loss)",
+  CRITICAL: "var(--loss)",
 };
 
 const statuses = [
@@ -71,7 +71,7 @@ export default function ExpertTaxFilesPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Expedientes tributarios
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Vista unificada del estado tributario de cada usuario.
         </p>
       </header>
@@ -83,10 +83,10 @@ export default function ExpertTaxFilesPage() {
       {error && (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             marginBottom: 24,
             padding: 16,
@@ -97,21 +97,21 @@ export default function ExpertTaxFilesPage() {
       )}
 
       {loading ? (
-        <p style={{ color: "#64748B" }}>Cargando expedientes…</p>
+        <p style={{ color: "var(--text-soft)" }}>Cargando expedientes…</p>
       ) : files.length === 0 ? (
-        <p style={{ color: "#64748B" }}>Sin expedientes para los filtros seleccionados.</p>
+        <p style={{ color: "var(--text-soft)" }}>Sin expedientes para los filtros seleccionados.</p>
       ) : (
         <div
           style={{
-            background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
             overflow: "hidden",
           }}
         >
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#F8FAFC", color: "#64748B", textAlign: "left" }}>
+              <tr style={{ background: "var(--bg-sunken)", color: "var(--text-soft)", textAlign: "left" }}>
                 <th style={{ padding: "12px 16px" }}>Usuario</th>
                 <th style={{ padding: "12px 16px" }}>Estado</th>
                 <th style={{ padding: "12px 16px" }}>Riesgo</th>
@@ -123,19 +123,19 @@ export default function ExpertTaxFilesPage() {
             </thead>
             <tbody>
               {files.map((f) => (
-                <tr key={f.userId} style={{ borderTop: "1px solid #E2E8F0" }}>
+                <tr key={f.userId} style={{ borderTop: "1px solid var(--border)" }}>
                   <td style={{ padding: "12px 16px" }}>
                     <Link
                       href={`/experto/expedientes/${f.userId}`}
                       style={{
-                        color: "#0F2A3D",
+                        color: "var(--text)",
                         fontWeight: 700,
                         textDecoration: "none",
                       }}
                     >
                       {f.userName || f.userEmail}
                     </Link>
-                    <div style={{ color: "#94A3B8", fontSize: 12 }}>{f.userId}</div>
+                    <div style={{ color: "var(--text-soft)", fontSize: 12 }}>{f.userId}</div>
                   </td>
                   <td style={{ padding: "12px 16px" }}>
                     <StatusBadge status={f.status} />
@@ -172,15 +172,15 @@ function Select({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180 }}>
-      <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>{label}</label>
+      <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #CBD5E1",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: 14,
           padding: "8px 12px",
         }}

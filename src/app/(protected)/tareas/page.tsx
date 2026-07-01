@@ -23,10 +23,10 @@ const priorityLabel: Record<Task["priority"], string> = {
 };
 
 const priorityColor: Record<Task["priority"], string> = {
-  LOW: "#64748B",
-  MEDIUM: "#B45309",
-  HIGH: "#DC2626",
-  CRITICAL: "#991B1B",
+  LOW: "var(--bg-elev)",
+  MEDIUM: "var(--warn)",
+  HIGH: "var(--loss)",
+  CRITICAL: "var(--loss)",
 };
 
 const statusLabel: Record<Task["status"], string> = {
@@ -38,11 +38,11 @@ const statusLabel: Record<Task["status"], string> = {
 };
 
 const statusColor: Record<Task["status"], string> = {
-  PENDING: "#B45309",
-  IN_PROGRESS: "#0F766E",
-  BLOCKED: "#991B1B",
-  COMPLETED: "#15803D",
-  CANCELLED: "#64748B",
+  PENDING: "var(--warn)",
+  IN_PROGRESS: "var(--accent)",
+  BLOCKED: "var(--loss)",
+  COMPLETED: "var(--accent)",
+  CANCELLED: "var(--bg-elev)",
 };
 
 export default function TasksPage() {
@@ -101,7 +101,7 @@ export default function TasksPage() {
       <header style={{ marginBottom: 24 }}>
         <p
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 850,
             letterSpacing: "0.06em",
@@ -113,7 +113,7 @@ export default function TasksPage() {
         </p>
         <h1
           style={{
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: "1.9rem",
             fontWeight: 850,
             lineHeight: 1.12,
@@ -122,7 +122,7 @@ export default function TasksPage() {
         >
           Qué hacer ahora
         </h1>
-        <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
           Tareas claras para mantener tu situación tributaria en orden.
         </p>
       </header>
@@ -132,10 +132,10 @@ export default function TasksPage() {
           onClick={generateFromRecommendations}
           disabled={generating || loading}
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             border: "none",
             borderRadius: 8,
-            color: "#FFFFFF",
+            color: "var(--text)",
             cursor: "pointer",
             fontSize: 14,
             fontWeight: 850,
@@ -149,10 +149,10 @@ export default function TasksPage() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           style={{
-            background: "#FFFFFF",
-            border: "1px solid #CBD5E1",
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: 14,
             padding: "10px 12px",
           }}
@@ -169,10 +169,10 @@ export default function TasksPage() {
       {error && (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             marginBottom: 24,
             padding: 16,
@@ -183,7 +183,7 @@ export default function TasksPage() {
       )}
 
       {loading ? (
-        <p style={{ color: "#64748B", fontSize: 14 }}>Cargando tareas…</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 14 }}>Cargando tareas…</p>
       ) : tasks.length === 0 ? (
         <EmptyState onGenerate={generateFromRecommendations} />
       ) : (
@@ -209,8 +209,8 @@ function TaskCard({
   return (
     <article
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderLeft: `4px solid ${priorityColor[task.priority]}`,
         borderRadius: 12,
         padding: "20px",
@@ -229,7 +229,7 @@ function TaskCard({
         >
           {priorityLabel[task.priority]}
         </span>
-        <span style={{ color: "#94A3B8", fontSize: 11 }}>• {categoryLabel(task.category)}</span>
+        <span style={{ color: "var(--text-soft)", fontSize: 11 }}>• {categoryLabel(task.category)}</span>
         <span
           style={{
             background: statusColor[task.status] + "15",
@@ -248,7 +248,7 @@ function TaskCard({
 
       <h2
         style={{
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: "1.15rem",
           fontWeight: 850,
           lineHeight: 1.25,
@@ -257,12 +257,12 @@ function TaskCard({
       >
         {task.title}
       </h2>
-      <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.55, margin: "0 0 16px" }}>
+      <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.55, margin: "0 0 16px" }}>
         {task.description}
       </p>
 
       {task.dueDate && (
-        <p style={{ color: "#64748B", fontSize: 13, margin: "0 0 16px" }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 13, margin: "0 0 16px" }}>
           Vence: {new Date(task.dueDate).toLocaleDateString("es-CL")}
         </p>
       )}
@@ -273,10 +273,10 @@ function TaskCard({
             <button
               onClick={() => onAction(task.id, "start")}
               style={{
-                background: "#0F766E",
+                background: "var(--accent)",
                 border: "none",
                 borderRadius: 8,
-                color: "#FFFFFF",
+                color: "var(--text)",
                 cursor: "pointer",
                 fontSize: 14,
                 fontWeight: 850,
@@ -290,10 +290,10 @@ function TaskCard({
             <button
               onClick={() => onAction(task.id, "complete")}
               style={{
-                background: "#15803D",
+                background: "var(--accent)",
                 border: "none",
                 borderRadius: 8,
-                color: "#FFFFFF",
+                color: "var(--text)",
                 cursor: "pointer",
                 fontSize: 14,
                 fontWeight: 850,
@@ -307,9 +307,9 @@ function TaskCard({
             onClick={() => onAction(task.id, "cancel")}
             style={{
               background: "transparent",
-              border: "1px solid #CBD5E1",
+              border: "1px solid var(--border)",
               borderRadius: 8,
-              color: "#64748B",
+              color: "var(--text-soft)",
               cursor: "pointer",
               fontSize: 13,
               fontWeight: 750,
@@ -328,8 +328,8 @@ function EmptyState({ onGenerate }: { onGenerate: () => void }) {
   return (
     <div
       style={{
-        background: "#F8FAFC",
-        border: "1px dashed #CBD5E1",
+        background: "var(--bg-sunken)",
+        border: "1px dashed var(--border)",
         borderRadius: 12,
         padding: "40px 28px",
         textAlign: "center",
@@ -338,7 +338,7 @@ function EmptyState({ onGenerate }: { onGenerate: () => void }) {
       <p style={{ fontSize: 28, margin: "0 0 10px" }}>✅</p>
       <h2
         style={{
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: "1.15rem",
           fontWeight: 850,
           margin: "0 0 8px",
@@ -346,16 +346,16 @@ function EmptyState({ onGenerate }: { onGenerate: () => void }) {
       >
         Sin tareas activas
       </h2>
-      <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.55, margin: "0 0 18px" }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: "0 0 18px" }}>
         No tienes tareas pendientes. Puedes generarlas automáticamente desde tus recomendaciones.
       </p>
       <button
         onClick={onGenerate}
         style={{
-          background: "#0F766E",
+          background: "var(--accent)",
           border: "none",
           borderRadius: 8,
-          color: "#FFFFFF",
+          color: "var(--text)",
           cursor: "pointer",
           fontSize: 14,
           fontWeight: 850,

@@ -65,7 +65,7 @@ export default function MiPerfilTributarioPage() {
   if (loading) {
     return (
       <div style={{ maxWidth: 800, width: "100%" }}>
-        <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>
           Cargando tu perfil tributario…
         </p>
       </div>
@@ -77,10 +77,10 @@ export default function MiPerfilTributarioPage() {
       <div style={{ maxWidth: 800, width: "100%" }}>
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             padding: 16,
           }}
@@ -94,17 +94,17 @@ export default function MiPerfilTributarioPage() {
   if (!profile) {
     return (
       <div style={{ maxWidth: 800, width: "100%" }}>
-        <p style={{ color: "#64748B", fontSize: 14 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 14 }}>
           No hay perfil disponible. Reconstruye tu perfil para obtener recomendaciones personalizadas.
         </p>
         <button
           onClick={handleRebuild}
           disabled={rebuilding}
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             border: "none",
             borderRadius: 8,
-            color: "#FFFFFF",
+            color: "var(--text)",
             cursor: rebuilding ? "not-allowed" : "pointer",
             fontSize: 14,
             fontWeight: 850,
@@ -128,7 +128,7 @@ export default function MiPerfilTributarioPage() {
       <section style={{ marginBottom: 28 }}>
         <p
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 850,
             letterSpacing: "0.06em",
@@ -140,7 +140,7 @@ export default function MiPerfilTributarioPage() {
         </p>
         <h1
           style={{
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: "1.85rem",
             fontWeight: 850,
             lineHeight: 1.12,
@@ -149,7 +149,7 @@ export default function MiPerfilTributarioPage() {
         >
           Mi Perfil Tributario
         </h1>
-        <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
           LEDGERA aprende cómo te comportas y adapta sus recomendaciones para ti.
         </p>
       </section>
@@ -178,7 +178,7 @@ export default function MiPerfilTributarioPage() {
             >
               {profileTypeLabel(pt)}
             </h2>
-            <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.5, margin: "6px 0 0" }}>
+            <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.5, margin: "6px 0 0" }}>
               {profileTypeDescription(pt)}
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function MiPerfilTributarioPage() {
         <div style={{ marginBottom: 20 }}>
           <p
             style={{
-              color: "#64748B",
+              color: "var(--text-soft)",
               fontSize: 11,
               fontWeight: 850,
               letterSpacing: "0.04em",
@@ -240,7 +240,7 @@ export default function MiPerfilTributarioPage() {
               background: color,
               border: "none",
               borderRadius: 8,
-              color: "#FFFFFF",
+              color: "var(--text)",
               cursor: rebuilding ? "not-allowed" : "pointer",
               fontSize: 14,
               fontWeight: 850,
@@ -255,8 +255,8 @@ export default function MiPerfilTributarioPage() {
       {/* ¿Qué significa esto? */}
       <section
         style={{
-          background: "#F8FAFC",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-sunken)",
+          border: "1px solid var(--border)",
           borderRadius: 14,
           padding: 24,
           marginBottom: 24,
@@ -264,7 +264,7 @@ export default function MiPerfilTributarioPage() {
       >
         <h3
           style={{
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: "1.1rem",
             fontWeight: 850,
             margin: "0 0 12px",
@@ -272,7 +272,7 @@ export default function MiPerfilTributarioPage() {
         >
           ¿Qué significa esto?
         </h3>
-        <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
           LEDGERA analiza tu historial de cumplimiento, cómo respondes a recomendaciones,
           cómo gestionas tus tareas, el estado de tus documentos y tu nivel de riesgo
           para crear un perfil adaptativo. Este perfil se usa para personalizar las
@@ -283,15 +283,15 @@ export default function MiPerfilTributarioPage() {
       {/* Explorar más */}
       <section
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 14,
           padding: 24,
         }}
       >
         <h3
           style={{
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: "1.1rem",
             fontWeight: 850,
             margin: "0 0 16px",
@@ -303,10 +303,10 @@ export default function MiPerfilTributarioPage() {
           <Link
             href="/mi-situacion"
             style={{
-              background: "#F8FAFC",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-sunken)",
+              border: "1px solid var(--border)",
               borderRadius: 10,
-              color: "#0F2A3D",
+              color: "var(--text)",
               fontSize: 13,
               fontWeight: 800,
               padding: 14,
@@ -318,10 +318,10 @@ export default function MiPerfilTributarioPage() {
           <Link
             href="/experto"
             style={{
-              background: "#F8FAFC",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-sunken)",
+              border: "1px solid var(--border)",
               borderRadius: 10,
-              color: "#0F2A3D",
+              color: "var(--text)",
               fontSize: 13,
               fontWeight: 800,
               padding: 14,
@@ -333,10 +333,10 @@ export default function MiPerfilTributarioPage() {
           <Link
             href="/experto/tributario"
             style={{
-              background: "#F8FAFC",
-              border: "1px solid #E2E8F0",
+              background: "var(--bg-sunken)",
+              border: "1px solid var(--border)",
               borderRadius: 10,
-              color: "#0F2A3D",
+              color: "var(--text)",
               fontSize: 13,
               fontWeight: 800,
               padding: 14,
@@ -355,15 +355,15 @@ function BehaviorCard({ label, value }: { label: string; value: string }) {
   return (
     <div
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 10,
         padding: 14,
       }}
     >
       <p
         style={{
-          color: "#64748B",
+          color: "var(--text-soft)",
           fontSize: 11,
           fontWeight: 850,
           letterSpacing: "0.04em",
@@ -373,7 +373,7 @@ function BehaviorCard({ label, value }: { label: string; value: string }) {
       >
         {label}
       </p>
-      <p style={{ color: "#0F2A3D", fontSize: 13, fontWeight: 750, margin: 0 }}>
+      <p style={{ color: "var(--text)", fontSize: 13, fontWeight: 750, margin: 0 }}>
         {value}
       </p>
     </div>

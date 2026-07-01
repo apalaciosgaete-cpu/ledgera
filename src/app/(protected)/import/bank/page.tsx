@@ -122,13 +122,13 @@ export default function BankImportPage() {
         <h1 style={{
           fontSize:   "22px",
           fontWeight: 700,
-          color:      "#0F2A3D",
+          color: "var(--text)",
           margin:     "0 0 6px",
           fontFamily: "var(--font-display, system-ui, sans-serif)",
         }}>
           Importación bancaria
         </h1>
-        <p style={{ fontSize: "14px", color: "#64748B", margin: 0 }}>
+        <p style={{ fontSize: "14px", color: "var(--text-soft)", margin: 0 }}>
           Conecta tus movimientos fiat con tu actividad crypto.
         </p>
       </div>
@@ -137,8 +137,8 @@ export default function BankImportPage() {
       <div style={{
         maxWidth:     "680px",
         margin:       "0 auto",
-        background:   "#FFFFFF",
-        border:       "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: "14px",
         padding:      "28px 32px",
       }}>
@@ -161,12 +161,12 @@ export default function BankImportPage() {
           onDrop={handleDrop}
           style={{
             display:      "block",
-            border:       `2px dashed ${file ? "#16A34A" : "#CBD5E1"}`,
+            border:       `2px dashed ${file ? "#3FA687" : "var(--border)"}`,
             borderRadius: "12px",
             padding:      "36px 24px",
             textAlign:    "center",
             cursor:       "pointer",
-            background:   file ? "rgba(22,163,74,0.03)" : "#F8FAFC",
+            background: file ? "rgba(22,163,74,0.03)" : "var(--bg-sunken)",
             marginBottom: "22px",
             transition:   "border-color 0.15s",
           }}
@@ -177,19 +177,19 @@ export default function BankImportPage() {
 
           {file ? (
             <div>
-              <p style={{ fontWeight: 600, fontSize: "14px", color: "#16A34A", margin: "0 0 4px" }}>
+              <p style={{ fontWeight: 600, fontSize: "14px", color: "var(--accent)", margin: "0 0 4px" }}>
                 {file.name}
               </p>
-              <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0 }}>
+              <p style={{ fontSize: "12px", color: "var(--text-soft)", margin: 0 }}>
                 {(file.size / 1024).toFixed(1)} KB · {file.name.split(".").pop()?.toUpperCase()}
               </p>
             </div>
           ) : (
             <div>
-              <p style={{ fontWeight: 600, fontSize: "14px", color: "#334155", margin: "0 0 4px" }}>
+              <p style={{ fontWeight: 600, fontSize: "14px", color: "var(--text)", margin: "0 0 4px" }}>
                 Arrastra tu cartola o selecciónala
               </p>
-              <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0 }}>
+              <p style={{ fontSize: "12px", color: "var(--text-soft)", margin: 0 }}>
                 PDF · XLSX · CSV
               </p>
             </div>
@@ -212,7 +212,7 @@ export default function BankImportPage() {
             padding:      "12px 16px",
             marginBottom: "18px",
             fontSize:     "13px",
-            color:        "#EF4444",
+            color: "var(--loss)",
           }}>
             {error}
           </div>
@@ -225,13 +225,13 @@ export default function BankImportPage() {
           style={{
             width:         "100%",
             height:        "44px",
-            background:    canImport ? "#16A34A" : "#E2E8F0",
-            color:         canImport ? "#FFFFFF"  : "#94A3B8",
+            background: canImport ? "var(--accent)" : "var(--bg-elev)",
+            color: canImport ? "var(--text)" : "var(--text-soft)",
             border:        "none",
             borderRadius:  "10px",
             fontSize:      "14px",
             fontWeight:    600,
-            cursor:        canImport ? "pointer" : "not-allowed",
+            cursor: canImport ? "pointer" : "not-allowed",
             transition:    "background 0.15s",
             letterSpacing: "0.01em",
           }}
@@ -250,7 +250,7 @@ function Label({ children }: { children: React.ReactNode }) {
       display:       "block",
       fontSize:      "12px",
       fontWeight:    600,
-      color:         "#334155",
+      color: "var(--text)",
       textTransform: "uppercase",
       letterSpacing: "0.05em",
       marginBottom:  "8px",
@@ -263,13 +263,13 @@ function Label({ children }: { children: React.ReactNode }) {
 const selectStyle: React.CSSProperties = {
   width:        "100%",
   height:       "42px",
-  border:       "1px solid #E2E8F0",
+  border: "1px solid var(--border)",
   borderRadius: "8px",
   padding:      "0 14px",
   fontSize:     "14px",
   fontWeight:   500,
-  color:        "#0F2A3D",
-  background:   "#F8FAFC",
+  color: "var(--text)",
+  background: "var(--bg-sunken)",
   cursor:       "pointer",
   outline:      "none",
 };

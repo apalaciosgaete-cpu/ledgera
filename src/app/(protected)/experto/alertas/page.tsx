@@ -82,13 +82,13 @@ export default function ExpertAlertsPage() {
   function severityColor(severity: string) {
     switch (severity) {
       case "CRITICAL":
-        return "#DC2626";
+        return "#C4634A";
       case "HIGH":
-        return "#EA580C";
+        return "#E8B84B";
       case "MEDIUM":
-        return "#CA8A04";
+        return "#E8B84B";
       default:
-        return "#16A34A";
+        return "#3FA687";
     }
   }
 
@@ -98,7 +98,7 @@ export default function ExpertAlertsPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Gestión de Alertas
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Monitoreo, filtrado y auditoría de alertas del sistema.
         </p>
       </header>
@@ -118,8 +118,8 @@ export default function ExpertAlertsPage() {
 
       <div
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
           marginBottom: 24,
           padding: 16,
@@ -151,15 +151,15 @@ export default function ExpertAlertsPage() {
       {loading ? (
         <p>Cargando alertas...</p>
       ) : alerts.length === 0 ? (
-        <p style={{ color: "#64748B" }}>No hay alertas que coincidan con los filtros.</p>
+        <p style={{ color: "var(--text-soft)" }}>No hay alertas que coincidan con los filtros.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {alerts.map((alert) => (
             <li
               key={alert.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: 8,
                 marginBottom: 12,
                 padding: 16,
@@ -178,9 +178,9 @@ export default function ExpertAlertsPage() {
                 <strong style={{ flex: 1 }}>{alert.title}</strong>
                 <span
                   style={{
-                    background: "#F1F5F9",
+                    background: "var(--bg-sunken)",
                     borderRadius: 4,
-                    color: "#475569",
+                    color: "var(--text)",
                     fontSize: 12,
                     padding: "2px 8px",
                   }}
@@ -188,8 +188,8 @@ export default function ExpertAlertsPage() {
                   {alert.status}
                 </span>
               </div>
-              <p style={{ color: "#475569", margin: "0 0 8px" }}>{alert.message}</p>
-              <p style={{ color: "#64748B", fontSize: 12, margin: "0 0 12px" }}>
+              <p style={{ color: "var(--text)", margin: "0 0 8px" }}>{alert.message}</p>
+              <p style={{ color: "var(--text-soft)", fontSize: 12, margin: "0 0 12px" }}>
                 Usuario {alert.userId} · {alert.category} · {alert.severity} ·{" "}
                 {new Date(alert.createdAt).toLocaleDateString("es-CL")}
                 {alert.source ? ` · Fuente: ${alert.source}` : ""}
@@ -199,10 +199,10 @@ export default function ExpertAlertsPage() {
                   <button
                     onClick={() => handleAcknowledge(alert.id)}
                     style={{
-                      background: "#F1F5F9",
+                      background: "var(--bg-sunken)",
                       border: "none",
                       borderRadius: 4,
-                      color: "#475569",
+                      color: "var(--text)",
                       cursor: "pointer",
                       fontSize: 12,
                       padding: "6px 12px",
@@ -215,10 +215,10 @@ export default function ExpertAlertsPage() {
                   <button
                     onClick={() => handleResolve(alert.id)}
                     style={{
-                      background: "#0F766E",
+                      background: "var(--accent)",
                       border: "none",
                       borderRadius: 4,
-                      color: "#FFFFFF",
+                      color: "var(--text)",
                       cursor: "pointer",
                       fontSize: 12,
                       padding: "6px 12px",
@@ -246,20 +246,20 @@ function Metric({
   accent: "good" | "warn" | "danger" | "info";
 }) {
   const color =
-    accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : accent === "danger" ? "#991B1B" : "#0F766E";
+    accent === "good" ? "#3FA687" : accent === "warn" ? "#E8B84B" : accent === "danger" ? "#C4634A" : "#3FA687";
 
   return (
     <article
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 8,
         padding: 16,
       }}
     >
       <p
         style={{
-          color: "#64748B",
+          color: "var(--text-soft)",
           fontSize: 11,
           fontWeight: 850,
           letterSpacing: "0.04em",
@@ -292,7 +292,7 @@ function FilterSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          border: "1px solid #E2E8F0",
+          border: "1px solid var(--border)",
           borderRadius: 4,
           fontSize: 13,
           padding: "6px 8px",

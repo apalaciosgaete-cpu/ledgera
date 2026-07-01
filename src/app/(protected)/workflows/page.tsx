@@ -64,7 +64,7 @@ export default function WorkflowsPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <p style={{ color: "#94A3B8", fontSize: 16 }}>Cargando workflows...</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 16 }}>Cargando workflows...</p>
       </div>
     );
   }
@@ -74,16 +74,16 @@ export default function WorkflowsPage() {
   return (
     <div style={{ display: "grid", gap: 24, maxWidth: 1100, margin: "0 auto" }}>
       {/* Header */}
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 24 }}>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
           <div>
-            <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+            <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
               Workflow Autónomo
             </p>
-            <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
+            <h1 style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
               Flujos de Trabajo Tributarios
             </h1>
-            <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
               LEDGERA ejecuta pasos autónomos desde cada caso tributario. Los pasos sensibles requieren tu aprobación.
             </p>
           </div>
@@ -94,8 +94,8 @@ export default function WorkflowsPage() {
               padding: "10px 22px",
               borderRadius: 999,
               border: "none",
-              background: rebuilding ? "#94A3B8" : "#0F766E",
-              color: "#FFFFFF",
+              background: rebuilding ? "var(--bg-elev)" : "var(--accent)",
+              color: "var(--text)",
               fontSize: 14,
               fontWeight: 800,
               cursor: rebuilding ? "not-allowed" : "pointer",
@@ -108,17 +108,17 @@ export default function WorkflowsPage() {
 
       {/* KPIs */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
-        <Kpi label="Pendientes" value={data?.pendingCount ?? 0} color="#64748B" />
-        <Kpi label="En ejecución" value={data?.runningCount ?? 0} color="#2563EB" />
-        <Kpi label="Esperando" value={data?.waitingCount ?? 0} color="#B45309" />
-        <Kpi label="Completados" value={data?.completedCount ?? 0} color="#047857" />
-        <Kpi label="Fallidos" value={data?.failedCount ?? 0} color="#B91C1C" />
+        <Kpi label="Pendientes" value={data?.pendingCount ?? 0} color="var(--text-soft)" />
+        <Kpi label="En ejecución" value={data?.runningCount ?? 0} color="#3FA687" />
+        <Kpi label="Esperando" value={data?.waitingCount ?? 0} color="#E8B84B" />
+        <Kpi label="Completados" value={data?.completedCount ?? 0} color="#3FA687" />
+        <Kpi label="Fallidos" value={data?.failedCount ?? 0} color="#C4634A" />
       </section>
 
       {items.length === 0 ? (
-        <section style={{ background: "#ECFDF5", border: "1px solid #BBF7D0", borderRadius: 18, padding: 24, textAlign: "center" }}>
-          <p style={{ color: "#166534", fontSize: 18, fontWeight: 800, margin: "0 0 6px" }}>✅ Sin workflows activos</p>
-          <p style={{ color: "#166534", fontSize: 14, margin: 0 }}>Genera workflows desde tus casos tributarios activos.</p>
+        <section style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 18, padding: 24, textAlign: "center" }}>
+          <p style={{ color: "var(--accent)", fontSize: 18, fontWeight: 800, margin: "0 0 6px" }}>✅ Sin workflows activos</p>
+          <p style={{ color: "var(--accent)", fontSize: 14, margin: 0 }}>Genera workflows desde tus casos tributarios activos.</p>
         </section>
       ) : (
         <div style={{ display: "grid", gap: 12 }}>
@@ -129,8 +129,8 @@ export default function WorkflowsPage() {
               <article
                 key={wf.id}
                 style={{
-                  background: "#FFFFFF",
-                  border: "1px solid #E2E8F0",
+                  background: "var(--bg-elev)",
+                  border: "1px solid var(--border)",
                   borderRadius: 16,
                   padding: "18px 22px",
                   display: "grid",
@@ -154,11 +154,11 @@ export default function WorkflowsPage() {
                       }}>
                         {STATUS_LABELS[wf.status]}
                       </span>
-                      <span style={{ fontSize: 12, color: "#94A3B8" }}>{wf.sourceType.replace(/_/g, " ")}</span>
+                      <span style={{ fontSize: 12, color: "var(--text-soft)" }}>{wf.sourceType.replace(/_/g, " ")}</span>
                     </div>
-                    <h3 style={{ color: "#0F2A3D", fontSize: 16, fontWeight: 800, margin: 0 }}>{wf.title}</h3>
+                    <h3 style={{ color: "var(--text)", fontSize: 16, fontWeight: 800, margin: 0 }}>{wf.title}</h3>
                     {wf.caseId && (
-                      <p style={{ color: "#94A3B8", fontSize: 12, margin: "4px 0 0" }}>
+                      <p style={{ color: "var(--text-soft)", fontSize: 12, margin: "4px 0 0" }}>
                         Caso: {wf.caseId.slice(0, 8)}...
                       </p>
                     )}
@@ -172,8 +172,8 @@ export default function WorkflowsPage() {
                           padding: "8px 18px",
                           borderRadius: 999,
                           border: "none",
-                          background: isRunning ? "#E2E8F0" : wf.status === "WAITING_USER" ? "#B45309" : "#0F766E",
-                          color: isRunning ? "#94A3B8" : "#FFFFFF",
+                          background: isRunning ? "var(--bg-elev)" : wf.status === "WAITING_USER" ? "#E8B84B" : "#3FA687",
+                          color: isRunning ? "var(--text-soft)" : "var(--text)",
                           fontSize: 13,
                           fontWeight: 800,
                           cursor: isRunning ? "not-allowed" : "pointer",
@@ -182,7 +182,7 @@ export default function WorkflowsPage() {
                         {isRunning ? "..." : wf.status === "WAITING_USER" ? "Aprobar" : "Ejecutar"}
                       </button>
                     )}
-                    <span style={{ color: "#94A3B8", fontSize: 14, marginLeft: 4 }}>
+                    <span style={{ color: "var(--text-soft)", fontSize: 14, marginLeft: 4 }}>
                       {wf.steps.length} paso(s)
                     </span>
                   </div>
@@ -190,7 +190,7 @@ export default function WorkflowsPage() {
 
                 {/* Expanded steps */}
                 {isExpanded && (
-                  <div style={{ borderTop: "1px solid #F1F5F9", paddingTop: 14, display: "grid", gap: 8 }}>
+                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, display: "grid", gap: 8 }}>
                     {wf.steps.map((step) => (
                       <div
                         key={step.id}
@@ -200,27 +200,27 @@ export default function WorkflowsPage() {
                           alignItems: "center",
                           padding: "10px 14px",
                           borderRadius: 10,
-                          background: step.status === "PENDING" ? "#F8FAFC" : step.status === "SUCCESS" ? "#F0FDF4" : step.status === "FAILED" ? "#FEF2F2" : "#F8FAFC",
+                          background: step.status === "PENDING" ? "var(--bg-sunken)" : step.status === "SUCCESS" ? "#1D2C27" : step.status === "FAILED" ? "rgba(196,99,74,0.14)" : "var(--bg-sunken)",
                           border: "1px solid",
-                          borderColor: step.status === "SUCCESS" ? "#BBF7D0" : step.status === "FAILED" ? "#FECACA" : "#E2E8F0",
+                          borderColor: step.status === "SUCCESS" ? "#1D2C27" : step.status === "FAILED" ? "rgba(196,99,74,0.14)" : "var(--border)",
                         }}
                       >
                         <div>
-                          <p style={{ color: "#0F2A3D", fontSize: 13, fontWeight: 700, margin: 0 }}>
+                          <p style={{ color: "var(--text)", fontSize: 13, fontWeight: 700, margin: 0 }}>
                             {step.stepOrder}. {ACTION_TYPE_LABELS[step.actionType] ?? step.actionType}
                           </p>
-                          <p style={{ color: "#64748B", fontSize: 12, margin: "2px 0 0" }}>{step.title}</p>
+                          <p style={{ color: "var(--text-soft)", fontSize: 12, margin: "2px 0 0" }}>{step.title}</p>
                         </div>
                         <span style={{
                           fontSize: 11,
                           fontWeight: 800,
-                          color: step.status === "SUCCESS" ? "#047857" : step.status === "FAILED" ? "#B91C1C" : "#64748B",
+                          color: step.status === "SUCCESS" ? "#3FA687" : step.status === "FAILED" ? "#C4634A" : "var(--text-soft)",
                         }}>
                           {STEP_STATUS_LABELS[step.status]}
                         </span>
                       </div>
                     ))}
-                    <p style={{ color: "#94A3B8", fontSize: 11, margin: "4px 0 0" }}>
+                    <p style={{ color: "var(--text-soft)", fontSize: 11, margin: "4px 0 0" }}>
                       Creado: {new Date(wf.createdAt).toLocaleDateString("es-CL")}
                     </p>
                   </div>
@@ -236,8 +236,8 @@ export default function WorkflowsPage() {
 
 function Kpi({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 18 }}>
-      <p style={{ color: "#64748B", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 16, padding: 18 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
       <p style={{ color, fontSize: 24, fontWeight: 900, margin: 0 }}>{value}</p>
     </article>
   );

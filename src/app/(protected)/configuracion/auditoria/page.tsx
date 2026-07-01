@@ -34,13 +34,13 @@ export default function UserAuditPage() {
   function resultColor(result: string) {
     switch (result) {
       case "SUCCESS":
-        return "#16A34A";
+        return "#3FA687";
       case "FAILED":
-        return "#DC2626";
+        return "#C4634A";
       case "PARTIAL":
-        return "#CA8A04";
+        return "#E8B84B";
       default:
-        return "#64748B";
+        return "var(--text-soft)";
     }
   }
 
@@ -50,7 +50,7 @@ export default function UserAuditPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Auditoría de cuenta
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Registro de acciones relevantes en tu cuenta.
         </p>
       </header>
@@ -58,15 +58,15 @@ export default function UserAuditPage() {
       {loading ? (
         <p>Cargando...</p>
       ) : events.length === 0 ? (
-        <p style={{ color: "#64748B" }}>No hay eventos registrados.</p>
+        <p style={{ color: "var(--text-soft)" }}>No hay eventos registrados.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {events.map((event) => (
             <li
               key={event.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: 8,
                 marginBottom: 12,
                 padding: 16,
@@ -78,8 +78,8 @@ export default function UserAuditPage() {
                   {event.result}
                 </span>
               </div>
-              <p style={{ color: "#475569", margin: "0 0 8px" }}>{event.description}</p>
-              <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>
+              <p style={{ color: "var(--text)", margin: "0 0 8px" }}>{event.description}</p>
+              <p style={{ color: "var(--text-soft)", fontSize: 12, margin: 0 }}>
                 {event.category} · {new Date(event.createdAt).toLocaleString("es-CL")}
               </p>
             </li>

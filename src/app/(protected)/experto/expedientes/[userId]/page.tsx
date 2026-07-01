@@ -29,10 +29,10 @@ type TaxFileSummary = {
 };
 
 const statusConfig: Record<TaxFileSummary["status"], { label: string; color: string; bg: string }> = {
-  HEALTHY: { label: "Saludable", color: "#15803D", bg: "#F0FDF4" },
-  ATTENTION_REQUIRED: { label: "Atención requerida", color: "#B45309", bg: "#FEF9C3" },
-  HIGH_RISK: { label: "Alto riesgo", color: "#DC2626", bg: "#FEF2F2" },
-  CRITICAL: { label: "Crítico", color: "#991B1B", bg: "#FEE2E2" },
+  HEALTHY: { label: "Saludable", color: "var(--accent)", bg: "var(--accent-soft)" },
+  ATTENTION_REQUIRED: { label: "Atención requerida", color: "var(--warn)", bg: "rgba(232,184,75,0.14)" },
+  HIGH_RISK: { label: "Alto riesgo", color: "var(--loss)", bg: "rgba(196,99,74,0.14)" },
+  CRITICAL: { label: "Crítico", color: "var(--loss)", bg: "rgba(196,99,74,0.14)" },
 };
 
 export default function ExpertTaxFileDetailPage() {
@@ -59,17 +59,17 @@ export default function ExpertTaxFileDetailPage() {
   }, [params.userId]);
 
   if (loading) {
-    return <p style={{ color: "#64748B" }}>Cargando expediente…</p>;
+    return <p style={{ color: "var(--text-soft)" }}>Cargando expediente…</p>;
   }
 
   if (error) {
     return (
       <div
         style={{
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
+          background: "rgba(196,99,74,0.14)",
+          border: "1px solid rgba(196,99,74,0.14)",
           borderRadius: 8,
-          color: "#991B1B",
+          color: "var(--loss)",
           fontWeight: 750,
           padding: 16,
         }}
@@ -80,7 +80,7 @@ export default function ExpertTaxFileDetailPage() {
   }
 
   if (!summary) {
-    return <p style={{ color: "#64748B" }}>No hay datos.</p>;
+    return <p style={{ color: "var(--text-soft)" }}>No hay datos.</p>;
   }
 
   const status = statusConfig[summary.status];
@@ -91,7 +91,7 @@ export default function ExpertTaxFileDetailPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Expediente: {summary.userName || summary.userEmail}
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>{summary.userEmail}</p>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>{summary.userEmail}</p>
       </header>
 
       <div
@@ -163,7 +163,7 @@ export default function ExpertTaxFileDetailPage() {
         </Section>
       </div>
 
-      <p style={{ color: "#94A3B8", fontSize: 12, marginTop: 24 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 12, marginTop: 24 }}>
         Generado: {new Date(summary.generatedAt).toLocaleString("es-CL")}
       </p>
     </section>
@@ -182,15 +182,15 @@ function Metric({
   return (
     <article
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 8,
         padding: 16,
       }}
     >
       <p
         style={{
-          color: "#64748B",
+          color: "var(--text-soft)",
           fontSize: 11,
           fontWeight: 850,
           letterSpacing: "0.04em",
@@ -200,10 +200,10 @@ function Metric({
       >
         {label}
       </p>
-      <p style={{ color: "#0F2A3D", fontSize: "1.5rem", fontWeight: 850, margin: "0 0 4px" }}>
+      <p style={{ color: "var(--text)", fontSize: "1.5rem", fontWeight: 850, margin: "0 0 4px" }}>
         {value}
       </p>
-      {note && <p style={{ color: "#94A3B8", fontSize: 12, margin: 0 }}>{note}</p>}
+      {note && <p style={{ color: "var(--text-soft)", fontSize: 12, margin: 0 }}>{note}</p>}
     </article>
   );
 }
@@ -212,15 +212,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 12,
         padding: "18px",
       }}
     >
       <h2
         style={{
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: "1rem",
           fontWeight: 850,
           margin: "0 0 12px",
@@ -236,8 +236,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between" }}>
-      <span style={{ color: "#64748B", fontSize: 14 }}>{label}</span>
-      <span style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 700 }}>{value}</span>
+      <span style={{ color: "var(--text-soft)", fontSize: 14 }}>{label}</span>
+      <span style={{ color: "var(--text)", fontSize: 14, fontWeight: 700 }}>{value}</span>
     </div>
   );
 }

@@ -54,7 +54,7 @@ export default function ExpertPerfilesAdaptativosPage() {
       <section style={{ marginBottom: 24 }}>
         <p
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 850,
             letterSpacing: "0.06em",
@@ -66,7 +66,7 @@ export default function ExpertPerfilesAdaptativosPage() {
         </p>
         <h1
           style={{
-            color: "#F8FAFC",
+            color: "var(--text)",
             fontSize: "1.85rem",
             fontWeight: 850,
             lineHeight: 1.12,
@@ -75,7 +75,7 @@ export default function ExpertPerfilesAdaptativosPage() {
         >
           Perfiles Adaptativos
         </h1>
-        <p style={{ color: "#94A3B8", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
           Distribución de usuarios según su perfil tributario adaptativo.
         </p>
       </section>
@@ -89,10 +89,10 @@ export default function ExpertPerfilesAdaptativosPage() {
           marginBottom: 24,
         }}
       >
-        <MetricCard label="Optimizados" value={optimized} color="#15803D" accent="good" />
-        <MetricCard label="Estándar" value={standard} color="#0F766E" accent="neutral" />
+        <MetricCard label="Optimizados" value={optimized} color="#3FA687" accent="good" />
+        <MetricCard label="Estándar" value={standard} color="#3FA687" accent="neutral" />
         <MetricCard label="Atención Requerida" value={attention} accent="warn" />
-        <MetricCard label="Críticos" value={critical} color="#991B1B" accent="danger" />
+        <MetricCard label="Críticos" value={critical} color="#C4634A" accent="danger" />
       </div>
 
       {/* Filter */}
@@ -108,7 +108,7 @@ export default function ExpertPerfilesAdaptativosPage() {
         <div style={{ alignItems: "center", display: "flex", gap: 12 }}>
           <label
             style={{
-              color: "#94A3B8",
+              color: "var(--text-soft)",
               fontSize: 13,
               fontWeight: 750,
             }}
@@ -119,10 +119,10 @@ export default function ExpertPerfilesAdaptativosPage() {
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             style={{
-              background: "#0B1D2C",
+              background: "var(--bg-sunken)",
               border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: 8,
-              color: "#F8FAFC",
+              color: "var(--text)",
               fontSize: 13,
               fontWeight: 750,
               minHeight: 38,
@@ -136,7 +136,7 @@ export default function ExpertPerfilesAdaptativosPage() {
             <option value="CRITICAL">Crítico</option>
           </select>
           {profiles.length > 0 && (
-            <span style={{ color: "#64748B", fontSize: 13 }}>
+            <span style={{ color: "var(--text-soft)", fontSize: 13 }}>
               {profiles.length} usuario{profiles.length !== 1 ? "s" : ""}
             </span>
           )}
@@ -145,14 +145,14 @@ export default function ExpertPerfilesAdaptativosPage() {
 
       {/* Table */}
       {loading ? (
-        <p style={{ color: "#94A3B8", fontSize: 14, fontWeight: 750 }}>Cargando perfiles…</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando perfiles…</p>
       ) : error ? (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             padding: 16,
           }}
@@ -171,7 +171,7 @@ export default function ExpertPerfilesAdaptativosPage() {
         >
           <h2
             style={{
-              color: "#F8FAFC",
+              color: "var(--text)",
               fontSize: "1.15rem",
               fontWeight: 850,
               margin: "0 0 8px",
@@ -179,7 +179,7 @@ export default function ExpertPerfilesAdaptativosPage() {
           >
             Sin perfiles adaptativos
           </h2>
-          <p style={{ color: "#94A3B8", fontSize: 14, lineHeight: 1.55, margin: 0 }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: 0 }}>
             Aún no hay perfiles generados. Los perfiles se crean automáticamente al consultarlos.
           </p>
         </section>
@@ -195,7 +195,7 @@ export default function ExpertPerfilesAdaptativosPage() {
           <div style={{ overflowX: "auto" }}>
             <table style={{ borderCollapse: "collapse", minWidth: 780, width: "100%" }}>
               <thead>
-                <tr style={{ background: "rgba(255,255,255,0.06)", color: "#94A3B8", textAlign: "left" }}>
+                <tr style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-soft)", textAlign: "left" }}>
                   <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Usuario</th>
                   <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px" }}>Perfil</th>
                   <th style={{ fontSize: 12, fontWeight: 850, padding: "13px 14px", textAlign: "right" }}>Score</th>
@@ -215,10 +215,10 @@ export default function ExpertPerfilesAdaptativosPage() {
                       key={p.id}
                       style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
                     >
-                      <td style={{ color: "#F8FAFC", fontSize: 13, padding: "14px" }}>
+                      <td style={{ color: "var(--text)", fontSize: 13, padding: "14px" }}>
                         <div>
                           <span style={{ fontWeight: 750 }}>{p.userName}</span>
-                          <span style={{ color: "#64748B", fontSize: 12, marginLeft: 8 }}>
+                          <span style={{ color: "var(--text-soft)", fontSize: 12, marginLeft: 8 }}>
                             {p.userEmail}
                           </span>
                         </div>
@@ -234,22 +234,22 @@ export default function ExpertPerfilesAdaptativosPage() {
                           {profileTypeIcon(pt)} {profileTypeLabel(pt)}
                         </span>
                       </td>
-                      <td style={{ color: "#F8FAFC", fontSize: 13, padding: "14px", textAlign: "right" }}>
+                      <td style={{ color: "var(--text)", fontSize: 13, padding: "14px", textAlign: "right" }}>
                         {p.complianceScore}
                       </td>
-                      <td style={{ color: "#94A3B8", fontSize: 13, padding: "14px" }}>
+                      <td style={{ color: "var(--text-soft)", fontSize: 13, padding: "14px" }}>
                         {RISK_LABELS[p.riskBehavior as keyof typeof RISK_LABELS] ?? p.riskBehavior}
                       </td>
-                      <td style={{ color: "#94A3B8", fontSize: 13, padding: "14px" }}>
+                      <td style={{ color: "var(--text-soft)", fontSize: 13, padding: "14px" }}>
                         {TASK_LABELS[p.taskBehavior as keyof typeof TASK_LABELS] ?? p.taskBehavior}
                       </td>
-                      <td style={{ color: "#94A3B8", fontSize: 13, padding: "14px" }}>
+                      <td style={{ color: "var(--text-soft)", fontSize: 13, padding: "14px" }}>
                         {RECOMMENDATION_LABELS[p.recommendationBehavior as keyof typeof RECOMMENDATION_LABELS] ?? p.recommendationBehavior}
                       </td>
-                      <td style={{ color: "#F8FAFC", fontSize: 13, padding: "14px", textAlign: "right" }}>
+                      <td style={{ color: "var(--text)", fontSize: 13, padding: "14px", textAlign: "right" }}>
                         {confidenceLabel(p.confidence)}
                       </td>
-                      <td style={{ color: "#64748B", fontSize: 12, padding: "14px", textAlign: "right" }}>
+                      <td style={{ color: "var(--text-soft)", fontSize: 12, padding: "14px", textAlign: "right" }}>
                         {new Date(p.updatedAt).toLocaleDateString("es-CL")}
                       </td>
                     </tr>
@@ -277,7 +277,7 @@ function MetricCard({
 }) {
   const c =
     color ??
-    (accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : accent === "danger" ? "#991B1B" : "#F8FAFC");
+    (accent === "good" ? "#3FA687" : accent === "warn" ? "#E8B84B" : accent === "danger" ? "#C4634A" : "var(--text)");
 
   return (
     <article
@@ -290,7 +290,7 @@ function MetricCard({
     >
       <p
         style={{
-          color: "#94A3B8",
+          color: "var(--text-soft)",
           fontSize: 11,
           fontWeight: 850,
           letterSpacing: "0.04em",

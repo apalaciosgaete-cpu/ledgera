@@ -61,7 +61,7 @@ export default function CasosPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
-        <p style={{ color: "#94A3B8", fontSize: 16 }}>Cargando casos tributarios...</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 16 }}>Cargando casos tributarios...</p>
       </div>
     );
   }
@@ -71,16 +71,16 @@ export default function CasosPage() {
   return (
     <div style={{ display: "grid", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
       {/* Header */}
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 24 }}>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
           <div>
-            <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+            <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
               Casos Tributarios
             </p>
-            <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
+            <h1 style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
               Expedientes Inteligentes
             </h1>
-            <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
+            <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.6, margin: 0, maxWidth: 600 }}>
               LEDGERA agrupa alertas, decisiones, documentos y tareas en casos tributarios inteligentes.
             </p>
           </div>
@@ -91,8 +91,8 @@ export default function CasosPage() {
               padding: "10px 22px",
               borderRadius: 999,
               border: "none",
-              background: rebuilding ? "#94A3B8" : "#0F766E",
-              color: "#FFFFFF",
+              background: rebuilding ? "var(--bg-elev)" : "var(--accent)",
+              color: "var(--text)",
               fontSize: 14,
               fontWeight: 800,
               cursor: rebuilding ? "not-allowed" : "pointer",
@@ -106,35 +106,35 @@ export default function CasosPage() {
 
       {/* KPIs */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
-        <KpiCard label="Casos abiertos" value={data?.openCount ?? 0} detail="Requieren acción" color="#2563EB" />
-        <KpiCard label="Críticos" value={data?.criticalCount ?? 0} detail="Atención inmediata" color="#B91C1C" />
-        <KpiCard label="En investigación" value={data?.investigatingCount ?? 0} detail="Siendo analizados" color="#B45309" />
-        <KpiCard label="Resueltos" value={data?.resolvedCount ?? 0} detail="Gestionados" color="#047857" />
-        <KpiCard label="Total" value={data?.totalCount ?? 0} detail="Todos los casos" color="#0F2A3D" />
+        <KpiCard label="Casos abiertos" value={data?.openCount ?? 0} detail="Requieren acción" color="#3FA687" />
+        <KpiCard label="Críticos" value={data?.criticalCount ?? 0} detail="Atención inmediata" color="#C4634A" />
+        <KpiCard label="En investigación" value={data?.investigatingCount ?? 0} detail="Siendo analizados" color="#E8B84B" />
+        <KpiCard label="Resueltos" value={data?.resolvedCount ?? 0} detail="Gestionados" color="#3FA687" />
+        <KpiCard label="Total" value={data?.totalCount ?? 0} detail="Todos los casos" color="var(--text)" />
       </section>
 
       {items.length === 0 ? (
-        <section style={{ background: "#ECFDF5", border: "1px solid #BBF7D0", borderRadius: 18, padding: 24, textAlign: "center" }}>
-          <p style={{ color: "#166534", fontSize: 18, fontWeight: 800, margin: "0 0 6px" }}>✅ Sin casos activos</p>
-          <p style={{ color: "#166534", fontSize: 14, margin: 0 }}>LEDGERA no detectó situaciones que requieran un caso tributario.</p>
+        <section style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 18, padding: 24, textAlign: "center" }}>
+          <p style={{ color: "var(--accent)", fontSize: 18, fontWeight: 800, margin: "0 0 6px" }}>✅ Sin casos activos</p>
+          <p style={{ color: "var(--accent)", fontSize: 14, margin: 0 }}>LEDGERA no detectó situaciones que requieran un caso tributario.</p>
         </section>
       ) : (
         <div style={{ display: "grid", gap: 16, gridTemplateColumns: selectedCase ? "1fr 380px" : "1fr" }}>
           {/* Table */}
-          <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, overflow: "hidden" }}>
-            <div style={{ padding: "18px 22px", borderBottom: "1px solid #E2E8F0" }}>
-              <h2 style={{ color: "#0F2A3D", fontSize: 18, fontWeight: 900, margin: 0 }}>Casos activos</h2>
+          <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, overflow: "hidden" }}>
+            <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--border)" }}>
+              <h2 style={{ color: "var(--text)", fontSize: 18, fontWeight: 900, margin: 0 }}>Casos activos</h2>
             </div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
                 <thead>
-                  <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-                    <th style={{ padding: "12px 16px", textAlign: "left", color: "#64748B", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Prioridad</th>
-                    <th style={{ padding: "12px 16px", textAlign: "left", color: "#64748B", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Caso</th>
-                    <th style={{ padding: "12px 16px", textAlign: "left", color: "#64748B", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Estado</th>
-                    <th style={{ padding: "12px 16px", textAlign: "left", color: "#64748B", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Origen</th>
-                    <th style={{ padding: "12px 16px", textAlign: "left", color: "#64748B", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Actualización</th>
-                    <th style={{ padding: "12px 16px", textAlign: "center", color: "#64748B", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}></th>
+                  <tr style={{ background: "var(--bg-sunken)", borderBottom: "1px solid var(--border)" }}>
+                    <th style={{ padding: "12px 16px", textAlign: "left", color: "var(--text-soft)", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Prioridad</th>
+                    <th style={{ padding: "12px 16px", textAlign: "left", color: "var(--text-soft)", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Caso</th>
+                    <th style={{ padding: "12px 16px", textAlign: "left", color: "var(--text-soft)", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Estado</th>
+                    <th style={{ padding: "12px 16px", textAlign: "left", color: "var(--text-soft)", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Origen</th>
+                    <th style={{ padding: "12px 16px", textAlign: "left", color: "var(--text-soft)", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Actualización</th>
+                    <th style={{ padding: "12px 16px", textAlign: "center", color: "var(--text-soft)", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -142,9 +142,9 @@ export default function CasosPage() {
                     <tr
                       key={tc.id}
                       style={{
-                        borderBottom: "1px solid #F1F5F9",
+                        borderBottom: "1px solid var(--border)",
                         cursor: "pointer",
-                        background: selectedCase?.id === tc.id ? "#F0FDF4" : "transparent",
+                        background: selectedCase?.id === tc.id ? "#1D2C27" : "transparent",
                       }}
                       onClick={() => setSelectedCase(selectedCase?.id === tc.id ? null : tc)}
                     >
@@ -161,7 +161,7 @@ export default function CasosPage() {
                           {PRIORITY_LABELS[tc.priority]}
                         </span>
                       </td>
-                      <td style={{ padding: "14px 16px", color: "#0F2A3D", fontWeight: 700 }}>{tc.title}</td>
+                      <td style={{ padding: "14px 16px", color: "var(--text)", fontWeight: 700 }}>{tc.title}</td>
                       <td style={{ padding: "14px 16px" }}>
                         <span style={{
                           display: "inline-block",
@@ -175,12 +175,12 @@ export default function CasosPage() {
                           {STATUS_LABELS[tc.status]}
                         </span>
                       </td>
-                      <td style={{ padding: "14px 16px", color: "#64748B", fontSize: 13 }}>{tc.sourceType.replace(/_/g, " ")}</td>
-                      <td style={{ padding: "14px 16px", color: "#94A3B8", fontSize: 13 }}>
+                      <td style={{ padding: "14px 16px", color: "var(--text-soft)", fontSize: 13 }}>{tc.sourceType.replace(/_/g, " ")}</td>
+                      <td style={{ padding: "14px 16px", color: "var(--text-soft)", fontSize: 13 }}>
                         {new Date(tc.updatedAt).toLocaleDateString("es-CL")}
                       </td>
                       <td style={{ padding: "14px 16px", textAlign: "center" }}>
-                        <span style={{ color: "#0F766E", fontSize: 18 }}>→</span>
+                        <span style={{ color: "var(--accent)", fontSize: 18 }}>→</span>
                       </td>
                     </tr>
                   ))}
@@ -201,10 +201,10 @@ export default function CasosPage() {
 
 function KpiCard({ label, value, detail, color }: { label: string; value: number; detail: string; color: string }) {
   return (
-    <article style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 18 }}>
-      <p style={{ color: "#64748B", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
+    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 16, padding: 18 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, fontWeight: 800, margin: "0 0 8px" }}>{label}</p>
       <p style={{ color, fontSize: 26, fontWeight: 900, margin: 0 }}>{value}</p>
-      <p style={{ color: "#94A3B8", fontSize: 13, margin: "4px 0 0" }}>{detail}</p>
+      <p style={{ color: "var(--text-soft)", fontSize: 13, margin: "4px 0 0" }}>{detail}</p>
     </article>
   );
 }
@@ -220,23 +220,23 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
 
   if (!isTerminal) {
     transitions.push(
-      { status: "INVESTIGATING", label: "En investigación", color: "#B45309", bg: "rgba(180,83,9,0.12)" },
-      { status: "ACTION_REQUIRED", label: "Requiere acción", color: "#B91C1C", bg: "rgba(185,28,28,0.12)" },
-      { status: "WAITING_USER", label: "Esperando usuario", color: "#6D28D9", bg: "rgba(109,40,217,0.12)" },
-      { status: "WAITING_SII", label: "Esperando SII", color: "#0369A1", bg: "rgba(3,105,161,0.12)" },
-      { status: "RESOLVED", label: "✓ Resolver", color: "#047857", bg: "rgba(4,120,87,0.12)" },
+      { status: "INVESTIGATING", label: "En investigación", color: "var(--warn)", bg: "rgba(180,83,9,0.12)" },
+      { status: "ACTION_REQUIRED", label: "Requiere acción", color: "var(--loss)", bg: "rgba(185,28,28,0.12)" },
+      { status: "WAITING_USER", label: "Esperando usuario", color: "var(--accent)", bg: "rgba(109,40,217,0.12)" },
+      { status: "WAITING_SII", label: "Esperando SII", color: "var(--accent)", bg: "rgba(3,105,161,0.12)" },
+      { status: "RESOLVED", label: "✓ Resolver", color: "var(--accent)", bg: "rgba(4,120,87,0.12)" },
     );
   }
 
   if (isTerminal) {
     transitions.push(
-      { status: "OPEN", label: "↺ Reabrir", color: "#2563EB", bg: "rgba(37,99,235,0.12)" },
+      { status: "OPEN", label: "↺ Reabrir", color: "var(--accent)", bg: "rgba(37,99,235,0.12)" },
     );
   }
 
   if (taxCase.status !== "CLOSED") {
     transitions.push(
-      { status: "CLOSED", label: "✕ Cerrar", color: "#64748B", bg: "rgba(100,116,139,0.12)" },
+      { status: "CLOSED", label: "✕ Cerrar", color: "var(--text-soft)", bg: "rgba(100,116,139,0.12)" },
     );
   }
 
@@ -269,8 +269,8 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
 
   return (
     <aside style={{
-      background: "#FFFFFF",
-      border: "1px solid #E2E8F0",
+      background: "var(--bg-elev)",
+      border: "1px solid var(--border)",
       borderRadius: 18,
       padding: 22,
       position: "sticky",
@@ -280,13 +280,13 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
       gap: 18,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h3 style={{ color: "#0F2A3D", fontSize: 18, fontWeight: 900, margin: 0 }}>Detalle del caso</h3>
+        <h3 style={{ color: "var(--text)", fontSize: 18, fontWeight: 900, margin: 0 }}>Detalle del caso</h3>
         <button
           onClick={onClose}
           style={{
             background: "none",
             border: "none",
-            color: "#94A3B8",
+            color: "var(--text-soft)",
             cursor: "pointer",
             fontSize: 20,
             padding: "4px 8px",
@@ -298,13 +298,13 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
       </div>
 
       <div>
-        <p style={{ color: "#0F2A3D", fontSize: 16, fontWeight: 800, margin: "0 0 4px" }}>{taxCase.title}</p>
-        <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.55, margin: 0 }}>{taxCase.description}</p>
+        <p style={{ color: "var(--text)", fontSize: 16, fontWeight: 800, margin: "0 0 4px" }}>{taxCase.title}</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: 0 }}>{taxCase.description}</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <div>
-          <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Estado</p>
+          <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Estado</p>
           <span style={{
             display: "inline-block",
             padding: "2px 10px",
@@ -318,7 +318,7 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
           </span>
         </div>
         <div>
-          <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Prioridad</p>
+          <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Prioridad</p>
           <span style={{
             display: "inline-block",
             padding: "2px 10px",
@@ -334,27 +334,27 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
       </div>
 
       <div>
-        <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Origen</p>
-        <p style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 600, margin: 0 }}>{taxCase.sourceType.replace(/_/g, " ")}</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Origen</p>
+        <p style={{ color: "var(--text)", fontSize: 14, fontWeight: 600, margin: 0 }}>{taxCase.sourceType.replace(/_/g, " ")}</p>
       </div>
 
       <div>
-        <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Resumen AI</p>
-        <p style={{ color: "#475569", fontSize: 13, lineHeight: 1.55, margin: 0 }}>{taxCase.aiSummary}</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Resumen AI</p>
+        <p style={{ color: "var(--text)", fontSize: 13, lineHeight: 1.55, margin: 0 }}>{taxCase.aiSummary}</p>
       </div>
 
       <div>
-        <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 6px" }}>Recomendaciones</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: "0 0 6px" }}>Recomendaciones</p>
         <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 4 }}>
           {taxCase.aiRecommendation.split("\n").filter(Boolean).map((step, i) => (
-            <li key={i} style={{ color: "#475569", fontSize: 13, lineHeight: 1.5 }}>{step}</li>
+            <li key={i} style={{ color: "var(--text)", fontSize: 13, lineHeight: 1.5 }}>{step}</li>
           ))}
         </ul>
       </div>
 
       {/* Status Transitions */}
       <div style={{ display: "grid", gap: 6 }}>
-        <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: 0 }}>
           Cambiar estado
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
@@ -374,8 +374,8 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
                   padding: "8px 6px",
                   borderRadius: 8,
                   border: isCurrent ? `2px solid ${t.color}` : "1px solid transparent",
-                  background: isLoading ? "#E2E8F0" : isCurrent ? t.bg : "#F8FAFC",
-                  color: isLoading ? "#94A3B8" : t.color,
+                  background: isLoading ? "var(--bg-elev)" : isCurrent ? t.bg: "var(--bg-sunken)",
+                  color: isLoading ? "var(--text-soft)" : t.color,
                   fontSize: 11,
                   fontWeight: 700,
                   cursor: isLoading || isCurrent ? "default" : "pointer",
@@ -389,12 +389,12 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
           })}
         </div>
         {error && (
-          <p style={{ color: "#B91C1C", fontSize: 12, margin: 0 }}>{error}</p>
+          <p style={{ color: "var(--loss)", fontSize: 12, margin: 0 }}>{error}</p>
         )}
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>
-        <p style={{ color: "#94A3B8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: 0 }}>Acciones rápidas</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", margin: 0 }}>Acciones rápidas</p>
         <Link
           href={`/tareas?caso=${taxCase.id}`}
           style={{
@@ -403,8 +403,8 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
             justifyContent: "center",
             padding: "10px",
             borderRadius: 10,
-            background: "#0F766E",
-            color: "#FFFFFF",
+            background: "var(--accent)",
+            color: "var(--text)",
             fontSize: 14,
             fontWeight: 800,
             textDecoration: "none",
@@ -420,8 +420,8 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
             justifyContent: "center",
             padding: "10px",
             borderRadius: 10,
-            background: "#F1F5F9",
-            color: "#0F2A3D",
+            background: "var(--bg-sunken)",
+            color: "var(--text)",
             fontSize: 14,
             fontWeight: 800,
             textDecoration: "none",
@@ -431,7 +431,7 @@ function CaseDetailPanel({ taxCase, onClose, onStatusChange }: { taxCase: TaxCas
         </Link>
       </div>
 
-      <p style={{ color: "#94A3B8", fontSize: 11, margin: 0 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 11, margin: 0 }}>
         Creado: {new Date(taxCase.createdAt).toLocaleDateString("es-CL")} • Actualizado: {new Date(taxCase.updatedAt).toLocaleDateString("es-CL")}
       </p>
     </aside>

@@ -25,7 +25,7 @@ export default function ExpertDashboardPage() {
   }, []);
 
   if (loading) return <p>Cargando dashboard ejecutivo...</p>;
-  if (error) return <p style={{ color: "#DC2626" }}>{error}</p>;
+  if (error) return <p style={{ color: "var(--loss)" }}>{error}</p>;
   if (!data) return <p>No hay datos disponibles.</p>;
 
   return (
@@ -34,7 +34,7 @@ export default function ExpertDashboardPage() {
         <h1 style={{ fontSize: "1.5rem", fontWeight: 850, margin: "0 0 8px" }}>
           Dashboard Ejecutivo
         </h1>
-        <p style={{ color: "#64748B", margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", margin: 0 }}>
           Visión operacional y tributaria consolidada de LEDGERA.
         </p>
       </header>
@@ -148,7 +148,7 @@ export default function ExpertDashboardPage() {
           ) : (
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ color: "#64748B", textAlign: "left" }}>
+                <tr style={{ color: "var(--text-soft)", textAlign: "left" }}>
                   <th style={{ paddingBottom: 8 }}>Usuario</th>
                   <th style={{ paddingBottom: 8 }}>Score</th>
                   <th style={{ paddingBottom: 8 }}>Nivel</th>
@@ -157,9 +157,9 @@ export default function ExpertDashboardPage() {
               <tbody>
                 {data.topRisk.map((row) => (
                   <tr key={row.userId}>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>{row.userId}</td>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>{row.score}</td>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>{row.userId}</td>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>{row.score}</td>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>
                       <LevelBadge level={row.level} />
                     </td>
                   </tr>
@@ -175,7 +175,7 @@ export default function ExpertDashboardPage() {
           ) : (
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ color: "#64748B", textAlign: "left" }}>
+                <tr style={{ color: "var(--text-soft)", textAlign: "left" }}>
                   <th style={{ paddingBottom: 8 }}>Fecha</th>
                   <th style={{ paddingBottom: 8 }}>Categoría</th>
                   <th style={{ paddingBottom: 8 }}>Severidad</th>
@@ -184,11 +184,11 @@ export default function ExpertDashboardPage() {
               <tbody>
                 {data.latestAlerts.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>
                       {new Date(row.createdAt).toLocaleDateString("es-CL")}
                     </td>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>{row.category}</td>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>{row.category}</td>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>
                       <SeverityBadge severity={row.severity} />
                     </td>
                   </tr>
@@ -204,7 +204,7 @@ export default function ExpertDashboardPage() {
           ) : (
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ color: "#64748B", textAlign: "left" }}>
+                <tr style={{ color: "var(--text-soft)", textAlign: "left" }}>
                   <th style={{ paddingBottom: 8 }}>Fecha</th>
                   <th style={{ paddingBottom: 8 }}>Evento</th>
                   <th style={{ paddingBottom: 8 }}>Resultado</th>
@@ -213,11 +213,11 @@ export default function ExpertDashboardPage() {
               <tbody>
                 {data.criticalEvents.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>
                       {new Date(row.createdAt).toLocaleDateString("es-CL")}
                     </td>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>{row.event}</td>
-                    <td style={{ padding: "6px 0", borderTop: "1px solid #E2E8F0" }}>{row.result}</td>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>{row.event}</td>
+                    <td style={{ padding: "6px 0", borderTop: "1px solid var(--border)" }}>{row.result}</td>
                   </tr>
                 ))}
               </tbody>
@@ -277,20 +277,20 @@ function Metric({
   accent?: "neutral" | "good" | "warn" | "danger";
 }) {
   const color =
-    accent === "good" ? "#15803D" : accent === "warn" ? "#B45309" : accent === "danger" ? "#991B1B" : "#0F2A3D";
+    accent === "good" ? "#3FA687" : accent === "warn" ? "#E8B84B" : accent === "danger" ? "#C4634A" : "var(--text)";
 
   return (
     <article
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 8,
         padding: 16,
       }}
     >
       <p
         style={{
-          color: "#64748B",
+          color: "var(--text-soft)",
           fontSize: 11,
           fontWeight: 850,
           letterSpacing: "0.04em",
@@ -309,8 +309,8 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   return (
     <div
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 8,
         padding: 16,
       }}
@@ -322,12 +322,12 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 }
 
 function Empty() {
-  return <p style={{ color: "#64748B", fontSize: 13, margin: 0 }}>Sin registros.</p>;
+  return <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>Sin registros.</p>;
 }
 
 function LevelBadge({ level }: { level: string }) {
   const color =
-    level === "CRITICAL" ? "#DC2626" : level === "HIGH" ? "#EA580C" : level === "MEDIUM" ? "#CA8A04" : "#16A34A";
+    level === "CRITICAL" ? "#C4634A" : level === "HIGH" ? "#E8B84B" : level === "MEDIUM" ? "#E8B84B" : "#3FA687";
   return (
     <span style={{ color, fontWeight: 700, fontSize: 12 }}>
       {level}
@@ -337,7 +337,7 @@ function LevelBadge({ level }: { level: string }) {
 
 function SeverityBadge({ severity }: { severity: string }) {
   const color =
-    severity === "CRITICAL" ? "#DC2626" : severity === "HIGH" ? "#EA580C" : severity === "MEDIUM" ? "#CA8A04" : "#16A34A";
+    severity === "CRITICAL" ? "#C4634A" : severity === "HIGH" ? "#E8B84B" : severity === "MEDIUM" ? "#E8B84B" : "#3FA687";
   return (
     <span style={{ color, fontWeight: 700, fontSize: 12 }}>
       {severity}

@@ -60,30 +60,30 @@ function situacionConfig(status: TaxStatus) {
       return {
         tone: "ok" as const,
         icon: "✓",
-        iconColor: "#16A34A",
-        border: "#86EFAC",
-        bg: "#F0FDF4",
-        titleColor: "#166534",
+        iconColor: "var(--accent)",
+        border: "var(--accent)",
+        bg: "var(--accent-soft)",
+        titleColor: "var(--accent)",
         subtitle: "Sin acción requerida",
       };
     case "EMPTY":
       return {
         tone: "warn" as const,
         icon: "◌",
-        iconColor: "#B45309",
-        border: "#FDE047",
-        bg: "#FEF9C3",
-        titleColor: "#854D0E",
+        iconColor: "var(--warn)",
+        border: "var(--warn)",
+        bg: "rgba(232,184,75,0.14)",
+        titleColor: "var(--text)",
         subtitle: "Revisión recomendada",
       };
     case "LOSS_REVIEW":
       return {
         tone: "warn" as const,
         icon: "⚠",
-        iconColor: "#B45309",
-        border: "#FDE047",
-        bg: "#FEF9C3",
-        titleColor: "#854D0E",
+        iconColor: "var(--warn)",
+        border: "var(--warn)",
+        bg: "rgba(232,184,75,0.14)",
+        titleColor: "var(--text)",
         subtitle: "Revisión recomendada",
       };
     case "DECLARE_REVIEW":
@@ -91,10 +91,10 @@ function situacionConfig(status: TaxStatus) {
       return {
         tone: "alert" as const,
         icon: "⚠",
-        iconColor: "#DC2626",
-        border: "#FECACA",
-        bg: "#FEF2F2",
-        titleColor: "#991B1B",
+        iconColor: "var(--loss)",
+        border: "rgba(196,99,74,0.14)",
+        bg: "rgba(196,99,74,0.14)",
+        titleColor: "var(--loss)",
         subtitle: "Declaración requerida",
       };
   }
@@ -170,7 +170,7 @@ export default function MiSituacionPage() {
   if (loading) {
     return (
       <div style={{ maxWidth: 800, width: "100%" }}>
-        <p style={{ color: "#64748B", fontSize: 14, fontWeight: 750 }}>Cargando tu situación…</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, fontWeight: 750 }}>Cargando tu situación…</p>
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function MiSituacionPage() {
   if (error) {
     return (
       <div style={{ maxWidth: 800, width: "100%" }}>
-        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontWeight: 750, padding: 16 }}>
+        <div style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 8, color: "var(--loss)", fontWeight: 750, padding: 16 }}>
           {error}
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function MiSituacionPage() {
   if (!data) {
     return (
       <div style={{ maxWidth: 800, width: "100%" }}>
-        <p style={{ color: "#64748B", fontSize: 14 }}>No hay datos para mostrar.</p>
+        <p style={{ color: "var(--text-soft)", fontSize: 14 }}>No hay datos para mostrar.</p>
       </div>
     );
   }
@@ -204,13 +204,13 @@ export default function MiSituacionPage() {
   return (
     <div style={{ maxWidth: 800, width: "100%" }}>
       <section style={{ marginBottom: 28 }}>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>
+        <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>
           SII · {new Date().getFullYear()}
         </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>
+        <h1 style={{ color: "var(--text)", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>
           Mi Situación
         </h1>
-        <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
           Resumen de tu posición tributaria y qué debes hacer.
         </p>
       </section>
@@ -232,7 +232,7 @@ export default function MiSituacionPage() {
           </h2>
         </div>
 
-        <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.55, margin: "0 0 20px", maxWidth: 640 }}>
+        <p style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.55, margin: "0 0 20px", maxWidth: 640 }}>
           {data.decision.status === "EMPTY"
             ? "Aún no tienes movimientos registrados. Importa tus operaciones para calcular tu situación tributaria."
             : data.decision.detail}
@@ -243,7 +243,7 @@ export default function MiSituacionPage() {
             <div style={{ marginBottom: 24 }}>
               <p
                 style={{
-                  color: "#64748B",
+                  color: "var(--text-soft)",
                   fontSize: 11,
                   fontWeight: 850,
                   letterSpacing: "0.04em",
@@ -253,7 +253,7 @@ export default function MiSituacionPage() {
               >
                 Impuesto estimado
               </p>
-              <p style={{ color: "#0F2A3D", fontSize: "2.2rem", fontWeight: 850, lineHeight: 1.1, margin: 0 }}>
+              <p style={{ color: "var(--text)", fontSize: "2.2rem", fontWeight: 850, lineHeight: 1.1, margin: 0 }}>
                 {clp(data.totals.impuestoEstimadoClp)}
               </p>
             </div>
@@ -264,7 +264,7 @@ export default function MiSituacionPage() {
         <div style={{ marginBottom: 24 }}>
           <p
             style={{
-              color: "#334155",
+              color: "var(--text)",
               fontSize: 12,
               fontWeight: 850,
               letterSpacing: "0.06em",
@@ -276,32 +276,32 @@ export default function MiSituacionPage() {
           </p>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {hasSales && (
-              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#0F2A3D" }}>
-                <span style={{ color: "#16A34A", fontWeight: 700 }}>✓</span>
+              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text)" }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓</span>
                 <span><strong>Ventas</strong> con ganancia detectadas</span>
               </li>
             )}
             {hasStaking && (
-              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#0F2A3D" }}>
-                <span style={{ color: "#16A34A", fontWeight: 700 }}>✓</span>
+              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text)" }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓</span>
                 <span><strong>Staking</strong> recibido como ingreso</span>
               </li>
             )}
             {data.decision.status === "EMPTY" && (
-              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#854D0E" }}>
+              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text)" }}>
                 <span style={{ fontWeight: 700 }}>•</span>
                 <span><strong>Información insuficiente</strong> para calcular</span>
               </li>
             )}
             {!hasSales && !hasStaking && data.decision.status !== "EMPTY" && (
-              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#475569" }}>
-                <span style={{ color: "#16A34A", fontWeight: 700 }}>✓</span>
+              <li style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text)" }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓</span>
                 <span>No detectamos ventas ni ingresos tributables con los datos actuales.</span>
               </li>
             )}
             {topActiveAssets.map(asset => (
-              <li key={asset.symbol} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#0F2A3D" }}>
-                <span style={{ color: "#16A34A", fontWeight: 700 }}>✓</span>
+              <li key={asset.symbol} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text)" }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓</span>
                 <span>
                   <strong>{asset.symbol}</strong>
                   {asset.eventsCount > 0 && ` · ${asset.eventsCount} operaciones`}
@@ -317,9 +317,9 @@ export default function MiSituacionPage() {
           <Link
             href="/importaciones"
             style={{
-              background: "#0F766E",
+              background: "var(--accent)",
               borderRadius: 8,
-              color: "#FFFFFF",
+              color: "var(--text)",
               display: "inline-flex",
               fontSize: 14,
               fontWeight: 850,
@@ -333,9 +333,9 @@ export default function MiSituacionPage() {
           <Link
             href="/experto"
             style={{
-              background: cfg.tone === "alert" ? "#DC2626" : cfg.tone === "warn" ? "#B45309" : "#16A34A",
+              background: cfg.tone === "alert" ? "#C4634A" : cfg.tone === "warn" ? "#E8B84B" : "#3FA687",
               borderRadius: 8,
-              color: "#FFFFFF",
+              color: "var(--text)",
               display: "inline-flex",
               fontSize: 14,
               fontWeight: 850,
@@ -371,8 +371,8 @@ export default function MiSituacionPage() {
                 key={item.key}
                 onClick={() => requestFeature(item.feature, item.label)}
                 style={{
-                  background: "#F8FAFC",
-                  border: "1px solid #E2E8F0",
+                  background: "var(--bg-sunken)",
+                  border: "1px solid var(--border)",
                   borderRadius: 10,
                   padding: 16,
                   opacity: 0.85,
@@ -382,9 +382,9 @@ export default function MiSituacionPage() {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                   <span>🔒</span>
-                  <span style={{ color: "#0F2A3D", fontSize: 14, fontWeight: 800 }}>{item.label}</span>
+                  <span style={{ color: "var(--text)", fontSize: 14, fontWeight: 800 }}>{item.label}</span>
                 </div>
-                <span style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>
+                <span style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>
                   Disponible en {item.plan}
                 </span>
               </button>
@@ -395,10 +395,10 @@ export default function MiSituacionPage() {
           <button
             onClick={() => requestFeature(Feature.PDF_EXPORT, "Reporte completo")}
             style={{
-              background: "#0F766E",
+              background: "var(--accent)",
               border: "none",
               borderRadius: 10,
-              color: "#FFFFFF",
+              color: "var(--text)",
               cursor: "pointer",
               display: "block",
               fontSize: 15,
@@ -412,7 +412,7 @@ export default function MiSituacionPage() {
           >
             Desbloquear reporte completo
           </button>
-          <p style={{ color: "#64748B", fontSize: 12, margin: 0, textAlign: "center" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 12, margin: 0, textAlign: "center" }}>
             Sigue viendo tu situación SII gratis. Solo los reportes y exportaciones avanzadas son de pago.
           </p>
         </section>
@@ -422,7 +422,7 @@ export default function MiSituacionPage() {
       {hasData && (
         <section style={{ ...sectionCardStyle, marginBottom: 24 }}>
           <h3 style={{ ...sectionTitleStyle, marginBottom: 8 }}>¿Quieres revisar el detalle técnico?</h3>
-          <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.5, margin: "0 0 16px" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.5, margin: "0 0 16px" }}>
             Revisa operaciones, eventos tributarios y tu posición por activo en modo experto.
           </p>
           <button
@@ -434,9 +434,9 @@ export default function MiSituacionPage() {
             }}
             style={{
               background: "transparent",
-              border: "1px solid #CBD5E1",
+              border: "1px solid var(--border)",
               borderRadius: 10,
-              color: "#0F2A3D",
+              color: "var(--text)",
               cursor: "pointer",
               display: "inline-flex",
               fontSize: 14,
@@ -458,23 +458,23 @@ export default function MiSituacionPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Característica</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Gratis</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Personal</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #E2E8F0" }}>Pro</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>Característica</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>Gratis</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>Personal</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>Pro</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_ROWS.map((row) => (
                   <tr key={row.feature}>
-                    <td style={{ padding: "10px 8px", borderBottom: "1px solid #F1F5F9" }}>{row.feature}</td>
-                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #F1F5F9", color: row.free ? "#16A34A" : "#94A3B8" }}>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{row.feature}</td>
+                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: row.free ? "var(--accent)" : "var(--text-soft)" }}>
                       {row.free ? "✓" : "—"}
                     </td>
-                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #F1F5F9", color: row.personal ? "#16A34A" : "#94A3B8" }}>
+                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: row.personal ? "var(--accent)" : "var(--text-soft)" }}>
                       {row.personal ? "✓" : "—"}
                     </td>
-                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid #F1F5F9", color: row.pro ? "#16A34A" : "#94A3B8" }}>
+                    <td style={{ textAlign: "center", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: row.pro ? "var(--accent)" : "var(--text-soft)" }}>
                       {row.pro ? "✓" : "—"}
                     </td>
                   </tr>
@@ -487,7 +487,7 @@ export default function MiSituacionPage() {
 
       {/* Nota de confianza */}
       {data.decision.status !== "EMPTY" && (
-        <p style={{ color: "#64748B", fontSize: 12, lineHeight: 1.5, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 12, lineHeight: 1.5, margin: 0 }}>
           Cálculo basado en {data.totals.eventsCount} eventos. Nivel de confianza: {data.totals.confidenceLevel}%.
         </p>
       )}
@@ -505,11 +505,11 @@ export default function MiSituacionPage() {
 
 function ValueMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: 14 }}>
-      <p style={{ color: "#64748B", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", textTransform: "uppercase", margin: "0 0 6px" }}>
+    <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 850, letterSpacing: "0.04em", textTransform: "uppercase", margin: "0 0 6px" }}>
         {label}
       </p>
-      <p style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 800, margin: 0, wordBreak: "break-word" }}>
+      <p style={{ color: "var(--text)", fontSize: 15, fontWeight: 800, margin: 0, wordBreak: "break-word" }}>
         {value}
       </p>
     </div>
@@ -517,14 +517,14 @@ function ValueMetric({ label, value }: { label: string; value: string }) {
 }
 
 const sectionCardStyle: React.CSSProperties = {
-  background: "#FFFFFF",
-  border: "1px solid #E2E8F0",
+  background: "var(--bg-elev)",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: "24px",
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  color: "#0F2A3D",
+  color: "var(--text)",
   fontSize: "1.1rem",
   fontWeight: 850,
   margin: 0,

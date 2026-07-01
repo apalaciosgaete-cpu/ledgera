@@ -68,20 +68,20 @@ export default function NotificacionesPage() {
   return (
     <div style={{ maxWidth: 800, width: "100%" }}>
       <section style={{ marginBottom: 28 }}>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>
+        <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>
           Centro de alertas
         </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>
+        <h1 style={{ color: "var(--text)", fontSize: "1.85rem", fontWeight: 850, lineHeight: 1.12, margin: "0 0 8px" }}>
           Notificaciones
         </h1>
-        <p style={{ color: "#64748B", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 }}>
           Mantente al día con tu situación tributaria y evita abandonar tus revisiones.
         </p>
       </section>
 
       {visibleAlerts.length === 0 ? (
-        <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: 32, textAlign: "center" }}>
-          <p style={{ color: "#64748B", fontSize: 15, margin: 0 }}>No tienes alertas pendientes.</p>
+        <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 12, padding: 32, textAlign: "center" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 15, margin: 0 }}>No tienes alertas pendientes.</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -89,8 +89,8 @@ export default function NotificacionesPage() {
             <div
               key={alert.id}
               style={{
-                background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border)",
                 borderRadius: 12,
                 padding: 18,
                 display: "flex",
@@ -100,15 +100,15 @@ export default function NotificacionesPage() {
             >
               <span style={{ fontSize: 24 }}>{alert.icon}</span>
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 800, margin: "0 0 4px" }}>{alert.title}</h3>
-                <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.5, margin: "0 0 12px" }}>{alert.message}</p>
+                <h3 style={{ color: "var(--text)", fontSize: 15, fontWeight: 800, margin: "0 0 4px" }}>{alert.title}</h3>
+                <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.5, margin: "0 0 12px" }}>{alert.message}</p>
                 <div style={{ display: "flex", gap: 10 }}>
                   <a
                     href={alert.href}
                     style={{
-                      background: "#0F766E",
+                      background: "var(--accent)",
                       borderRadius: 8,
-                      color: "#FFFFFF",
+                      color: "var(--text)",
                       fontSize: 13,
                       fontWeight: 800,
                       padding: "8px 14px",
@@ -121,9 +121,9 @@ export default function NotificacionesPage() {
                     onClick={() => dismiss(alert.id)}
                     style={{
                       background: "transparent",
-                      border: "1px solid #E2E8F0",
+                      border: "1px solid var(--border)",
                       borderRadius: 8,
-                      color: "#64748B",
+                      color: "var(--text-soft)",
                       cursor: "pointer",
                       fontSize: 13,
                       fontWeight: 700,

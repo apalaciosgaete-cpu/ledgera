@@ -87,14 +87,14 @@ export default function SimuladorPage() {
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gap: 24 }}>
-      <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 24 }}>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+      <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 24 }}>
+        <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
           Simulación Tributaria
         </p>
-        <h1 style={{ color: "#0F2A3D", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
+        <h1 style={{ color: "var(--text)", fontSize: "2rem", fontWeight: 900, margin: "0 0 8px" }}>
           ¿Qué pasa si...?
         </h1>
-        <p style={{ color: "#64748B", fontSize: 15, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.6, margin: 0 }}>
           Proyecta riesgo, score e impacto estimado antes de tomar una decisión. Esta simulación es orientativa y no ejecuta cambios reales.
         </p>
       </section>
@@ -113,36 +113,36 @@ export default function SimuladorPage() {
               }}
               style={{
                 textAlign: "left",
-                background: active ? "#ECFDF5" : "#FFFFFF",
-                border: active ? "2px solid #0F766E" : "1px solid #E2E8F0",
+                background: active ? "var(--accent-soft)" : "var(--bg-elev)",
+                border: active ? "2px solid var(--accent)" : "1px solid var(--border)",
                 borderRadius: 14,
                 padding: 18,
                 cursor: "pointer",
               }}
             >
-              <p style={{ color: "#0F2A3D", fontSize: 16, fontWeight: 850, margin: "0 0 6px" }}>{scenario.title}</p>
-              <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.45, margin: 0 }}>{scenario.description}</p>
+              <p style={{ color: "var(--text)", fontSize: 16, fontWeight: 850, margin: "0 0 6px" }}>{scenario.title}</p>
+              <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.45, margin: 0 }}>{scenario.description}</p>
             </button>
           );
         })}
       </section>
 
-      <form onSubmit={run} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 22, display: "grid", gap: 16 }}>
+      <form onSubmit={run} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 22, display: "grid", gap: 16 }}>
         <div>
-          <h2 style={{ color: "#0F2A3D", fontSize: 20, fontWeight: 850, margin: "0 0 6px" }}>{selected.title}</h2>
-          <p style={{ color: "#64748B", fontSize: 14, margin: 0 }}>{selected.description}</p>
+          <h2 style={{ color: "var(--text)", fontSize: 20, fontWeight: 850, margin: "0 0 6px" }}>{selected.title}</h2>
+          <p style={{ color: "var(--text-soft)", fontSize: 14, margin: 0 }}>{selected.description}</p>
         </div>
 
         {selected.type === "INCOME" && (
           <label style={{ display: "grid", gap: 8, maxWidth: 320 }}>
-            <span style={{ color: "#334155", fontSize: 13, fontWeight: 800 }}>Aumento estimado de ingresos (%)</span>
+            <span style={{ color: "var(--text)", fontSize: 13, fontWeight: 800 }}>Aumento estimado de ingresos (%)</span>
             <input
               type="number"
               min="1"
               max="200"
               value={increasePercentage}
               onChange={(event) => setIncreasePercentage(event.target.value)}
-              style={{ border: "1px solid #CBD5E1", borderRadius: 10, padding: "11px 12px", fontSize: 14 }}
+              style={{ border: "1px solid var(--border)", borderRadius: 10, padding: "11px 12px", fontSize: 14 }}
             />
           </label>
         )}
@@ -151,10 +151,10 @@ export default function SimuladorPage() {
           type="submit"
           disabled={loading}
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             border: "none",
             borderRadius: 12,
-            color: "#FFFFFF",
+            color: "var(--text)",
             cursor: loading ? "not-allowed" : "pointer",
             fontSize: 14,
             fontWeight: 850,
@@ -166,7 +166,7 @@ export default function SimuladorPage() {
         </button>
 
         {error && (
-          <p style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, color: "#991B1B", fontSize: 14, fontWeight: 750, margin: 0, padding: 12 }}>
+          <p style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 10, color: "var(--loss)", fontSize: 14, fontWeight: 750, margin: 0, padding: 12 }}>
             {error}
           </p>
         )}
@@ -179,29 +179,29 @@ export default function SimuladorPage() {
 
 function SimulationResultView({ result }: { result: SimulationResult }) {
   return (
-    <section style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: 22, display: "grid", gap: 18 }}>
+    <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 22, display: "grid", gap: 18 }}>
       <div>
-        <p style={{ color: "#0F766E", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
+        <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 8px", textTransform: "uppercase" }}>
           Resultado proyectado
         </p>
-        <h2 style={{ color: "#0F2A3D", fontSize: 22, fontWeight: 900, margin: "0 0 6px" }}>{result.summary}</h2>
+        <h2 style={{ color: "var(--text)", fontSize: 22, fontWeight: 900, margin: "0 0 6px" }}>{result.summary}</h2>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 14 }}>
         <ImpactCard label="Riesgo" current={result.impact.currentRisk} projected={result.impact.projectedRisk} suffix="/100" lowerIsBetter />
         <ImpactCard label="Score" current={result.impact.currentScore} projected={result.impact.projectedScore} suffix="/100" />
-        <article style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 14, padding: 18 }}>
-          <p style={{ color: "#64748B", fontSize: 12, fontWeight: 850, margin: "0 0 8px", textTransform: "uppercase" }}>Impacto estimado</p>
-          <p style={{ color: "#0F2A3D", fontSize: 26, fontWeight: 900, margin: 0 }}>{result.impact.taxImpact}</p>
-          <p style={{ color: "#64748B", fontSize: 13, margin: "4px 0 0" }}>Estimación simple del motor</p>
+        <article style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 850, margin: "0 0 8px", textTransform: "uppercase" }}>Impacto estimado</p>
+          <p style={{ color: "var(--text)", fontSize: 26, fontWeight: 900, margin: 0 }}>{result.impact.taxImpact}</p>
+          <p style={{ color: "var(--text-soft)", fontSize: 13, margin: "4px 0 0" }}>Estimación simple del motor</p>
         </article>
       </div>
 
       <div>
-        <h3 style={{ color: "#0F2A3D", fontSize: 17, fontWeight: 850, margin: "0 0 10px" }}>Recomendaciones</h3>
+        <h3 style={{ color: "var(--text)", fontSize: 17, fontWeight: 850, margin: "0 0 10px" }}>Recomendaciones</h3>
         <div style={{ display: "grid", gap: 8 }}>
           {result.recommendations.map((recommendation: string, index: number) => (
-            <p key={`${recommendation}-${index}`} style={{ background: "#ECFDF5", border: "1px solid #BBF7D0", borderRadius: 10, color: "#166534", fontSize: 14, fontWeight: 700, margin: 0, padding: 12 }}>
+            <p key={`${recommendation}-${index}`} style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 10, color: "var(--accent)", fontSize: 14, fontWeight: 700, margin: 0, padding: 12 }}>
               {recommendation}
             </p>
           ))}
@@ -215,12 +215,12 @@ function ImpactCard({ label, current, projected, suffix, lowerIsBetter = false }
   const delta = projected - current;
   const isGood = lowerIsBetter ? delta <= 0 : delta >= 0;
   return (
-    <article style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 14, padding: 18 }}>
-      <p style={{ color: "#64748B", fontSize: 12, fontWeight: 850, margin: "0 0 8px", textTransform: "uppercase" }}>{label}</p>
-      <p style={{ color: "#0F2A3D", fontSize: 24, fontWeight: 900, margin: "0 0 6px" }}>
+    <article style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 14, padding: 18 }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 850, margin: "0 0 8px", textTransform: "uppercase" }}>{label}</p>
+      <p style={{ color: "var(--text)", fontSize: 24, fontWeight: 900, margin: "0 0 6px" }}>
         {current}{suffix} → {projected}{suffix}
       </p>
-      <p style={{ color: isGood ? "#15803D" : "#B45309", fontSize: 13, fontWeight: 800, margin: 0 }}>
+      <p style={{ color: isGood ? "var(--accent)" : "var(--warn)", fontSize: 13, fontWeight: 800, margin: 0 }}>
         Variación: {delta > 0 ? "+" : ""}{delta}
       </p>
     </article>

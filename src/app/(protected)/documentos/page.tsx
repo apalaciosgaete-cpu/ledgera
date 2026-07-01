@@ -61,9 +61,9 @@ const statusLabel: Record<string, string> = {
 };
 
 const statusColor: Record<string, string> = {
-  ACTIVE: "#15803D",
-  ARCHIVED: "#B45309",
-  DELETED: "#991B1B",
+  ACTIVE: "var(--accent)",
+  ARCHIVED: "var(--warn)",
+  DELETED: "var(--loss)",
 };
 
 export default function DocumentsPage() {
@@ -175,7 +175,7 @@ export default function DocumentsPage() {
       <header style={{ marginBottom: 24 }}>
         <p
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 850,
             letterSpacing: "0.06em",
@@ -187,7 +187,7 @@ export default function DocumentsPage() {
         </p>
         <h1
           style={{
-            color: "#0F2A3D",
+            color: "var(--text)",
             fontSize: "1.9rem",
             fontWeight: 850,
             lineHeight: 1.12,
@@ -196,7 +196,7 @@ export default function DocumentsPage() {
         >
           Tus documentos tributarios
         </h1>
-        <p style={{ color: "#64748B", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
           Almacena, organiza y descarga toda la documentación de tu expediente.
         </p>
       </header>
@@ -217,8 +217,8 @@ export default function DocumentsPage() {
 
       <div
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 12,
           padding: 20,
           marginBottom: 24,
@@ -228,7 +228,7 @@ export default function DocumentsPage() {
         <form onSubmit={handleUpload} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
             <div style={{ flex: 1, minWidth: 240 }}>
-              <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>
+              <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>
                 Archivo
               </label>
               <input
@@ -243,7 +243,7 @@ export default function DocumentsPage() {
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
             <div style={{ flex: 1, minWidth: 240 }}>
-              <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>
+              <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>
                 Nombre
               </label>
               <input
@@ -254,13 +254,13 @@ export default function DocumentsPage() {
                   width: "100%",
                   padding: "8px 12px",
                   borderRadius: 8,
-                  border: "1px solid #CBD5E1",
+                  border: "1px solid var(--border)",
                   fontSize: 14,
                 }}
               />
             </div>
             <div style={{ flex: 1, minWidth: 240 }}>
-              <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>
+              <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>
                 Etiquetas
               </label>
               <input
@@ -271,7 +271,7 @@ export default function DocumentsPage() {
                   width: "100%",
                   padding: "8px 12px",
                   borderRadius: 8,
-                  border: "1px solid #CBD5E1",
+                  border: "1px solid var(--border)",
                   fontSize: 14,
                 }}
               />
@@ -282,10 +282,10 @@ export default function DocumentsPage() {
             disabled={uploading}
             style={{
               alignSelf: "flex-start",
-              background: "#0F766E",
+              background: "var(--accent)",
               border: "none",
               borderRadius: 8,
-              color: "#FFFFFF",
+              color: "var(--text)",
               cursor: "pointer",
               fontSize: 14,
               fontWeight: 850,
@@ -306,10 +306,10 @@ export default function DocumentsPage() {
       {error && (
         <div
           style={{
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
+            background: "rgba(196,99,74,0.14)",
+            border: "1px solid rgba(196,99,74,0.14)",
             borderRadius: 8,
-            color: "#991B1B",
+            color: "var(--loss)",
             fontWeight: 750,
             marginBottom: 24,
             padding: 16,
@@ -320,21 +320,21 @@ export default function DocumentsPage() {
       )}
 
       {loading ? (
-        <p style={{ color: "#64748B" }}>Cargando documentos…</p>
+        <p style={{ color: "var(--text-soft)" }}>Cargando documentos…</p>
       ) : documents.length === 0 ? (
-        <p style={{ color: "#64748B" }}>No hay documentos para los filtros seleccionados.</p>
+        <p style={{ color: "var(--text-soft)" }}>No hay documentos para los filtros seleccionados.</p>
       ) : (
         <div
           style={{
-            background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
             overflow: "hidden",
           }}
         >
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#F8FAFC", color: "#64748B", textAlign: "left" }}>
+              <tr style={{ background: "var(--bg-sunken)", color: "var(--text-soft)", textAlign: "left" }}>
                 <th style={{ padding: "12px 16px" }}>Nombre</th>
                 <th style={{ padding: "12px 16px" }}>Categoría</th>
                 <th style={{ padding: "12px 16px" }}>Tipo</th>
@@ -346,10 +346,10 @@ export default function DocumentsPage() {
             </thead>
             <tbody>
               {documents.map((d) => (
-                <tr key={d.id} style={{ borderTop: "1px solid #E2E8F0" }}>
+                <tr key={d.id} style={{ borderTop: "1px solid var(--border)" }}>
                   <td style={{ padding: "12px 16px" }}>
-                    <div style={{ fontWeight: 700, color: "#0F2A3D" }}>{d.name}</div>
-                    <div style={{ color: "#94A3B8", fontSize: 12 }}>{d.fileName}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text)" }}>{d.name}</div>
+                    <div style={{ color: "var(--text-soft)", fontSize: 12 }}>{d.fileName}</div>
                   </td>
                   <td style={{ padding: "12px 16px" }}>{categoryLabel[d.category] ?? d.category}</td>
                   <td style={{ padding: "12px 16px" }}>{d.type}</td>
@@ -369,7 +369,7 @@ export default function DocumentsPage() {
                     </span>
                   </td>
                   <td style={{ padding: "12px 16px" }}>{formatSize(d.fileSize)}</td>
-                  <td style={{ padding: "12px 16px", color: "#64748B" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--text-soft)" }}>
                     {new Date(d.createdAt).toLocaleDateString("es-CL")}
                   </td>
                   <td style={{ padding: "12px 16px" }}>
@@ -379,9 +379,9 @@ export default function DocumentsPage() {
                         target="_blank"
                         rel="noreferrer"
                         style={{
-                          background: "#F1F5F9",
+                          background: "var(--bg-sunken)",
                           borderRadius: 6,
-                          color: "#0F2A3D",
+                          color: "var(--text)",
                           fontSize: 12,
                           fontWeight: 700,
                           padding: "6px 10px",
@@ -394,10 +394,10 @@ export default function DocumentsPage() {
                         <button
                           onClick={() => handleArchive(d.id)}
                           style={{
-                            background: "#FEF3C7",
+                            background: "rgba(232,184,75,0.14)",
                             border: "none",
                             borderRadius: 6,
-                            color: "#92400E",
+                            color: "var(--warn)",
                             cursor: "pointer",
                             fontSize: 12,
                             fontWeight: 700,
@@ -411,10 +411,10 @@ export default function DocumentsPage() {
                         <button
                           onClick={() => handleDelete(d.id)}
                           style={{
-                            background: "#FEE2E2",
+                            background: "rgba(196,99,74,0.14)",
                             border: "none",
                             borderRadius: 6,
-                            color: "#991B1B",
+                            color: "var(--loss)",
                             cursor: "pointer",
                             fontSize: 12,
                             fontWeight: 700,
@@ -440,14 +440,14 @@ function MetricCard({ label, value }: { label: string; value: number }) {
   return (
     <div
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 12,
         padding: 16,
       }}
     >
-      <div style={{ color: "#64748B", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{label}</div>
-      <div style={{ color: "#0F2A3D", fontSize: "1.75rem", fontWeight: 850 }}>{value}</div>
+      <div style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{label}</div>
+      <div style={{ color: "var(--text)", fontSize: "1.75rem", fontWeight: 850 }}>{value}</div>
     </div>
   );
 }
@@ -469,17 +469,17 @@ function Select({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 160 }}>
-      <label style={{ color: "#64748B", fontSize: 12, fontWeight: 700 }}>{label}</label>
+      <label style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 700 }}>{label}</label>
       <select
         name={name}
         value={value}
         defaultValue={defaultValue}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #CBD5E1",
+          background: "var(--bg-elev)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: 14,
           padding: "8px 12px",
         }}
