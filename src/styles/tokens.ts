@@ -24,8 +24,9 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  display: "var(--font-display, 'Manrope', system-ui, sans-serif)",
+  display: "var(--font-display, 'Space Grotesk', system-ui, sans-serif)",
   body:    "var(--font-body, 'Inter', system-ui, sans-serif)",
+  mono:    "var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace)",
 } as const;
 
 export const fontSize = {

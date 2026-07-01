@@ -8,7 +8,7 @@ import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { saveSessionToken } from "@/modules/identity/client/authStorage";
 import type { AuthUser } from "@/modules/identity/client/authClient";
-import { colors, fonts } from "@/styles/tokens";
+import { fonts } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
 const BG_IMAGES = [
@@ -304,7 +304,7 @@ function LoginForm() {
   const overlayStyle = {
     position: "absolute" as const,
     inset: 0,
-    background: "rgba(6,15,23,0.68)",
+    background: "rgba(15,18,19,0.72)",
     zIndex: 0,
   };
 
@@ -321,23 +321,42 @@ function LoginForm() {
 
   const cardStyle = {
     width: "100%",
-    background: "rgba(255,255,255,0.82)",
+    background: "rgba(27,33,36,0.82)",
+    border: "1px solid var(--border)",
     backdropFilter: "blur(16px)",
     borderRadius: "16px",
     padding: "2rem",
     display: "flex",
     flexDirection: "column" as const,
     gap: "1.25rem",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
   };
 
   const labelStyle = {
     display: "block",
     fontSize: "13px",
     fontWeight: 600,
-    color: "#0F2A3D",
+    color: "var(--text-soft)",
     marginBottom: "6px",
     fontFamily: fonts.body,
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "0.8rem 1rem",
+    borderRadius: "10px",
+    border: "1px solid var(--border-strong)",
+    background: "var(--bg-sunken)",
+    color: "var(--text)",
+    fontSize: "14px",
+    fontFamily: fonts.body,
+  } as const;
+
+  const codeInputStyle = {
+    ...inputStyle,
+    fontSize: "18px",
+    letterSpacing: "0.25em",
+    textAlign: "center" as const,
   };
 
   const primaryButtonStyle = {
@@ -345,8 +364,8 @@ function LoginForm() {
     border: "none",
     borderRadius: "12px",
     padding: "0.9rem 1rem",
-    background: colors.primary,
-    color: "#FFFFFF",
+    background: "var(--accent)",
+    color: "var(--accent-contrast)",
     fontSize: "15px",
     fontWeight: 800,
     fontFamily: fonts.body,
@@ -359,12 +378,12 @@ function LoginForm() {
         <Logo variant="light" size="lg" />
         <section style={cardStyle}>
           <div style={{ display: "grid", gap: "0.5rem" }}>
-            <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 900, color: colors.textPrimary, fontFamily: fonts.display }}>
+            <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 900, color: "var(--text)", fontFamily: fonts.display }}>
               {step === 1 && "Iniciar sesión"}
               {step === 2 && "Verificación 2FA"}
               {step === 3 && "Configura tu 2FA"}
             </h1>
-            <p style={{ margin: 0, fontSize: "14px", color: colors.textSecondary, lineHeight: 1.6, fontFamily: fonts.body }}>
+            <p style={{ margin: 0, fontSize: "14px", color: "var(--text-soft)", lineHeight: 1.6, fontFamily: fonts.body }}>
               {step === 1 && "Ingresa con tu cuenta para continuar con LEDGERA."}
               {step === 2 && "Introduce el código de tu app autenticadora para ingresar."}
               {step === 3 && "Escanea el código QR, ingresa el código de 6 dígitos y termina la configuración obligatoria."}
@@ -372,7 +391,7 @@ function LoginForm() {
           </div>
 
           {justRegistered && step === 1 ? (
-            <div style={{ background: "rgba(15,118,110,0.08)", border: "1px solid rgba(15,118,110,0.15)", borderRadius: "10px", padding: "0.9rem 1rem", color: "#0F766E", fontSize: "14px", fontWeight: 600, fontFamily: fonts.body }}>
+            <div style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", borderRadius: "10px", padding: "0.9rem 1rem", color: "var(--gain)", fontSize: "14px", fontWeight: 600, fontFamily: fonts.body }}>
               Tu cuenta fue creada. Ahora inicia sesión.
             </div>
           ) : null}
@@ -381,19 +400,19 @@ function LoginForm() {
             <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
               <div>
                 <label htmlFor="email" style={labelStyle}>Correo</label>
-                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "14px", fontFamily: fonts.body }} />
+                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
               </div>
               <div>
                 <label htmlFor="password" style={labelStyle}>Contraseña</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required style={{ flex: 1, padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "14px", fontFamily: fonts.body }} />
-                  <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ border: "1px solid #D6E0EA", background: "#F8FAFC", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
+                  <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required style={{ ...inputStyle, width: "auto", flex: 1 }} />
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text-soft)", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
                     {showPassword ? "Ocultar" : "Mostrar"}
                   </button>
                 </div>
               </div>
 
-              {errorMessage ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
+              {errorMessage ? <p style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
 
               <button type="submit" disabled={submitting} style={{ ...primaryButtonStyle, cursor: submitting ? "not-allowed" : "pointer" }}>
                 {submitting ? "Ingresando..." : "Entrar"}
@@ -405,13 +424,13 @@ function LoginForm() {
             <form onSubmit={handle2FA} style={{ display: "grid", gap: "1rem" }}>
               <div>
                 <label htmlFor="twofa" style={labelStyle}>Código 2FA</label>
-                <input id="twofa" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={twoFACode} onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
+                <input id="twofa" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={twoFACode} onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ""))} required style={codeInputStyle} />
               </div>
-              {error2FA ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
+              {error2FA ? <p style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
               <button type="submit" disabled={validating2FA} style={{ ...primaryButtonStyle, cursor: validating2FA ? "not-allowed" : "pointer" }}>
                 {validating2FA ? "Validando..." : "Validar código"}
               </button>
-              <button type="button" onClick={startRecovery} style={{ width: "100%", border: "1px solid #CBD5E1", borderRadius: "12px", padding: "0.9rem 1rem", background: "#FFFFFF", color: colors.textPrimary, fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body }}>
+              <button type="button" onClick={startRecovery} style={{ width: "100%", border: "1px solid var(--border-strong)", borderRadius: "12px", padding: "0.9rem 1rem", background: "transparent", color: "var(--text)", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body }}>
                 Reconfigurar autenticador
               </button>
             </form>
@@ -420,12 +439,12 @@ function LoginForm() {
           {step === 3 && (
             <form onSubmit={handleSetup2FA} style={{ display: "grid", gap: "1rem" }}>
               {setupQrCode ? <img src={setupQrCode} alt="Código QR 2FA" style={{ width: 180, height: 180, objectFit: "contain", justifySelf: "center", background: "#FFFFFF", padding: 8, borderRadius: 12 }} /> : null}
-              {setupSecret ? <p style={{ margin: 0, fontSize: "13px", color: colors.textSecondary, lineHeight: 1.6, fontFamily: fonts.body }}>Clave manual: <strong style={{ color: colors.textPrimary }}>{setupSecret}</strong></p> : null}
+              {setupSecret ? <p style={{ margin: 0, fontSize: "13px", color: "var(--text-soft)", lineHeight: 1.6, fontFamily: fonts.body }}>Clave manual: <strong style={{ color: "var(--text)", fontFamily: fonts.mono }}>{setupSecret}</strong></p> : null}
               <div>
                 <label htmlFor="setupCode" style={labelStyle}>Código de 6 dígitos</label>
-                <input id="setupCode" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
+                <input id="setupCode" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))} required style={codeInputStyle} />
               </div>
-              {errorSetup ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
+              {errorSetup ? <p style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
               <button type="submit" disabled={verifyingSetup} style={{ ...primaryButtonStyle, cursor: verifyingSetup ? "not-allowed" : "pointer" }}>
                 {verifyingSetup ? "Verificando..." : "Activar y entrar"}
               </button>
@@ -433,8 +452,8 @@ function LoginForm() {
           )}
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", fontSize: "13px", fontFamily: fonts.body }}>
-            <Link href="/register" style={{ color: colors.primary, fontWeight: 700, textDecoration: "none" }}>Crear cuenta</Link>
-            <Link href="/forgot-password" style={{ color: colors.textSecondary, textDecoration: "none" }}>¿Olvidaste tu contraseña?</Link>
+            <Link href="/register" style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>Crear cuenta</Link>
+            <Link href="/forgot-password" style={{ color: "var(--text-soft)", textDecoration: "none" }}>¿Olvidaste tu contraseña?</Link>
           </div>
         </section>
       </div>
