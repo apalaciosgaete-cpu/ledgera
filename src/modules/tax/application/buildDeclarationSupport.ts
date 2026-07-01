@@ -55,6 +55,10 @@ type DeclarationSupportPayload = {
     taxableEvents: number;
     taxableBaseClp: number;
     igcEstimatedTaxClp: number;
+    igcMarginalRatePct: number;
+    igcEffectiveRatePct: number;
+    igcBracketFromClp: number;
+    igcBracketToClp: number | null;
     declarationStatus: string;
     paymentStatus: string;
     conclusion: string;
@@ -92,6 +96,15 @@ function formatClp(value: number): string {
     currency: "CLP",
     maximumFractionDigits: 0,
   }).format(Math.round(value));
+}
+
+function formatPct(value: number): string {
+  return `${new Intl.NumberFormat("es-CL", { maximumFractionDigits: 2 }).format(value)}%`;
+}
+
+function formatBracket(from: number, to: number | null): string {
+  if (to === null) return `Desde ${formatClp(from)} sin tope`;
+  return `${formatClp(from)} a ${formatClp(to)}`;
 }
 
 function extractAsset(item: StagingItem): string {
@@ -202,6 +215,7 @@ export async function buildDeclarationSupportPayload(input: {
   const taxableBaseClp = Math.max(0, taxEvents.reduce((sum, event) => sum + Number(event.realizedPnlClp || 0), 0));
   const igcTaxYear = input.year === 2025 || input.year === null ? DEFAULT_GLOBAL_COMPLEMENTARY_TAX_YEAR : DEFAULT_GLOBAL_COMPLEMENTARY_TAX_YEAR;
   const igc = calculateGlobalComplementaryTax({ taxableIncomeClp: taxableBaseClp, taxYear: igcTaxYear });
+  const igcEffectiveRatePct = taxableBaseClp > 0 ? (igc.taxClp / taxableBaseClp) * 100 : 0;
 
   const mustSupport = confirmed.length > 0;
   const mustPay = igc.taxClp > 0;
@@ -228,6 +242,10 @@ export async function buildDeclarationSupportPayload(input: {
       taxableEvents: taxEvents.length,
       taxableBaseClp,
       igcEstimatedTaxClp: igc.taxClp,
+      igcMarginalRatePct: igc.marginalRatePct,
+      igcEffectiveRatePct,
+      igcBracketFromClp: igc.bracket.fromClpInclusive,
+      igcBracketToClp: igc.bracket.toClpInclusive,
       declarationStatus: mustSupport ? "DECLARAR_RESPALDAR" : "SIN_DATOS",
       paymentStatus: mustPay ? "PAGA_IGC_ESTIMADO" : "SIN_PAGO_IGC_DETECTADO",
       conclusion,
@@ -262,27 +280,42 @@ function addPdfHeader(doc: PDFKit.PDFDocument, payload: DeclarationSupportPayloa
   doc.text(`Año operaciones: ${payload.year ?? "Todos"} · Año tabla IGC: AT ${payload.igcTaxYear}`, metadataX, topY + 14, { width: metadataWidth, align: "right" });
   doc.text(`Generado: ${new Date(payload.generatedAt).toLocaleString("es-CL")}`, metadataX, topY + 27, { width: metadataWidth, align: "right" });
 
-  doc.moveTo(margin, topY + 50)
-    .lineTo(pageWidth - margin, topY + 50)
-    .strokeColor("#D9F5E8")
-    .lineWidth(1)
-    .stroke();
-
-  doc.y = topY + 66;
+  doc.y = topY + 64;
   doc.font("Helvetica-Bold")
-    .fontSize(16)
+    .fontSize(18)
     .fillColor("#0F2A3D")
-    .text("Declaración tributaria y respaldo de criptoactivos", margin, doc.y, { width: pageWidth - margin * 2 });
-  doc.moveDown();
+    .text("Respaldo de movimientos", margin, doc.y, { width: pageWidth - margin * 2 });
+  doc.moveDown(1);
 }
 
 function checkPage(doc: PDFKit.PDFDocument, minY = 720) {
   if (doc.y > minY) doc.addPage();
 }
 
-function writeKeyValue(doc: PDFKit.PDFDocument, label: string, value: string) {
-  doc.font("Helvetica-Bold").fillColor("#0F2A3D").text(`${label}: `, { continued: true });
-  doc.font("Helvetica").fillColor("#334155").text(value);
+function sectionTitle(doc: PDFKit.PDFDocument, title: string) {
+  checkPage(doc, 690);
+  doc.moveDown(0.2);
+  doc.font("Helvetica-Bold").fontSize(12).fillColor("#0F766E").text(title);
+  doc.moveDown(0.35);
+}
+
+function writeRows(doc: PDFKit.PDFDocument, rows: Array<[string, string]>) {
+  const leftX = doc.page.margins.left;
+  const valueX = leftX + 205;
+  const valueWidth = doc.page.width - valueX - doc.page.margins.right;
+
+  for (const [label, value] of rows) {
+    checkPage(doc);
+    const y = doc.y;
+    doc.font("Helvetica-Bold").fontSize(8.8).fillColor("#0F2A3D").text(label, leftX, y, { width: 190 });
+    doc.font("Helvetica").fontSize(8.8).fillColor("#334155").text(value, valueX, y, { width: valueWidth });
+    const rowHeight = Math.max(
+      doc.heightOfString(label, { width: 190 }),
+      doc.heightOfString(value, { width: valueWidth }),
+    );
+    doc.y = y + rowHeight + 5;
+  }
+  doc.moveDown(0.5);
 }
 
 export async function renderDeclarationSupportPdf(payload: DeclarationSupportPayload): Promise<Buffer> {
@@ -295,59 +328,55 @@ export async function renderDeclarationSupportPdf(payload: DeclarationSupportPay
 
     addPdfHeader(doc, payload);
 
-    doc.font("Helvetica-Bold").fontSize(12).fillColor("#0F766E").text("Conclusión expresa LEDGERA");
-    doc.moveDown(0.3);
-    doc.font("Helvetica").fontSize(10).fillColor("#334155").text(payload.summary.conclusion, { lineGap: 2 });
-    doc.moveDown();
+    sectionTitle(doc, "Resumen");
+    writeRows(doc, [
+      ["Declaración / respaldo", payload.summary.declarationStatus],
+      ["Pago IGC", payload.summary.paymentStatus],
+      ["Operaciones confirmadas", String(payload.summary.confirmedOperations)],
+      ["Activos con base de costo", String(payload.summary.assetsWithCostBasis)],
+      ["Compras/base de costo", String(payload.summary.buyOperations)],
+      ["Eventos imponibles detectados", String(payload.summary.taxableEvents)],
+    ]);
 
-    doc.font("Helvetica-Bold").fontSize(12).fillColor("#0F2A3D").text("Resumen declaración vs pago");
-    doc.moveDown(0.3);
-    doc.fontSize(9);
-    writeKeyValue(doc, "Declaración / respaldo", payload.summary.declarationStatus);
-    writeKeyValue(doc, "Pago IGC", payload.summary.paymentStatus);
-    writeKeyValue(doc, "Operaciones confirmadas", String(payload.summary.confirmedOperations));
-    writeKeyValue(doc, "Activos con base de costo", String(payload.summary.assetsWithCostBasis));
-    writeKeyValue(doc, "Compras/base de costo", String(payload.summary.buyOperations));
-    writeKeyValue(doc, "Eventos imponibles detectados", String(payload.summary.taxableEvents));
-    writeKeyValue(doc, "Base imponible IGC detectada", formatClp(payload.summary.taxableBaseClp));
-    writeKeyValue(doc, "IGC estimado", formatClp(payload.summary.igcEstimatedTaxClp));
-    doc.moveDown();
+    sectionTitle(doc, "IGC detectado");
+    doc.font("Helvetica").fontSize(8.8).fillColor("#475569").text(
+      "IGC detectado es la estimacion del Impuesto Global Complementario sobre la base imponible que LEDGERA identifica desde los movimientos confirmados. Si la base detectada esta en tramo exento o es cero, el pago estimado es $0.",
+      { lineGap: 2 },
+    );
+    doc.moveDown(0.55);
+    writeRows(doc, [
+      ["Base imponible IGC detectada", formatClp(payload.summary.taxableBaseClp)],
+      ["Tramo IGC aplicado", formatBracket(payload.summary.igcBracketFromClp, payload.summary.igcBracketToClp)],
+      ["Tasa marginal del tramo", formatPct(payload.summary.igcMarginalRatePct)],
+      ["Tasa efectiva detectada", formatPct(payload.summary.igcEffectiveRatePct)],
+      ["IGC estimado", formatClp(payload.summary.igcEstimatedTaxClp)],
+    ]);
 
-    checkPage(doc);
-    doc.font("Helvetica-Bold").fontSize(12).fillColor("#0F2A3D").text("Trazabilidad por activo");
-    doc.moveDown(0.4);
+    sectionTitle(doc, "Trazabilidad por activo");
     if (payload.assetTrace.length === 0) {
       doc.font("Helvetica").fontSize(9).fillColor("#64748B").text("Sin activos confirmados.");
     }
-    for (const asset of payload.assetTrace) {
-      checkPage(doc);
-      doc.font("Helvetica-Bold").fontSize(9).fillColor("#0F2A3D").text(`${asset.symbol}`);
-      doc.font("Helvetica").fontSize(8).fillColor("#475569").text(`Cantidad detectada: ${asset.quantity.toLocaleString("es-CL", { maximumFractionDigits: 8 })} · Operaciones: ${asset.operations} · Última fecha: ${formatDate(asset.lastDate)}`);
-      doc.moveDown(0.25);
-    }
+    writeRows(doc, payload.assetTrace.map((asset) => [
+      asset.symbol,
+      `Cantidad detectada: ${asset.quantity.toLocaleString("es-CL", { maximumFractionDigits: 8 })} · Operaciones: ${asset.operations} · Ultima fecha: ${formatDate(asset.lastDate)}`,
+    ]));
 
-    doc.moveDown();
-    checkPage(doc);
-    doc.font("Helvetica-Bold").fontSize(12).fillColor("#0F2A3D").text("Detalle de operaciones confirmadas");
-    doc.moveDown(0.4);
-
-    for (const row of payload.traceRows.slice(0, 160)) {
-      checkPage(doc);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor("#0F2A3D").text(`${row.date} · ${row.provider} · ${row.asset} · ${row.amount}`);
-      doc.font("Helvetica").fontSize(7.8).fillColor("#475569").text(`${row.title} · ${row.treatment}`);
-      doc.font("Helvetica").fontSize(7).fillColor("#64748B").text(`Fuente: ${row.source} · Tipo: ${row.rawType} · IDs: ${row.sourceIds}`);
-      doc.moveDown(0.35);
-    }
+    sectionTitle(doc, "Detalle de operaciones confirmadas");
+    writeRows(doc, payload.traceRows.slice(0, 160).map((row) => [
+      `${row.date} · ${row.asset}`,
+      `${row.provider} · ${row.amount} · ${row.title} · ${row.treatment} · Fuente: ${row.source} · Tipo: ${row.rawType}`,
+    ]));
 
     if (payload.traceRows.length > 160) {
       doc.moveDown(0.4);
       doc.font("Helvetica").fontSize(8).fillColor("#64748B").text(`Se muestran 160 operaciones en PDF. El Excel contiene el detalle completo de ${payload.traceRows.length} operaciones.`);
     }
 
-    checkPage(doc);
-    doc.moveDown();
-    doc.font("Helvetica-Bold").fontSize(9).fillColor("#0F2A3D").text("Alcance del documento");
-    doc.font("Helvetica").fontSize(8).fillColor("#64748B").text("Documento generado automáticamente desde datos confirmados en LEDGERA. La conclusión se limita a la información importada y validada en la plataforma. Debe revisarse junto con los demás antecedentes tributarios del contribuyente antes de presentar una declaración final.", { lineGap: 2 });
+    sectionTitle(doc, "Alcance del documento");
+    doc.font("Helvetica").fontSize(8.5).fillColor("#64748B").text("Documento generado automaticamente desde datos confirmados en LEDGERA. La conclusion se limita a la informacion importada y validada en la plataforma. Debe revisarse junto con los demas antecedentes tributarios del contribuyente antes de presentar una declaracion final.", { lineGap: 2 });
+
+    sectionTitle(doc, "Conclusion expresa LEDGERA");
+    doc.font("Helvetica").fontSize(10).fillColor("#334155").text(payload.summary.conclusion, { lineGap: 2 });
 
     doc.end();
   });
@@ -360,8 +389,8 @@ function sheetFromAoA(rows: unknown[][]) {
 export function renderDeclarationSupportXlsx(payload: DeclarationSupportPayload): Buffer {
   const wb = XLSX.utils.book_new();
   wb.Props = {
-    Title: "Declaración tributaria y respaldo de criptoactivos LEDGERA",
-    Subject: "Trazabilidad de activos y conclusión tributaria",
+    Title: "Respaldo de movimientos LEDGERA",
+    Subject: "Trazabilidad de activos y conclusion tributaria",
     Author: "LEDGERA",
     CreatedDate: new Date(payload.generatedAt),
   };
@@ -370,13 +399,11 @@ export function renderDeclarationSupportXlsx(payload: DeclarationSupportPayload)
     ["LEDGERA"],
     ["Sistema Operativo Financiero y Tributario"],
     [],
-    ["Declaración tributaria y respaldo de criptoactivos"],
+    ["Respaldo de movimientos"],
     ["Usuario", payload.userEmail],
     ["Año operaciones", payload.year ?? "Todos"],
     ["Año tabla IGC", `AT ${payload.igcTaxYear}`],
     ["Generado", new Date(payload.generatedAt).toLocaleString("es-CL")],
-    [],
-    ["Conclusión expresa LEDGERA", payload.summary.conclusion],
     [],
     ["Declaración / respaldo", payload.summary.declarationStatus],
     ["Pago IGC", payload.summary.paymentStatus],
@@ -385,7 +412,12 @@ export function renderDeclarationSupportXlsx(payload: DeclarationSupportPayload)
     ["Compras/base de costo", payload.summary.buyOperations],
     ["Eventos imponibles detectados", payload.summary.taxableEvents],
     ["Base imponible IGC detectada CLP", payload.summary.taxableBaseClp],
+    ["Tramo IGC aplicado", formatBracket(payload.summary.igcBracketFromClp, payload.summary.igcBracketToClp)],
+    ["Tasa marginal del tramo", formatPct(payload.summary.igcMarginalRatePct)],
+    ["Tasa efectiva detectada", formatPct(payload.summary.igcEffectiveRatePct)],
     ["IGC estimado CLP", payload.summary.igcEstimatedTaxClp],
+    [],
+    ["Conclusión expresa LEDGERA", payload.summary.conclusion],
   ];
   const summarySheet = sheetFromAoA(summaryRows);
   summarySheet["!cols"] = [{ wch: 34 }, { wch: 120 }];
