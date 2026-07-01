@@ -1,0 +1,34 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/shared";
+import { fail, serverError } from "@/shared/apiResponse";
+import {
+  buildDeclarationSupportPayload,
+  parseDeclarationYear,
+  renderDeclarationSupportPdf,
+} from "@/modules/tax/application/buildDeclarationSupport";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request);
+  if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
+
+  try {
+    const year = parseDeclarationYear(request.nextUrl.searchParams.get("year"));
+    const payload = await buildDeclarationSupportPayload({ user: auth.user, year });
+    const pdf = await renderDeclarationSupportPdf(payload);
+    const suffix = year ? `-${year}` : "";
+
+    return new NextResponse(new Uint8Array(pdf), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="ledgera-declaracion-respaldo${suffix}.pdf"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error) {
+    return serverError(error);
+  }
+}
