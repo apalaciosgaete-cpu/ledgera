@@ -57,7 +57,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   { items: [{ href: "/origen-fondos", label: "Origen de Fondos" }] },
   { items: [{ href: "/cryptoactivos", label: "Activos" }] },
   { items: [{ href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" }] },
-  { items: [{ href: "/reportes", label: "Reportes" }] },
+  { items: [{ href: "/declaraciones", label: "Declaraciones" }] },
   { items: [{ href: "/configuracion", label: "Configuración" }] },
   { items: [{ href: "/ayuda", label: "Ayuda" }] },
 ];
@@ -190,7 +190,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const isImportsPage = pathname === "/importaciones";
   const isAssetsPage = pathname === "/cryptoactivos";
   const isTaxObligationsPage = pathname === "/obligaciones-tributarias";
-  const isReportsPage = pathname === "/reportes" || pathname === "/impuestos/reportes" || pathname === "/tax/reports" || pathname === "/experto/reportes";
+  const isDeclarationsPage = pathname === "/declaraciones";
+  const isReportsPage = pathname === "/reportes" || pathname === "/declaraciones" || pathname === "/impuestos/reportes" || pathname === "/tax/reports" || pathname === "/experto/reportes";
 
   if (!user) return null;
 
@@ -298,7 +299,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           minWidth: 0,
           ...(isPanel
             ? {}
-            : isImportsPage || isAssetsPage || isTaxObligationsPage
+            : isImportsPage || isAssetsPage || isTaxObligationsPage || isDeclarationsPage
               ? { minHeight: "calc(100vh - 60px)", overflow: "visible", boxSizing: "border-box" as const }
               : { height: "calc(100vh - 60px)", overflow: "hidden", boxSizing: "border-box" as const }),
         }}
