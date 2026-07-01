@@ -196,7 +196,7 @@ export default function ChatWidget() {
           width: BTN_SIZE,
           height: BTN_SIZE,
           borderRadius: "50%",
-          background: open ? "#1E293B" : "#0F766E",
+          background: open ? "var(--bg-elev)" : "var(--accent)",
           border: open ? "1px solid rgba(255,255,255,0.15)" : "none",
           display: "flex",
           alignItems: "center",
@@ -209,22 +209,22 @@ export default function ChatWidget() {
         }}
       >
         {unread > 0 && !open ? (
-          <span style={{ position: "absolute", top: -4, right: -4, background: "#EF4444", color: "#FFFFFF", fontSize: 11, fontWeight: 700, width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>{unread}</span>
+          <span style={{ position: "absolute", top: -4, right: -4, background: "var(--loss)", color: "var(--text)", fontSize: 11, fontWeight: 700, width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>{unread}</span>
         ) : null}
         {open ? (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
         ) : (
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z" /></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--accent-contrast)"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z" /></svg>
         )}
       </button>
 
       {open && pos ? (
-        <div style={{ position: "fixed", left: Math.max(12, Math.min(pos.x + BTN_SIZE / 2 - 170, (typeof window !== "undefined" ? window.innerWidth : 360) - 352)), ...(panelOnTop ? { bottom: (typeof window !== "undefined" ? window.innerHeight : 0) - pos.y + 12 } : { top: pos.y + BTN_SIZE + 12 }), width: 340, maxWidth: "calc(100vw - 40px)", height: 460, maxHeight: "calc(100vh - 120px)", background: "#0F172A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, overflow: "hidden" }}>
+        <div style={{ position: "fixed", left: Math.max(12, Math.min(pos.x + BTN_SIZE / 2 - 170, (typeof window !== "undefined" ? window.innerWidth : 360) - 352)), ...(panelOnTop ? { bottom: (typeof window !== "undefined" ? window.innerHeight : 0) - pos.y + 12 } : { top: pos.y + BTN_SIZE + 12 }), width: 340, maxWidth: "calc(100vw - 40px)", height: 460, maxHeight: "calc(100vh - 120px)", background: "var(--bg-elev)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, overflow: "hidden" }}>
           <div style={{ padding: "1rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#0F766E", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", fontWeight: 800 }}>H</div>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)", fontWeight: 800 }}>H</div>
             <div>
-              <p style={{ margin: 0, fontWeight: 700, color: "#F1F5F9", fontSize: "0.9rem" }}>Soporte humano</p>
-              <p style={{ margin: 0, fontSize: "0.72rem", color: adminOnline ? "#22C55E" : "#94A3B8" }}>
+              <p style={{ margin: 0, fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>Soporte humano</p>
+              <p style={{ margin: 0, fontSize: "0.72rem", color: adminOnline ? "var(--accent)" : "var(--text-soft)" }}>
                 {adminOnline ? "● En línea" : "● Responderemos pronto"}
               </p>
             </div>
@@ -232,29 +232,29 @@ export default function ChatWidget() {
 
           {initError ? (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
-              <p style={{ color: "#F87171", fontSize: "0.85rem", textAlign: "center" }}>No se pudo conectar.</p>
-              <button type="button" onClick={initChat} style={{ color: "#4ADE80", background: "none", border: "1px solid rgba(74,222,128,0.3)", borderRadius: 8, padding: "0.4rem 0.9rem", cursor: "pointer", fontSize: "0.82rem" }}>Reintentar</button>
+              <p style={{ color: "var(--loss)", fontSize: "0.85rem", textAlign: "center" }}>No se pudo conectar.</p>
+              <button type="button" onClick={initChat} style={{ color: "var(--accent)", background: "none", border: "1px solid rgba(74,222,128,0.3)", borderRadius: 8, padding: "0.4rem 0.9rem", cursor: "pointer", fontSize: "0.82rem" }}>Reintentar</button>
             </div>
           ) : offlineSubmitted ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem", textAlign: "center", gap: "0.75rem" }}>
-              <p style={{ color: "#F1F5F9", fontWeight: 600, fontSize: "0.95rem", margin: 0 }}>Listo.</p>
-              <p style={{ color: "#94A3B8", fontSize: "0.85rem", margin: 0, lineHeight: 1.6 }}>Nos contactaremos contigo en <strong style={{ color: "#4ADE80" }}>{offlineEmail}</strong>.</p>
+              <p style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.95rem", margin: 0 }}>Listo.</p>
+              <p style={{ color: "var(--text-soft)", fontSize: "0.85rem", margin: 0, lineHeight: 1.6 }}>Nos contactaremos contigo en <strong style={{ color: "var(--accent)" }}>{offlineEmail}</strong>.</p>
             </div>
           ) : showOfflineForm ? (
             <form onSubmit={submitOfflineForm} style={{ flex: 1, display: "flex", flexDirection: "column", padding: "1.2rem", gap: "0.85rem", overflowY: "auto" }}>
               <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 10, padding: "0.75rem 1rem" }}>
-                <p style={{ color: "#FCD34D", fontSize: "0.82rem", margin: 0, lineHeight: 1.6 }}>Este canal es atendido por una persona. Deja tus datos y responderemos pronto.</p>
+                <p style={{ color: "var(--warn)", fontSize: "0.82rem", margin: 0, lineHeight: 1.6 }}>Este canal es atendido por una persona. Deja tus datos y responderemos pronto.</p>
               </div>
-              <input value={offlineName} onChange={(e) => setOfflineName(e.target.value)} placeholder="Tu nombre" required style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.6rem 0.8rem", color: "#F1F5F9", fontSize: "0.88rem", outline: "none" }} />
-              <input value={offlineEmail} onChange={(e) => setOfflineEmail(e.target.value)} placeholder="Tu correo electrónico" type="email" required style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.6rem 0.8rem", color: "#F1F5F9", fontSize: "0.88rem", outline: "none" }} />
-              <button type="submit" style={{ background: "#0F766E", color: "#FFFFFF", border: "none", borderRadius: 8, padding: "0.65rem", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem" }}>Enviar y esperar respuesta →</button>
-              <button type="button" onClick={() => setShowOfflineForm(false)} style={{ background: "none", border: "none", color: "#64748B", fontSize: "0.78rem", cursor: "pointer" }}>Volver al chat</button>
+              <input value={offlineName} onChange={(e) => setOfflineName(e.target.value)} placeholder="Tu nombre" required style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.6rem 0.8rem", color: "var(--text)", fontSize: "0.88rem", outline: "none" }} />
+              <input value={offlineEmail} onChange={(e) => setOfflineEmail(e.target.value)} placeholder="Tu correo electrónico" type="email" required style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.6rem 0.8rem", color: "var(--text)", fontSize: "0.88rem", outline: "none" }} />
+              <button type="submit" style={{ background: "var(--accent)", color: "var(--text)", border: "none", borderRadius: 8, padding: "0.65rem", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem" }}>Enviar y esperar respuesta →</button>
+              <button type="button" onClick={() => setShowOfflineForm(false)} style={{ background: "none", border: "none", color: "var(--text-soft)", fontSize: "0.78rem", cursor: "pointer" }}>Volver al chat</button>
             </form>
           ) : (
             <>
               <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 {messages.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "#64748B", fontSize: "0.82rem", marginTop: "2rem", lineHeight: 1.6 }}>
+                  <div style={{ textAlign: "center", color: "var(--text-soft)", fontSize: "0.82rem", marginTop: "2rem", lineHeight: 1.6 }}>
                     Hola. Este es el canal de soporte humano. Para conversar con LEDGERA IA, usa la sección Conversaciones.
                   </div>
                 ) : null}
@@ -262,7 +262,7 @@ export default function ChatWidget() {
                   const isUser = m.sender === "USER";
                   return (
                     <div key={m.id} style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }}>
-                      <div style={{ maxWidth: "80%", padding: "0.5rem 0.8rem", borderRadius: isUser ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: isUser ? "#0F766E" : "rgba(255,255,255,0.08)", color: "#F1F5F9", fontSize: "0.85rem", lineHeight: 1.5 }}>
+                      <div style={{ maxWidth: "80%", padding: "0.5rem 0.8rem", borderRadius: isUser ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: isUser ? "var(--accent)" : "rgba(255,255,255,0.08)", color: "var(--text)", fontSize: "0.85rem", lineHeight: 1.5 }}>
                         {m.content}
                         <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", marginTop: 2, textAlign: "right" }}>{new Date(m.createdAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</div>
                       </div>
@@ -271,16 +271,16 @@ export default function ChatWidget() {
                 })}
                 {messages.some((m) => m.sender === "USER") && !messages.some((m) => m.sender === "ADMIN") && !adminOnline ? (
                   <div style={{ textAlign: "center", marginTop: "0.5rem" }}>
-                    <span style={{ color: "#64748B", fontSize: "0.75rem" }}>✓ Mensaje recibido — te responderemos pronto</span><br />
-                    <button type="button" onClick={() => setShowOfflineForm(true)} style={{ color: "#4ADE80", background: "none", border: "none", fontSize: "0.75rem", cursor: "pointer", marginTop: 4, textDecoration: "underline" }}>Dejar mis datos de contacto</button>
+                    <span style={{ color: "var(--text-soft)", fontSize: "0.75rem" }}>✓ Mensaje recibido — te responderemos pronto</span><br />
+                    <button type="button" onClick={() => setShowOfflineForm(true)} style={{ color: "var(--accent)", background: "none", border: "none", fontSize: "0.75rem", cursor: "pointer", marginTop: 4, textDecoration: "underline" }}>Dejar mis datos de contacto</button>
                   </div>
                 ) : null}
                 <div ref={bottomRef} />
               </div>
 
               <div style={{ padding: "0.75rem", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
-                <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Escribe tu mensaje..." rows={1} style={{ flex: 1, resize: "none", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.6rem 0.8rem", color: "#F1F5F9", fontSize: "0.85rem", outline: "none", fontFamily: "inherit" }} />
-                <button type="button" onClick={send} disabled={!input.trim() || sending || !conversationId} style={{ background: input.trim() && conversationId ? "#0F766E" : "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "0.6rem 0.9rem", cursor: input.trim() && conversationId ? "pointer" : "default", color: "#FFFFFF" }}>Enviar</button>
+                <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Escribe tu mensaje..." rows={1} style={{ flex: 1, resize: "none", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.6rem 0.8rem", color: "var(--text)", fontSize: "0.85rem", outline: "none", fontFamily: "inherit" }} />
+                <button type="button" onClick={send} disabled={!input.trim() || sending || !conversationId} style={{ background: input.trim() && conversationId ? "var(--accent)" : "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "0.6rem 0.9rem", cursor: input.trim() && conversationId ? "pointer" : "default", color: "var(--text)" }}>Enviar</button>
               </div>
             </>
           )}

@@ -19,17 +19,17 @@ const featureCards = [
   {
     title: "Importaciones revisables",
     text: "Revisa archivos, exchange, banco o carga manual antes de confirmar movimientos.",
-    tone: "#4ADE80",
+    tone: "var(--accent)",
   },
   {
     title: "Conciliación financiera",
     text: "Relaciona banco, exchange y portafolio sin contaminar tu historial confirmado.",
-    tone: "#67E8F9",
+    tone: "var(--bg-elev)",
   },
   {
     title: "Base tributaria trazable",
     text: "Prepara información clara para revisión financiera y tributaria en Chile.",
-    tone: "#FBBF24",
+    tone: "var(--warn)",
   },
 ];
 
@@ -52,7 +52,7 @@ export default function SeoContentPage({ content }: SeoContentPageProps) {
     <PublicShell>
       <JsonLd data={schema} />
 
-      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(22,163,74,0.20),_transparent_34%),linear-gradient(135deg,#061522_0%,#082033_48%,#0B2A3F_100%)]">
+      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(63,166,135,0.20),_transparent_34%),linear-gradient(135deg,#0F1213_0%,#14181A_48%,#1B2124_100%)]">
         <PublicContainer>
           <div className="flex flex-col gap-10 py-16 md:py-24">
             <div className="max-w-4xl">

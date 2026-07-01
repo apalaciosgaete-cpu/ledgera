@@ -70,8 +70,8 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
           <div
             key={plan.key}
             style={{
-              background: "#FFFFFF",
-              border: isCurrent ? "2px solid #16A34A" : "1px solid #E2E8F0",
+              background: "var(--bg-elev)",
+              border: isCurrent ? "2px solid var(--accent)" : "1px solid var(--border)",
               borderRadius: 12,
               padding: 20,
               display: "flex",
@@ -79,22 +79,22 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
             }}
           >
             <div style={{ marginBottom: 12 }}>
-              <h4 style={{ color: "#0F2A3D", fontSize: 16, fontWeight: 800, margin: "0 0 4px" }}>
+              <h4 style={{ color: "var(--text)", fontSize: 16, fontWeight: 800, margin: "0 0 4px" }}>
                 {plan.name}
                 {isCurrent && (
-                  <span style={{ marginLeft: 8, fontSize: 10, color: "#16A34A", background: "rgba(22,163,74,0.12)", padding: "2px 8px", borderRadius: 999 }}>
+                  <span style={{ marginLeft: 8, fontSize: 10, color: "var(--accent)", background: "rgba(22,163,74,0.12)", padding: "2px 8px", borderRadius: 999 }}>
                     Actual
                   </span>
                 )}
               </h4>
-              <p style={{ color: "#0F2A3D", fontSize: 22, fontWeight: 850, margin: "0 0 6px" }}>{plan.price}</p>
-              <p style={{ color: "#64748B", fontSize: 12, margin: 0 }}>{plan.description}</p>
+              <p style={{ color: "var(--text)", fontSize: 22, fontWeight: 850, margin: "0 0 6px" }}>{plan.price}</p>
+              <p style={{ color: "var(--text-soft)", fontSize: 12, margin: 0 }}>{plan.description}</p>
             </div>
 
             <ul style={{ listStyle: "none", margin: "0 0 16px", padding: 0, flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
               {plan.features.map((feature) => (
-                <li key={feature} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#334155" }}>
-                  <span style={{ color: "#16A34A", fontWeight: 700 }}>✓</span>
+                <li key={feature} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--text)" }}>
+                  <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓</span>
                   {feature}
                 </li>
               ))}
@@ -105,8 +105,8 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
                 plan={plan.checkoutPlan}
                 action={action}
                 style={{
-                  background: "#0F766E",
-                  color: "#FFFFFF",
+                  background: "var(--accent)",
+                  color: "var(--text)",
                   borderRadius: 8,
                   padding: "12px 16px",
                   fontSize: 14,
@@ -119,8 +119,8 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
               <button
                 disabled
                 style={{
-                  background: isCurrent ? "#16A34A" : "#E2E8F0",
-                  color: isCurrent ? "#FFFFFF" : "#64748B",
+                  background: isCurrent ? "var(--accent)" : "var(--bg-elev)",
+                  color: isCurrent ? "var(--text)" : "var(--text-soft)",
                   border: "none",
                   borderRadius: 8,
                   padding: "12px 16px",

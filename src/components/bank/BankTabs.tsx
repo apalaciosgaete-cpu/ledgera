@@ -20,7 +20,7 @@ export function BankTabs() {
       display:      "flex",
       gap:          "4px",
       marginBottom: "28px",
-      borderBottom: "1px solid #E2E8F0",
+      borderBottom: "1px solid var(--border)",
       paddingBottom: "0",
     }}>
       {TABS.map(tab => {
@@ -36,8 +36,8 @@ export function BankTabs() {
               padding:        "0 16px",
               fontSize:       "13px",
               fontWeight:     active ? 600 : 400,
-              color:          active ? "#0F2A3D" : "#64748B",
-              borderBottom:   active ? "2px solid #0F2A3D" : "2px solid transparent",
+              color: active ? "var(--text)" : "var(--text-soft)",
+              borderBottom: active ? "2px solid var(--border-strong)" : "2px solid transparent",
               textDecoration: "none",
               marginBottom:   "-1px",
               transition:     "all 0.15s ease",

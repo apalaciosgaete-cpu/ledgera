@@ -15,17 +15,17 @@ export const publicNavLinks = [
 ];
 
 export const publicPalette = {
-  page: "#071520",
-  section: "#071B28",
-  sectionSoft: "#0F2A3D",
-  footer: "#040C13",
+  page: "var(--bg-elev)",
+  section: "var(--bg-sunken)",
+  sectionSoft: "var(--bg-elev)",
+  footer: "var(--bg-elev)",
   action: colors.accent,
   actionHover: colors.accentHover,
   warning: colors.warning,
-  text: "#F8FAFC",
-  textSoft: "#CBD5E1",
-  textMuted: "#94A3B8",
-  textFaint: "#64748B",
+  text: "var(--text)",
+  textSoft: "var(--text-faint)",
+  textMuted: "var(--text-soft)",
+  textFaint: "var(--text-soft)",
   border: "rgba(255,255,255,0.10)",
   card: "rgba(255,255,255,0.045)",
   cardStrong: "rgba(255,255,255,0.065)",
@@ -33,8 +33,7 @@ export const publicPalette = {
 
 const pageStyle: CSSProperties = {
   minHeight: "100vh",
-  background:
-    "linear-gradient(180deg,#0F2A3D 0%,#071B28 28%,#061520 58%,#0F2A3D 100%)",
+  background: "linear-gradient(180deg,var(--bg-elev) 0%,var(--bg-sunken) 28%,var(--bg-elev) 58%,var(--bg-elev) 100%)",
   color: publicPalette.text,
   fontFamily: fonts.body,
   overflowX: "hidden",
@@ -71,7 +70,7 @@ function PublicNavLink({ href, children }: { href: string; children: ReactNode }
 
 export function PublicHeader({ activePath: _activePath }: { activePath?: string }) {
   return (
-    <header className="sticky top-0 z-[100] border-b border-white/10 bg-[#0F2A3D]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-[100] border-b border-white/10 bg-[#1B2124]/95 backdrop-blur-md">
       <div className="flex h-[76px] items-center justify-between px-5 lg:px-8">
         <Link href="/" aria-label="Inicio LEDGERA" className="shrink-0">
           <Logo variant="light" size="lg" showSubtitle />
@@ -99,7 +98,7 @@ export function PublicHeader({ activePath: _activePath }: { activePath?: string 
           <summary className="list-none rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-slate-100 marker:hidden">
             Menú
           </summary>
-          <div className="absolute right-0 top-[56px] z-[110] grid min-w-[230px] gap-3 rounded-2xl border border-white/10 bg-[#0F2A3D]/98 p-4 shadow-2xl backdrop-blur-md">
+          <div className="absolute right-0 top-[56px] z-[110] grid min-w-[230px] gap-3 rounded-2xl border border-white/10 bg-[#1B2124]/98 p-4 shadow-2xl backdrop-blur-md">
             {publicNavLinks.map((item) => (
               <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-300">
                 {item.label}
@@ -197,10 +196,10 @@ export function PublicFooter() {
             flexWrap: "wrap",
           }}
         >
-          <p style={{ color: "#334155", fontSize: "12px", margin: 0 }}>
+          <p style={{ color: "var(--text)", fontSize: "12px", margin: 0 }}>
             © {new Date().getFullYear()} LEDGERA. Todos los derechos reservados.
           </p>
-          <p style={{ color: "#334155", fontSize: "12px", margin: 0 }}>
+          <p style={{ color: "var(--text)", fontSize: "12px", margin: 0 }}>
             Software de organización financiera-tributaria. No reemplaza asesoría profesional.
           </p>
         </div>
@@ -284,8 +283,7 @@ export function PublicHero({
     <section
       style={{
         borderBottom: `1px solid ${publicPalette.border}`,
-        background:
-          "radial-gradient(circle at top left, rgba(22,163,74,0.20), transparent 34%), linear-gradient(135deg, #061522 0%, #082033 48%, #0B2A3F 100%)",
+        background: "radial-gradient(circle at top left, rgba(22,163,74,0.20), transparent 34%), linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 48%, var(--bg-elev) 100%)",
         padding: "86px 0 70px",
       }}
     >
@@ -299,7 +297,7 @@ export function PublicHero({
         >
           <p
             style={{
-              color: "#4ADE80",
+              color: "var(--accent)",
               display: "inline-flex",
               alignItems: "center",
               background: "rgba(22,163,74,0.12)",
@@ -368,7 +366,7 @@ export function PublicButton({
         background: primary ? publicPalette.action : "rgba(255,255,255,0.055)",
         border: primary ? "1px solid rgba(22,163,74,0.55)" : `1px solid ${publicPalette.border}`,
         borderRadius: "12px",
-        color: "#ffffff",
+        color: "var(--text)",
         display: "inline-flex",
         fontSize: "15px",
         fontWeight: 850,
@@ -555,7 +553,7 @@ export function LegalNotice({ children }: { children: ReactNode }) {
         border: "1px solid rgba(245,158,11,0.24)",
         borderLeft: `4px solid ${publicPalette.warning}`,
         borderRadius: "16px",
-        color: "#FDE68A",
+        color: "rgba(232,184,75,0.14)",
         fontSize: "15px",
         lineHeight: 1.75,
         padding: "20px 22px",

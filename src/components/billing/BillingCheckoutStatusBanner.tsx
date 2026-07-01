@@ -69,20 +69,20 @@ export function BillingCheckoutStatusBanner() {
     info: {
       border: "rgba(14,165,233,0.24)",
       background: "rgba(14,165,233,0.08)",
-      title: "#075985",
-      text: "#0F2A3D",
+      title: "var(--bg-elev)",
+      text: "var(--text)",
     },
     success: {
       border: "rgba(22,163,74,0.24)",
       background: "rgba(22,163,74,0.08)",
-      title: "#166534",
-      text: "#0F2A3D",
+      title: "var(--accent)",
+      text: "var(--text)",
     },
     error: {
       border: "rgba(239,68,68,0.24)",
       background: "rgba(239,68,68,0.08)",
-      title: "#991B1B",
-      text: "#0F2A3D",
+      title: "var(--loss)",
+      text: "var(--text)",
     },
   }[copy.tone];
 
@@ -122,7 +122,7 @@ export function BillingCheckoutStatusBanner() {
           style={{
             margin: "8px 0 0",
             fontSize: "11px",
-            color: "#475569",
+            color: "var(--text)",
             fontFamily: "monospace",
           }}
         >

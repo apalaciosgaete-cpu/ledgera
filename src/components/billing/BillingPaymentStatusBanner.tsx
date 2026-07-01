@@ -70,8 +70,8 @@ function resolveToneStyles(tone: BannerTone) {
     return {
       border: "1px solid rgba(22,163,74,0.35)",
       background: "rgba(22,163,74,0.10)",
-      titleColor: "#4ADE80",
-      textColor: "#BBF7D0",
+      titleColor: "var(--accent)",
+      textColor: "var(--accent-soft)",
     };
   }
 
@@ -79,16 +79,16 @@ function resolveToneStyles(tone: BannerTone) {
     return {
       border: "1px solid rgba(234,179,8,0.35)",
       background: "rgba(234,179,8,0.10)",
-      titleColor: "#FACC15",
-      textColor: "#FEF3C7",
+      titleColor: "var(--text-faint)",
+      textColor: "rgba(232,184,75,0.14)",
     };
   }
 
   return {
     border: "1px solid rgba(239,68,68,0.35)",
     background: "rgba(239,68,68,0.10)",
-    titleColor: "#F87171",
-    textColor: "#FECACA",
+    titleColor: "var(--loss)",
+    textColor: "rgba(196,99,74,0.14)",
   };
 }
 
@@ -198,7 +198,7 @@ export function BillingPaymentStatusBanner() {
           style={{
             margin: "8px 0 0",
             fontSize: "12px",
-            color: "#94A3B8",
+            color: "var(--text-soft)",
           }}
         >
           Último pago: {billingStatus.latestPayment.provider} ·{" "}

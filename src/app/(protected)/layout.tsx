@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
-import { colors, fonts } from "@/styles/tokens";
+import { fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
 const roleTokens: Record<string, {
@@ -93,8 +93,8 @@ function Sidebar({
           left: 0,
           bottom: 0,
           width: 280,
-          background: "#071B28",
-          borderRight: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--bg-sunken)",
+          borderRight: "1px solid var(--border)",
           zIndex: 101,
           display: "flex",
           flexDirection: "column",
@@ -108,12 +108,12 @@ function Sidebar({
             justifyContent: "space-between",
             alignItems: "center",
             padding: "20px 24px",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            borderBottom: "1px solid var(--border)",
           }}
         >
           <span
             style={{
-              color: "#475569",
+              color: "var(--text-faint)",
               fontSize: 13,
               fontWeight: 850,
               letterSpacing: "0.1em",
@@ -126,10 +126,10 @@ function Sidebar({
           <button
             onClick={onClose}
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
-              color: "#94A3B8",
+              color: "var(--text-faint)",
               cursor: "pointer",
               fontSize: 14,
               padding: "4px 9px",
@@ -149,7 +149,7 @@ function Sidebar({
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  style={{ display: "block", padding: "10px 24px", color: "#E2E8F0", fontSize: 15, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body, transition: "background 0.1s" }}
+                  style={{ display: "block", padding: "10px 24px", color: "var(--text)", fontSize: 15, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body, transition: "background 0.1s" }}
                 >
                   {item.label}
                 </Link>
@@ -164,7 +164,7 @@ function Sidebar({
               width: "100%",
               textAlign: "left",
               padding: "12px 24px",
-              color: "#94A3B8",
+              color: "var(--text-faint)",
               fontSize: 14,
               fontWeight: 500,
               background: "none",
@@ -208,7 +208,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     <div
       style={{
         minHeight: "100vh",
-        background: isPanel ? "#071B28" : colors.bgApp,
+        background: "var(--bg)",
         fontFamily: fonts.body,
       }}
     >
@@ -223,8 +223,8 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
 
       <header
         style={{
-          background: "#071B28",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "var(--bg-sunken)",
+          borderBottom: "1px solid var(--border)",
           position: "sticky",
           top: 0,
           zIndex: 50,
@@ -245,10 +245,10 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
               onClick={() => setMenuOpen(true)}
               title="Menú"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "var(--bg-elev)",
+                border: "1px solid var(--border-strong)",
                 borderRadius: 8,
-                color: "#94A3B8",
+                color: "var(--text-faint)",
                 cursor: "pointer",
                 fontSize: 18,
                 padding: "9px 13px",

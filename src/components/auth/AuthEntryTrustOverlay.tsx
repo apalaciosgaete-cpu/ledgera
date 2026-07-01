@@ -25,14 +25,14 @@ function ensureStyles() {
       display: none;
     }
     .ledgera-auth-trust-title {
-      color: #0f2a3d;
+      color: var(--text);
       font-size: 12px;
       font-weight: 800;
       margin: 0;
     }
     .ledgera-auth-trust-item {
       align-items: flex-start;
-      color: #0f2a3d;
+      color: var(--text);
       display: flex;
       font-size: 12px;
       font-weight: 700;
@@ -41,15 +41,15 @@ function ensureStyles() {
       margin: 0;
     }
     .ledgera-auth-trust-check {
-      color: #16a34a;
+      color: var(--accent);
       font-weight: 900;
     }
     .ledgera-google-entry-button {
       align-items: center;
-      background: #ffffff;
+      background: var(--bg-elev);
       border: 1px solid rgba(15, 42, 61, 0.18);
       border-radius: 8px;
-      color: #0f2a3d;
+      color: var(--text);
       display: flex;
       font-family: inherit;
       font-size: 14px;
@@ -62,13 +62,13 @@ function ensureStyles() {
       box-sizing: border-box;
     }
     .ledgera-google-entry-button:hover {
-      background: #f8fafc;
+      background: var(--bg-sunken);
     }
     .ledgera-auth-separator {
       align-items: center;
       display: flex;
       gap: 10px;
-      color: #64748b;
+      color: var(--text-soft);
       font-size: 12px;
       font-weight: 800;
     }
@@ -91,7 +91,7 @@ function ensureStyles() {
       display: none;
     }
     .ledgera-register-trust-title {
-      color: #4ade80;
+      color: var(--accent);
       font-size: 12px;
       font-weight: 900;
       letter-spacing: 0.06em;
@@ -100,7 +100,7 @@ function ensureStyles() {
     }
     .ledgera-register-trust-item {
       align-items: flex-start;
-      color: #cbd5e1;
+      color: var(--text-faint);
       display: flex;
       font-size: 12px;
       gap: 8px;

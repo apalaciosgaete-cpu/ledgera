@@ -68,7 +68,7 @@ export function UpgradeModal({ feature, featureLabel, onClose, source = "upgrade
     >
       <div
         style={{
-          background: "#FFFFFF",
+          background: "var(--bg-elev)",
           borderRadius: 16,
           maxWidth: 420,
           width: "100%",
@@ -78,22 +78,22 @@ export function UpgradeModal({ feature, featureLabel, onClose, source = "upgrade
       >
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>🔒</div>
-          <h2 style={{ color: "#0F2A3D", fontSize: 20, fontWeight: 800, margin: "0 0 8px" }}>
+          <h2 style={{ color: "var(--text)", fontSize: 20, fontWeight: 800, margin: "0 0 8px" }}>
             Desbloquea esta funcionalidad
           </h2>
-          <p style={{ color: "#64748B", fontSize: 14, margin: 0 }}>
+          <p style={{ color: "var(--text-soft)", fontSize: 14, margin: 0 }}>
             <strong>{featureLabel}</strong> está disponible en el plan {planLabel}.
           </p>
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <p style={{ color: "#334155", fontSize: 13, fontWeight: 800, margin: "0 0 10px" }}>
+          <p style={{ color: "var(--text)", fontSize: 13, fontWeight: 800, margin: "0 0 10px" }}>
             Plan requerido: {planLabel}
           </p>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {benefits.map((benefit) => (
-              <li key={benefit} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#0F2A3D" }}>
-                <span style={{ color: "#16A34A" }}>✓</span>
+              <li key={benefit} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--text)" }}>
+                <span style={{ color: "var(--accent)" }}>✓</span>
                 {benefit}
               </li>
             ))}
@@ -114,9 +114,9 @@ export function UpgradeModal({ feature, featureLabel, onClose, source = "upgrade
             });
           }}
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             borderRadius: 10,
-            color: "#FFFFFF",
+            color: "var(--text)",
             display: "block",
             fontSize: 15,
             fontWeight: 800,
@@ -134,7 +134,7 @@ export function UpgradeModal({ feature, featureLabel, onClose, source = "upgrade
           style={{
             background: "transparent",
             border: "none",
-            color: "#64748B",
+            color: "var(--text-soft)",
             cursor: "pointer",
             display: "block",
             fontSize: 13,

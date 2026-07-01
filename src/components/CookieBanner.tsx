@@ -74,7 +74,7 @@ export default function CookieBanner() {
             left: 0,
             right: 0,
             zIndex: 1999,
-            background: "#0f1623",
+            background: "var(--bg-elev)",
             border: "1px solid rgba(255,255,255,0.1)",
             borderBottom: "none",
             borderRadius: "16px 16px 0 0",
@@ -97,7 +97,7 @@ export default function CookieBanner() {
                 fontFamily: "'Manrope', sans-serif",
                 fontSize: "1.05rem",
                 fontWeight: 700,
-                color: "#f1f5f9",
+                color: "var(--text)",
                 margin: 0,
               }}
             >
@@ -108,7 +108,7 @@ export default function CookieBanner() {
               style={{
                 background: "none",
                 border: "none",
-                color: "#64748b",
+                color: "var(--text-soft)",
                 cursor: "pointer",
                 fontSize: "1.2rem",
                 lineHeight: 1,
@@ -155,7 +155,7 @@ export default function CookieBanner() {
                 minWidth: "160px",
                 padding: "0.75rem 1.2rem",
                 borderRadius: "8px",
-                background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                background: "linear-gradient(135deg, var(--accent), var(--bg-elev))",
                 border: "none",
                 color: "#fff",
                 fontWeight: 600,
@@ -174,7 +174,7 @@ export default function CookieBanner() {
                 borderRadius: "8px",
                 background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.1)",
-                color: "#94a3b8",
+                color: "var(--text-soft)",
                 fontWeight: 500,
                 fontSize: "0.88rem",
                 cursor: "pointer",
@@ -196,7 +196,7 @@ export default function CookieBanner() {
             transform: "translateX(-50%)",
             width: "min(92vw, 680px)",
             zIndex: 1997,
-            background: "#0f1623",
+            background: "var(--bg-elev)",
             border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "14px",
             padding: "1.2rem 1.4rem",
@@ -215,7 +215,7 @@ export default function CookieBanner() {
             <p
               style={{
                 margin: "0 0 0.25rem",
-                color: "#e2e8f0",
+                color: "var(--text)",
                 fontSize: "0.88rem",
                 fontWeight: 600,
                 lineHeight: 1.4,
@@ -223,9 +223,9 @@ export default function CookieBanner() {
             >
               Usamos cookies para mejorar tu experiencia
             </p>
-            <p style={{ margin: 0, color: "#64748b", fontSize: "0.8rem", lineHeight: 1.5 }}>
+            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.8rem", lineHeight: 1.5 }}>
               Las estrictamente necesarias siempre están activas.{" "}
-              <Link href="/cookies" style={{ color: "#818cf8", textDecoration: "none" }}>
+              <Link href="/cookies" style={{ color: "var(--accent)", textDecoration: "none" }}>
                 Política de Cookies
               </Link>
             </p>
@@ -240,14 +240,14 @@ export default function CookieBanner() {
                 borderRadius: "8px",
                 background: "transparent",
                 border: "1px solid rgba(255,255,255,0.12)",
-                color: "#64748b",
+                color: "var(--text-soft)",
                 fontSize: "0.82rem",
                 fontWeight: 500,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#94a3b8")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-faint)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-soft)")}
             >
               Solo necesarias
             </button>
@@ -258,7 +258,7 @@ export default function CookieBanner() {
                 borderRadius: "8px",
                 background: "transparent",
                 border: "1px solid rgba(99,102,241,0.4)",
-                color: "#818cf8",
+                color: "var(--accent)",
                 fontSize: "0.82rem",
                 fontWeight: 500,
                 cursor: "pointer",
@@ -274,7 +274,7 @@ export default function CookieBanner() {
               style={{
                 padding: "0.55rem 1.1rem",
                 borderRadius: "8px",
-                background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                background: "linear-gradient(135deg, var(--accent), var(--bg-elev))",
                 border: "none",
                 color: "#fff",
                 fontSize: "0.82rem",
@@ -318,14 +318,14 @@ function ToggleRow({
       }}
     >
       <div style={{ flex: 1 }}>
-        <p style={{ margin: "0 0 0.2rem", color: "#e2e8f0", fontWeight: 600, fontSize: "0.88rem" }}>
+        <p style={{ margin: "0 0 0.2rem", color: "var(--text)", fontWeight: 600, fontSize: "0.88rem" }}>
           {label}
           {locked && (
             <span
               style={{
                 marginLeft: "0.5rem",
                 fontSize: "0.7rem",
-                color: "#475569",
+                color: "var(--text)",
                 background: "rgba(255,255,255,0.05)",
                 padding: "0.1rem 0.45rem",
                 borderRadius: "999px",
@@ -336,7 +336,7 @@ function ToggleRow({
             </span>
           )}
         </p>
-        <p style={{ margin: 0, color: "#64748b", fontSize: "0.8rem", lineHeight: 1.55 }}>
+        <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.8rem", lineHeight: 1.55 }}>
           {description}
         </p>
       </div>
@@ -356,7 +356,7 @@ function ToggleRow({
           background: checked
             ? locked
               ? "rgba(99,102,241,0.5)"
-              : "#4f46e5"
+              : "#3FA687"
             : "rgba(255,255,255,0.1)",
           cursor: locked ? "not-allowed" : "pointer",
           position: "relative",
