@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/Logo";
-import { colors, fonts } from "@/styles/tokens";
+import { fonts } from "@/styles/tokens";
 import { saveSessionToken } from "@/modules/identity/client/authStorage";
 import { useAuth } from "@/modules/identity/client/authContext";
 import {
@@ -73,10 +73,10 @@ const roles: { value: Role; label: string; description: string }[] = [
 const fieldStyle: React.CSSProperties = {
   width: "100%",
   padding: "11px 14px",
-  background: colors.primary,
-  border: `0.5px solid ${colors.borderDark}`,
+  background: "var(--bg-sunken)",
+  border: "0.5px solid var(--border-strong)",
   borderRadius: "8px",
-  color: "#F6F8FA",
+  color: "var(--text)",
   fontSize: "14px",
   fontFamily: fonts.body,
 };
@@ -85,7 +85,7 @@ const labelStyle: React.CSSProperties = {
   display: "block",
   fontSize: "12px",
   fontWeight: 600,
-  color: colors.textMuted,
+  color: "var(--text-faint)",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
   marginBottom: "6px",
@@ -233,7 +233,7 @@ function RegisterForm() {
     <main
       style={{
         minHeight: "100vh",
-        background: colors.primary,
+        background: "var(--bg)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -243,8 +243,8 @@ function RegisterForm() {
     >
       <style>{`
         * { box-sizing: border-box; }
-        input::placeholder { color: #334155; }
-        input:focus, select:focus { outline: none; border-color: ${colors.accent} !important; }
+        input::placeholder { color: var(--text-faint); }
+        input:focus, select:focus { outline: none; border-color: var(--accent) !important; }
       `}</style>
 
       <div style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", gap: "28px" }}>
@@ -252,19 +252,19 @@ function RegisterForm() {
           <Logo variant="light" size="lg" showSubtitle />
         </div>
 
-        <div style={{ background: colors.surfaceDark, borderRadius: "16px", padding: "32px", border: `0.5px solid ${colors.borderDark}` }}>
-          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "#F6F8FA", margin: "0 0 8px" }}>
+        <div style={{ background: "var(--bg-elev)", borderRadius: "16px", padding: "32px", border: "0.5px solid var(--border)" }}>
+          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
             {step === "account" ? "Crear cuenta" : "Seguridad inicial obligatoria"}
           </h1>
 
-          <p style={{ color: "#94A3B8", fontSize: "13px", lineHeight: 1.5, margin: "0 0 24px" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: "13px", lineHeight: 1.5, margin: "0 0 24px" }}>
             {step === "account"
               ? acquisitionCopy ?? "LEDGERA protege información financiera y tributaria. Todas las cuentas requieren seguridad reforzada."
               : "Escanea el QR con tu app autenticadora e ingresa el código de 6 dígitos."}
           </p>
 
           {errorMessage && (
-            <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.24)", borderRadius: 10, padding: 12, color: "#FCA5A5", fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: "rgba(196,99,74,0.12)", border: "1px solid rgba(196,99,74,0.24)", borderRadius: 10, padding: 12, color: "var(--loss)", fontSize: 13, marginBottom: 16 }}>
               {errorMessage}
             </div>
           )}
@@ -306,41 +306,41 @@ function RegisterForm() {
                     placeholder="Contraseña segura"
                     style={fieldStyle}
                   />
-                  <button type="button" onClick={() => setShowPassword((value) => !value)} style={{ border: `1px solid ${colors.borderDark}`, background: colors.primary, color: colors.textMuted, borderRadius: 8, padding: "0 10px" }}>
+                  <button type="button" onClick={() => setShowPassword((value) => !value)} style={{ border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text-faint)", borderRadius: 8, padding: "0 10px" }}>
                     {showPassword ? "Ocultar" : "Ver"}
                   </button>
                 </div>
-                <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "#64748B", fontSize: 11 }}>
+                <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "var(--text-faint)", fontSize: 11 }}>
                   {PASSWORD_REQUIREMENTS.map((requirement) => (
                     <li key={requirement.id}>{requirement.label}</li>
                   ))}
                 </ul>
               </div>
 
-              <label style={{ display: "flex", gap: 8, alignItems: "flex-start", color: "#94A3B8", fontSize: 12, lineHeight: 1.5 }}>
+              <label style={{ display: "flex", gap: 8, alignItems: "flex-start", color: "var(--text-soft)", fontSize: 12, lineHeight: 1.5 }}>
                 <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
                 Acepto los Términos y Condiciones de LEDGERA.
               </label>
 
-              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: 10, padding: "13px 16px", background: colors.accent, color: "#062016", fontSize: 14, fontWeight: 850, cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.72 : 1 }}>
+              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: 10, padding: "13px 16px", background: "var(--accent)", color: "var(--accent-contrast)", fontSize: 14, fontWeight: 850, cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.72 : 1 }}>
                 {submitting ? "Creando cuenta..." : checkoutFirst ? "Activar cuenta pagada" : "Crear cuenta"}
               </button>
 
-              <p style={{ margin: 0, color: "#94A3B8", fontSize: 12, textAlign: "center" }}>
-                ¿Ya tienes cuenta? <Link href="/login" style={{ color: colors.accent }}>Inicia sesión</Link>
+              <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12, textAlign: "center" }}>
+                ¿Ya tienes cuenta? <Link href="/login" style={{ color: "var(--accent)" }}>Inicia sesión</Link>
               </p>
             </form>
           ) : (
             <form onSubmit={handleVerifySecurity} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {qrCode && <img src={qrCode} alt="QR 2FA" style={{ width: 180, height: 180, alignSelf: "center", background: "#FFFFFF", padding: 8, borderRadius: 12 }} />}
-              <p style={{ margin: 0, color: "#94A3B8", fontSize: 12, lineHeight: 1.5 }}>
-                Clave manual: <span style={{ color: "#F8FAFC", fontFamily: "monospace" }}>{manualSecret}</span>
+              <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12, lineHeight: 1.5 }}>
+                Clave manual: <span style={{ color: "var(--text)", fontFamily: fonts.mono }}>{manualSecret}</span>
               </p>
               <div>
                 <label htmlFor="twoFactorCode" style={labelStyle}>Código 2FA</label>
                 <input id="twoFactorCode" inputMode="numeric" value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value.replace(/\D/g, "").slice(0, 6))} required placeholder="123456" style={fieldStyle} />
               </div>
-              <button type="submit" disabled={verifyingSecurity} style={{ width: "100%", border: "none", borderRadius: 10, padding: "13px 16px", background: colors.accent, color: "#062016", fontSize: 14, fontWeight: 850, cursor: verifyingSecurity ? "not-allowed" : "pointer", opacity: verifyingSecurity ? 0.72 : 1 }}>
+              <button type="submit" disabled={verifyingSecurity} style={{ width: "100%", border: "none", borderRadius: 10, padding: "13px 16px", background: "var(--accent)", color: "var(--accent-contrast)", fontSize: 14, fontWeight: 850, cursor: verifyingSecurity ? "not-allowed" : "pointer", opacity: verifyingSecurity ? 0.72 : 1 }}>
                 {verifyingSecurity ? "Verificando..." : "Activar seguridad"}
               </button>
             </form>
