@@ -95,21 +95,21 @@ export function BillingInvoicesPanel() {
   }, []);
 
   return (
-    <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }}>
+    <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1rem" }}>
-        <h3 style={{ fontFamily: fonts.display, fontSize: 15, fontWeight: 800, color: "#0F2A3D", margin: "0 0 4px" }}>
+        <h3 style={{ fontFamily: fonts.display, fontSize: 15, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
           Facturas
         </h3>
-        <p style={{ margin: 0, color: "#475569", fontSize: 12, lineHeight: 1.5 }}>
+        <p style={{ margin: 0, color: "var(--text)", fontSize: 12, lineHeight: 1.5 }}>
           Historial de facturas comerciales. PDF y XML quedarán disponibles cuando el proveedor emita documentos reales.
         </p>
       </div>
 
-      {loading && <p style={{ margin: 0, color: "#475569", fontSize: 13 }}>Cargando facturas...</p>}
-      {error && <p style={{ margin: 0, color: "#991B1B", fontSize: 13 }}>{error}</p>}
+      {loading && <p style={{ margin: 0, color: "var(--text)", fontSize: 13 }}>Cargando facturas...</p>}
+      {error && <p style={{ margin: 0, color: "var(--loss)", fontSize: 13 }}>{error}</p>}
 
       {!loading && !error && invoices.length === 0 && (
-        <div style={{ background: "#F8FAFC", border: "1px dashed #CBD5E1", borderRadius: 10, padding: "1rem", color: "#64748B", fontSize: 13 }}>
+        <div style={{ background: "var(--bg-sunken)", border: "1px dashed var(--border)", borderRadius: 10, padding: "1rem", color: "var(--text-soft)", fontSize: 13 }}>
           Aún no hay facturas emitidas.
         </div>
       )}
@@ -120,7 +120,7 @@ export function BillingInvoicesPanel() {
             <thead>
               <tr>
                 {["Factura", "Fecha", "Proveedor", "Total", "Estado", "Documentos"].map((header) => (
-                  <th key={header} style={{ textAlign: "left", padding: "8px 10px", color: "#64748B", borderBottom: "1px solid #E2E8F0", fontWeight: 700 }}>
+                  <th key={header} style={{ textAlign: "left", padding: "8px 10px", color: "var(--text-soft)", borderBottom: "1px solid var(--border)", fontWeight: 700 }}>
                     {header}
                   </th>
                 ))}
@@ -129,12 +129,12 @@ export function BillingInvoicesPanel() {
             <tbody>
               {invoices.map((invoice) => (
                 <tr key={invoice.id}>
-                  <td style={{ padding: "10px", color: "#0F2A3D", borderBottom: "1px solid #F1F5F9", fontWeight: 800 }}>{invoice.invoiceNumber}</td>
-                  <td style={{ padding: "10px", color: "#475569", borderBottom: "1px solid #F1F5F9", whiteSpace: "nowrap" }}>{formatDate(invoice.issuedAt ?? invoice.createdAt)}</td>
-                  <td style={{ padding: "10px", color: "#475569", borderBottom: "1px solid #F1F5F9", textTransform: "capitalize" }}>{invoice.provider ?? "—"}</td>
-                  <td style={{ padding: "10px", color: "#0F2A3D", borderBottom: "1px solid #F1F5F9", fontWeight: 800 }}>{formatMoney(invoice.totalAmount, invoice.currency)}</td>
-                  <td style={{ padding: "10px", color: "#475569", borderBottom: "1px solid #F1F5F9" }}>{statusLabel(invoice.status)}</td>
-                  <td style={{ padding: "10px", color: "#64748B", borderBottom: "1px solid #F1F5F9" }}>
+                  <td style={{ padding: "10px", color: "var(--text)", borderBottom: "1px solid var(--border)", fontWeight: 800 }}>{invoice.invoiceNumber}</td>
+                  <td style={{ padding: "10px", color: "var(--text)", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>{formatDate(invoice.issuedAt ?? invoice.createdAt)}</td>
+                  <td style={{ padding: "10px", color: "var(--text)", borderBottom: "1px solid var(--border)", textTransform: "capitalize" }}>{invoice.provider ?? "—"}</td>
+                  <td style={{ padding: "10px", color: "var(--text)", borderBottom: "1px solid var(--border)", fontWeight: 800 }}>{formatMoney(invoice.totalAmount, invoice.currency)}</td>
+                  <td style={{ padding: "10px", color: "var(--text)", borderBottom: "1px solid var(--border)" }}>{statusLabel(invoice.status)}</td>
+                  <td style={{ padding: "10px", color: "var(--text-soft)", borderBottom: "1px solid var(--border)" }}>
                     {invoice.pdfUrl ? "PDF listo" : "PDF pendiente"} · {invoice.xmlUrl ? "XML listo" : "XML pendiente"}
                   </td>
                 </tr>

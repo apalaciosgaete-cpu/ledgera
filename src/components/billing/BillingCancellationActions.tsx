@@ -52,8 +52,8 @@ export function BillingCancellationActions() {
   return (
     <div
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 12,
         padding: "1.25rem",
         marginBottom: "1rem",
@@ -65,13 +65,13 @@ export function BillingCancellationActions() {
             fontFamily: fonts.display,
             fontSize: 15,
             fontWeight: 800,
-            color: "#0F2A3D",
+            color: "var(--text)",
             margin: "0 0 4px",
           }}
         >
           Gestión de suscripción
         </h3>
-        <p style={{ margin: 0, fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: 12, color: "var(--text)", lineHeight: 1.5 }}>
           Cancela la renovación manteniendo acceso hasta el vencimiento, o vuelve inmediatamente al plan Free.
         </p>
       </div>
@@ -84,7 +84,7 @@ export function BillingCancellationActions() {
           style={{
             border: "1px solid rgba(245,158,11,0.35)",
             background: "rgba(245,158,11,0.10)",
-            color: "#92400E",
+            color: "var(--warn)",
             borderRadius: 8,
             padding: "10px 14px",
             fontSize: 13,
@@ -102,7 +102,7 @@ export function BillingCancellationActions() {
           style={{
             border: "1px solid rgba(239,68,68,0.35)",
             background: "rgba(239,68,68,0.08)",
-            color: "#991B1B",
+            color: "var(--loss)",
             borderRadius: 8,
             padding: "10px 14px",
             fontSize: 13,
@@ -115,13 +115,13 @@ export function BillingCancellationActions() {
       </div>
 
       {message && (
-        <p style={{ margin: "12px 0 0", color: "#166534", fontSize: 13, lineHeight: 1.5 }}>
+        <p style={{ margin: "12px 0 0", color: "var(--accent)", fontSize: 13, lineHeight: 1.5 }}>
           {message}
         </p>
       )}
 
       {error && (
-        <p style={{ margin: "12px 0 0", color: "#991B1B", fontSize: 13, lineHeight: 1.5 }}>
+        <p style={{ margin: "12px 0 0", color: "var(--loss)", fontSize: 13, lineHeight: 1.5 }}>
           {error}
         </p>
       )}

@@ -62,10 +62,10 @@ export default function TwoFASetupPanel() {
 
   if (loading) {
     return (
-      <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "2rem", textAlign: "center" }}>
-        <div style={{ width: "28px", height: "28px", border: "2px solid #E2E8F0", borderTop: "2px solid #16A34A", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+      <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: "12px", padding: "2rem", textAlign: "center" }}>
+        <div style={{ width: "28px", height: "28px", border: "2px solid var(--border)", borderTop: "2px solid var(--accent)", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <p style={{ fontSize: "13px", color: "#475569", margin: 0 }}>Preparando configuración de seguridad...</p>
+        <p style={{ fontSize: "13px", color: "var(--text)", margin: 0 }}>Preparando configuración de seguridad...</p>
       </div>
     );
   }
@@ -74,43 +74,43 @@ export default function TwoFASetupPanel() {
     return (
       <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "12px", padding: "1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "18px", margin: "0 0 8px" }}>✅</p>
-        <p style={{ fontSize: "14px", fontWeight: 700, color: "#16A34A", margin: "0 0 4px" }}>2FA activado correctamente</p>
-        <p style={{ fontSize: "13px", color: "#475569", margin: 0 }}>Tu cuenta está protegida. Ya puedes navegar por LEDGERA.</p>
+        <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--accent)", margin: "0 0 4px" }}>2FA activado correctamente</p>
+        <p style={{ fontSize: "13px", color: "var(--text)", margin: 0 }}>Tu cuenta está protegida. Ya puedes navegar por LEDGERA.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1.5rem" }}>
+    <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
-        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "#0F2A3D", margin: 0 }}>Configurar verificación en dos pasos</h3>
+        <h3 style={{ fontFamily: fonts.display, fontSize: "14px", fontWeight: 700, color: "var(--text)", margin: 0 }}>Configurar verificación en dos pasos</h3>
         <button
           type="button"
           onClick={() => { setRegenerating(true); loadQr(true); }}
           disabled={regenerating}
-          style={{ background: "transparent", border: "none", color: "#0EA5E9", fontSize: "12px", fontWeight: 600, cursor: regenerating ? "not-allowed" : "pointer", textDecoration: "underline", padding: 0 }}
+          style={{ background: "transparent", border: "none", color: "var(--accent)", fontSize: "12px", fontWeight: 600, cursor: regenerating ? "not-allowed" : "pointer", textDecoration: "underline", padding: 0 }}
         >
           {regenerating ? "Generando..." : "Generar nuevo QR"}
         </button>
       </div>
-      <p style={{ fontSize: "12px", color: "#475569", margin: "0 0 1.25rem" }}>Escanea el código QR con tu app de autenticación y luego ingresa el código de 6 dígitos.</p>
+      <p style={{ fontSize: "12px", color: "var(--text)", margin: "0 0 1.25rem" }}>Escanea el código QR con tu app de autenticación y luego ingresa el código de 6 dígitos.</p>
 
       {error && (
         <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: "8px", padding: "10px 12px", marginBottom: "1rem" }}>
-          <p style={{ fontSize: "13px", color: "#DC2626", margin: 0, fontWeight: 600 }}>{error}</p>
+          <p style={{ fontSize: "13px", color: "var(--loss)", margin: 0, fontWeight: 600 }}>{error}</p>
         </div>
       )}
 
       {qrCode && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "1.25rem" }}>
-          <img src={qrCode} alt="Código QR 2FA" style={{ width: "180px", height: "180px", borderRadius: "10px", background: "#fff", padding: "8px", border: "1px solid #E2E8F0" }} />
-          <code style={{ color: "#0F2A3D", fontSize: "11px", letterSpacing: "0.05em", wordBreak: "break-all", background: "#F8FAFC", padding: "6px 10px", borderRadius: "6px", border: "1px solid #E2E8F0" }}>{secret}</code>
+          <img src={qrCode} alt="Código QR 2FA" style={{ width: "180px", height: "180px", borderRadius: "10px", background: "#fff", padding: "8px", border: "1px solid var(--border)" }} />
+          <code style={{ color: "var(--text)", fontSize: "11px", letterSpacing: "0.05em", wordBreak: "break-all", background: "var(--bg-sunken)", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border)" }}>{secret}</code>
         </div>
       )}
 
       <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569" }}>Código de 6 dígitos</label>
+          <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>Código de 6 dígitos</label>
           <input
             type="text"
             inputMode="numeric"
@@ -119,7 +119,7 @@ export default function TwoFASetupPanel() {
             value={code}
             onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
             placeholder="123456"
-            style={{ background: "#F8FAFC", border: "1px solid #CBD5E1", borderRadius: "8px", padding: "10px 12px", color: "#0F172A", fontSize: "14px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box", letterSpacing: "0.1em" }}
+            style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: fonts.body, outline: "none", width: "100%", boxSizing: "border-box", letterSpacing: "0.1em" }}
           />
         </div>
         <button
@@ -127,8 +127,8 @@ export default function TwoFASetupPanel() {
           disabled={verifying || code.length !== 6}
           style={{
             padding: "10px 20px", borderRadius: "8px", border: "none",
-            background: verifying ? "#15803D" : code.length === 6 ? "#16A34A" : "#CBD5E1",
-            color: "#ffffff", fontSize: "13px", fontWeight: 700,
+            background: verifying ? "#3FA687" : code.length === 6 ? "#3FA687" : "var(--border-strong)",
+            color: "var(--text)", fontSize: "13px", fontWeight: 700,
             cursor: verifying || code.length !== 6 ? "not-allowed" : "pointer",
             fontFamily: fonts.body,
           }}

@@ -154,7 +154,7 @@ export function BillingCheckoutButton({
         <p
           style={{
             margin: 0,
-            color: "#16A34A",
+            color: "var(--accent)",
             fontSize: "12px",
             lineHeight: 1.5,
           }}
@@ -167,7 +167,7 @@ export function BillingCheckoutButton({
         <p
           style={{
             margin: 0,
-            color: "#F87171",
+            color: "var(--loss)",
             fontSize: "12px",
             lineHeight: 1.5,
           }}

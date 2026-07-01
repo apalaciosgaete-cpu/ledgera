@@ -51,17 +51,17 @@ type AssetPosition = {
 };
 
 const SOURCE_OPTIONS: SourceOption[] = [
-  { key: "bancos", icon: "🏦", label: "Bancos", hint: "Abrí Bancos. Selecciona tu banco para continuar.", accent: "#6D4AFF", bg: "#FBFAFF", border: "#E6E0FF" },
-  { key: "exchanges", icon: "📊", label: "Exchanges", hint: "Abrí Exchanges. Selecciona tu exchange para continuar.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
-  { key: "wallets", icon: "💳", label: "Wallets", hint: "Abrí Wallets. Selecciona tu wallet para continuar.", accent: "#2483FF", bg: "#F8FBFF", border: "#DCEBFF" },
-  { key: "documentacion", icon: "📄", label: "Documentación", hint: "Abrí Documentación. Puedes cargar PDF o Excel.", accent: "#FF7A1A", bg: "#FFFBF6", border: "#FFE8D6" },
+  { key: "bancos", icon: "🏦", label: "Bancos", hint: "Abrí Bancos. Selecciona tu banco para continuar.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
+  { key: "exchanges", icon: "📊", label: "Exchanges", hint: "Abrí Exchanges. Selecciona tu exchange para continuar.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
+  { key: "wallets", icon: "💳", label: "Wallets", hint: "Abrí Wallets. Selecciona tu wallet para continuar.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
+  { key: "documentacion", icon: "📄", label: "Documentación", hint: "Abrí Documentación. Puedes cargar PDF o Excel.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
 ];
 
 const ASSET_VIEWS: Omit<AssetView, "value">[] = [
-  { key: "transacciones", label: "Transacciones", hint: "Todos los movimientos confirmados desde tus fuentes.", accent: "#6D4AFF", bg: "#FBFAFF", border: "#E6E0FF" },
-  { key: "activos-detectados", label: "Activos", hint: "Saldos y activos detectados desde movimientos confirmados.", accent: "#2483FF", bg: "#F8FBFF", border: "#DCEBFF" },
-  { key: "pendientes", label: "Por revisar", hint: "Datos que aún requieren corrección o confirmación.", accent: "#FF7A1A", bg: "#FFFBF6", border: "#FFE8D6" },
-  { key: "eventos-tributarios", label: "Eventos tributarios", hint: "Operaciones confirmadas que alimentan el análisis tributario.", accent: "#20C878", bg: "#F8FFFB", border: "#D9F5E8" },
+  { key: "transacciones", label: "Transacciones", hint: "Todos los movimientos confirmados desde tus fuentes.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
+  { key: "activos-detectados", label: "Activos", hint: "Saldos y activos detectados desde movimientos confirmados.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
+  { key: "pendientes", label: "Por revisar", hint: "Datos que aún requieren corrección o confirmación.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
+  { key: "eventos-tributarios", label: "Eventos tributarios", hint: "Operaciones confirmadas que alimentan el análisis tributario.", accent: "var(--bg-elev)", bg: "var(--bg-elev)", border: "var(--border)" },
 ];
 
 const STEP_COPY: Record<WealthStepKey, { title: string; subtitle: string; guide: string; examples: string[] }> = {
@@ -143,8 +143,8 @@ function buildPositions(items: StagingItem[]): AssetPosition[] {
 
 function EmptyTransactionsTable() {
   return (
-    <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", overflow: "hidden", minHeight: 260 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr", padding: "11px 14px", background: "#F8FAFC", color: "#64748B", fontSize: 11, fontWeight: 900, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: fonts.body }}>
+    <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflow: "hidden", minHeight: 260 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr", padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: fonts.body }}>
         <span>Fecha</span>
         <span>Fuente</span>
         <span>Activo</span>
@@ -152,9 +152,9 @@ function EmptyTransactionsTable() {
         <span>Estado</span>
         <span>Acción</span>
       </div>
-      <div style={{ display: "grid", placeItems: "center", minHeight: 210, padding: 20, textAlign: "center", color: "#64748B", fontFamily: fonts.body }}>
+      <div style={{ display: "grid", placeItems: "center", minHeight: 210, padding: 20, textAlign: "center", color: "var(--text-soft)", fontFamily: fonts.body }}>
         <div>
-          <strong style={{ display: "block", color: "#0F2A3D", fontSize: 16, marginBottom: 6 }}>Aún no hay datos importados</strong>
+          <strong style={{ display: "block", color: "var(--text)", fontSize: 16, marginBottom: 6 }}>Aún no hay datos importados</strong>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45 }}>Cuando cargues bancos, exchanges, wallets o documentos, las transacciones aparecerán aquí para revisar y corregir.</p>
         </div>
       </div>
@@ -166,8 +166,8 @@ function TransactionsTable({ items }: { items: StagingItem[] }) {
   if (items.length === 0) return <EmptyTransactionsTable />;
 
   return (
-    <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", overflow: "hidden" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "0.9fr 0.9fr 0.8fr 1.1fr 0.9fr 0.8fr", padding: "11px 14px", background: "#F8FAFC", color: "#64748B", fontSize: 11, fontWeight: 900, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: fonts.body }}>
+    <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflow: "hidden" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "0.9fr 0.9fr 0.8fr 1.1fr 0.9fr 0.8fr", padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: fonts.body }}>
         <span>Fecha</span>
         <span>Fuente</span>
         <span>Activo</span>
@@ -176,13 +176,13 @@ function TransactionsTable({ items }: { items: StagingItem[] }) {
         <span>Estado</span>
       </div>
       {items.map((item) => (
-        <div key={item.id} style={{ display: "grid", gridTemplateColumns: "0.9fr 0.9fr 0.8fr 1.1fr 0.9fr 0.8fr", padding: "12px 14px", borderTop: "1px solid #F1F5F9", color: "#334155", fontSize: 12.5, alignItems: "center" }}>
+        <div key={item.id} style={{ display: "grid", gridTemplateColumns: "0.9fr 0.9fr 0.8fr 1.1fr 0.9fr 0.8fr", padding: "12px 14px", borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 12.5, alignItems: "center" }}>
           <span>{formatDate(item.occurredAt)}</span>
           <span>{item.provider || item.sources[0] || "Fuente"}</span>
-          <strong style={{ color: "#0F2A3D" }}>{extractAsset(item)}</strong>
+          <strong style={{ color: "var(--text)" }}>{extractAsset(item)}</strong>
           <span>{item.title}</span>
-          <strong style={{ color: "#0F2A3D" }}>{item.amountLabel}</strong>
-          <span style={{ color: "#15803D", fontWeight: 900 }}>Confirmado</span>
+          <strong style={{ color: "var(--text)" }}>{item.amountLabel}</strong>
+          <span style={{ color: "var(--accent)", fontWeight: 900 }}>Confirmado</span>
         </div>
       ))}
     </div>
@@ -193,17 +193,17 @@ function AssetsTable({ positions }: { positions: AssetPosition[] }) {
   if (positions.length === 0) return <EmptyTransactionsTable />;
 
   return (
-    <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", overflow: "hidden" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", padding: "11px 14px", background: "#F8FAFC", color: "#64748B", fontSize: 11, fontWeight: 900, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: fonts.body }}>
+    <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflow: "hidden" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: fonts.body }}>
         <span>Activo</span>
         <span>Cantidad detectada</span>
         <span>Movimientos</span>
         <span>Última fecha</span>
       </div>
       {positions.map((position) => (
-        <div key={position.symbol} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", padding: "12px 14px", borderTop: "1px solid #F1F5F9", color: "#334155", fontSize: 12.5, alignItems: "center" }}>
-          <strong style={{ color: "#0F2A3D" }}>{position.symbol}</strong>
-          <strong style={{ color: "#0F2A3D" }}>{position.quantity.toLocaleString("es-CL", { maximumFractionDigits: 8 })}</strong>
+        <div key={position.symbol} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", padding: "12px 14px", borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 12.5, alignItems: "center" }}>
+          <strong style={{ color: "var(--text)" }}>{position.symbol}</strong>
+          <strong style={{ color: "var(--text)" }}>{position.quantity.toLocaleString("es-CL", { maximumFractionDigits: 8 })}</strong>
           <span>{position.count}</span>
           <span>{formatDate(position.lastDate)}</span>
         </div>
@@ -290,8 +290,8 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     return (
       <main style={{ minHeight: "calc(100vh - 100px)", overflow: "visible", display: "grid", gap: 12, gridTemplateRows: "auto auto auto auto", paddingBottom: 80 }}>
         <section>
-          <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.55rem,2.7vw,1.9rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
-          <p style={{ color: "#334155", fontSize: 13.5, lineHeight: 1.32, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
+          <h1 style={{ color: "var(--text)", fontSize: "clamp(1.55rem,2.7vw,1.9rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
+          <p style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.32, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
         </section>
 
         <section style={{ display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: 10 }}>
@@ -300,27 +300,27 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
             return (
               <button key={view.key} type="button" onClick={() => setAssetView(view.key)} style={{ minHeight: 82, borderRadius: 18, border: `1px solid ${active ? view.accent : view.border}`, background: view.bg, cursor: "pointer", textAlign: "left", padding: "12px 14px", display: "grid", gap: 3, boxShadow: active ? `0 8px 18px ${view.accent}20` : "0 8px 16px rgba(15,42,61,0.035)", fontFamily: fonts.body }}>
                 <span style={{ color: view.accent, fontSize: 21, fontWeight: 950, lineHeight: 1 }}>{view.value}</span>
-                <strong style={{ color: "#0F2A3D", fontSize: 13.5, fontWeight: 900 }}>{view.label}</strong>
-                <span style={{ color: "#64748B", fontSize: 11.5, lineHeight: 1.2 }}>{view.hint}</span>
+                <strong style={{ color: "var(--text)", fontSize: 13.5, fontWeight: 900 }}>{view.label}</strong>
+                <span style={{ color: "var(--text-soft)", fontSize: 11.5, lineHeight: 1.2 }}>{view.hint}</span>
               </button>
             );
           })}
         </section>
 
         <section style={{ overflow: "visible", display: "grid", gap: 10, alignContent: "start", paddingBottom: 8 }}>
-          <div style={{ border: "1px solid #E2E8F0", borderRadius: 18, background: "#FFFFFF", padding: "12px 14px", fontFamily: fonts.body }}>
-            <strong style={{ color: "#0F2A3D", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
-            <p style={{ margin: "4px 0 0", color: "#64748B", fontSize: 12.5, lineHeight: 1.35 }}>{selectedAssetView.hint}</p>
+          <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", padding: "12px 14px", fontFamily: fonts.body }}>
+            <strong style={{ color: "var(--text)", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
+            <p style={{ margin: "4px 0 0", color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.35 }}>{selectedAssetView.hint}</p>
           </div>
           {renderAssetContent()}
         </section>
 
-        <section style={{ alignSelf: "start", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gap: 10, boxShadow: "0 12px 28px rgba(109,74,255,0.05)", flexShrink: 0 }}>
-          <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body }}>{selectedAssetView.hint}</p>
+        <section style={{ alignSelf: "start", border: "1px solid var(--border)", borderRadius: 20, background: "var(--bg-elev)", padding: 12, display: "grid", gap: 10, boxShadow: "0 12px 28px rgba(109,74,255,0.05)", flexShrink: 0 }}>
+          <p style={{ margin: 0, color: "var(--text)", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body }}>{selectedAssetView.hint}</p>
           <form onSubmit={submit}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar transacción, activo o pendiente..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
+              <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid var(--border)", background: "var(--bg-elev)", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar transacción, activo o pendiente..." style={{ flex: 1, border: "none", outline: "none", color: "var(--text)", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
               </div>
             </div>
           </form>
@@ -332,15 +332,15 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   return (
     <main style={{ height: "calc(100vh - 160px)", overflow: "hidden", display: "grid", gap: 14, gridTemplateRows: "auto 110px 1fr" }}>
       <section>
-        <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.65rem,3vw,2.05rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
-        <p style={{ color: "#334155", fontSize: 14, lineHeight: 1.35, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
+        <h1 style={{ color: "var(--text)", fontSize: "clamp(1.65rem,3vw,2.05rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>{copy.title}</h1>
+        <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.35, margin: 0, fontFamily: fonts.body }}>{copy.subtitle}</p>
       </section>
 
       <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(4,minmax(0,1fr))" }}>
         {SOURCE_OPTIONS.map((option) => {
           const active = selectedSource === option.key;
           return (
-            <button key={option.key} type="button" onClick={() => openSourceOption(option)} style={{ height: 110, borderRadius: 18, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "#0F2A3D", cursor: "pointer", display: "grid", gap: 6, padding: "12px 10px", justifyItems: "center", alignItems: "center", alignContent: "center", boxShadow: active ? `0 8px 18px ${option.accent}20` : "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "center" }}>
+            <button key={option.key} type="button" onClick={() => openSourceOption(option)} style={{ height: 110, borderRadius: 18, border: `1px solid ${active ? option.accent : option.border}`, background: option.bg, color: "var(--text)", cursor: "pointer", display: "grid", gap: 6, padding: "12px 10px", justifyItems: "center", alignItems: "center", alignContent: "center", boxShadow: active ? `0 8px 18px ${option.accent}20` : "0 8px 16px rgba(15,42,61,0.04)", fontFamily: fonts.body, textAlign: "center" }}>
               <span style={{ fontSize: 36, lineHeight: 1 }}>{option.icon}</span>
               <strong style={{ fontSize: 14, fontWeight: 900 }}>{option.label}</strong>
             </button>
@@ -348,12 +348,12 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
         })}
       </section>
 
-      <section style={{ alignSelf: "end", border: "1px solid #DDD6FE", borderRadius: 20, background: "#FFFFFF", padding: 12, display: "grid", gap: 10, boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
-        <p style={{ margin: 0, color: "#475569", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body }}>{selectedSourceOption ? selectedSourceOption.hint : `Escribe: ${copy.examples.join(", ")}.`}</p>
+      <section style={{ alignSelf: "end", border: "1px solid var(--border)", borderRadius: 20, background: "var(--bg-elev)", padding: 12, display: "grid", gap: 10, boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
+        <p style={{ margin: 0, color: "var(--text)", fontSize: 12.5, lineHeight: 1.28, fontFamily: fonts.body }}>{selectedSourceOption ? selectedSourceOption.hint : `Escribe: ${copy.examples.join(", ")}.`}</p>
         <form onSubmit={submit}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid #CBD5E1", background: "#FFFFFF", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "#0F2A3D", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
+            <div style={{ flex: 1, minHeight: 46, borderRadius: 15, border: "1px solid var(--border)", background: "var(--bg-elev)", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0, boxShadow: "0 6px 14px rgba(15,42,61,0.035)" }}>
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Escribe aquí..." style={{ flex: 1, border: "none", outline: "none", color: "var(--text)", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
             </div>
           </div>
         </form>

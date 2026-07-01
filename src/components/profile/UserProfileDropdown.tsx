@@ -46,7 +46,7 @@ export function UserProfileDropdown({
           display:        "flex",
           alignItems:     "center",
           gap:            "10px",
-          background:     open ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+          background: open ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
           border:         `1px solid ${open ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.08)"}`,
           borderRadius:   "12px",
           padding:        "5px 6px 5px 10px",
@@ -70,7 +70,7 @@ export function UserProfileDropdown({
         </div>
         <div className="hidden xl:flex" style={{ flexDirection: "column", gap: "4px", minWidth: 0 }}>
           <span style={{
-            fontSize: "12px", fontWeight: 500, color: "#E2E8F0", lineHeight: 1,
+            fontSize: "12px", fontWeight: 500, color: "var(--text)", lineHeight: 1,
             maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {name}
@@ -88,7 +88,7 @@ export function UserProfileDropdown({
           width="12" height="12" viewBox="0 0 12 12" fill="none"
           style={{ marginLeft: "2px", transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", flexShrink: 0 }}
         >
-          <path d="M2 4l4 4 4-4" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M2 4l4 4 4-4" stroke="var(--text-faint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
 
@@ -99,7 +99,7 @@ export function UserProfileDropdown({
           top:          "calc(100% + 8px)",
           right:        0,
           width:        "220px",
-          background:   "#0F2236",
+          background: "var(--bg-elev)",
           border:       "1px solid rgba(255,255,255,0.1)",
           borderRadius: "14px",
           boxShadow:    "0 16px 40px rgba(0,0,0,0.5)",
@@ -114,10 +114,10 @@ export function UserProfileDropdown({
             borderBottom: "1px solid rgba(255,255,255,0.07)",
             flexShrink:   0,
           }}>
-            <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#F1F5F9" }}>
+            <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>
               {name}
             </p>
-            <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#64748B" }}>
+            <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-soft)" }}>
               {roleLabel}
             </p>
           </div>
@@ -134,7 +134,7 @@ export function UserProfileDropdown({
                 borderRadius: "8px",
                 fontSize:     "13px",
                 fontWeight:   600,
-                color:        "#F87171",
+                color: "var(--loss)",
                 background:   "transparent",
                 border:       "none",
                 cursor:       "pointer",

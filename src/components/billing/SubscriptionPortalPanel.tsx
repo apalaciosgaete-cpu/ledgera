@@ -92,23 +92,23 @@ export function SubscriptionPortalPanel() {
     state === "PAST_DUE";
 
   return (
-    <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }}>
+    <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1rem" }}>
-        <h3 style={{ fontFamily: fonts.display, fontSize: 15, fontWeight: 800, color: "#0F2A3D", margin: "0 0 4px" }}>
+        <h3 style={{ fontFamily: fonts.display, fontSize: 15, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
           Portal de suscripción
         </h3>
-        <p style={{ margin: 0, fontSize: 12, color: "#475569", lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: 12, color: "var(--text)", lineHeight: 1.5 }}>
           Cambia, renueva o reactiva tu plan desde un único centro de gestión.
         </p>
       </div>
 
-      <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: 12, marginBottom: "1rem" }}>
-        <p style={{ margin: "0 0 4px", fontSize: 11, color: "#64748B", fontWeight: 800, textTransform: "uppercase" }}>Estado</p>
-        <p style={{ margin: 0, fontSize: 14, color: "#0F2A3D", fontWeight: 800 }}>
+      <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 10, padding: 12, marginBottom: "1rem" }}>
+        <p style={{ margin: "0 0 4px", fontSize: 11, color: "var(--text-soft)", fontWeight: 800, textTransform: "uppercase" }}>Estado</p>
+        <p style={{ margin: 0, fontSize: 14, color: "var(--text)", fontWeight: 800 }}>
           {loading ? "Cargando..." : `${status?.plan.label ?? "Free"} · ${state}`}
         </p>
         {state === "CANCEL_AT_PERIOD_END" && (
-          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#92400E" }}>
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--warn)" }}>
             Renovación cancelada. Acceso hasta {formatDate(status?.subscription?.currentPeriodEnd)}.
           </p>
         )}
@@ -122,8 +122,8 @@ export function SubscriptionPortalPanel() {
             disabled={reactivateLoading}
             style={{
               width: "100%",
-              background: "#16A34A",
-              color: "#FFFFFF",
+              background: "var(--accent)",
+              color: "var(--text)",
               border: "none",
               borderRadius: 8,
               padding: "12px 14px",
@@ -137,10 +137,10 @@ export function SubscriptionPortalPanel() {
           </button>
 
           {reactivateSuccess && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "#166534" }}>{reactivateSuccess}</p>
+            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--accent)" }}>{reactivateSuccess}</p>
           )}
           {reactivateError && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "#991B1B" }}>{reactivateError}</p>
+            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--loss)" }}>{reactivateError}</p>
           )}
         </div>
       )}
@@ -150,7 +150,7 @@ export function SubscriptionPortalPanel() {
           plan="PROFESIONAL"
           action="change-plan"
           disabled={state === "ACTIVE" && status?.plan.normalized === "PERSONAL"}
-          style={{ background: "#0F766E", color: "#FFFFFF", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
+          style={{ background: "var(--accent)", color: "var(--text)", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
         >
           {state === "EXPIRED" || state === "CANCELLED" || state === "FAILED" || state === "PAST_DUE"
             ? "Renovar Personal"
@@ -161,7 +161,7 @@ export function SubscriptionPortalPanel() {
           plan="EMPRESA"
           action="change-plan"
           disabled={state === "ACTIVE" && status?.plan.normalized === "PRO"}
-          style={{ background: "#0F2A3D", color: "#FFFFFF", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
+          style={{ background: "var(--bg-elev)", color: "var(--text)", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
         >
           {state === "EXPIRED" || state === "CANCELLED" || state === "FAILED" || state === "PAST_DUE"
             ? "Renovar Pro"
@@ -169,7 +169,7 @@ export function SubscriptionPortalPanel() {
         </BillingCheckoutButton>
       </div>
 
-      <p style={{ margin: "12px 0 0", fontSize: 11, color: "#64748B", lineHeight: 1.5 }}>
+      <p style={{ margin: "12px 0 0", fontSize: 11, color: "var(--text-soft)", lineHeight: 1.5 }}>
         Compatible con Stripe, Flow y MercadoPago mediante el contrato de checkout vigente.
       </p>
     </div>

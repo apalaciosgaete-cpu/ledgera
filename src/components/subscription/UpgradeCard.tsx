@@ -87,8 +87,8 @@ export function UpgradeCard({ feature, source = "upgrade_card" }: UpgradeCardPro
   return (
     <div
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
         borderRadius: 12,
         padding: 28,
         textAlign: "center",
@@ -99,7 +99,7 @@ export function UpgradeCard({ feature, source = "upgrade_card" }: UpgradeCardPro
       <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
       <h3
         style={{
-          color: "#0F2A3D",
+          color: "var(--text)",
           fontSize: 17,
           fontWeight: 800,
           margin: "0 0 8px",
@@ -107,7 +107,7 @@ export function UpgradeCard({ feature, source = "upgrade_card" }: UpgradeCardPro
       >
         {featureLabel}
       </h3>
-      <p style={{ color: "#64748B", fontSize: 14, margin: "0 0 22px" }}>
+      <p style={{ color: "var(--text-soft)", fontSize: 14, margin: "0 0 22px" }}>
         Disponible en <strong>{planLabel}</strong>
       </p>
 
@@ -123,10 +123,10 @@ export function UpgradeCard({ feature, source = "upgrade_card" }: UpgradeCardPro
           type="button"
           onClick={handleClick}
           style={{
-            background: "#0F766E",
+            background: "var(--accent)",
             border: "none",
             borderRadius: 8,
-            color: "#FFFFFF",
+            color: "var(--text)",
             cursor: "pointer",
             fontSize: 14,
             fontWeight: 800,
@@ -141,7 +141,7 @@ export function UpgradeCard({ feature, source = "upgrade_card" }: UpgradeCardPro
           href="/configuracion/facturacion"
           onClick={handleClick}
           style={{
-            color: "#0F766E",
+            color: "var(--accent)",
             fontSize: 13,
             fontWeight: 700,
             textDecoration: "none",
