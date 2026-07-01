@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DigitalModuleDefinition } from "@/modules/digital-operating-system";
 import { fonts } from "@/styles/tokens";
 
@@ -41,6 +41,34 @@ type TaxAssistant = {
   safeDisclaimer: string;
 };
 
+type StagingItem = {
+  id: string;
+  source: string;
+  sources: string[];
+  provider: string;
+  status: string;
+  occurredAt: string;
+  title: string;
+  subtitle: string;
+  amountLabel: string;
+};
+
+type StagingData = {
+  items: StagingItem[];
+  counts?: {
+    pending?: number;
+    review?: number;
+    confirmed?: number;
+    rejected?: number;
+  };
+};
+
+type ApiResponse<T> = {
+  ok: boolean;
+  message: string;
+  data: T;
+};
+
 const HEALTH_COLORS: Record<TaxHealthStatus, string> = {
   OK: "#16A34A",
   REVIEW: "#F59E0B",
@@ -49,31 +77,143 @@ const HEALTH_COLORS: Record<TaxHealthStatus, string> = {
 
 const DEFAULT_ASSISTANT: TaxAssistant = {
   title: "Cómo funciona esta sección",
-  summary: "Obligaciones Tributarias toma información validada desde Activos y muestra solo lo que podría importar para impuestos.",
-  whatIsThis: "Aquí no se ingresan datos manualmente. LEDGERA muestra operaciones que podrían necesitar revisión tributaria.",
-  whyItMatters: "Algunas ventas, intercambios, rendimientos o movimientos sin respaldo pueden necesitar confirmación antes del cálculo.",
+  summary: "Obligaciones Tributarias se completa automáticamente con la información validada en Activos.",
+  whatIsThis: "Aquí LEDGERA muestra operaciones que podrían tener efecto tributario. Las compras normalmente quedan como base de costo y no generan impuesto inmediato.",
+  whyItMatters: "Ventas, permutas, rendimientos o movimientos sin respaldo pueden generar efectos tributarios. Las compras sirven para calcular la base de costo futura.",
   howToOperate: [
-    "Revisa si hay eventos detectados.",
-    "Abre los eventos pendientes o sin respaldo.",
-    "Confirma si la información es correcta.",
-    "Valida o agrega respaldo cuando corresponda.",
-    "Deja los eventos listos para cálculo.",
+    "Revisa si hay eventos tributarios detectados.",
+    "Si solo hay compras, valida que queden como base de costo.",
+    "Cuando existan ventas o permutas, revisa ganancia o pérdida.",
+    "Confirma o corrige eventos pendientes cuando aparezcan.",
+    "Genera reportes solo con datos ya validados.",
   ],
   fullFlow: [
     "Origen de Fondos carga información.",
-    "Activos ordena y valida movimientos.",
-    "Obligaciones Tributarias detecta eventos.",
-    "El usuario confirma o corrige.",
-    "El motor calcula con datos validados.",
+    "Importaciones valida y confirma operaciones.",
+    "Activos consolida movimientos y saldos.",
+    "Obligaciones Tributarias detecta eventos imponibles.",
+    "Reportes prepara la salida final.",
   ],
-  nextBestAction: "Primero revisa Activos. Cuando haya datos clasificados, aparecerán eventos aquí.",
+  nextBestAction: "Si no hay eventos tributarios, revisa Activos y conserva las compras como base de costo para cálculos futuros.",
   safeDisclaimer: "LEDGERA marca posibles efectos tributarios. No reemplaza la revisión final con información completa.",
 };
 
-export function CryptoFirstModulePage({ module, sections = [] }: Props) {
+function extractAsset(item: StagingItem): string {
+  const amountSymbol = item.amountLabel.match(/\b[A-Z0-9]{2,12}\b$/)?.[0];
+  if (amountSymbol) return amountSymbol;
+  const subtitleSymbol = item.subtitle.match(/·\s*([A-Z0-9]{2,12})\b/)?.[1];
+  if (subtitleSymbol) return subtitleSymbol;
+  return "ACTIVO";
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function classifyConfirmedOperations(items: StagingItem[]) {
+  const confirmed = items.filter((item) => item.status === "CONFIRMED");
+  const assets = new Set(confirmed.map(extractAsset));
+  const buys = confirmed.filter((item) => /compra|buy/i.test(item.title) || /buy/i.test(item.subtitle));
+  const possibleTaxable = confirmed.filter((item) => /venta|sell|swap|permuta|retiro|withdraw|reward|staking|airdrop|earn/i.test(`${item.title} ${item.subtitle}`));
+
+  return {
+    confirmed,
+    assetCount: assets.size,
+    buyCount: buys.length,
+    possibleTaxableCount: possibleTaxable.length,
+  };
+}
+
+function StatPill({ label, value, tone }: { label: string; value: number; tone: "green" | "blue" | "amber" | "red" }) {
+  const palette = {
+    green: { bg: "rgba(22,163,74,0.09)", border: "rgba(22,163,74,0.24)", color: "#15803D" },
+    blue: { bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.22)", color: "#1D4ED8" },
+    amber: { bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.26)", color: "#B45309" },
+    red: { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.22)", color: "#DC2626" },
+  }[tone];
+
+  return (
+    <span style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      borderRadius: 999,
+      border: `1px solid ${palette.border}`,
+      background: palette.bg,
+      color: palette.color,
+      padding: "7px 11px",
+      fontFamily: fonts.body,
+      fontSize: 12,
+      fontWeight: 850,
+      whiteSpace: "nowrap",
+    }}>
+      <strong>{value}</strong> {label}
+    </span>
+  );
+}
+
+function TaxNeutralState({
+  confirmedCount,
+  assetCount,
+  buyCount,
+}: {
+  confirmedCount: number;
+  assetCount: number;
+  buyCount: number;
+}) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0,1fr)", gap: 16, alignItems: "center" }}>
+      <div style={{ width: 58, height: 58, borderRadius: 18, background: "#ECFDF5", color: "#0F766E", display: "grid", placeItems: "center", fontSize: 28, boxShadow: "inset 0 0 0 1px #BBF7D0" }}>
+        🧾
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: "0 0 5px", textTransform: "uppercase", fontFamily: fonts.body }}>
+          IA LEDGERA
+        </p>
+        <h2 style={{ color: "#0F2A3D", fontSize: "clamp(1.15rem,2vw,1.45rem)", fontWeight: 950, letterSpacing: "-0.04em", margin: "0 0 6px", fontFamily: fonts.display }}>
+          No hay eventos tributarios imponibles detectados
+        </h2>
+        <p style={{ color: "#475569", fontSize: 13.5, lineHeight: 1.45, margin: 0, maxWidth: 900, fontFamily: fonts.body }}>
+          Hay {confirmedCount} operaciones confirmadas y {assetCount} activos detectados. La IA interpreta que {buyCount} operación{buyCount === 1 ? "" : "es"} corresponde{buyCount === 1 ? "" : "n"} a compra/base de costo. Una compra spot normalmente no genera impuesto inmediato; queda registrada para calcular ganancia o pérdida cuando exista venta, permuta u otro evento tributariamente relevante.
+        </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          <a href="/cryptoactivos" style={linkButton("primary")}>Revisar activos</a>
+          <a href="/reportes" style={linkButton("secondary")}>Ir a reportes</a>
+          <a href="/origen-fondos/documentacion" style={linkButton("secondary")}>Subir otro documento</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function linkButton(variant: "primary" | "secondary"): React.CSSProperties {
+  return {
+    minHeight: 34,
+    padding: "8px 12px",
+    borderRadius: 9,
+    border: variant === "primary" ? "1px solid #0F766E" : "1px solid #CBD5E1",
+    background: variant === "primary" ? "#0F766E" : "#FFFFFF",
+    color: variant === "primary" ? "#FFFFFF" : "#475569",
+    fontSize: 12,
+    fontWeight: 900,
+    textDecoration: "none",
+    display: "inline-flex",
+    alignItems: "center",
+    whiteSpace: "nowrap",
+    fontFamily: fonts.body,
+  };
+}
+
+export function CryptoFirstModulePage({ module }: Props) {
   const [events, setEvents] = useState<TaxEvent[]>([]);
   const [taxHealth, setTaxHealth] = useState<TaxHealth | null>(null);
   const [assistant, setAssistant] = useState<TaxAssistant>(DEFAULT_ASSISTANT);
+  const [stagingData, setStagingData] = useState<StagingData | null>(null);
   const [totalEvents, setTotalEvents] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -88,15 +228,22 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
       if (showLoading) setLoading(true);
       setError(null);
 
-      const [eventsRes, assistantRes] = await Promise.all([
+      const requests: Promise<Response>[] = [
         fetch("/api/tax/events", { cache: "no-store", credentials: "include" }),
         fetch("/api/tax/assistant", { cache: "no-store", credentials: "include" }),
-      ]);
+      ];
+
+      if (isTaxObligations) {
+        requests.push(fetch("/api/imports/staging", { cache: "no-store", credentials: "include" }));
+      }
+
+      const [eventsRes, assistantRes, stagingRes] = await Promise.all(requests);
 
       if (!eventsRes.ok) throw new Error(`HTTP ${eventsRes.status}`);
 
       const eventsJson = await eventsRes.json();
       const assistantJson = assistantRes.ok ? await assistantRes.json() : null;
+      const stagingJson = stagingRes?.ok ? (await stagingRes.json()) as ApiResponse<StagingData> : null;
 
       const data = eventsJson?.data;
       const eventList: TaxEvent[] = data?.events ?? [];
@@ -115,12 +262,13 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
       setPendingCount(data?.totals?.pendingCount ?? pending);
 
       if (assistantJson?.data) setAssistant(assistantJson.data);
+      if (stagingJson?.data) setStagingData(stagingJson.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       if (showLoading) setLoading(false);
     }
-  }, []);
+  }, [isTaxObligations]);
 
   useEffect(() => {
     void loadEvents();
@@ -159,9 +307,15 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
     }
   }
 
+  const confirmedSummary = useMemo(
+    () => classifyConfirmedOperations(stagingData?.items ?? []),
+    [stagingData],
+  );
+
   const healthStatus = taxHealth?.status ?? null;
   const healthColor = healthStatus ? HEALTH_COLORS[healthStatus] : "#94A3B8";
   const hasEvents = events.length > 0;
+  const hasConfirmedOperations = confirmedSummary.confirmed.length > 0;
 
   const buckets = events.reduce<Record<string, number>>((acc, e) => {
     const cat = e.effectiveTaxCategory || "SIN_CLASIFICAR";
@@ -180,8 +334,10 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
             <h1 style={{ color: "#0F2A3D", fontSize: "clamp(1.3rem, 3.5vw, 1.8rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>
               {module.label}
             </h1>
-            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, maxWidth: 700, margin: 0, fontFamily: fonts.body }}>
-              {assistant.summary}
+            <p style={{ color: "#64748B", fontSize: 13, lineHeight: 1.5, maxWidth: 760, margin: 0, fontFamily: fonts.body }}>
+              {hasConfirmedOperations && !hasEvents
+                ? "Tus activos ya tienen operaciones confirmadas. Esta pantalla indica si esas operaciones generan eventos tributarios imponibles."
+                : assistant.summary}
             </p>
           </div>
           {isTaxObligations && (
@@ -213,10 +369,26 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
             {rebuildMessage}
           </p>
         )}
+
+        {!loading && !error && hasConfirmedOperations && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <StatPill label="operaciones confirmadas" value={confirmedSummary.confirmed.length} tone="green" />
+            <StatPill label="activos con base de costo" value={confirmedSummary.assetCount} tone="blue" />
+            <StatPill label="compras/base de costo" value={confirmedSummary.buyCount} tone="amber" />
+            <StatPill label="eventos imponibles detectados" value={events.length} tone={events.length > 0 ? "red" : "green"} />
+          </div>
+        )}
+
         {loading ? (
           <p style={{ color: "#64748B", fontSize: 13, fontFamily: fonts.body, margin: 0 }}>Cargando eventos tributarios…</p>
         ) : error ? (
           <p style={{ color: "#DC2626", fontSize: 13, fontFamily: fonts.body, margin: 0 }}>Error: {error}</p>
+        ) : !hasEvents && hasConfirmedOperations ? (
+          <TaxNeutralState
+            confirmedCount={confirmedSummary.confirmed.length}
+            assetCount={confirmedSummary.assetCount}
+            buyCount={confirmedSummary.buyCount}
+          />
         ) : !hasEvents ? (
           <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0,1fr)", gap: 16, alignItems: "center" }}>
             <div style={{ width: 58, height: 58, borderRadius: 18, background: "#ECFDF5", color: "#0F766E", display: "grid", placeItems: "center", fontSize: 28, boxShadow: "inset 0 0 0 1px #BBF7D0" }}>
@@ -296,9 +468,9 @@ export function CryptoFirstModulePage({ module, sections = [] }: Props) {
 
       <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
         {[
-          { title: "Qué es", text: assistant.whatIsThis },
-          { title: "Por qué importa", text: assistant.whyItMatters },
-          { title: "Cómo usarlo", text: assistant.howToOperate.slice(0, 3).join(" ") },
+          { title: "Qué es", text: hasConfirmedOperations && !hasEvents ? "Esta pantalla valida si las operaciones confirmadas generan eventos tributarios. Si solo hay compras, quedan como base de costo." : assistant.whatIsThis },
+          { title: "Por qué importa", text: "Las compras no suelen tributar de inmediato, pero son necesarias para calcular costo y resultado cuando exista venta, permuta o retiro relevante." },
+          { title: "Cómo usarlo", text: hasConfirmedOperations && !hasEvents ? "Revisa Activos. Si las cantidades son correctas, conserva esta información para reportes futuros o sube documentos adicionales." : assistant.howToOperate.slice(0, 3).join(" ") },
           { title: "Importante", text: assistant.safeDisclaimer },
         ].map((item, index) => (
           <article key={item.title} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, padding: "10px 14px", minHeight: "105px", display: "flex", flexDirection: "column" }}>
