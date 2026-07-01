@@ -156,6 +156,32 @@ body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'
   border-radius: 999px;
 }
 
+/* ─── Importaciones: leyenda de estados en una sola línea ─────────────────── */
+main button[style*='min-height: 64px'] {
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 6px 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  text-align: left !important;
+}
+
+main button[style*='min-height: 64px'] > span:first-child {
+  display: inline !important;
+  margin-bottom: 0 !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+main button[style*='min-height: 64px'] > span:last-child {
+  min-width: 24px !important;
+  height: 20px !important;
+  font-size: 11px !important;
+  flex-shrink: 0 !important;
+}
+
 @media (max-width: 1100px) {
   body:has(input[placeholder*='Buscar por título']) div[style*='grid-template-columns: 1fr 1fr 1fr'] {
     grid-template-columns: 1fr !important;
