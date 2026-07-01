@@ -25,6 +25,7 @@ type Position = {
   needsReview: boolean;
 };
 
+const EXTERNAL_FETCH_TIMEOUT_MS = 1600;
 const STABLE_USD = new Set(["USDT", "USDC", "DAI", "BUSD", "FDUSD", "TUSD"]);
 const BINANCE_BASES = new Set([
   "BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "TRX", "AVAX", "DOT", "LINK", "LTC", "BCH", "UNI", "AAVE", "MATIC", "POL",
@@ -37,13 +38,27 @@ function classify(type: string): "IN" | "OUT" | "IGNORE" {
   return "IGNORE";
 }
 
+async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = EXTERNAL_FETCH_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function fetchUsdClp(): Promise<{ value: number; source: string }> {
   try {
     const today = new Date();
     const day = String(today.getUTCDate()).padStart(2, "0");
     const month = String(today.getUTCMonth() + 1).padStart(2, "0");
     const year = today.getUTCFullYear();
-    const res = await fetch(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, { headers: { Accept: "application/json" }, cache: "no-store" });
+    const res = await fetchWithTimeout(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, { headers: { Accept: "application/json" }, cache: "no-store" });
     if (!res.ok) throw new Error("fx");
     const data = await res.json();
     const value = data?.serie?.[0]?.valor;
@@ -65,7 +80,7 @@ async function fetchPrices(symbols: string[]): Promise<Record<string, { priceUsd
   if (pairs.length === 0) return result;
 
   try {
-    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(JSON.stringify(pairs))}`, { cache: "no-store" });
+    const res = await fetchWithTimeout(`https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(JSON.stringify(pairs))}`, { cache: "no-store" });
     if (!res.ok) throw new Error("prices");
     const data = await res.json();
     if (!Array.isArray(data)) return result;
@@ -156,8 +171,10 @@ export async function GET(request: NextRequest) {
     })) as RawMovement[];
 
     const positions = buildPositions(movements);
-    const fx = await fetchUsdClp();
-    const prices = await fetchPrices(positions.map((position) => position.symbol));
+    const [fx, prices] = await Promise.all([
+      fetchUsdClp(),
+      fetchPrices(positions.map((position) => position.symbol)),
+    ]);
 
     const assets = positions.map((position) => {
       const quote = prices[position.symbol] ?? { priceUsd: null, source: "sin_precio" };
