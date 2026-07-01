@@ -15,32 +15,32 @@ function resolveSubscriptionColor(state: string | null | undefined) {
     case "ADMIN":
     case "ACTIVE":
       return {
-        border: "#16A34A",
-        background: "rgba(22, 163, 74, 0.12)",
-        text: "#86EFAC",
+        border: "var(--accent)",
+        background: "var(--accent-soft)",
+        text: "var(--gain)",
       };
 
     case "WARNING":
       return {
-        border: "#F59E0B",
-        background: "rgba(245, 158, 11, 0.14)",
-        text: "#FCD34D",
+        border: "var(--warn)",
+        background: "rgba(232, 184, 75, 0.14)",
+        text: "var(--warn)",
       };
 
     case "EXPIRED":
     case "SUSPENDED":
     case "INACTIVE":
       return {
-        border: "#EF4444",
-        background: "rgba(239, 68, 68, 0.14)",
-        text: "#FCA5A5",
+        border: "var(--loss)",
+        background: "rgba(196, 99, 74, 0.14)",
+        text: "var(--loss)",
       };
 
     default:
       return {
-        border: "#64748B",
-        background: "rgba(100, 116, 139, 0.12)",
-        text: "#CBD5E1",
+        border: "var(--border-strong)",
+        background: "var(--bg-elev)",
+        text: "var(--text-soft)",
       };
   }
 }
@@ -59,8 +59,8 @@ export default function AppScreen({
       style={{
         minHeight: "100vh",
         padding: "48px 24px",
-        backgroundColor: "#0b1020",
-        color: "#f5f7fb",
+        backgroundColor: "var(--bg)",
+        color: "var(--text)",
       }}
     >
       <div
@@ -85,7 +85,7 @@ export default function AppScreen({
               <p
                 style={{
                   marginTop: "16px",
-                  color: "#cbd5e1",
+                  color: "var(--text-soft)",
                   lineHeight: 1.7,
                   maxWidth: "760px",
                 }}
@@ -122,7 +122,7 @@ export default function AppScreen({
               <p
                 style={{
                   margin: "0 0 8px",
-                  color: "#E2E8F0",
+                  color: "var(--text-soft)",
                   fontSize: "13px",
                   lineHeight: 1.5,
                 }}
@@ -134,7 +134,7 @@ export default function AppScreen({
                 style={{
                   display: "grid",
                   gap: "4px",
-                  color: "#94A3B8",
+                  color: "var(--text-faint)",
                   fontSize: "12px",
                 }}
               >
