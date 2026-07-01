@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { saveSessionToken } from "@/modules/identity/client/authStorage";
+import type { AuthUser } from "@/modules/identity/client/authClient";
 import { colors, fonts } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
@@ -25,6 +26,13 @@ const BG_IMAGES = [
 
 const randomBg = BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
 
+type SessionPayload = {
+  session?: {
+    token?: string;
+  };
+  user?: Partial<AuthUser>;
+};
+
 type LoginApiResponse = {
   ok?: boolean;
   message?: string;
@@ -35,47 +43,36 @@ type LoginApiResponse = {
   qrCode?: string;
   secret?: string;
   setupToken?: string;
-  data?: {
-    session?: {
-      token?: string;
-    };
-  };
+  data?: SessionPayload;
 };
 
 type TwoFactorLoginResponse = {
   ok?: boolean;
   message?: string;
-  data?: {
-    session?: {
-      token?: string;
-    };
-  };
+  data?: SessionPayload;
 };
 
 function resolveClientError(error: unknown, fallback: string) {
-  if (!isHttpClientError(error)) {
-    return fallback;
-  }
+  if (!isHttpClientError(error)) return fallback;
 
   if (error.status === 429 && error.retryAfterSeconds) {
     return `Demasiados intentos. Intenta nuevamente en ${error.retryAfterSeconds} segundos.`;
   }
 
-  if (error.status === 401) {
-    return "Credenciales inválidas.";
-  }
-
-  if (error.status === 403) {
-    return "La cuenta no está activa o no tiene permisos para ingresar.";
-  }
+  if (error.status === 401) return "Credenciales inválidas.";
+  if (error.status === 403) return "La cuenta no está activa o no tiene permisos para ingresar.";
 
   return error.message || fallback;
+}
+
+function isPrimeableUser(user: Partial<AuthUser> | undefined): user is AuthUser {
+  return Boolean(user?.id && user.email && user.role);
 }
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, isLoading, user, refreshUser } = useAuth();
+  const { isAuthenticated, isLoading, user, refreshUser, primeAuthSession } = useAuth();
 
   const justRegistered = searchParams.get("registered") === "1";
   const oauth2fa = searchParams.get("oauth2fa") === "1";
@@ -103,46 +100,59 @@ function LoginForm() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !oauth2fa) {
-      router.push("/panel");
+      router.replace("/panel");
     }
   }, [isAuthenticated, isLoading, router, oauth2fa]);
 
   useEffect(() => {
-    if (oauth2fa && isAuthenticated && user) {
-      fetch("/api/2fa/oauth-setup", { credentials: "include" })
-        .then(r => r.json())
-        .then(json => {
-          if (json.ok && json.data) {
-            setSetupQrCode(json.data.qrCode ?? "");
-            setSetupSecret(json.data.secret ?? "");
-            setSetupToken(json.data.setupToken ?? "");
-            setSetupEmail(user.email ?? "");
-            setSetupCode("");
-            setErrorSetup("");
-            setStep(3);
-          } else {
-            setErrorSetup(json.message || "No fue posible cargar la configuración de 2FA.");
-          }
-        })
-        .catch(() => {
-          setErrorSetup("Error al cargar la configuración de 2FA. Intenta recargar la página.");
-        });
-    }
+    if (!oauth2fa || !isAuthenticated || !user) return;
+
+    fetch("/api/2fa/oauth-setup", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.ok && json.data) {
+          setSetupQrCode(json.data.qrCode ?? "");
+          setSetupSecret(json.data.secret ?? "");
+          setSetupToken(json.data.setupToken ?? "");
+          setSetupEmail(user.email ?? "");
+          setSetupCode("");
+          setErrorSetup("");
+          setStep(3);
+        } else {
+          setErrorSetup(json.message || "No fue posible cargar la configuración de 2FA.");
+        }
+      })
+      .catch(() => {
+        setErrorSetup("Error al cargar la configuración de 2FA. Intenta recargar la página.");
+      });
   }, [oauth2fa, isAuthenticated, user]);
+
+  async function finishLogin(token: string, nextUser?: Partial<AuthUser>) {
+    saveSessionToken(token);
+
+    if (isPrimeableUser(nextUser)) {
+      primeAuthSession({
+        ...nextUser,
+        twoFactorEnabled: nextUser.twoFactorEnabled ?? true,
+      });
+      router.replace("/panel");
+      void refreshUser({ silent: true });
+      return;
+    }
+
+    await refreshUser();
+    router.replace("/panel");
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-
     setErrorMessage("");
     setSubmitting(true);
 
     try {
       const response = await httpClient<LoginApiResponse>("/api/login", {
         method: "POST",
-        body: {
-          email,
-          password,
-        },
+        body: { email, password },
       });
 
       if (response.twoFactorSetupRequired && response.pendingUserId) {
@@ -165,22 +175,14 @@ function LoginForm() {
       }
 
       const token = response.data?.session?.token;
-
       if (!token) {
         setErrorMessage("Respuesta de login inválida.");
         return;
       }
 
-      saveSessionToken(token);
-      await refreshUser();
-      router.push("/panel");
+      await finishLogin(token, response.data?.user);
     } catch (error) {
-      setErrorMessage(
-        resolveClientError(
-          error,
-          "No fue posible iniciar sesión. Intenta nuevamente.",
-        ),
-      );
+      setErrorMessage(resolveClientError(error, "No fue posible iniciar sesión. Intenta nuevamente."));
     } finally {
       setSubmitting(false);
     }
@@ -188,39 +190,24 @@ function LoginForm() {
 
   async function handle2FA(e: FormEvent) {
     e.preventDefault();
-
     setError2FA("");
     setValidating2FA(true);
 
     try {
-      const response = await httpClient<TwoFactorLoginResponse>(
-        "/api/2fa/login",
-        {
-          method: "POST",
-          body: {
-            userId: pendingUserId,
-            code: twoFACode,
-          },
-        },
-      );
+      const response = await httpClient<TwoFactorLoginResponse>("/api/2fa/login", {
+        method: "POST",
+        body: { userId: pendingUserId, code: twoFACode },
+      });
 
       const token = response.data?.session?.token;
-
       if (!token) {
         setError2FA("Respuesta de autenticación inválida.");
         return;
       }
 
-      saveSessionToken(token);
-      await refreshUser();
-      router.push("/panel");
+      await finishLogin(token, response.data?.user);
     } catch (error) {
-      setError2FA(
-        resolveClientError(
-          error,
-          "Error al validar el código.",
-        ),
-      );
+      setError2FA(resolveClientError(error, "Error al validar el código."));
     } finally {
       setValidating2FA(false);
     }
@@ -234,6 +221,7 @@ function LoginForm() {
       setErrorSetup("Error de sesión: falta identificador de usuario. Recarga la página e intenta nuevamente.");
       return;
     }
+
     if (!setupCode || setupCode.length !== 6) {
       setErrorSetup("Ingresa el código de 6 dígitos de tu app autenticadora.");
       return;
@@ -260,11 +248,7 @@ function LoginForm() {
         ? { userId: pendingUserId, code: setupCode }
         : { userId: pendingUserId, email: setupEmail, code: setupCode, setupToken };
 
-      const response = await httpClient<{ ok?: boolean; message?: string; data?: { session?: { token?: string } } }>(
-        endpoint,
-        { method: "POST", body },
-      );
-
+      const response = await httpClient<TwoFactorLoginResponse>(endpoint, { method: "POST", body });
       const token = response.data?.session?.token;
 
       if (!token) {
@@ -272,9 +256,7 @@ function LoginForm() {
         return;
       }
 
-      saveSessionToken(token);
-      await refreshUser();
-      router.push("/panel");
+      await finishLogin(token, response.data?.user);
     } catch (error) {
       setErrorSetup(resolveClientError(error, "Error al verificar el código."));
     } finally {
@@ -287,10 +269,7 @@ function LoginForm() {
     try {
       const response = await httpClient<{ ok?: boolean; message?: string; data?: { qrCode?: string; secret?: string } }>(
         "/api/2fa/login/setup",
-        {
-          method: "POST",
-          body: { userId: pendingUserId, email },
-        },
+        { method: "POST", body: { userId: pendingUserId, email } },
       );
 
       if (response.ok && response.data) {
@@ -361,6 +340,18 @@ function LoginForm() {
     fontFamily: fonts.body,
   };
 
+  const primaryButtonStyle = {
+    width: "100%",
+    border: "none",
+    borderRadius: "12px",
+    padding: "0.9rem 1rem",
+    background: colors.primary,
+    color: "#FFFFFF",
+    fontSize: "15px",
+    fontWeight: 800,
+    fontFamily: fonts.body,
+  };
+
   return (
     <main style={mainStyle}>
       <div style={overlayStyle} />
@@ -396,7 +387,7 @@ function LoginForm() {
                 <label htmlFor="password" style={labelStyle}>Contraseña</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
                   <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required style={{ flex: 1, padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "14px", fontFamily: fonts.body }} />
-                  <button type="button" onClick={() => setShowPassword(v => !v)} style={{ border: "1px solid #D6E0EA", background: "#F8FAFC", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ border: "1px solid #D6E0EA", background: "#F8FAFC", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
                     {showPassword ? "Ocultar" : "Mostrar"}
                   </button>
                 </div>
@@ -404,7 +395,7 @@ function LoginForm() {
 
               {errorMessage ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
 
-              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.primary, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: submitting ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+              <button type="submit" disabled={submitting} style={{ ...primaryButtonStyle, cursor: submitting ? "not-allowed" : "pointer" }}>
                 {submitting ? "Ingresando..." : "Entrar"}
               </button>
             </form>
@@ -417,7 +408,7 @@ function LoginForm() {
                 <input id="twofa" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={twoFACode} onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
               </div>
               {error2FA ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
-              <button type="submit" disabled={validating2FA} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.primary, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: validating2FA ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+              <button type="submit" disabled={validating2FA} style={{ ...primaryButtonStyle, cursor: validating2FA ? "not-allowed" : "pointer" }}>
                 {validating2FA ? "Validando..." : "Validar código"}
               </button>
               <button type="button" onClick={startRecovery} style={{ width: "100%", border: "1px solid #CBD5E1", borderRadius: "12px", padding: "0.9rem 1rem", background: "#FFFFFF", color: colors.textPrimary, fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body }}>
@@ -435,7 +426,7 @@ function LoginForm() {
                 <input id="setupCode" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))} required style={{ width: "100%", padding: "0.8rem 1rem", borderRadius: "10px", border: "1px solid #D6E0EA", fontSize: "18px", letterSpacing: "0.25em", textAlign: "center", fontFamily: fonts.body }} />
               </div>
               {errorSetup ? <p style={{ margin: 0, fontSize: "13px", color: "#B91C1C", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
-              <button type="submit" disabled={verifyingSetup} style={{ width: "100%", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", background: colors.primary, color: "#FFFFFF", fontSize: "15px", fontWeight: 800, cursor: verifyingSetup ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
+              <button type="submit" disabled={verifyingSetup} style={{ ...primaryButtonStyle, cursor: verifyingSetup ? "not-allowed" : "pointer" }}>
                 {verifyingSetup ? "Verificando..." : "Activar y entrar"}
               </button>
             </form>
