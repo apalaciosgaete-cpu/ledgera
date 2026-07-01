@@ -188,6 +188,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const isPanel = pathname === "/panel";
   const isImportsPage = pathname === "/importaciones";
+  const isAssetsPage = pathname === "/cryptoactivos";
   const isReportsPage = pathname === "/reportes" || pathname === "/impuestos/reportes" || pathname === "/tax/reports" || pathname === "/experto/reportes";
 
   if (!user) return null;
@@ -296,7 +297,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           minWidth: 0,
           ...(isPanel
             ? {}
-            : isImportsPage
+            : isImportsPage || isAssetsPage
               ? { minHeight: "calc(100vh - 60px)", overflow: "visible", boxSizing: "border-box" as const }
               : { height: "calc(100vh - 60px)", overflow: "hidden", boxSizing: "border-box" as const }),
         }}
