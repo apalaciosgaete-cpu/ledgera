@@ -11,14 +11,6 @@ type ReportItem = {
   formats: { label: string; href: string }[];
 };
 
-const flowSteps = [
-  "Carga información en Origen de Fondos.",
-  "Confirma movimientos en Importaciones.",
-  "Revisa activos y base de costo.",
-  "Distingue declaración/respaldo versus pago de impuesto.",
-  "Descarga PDF y Excel como respaldo formal.",
-];
-
 export default function DeclaracionesPage() {
   const [year, setYear] = useState<string>(String(new Date().getFullYear()));
   const [availableYears, setAvailableYears] = useState<number[]>([]);
@@ -72,28 +64,6 @@ export default function DeclaracionesPage() {
         <Link href="/obligaciones-tributarias" style={{ border: "1px solid #CBD5E1", borderRadius: 999, color: "#0F2A3D", display: "inline-flex", fontSize: 13, fontWeight: 850, padding: "10px 14px", textDecoration: "none" }}>
           Revisar situación tributaria primero
         </Link>
-      </section>
-
-      <section style={{ background: "linear-gradient(135deg,#FFFFFF 0%,#F8FFFB 100%)", border: "1px solid #D9F5E8", borderRadius: 24, boxShadow: "0 14px 34px rgba(15,42,61,0.06)", padding: 18, display: "grid", gap: 14 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0,1fr)", gap: 14, alignItems: "center" }}>
-          <div style={{ width: 58, height: 58, borderRadius: 18, background: "#ECFDF5", color: "#0F766E", display: "grid", placeItems: "center", fontSize: 28, boxShadow: "inset 0 0 0 1px #BBF7D0" }}>📄</div>
-          <div>
-            <p style={{ color: "#0F766E", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: "0 0 5px", textTransform: "uppercase" }}>IA LEDGERA</p>
-            <h2 style={{ color: "#0F2A3D", fontSize: "1.35rem", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 6px" }}>La declaración no es lo mismo que el pago</h2>
-            <p style={{ color: "#475569", fontSize: 13.5, lineHeight: 1.45, margin: 0, maxWidth: 880 }}>
-              El PDF y el Excel indican si las operaciones solo deben declararse o respaldarse, o si además generan impuesto estimado bajo Impuesto Global Complementario según la base detectada por LEDGERA.
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))" }}>
-          {flowSteps.map((step, index) => (
-            <article key={step} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: 12 }}>
-              <span style={{ color: "#0F766E", fontSize: 12, fontWeight: 900 }}>{String(index + 1).padStart(2, "0")}</span>
-              <p style={{ color: "#475569", fontSize: 13, lineHeight: 1.4, margin: "7px 0 0" }}>{step}</p>
-            </article>
-          ))}
-        </div>
       </section>
 
       <section style={{ alignItems: "center", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 18, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", padding: 16 }}>
