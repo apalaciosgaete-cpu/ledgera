@@ -71,7 +71,7 @@ export type TaxDeclarationMetadata = {
       capitalGainFlatRatePct: number;
       firstCategoryRatePct: number;
     };
-    globalComplementaryTax: {
+    globalComplementaryTax?: {
       currentTaxYear: number;
       legalReference: "LIR_ART_52";
       source: "SII";
