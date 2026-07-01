@@ -30,60 +30,87 @@
 
 /* ─── Reset ───────────────────────────────────────────────────────────────── */
 *, *::before, *::after {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-body), 'Inter', system-ui, sans-serif;
   box-sizing: border-box;
 }
 
 h1, h2, h3, h4, h5, h6,
 .font-display {
-  font-family: 'Manrope', system-ui, sans-serif;
+  font-family: var(--font-display), 'Space Grotesk', system-ui, sans-serif;
 }
 
-/* ─── Variables ───────────────────────────────────────────────────────────── */
+/* ─── Variables ───────────────────────────────────────────────────────────────
+ * LEDGERA design system · Propuesta B "Cierre" (modo oscuro — base del producto).
+ * `--font-display`, `--font-body` y `--font-mono` los inyecta next/font en <html>;
+ * aquí sólo declaramos los tokens de color, radio y sombra. */
 :root {
-  --font-display:         'Manrope', system-ui, sans-serif;
-  --font-body:            'Inter', system-ui, sans-serif;
-  --font-sans:            'Inter', system-ui, sans-serif;
+  /* Fondos */
+  --bg:               #14181A;
+  --bg-elev:          #1B2124;
+  --bg-sunken:        #0F1213;
+  /* Bordes */
+  --border:           #262C2E;
+  --border-strong:    #343B3D;
+  /* Texto */
+  --text:             #E7E4DA;
+  --text-soft:        #B7B4A8;
+  --text-faint:       #7C8079;
+  /* Acento / marca (== ganancia, a propósito) */
+  --accent:           #3FA687;
+  --accent-contrast:  #0B1512;
+  --accent-soft:      #1D2C27;
+  /* Semánticos */
+  --gain:             #3FA687;
+  --loss:             #C4634A;
+  --warn:             #E8B84B;
 
-  --color-primary:        #0F2A3D;
-  --color-primary-hover:  #13364F;
-  --color-primary-card:   #13364F;
-  --color-primary-border: #1e4a6b;
-  --color-accent:         #16A34A;
-  --color-accent-hover:   #15803D;
-  --color-accent-muted:   rgba(22, 163, 74, 0.15);
-  --color-warning:        #F59E0B;
-  --color-warning-hover:  #D97706;
-  --color-warning-muted:  rgba(245, 158, 11, 0.15);
-  --color-danger:         #EF4444;
-  --color-danger-hover:   #DC2626;
-  --color-danger-muted:   rgba(239, 68, 68, 0.15);
-  --color-bg:             #0F2A3D;
-  --color-bg-app:         #F6F8FA;
-  --color-surface:        #FFFFFF;
-  --color-surface-alt:    #F8FAFC;
-  --color-surface-dark:   #13364F;
-  --color-text-primary:   #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-muted:     #94A3B8;
-  --color-text-light:     #F6F8FA;
-  --color-border:         #E2E8F0;
-  --color-border-dark:    #1e4a6b;
+  /* Fallback tipográfico para código legacy que aún referencia --font-sans */
+  --font-sans:        var(--font-body), 'Inter', system-ui, sans-serif;
+
+  /* ── Compat: variables --color-* legadas remapeadas al nuevo sistema oscuro.
+   *    Se conservan para no romper componentes que aún las consumen; migrar
+   *    a los tokens nuevos progresivamente. ── */
+  --color-primary:        var(--accent);
+  --color-primary-hover:  var(--accent);
+  --color-primary-card:   var(--bg-elev);
+  --color-primary-border: var(--border-strong);
+  --color-accent:         var(--accent);
+  --color-accent-hover:   var(--accent);
+  --color-accent-muted:   var(--accent-soft);
+  --color-warning:        var(--warn);
+  --color-warning-hover:  var(--warn);
+  --color-warning-muted:  rgba(232, 184, 75, 0.15);
+  --color-danger:         var(--loss);
+  --color-danger-hover:   var(--loss);
+  --color-danger-muted:   rgba(196, 99, 74, 0.15);
+  --color-bg:             var(--bg);
+  --color-bg-app:         var(--bg);
+  --color-surface:        var(--bg-elev);
+  --color-surface-alt:    var(--bg-sunken);
+  --color-surface-dark:   var(--bg-sunken);
+  --color-text-primary:   var(--text);
+  --color-text-secondary: var(--text-soft);
+  --color-text-muted:     var(--text-faint);
+  --color-text-light:     var(--text);
+  --color-border:         var(--border);
+  --color-border-dark:    var(--border-strong);
+
   --radius-sm:            6px;
   --radius-md:            8px;
   --radius-lg:            12px;
   --radius-xl:            16px;
-  --shadow-sm:            0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md:            0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg:            0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-sm:            0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-md:            0 4px 16px rgba(0, 0, 0, 0.40);
+  --shadow-lg:            0 8px 32px rgba(0, 0, 0, 0.50);
 }
 
 html, body {
   padding: 0;
   margin: 0;
   min-height: 100%;
-  background: var(--color-bg-app);
-  color: var(--color-text-primary);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body), 'Inter', system-ui, sans-serif;
 }
 
 a {
@@ -92,11 +119,11 @@ a {
 }
 
 .text-display {
-  font-family: 'Manrope', system-ui, sans-serif;
+  font-family: var(--font-display), 'Space Grotesk', system-ui, sans-serif;
 }
 
 .text-body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-body), 'Inter', system-ui, sans-serif;
 }
 
 /* ─── Importaciones: kanban operativo ───────────────────────────────────────

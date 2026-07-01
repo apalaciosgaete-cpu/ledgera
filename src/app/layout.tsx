@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
+import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
@@ -7,6 +8,27 @@ import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
 import ChatWidget from "@/components/chat/ChatWidget";
 import SwRegister from "@/components/chat/SwRegister";
 import AuthEntryTrustOverlay from "@/components/auth/AuthEntryTrustOverlay";
+
+// ── LEDGERA design system · Propuesta B "Cierre" ──
+// Display: cifras destacadas, headlines, logo · Body: nav/texto/labels · Mono: montos, folios, tablas
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-display",
+  display: "swap",
+});
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-body",
+  display: "swap",
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 const baseUrl = "https://ledgera.cl";
 const googleSiteVerification =
@@ -173,7 +195,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es-CL">
+    <html
+      lang="es-CL"
+      className={`${spaceGrotesk.variable} ${inter.variable} ${plexMono.variable}`}
+    >
       <body>
         <script
           type="application/ld+json"
