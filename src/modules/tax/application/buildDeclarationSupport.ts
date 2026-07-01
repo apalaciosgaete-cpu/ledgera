@@ -358,6 +358,64 @@ function writeAssetTraceTable(doc: PDFKit.PDFDocument, rows: AssetTrace[]) {
   doc.moveDown(0.7);
 }
 
+function writeOperationsTable(doc: PDFKit.PDFDocument, rows: TraceRow[]) {
+  const leftX = doc.page.margins.left;
+  const columns = [
+    { label: "Fecha", x: leftX, width: 58 },
+    { label: "Activo", x: leftX + 64, width: 36 },
+    { label: "Proveedor", x: leftX + 106, width: 58 },
+    { label: "Monto", x: leftX + 170, width: 72 },
+    { label: "Operación", x: leftX + 248, width: 64 },
+    { label: "Tratamiento", x: leftX + 318, width: 90 },
+    { label: "Fuente / tipo", x: leftX + 414, width: 84 },
+  ];
+
+  const writeHeader = () => {
+    checkPage(doc, 700);
+    const y = doc.y;
+    doc.font("Helvetica-Bold").fontSize(7.2).fillColor("#0F766E");
+    for (const column of columns) {
+      doc.text(column.label, column.x, y, { width: column.width });
+    }
+    doc.y = y + 15;
+  };
+
+  if (rows.length === 0) {
+    doc.font("Helvetica").fontSize(9).fillColor("#64748B").text("Sin operaciones confirmadas.");
+    return;
+  }
+
+  writeHeader();
+  for (const row of rows) {
+    if (doc.y > 714) {
+      doc.addPage();
+      writeHeader();
+    }
+    const y = doc.y;
+    const values = [
+      row.date,
+      row.asset,
+      row.provider,
+      row.amount,
+      row.title,
+      row.treatment,
+      `${row.source} / ${row.rawType}`,
+    ];
+
+    doc.font("Helvetica").fontSize(6.8).fillColor("#334155");
+    values.forEach((value, index) => {
+      const column = columns[index];
+      doc.font(index === 1 ? "Helvetica-Bold" : "Helvetica").text(value, column.x, y, { width: column.width });
+    });
+
+    const rowHeight = Math.max(
+      ...values.map((value, index) => doc.heightOfString(value, { width: columns[index].width })),
+    );
+    doc.y = y + Math.max(rowHeight, 12) + 4;
+  }
+  doc.moveDown(0.7);
+}
+
 export async function renderDeclarationSupportPdf(payload: DeclarationSupportPayload): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ margin: 48, size: "A4" });
@@ -391,10 +449,7 @@ export async function renderDeclarationSupportPdf(payload: DeclarationSupportPay
     writeAssetTraceTable(doc, payload.assetTrace);
 
     sectionTitle(doc, "Detalle de operaciones confirmadas");
-    writeRows(doc, payload.traceRows.slice(0, 160).map((row) => [
-      `${row.date} · ${row.asset}`,
-      `${row.provider} · ${row.amount} · ${row.title} · ${row.treatment} · Fuente: ${row.source} · Tipo: ${row.rawType}`,
-    ]));
+    writeOperationsTable(doc, payload.traceRows.slice(0, 160));
 
     if (payload.traceRows.length > 160) {
       doc.moveDown(0.4);
