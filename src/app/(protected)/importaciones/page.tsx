@@ -84,6 +84,11 @@ function getProviderLabel(provider: string): string {
   return provider || "Fuente";
 }
 
+function statusTitle(status: StatusFilter): string {
+  if (status === "ALL") return "Todos los estados";
+  return STATUS_LABEL[status] ?? status;
+}
+
 function tone(status: string) {
   if (status === "CONFIRMED" || status === "MATCHED") {
     return { bg: "rgba(22,163,74,0.10)", fg: "#15803D", border: "rgba(22,163,74,0.24)" };
@@ -95,11 +100,6 @@ function tone(status: string) {
     return { bg: "rgba(239,68,68,0.08)", fg: "#DC2626", border: "rgba(239,68,68,0.22)" };
   }
   return { bg: "rgba(245,158,11,0.12)", fg: "#B45309", border: "rgba(245,158,11,0.24)" };
-}
-
-function statusTitle(status: StatusFilter): string {
-  if (status === "ALL") return "Todos los estados";
-  return STATUS_LABEL[status] ?? status;
 }
 
 function statusCount(items: StagingItem[], status: StatusFilter): number {
@@ -139,6 +139,58 @@ function SourceBadge({ item }: { item: StagingItem }) {
     }}>
       {isExchange ? getProviderLabel(item.sources[0] ?? item.provider) : SOURCE_LABEL[item.source] ?? item.source}
     </span>
+  );
+}
+
+function StatusFilterPill({
+  status,
+  count,
+  active,
+  onClick,
+}: {
+  status: StatusFilter;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const t = status === "ALL" ? { bg: "#0F2A3D", fg: "#FFFFFF", border: "#0F2A3D" } : tone(status);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        minHeight: 34,
+        borderRadius: 999,
+        padding: "6px 12px",
+        border: `1px solid ${active ? "#0F2A3D" : t.border}`,
+        background: active ? "#0F2A3D" : "#FFFFFF",
+        color: active ? "#FFFFFF" : "#334155",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 12,
+        fontWeight: 850,
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span>{statusTitle(status)}</span>
+      <span style={{
+        minWidth: 22,
+        height: 20,
+        padding: "0 7px",
+        borderRadius: 999,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: active ? "rgba(255,255,255,0.16)" : t.bg,
+        color: active ? "#FFFFFF" : t.fg,
+        fontSize: 11,
+        fontWeight: 900,
+      }}>
+        {count}
+      </span>
+    </button>
   );
 }
 
@@ -275,55 +327,6 @@ function StagingCard({
   );
 }
 
-function StatusButton({
-  status,
-  count,
-  active,
-  onClick,
-}: {
-  status: StatusFilter;
-  count: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  const t = status === "ALL" ? { bg: "#0F2A3D", fg: "#FFFFFF", border: "#0F2A3D" } : tone(status);
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        minHeight: 64,
-        textAlign: "left",
-        borderRadius: 14,
-        padding: "12px 14px",
-        border: `1px solid ${active ? "#0F2A3D" : t.border}`,
-        background: active ? "#0F2A3D" : "#FFFFFF",
-        color: active ? "#FFFFFF" : "#0F2A3D",
-        cursor: "pointer",
-      }}
-    >
-      <span style={{ display: "block", color: active ? "#FFFFFF" : "#64748B", fontSize: 11, fontWeight: 850, marginBottom: 8 }}>
-        {statusTitle(status)}
-      </span>
-      <span style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: 30,
-        height: 24,
-        borderRadius: "999px",
-        background: active ? "rgba(255,255,255,0.16)" : t.bg,
-        color: active ? "#FFFFFF" : t.fg,
-        fontSize: 13,
-        fontWeight: 900,
-      }}>
-        {count}
-      </span>
-    </button>
-  );
-}
-
 function Section({
   title,
   status,
@@ -389,6 +392,50 @@ function Section({
       </div>
     </section>
   );
+}
+
+function NextStepCta({ confirmed, rejected }: { confirmed: number; rejected: number }) {
+  return (
+    <section style={{
+      marginBottom: 14,
+      padding: "12px 14px",
+      borderRadius: 14,
+      border: "1px solid rgba(22,163,74,0.24)",
+      background: "rgba(22,163,74,0.08)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      flexWrap: "wrap",
+    }}>
+      <div style={{ color: "#166534", fontSize: 13, lineHeight: 1.35 }}>
+        <strong>IA: revisión completada.</strong>{" "}
+        {confirmed} confirmados{rejected > 0 ? ` · ${rejected} rechazados` : ""}. Siguiente recomendado: revisar los activos generados.
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <a href="/cryptoactivos" style={ctaLinkStyle("primary")}>Ver activos</a>
+        <a href="/obligaciones-tributarias" style={ctaLinkStyle("secondary")}>Obligaciones tributarias</a>
+        <a href="/origen-fondos/documentacion" style={ctaLinkStyle("secondary")}>Subir otro documento</a>
+      </div>
+    </section>
+  );
+}
+
+function ctaLinkStyle(variant: "primary" | "secondary"): CSSProperties {
+  return {
+    minHeight: 34,
+    padding: "8px 12px",
+    borderRadius: 9,
+    border: variant === "primary" ? "1px solid #16A34A" : "1px solid #CBD5E1",
+    background: variant === "primary" ? "#16A34A" : "#FFFFFF",
+    color: variant === "primary" ? "#FFFFFF" : "#475569",
+    fontSize: 12,
+    fontWeight: 900,
+    textDecoration: "none",
+    display: "inline-flex",
+    alignItems: "center",
+    whiteSpace: "nowrap",
+  };
 }
 
 function DetailDrawer({
@@ -511,7 +558,6 @@ export default function ImportacionesPage() {
   }, [load]);
 
   const allItems = data?.items ?? [];
-
   const sourceItems = useMemo(() => {
     if (tab === "ALL") return allItems;
     return allItems.filter((item) => item.source === tab);
@@ -521,6 +567,7 @@ export default function ImportacionesPage() {
   const review = sourceItems.filter((item) => item.status === "REVIEW").sort((a, b) => (b.stagingConfidence ?? -1) - (a.stagingConfidence ?? -1));
   const confirmed = sourceItems.filter((item) => item.status === "CONFIRMED");
   const rejected = sourceItems.filter((item) => item.status === "REJECTED");
+  const workflowComplete = !loading && pending.length === 0 && review.length === 0 && confirmed.length > 0;
 
   const visibleSections = useMemo(() => {
     const base = [
@@ -675,13 +722,13 @@ export default function ImportacionesPage() {
       </nav>
 
       <section style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-        gap: 10,
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 8,
         marginBottom: 14,
       }}>
         {STATUS_FILTERS.map((status) => (
-          <StatusButton
+          <StatusFilterPill
             key={status}
             status={status}
             count={statusCount(sourceItems, status)}
@@ -690,6 +737,10 @@ export default function ImportacionesPage() {
           />
         ))}
       </section>
+
+      {workflowComplete && statusFilter === "ALL" && (
+        <NextStepCta confirmed={confirmed.length} rejected={rejected.length} />
+      )}
 
       {selectablePendingIds.length > 0 && (
         <section style={{
