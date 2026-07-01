@@ -1,6 +1,11 @@
 // src/modules/tax/domain/taxPolicy.ts
 
 import type { SuggestedTaxCategory, SuggestedTaxRule } from "./resolveTaxCategory";
+import {
+  calculateGlobalComplementaryTax,
+  DEFAULT_GLOBAL_COMPLEMENTARY_TAX_YEAR,
+  getGlobalComplementaryTaxTable,
+} from "./globalComplementaryTax";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -18,7 +23,8 @@ export type TaxPolicy = {
 
   rates: {
     // Persona natural habitual → IGC (Impuesto Global Complementario)
-    // Tasa marginal máxima vigente: 40% (Art. 52 LIR)
+    // Tasa marginal máxima vigente: 40% (Art. 52 LIR).
+    // No usar como tasa plana; el impuesto se calcula con tabla progresiva.
     igcMaxRatePct: number;
 
     // Persona natural no habitual → Impuesto Único 2da Categoría
@@ -28,6 +34,13 @@ export type TaxPolicy = {
     // Empresa (Régimen General) → Impuesto de Primera Categoría
     // Tasa vigente 2024: 27% (Art. 20 LIR)
     firstCategoryRatePct: number;
+  };
+
+  globalComplementaryTax: {
+    currentTaxYear: number;
+    legalReference: "LIR_ART_52";
+    source: "SII";
+    sourceUrl: string;
   };
 
   utm: {
@@ -65,6 +78,10 @@ export type TaxPolicy = {
 
 // ─── Política vigente ──────────────────────────────────────────────────────────
 
+const currentGlobalComplementaryTaxTable = getGlobalComplementaryTaxTable(
+  DEFAULT_GLOBAL_COMPLEMENTARY_TAX_YEAR,
+);
+
 export const taxPolicy: TaxPolicy = {
   regime: "PERSONA_NATURAL",
 
@@ -77,6 +94,13 @@ export const taxPolicy: TaxPolicy = {
     igcMaxRatePct:          40,
     capitalGainFlatRatePct: 35,
     firstCategoryRatePct:   27,
+  },
+
+  globalComplementaryTax: {
+    currentTaxYear: DEFAULT_GLOBAL_COMPLEMENTARY_TAX_YEAR,
+    legalReference: currentGlobalComplementaryTaxTable.legalReference,
+    source: currentGlobalComplementaryTaxTable.source,
+    sourceUrl: currentGlobalComplementaryTaxTable.sourceUrl,
   },
 
   utm: {
@@ -118,7 +142,11 @@ export function isHabitual(
 }
 
 /**
- * Retorna la tasa impositiva aplicable según habitualidad y régimen.
+ * Retorna la tasa impositiva referencial según habitualidad y régimen.
+ *
+ * Importante: para persona natural habitual, el 40% es solo la tasa marginal
+ * máxima del IGC. No usar este helper para determinar impuesto a pagar.
+ * Usar calculateApplicableTaxClp para cálculo monetario.
  */
 export function getApplicableRatePct(habitual: boolean): number {
   if (taxPolicy.regime === "EMPRESA") {
@@ -127,6 +155,39 @@ export function getApplicableRatePct(habitual: boolean): number {
   return habitual
     ? taxPolicy.rates.igcMaxRatePct
     : taxPolicy.rates.capitalGainFlatRatePct;
+}
+
+/**
+ * Calcula impuesto estimado en CLP para la base imponible indicada.
+ *
+ * - Persona natural habitual: tabla progresiva de IGC Art. 52 LIR.
+ * - Persona natural no habitual: tasa plana configurada para mayor valor.
+ * - Empresa: Impuesto de Primera Categoría configurado.
+ */
+export function calculateApplicableTaxClp(input: {
+  taxableIncomeClp: number;
+  habitual: boolean;
+  taxYear?: number;
+}): number {
+  const taxableIncomeClp = Math.max(0, Math.round(input.taxableIncomeClp));
+
+  if (taxPolicy.regime === "EMPRESA") {
+    return Math.round(
+      taxableIncomeClp * (taxPolicy.rates.firstCategoryRatePct / 100),
+    );
+  }
+
+  if (input.habitual) {
+    return calculateGlobalComplementaryTax({
+      taxableIncomeClp,
+      taxYear:
+        input.taxYear ?? taxPolicy.globalComplementaryTax.currentTaxYear,
+    }).taxClp;
+  }
+
+  return Math.round(
+    taxableIncomeClp * (taxPolicy.rates.capitalGainFlatRatePct / 100),
+  );
 }
 
 /**
