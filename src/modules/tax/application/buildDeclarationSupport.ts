@@ -77,6 +77,9 @@ type DeclarationSupportPayload = {
   verification: VerificationData;
 };
 
+const PDF_FINAL_VERIFICATION_BLOCK_HEIGHT = 96;
+const PDF_FINAL_VERIFICATION_TOP_GAP = 18;
+
 export function parseDeclarationYear(value: string | null): number | null {
   if (!value) return null;
   const parsed = Number(value);
@@ -347,11 +350,43 @@ function checkPage(doc: PDFKit.PDFDocument, minY = 720) {
   if (doc.y > minY) doc.addPage();
 }
 
+function pdfLeftX(doc: PDFKit.PDFDocument): number {
+  return doc.page.margins.left;
+}
+
+function pdfContentWidth(doc: PDFKit.PDFDocument): number {
+  return doc.page.width - doc.page.margins.left - doc.page.margins.right;
+}
+
+function verificationTopY(doc: PDFKit.PDFDocument): number {
+  return doc.page.height - doc.page.margins.bottom - PDF_FINAL_VERIFICATION_BLOCK_HEIGHT;
+}
+
 function sectionTitle(doc: PDFKit.PDFDocument, title: string) {
   checkPage(doc, 690);
-  doc.moveDown(0.2);
-  doc.font("Helvetica-Bold").fontSize(12).fillColor("#0F766E").text(title);
-  doc.moveDown(0.35);
+  const leftX = pdfLeftX(doc);
+  const y = doc.y + 3;
+  doc.font("Helvetica-Bold")
+    .fontSize(12)
+    .fillColor("#0F766E")
+    .text(title, leftX, y, { width: pdfContentWidth(doc), align: "left", lineBreak: false });
+  doc.x = leftX;
+  doc.y = y + 17;
+}
+
+function writeFullWidthParagraph(doc: PDFKit.PDFDocument, text: string, options?: { fontSize?: number; color?: string }) {
+  const leftX = pdfLeftX(doc);
+  doc.font("Helvetica")
+    .fontSize(options?.fontSize ?? 8.5)
+    .fillColor(options?.color ?? "#64748B")
+    .text(text, leftX, doc.y, { width: pdfContentWidth(doc), lineGap: 2 });
+  doc.x = leftX;
+}
+
+function ensureFinalSectionSpace(doc: PDFKit.PDFDocument, minHeight = 128) {
+  const maxContentY = verificationTopY(doc) - PDF_FINAL_VERIFICATION_TOP_GAP;
+  if (doc.y + minHeight > maxContentY) doc.addPage();
+  doc.x = pdfLeftX(doc);
 }
 
 function writeRows(doc: PDFKit.PDFDocument, rows: Array<[string, string]>) {
@@ -472,22 +507,42 @@ function writeOperationsTable(doc: PDFKit.PDFDocument, rows: TraceRow[]) {
 }
 
 function writeVerificationBlock(doc: PDFKit.PDFDocument, payload: DeclarationSupportPayload, qrBuffer: Buffer) {
-  checkPage(doc, 650);
-  doc.moveDown(0.7);
-  const leftX = doc.page.margins.left;
-  const qrSize = 86;
-  const y = doc.y;
+  if (doc.y > verificationTopY(doc) - 8) doc.addPage();
+
+  const leftX = pdfLeftX(doc);
+  const rightX = doc.page.width - doc.page.margins.right;
+  const qrSize = 74;
+  const y = verificationTopY(doc);
+  const textX = leftX + qrSize + 16;
+  const textWidth = rightX - textX;
+
+  doc.moveTo(leftX, y - 10).lineTo(rightX, y - 10).strokeColor("#E5E7EB").stroke();
 
   doc.image(qrBuffer, leftX, y, { width: qrSize, height: qrSize });
-  doc.font("Helvetica-Bold").fontSize(10).fillColor("#0F766E").text("Verificación de trazabilidad", leftX + qrSize + 18, y, { width: 360 });
-  doc.font("Helvetica").fontSize(8).fillColor("#334155")
-    .text(`Folio: ${payload.verification.folio}`, leftX + qrSize + 18, y + 18, { width: 360 })
-    .text(`Hash: ${payload.verification.hash}`, leftX + qrSize + 18, y + 32, { width: 360 })
-    .text(`URL: ${payload.verification.url}`, leftX + qrSize + 18, y + 57, { width: 360 });
-  doc.font("Helvetica").fontSize(7.8).fillColor("#64748B")
-    .text("Escanee para verificar autenticidad y trazabilidad del respaldo.", leftX + qrSize + 18, y + 76, { width: 360 });
+  doc.link(leftX, y, qrSize, qrSize, payload.verification.url);
 
-  doc.y = y + qrSize + 8;
+  doc.font("Helvetica-Bold")
+    .fontSize(10)
+    .fillColor("#0F766E")
+    .text("Verificación de trazabilidad", textX, y, { width: textWidth, lineBreak: false });
+  doc.font("Helvetica")
+    .fontSize(7.3)
+    .fillColor("#334155")
+    .text(`Folio: ${payload.verification.folio}`, textX, y + 17, { width: textWidth, lineBreak: false })
+    .text(`Hash: ${payload.verification.hash}`, textX, y + 31, { width: textWidth, lineBreak: false });
+  doc.font("Helvetica")
+    .fontSize(5.8)
+    .fillColor("#334155")
+    .text(`URL: ${payload.verification.url}`, textX, y + 49, { width: textWidth, lineBreak: false });
+  doc.link(textX, y + 49, textWidth, 8, payload.verification.url);
+  doc.font("Helvetica")
+    .fontSize(7)
+    .fillColor("#64748B")
+    .text("Escanee para verificar autenticidad y trazabilidad del respaldo.", textX, y + 65, { width: textWidth, lineBreak: false });
+
+  doc.x = leftX;
+  doc.y = y + PDF_FINAL_VERIFICATION_BLOCK_HEIGHT;
+  doc.fillColor("#0F2A3D");
 }
 
 export async function renderDeclarationSupportPdf(payload: DeclarationSupportPayload): Promise<Buffer> {
@@ -534,14 +589,16 @@ export async function renderDeclarationSupportPdf(payload: DeclarationSupportPay
 
     if (payload.traceRows.length > 160) {
       doc.moveDown(0.4);
-      doc.font("Helvetica").fontSize(8).fillColor("#64748B").text(`Se muestran 160 operaciones en PDF. El Excel contiene el detalle completo de ${payload.traceRows.length} operaciones.`);
+      writeFullWidthParagraph(doc, `Se muestran 160 operaciones en PDF. El Excel contiene el detalle completo de ${payload.traceRows.length} operaciones.`, { fontSize: 8, color: "#64748B" });
     }
 
-    sectionTitle(doc, "Alcance del documento");
-    doc.font("Helvetica").fontSize(8.5).fillColor("#64748B").text("Documento generado automáticamente desde datos confirmados en LEDGERA. La conclusión se limita a la información importada y validada en la plataforma. Debe revisarse junto con los demás antecedentes tributarios del contribuyente antes de presentar una declaración final.", { lineGap: 2 });
-
+    ensureFinalSectionSpace(doc);
     sectionTitle(doc, "Conclusión expresa LEDGERA");
-    doc.font("Helvetica").fontSize(10).fillColor("#334155").text(payload.summary.conclusion, { lineGap: 2 });
+    writeFullWidthParagraph(doc, payload.summary.conclusion, { fontSize: 10, color: "#334155" });
+
+    sectionTitle(doc, "Alcance del documento");
+    writeFullWidthParagraph(doc, "Documento generado automáticamente desde datos confirmados en LEDGERA. La conclusión se limita a la información importada y validada en la plataforma. Debe revisarse junto con los demás antecedentes tributarios del contribuyente antes de presentar una declaración final.");
+
     writeVerificationBlock(doc, payload, qrBuffer);
 
     doc.end();
