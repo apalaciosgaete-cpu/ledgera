@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Si estamos en recuperación (twoFactorEnabled era false), activar ahora
     if (!user.twoFactorEnabled) {
       await prisma.users.update({
         where: { id: user.id },
@@ -107,6 +106,10 @@ export async function POST(req: NextRequest) {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          status: user.status,
+          subscriptionPlan: user.subscriptionPlan,
+          subscriptionExpiresAt: user.subscriptionExpiresAt,
+          twoFactorEnabled: true,
         },
         session: {
           id: session.id,
