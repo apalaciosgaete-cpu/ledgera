@@ -35,6 +35,10 @@ import {
   type SubscriptionStateResult,
 } from "@/modules/subscription/application/resolveSubscriptionState";
 
+type RefreshUserOptions = {
+  silent?: boolean;
+};
+
 type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -51,7 +55,9 @@ type AuthContextValue = {
 
   logout: () => Promise<void>;
 
-  refreshUser: () => Promise<void>;
+  refreshUser: (options?: RefreshUserOptions) => Promise<void>;
+
+  primeAuthSession: (user: AuthUser) => void;
 
   clearAuthError: () => void;
 };
@@ -89,11 +95,22 @@ export function AuthProvider({
     setIsHydratedFromCache(false);
   }, []);
 
-  const refreshUser = useCallback(async () => {
+  const primeAuthSession = useCallback((nextUser: AuthUser) => {
+    setUser(nextUser);
+    setIsHydratedFromCache(true);
+    setIsLoading(false);
+    setLastAuthError(null);
+    writeCachedAuthUser(nextUser);
+  }, []);
+
+  const refreshUser = useCallback(async (options: RefreshUserOptions = {}) => {
+    const silent = options.silent === true;
     const hadLocalToken =
       Boolean(getSessionToken());
 
-    setIsLoading(true);
+    if (!silent) {
+      setIsLoading(true);
+    }
 
     try {
       const currentUser =
@@ -130,7 +147,9 @@ export function AuthProvider({
         );
       }
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   }, [clearLocalSession]);
 
@@ -162,9 +181,7 @@ export function AuthProvider({
           );
 
         saveSessionToken(result.token);
-        setUser(result.user);
-        setIsHydratedFromCache(false);
-        writeCachedAuthUser(result.user);
+        primeAuthSession(result.user);
       } catch (error) {
         if (isHttpClientError(error)) {
           setLastAuthError(error.message);
@@ -179,7 +196,7 @@ export function AuthProvider({
         setIsLoading(false);
       }
     },
-    [],
+    [primeAuthSession],
   );
 
   const logout = useCallback(async () => {
@@ -223,6 +240,7 @@ export function AuthProvider({
       login,
       logout,
       refreshUser,
+      primeAuthSession,
       clearAuthError,
     }),
     [
@@ -235,6 +253,7 @@ export function AuthProvider({
       login,
       logout,
       refreshUser,
+      primeAuthSession,
       clearAuthError,
     ],
   );
