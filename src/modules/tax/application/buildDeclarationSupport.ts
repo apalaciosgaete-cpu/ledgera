@@ -239,15 +239,40 @@ export async function buildDeclarationSupportPayload(input: {
 }
 
 function addPdfHeader(doc: PDFKit.PDFDocument, payload: DeclarationSupportPayload) {
-  doc.font("Helvetica-Bold").fontSize(22).fillColor("#071B28").text("LEDGERA");
-  doc.font("Helvetica").fontSize(8).fillColor("#0F766E").text("Sistema Operativo Financiero y Tributario");
-  doc.moveDown(0.9);
-  doc.font("Helvetica-Bold").fontSize(16).fillColor("#0F2A3D").text("Declaración tributaria y respaldo de criptoactivos");
-  doc.moveDown(0.4);
-  doc.font("Helvetica").fontSize(9).fillColor("#475569");
-  doc.text(`Contribuyente/usuario: ${payload.userEmail}`);
-  doc.text(`Año operaciones: ${payload.year ?? "Todos"} · Año tabla IGC: AT ${payload.igcTaxYear}`);
-  doc.text(`Generado: ${new Date(payload.generatedAt).toLocaleString("es-CL")}`);
+  const margin = 48;
+  const topY = doc.y;
+  const pageWidth = doc.page.width;
+  const metadataWidth = 265;
+  const metadataX = pageWidth - margin - metadataWidth;
+  const brandWidth = metadataX - margin - 24;
+
+  doc.font("Helvetica-Bold")
+    .fontSize(22)
+    .fillColor("#071B28")
+    .text("LEDGERA", margin, topY, { width: brandWidth, align: "left" });
+  doc.font("Helvetica")
+    .fontSize(8)
+    .fillColor("#0F766E")
+    .text("Sistema Operativo Financiero y Tributario", margin, topY + 25, { width: brandWidth, align: "left" });
+
+  doc.font("Helvetica")
+    .fontSize(8.5)
+    .fillColor("#475569")
+    .text(`Contribuyente/usuario: ${payload.userEmail}`, metadataX, topY + 1, { width: metadataWidth, align: "right" });
+  doc.text(`Año operaciones: ${payload.year ?? "Todos"} · Año tabla IGC: AT ${payload.igcTaxYear}`, metadataX, topY + 14, { width: metadataWidth, align: "right" });
+  doc.text(`Generado: ${new Date(payload.generatedAt).toLocaleString("es-CL")}`, metadataX, topY + 27, { width: metadataWidth, align: "right" });
+
+  doc.moveTo(margin, topY + 50)
+    .lineTo(pageWidth - margin, topY + 50)
+    .strokeColor("#D9F5E8")
+    .lineWidth(1)
+    .stroke();
+
+  doc.y = topY + 66;
+  doc.font("Helvetica-Bold")
+    .fontSize(16)
+    .fillColor("#0F2A3D")
+    .text("Declaración tributaria y respaldo de criptoactivos", margin, doc.y, { width: pageWidth - margin * 2 });
   doc.moveDown();
 }
 
