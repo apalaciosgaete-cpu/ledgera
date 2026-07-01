@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Logo } from "@/components/brand/Logo";
-import { colors, fonts, radius, shadows } from "@/styles/tokens";
+import { fonts, radius, shadows } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
 type SubscriptionPlan = "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
@@ -50,10 +50,10 @@ const PLAN_PRICES: Record<SubscriptionPlan, number> = {
 };
 
 const PLAN_COLORS: Record<SubscriptionPlan, string> = {
-  BASICO:      "#64748B",
-  PERSONAL:    "#10B981",
-  PROFESIONAL: "#7C3AED",
-  EMPRESA:     "#0EA5E9",
+  BASICO: "var(--bg-elev)",
+  PERSONAL: "var(--accent)",
+  PROFESIONAL: "var(--bg-elev)",
+  EMPRESA: "var(--accent)",
 };
 
 const STATUS_LABELS: Record<UserStatus, string> = {
@@ -63,9 +63,9 @@ const STATUS_LABELS: Record<UserStatus, string> = {
 };
 
 const STATUS_COLORS: Record<UserStatus, string> = {
-  active: "#16A34A",
-  inactive: "#94A3B8",
-  suspended: "#EF4444",
+  active: "var(--accent)",
+  inactive: "var(--bg-elev)",
+  suspended: "var(--loss)",
 };
 
 function isExpired(expiresAt: string | null): boolean {
@@ -292,14 +292,14 @@ export default function AdminPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: colors.bgApp,
+        background: "var(--bg)",
         fontFamily: fonts.body,
       }}
     >
       <header
         style={{
-          background: colors.primary,
-          borderBottom: `1px solid ${colors.borderDark}`,
+          background: "var(--bg-elev)",
+          borderBottom: `1px solid ${"var(--border-strong)"}`,
           padding: "0 32px",
         }}
       >
@@ -318,8 +318,8 @@ export default function AdminPage() {
             <span
               style={{
                 fontSize: "12px",
-                color: "#475569",
-                background: "#1e3a52",
+                color: "var(--text)",
+                background: "var(--bg-elev)",
                 padding: "2px 10px",
                 borderRadius: "20px",
               }}
@@ -332,7 +332,7 @@ export default function AdminPage() {
             <button
               onClick={() => router.push("/admin/chat")}
               style={{
-                background: "#3a76f0",
+                background: "var(--bg-elev)",
                 border: "none",
                 borderRadius: "8px",
                 color: "#fff",
@@ -351,9 +351,9 @@ export default function AdminPage() {
               onClick={() => router.push("/portafolio")}
               style={{
                 background: "transparent",
-                border: `1px solid ${colors.borderDark}`,
+                border: `1px solid ${"var(--border-strong)"}`,
                 borderRadius: "8px",
-                color: colors.textMuted,
+                color: "var(--text-faint)",
                 fontSize: "14px",
                 padding: "8px 16px",
                 cursor: "pointer",
@@ -373,14 +373,14 @@ export default function AdminPage() {
               fontFamily: fonts.display,
               fontSize: "20px",
               fontWeight: 700,
-              color: colors.textPrimary,
+              color: "var(--text)",
               margin: "0 0 4px",
             }}
           >
             Panel de Administración
           </h1>
 
-          <p style={{ fontSize: "14px", color: colors.textSecondary, margin: 0 }}>
+          <p style={{ fontSize: "14px", color: "var(--text-soft)", margin: 0 }}>
             Gestión de usuarios y suscripciones
           </p>
         </div>
@@ -388,18 +388,18 @@ export default function AdminPage() {
         {/* Métricas */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px", marginBottom: "24px" }}>
           {[
-            { label: "Total usuarios",       value: totalUsers,    color: colors.textPrimary, sub: "registrados" },
-            { label: "Cuentas activas",      value: activeUsers,   color: colors.accent,      sub: "en uso" },
-            { label: "Suscripciones vencidas", value: expiredUsers, color: colors.danger,     sub: "requieren acción" },
-            { label: "Por vencer (≤7 días)", value: expiringUsers, color: colors.warning,     sub: "avisar al cliente" },
-            { label: "MRR estimado",         value: loading ? "—" : `$${mrr.toLocaleString("es-CL")}`, color: "#7C3AED", sub: "CLP/mes activo", isText: true },
+            { label: "Total usuarios",       value: totalUsers,    color: "var(--text)", sub: "registrados" },
+            { label: "Cuentas activas",      value: activeUsers,   color: "var(--accent)",      sub: "en uso" },
+            { label: "Suscripciones vencidas", value: expiredUsers, color: "var(--loss)",     sub: "requieren acción" },
+            { label: "Por vencer (≤7 días)", value: expiringUsers, color: "var(--warn)",     sub: "avisar al cliente" },
+            { label: "MRR estimado",         value: loading ? "—" : `$${mrr.toLocaleString("es-CL")}`, color: "var(--text-soft)", sub: "CLP/mes activo", isText: true },
           ].map(m => (
-            <div key={m.label} style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "20px" }}>
-              <p style={{ fontSize: "11px", fontWeight: 600, color: colors.textMuted, margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.label}</p>
+            <div key={m.label} style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "20px" }}>
+              <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.label}</p>
               <p style={{ fontSize: m.isText ? "22px" : "30px", fontWeight: 700, color: m.color, margin: "0 0 4px", fontFamily: fonts.display, lineHeight: 1 }}>
                 {loading ? "—" : (m.isText ? m.value : m.value)}
               </p>
-              <p style={{ fontSize: "11px", color: colors.textMuted, margin: 0 }}>{m.sub}</p>
+              <p style={{ fontSize: "11px", color: "var(--text-faint)", margin: 0 }}>{m.sub}</p>
             </div>
           ))}
         </div>
@@ -408,8 +408,8 @@ export default function AdminPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
 
           {/* Distribución por plan */}
-          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "24px" }}>
-            <p style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary, margin: "0 0 20px" }}>Distribución por plan</p>
+          <div style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "24px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", margin: "0 0 20px" }}>Distribución por plan</p>
             <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
               {/* Donut */}
               <div style={{ position: "relative", flexShrink: 0 }}>
@@ -421,13 +421,13 @@ export default function AdminPage() {
                   const a1 = d1;
                   const a2 = a1 + d2;
                   const gradient = totalUsers === 0
-                    ? `conic-gradient(#E2E8F0 0deg 360deg)`
+                    ? `conic-gradient(var(--border-strong) 0deg 360deg)`
                     : `conic-gradient(${PLAN_COLORS.BASICO} 0deg ${a1}deg, ${PLAN_COLORS.PROFESIONAL} ${a1}deg ${a2}deg, ${PLAN_COLORS.EMPRESA} ${a2}deg 360deg)`;
                   return (
                     <div style={{ width: 110, height: 110, borderRadius: "50%", background: gradient, position: "relative" }}>
-                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 66, height: 66, borderRadius: "50%", background: colors.surface, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
-                        <span style={{ fontSize: "18px", fontWeight: 700, color: colors.textPrimary, lineHeight: 1, fontFamily: fonts.display }}>{loading ? "—" : totalUsers}</span>
-                        <span style={{ fontSize: "9px", color: colors.textMuted, letterSpacing: "0.04em" }}>usuarios</span>
+                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 66, height: 66, borderRadius: "50%", background: "var(--bg-elev)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+                        <span style={{ fontSize: "18px", fontWeight: 700, color: "var(--text)", lineHeight: 1, fontFamily: fonts.display }}>{loading ? "—" : totalUsers}</span>
+                        <span style={{ fontSize: "9px", color: "var(--text-faint)", letterSpacing: "0.04em" }}>usuarios</span>
                       </div>
                     </div>
                   );
@@ -439,13 +439,13 @@ export default function AdminPage() {
                   <div key={plan} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <div style={{ width: 10, height: 10, borderRadius: "3px", background: PLAN_COLORS[plan], flexShrink: 0 }} />
-                      <span style={{ fontSize: "12px", color: colors.textSecondary }}>{PLAN_LABELS[plan]}</span>
+                      <span style={{ fontSize: "12px", color: "var(--text-soft)" }}>{PLAN_LABELS[plan]}</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: 80, height: 6, background: colors.surfaceAlt, borderRadius: "3px", overflow: "hidden" }}>
+                      <div style={{ width: 80, height: 6, background: "var(--bg-sunken)", borderRadius: "3px", overflow: "hidden" }}>
                         <div style={{ height: "100%", width: `${totalUsers ? planCounts[plan] / totalUsers * 100 : 0}%`, background: PLAN_COLORS[plan], borderRadius: "3px" }} />
                       </div>
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: colors.textPrimary, minWidth: "16px", textAlign: "right" }}>{loading ? "—" : planCounts[plan]}</span>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", minWidth: "16px", textAlign: "right" }}>{loading ? "—" : planCounts[plan]}</span>
                     </div>
                   </div>
                 ))}
@@ -454,38 +454,38 @@ export default function AdminPage() {
           </div>
 
           {/* Desglose de cuentas */}
-          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: "12px", padding: "24px" }}>
-            <p style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary, margin: "0 0 20px" }}>Desglose de cuentas</p>
-            <p style={{ fontSize: "11px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por estado</p>
+          <div style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "24px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", margin: "0 0 20px" }}>Desglose de cuentas</p>
+            <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por estado</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
               {[
-                { label: "Activos",      value: activeUsers,    color: colors.accent },
-                { label: "Suspendidos",  value: suspendedUsers, color: colors.danger },
-                { label: "Inactivos",    value: inactiveUsers,  color: colors.textMuted },
+                { label: "Activos",      value: activeUsers,    color: "var(--accent)" },
+                { label: "Suspendidos",  value: suspendedUsers, color: "var(--loss)" },
+                { label: "Inactivos",    value: inactiveUsers,  color: "var(--text-faint)" },
               ].map(row => (
                 <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "12px", color: colors.textSecondary, width: "80px" }}>{row.label}</span>
-                  <div style={{ flex: 1, height: 8, background: colors.surfaceAlt, borderRadius: "4px", overflow: "hidden" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text-soft)", width: "80px" }}>{row.label}</span>
+                  <div style={{ flex: 1, height: 8, background: "var(--bg-sunken)", borderRadius: "4px", overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${totalUsers ? row.value / totalUsers * 100 : 0}%`, background: row.color, borderRadius: "4px", transition: "width 0.4s ease" }} />
                   </div>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: colors.textPrimary, minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: "11px", fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por rol</p>
+            <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por rol</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {[
-                { label: "Personal",  value: roleCounts.personal, color: "#16A34A" },
-                { label: "Contador",  value: roleCounts.contador,  color: "#0EA5E9" },
-                { label: "Empresa",   value: roleCounts.empresa,   color: "#7C3AED" },
-                { label: "Admin",     value: roleCounts.admin,     color: "#F59E0B" },
+                { label: "Personal",  value: roleCounts.personal, color: "var(--accent)" },
+                { label: "Contador",  value: roleCounts.contador,  color: "var(--accent)" },
+                { label: "Empresa",   value: roleCounts.empresa,   color: "var(--text-soft)" },
+                { label: "Admin",     value: roleCounts.admin,     color: "var(--warn)" },
               ].map(row => (
                 <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "12px", color: colors.textSecondary, width: "80px" }}>{row.label}</span>
-                  <div style={{ flex: 1, height: 8, background: colors.surfaceAlt, borderRadius: "4px", overflow: "hidden" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text-soft)", width: "80px" }}>{row.label}</span>
+                  <div style={{ flex: 1, height: 8, background: "var(--bg-sunken)", borderRadius: "4px", overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${totalUsers ? row.value / totalUsers * 100 : 0}%`, background: row.color, borderRadius: "4px", transition: "width 0.4s ease" }} />
                   </div>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: colors.textPrimary, minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
                 </div>
               ))}
             </div>
@@ -494,8 +494,8 @@ export default function AdminPage() {
 
         <div
           style={{
-            background: colors.surface,
-            border: `1px solid ${colors.border}`,
+            background: "var(--bg-elev)",
+            border: `1px solid ${"var(--border)"}`,
             borderRadius: "12px",
             overflow: "hidden",
           }}
@@ -503,14 +503,14 @@ export default function AdminPage() {
           <div
             style={{
               padding: "20px 24px",
-              borderBottom: `1px solid ${colors.border}`,
+              borderBottom: `1px solid ${"var(--border)"}`,
             }}
           >
             <h2
               style={{
                 fontSize: "16px",
                 fontWeight: 600,
-                color: colors.textPrimary,
+                color: "var(--text)",
                 margin: 0,
               }}
             >
@@ -523,7 +523,7 @@ export default function AdminPage() {
               style={{
                 padding: "48px",
                 textAlign: "center",
-                color: colors.textMuted,
+                color: "var(--text-faint)",
               }}
             >
               Cargando usuarios...
@@ -535,7 +535,7 @@ export default function AdminPage() {
               style={{
                 padding: "48px",
                 textAlign: "center",
-                color: colors.danger,
+                color: "var(--loss)",
               }}
             >
               {error}
@@ -547,7 +547,7 @@ export default function AdminPage() {
               style={{
                 padding: "48px",
                 textAlign: "center",
-                color: colors.textMuted,
+                color: "var(--text-faint)",
               }}
             >
               No hay usuarios registrados
@@ -558,7 +558,7 @@ export default function AdminPage() {
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ background: colors.surfaceAlt }}>
+                  <tr style={{ background: "var(--bg-sunken)" }}>
                     {[
                       "Usuario",
                       "Rol",
@@ -575,10 +575,10 @@ export default function AdminPage() {
                           textAlign: "left",
                           fontSize: "12px",
                           fontWeight: 600,
-                          color: colors.textSecondary,
+                          color: "var(--text-soft)",
                           textTransform: "uppercase",
                           letterSpacing: "0.05em",
-                          borderBottom: `1px solid ${colors.border}`,
+                          borderBottom: `1px solid ${"var(--border)"}`,
                         }}
                       >
                         {header}
@@ -591,14 +591,14 @@ export default function AdminPage() {
                   {users.map((user) => (
                     <tr
                       key={user.id}
-                      style={{ borderBottom: "1px solid #F1F5F9" }}
+                      style={{ borderBottom: "1px solid var(--border)" }}
                     >
                       <td style={{ padding: "14px 16px" }}>
                         <p
                           style={{
                             fontSize: "14px",
                             fontWeight: 500,
-                            color: colors.textPrimary,
+                            color: "var(--text)",
                             margin: "0 0 2px",
                           }}
                         >
@@ -607,7 +607,7 @@ export default function AdminPage() {
                         <p
                           style={{
                             fontSize: "12px",
-                            color: colors.textMuted,
+                            color: "var(--text-faint)",
                             margin: 0,
                           }}
                         >
@@ -637,8 +637,7 @@ export default function AdminPage() {
                         <span
                           style={{
                             color: isExpired(user.subscriptionExpiresAt)
-                              ? colors.danger
-                              : colors.accent,
+                              ? "var(--loss)" : "var(--accent)",
                             fontWeight: 500,
                           }}
                         >
@@ -656,7 +655,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => { setEditSubscription(user); setSelectedPlan(user.subscriptionPlan); setDaysToAdd(30); }}
                               disabled={actionLoading === `${user.id}_sub`}
-                              style={{ background: colors.surface, color: colors.textSecondary, border: `1px solid ${colors.border}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                              style={{ background: "var(--bg-elev)", color: "var(--text-soft)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
                             >
                               Suscripción
                             </button>
@@ -664,7 +663,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => handleStatusToggle(user)}
                               disabled={actionLoading === `${user.id}_status`}
-                              style={{ background: user.status === "active" ? colors.warningMuted : colors.accentMuted, color: user.status === "active" ? colors.warningHover : colors.accentHover, border: `1px solid ${user.status === "active" ? colors.warning : colors.accent}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                              style={{ background: user.status === "active" ? "rgba(232,184,75,0.15)" : "var(--accent-soft)", color: user.status === "active" ? "var(--warn)" : "var(--accent)", border: `1px solid ${user.status === "active" ? "var(--warn)" : "var(--accent)"}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
                             >
                               {user.status === "active" ? "Suspender" : "Activar"}
                             </button>
@@ -672,7 +671,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => setConfirmDelete(user)}
                               disabled={actionLoading === user.id}
-                              style={{ background: colors.dangerMuted, color: colors.dangerHover, border: `1px solid ${colors.danger}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                              style={{ background: "rgba(196,99,74,0.15)", color: "var(--loss)", border: `1px solid ${"var(--loss)"}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
                             >
                               Eliminar
                             </button>
@@ -705,7 +704,7 @@ export default function AdminPage() {
         >
           <div
             style={{
-              background: colors.surface,
+              background: "var(--bg-elev)",
               borderRadius: radius.xl,
               padding: "32px",
               maxWidth: "440px",
@@ -713,26 +712,26 @@ export default function AdminPage() {
               boxShadow: shadows.lg,
             }}
           >
-            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 8px" }}>
+            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
               ¿Eliminar usuario?
             </h2>
-            <p style={{ fontFamily: fonts.body, fontSize: "14px", color: colors.textSecondary, margin: "0 0 4px" }}>
+            <p style={{ fontFamily: fonts.body, fontSize: "14px", color: "var(--text-soft)", margin: "0 0 4px" }}>
               Esta acción es irreversible.
             </p>
-            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: colors.textMuted, margin: "0 0 24px" }}>
+            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: "var(--text-faint)", margin: "0 0 24px" }}>
               {confirmDelete.email}
             </p>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
               <button
                 onClick={() => setConfirmDelete(null)}
-                style={{ background: colors.surface, color: colors.textSecondary, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                style={{ background: "var(--bg-elev)", color: "var(--text-soft)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDelete(confirmDelete)}
-                style={{ background: colors.danger, color: "#ffffff", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
+                style={{ background: "var(--loss)", color: "var(--text)", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
               >
                 {actionLoading === confirmDelete.id ? "Eliminando..." : "Eliminar"}
               </button>
@@ -756,7 +755,7 @@ export default function AdminPage() {
         >
           <div
             style={{
-              background: colors.surface,
+              background: "var(--bg-elev)",
               borderRadius: radius.xl,
               padding: "32px",
               maxWidth: "440px",
@@ -764,21 +763,21 @@ export default function AdminPage() {
               boxShadow: shadows.lg,
             }}
           >
-            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: colors.textPrimary, margin: "0 0 4px" }}>
+            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>
               Actualizar suscripción
             </h2>
-            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: colors.textMuted, margin: "0 0 24px" }}>
+            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: "var(--text-faint)", margin: "0 0 24px" }}>
               {editSubscription.email}
             </p>
 
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
                 Plan
               </label>
               <select
                 value={selectedPlan}
                 onChange={(event) => setSelectedPlan(event.target.value as SubscriptionPlan)}
-                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: colors.textPrimary, background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 12px", outline: "none" }}
+                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: "var(--text)", background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 12px", outline: "none" }}
               >
                 <option value="BASICO">Básico</option>
                 <option value="PROFESIONAL">Profesional</option>
@@ -787,7 +786,7 @@ export default function AdminPage() {
             </div>
 
             <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
                 Días a agregar
               </label>
               <input
@@ -796,20 +795,20 @@ export default function AdminPage() {
                 max={365}
                 value={daysToAdd}
                 onChange={(event) => setDaysToAdd(Number(event.target.value))}
-                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: colors.textPrimary, background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 12px", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: "var(--text)", background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 12px", outline: "none", boxSizing: "border-box" }}
               />
             </div>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
               <button
                 onClick={() => setEditSubscription(null)}
-                style={{ background: colors.surface, color: colors.textSecondary, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                style={{ background: "var(--bg-elev)", color: "var(--text-soft)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleUpdateSubscription}
-                style={{ background: colors.accent, color: "#ffffff", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
+                style={{ background: "var(--accent)", color: "var(--text)", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
               >
                 {actionLoading === `${editSubscription.id}_sub` ? "Guardando..." : "Guardar"}
               </button>
@@ -824,8 +823,8 @@ export default function AdminPage() {
             position: "fixed",
             bottom: "32px",
             right: "32px",
-            background: toast.ok ? colors.accent : colors.danger,
-            color: "#ffffff",
+            background: toast.ok ? "var(--accent)" : "var(--loss)",
+            color: "var(--text)",
             padding: "14px 20px",
             borderRadius: "10px",
             fontSize: "14px",

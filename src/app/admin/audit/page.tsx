@@ -50,19 +50,19 @@ type FilterGroup = {
 };
 
 const FILTER_GROUPS: FilterGroup[] = [
-  { label: "Todas",          prefix: null,         color: "#334155" },
-  { label: "Binance",        prefix: "BINANCE_",   color: "#B45309" },
-  { label: "Usuarios",       prefix: "USER_",      color: "#1D4ED8" },
-  { label: "Admin",          prefix: "ADMIN_",     color: "#B91C1C" },
-  { label: "Declaraciones",  prefix: null,         color: "#6B7280", disabled: true },
-  { label: "Configuración",  prefix: null,         color: "#6B7280", disabled: true },
+  { label: "Todas",          prefix: null,         color: "var(--text)" },
+  { label: "Binance",        prefix: "BINANCE_",   color: "var(--warn)" },
+  { label: "Usuarios",       prefix: "USER_",      color: "var(--accent)" },
+  { label: "Admin",          prefix: "ADMIN_",     color: "var(--loss)" },
+  { label: "Declaraciones",  prefix: null,         color: "var(--text-soft)", disabled: true },
+  { label: "Configuración",  prefix: null,         color: "var(--text-soft)", disabled: true },
 ];
 
 function actionBadgeStyle(action: string): { background: string; color: string } {
-  if (action.startsWith("BINANCE_")) return { background: "#FEF9C3", color: "#92400E" };
-  if (action.startsWith("USER_"))    return { background: "#DBEAFE", color: "#1E3A8A" };
-  if (action.startsWith("ADMIN_"))   return { background: "#FEE2E2", color: "#991B1B" };
-  return { background: "#F1F5F9", color: "#334155" };
+  if (action.startsWith("BINANCE_")) return { background: "rgba(232,184,75,0.14)", color: "var(--warn)" };
+  if (action.startsWith("USER_"))    return { background: "var(--accent-soft)", color: "var(--text)" };
+  if (action.startsWith("ADMIN_"))   return { background: "rgba(196,99,74,0.14)", color: "var(--loss)" };
+  return { background: "var(--bg-sunken)", color: "var(--text)" };
 }
 
 function formatDate(value: string) {
@@ -124,41 +124,41 @@ function BinanceMetaSummary({ meta }: { meta: BinanceMeta }) {
             borderRadius: 99,
             fontSize: 11,
             fontWeight: 700,
-            background: meta.status === "SUCCESS" ? "#D1FAE5" : "#FEE2E2",
-            color: meta.status === "SUCCESS" ? "#065F46" : "#991B1B",
+            background: meta.status === "SUCCESS" ? "var(--accent-soft)" : "rgba(196,99,74,0.14)",
+            color: meta.status === "SUCCESS" ? "var(--accent)" : "var(--loss)",
           }}
         >
           {meta.status}
         </span>
       )}
       {meta.externalType && (
-        <span style={{ fontSize: 11, color: "#475569", fontWeight: 600 }}>{meta.externalType}</span>
+        <span style={{ fontSize: 11, color: "var(--text)", fontWeight: 600 }}>{meta.externalType}</span>
       )}
       {meta.accountType && (
-        <span style={{ fontSize: 11, color: "#475569" }}>tipo: {meta.accountType}</span>
+        <span style={{ fontSize: 11, color: "var(--text)" }}>tipo: {meta.accountType}</span>
       )}
       {meta.canTrade !== undefined && (
-        <span style={{ fontSize: 11, color: "#475569" }}>
+        <span style={{ fontSize: 11, color: "var(--text)" }}>
           trade: {meta.canTrade ? "sí" : "no"}
         </span>
       )}
       {meta.stats && (
-        <span style={{ fontSize: 11, color: "#475569" }}>
+        <span style={{ fontSize: 11, color: "var(--text)" }}>
           +{meta.stats.imported} / skip {meta.stats.skipped} / err {meta.stats.errors}
         </span>
       )}
       {meta.connectionId && (
-        <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: "monospace" }}>
+        <span style={{ fontSize: 10, color: "var(--text-soft)", fontFamily: "monospace" }}>
           conn …{meta.connectionId.slice(-6)}
         </span>
       )}
       {meta.externalId && (
-        <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: "monospace" }}>
+        <span style={{ fontSize: 10, color: "var(--text-soft)", fontFamily: "monospace" }}>
           {meta.externalId.length > 24 ? `${meta.externalId.slice(0, 24)}…` : meta.externalId}
         </span>
       )}
       {meta.error && (
-        <span style={{ fontSize: 11, color: "#991B1B" }} title={meta.error}>
+        <span style={{ fontSize: 11, color: "var(--loss)" }} title={meta.error}>
           {meta.error.length > 60 ? `${meta.error.slice(0, 60)}…` : meta.error}
         </span>
       )}
@@ -180,8 +180,8 @@ function MetadataCell({ log, expanded, onToggle }: { log: Log; expanded: boolean
         type="button"
         onClick={onToggle}
         style={{
-          border: "1px solid #CBD5E1",
-          background: "#FFFFFF",
+          border: "1px solid var(--border)",
+          background: "var(--bg-elev)",
           borderRadius: 6,
           padding: "4px 10px",
           cursor: "pointer",
@@ -200,8 +200,8 @@ function MetadataCell({ log, expanded, onToggle }: { log: Log; expanded: boolean
             maxHeight: 260,
             overflow: "auto",
             whiteSpace: "pre-wrap",
-            background: "#0F172A",
-            color: "#E2E8F0",
+            background: "var(--bg-elev)",
+            color: "var(--text)",
             borderRadius: 8,
             padding: 12,
             fontSize: 12,
@@ -312,8 +312,8 @@ export default function AdminAuditPage() {
                   padding: "6px 14px",
                   borderRadius: 99,
                   border: active ? `2px solid ${group.color}` : "2px solid transparent",
-                  background: active ? group.color : "#F1F5F9",
-                  color: active ? "#FFFFFF" : group.disabled ? "#9CA3AF" : "#334155",
+                  background: active ? group.color : "var(--bg-elev)",
+                  color: active ? "var(--text)" : group.disabled ? "var(--text-faint)" : "var(--text-soft)",
                   cursor: group.disabled ? "not-allowed" : "pointer",
                   fontSize: 13,
                   fontWeight: active ? 700 : 400,
@@ -344,7 +344,7 @@ export default function AdminAuditPage() {
             style={{
               minWidth: 340,
               padding: "10px 12px",
-              border: "1px solid #CBD5E1",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               fontSize: 14,
             }}
@@ -356,9 +356,9 @@ export default function AdminAuditPage() {
             disabled={filteredLogs.length === 0}
             style={{
               padding: "10px 14px",
-              border: "1px solid #CBD5E1",
+              border: "1px solid var(--border)",
               borderRadius: 8,
-              background: "#FFFFFF",
+              background: "var(--bg-elev)",
               cursor: filteredLogs.length === 0 ? "not-allowed" : "pointer",
               fontSize: 14,
             }}
@@ -367,7 +367,7 @@ export default function AdminAuditPage() {
           </button>
         </section>
 
-        <section style={{ display: "flex", gap: 12, flexWrap: "wrap", color: "#475569", fontSize: 13 }}>
+        <section style={{ display: "flex", gap: 12, flexWrap: "wrap", color: "var(--text)", fontSize: 13 }}>
           <span>Total cargado: {logs.length}</span>
           <span>Filtrado: {filteredLogs.length}</span>
         </section>
@@ -377,9 +377,9 @@ export default function AdminAuditPage() {
         {error && (
           <div
             style={{
-              border: "1px solid #FCA5A5",
-              background: "#FEF2F2",
-              color: "#991B1B",
+              border: "1px solid var(--loss)",
+              background: "rgba(196,99,74,0.14)",
+              color: "var(--loss)",
               padding: 12,
               borderRadius: 8,
             }}
@@ -389,20 +389,20 @@ export default function AdminAuditPage() {
         )}
 
         {!loading && !error && (
-          <div style={{ overflowX: "auto", border: "1px solid #E2E8F0", borderRadius: 12 }}>
+          <div style={{ overflowX: "auto", border: "1px solid var(--border)", borderRadius: 12 }}>
             <table
               style={{ width: "100%", minWidth: 1400, borderCollapse: "collapse", fontSize: 13 }}
             >
               <thead>
-                <tr style={{ background: "#F8FAFC" }}>
+                <tr style={{ background: "var(--bg-sunken)" }}>
                   {["Fecha", "Acción", "Actor", "Target", "IP", "User agent", "Metadata"].map((h) => (
                     <th
                       key={h}
                       style={{
                         textAlign: "left",
                         padding: "12px 14px",
-                        borderBottom: "1px solid #E2E8F0",
-                        color: "#334155",
+                        borderBottom: "1px solid var(--border)",
+                        color: "var(--text)",
                         fontWeight: 700,
                       }}
                     >
@@ -415,7 +415,7 @@ export default function AdminAuditPage() {
               <tbody>
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: 24, color: "#64748B" }}>
+                    <td colSpan={7} style={{ padding: 24, color: "var(--text-soft)" }}>
                       No hay registros para los filtros seleccionados.
                     </td>
                   </tr>
@@ -425,7 +425,7 @@ export default function AdminAuditPage() {
                     const badge = actionBadgeStyle(log.action);
 
                     return (
-                      <tr key={log.id} style={{ borderBottom: "1px solid #E2E8F0" }}>
+                      <tr key={log.id} style={{ borderBottom: "1px solid var(--border)" }}>
                         <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
                           {formatDate(log.createdAt)}
                         </td>
@@ -449,12 +449,12 @@ export default function AdminAuditPage() {
 
                         <td style={{ padding: "12px 14px" }}>
                           <div>{log.actorEmail ?? "-"}</div>
-                          <div style={{ color: "#94A3B8", fontSize: 11 }}>{log.actorId ?? "-"}</div>
+                          <div style={{ color: "var(--text-soft)", fontSize: 11 }}>{log.actorId ?? "-"}</div>
                         </td>
 
                         <td style={{ padding: "12px 14px" }}>
                           <div>{log.targetUserEmail ?? "-"}</div>
-                          <div style={{ color: "#94A3B8", fontSize: 11 }}>{log.targetUserId ?? "-"}</div>
+                          <div style={{ color: "var(--text-soft)", fontSize: 11 }}>{log.targetUserId ?? "-"}</div>
                         </td>
 
                         <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>

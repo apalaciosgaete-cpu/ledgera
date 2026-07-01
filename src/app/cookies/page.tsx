@@ -16,8 +16,8 @@ export default function CookiesPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #0a0a0f 100%)",
-        color: "#e2e8f0",
+        background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 50%, var(--bg-elev) 100%)",
+        color: "var(--text)",
         fontFamily: "'Inter', sans-serif",
       }}
     >
@@ -42,15 +42,15 @@ export default function CookiesPage() {
         <Link
           href="/"
           style={{
-            color: "#94a3b8",
+            color: "var(--text-soft)",
             fontSize: "0.85rem",
             textDecoration: "none",
             display: "flex",
             alignItems: "center",
             gap: "0.4rem",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#e2e8f0")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-soft)")}
         >
           ← Volver al inicio
         </Link>
@@ -67,7 +67,7 @@ export default function CookiesPage() {
               borderRadius: "999px",
               padding: "0.3rem 1rem",
               fontSize: "0.78rem",
-              color: "#818cf8",
+              color: "var(--accent)",
               marginBottom: "1.5rem",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -80,14 +80,14 @@ export default function CookiesPage() {
               fontFamily: "'Manrope', sans-serif",
               fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
               fontWeight: 800,
-              color: "#f8fafc",
+              color: "var(--text)",
               margin: "0 0 1rem",
               lineHeight: 1.15,
             }}
           >
             Política de Cookies
           </h1>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: "0.9rem" }}>
             Última actualización: 8 de mayo de 2026 · Versión 1.0
           </p>
         </div>
@@ -107,7 +107,7 @@ export default function CookiesPage() {
         <LegalSection title="2. Tipos de cookies que utilizamos">
           <CookieTable
             type="Estrictamente necesarias"
-            color="#22c55e"
+            color="#3FA687"
             description="Imprescindibles para el funcionamiento de la Plataforma. Sin ellas, el servicio no puede prestarse correctamente."
             examples={[
               {
@@ -127,7 +127,7 @@ export default function CookiesPage() {
 
           <CookieTable
             type="Funcionales"
-            color="#818cf8"
+            color="#3FA687"
             description="Permiten recordar preferencias del Usuario para personalizar la experiencia."
             examples={[
               {
@@ -147,7 +147,7 @@ export default function CookiesPage() {
 
           <CookieTable
             type="Analíticas"
-            color="#f59e0b"
+            color="#E8B84B"
             description="Recogen información anónima sobre cómo los usuarios interactúan con la Plataforma."
             examples={[
               {
@@ -167,9 +167,9 @@ export default function CookiesPage() {
               padding: "1rem 1.2rem",
             }}
           >
-            <p style={{ color: "#a5b4fc", fontSize: "0.88rem", margin: 0 }}>
+            <p style={{ color: "var(--text-faint)", fontSize: "0.88rem", margin: 0 }}>
               ℹ️{" "}
-              <strong style={{ color: "#c7d2fe" }}>
+              <strong style={{ color: "var(--text-faint)" }}>
                 Ledgera NO utiliza cookies de publicidad
               </strong>{" "}
               ni comparte datos de comportamiento con redes publicitarias de terceros.
@@ -187,7 +187,7 @@ export default function CookiesPage() {
                 width: "100%",
                 borderCollapse: "collapse",
                 fontSize: "0.85rem",
-                color: "#94a3b8",
+                color: "var(--text-soft)",
               }}
             >
               <thead>
@@ -199,7 +199,7 @@ export default function CookiesPage() {
                         textAlign: "left",
                         padding: "0.6rem 0.8rem",
                         borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        color: "#cbd5e1",
+                        color: "var(--text-faint)",
                         fontWeight: 600,
                         whiteSpace: "nowrap",
                       }}
@@ -223,7 +223,7 @@ export default function CookiesPage() {
                   },
                 ].map((row, i) => (
                   <tr key={i} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
-                    <td style={{ padding: "0.6rem 0.8rem", color: "#e2e8f0", fontWeight: 500 }}>
+                    <td style={{ padding: "0.6rem 0.8rem", color: "var(--text)", fontWeight: 500 }}>
                       {row.proveedor}
                     </td>
                     <td style={{ padding: "0.6rem 0.8rem" }}>{row.finalidad}</td>
@@ -232,7 +232,7 @@ export default function CookiesPage() {
                         href={row.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ color: "#818cf8" }}
+                        style={{ color: "var(--accent)" }}
                       >
                         Ver política →
                       </a>
@@ -256,14 +256,14 @@ export default function CookiesPage() {
               { name: "Microsoft Edge", url: "https://support.microsoft.com/es-es/microsoft-edge/eliminar-las-cookies-en-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" },
             ].map((b) => (
               <li key={b.name}>
-                <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ color: "#818cf8" }}>
+                <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
                   {b.name} →
                 </a>
               </li>
             ))}
           </ul>
           <p>
-            <strong style={{ color: "#e2e8f0" }}>Atención:</strong> deshabilitar las cookies
+            <strong style={{ color: "var(--text)" }}>Atención:</strong> deshabilitar las cookies
             estrictamente necesarias impedirá el inicio de sesión y el funcionamiento correcto de la
             Plataforma.
           </p>
@@ -273,7 +273,7 @@ export default function CookiesPage() {
           <p>
             Al utilizar Ledgera, el Usuario acepta el uso de las cookies descritas en esta Política.
             El consentimiento se obtiene como parte de la aceptación de los{" "}
-            <Link href="/terminos" style={{ color: "#818cf8" }}>
+            <Link href="/terminos" style={{ color: "var(--accent)" }}>
               Términos y Condiciones
             </Link>
             .
@@ -290,7 +290,7 @@ export default function CookiesPage() {
         <LegalSection title="7. Contacto">
           <p>
             Consultas sobre cookies:{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+            <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
             </a>
             .
@@ -309,55 +309,55 @@ export default function CookiesPage() {
             gap: "1rem",
           }}
         >
-          <span style={{ color: "#64748b", fontSize: "0.85rem", alignSelf: "center" }}>Ver también:</span>
-          <Link href="/terminos" style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}>
+          <span style={{ color: "var(--text-soft)", fontSize: "0.85rem", alignSelf: "center" }}>Ver también:</span>
+          <Link href="/terminos" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
             Términos y Condiciones →
           </Link>
-          <Link href="/privacidad" style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}>
+          <Link href="/privacidad" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
             Política de Privacidad →
           </Link>
         </div>
       </main>
 
-      <footer style={{ background: "#040C13", padding: "3rem 2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <footer style={{ background: "var(--bg-elev)", padding: "3rem 2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "2rem", marginBottom: "2rem" }}>
             <div>
               <div style={{ marginBottom: "12px" }}>
                 <Logo variant="light" size="sm" showSubtitle />
               </div>
-              <p style={{ fontSize: "13px", color: "#475569", margin: 0, maxWidth: "260px", lineHeight: 1.6 }}>
+              <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, maxWidth: "260px", lineHeight: 1.6 }}>
                 Software tributario especializado en criptomonedas para el mercado chileno.
               </p>
             </div>
             <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap" }}>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Producto</p>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Producto</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/register" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Comenzar gratis</Link>
-                  <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Iniciar sesión</Link>
-                  <Link href="/blog" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Blog</Link>
+                  <Link href="/register" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Comenzar gratis</Link>
+                  <Link href="/login" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Iniciar sesión</Link>
+                  <Link href="/blog" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Blog</Link>
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Legal</p>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Legal</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Términos y condiciones</Link>
-                  <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de privacidad</Link>
-                  <Link href="/cookies" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de cookies</Link>
+                  <Link href="/terminos" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Términos y condiciones</Link>
+                  <Link href="/privacidad" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Política de privacidad</Link>
+                  <Link href="/cookies" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Política de cookies</Link>
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Contacto</p>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Contacto</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>admin@ledgera.cl</a>
+                  <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>admin@ledgera.cl</a>
                 </div>
               </div>
             </div>
           </div>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-            <span style={{ fontSize: "12px", color: "#334155" }}>© {new Date().getFullYear()} Ledgera · Chile · Ley 21.719 protección de datos</span>
-            <span style={{ fontSize: "12px", color: "#334155" }}>ledgera.cl</span>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>© {new Date().getFullYear()} Ledgera · Chile · Ley 21.719 protección de datos</span>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>ledgera.cl</span>
           </div>
         </div>
       </footer>
@@ -366,7 +366,7 @@ export default function CookiesPage() {
         <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Volver arriba"
           style={{ position: "fixed", bottom: "92px", right: "28px", width: "44px", height: "44px", borderRadius: "50%", background: "rgba(10,31,46,0.92)", border: "1px solid rgba(255,255,255,0.14)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 998, backdropFilter: "blur(8px)" }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M9 13V5M5 9l4-4 4 4" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M9 13V5M5 9l4-4 4 4" stroke="var(--text-faint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       )}
@@ -382,7 +382,7 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
           fontFamily: "'Manrope', sans-serif",
           fontSize: "1.1rem",
           fontWeight: 700,
-          color: "#f1f5f9",
+          color: "var(--text)",
           marginBottom: "1rem",
           paddingBottom: "0.5rem",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
@@ -395,7 +395,7 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
           display: "flex",
           flexDirection: "column",
           gap: "0.85rem",
-          color: "#94a3b8",
+          color: "var(--text-soft)",
           fontSize: "0.92rem",
           lineHeight: 1.75,
         }}
@@ -451,14 +451,14 @@ function CookieTable({
             flexShrink: 0,
           }}
         />
-        <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "0.9rem" }}>{type}</span>
+        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{type}</span>
       </div>
       <div style={{ padding: "0.8rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.85rem" }}>{description}</p>
+        <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.85rem" }}>{description}</p>
       </div>
       <div style={{ overflowX: "auto" }}>
         <table
-          style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", color: "#94a3b8" }}
+          style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", color: "var(--text-soft)" }}
         >
           <thead>
             <tr>
@@ -469,7 +469,7 @@ function CookieTable({
                     textAlign: "left",
                     padding: "0.5rem 1rem",
                     borderBottom: "1px solid rgba(255,255,255,0.06)",
-                    color: "#cbd5e1",
+                    color: "var(--text-faint)",
                     fontWeight: 600,
                     whiteSpace: "nowrap",
                   }}
@@ -485,7 +485,7 @@ function CookieTable({
                 <td
                   style={{
                     padding: "0.5rem 1rem",
-                    color: "#e2e8f0",
+                    color: "var(--text)",
                     fontFamily: "monospace",
                     fontSize: "0.8rem",
                   }}

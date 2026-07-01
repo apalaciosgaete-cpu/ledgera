@@ -15,8 +15,8 @@ export default function NotFound() {
     <main
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #071520 0%, #0A1F2E 58%, #071520 100%)",
-        color: "#e2e8f0",
+        background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 58%, var(--bg-elev) 100%)",
+        color: "var(--text)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -41,7 +41,7 @@ export default function NotFound() {
         <p
           style={{
             margin: "0 0 0.75rem",
-            color: "#38bdf8",
+            color: "var(--accent)",
             fontSize: "0.78rem",
             fontWeight: 800,
             letterSpacing: "0.12em",
@@ -54,7 +54,7 @@ export default function NotFound() {
         <h1
           style={{
             margin: "0 0 1rem",
-            color: "#f8fafc",
+            color: "var(--text)",
             fontSize: "clamp(2rem, 5vw, 3.5rem)",
             lineHeight: 1.05,
             fontWeight: 900,
@@ -64,7 +64,7 @@ export default function NotFound() {
           Esta página no existe o fue movida
         </h1>
 
-        <p style={{ margin: "0 0 1.75rem", color: "#94a3b8", lineHeight: 1.7, maxWidth: "60ch" }}>
+        <p style={{ margin: "0 0 1.75rem", color: "var(--text-soft)", lineHeight: 1.7, maxWidth: "60ch" }}>
           Puedes volver al inicio o revisar las páginas públicas de LEDGERA sobre impuestos crypto,
           declaración tributaria y conciliación banco-exchange en Chile.
         </p>
@@ -77,7 +77,7 @@ export default function NotFound() {
               style={{
                 border: "1px solid rgba(148,163,184,0.26)",
                 borderRadius: "999px",
-                color: "#cbd5e1",
+                color: "var(--text-faint)",
                 padding: "0.72rem 1rem",
                 textDecoration: "none",
                 fontSize: "0.9rem",

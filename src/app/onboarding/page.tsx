@@ -197,9 +197,8 @@ function Bubble({ msg, typing }: { msg: ChatMessage; typing?: boolean }) {
           borderRadius: isLedgera ? "4px 18px 18px 18px" : "18px 4px 18px 18px",
           background: isLedgera ? "rgba(255,255,255,0.06)" : "rgba(22,163,74,0.2)",
           border: isLedgera
-            ? "1px solid rgba(255,255,255,0.06)"
-            : "1px solid rgba(22,163,74,0.2)",
-          color: isLedgera ? "#CBD5E1" : "#F8FAFC",
+            ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(22,163,74,0.2)",
+          color: isLedgera ? "var(--text-faint)" : "var(--text)",
           fontSize: 15,
           lineHeight: 1.55,
           fontFamily: fonts.body,
@@ -468,7 +467,7 @@ export default function OnboardingPage() {
   if (isLoading || !user) {
     return (
       <div style={fullScreenStyle}>
-        <p style={{ color: "#475569", fontSize: 14 }}>Cargando…</p>
+        <p style={{ color: "var(--text)", fontSize: 14 }}>Cargando…</p>
       </div>
     );
   }
@@ -522,7 +521,7 @@ export default function OnboardingPage() {
           }}
         >
           <p style={{
-            color: "#334155", fontSize: 11, fontWeight: 850,
+            color: "var(--text)", fontSize: 11, fontWeight: 850,
             letterSpacing: "0.12em", textTransform: "uppercase",
             margin: "0 0 12px", fontFamily: fonts.body,
           }}>
@@ -530,7 +529,7 @@ export default function OnboardingPage() {
           </p>
 
           <h1 style={{
-            color: "#F8FAFC",
+            color: "var(--text)",
             fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
             fontWeight: 800,
             margin: "0 0 10px",
@@ -542,7 +541,7 @@ export default function OnboardingPage() {
           </h1>
 
           <p style={{
-            color: "#64748B",
+            color: "var(--text-soft)",
             fontSize: 16,
             lineHeight: 1.6,
             margin: "0 auto 36px",
@@ -556,10 +555,10 @@ export default function OnboardingPage() {
           <button
             onClick={handleWelcome}
             style={{
-              background: "#16A34A",
+              background: "var(--accent)",
               border: "none",
               borderRadius: 12,
-              color: "#FFFFFF",
+              color: "var(--text)",
               cursor: "pointer",
               padding: "14px 40px",
               fontSize: 16,
@@ -569,11 +568,11 @@ export default function OnboardingPage() {
               animation: "pulseGlow 2s ease-in-out infinite",
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background = "#15803D";
+              e.currentTarget.style.background = "#3FA687";
               e.currentTarget.style.transform = "scale(1.02)";
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = "#16A34A";
+              e.currentTarget.style.background = "#3FA687";
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
@@ -641,7 +640,7 @@ export default function OnboardingPage() {
                           background: "rgba(255,255,255,0.04)",
                           border: "1px solid rgba(255,255,255,0.08)",
                           borderRadius: 999,
-                          color: "#475569",
+                          color: "var(--text)",
                           cursor: "pointer",
                           fontSize: 13,
                           fontWeight: 500,
@@ -667,13 +666,13 @@ export default function OnboardingPage() {
                         background: "rgba(255,255,255,0.04)",
                         border: `1.5px solid ${goalFocused ? "rgba(74,222,128,0.3)" : "rgba(255,255,255,0.08)"}`,
                         borderRadius: 12,
-                        color: "#F8FAFC",
+                        color: "var(--text)",
                         fontSize: 15,
                         fontFamily: fonts.body,
                         fontWeight: 500,
                         padding: "12px 16px",
                         outline: "none",
-                        caretColor: "#4ADE80",
+                        caretColor: "var(--accent)",
                         transition: "border-color 0.2s",
                       }}
                     />
@@ -681,10 +680,10 @@ export default function OnboardingPage() {
                       type="submit"
                       disabled={!goalText.trim()}
                       style={{
-                        background: goalText.trim() ? "#16A34A" : "rgba(255,255,255,0.06)",
+                        background: goalText.trim() ? "var(--accent)" : "rgba(255,255,255,0.06)",
                         border: "none",
                         borderRadius: 12,
-                        color: "#FFFFFF",
+                        color: "var(--text)",
                         cursor: goalText.trim() ? "pointer" : "default",
                         padding: "12px 18px",
                         fontSize: 17,
@@ -727,10 +726,9 @@ export default function OnboardingPage() {
                           style={{
                             background: selected ? "rgba(22,163,74,0.18)" : "rgba(255,255,255,0.04)",
                             border: selected
-                              ? "1px solid rgba(74,222,128,0.35)"
-                              : "1px solid rgba(255,255,255,0.08)",
+                              ? "1px solid rgba(74,222,128,0.35)" : "1px solid rgba(255,255,255,0.08)",
                             borderRadius: 999,
-                            color: selected ? "#F8FAFC" : "#475569",
+                            color: selected ? "var(--text)" : "var(--text)",
                             cursor: "pointer",
                             fontSize: 13,
                             fontWeight: selected ? 700 : 500,
@@ -749,10 +747,10 @@ export default function OnboardingPage() {
                     style={{
                       display: "block",
                       margin: "0 auto",
-                      background: "#16A34A",
+                      background: "var(--accent)",
                       border: "none",
                       borderRadius: 10,
-                      color: "#FFFFFF",
+                      color: "var(--text)",
                       cursor: "pointer",
                       padding: "10px 28px",
                       fontSize: 14,
@@ -812,10 +810,9 @@ export default function OnboardingPage() {
                           style={{
                             background: selected ? "rgba(22,163,74,0.18)" : "rgba(255,255,255,0.04)",
                             border: selected
-                              ? "1px solid rgba(74,222,128,0.35)"
-                              : "1px solid rgba(255,255,255,0.08)",
+                              ? "1px solid rgba(74,222,128,0.35)" : "1px solid rgba(255,255,255,0.08)",
                             borderRadius: 999,
-                            color: selected ? "#F8FAFC" : "#475569",
+                            color: selected ? "var(--text)" : "var(--text)",
                             cursor: "pointer",
                             fontSize: 13,
                             fontWeight: selected ? 700 : 500,
@@ -834,10 +831,10 @@ export default function OnboardingPage() {
                     style={{
                       display: "block",
                       margin: "0 auto",
-                      background: "#16A34A",
+                      background: "var(--accent)",
                       border: "none",
                       borderRadius: 10,
-                      color: "#FFFFFF",
+                      color: "var(--text)",
                       cursor: "pointer",
                       padding: "10px 28px",
                       fontSize: 14,
@@ -895,7 +892,7 @@ export default function OnboardingPage() {
             width: "100%",
           }}>
             <p style={{
-              color: "#334155", fontSize: 11, fontWeight: 850,
+              color: "var(--text)", fontSize: 11, fontWeight: 850,
               letterSpacing: "0.09em", textTransform: "uppercase",
               margin: "0 0 22px", fontFamily: fonts.body,
             }}>
@@ -913,15 +910,14 @@ export default function OnboardingPage() {
                     gap: 12,
                     paddingBottom: 12,
                     borderBottom: i < summaryItems.length - 1
-                      ? "1px solid rgba(255,255,255,0.05)"
-                      : "none",
+                      ? "1px solid rgba(255,255,255,0.05)" : "none",
                   }}
                 >
-                  <span style={{ color: "#4B5563", fontSize: 14, lineHeight: 1.4 }}>
+                  <span style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.4 }}>
                     {item.label}
                   </span>
                   <span style={{
-                    color: "#E2E8F0", fontSize: 14, fontWeight: 700,
+                    color: "var(--text)", fontSize: 14, fontWeight: 700,
                     textAlign: "right", maxWidth: "60%",
                   }}>
                     {item.value}
@@ -940,7 +936,7 @@ export default function OnboardingPage() {
                   background: "transparent",
                   border: "1px solid rgba(255,255,255,0.12)",
                   borderRadius: 10,
-                  color: "#94A3B8",
+                  color: "var(--text-soft)",
                   cursor: "pointer",
                   padding: "11px 24px",
                   fontSize: 14,
@@ -955,10 +951,10 @@ export default function OnboardingPage() {
                 onClick={handleSave}
                 disabled={saving}
                 style={{
-                  background: saving ? "#15803D" : "#16A34A",
+                  background: saving ? "var(--accent)" : "var(--accent)",
                   border: "none",
                   borderRadius: 10,
-                  color: "#FFFFFF",
+                  color: "var(--text)",
                   cursor: saving ? "not-allowed" : "pointer",
                   padding: "11px 28px",
                   fontSize: 14,
@@ -974,7 +970,7 @@ export default function OnboardingPage() {
 
             {saveError && (
               <p style={{
-                color: "#F87171", fontSize: 13, margin: "16px 0 0",
+                color: "var(--loss)", fontSize: 13, margin: "16px 0 0",
                 textAlign: "center",
               }}>
                 {saveError}
@@ -1000,7 +996,7 @@ export default function OnboardingPage() {
         >
           <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
           <h2 style={{
-            color: "#F8FAFC",
+            color: "var(--text)",
             fontSize: "clamp(1.4rem, 3.5vw, 2rem)",
             fontWeight: 800,
             margin: "0 0 10px",
@@ -1010,7 +1006,7 @@ export default function OnboardingPage() {
             Ya tienes tu espacio LEDGERA configurado.
           </h2>
           <p style={{
-            color: "#64748B",
+            color: "var(--text-soft)",
             fontSize: 15,
             lineHeight: 1.6,
             margin: "0 auto 32px",
@@ -1021,10 +1017,10 @@ export default function OnboardingPage() {
           <button
             onClick={() => router.push("/panel")}
             style={{
-              background: "#16A34A",
+              background: "var(--accent)",
               border: "none",
               borderRadius: 12,
-              color: "#FFFFFF",
+              color: "var(--text)",
               cursor: "pointer",
               padding: "14px 40px",
               fontSize: 16,
@@ -1033,11 +1029,11 @@ export default function OnboardingPage() {
               transition: "background 0.15s, transform 0.15s",
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background = "#15803D";
+              e.currentTarget.style.background = "#3FA687";
               e.currentTarget.style.transform = "scale(1.02)";
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = "#16A34A";
+              e.currentTarget.style.background = "#3FA687";
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
@@ -1073,7 +1069,7 @@ function OptionsRow({
             background: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.10)",
             borderRadius: 999,
-            color: "#CBD5E1",
+            color: "var(--text-faint)",
             cursor: "pointer",
             fontSize: 15,
             fontWeight: 600,
@@ -1084,12 +1080,12 @@ function OptionsRow({
           onMouseEnter={e => {
             e.currentTarget.style.background = "rgba(22,163,74,0.14)";
             e.currentTarget.style.borderColor = "rgba(74,222,128,0.3)";
-            e.currentTarget.style.color = "#F8FAFC";
+            e.currentTarget.style.color = "var(--text)";
           }}
           onMouseLeave={e => {
             e.currentTarget.style.background = "rgba(255,255,255,0.04)";
             e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
-            e.currentTarget.style.color = "#CBD5E1";
+            e.currentTarget.style.color = "var(--text-soft)";
           }}
         >
           {opt.label}
@@ -1103,7 +1099,7 @@ function OptionsRow({
 
 const fullScreenStyle: React.CSSProperties = {
   minHeight: "100vh",
-  background: "#071B28",
+  background: "var(--bg-sunken)",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",

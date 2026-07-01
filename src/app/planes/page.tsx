@@ -159,10 +159,10 @@ const faqItems = [
 
 const primaryCheckoutStyle: CSSProperties = {
   alignItems: "center",
-  background: "#16A34A",
+  background: "var(--accent)",
   border: "1px solid rgba(22,163,74,0.55)",
   borderRadius: "14px",
-  color: "#FFFFFF",
+  color: "var(--text)",
   display: "inline-flex",
   fontSize: "14px",
   fontWeight: 900,
@@ -175,10 +175,10 @@ const primaryCheckoutStyle: CSSProperties = {
 
 const secondaryCheckoutStyle: CSSProperties = {
   ...primaryCheckoutStyle,
-  background: "#0F766E",
-  border: "1px solid #34D399",
+  background: "var(--accent)",
+  border: "1px solid var(--accent)",
   boxShadow: "0 10px 24px rgba(16,185,129,0.16)",
-  color: "#FFFFFF",
+  color: "var(--text)",
 };
 
 function formatClp(value: number) {

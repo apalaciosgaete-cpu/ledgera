@@ -25,9 +25,8 @@ export default function MaintenancePage() {
     <main
       style={{
         minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top left, rgba(22,163,74,0.18), transparent 34%), linear-gradient(135deg, #040C13 0%, #071B28 44%, #0B2132 100%)",
-        color: "#F8FAFC",
+        background: "radial-gradient(circle at top left, rgba(22,163,74,0.18), transparent 34%), linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-sunken) 44%, var(--bg-elev) 100%)",
+        color: "var(--text)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -57,7 +56,7 @@ export default function MaintenancePage() {
             border: "1px solid rgba(74,222,128,0.28)",
             borderRadius: "999px",
             background: "rgba(22,163,74,0.12)",
-            color: "#4ADE80",
+            color: "var(--accent)",
             padding: "8px 14px",
             fontSize: "13px",
             fontWeight: 800,
@@ -84,7 +83,7 @@ export default function MaintenancePage() {
           style={{
             margin: "24px auto 0",
             maxWidth: "570px",
-            color: "#CBD5E1",
+            color: "var(--text-faint)",
             fontSize: "18px",
             lineHeight: 1.65,
           }}
@@ -95,7 +94,7 @@ export default function MaintenancePage() {
         <p
           style={{
             margin: "30px auto 0",
-            color: "#94A3B8",
+            color: "var(--text-soft)",
             fontSize: "14px",
             lineHeight: 1.6,
           }}

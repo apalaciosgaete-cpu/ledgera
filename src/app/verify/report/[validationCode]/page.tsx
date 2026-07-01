@@ -70,9 +70,9 @@ export default async function VerifyReportPage({
   const data = await fetchValidation(validationCode);
 
   const isValid      = data?.isValid ?? false;
-  const statusColor  = isValid ? "#16A34A" : "#EF4444";
-  const statusBg     = isValid ? "#F0FDF4" : "#FEF2F2";
-  const statusBorder = isValid ? "#BBF7D0" : "#FECACA";
+  const statusColor  = isValid ? "#3FA687" : "#C4634A";
+  const statusBg     = isValid ? "#1D2C27" : "rgba(196,99,74,0.14)";
+  const statusBorder = isValid ? "#1D2C27" : "var(--loss)";
   const statusIcon   = isValid ? "✓" : "✗";
   const statusText   = !data
     ? "Documento no encontrado"
@@ -86,22 +86,22 @@ export default async function VerifyReportPage({
         <title>Verificación de documento — LEDGERA</title>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F6F8FA; color: #0F172A; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 16px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-sunken); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 16px; }
           .container { width: 100%; max-width: 560px; }
           .header { text-align: center; margin-bottom: 32px; }
-          .logo { font-size: 1.25rem; font-weight: 800; color: #0F2A3D; letter-spacing: -0.02em; }
-          .logo span { color: #F59E0B; }
-          .subtitle { font-size: 0.75rem; color: #94A3B8; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+          .logo { font-size: 1.25rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+          .logo span { color: var(--warn); }
+          .subtitle { font-size: 0.75rem; color: var(--text-soft); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
           .status-card { border-radius: 14px; padding: 24px; border: 1.5px solid ${statusBorder}; background: ${statusBg}; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
           .status-icon { width: 44px; height: 44px; border-radius: 50%; background: ${statusColor}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; flex-shrink: 0; }
           .status-title { font-size: 1.05rem; font-weight: 700; color: ${statusColor}; }
-          .status-sub { font-size: 0.8rem; color: #64748B; margin-top: 3px; }
-          .section-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; }
-          .field-label { font-size: 0.7rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-          .field-value { font-size: 0.9rem; color: #0F172A; font-weight: 500; }
-          .mono { font-family: 'Courier New', monospace; font-size: 0.78rem; word-break: break-all; color: #475569; }
-          .not-found-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 40px 24px; text-align: center; }
-          .footer { text-align: center; font-size: 0.72rem; color: #94A3B8; margin-top: 32px; }
+          .status-sub { font-size: 0.8rem; color: var(--text-soft); margin-top: 3px; }
+          .section-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; }
+          .field-label { font-size: 0.7rem; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+          .field-value { font-size: 0.9rem; color: var(--text); font-weight: 500; }
+          .mono { font-family: 'Courier New', monospace; font-size: 0.78rem; word-break: break-all; color: var(--text); }
+          .not-found-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 40px 24px; text-align: center; }
+          .footer { text-align: center; font-size: 0.72rem; color: var(--text-soft); margin-top: 32px; }
         `}</style>
       </head>
       <body>
@@ -160,7 +160,7 @@ export default async function VerifyReportPage({
             <div className="not-found-card">
               <p style={{ fontSize: "2rem", marginBottom: "12px" }}>🔍</p>
               <p style={{ fontWeight: 600, marginBottom: "6px" }}>Documento no encontrado</p>
-              <p style={{ fontSize: "0.875rem", color: "#64748B" }}>
+              <p style={{ fontSize: "0.875rem", color: "var(--text-soft)" }}>
                 Verifica que el código fue copiado correctamente desde el documento original.
               </p>
             </div>

@@ -16,9 +16,8 @@ export default function PrivacidadPage() {
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #0a0a0f 100%)",
-        color: "#e2e8f0",
+        background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 50%, var(--bg-elev) 100%)",
+        color: "var(--text)",
         fontFamily: "'Inter', sans-serif",
       }}
     >
@@ -46,15 +45,15 @@ export default function PrivacidadPage() {
         <Link
           href="/"
           style={{
-            color: "#94a3b8",
+            color: "var(--text-soft)",
             fontSize: "0.85rem",
             textDecoration: "none",
             display: "flex",
             alignItems: "center",
             gap: "0.4rem",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#e2e8f0")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-soft)")}
         >
           ← Volver al inicio
         </Link>
@@ -72,7 +71,7 @@ export default function PrivacidadPage() {
               borderRadius: "999px",
               padding: "0.3rem 1rem",
               fontSize: "0.78rem",
-              color: "#818cf8",
+              color: "var(--accent)",
               marginBottom: "1.5rem",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -85,14 +84,14 @@ export default function PrivacidadPage() {
               fontFamily: "'Manrope', sans-serif",
               fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
               fontWeight: 800,
-              color: "#f8fafc",
+              color: "var(--text)",
               margin: "0 0 1rem",
               lineHeight: 1.15,
             }}
           >
             Política de Privacidad
           </h1>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: "0.9rem" }}>
             Última actualización: 8 de mayo de 2026 · Versión 2.0
           </p>
         </div>
@@ -100,13 +99,13 @@ export default function PrivacidadPage() {
         {/* AVISO NORMATIVO */}
         <InfoBox color="indigo">
           La presente Política regula el tratamiento de datos personales efectuado por{" "}
-          <strong style={{ color: "#c7d2fe" }}>Ledgera SpA</strong> de conformidad con la{" "}
-          <strong style={{ color: "#c7d2fe" }}>Ley N° 21.719</strong> de Protección de
+          <strong style={{ color: "var(--text-faint)" }}>Ledgera SpA</strong> de conformidad con la{" "}
+          <strong style={{ color: "var(--text-faint)" }}>Ley N° 21.719</strong> de Protección de
           Datos Personales de Chile, el{" "}
-          <strong style={{ color: "#c7d2fe" }}>Código Civil</strong>, la{" "}
-          <strong style={{ color: "#c7d2fe" }}>Ley N° 19.496</strong> de Protección al
+          <strong style={{ color: "var(--text-faint)" }}>Código Civil</strong>, la{" "}
+          <strong style={{ color: "var(--text-faint)" }}>Ley N° 19.496</strong> de Protección al
           Consumidor y demás normativa aplicable. Forma parte integrante de los{" "}
-          <Link href="/terminos" style={{ color: "#818cf8" }}>
+          <Link href="/terminos" style={{ color: "var(--accent)" }}>
             Términos y Condiciones
           </Link>{" "}
           de Ledgera.
@@ -116,33 +115,33 @@ export default function PrivacidadPage() {
 
         <LegalSection title="1. Responsable del tratamiento y Encargado de Protección de Datos">
           <p>
-            El <strong style={{ color: "#e2e8f0" }}>responsable del tratamiento</strong> de
+            El <strong style={{ color: "var(--text)" }}>responsable del tratamiento</strong> de
             sus datos personales es:
           </p>
           <InfoBox color="indigo">
-            <strong style={{ color: "#c7d2fe" }}>Ledgera SpA</strong>
+            <strong style={{ color: "var(--text-faint)" }}>Ledgera SpA</strong>
             {"  ·  "}
             Domicilio: Región Metropolitana, Chile
             {"  ·  "}
             Correo:{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+            <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
             </a>
           </InfoBox>
           <p>
             Conforme a la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 21.719</strong>, Ledgera SpA ha
+            <strong style={{ color: "var(--text)" }}>Ley N° 21.719</strong>, Ledgera SpA ha
             designado un{" "}
-            <strong style={{ color: "#e2e8f0" }}>
+            <strong style={{ color: "var(--text)" }}>
               Encargado de Protección de Datos (EPD)
             </strong>{" "}
             responsable de velar por el cumplimiento de esta Política y de atender las
             solicitudes de los titulares. Puede contactarlo en:
           </p>
           <InfoBox color="indigo">
-            <strong style={{ color: "#c7d2fe" }}>EPD — Ledgera SpA</strong>
+            <strong style={{ color: "var(--text-faint)" }}>EPD — Ledgera SpA</strong>
             {"  ·  "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+            <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
             </a>
             {"  ·  "}
@@ -195,7 +194,7 @@ export default function PrivacidadPage() {
                 <span
                   style={{
                     background: "rgba(99,102,241,0.15)",
-                    color: "#a5b4fc",
+                    color: "var(--text-faint)",
                     fontSize: "0.75rem",
                     fontWeight: 700,
                     padding: "0.15rem 0.6rem",
@@ -207,7 +206,7 @@ export default function PrivacidadPage() {
                 >
                   {p.nombre}
                 </span>
-                <span style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7 }}>
+                <span style={{ color: "var(--text-soft)", fontSize: "0.9rem", lineHeight: 1.7 }}>
                   {p.desc}
                 </span>
               </div>
@@ -257,7 +256,7 @@ export default function PrivacidadPage() {
           />
           <InfoBox color="indigo">
             Ledgera{" "}
-            <strong style={{ color: "#c7d2fe" }}>no recopila datos sensibles</strong> en los
+            <strong style={{ color: "var(--text-faint)" }}>no recopila datos sensibles</strong> en los
             términos del Art. 4 de la Ley N° 21.719 (datos de salud, origen racial o
             étnico, opiniones políticas, creencias religiosas, datos biométricos, etc.).
           </InfoBox>
@@ -303,7 +302,7 @@ export default function PrivacidadPage() {
           />
           <p>
             Los datos tributarios del Usuario{" "}
-            <strong style={{ color: "#e2e8f0" }}>
+            <strong style={{ color: "var(--text)" }}>
               no se utilizan con fines publicitarios
             </strong>{" "}
             ni se comparten con terceros para ese propósito.
@@ -313,7 +312,7 @@ export default function PrivacidadPage() {
         <LegalSection title="5. Decisiones automatizadas e indicadores de riesgo">
           <p>
             En cumplimiento del{" "}
-            <strong style={{ color: "#e2e8f0" }}>Art. 16 de la Ley N° 21.719</strong>,
+            <strong style={{ color: "var(--text)" }}>Art. 16 de la Ley N° 21.719</strong>,
             Ledgera informa que la Plataforma genera de forma automatizada los siguientes
             análisis basados en los datos del Usuario:
           </p>
@@ -326,25 +325,25 @@ export default function PrivacidadPage() {
             }}
           >
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Indicadores de riesgo tributario:</strong>{" "}
+              <strong style={{ color: "var(--text)" }}>Indicadores de riesgo tributario:</strong>{" "}
               calculados a partir del volumen de operaciones, consistencia de registros y
               brechas detectadas entre períodos.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Alertas accionables:</strong> notificaciones
+              <strong style={{ color: "var(--text)" }}>Alertas accionables:</strong> notificaciones
               automáticas sobre inconsistencias, operaciones sin clasificar o aproximación
               al cierre de período tributario.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Cálculo FIFO automatizado:</strong>{" "}
+              <strong style={{ color: "var(--text)" }}>Cálculo FIFO automatizado:</strong>{" "}
               determinación del costo tributario de cada activo aplicando el método First In,
               First Out conforme a la Circular SII N° 31/2021.
             </li>
           </ul>
           <InfoBox color="amber">
-            <strong style={{ color: "#fcd34d" }}>Importante:</strong> Estas decisiones
+            <strong style={{ color: "var(--warn)" }}>Importante:</strong> Estas decisiones
             automatizadas son herramientas de{" "}
-            <strong style={{ color: "#fcd34d" }}>asistencia informativa</strong> y no
+            <strong style={{ color: "var(--warn)" }}>asistencia informativa</strong> y no
             producen efectos jurídicos vinculantes sobre el Usuario. El Usuario conserva
             el control total de sus declaraciones ante el SII. Si desea impugnar o revisar
             cualquier cálculo automatizado, puede hacerlo directamente dentro de la
@@ -356,11 +355,11 @@ export default function PrivacidadPage() {
           <p>
             Los datos personales se conservan durante la vigencia de la suscripción y por un
             período adicional de{" "}
-            <strong style={{ color: "#e2e8f0" }}>5 años</strong> desde la cancelación de la
+            <strong style={{ color: "var(--text)" }}>5 años</strong> desde la cancelación de la
             cuenta, conforme al plazo de prescripción tributaria ordinaria establecido en el{" "}
-            <strong style={{ color: "#e2e8f0" }}>Art. 200 del Código Tributario</strong>.
+            <strong style={{ color: "var(--text)" }}>Art. 200 del Código Tributario</strong>.
             Este plazo puede extenderse a{" "}
-            <strong style={{ color: "#e2e8f0" }}>6 años</strong> cuando corresponda aplicar
+            <strong style={{ color: "var(--text)" }}>6 años</strong> cuando corresponda aplicar
             la prescripción extraordinaria del mismo artículo.
           </p>
           <DataTable
@@ -409,20 +408,20 @@ export default function PrivacidadPage() {
             ]}
           />
           <InfoBox color="amber">
-            <strong style={{ color: "#fcd34d" }}>Transferencias internacionales:</strong>{" "}
+            <strong style={{ color: "var(--warn)" }}>Transferencias internacionales:</strong>{" "}
             Los datos transferidos a Vercel y Cloudflare (ambos radicados en EE.UU.) se
             amparan en{" "}
-            <strong style={{ color: "#fcd34d" }}>
+            <strong style={{ color: "var(--warn)" }}>
               Acuerdos de Procesamiento de Datos (DPA)
             </strong>{" "}
             que incluyen cláusulas contractuales tipo equivalentes a las exigidas por el{" "}
-            <strong style={{ color: "#fcd34d" }}>Art. 27 de la Ley N° 21.719</strong> como
+            <strong style={{ color: "var(--warn)" }}>Art. 27 de la Ley N° 21.719</strong> como
             garantía adecuada para la transferencia internacional. Ledgera no transfiere
             datos a países sin nivel de protección adecuado sin contar con dichas garantías.
           </InfoBox>
           <p>
             Ledgera{" "}
-            <strong style={{ color: "#e2e8f0" }}>no vende, arrienda ni cede</strong> datos
+            <strong style={{ color: "var(--text)" }}>no vende, arrienda ni cede</strong> datos
             personales a terceros con fines comerciales o publicitarios.
           </p>
         </LegalSection>
@@ -430,7 +429,7 @@ export default function PrivacidadPage() {
         <LegalSection title="8. Derechos del titular">
           <p>
             Conforme a la{" "}
-            <strong style={{ color: "#e2e8f0" }}>Ley N° 21.719</strong>, el Usuario tiene
+            <strong style={{ color: "var(--text)" }}>Ley N° 21.719</strong>, el Usuario tiene
             los siguientes derechos sobre sus datos personales, con los plazos de respuesta
             que la ley establece para cada uno:
           </p>
@@ -441,49 +440,49 @@ export default function PrivacidadPage() {
                 arts: "Art. 13",
                 desc: "Conocer qué datos personales tratamos, con qué finalidad y obtener una copia.",
                 plazo: "30 días corridos",
-                color: "#818cf8",
+                color: "var(--accent)",
               },
               {
                 derecho: "Rectificación",
                 arts: "Art. 14",
                 desc: "Corregir datos inexactos, incompletos o desactualizados.",
                 plazo: "5 días hábiles",
-                color: "#22c55e",
+                color: "var(--accent)",
               },
               {
                 derecho: "Supresión",
                 arts: "Art. 15",
                 desc: "Solicitar la eliminación de datos cuando ya no sean necesarios, salvo obligación legal de conservarlos.",
                 plazo: "5 días hábiles",
-                color: "#22c55e",
+                color: "var(--accent)",
               },
               {
                 derecho: "Oposición",
                 arts: "Art. 16",
                 desc: "Oponerse al tratamiento basado en interés legítimo o revocar el consentimiento otorgado.",
                 plazo: "5 días hábiles",
-                color: "#22c55e",
+                color: "var(--accent)",
               },
               {
                 derecho: "Portabilidad",
                 arts: "Art. 17",
                 desc: "Recibir sus datos en formato estructurado, de uso común y legible por máquina (CSV o JSON).",
                 plazo: "30 días corridos",
-                color: "#818cf8",
+                color: "var(--accent)",
               },
               {
                 derecho: "Limitación",
                 arts: "Art. 18",
                 desc: "Solicitar la suspensión del tratamiento mientras se verifica una reclamación o impugnación.",
                 plazo: "5 días hábiles",
-                color: "#22c55e",
+                color: "var(--accent)",
               },
               {
                 derecho: "Impugnar decisiones automatizadas",
                 arts: "Art. 16 bis",
                 desc: "Solicitar revisión humana de cualquier indicador de riesgo o cálculo automatizado que le afecte.",
                 plazo: "10 días hábiles",
-                color: "#f59e0b",
+                color: "var(--warn)",
               },
             ].map((d) => (
               <div
@@ -509,16 +508,16 @@ export default function PrivacidadPage() {
                   >
                     {d.derecho}
                   </span>
-                  <span style={{ color: "#475569", fontSize: "0.75rem" }}>{d.arts}</span>
+                  <span style={{ color: "var(--text)", fontSize: "0.75rem" }}>{d.arts}</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: "0 0 0.35rem", color: "#94a3b8", fontSize: "0.87rem", lineHeight: 1.6 }}>
+                  <p style={{ margin: "0 0 0.35rem", color: "var(--text-soft)", fontSize: "0.87rem", lineHeight: 1.6 }}>
                     {d.desc}
                   </p>
                   <span
                     style={{
                       fontSize: "0.75rem",
-                      color: "#64748b",
+                      color: "var(--text-soft)",
                       background: "rgba(255,255,255,0.04)",
                       padding: "0.1rem 0.5rem",
                       borderRadius: "999px",
@@ -532,7 +531,7 @@ export default function PrivacidadPage() {
           </div>
           <p>
             Para ejercer cualquiera de estos derechos, envíe una solicitud escrita a{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+            <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
             </a>{" "}
             con asunto <em>"Ejercicio de derechos — Ley 21.719"</em>, indicando el derecho
@@ -543,7 +542,7 @@ export default function PrivacidadPage() {
         <LegalSection title="9. Retiro del consentimiento">
           <p>
             Cuando el tratamiento de datos se base en el{" "}
-            <strong style={{ color: "#e2e8f0" }}>consentimiento del Usuario</strong> (por
+            <strong style={{ color: "var(--text)" }}>consentimiento del Usuario</strong> (por
             ejemplo, comunicaciones de marketing opcionales), este podrá retirarlo en
             cualquier momento sin que ello afecte a la licitud del tratamiento previo.
           </p>
@@ -564,7 +563,7 @@ export default function PrivacidadPage() {
             </li>
             <li>
               Enviando una solicitud a{" "}
-              <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+              <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
                 admin@ledgera.cl
               </a>{" "}
               con asunto <em>"Retiro de consentimiento"</em>.
@@ -575,7 +574,7 @@ export default function PrivacidadPage() {
             </li>
           </ul>
           <InfoBox color="amber">
-            <strong style={{ color: "#fcd34d" }}>Importante:</strong> El retiro del
+            <strong style={{ color: "var(--warn)" }}>Importante:</strong> El retiro del
             consentimiento para el tratamiento necesario para la ejecución del contrato
             (autenticación, cálculos FIFO, facturación) equivale a la resolución del contrato
             de servicios, por lo que implicará la cancelación de la cuenta.
@@ -585,7 +584,7 @@ export default function PrivacidadPage() {
         <LegalSection title="10. Seguridad de los datos">
           <p>
             En cumplimiento del{" "}
-            <strong style={{ color: "#e2e8f0" }}>Art. 11 de la Ley N° 21.719</strong>,
+            <strong style={{ color: "var(--text)" }}>Art. 11 de la Ley N° 21.719</strong>,
             Ledgera implementa las siguientes medidas técnicas y organizativas:
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
@@ -607,13 +606,13 @@ export default function PrivacidadPage() {
                     width: "6px",
                     height: "6px",
                     borderRadius: "50%",
-                    background: "#22c55e",
+                    background: "var(--accent)",
                     marginTop: "0.6rem",
                     flexShrink: 0,
                   }}
                 />
-                <span style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7 }}>
-                  <strong style={{ color: "#e2e8f0" }}>{m.label}:</strong> {m.desc}
+                <span style={{ color: "var(--text-soft)", fontSize: "0.9rem", lineHeight: 1.7 }}>
+                  <strong style={{ color: "var(--text)" }}>{m.label}:</strong> {m.desc}
                 </span>
               </div>
             ))}
@@ -621,7 +620,7 @@ export default function PrivacidadPage() {
           <p>
             En caso de producirse una brecha de seguridad que pueda afectar los derechos del
             Usuario, Ledgera lo notificará en el plazo y forma exigidos por el{" "}
-            <strong style={{ color: "#e2e8f0" }}>Art. 11 de la Ley N° 21.719</strong>, y
+            <strong style={{ color: "var(--text)" }}>Art. 11 de la Ley N° 21.719</strong>, y
             adoptará las medidas correctivas de forma inmediata.
           </p>
         </LegalSection>
@@ -629,7 +628,7 @@ export default function PrivacidadPage() {
         <LegalSection title="11. Menores de edad">
           <p>
             La Plataforma está destinada exclusivamente a personas naturales mayores de{" "}
-            <strong style={{ color: "#e2e8f0" }}>18 años</strong> y a personas jurídicas
+            <strong style={{ color: "var(--text)" }}>18 años</strong> y a personas jurídicas
             debidamente representadas. Ledgera no recopila conscientemente datos de menores
             de edad sin consentimiento parental.
           </p>
@@ -637,7 +636,7 @@ export default function PrivacidadPage() {
             Si detectamos que un menor de 18 años ha proporcionado datos personales sin
             autorización de su representante legal, procederemos a eliminarlos de forma
             inmediata y a cancelar la cuenta asociada, en cumplimiento del{" "}
-            <strong style={{ color: "#e2e8f0" }}>Art. 16 de la Ley N° 21.719</strong>.
+            <strong style={{ color: "var(--text)" }}>Art. 16 de la Ley N° 21.719</strong>.
           </p>
         </LegalSection>
 
@@ -650,7 +649,7 @@ export default function PrivacidadPage() {
           <p>
             La información detallada sobre los tipos de cookies utilizadas, su finalidad,
             duración y los proveedores que las instalan se encuentra en la{" "}
-            <Link href="/cookies" style={{ color: "#818cf8" }}>
+            <Link href="/cookies" style={{ color: "var(--accent)" }}>
               Política de Cookies
             </Link>
             , que complementa y debe leerse junto con la presente Política de Privacidad.
@@ -658,9 +657,9 @@ export default function PrivacidadPage() {
           <InfoBox color="indigo">
             Las cookies estrictamente necesarias (sesión y seguridad) se tratan bajo la base
             jurídica de{" "}
-            <strong style={{ color: "#c7d2fe" }}>ejecución del contrato</strong>. Las cookies
+            <strong style={{ color: "var(--text-faint)" }}>ejecución del contrato</strong>. Las cookies
             analíticas opcionales requieren{" "}
-            <strong style={{ color: "#c7d2fe" }}>consentimiento expreso</strong>, revocable
+            <strong style={{ color: "var(--text-faint)" }}>consentimiento expreso</strong>, revocable
             en cualquier momento desde la configuración del navegador.
           </InfoBox>
         </LegalSection>
@@ -673,14 +672,14 @@ export default function PrivacidadPage() {
           <p>
             Los cambios significativos serán notificados al correo electrónico registrado
             con al menos{" "}
-            <strong style={{ color: "#e2e8f0" }}>10 días hábiles de anticipación</strong>.
+            <strong style={{ color: "var(--text)" }}>10 días hábiles de anticipación</strong>.
             Continuando con el uso de la Plataforma tras ese plazo, el Usuario manifiesta
             su aceptación de la nueva versión.
           </p>
           <p>
             Si el Usuario no acepta los cambios, podrá resolver el contrato conforme a lo
             dispuesto en los{" "}
-            <Link href="/terminos" style={{ color: "#818cf8" }}>
+            <Link href="/terminos" style={{ color: "var(--accent)" }}>
               Términos y Condiciones
             </Link>{" "}
             sección 12.
@@ -693,9 +692,9 @@ export default function PrivacidadPage() {
             seguridad:
           </p>
           <InfoBox color="indigo">
-            <strong style={{ color: "#c7d2fe" }}>EPD — Ledgera SpA</strong>
+            <strong style={{ color: "var(--text-faint)" }}>EPD — Ledgera SpA</strong>
             {"  ·  "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+            <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
             </a>
             {"  ·  "}
@@ -704,12 +703,12 @@ export default function PrivacidadPage() {
           <p>
             Si considera que su solicitud no fue atendida de forma satisfactoria, tiene
             derecho a presentar una reclamación ante la{" "}
-            <strong style={{ color: "#e2e8f0" }}>
+            <strong style={{ color: "var(--text)" }}>
               Agencia de Protección de Datos Personales
             </strong>{" "}
             (autoridad de control establecida por la Ley N° 21.719) o, en forma transitoria
             mientras dicha institución completa su constitución, ante el{" "}
-            <strong style={{ color: "#e2e8f0" }}>Consejo para la Transparencia</strong>.
+            <strong style={{ color: "var(--text)" }}>Consejo para la Transparencia</strong>.
           </p>
         </LegalSection>
 
@@ -726,18 +725,18 @@ export default function PrivacidadPage() {
             gap: "1rem",
           }}
         >
-          <span style={{ color: "#64748b", fontSize: "0.85rem", alignSelf: "center" }}>
+          <span style={{ color: "var(--text-soft)", fontSize: "0.85rem", alignSelf: "center" }}>
             Ver también:
           </span>
           <Link
             href="/terminos"
-            style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}
+            style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}
           >
             Términos y Condiciones →
           </Link>
           <Link
             href="/cookies"
-            style={{ color: "#818cf8", fontSize: "0.85rem", textDecoration: "none" }}
+            style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}
           >
             Política de Cookies →
           </Link>
@@ -747,7 +746,7 @@ export default function PrivacidadPage() {
       {/* FOOTER */}
       <footer
         style={{
-          background: "#040C13",
+          background: "var(--bg-elev)",
           padding: "3rem 2.5rem",
           borderTop: "1px solid rgba(255,255,255,0.05)",
         }}
@@ -770,7 +769,7 @@ export default function PrivacidadPage() {
               <p
                 style={{
                   fontSize: "13px",
-                  color: "#475569",
+                  color: "var(--text)",
                   margin: 0,
                   maxWidth: "260px",
                   lineHeight: 1.6,
@@ -781,31 +780,31 @@ export default function PrivacidadPage() {
             </div>
             <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap" }}>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
                   Producto
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/register" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Comenzar gratis</Link>
-                  <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Iniciar sesión</Link>
-                  <Link href="/blog" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Blog</Link>
+                  <Link href="/register" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Comenzar gratis</Link>
+                  <Link href="/login" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Iniciar sesión</Link>
+                  <Link href="/blog" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Blog</Link>
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
                   Legal
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/terminos" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Términos y condiciones</Link>
-                  <Link href="/privacidad" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de privacidad</Link>
-                  <Link href="/cookies" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Política de cookies</Link>
+                  <Link href="/terminos" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Términos y condiciones</Link>
+                  <Link href="/privacidad" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Política de privacidad</Link>
+                  <Link href="/cookies" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Política de cookies</Link>
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
                   Contacto
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>admin@ledgera.cl</a>
+                  <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>admin@ledgera.cl</a>
                 </div>
               </div>
             </div>
@@ -821,10 +820,10 @@ export default function PrivacidadPage() {
               gap: "1rem",
             }}
           >
-            <span style={{ fontSize: "12px", color: "#334155" }}>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>
               © {new Date().getFullYear()} Ledgera SpA · Chile · Ley 21.719 protección de datos
             </span>
-            <span style={{ fontSize: "12px", color: "#334155" }}>ledgera.cl</span>
+            <span style={{ fontSize: "12px", color: "var(--text)" }}>ledgera.cl</span>
           </div>
         </div>
       </footer>
@@ -853,7 +852,7 @@ export default function PrivacidadPage() {
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 13V5M5 9l4-4 4 4"
-              stroke="#94A3B8"
+              stroke="var(--text-faint)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -873,7 +872,7 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
           fontFamily: "'Manrope', sans-serif",
           fontSize: "1.1rem",
           fontWeight: 700,
-          color: "#f1f5f9",
+          color: "var(--text)",
           marginBottom: "1rem",
           paddingBottom: "0.5rem",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
@@ -886,7 +885,7 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
           display: "flex",
           flexDirection: "column",
           gap: "0.85rem",
-          color: "#94a3b8",
+          color: "var(--text-soft)",
           fontSize: "0.92rem",
           lineHeight: 1.75,
         }}
@@ -905,9 +904,9 @@ function InfoBox({
   color?: "indigo" | "amber" | "red";
 }) {
   const palette = {
-    indigo: { bg: "rgba(99,102,241,0.06)", border: "rgba(99,102,241,0.15)", text: "#a5b4fc" },
-    amber: { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.18)", text: "#fcd34d" },
-    red: { bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.18)", text: "#fca5a5" },
+    indigo: { bg: "rgba(99,102,241,0.06)", border: "rgba(99,102,241,0.15)", text: "var(--text-faint)" },
+    amber: { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.18)", text: "var(--warn)" },
+    red: { bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.18)", text: "var(--loss)" },
   };
   const p = palette[color];
   return (
@@ -940,7 +939,7 @@ function DataTable({
           width: "100%",
           borderCollapse: "collapse",
           fontSize: "0.84rem",
-          color: "#94a3b8",
+          color: "var(--text-soft)",
         }}
       >
         <thead>
@@ -952,7 +951,7 @@ function DataTable({
                   textAlign: "left",
                   padding: "0.6rem 0.8rem",
                   borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  color: "#cbd5e1",
+                  color: "var(--text-faint)",
                   fontWeight: 600,
                   whiteSpace: "nowrap",
                 }}
@@ -967,8 +966,7 @@ function DataTable({
             <tr
               key={i}
               style={{
-                background:
-                  i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent",
+                background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent",
               }}
             >
               {row.map((cell, j) => (
@@ -976,7 +974,7 @@ function DataTable({
                   key={j}
                   style={{
                     padding: "0.6rem 0.8rem",
-                    color: j === 0 ? "#e2e8f0" : "#94a3b8",
+                    color: j === 0 ? "var(--text)" : "var(--text-soft)",
                     fontWeight: j === 0 ? 500 : 400,
                     verticalAlign: "top",
                     lineHeight: 1.6,

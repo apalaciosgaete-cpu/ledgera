@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Logo } from "@/components/brand/Logo";
-import { colors, fonts } from "@/styles/tokens";
+import { fonts } from "@/styles/tokens";
 
 type PublicPlan = "PERSONAL" | "PROFESIONAL" | "EMPRESA";
 type CheckoutStep = "consent" | "payment";
@@ -76,8 +76,8 @@ function CheckoutShell({ children }: { children: React.ReactNode }) {
     <main
       style={{
         minHeight: "100vh",
-        background: colors.primary,
-        color: "#F8FAFC",
+        background: "var(--bg-elev)",
+        color: "var(--text)",
         fontFamily: fonts.body,
         padding: "32px 20px",
         display: "flex",
@@ -128,11 +128,11 @@ function PlanSummary({
         }}
       >
         <div>
-          <p style={{ margin: 0, color: "#CBD5E1", fontSize: 12 }}>Plan seleccionado</p>
+          <p style={{ margin: 0, color: "var(--text-faint)", fontSize: 12 }}>Plan seleccionado</p>
           <p
             style={{
               margin: "4px 0 0",
-              color: "#F8FAFC",
+              color: "var(--text)",
               fontSize: 18,
               fontWeight: 850,
             }}
@@ -143,7 +143,7 @@ function PlanSummary({
         <p
           style={{
             margin: 0,
-            color: colors.accent,
+            color: "var(--accent)",
             fontSize: 18,
             fontWeight: 850,
           }}
@@ -162,10 +162,10 @@ function PlanSummary({
             }}
           />
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-            <p style={{ margin: 0, color: "#CBD5E1", fontSize: 13 }}>
-              Cupón: <strong style={{ color: "#F8FAFC" }}>{coupon.coupon.code}</strong>
+            <p style={{ margin: 0, color: "var(--text-faint)", fontSize: 13 }}>
+              Cupón: <strong style={{ color: "var(--text)" }}>{coupon.coupon.code}</strong>
             </p>
-            <p style={{ margin: 0, color: "#F87171", fontSize: 13, fontWeight: 700 }}>
+            <p style={{ margin: 0, color: "var(--loss)", fontSize: 13, fontWeight: 700 }}>
               -{formatClp(discountAmount)}
             </p>
           </div>
@@ -188,13 +188,13 @@ function PlanSummary({
           alignItems: "center",
         }}
       >
-        <p style={{ margin: 0, color: "#F8FAFC", fontSize: 14, fontWeight: 700 }}>
+        <p style={{ margin: 0, color: "var(--text)", fontSize: 14, fontWeight: 700 }}>
           Total a pagar
         </p>
         <p
           style={{
             margin: 0,
-            color: colors.accent,
+            color: "var(--accent)",
             fontSize: 20,
             fontWeight: 850,
           }}
@@ -215,7 +215,7 @@ function PlanSummary({
         <p
           style={{
             margin: 0,
-            color: "#94A3B8",
+            color: "var(--text-soft)",
             fontSize: 12,
             lineHeight: 1.6,
           }}
@@ -226,7 +226,7 @@ function PlanSummary({
         <p
           style={{
             margin: 0,
-            color: "#64748B",
+            color: "var(--text-soft)",
             fontSize: 11,
             lineHeight: 1.5,
           }}
@@ -308,8 +308,8 @@ function ConsentStep({
   return (
     <section
       style={{
-        background: colors.surfaceDark,
-        border: `1px solid ${colors.borderDark}`,
+        background: "var(--bg-elev)",
+        border: `1px solid ${"var(--border-strong)"}`,
         borderRadius: 18,
         padding: 28,
         boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
@@ -318,7 +318,7 @@ function ConsentStep({
       <p
         style={{
           margin: "0 0 8px",
-          color: colors.accent,
+          color: "var(--accent)",
           fontSize: 12,
           fontWeight: 800,
           letterSpacing: "0.08em",
@@ -334,13 +334,13 @@ function ConsentStep({
           fontSize: 26,
           lineHeight: 1.15,
           margin: "0 0 10px",
-          color: "#F8FAFC",
+          color: "var(--text)",
         }}
       >
         Estás contratando LEDGERA {copy.label}
       </h1>
 
-      <p style={{ margin: "0 0 22px", color: "#94A3B8", fontSize: 14, lineHeight: 1.6 }}>
+      <p style={{ margin: "0 0 22px", color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6 }}>
         {copy.description}
       </p>
 
@@ -358,7 +358,7 @@ function ConsentStep({
         <p
           style={{
             margin: "0 0 14px",
-            color: "#CBD5E1",
+            color: "var(--text-faint)",
             fontSize: 12,
             fontWeight: 800,
             letterSpacing: "0.08em",
@@ -380,8 +380,8 @@ function ConsentStep({
               padding: "10px 12px",
               border: "1px solid rgba(148,163,184,0.25)",
               borderRadius: 8,
-              background: colors.primary,
-              color: "#F8FAFC",
+              background: "var(--bg-elev)",
+              color: "var(--text)",
               fontSize: 14,
             }}
           />
@@ -393,8 +393,8 @@ function ConsentStep({
               padding: "10px 14px",
               border: "none",
               borderRadius: 8,
-              background: validatingCoupon || !couponCode.trim() ? "#374151" : colors.accent,
-              color: validatingCoupon || !couponCode.trim() ? "#9CA3AF" : "#062016",
+              background: validatingCoupon || !couponCode.trim() ? "var(--bg-elev)" : "var(--accent)",
+              color: validatingCoupon || !couponCode.trim() ? "var(--text-soft)" : "var(--text)",
               fontSize: 13,
               fontWeight: 700,
               cursor: validatingCoupon || !couponCode.trim() ? "not-allowed" : "pointer",
@@ -405,13 +405,13 @@ function ConsentStep({
         </div>
 
         {couponError && (
-          <p style={{ margin: "10px 0 0", color: "#F87171", fontSize: 12 }}>
+          <p style={{ margin: "10px 0 0", color: "var(--loss)", fontSize: 12 }}>
             {couponError}
           </p>
         )}
 
         {coupon?.valid && coupon.coupon && (
-          <p style={{ margin: "10px 0 0", color: "#34D399", fontSize: 12 }}>
+          <p style={{ margin: "10px 0 0", color: "var(--accent)", fontSize: 12 }}>
             Cupón {coupon.coupon.code} aplicado: -{formatClp(coupon.discountAmount)}
           </p>
         )}
@@ -429,7 +429,7 @@ function ConsentStep({
         <p
           style={{
             margin: "0 0 14px",
-            color: "#CBD5E1",
+            color: "var(--text-faint)",
             fontSize: 12,
             fontWeight: 800,
             letterSpacing: "0.08em",
@@ -454,12 +454,12 @@ function ConsentStep({
               onChange={(e) => setAcceptedTerms(e.target.checked)}
               style={{ marginTop: "0.15rem" }}
             />
-            <span style={{ color: "#CBD5E1", fontSize: 13, lineHeight: 1.5 }}>
+            <span style={{ color: "var(--text-faint)", fontSize: 13, lineHeight: 1.5 }}>
               Acepto los{" "}
               <Link
                 href="/legal/terminos"
                 target="_blank"
-                style={{ color: colors.accent, textDecoration: "underline" }}
+                style={{ color: "var(--accent)", textDecoration: "underline" }}
               >
                 Términos y Condiciones
               </Link>
@@ -480,12 +480,12 @@ function ConsentStep({
               onChange={(e) => setAcceptedPrivacy(e.target.checked)}
               style={{ marginTop: "0.15rem" }}
             />
-            <span style={{ color: "#CBD5E1", fontSize: 13, lineHeight: 1.5 }}>
+            <span style={{ color: "var(--text-faint)", fontSize: 13, lineHeight: 1.5 }}>
               Acepto la{" "}
               <Link
                 href="/legal/privacidad"
                 target="_blank"
-                style={{ color: colors.accent, textDecoration: "underline" }}
+                style={{ color: "var(--accent)", textDecoration: "underline" }}
               >
                 Política de Privacidad
               </Link>
@@ -506,7 +506,7 @@ function ConsentStep({
               onChange={(e) => setAcceptedRenewal(e.target.checked)}
               style={{ marginTop: "0.15rem" }}
             />
-            <span style={{ color: "#CBD5E1", fontSize: 13, lineHeight: 1.5 }}>
+            <span style={{ color: "var(--text-faint)", fontSize: 13, lineHeight: 1.5 }}>
               Entiendo que mi suscripción se renovará automáticamente hasta su
               cancelación
             </span>
@@ -525,21 +525,21 @@ function ConsentStep({
           <Link
             href="/legal/terminos"
             target="_blank"
-            style={{ color: "#94A3B8", textDecoration: "underline" }}
+            style={{ color: "var(--text-soft)", textDecoration: "underline" }}
           >
             Términos y Condiciones
           </Link>
           <Link
             href="/legal/privacidad"
             target="_blank"
-            style={{ color: "#94A3B8", textDecoration: "underline" }}
+            style={{ color: "var(--text-soft)", textDecoration: "underline" }}
           >
             Política de Privacidad
           </Link>
           <Link
             href="/legal/comercial"
             target="_blank"
-            style={{ color: "#94A3B8", textDecoration: "underline" }}
+            style={{ color: "var(--text-soft)", textDecoration: "underline" }}
           >
             Política Comercial
           </Link>
@@ -550,7 +550,7 @@ function ConsentStep({
         <p
           style={{
             margin: "0 0 14px",
-            color: "#F59E0B",
+            color: "var(--warn)",
             fontSize: 13,
             textAlign: "center",
           }}
@@ -568,8 +568,8 @@ function ConsentStep({
           border: "none",
           borderRadius: 10,
           padding: "14px 18px",
-          background: !canContinue ? "#374151" : colors.accent,
-          color: !canContinue ? "#9CA3AF" : "#062016",
+          background: !canContinue ? "var(--bg-elev)" : "var(--accent)",
+          color: !canContinue ? "var(--text-soft)" : "var(--text)",
           fontSize: 15,
           fontWeight: 850,
           cursor: !canContinue ? "not-allowed" : "pointer",
@@ -582,14 +582,14 @@ function ConsentStep({
       <p
         style={{
           margin: "14px 0 0",
-          color: "#94A3B8",
+          color: "var(--text-soft)",
           fontSize: 12,
           lineHeight: 1.5,
           textAlign: "center",
         }}
       >
         ¿Quieres partir gratis?{" "}
-        <Link href="/register?plan=FREE" style={{ color: colors.accent }}>
+        <Link href="/register?plan=FREE" style={{ color: "var(--accent)" }}>
           Crear cuenta Free
         </Link>
       </p>
@@ -646,8 +646,8 @@ function PaymentStep({
   return (
     <section
       style={{
-        background: colors.surfaceDark,
-        border: `1px solid ${colors.borderDark}`,
+        background: "var(--bg-elev)",
+        border: `1px solid ${"var(--border-strong)"}`,
         borderRadius: 18,
         padding: 28,
         boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
@@ -656,7 +656,7 @@ function PaymentStep({
       <p
         style={{
           margin: "0 0 8px",
-          color: colors.accent,
+          color: "var(--accent)",
           fontSize: 12,
           fontWeight: 800,
           letterSpacing: "0.08em",
@@ -672,13 +672,13 @@ function PaymentStep({
           fontSize: 26,
           lineHeight: 1.15,
           margin: "0 0 10px",
-          color: "#F8FAFC",
+          color: "var(--text)",
         }}
       >
         Completa tu pago
       </h1>
 
-      <p style={{ margin: "0 0 22px", color: "#94A3B8", fontSize: 14, lineHeight: 1.6 }}>
+      <p style={{ margin: "0 0 22px", color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6 }}>
         Una vez confirmado el pago podrás crear tu cuenta y activar el plan
         contratado.
       </p>
@@ -697,7 +697,7 @@ function PaymentStep({
         <p
           style={{
             margin: "0 0 8px",
-            color: "#CBD5E1",
+            color: "var(--text-faint)",
             fontSize: 13,
             fontWeight: 700,
           }}
@@ -707,7 +707,7 @@ function PaymentStep({
         <p
           style={{
             margin: 0,
-            color: "#94A3B8",
+            color: "var(--text-soft)",
             fontSize: 13,
             lineHeight: 1.6,
           }}
@@ -727,8 +727,8 @@ function PaymentStep({
           border: "none",
           borderRadius: 10,
           padding: "14px 18px",
-          background: loading ? "#374151" : colors.accent,
-          color: loading ? "#9CA3AF" : "#062016",
+          background: loading ? "var(--bg-elev)" : "var(--accent)",
+          color: loading ? "var(--text-soft)" : "var(--text)",
           fontSize: 15,
           fontWeight: 850,
           cursor: loading ? "not-allowed" : "pointer",
@@ -741,14 +741,14 @@ function PaymentStep({
       <p
         style={{
           margin: "14px 0 0",
-          color: "#94A3B8",
+          color: "var(--text-soft)",
           fontSize: 12,
           lineHeight: 1.5,
           textAlign: "center",
         }}
       >
         ¿Tienes dudas? Revisa nuestra{" "}
-        <Link href="/legal/comercial" target="_blank" style={{ color: colors.accent }}>
+        <Link href="/legal/comercial" target="_blank" style={{ color: "var(--accent)" }}>
           Política Comercial
         </Link>
       </p>

@@ -9,9 +9,8 @@ export default function ComercialPage() {
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #0a0a0f 100%)",
-        color: "#e2e8f0",
+        background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 50%, var(--bg-elev) 100%)",
+        color: "var(--text)",
         fontFamily: "'Inter', sans-serif",
       }}
     >
@@ -42,15 +41,15 @@ export default function ComercialPage() {
         <Link
           href="/"
           style={{
-            color: "#94a3b8",
+            color: "var(--text-soft)",
             fontSize: "0.85rem",
             textDecoration: "none",
             display: "flex",
             alignItems: "center",
             gap: "0.4rem",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#e2e8f0")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-soft)")}
         >
           ← Volver al inicio
         </Link>
@@ -69,7 +68,7 @@ export default function ComercialPage() {
               borderRadius: "999px",
               padding: "0.3rem 1rem",
               fontSize: "0.78rem",
-              color: "#818cf8",
+              color: "var(--accent)",
               marginBottom: "1.5rem",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -82,14 +81,14 @@ export default function ComercialPage() {
               fontFamily: "'Manrope', sans-serif",
               fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
               fontWeight: 800,
-              color: "#f8fafc",
+              color: "var(--text)",
               margin: "0 0 1rem",
               lineHeight: 1.15,
             }}
           >
             Política Comercial
           </h1>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: "0.9rem" }}>
             Última actualización: 12 de junio de 2026 · Vigente para suscripciones
             LEDGERA
           </p>
@@ -106,18 +105,18 @@ export default function ComercialPage() {
         >
           <p
             style={{
-              color: "#a5b4fc",
+              color: "var(--text-faint)",
               fontSize: "0.88rem",
               margin: 0,
               lineHeight: 1.7,
             }}
           >
             La presente Política Comercial complementa los{" "}
-            <Link href="/terminos" style={{ color: "#c7d2fe" }}>
+            <Link href="/terminos" style={{ color: "var(--text-faint)" }}>
               Términos y Condiciones
             </Link>{" "}
             y la{" "}
-            <Link href="/privacidad" style={{ color: "#c7d2fe" }}>
+            <Link href="/privacidad" style={{ color: "var(--text-faint)" }}>
               Política de Privacidad
             </Link>
             . Regula planes, precios, pagos, facturación, renovación automática,
@@ -139,19 +138,19 @@ export default function ComercialPage() {
             }}
           >
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Gratuito:</strong> sin costo.
+              <strong style={{ color: "var(--text)" }}>Gratuito:</strong> sin costo.
               Incluye funcionalidades básicas de prueba y exploración.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Personal:</strong> $4.990 CLP
+              <strong style={{ color: "var(--text)" }}>Personal:</strong> $4.990 CLP
               mensual. Para inversores individuales.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Profesional:</strong> $14.990
+              <strong style={{ color: "var(--text)" }}>Profesional:</strong> $14.990
               CLP mensual. Para asesores y equipos con clientes.
             </li>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Empresa:</strong> $29.990 CLP
+              <strong style={{ color: "var(--text)" }}>Empresa:</strong> $29.990 CLP
               mensual. Para operación corporativa y equipos grandes.
             </li>
           </ul>
@@ -280,8 +279,8 @@ export default function ComercialPage() {
             reembolsos, escríbenos a:
           </p>
           <p>
-            <strong style={{ color: "#e2e8f0" }}>Correo:</strong>{" "}
-            <a href="mailto:admin@ledgera.cl" style={{ color: "#818cf8" }}>
+            <strong style={{ color: "var(--text)" }}>Correo:</strong>{" "}
+            <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
             </a>
           </p>
@@ -301,7 +300,7 @@ export default function ComercialPage() {
         >
           <p
             style={{
-              color: "#475569",
+              color: "var(--text)",
               fontSize: "0.8rem",
               margin: 0,
               lineHeight: 1.6,
@@ -325,14 +324,14 @@ export default function ComercialPage() {
           }}
         >
           <span
-            style={{ color: "#64748b", fontSize: "0.85rem", alignSelf: "center" }}
+            style={{ color: "var(--text-soft)", fontSize: "0.85rem", alignSelf: "center" }}
           >
             Ver también:
           </span>
           <Link
             href="/terminos"
             style={{
-              color: "#818cf8",
+              color: "var(--accent)",
               fontSize: "0.85rem",
               textDecoration: "none",
             }}
@@ -342,7 +341,7 @@ export default function ComercialPage() {
           <Link
             href="/privacidad"
             style={{
-              color: "#818cf8",
+              color: "var(--accent)",
               fontSize: "0.85rem",
               textDecoration: "none",
             }}
@@ -369,7 +368,7 @@ function LegalSection({
           fontFamily: "'Manrope', sans-serif",
           fontSize: "1.1rem",
           fontWeight: 700,
-          color: "#f1f5f9",
+          color: "var(--text)",
           marginBottom: "1rem",
           paddingBottom: "0.5rem",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
@@ -382,7 +381,7 @@ function LegalSection({
           display: "flex",
           flexDirection: "column",
           gap: "0.85rem",
-          color: "#94a3b8",
+          color: "var(--text-soft)",
           fontSize: "0.92rem",
           lineHeight: 1.75,
         }}
