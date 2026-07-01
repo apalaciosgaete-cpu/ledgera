@@ -90,7 +90,11 @@ export async function POST(req: NextRequest) {
       select: {
         id: true,
         email: true,
+        full_name: true,
+        role: true,
         status: true,
+        subscription_plan: true,
+        subscription_expires_at: true,
         twoFactorSecret: true,
         twoFactorEnabled: true,
       },
@@ -199,6 +203,11 @@ export async function POST(req: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
+          fullName: user.full_name,
+          role: user.role,
+          status: user.status,
+          subscriptionPlan: user.subscription_plan,
+          subscriptionExpiresAt: user.subscription_expires_at,
           twoFactorEnabled: true,
         },
         session: {
