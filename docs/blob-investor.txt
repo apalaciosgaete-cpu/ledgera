@@ -1,3 +1,0 @@
-export function InvestorDashboard() {
-  return <main>X</main>;
-}
