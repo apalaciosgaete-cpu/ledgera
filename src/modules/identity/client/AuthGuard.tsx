@@ -35,6 +35,7 @@ const ONBOARDING_ROUTES = [
   "/wallets",
   "/origen-fondos",
   "/obligaciones-tributarias",
+  "/declaraciones",
   "/reportes",
   "/impuestos/reportes",
   "/tax/reports",
