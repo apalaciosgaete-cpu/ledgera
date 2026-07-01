@@ -1,4 +1,6 @@
+import { createHash } from "crypto";
 import PDFDocument from "pdfkit";
+import QRCode from "qrcode";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 import { getStagingItems, type StagingItem } from "@/modules/staging/application/getStagingItems";
@@ -43,6 +45,12 @@ type TraceRow = {
   linkedMovementId: string;
 };
 
+type VerificationData = {
+  folio: string;
+  hash: string;
+  url: string;
+};
+
 type DeclarationSupportPayload = {
   generatedAt: string;
   userEmail: string;
@@ -66,6 +74,7 @@ type DeclarationSupportPayload = {
   assetTrace: AssetTrace[];
   traceRows: TraceRow[];
   taxEvents: TaxEventRow[];
+  verification: VerificationData;
 };
 
 export function parseDeclarationYear(value: string | null): number | null {
@@ -167,6 +176,47 @@ function buildTraceRows(items: StagingItem[]): TraceRow[] {
   }));
 }
 
+function getVerificationBaseUrl(): string {
+  return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "https://ledgera.cl").replace(/\/$/, "");
+}
+
+function buildVerificationData(payload: Omit<DeclarationSupportPayload, "verification">): VerificationData {
+  const tracePayload = {
+    userEmail: payload.userEmail,
+    year: payload.year,
+    igcTaxYear: payload.igcTaxYear,
+    summary: {
+      confirmedOperations: payload.summary.confirmedOperations,
+      assetsWithCostBasis: payload.summary.assetsWithCostBasis,
+      buyOperations: payload.summary.buyOperations,
+      taxableEvents: payload.summary.taxableEvents,
+      taxableBaseClp: payload.summary.taxableBaseClp,
+      igcEstimatedTaxClp: payload.summary.igcEstimatedTaxClp,
+      declarationStatus: payload.summary.declarationStatus,
+      paymentStatus: payload.summary.paymentStatus,
+    },
+    assetTrace: payload.assetTrace,
+    traceRows: payload.traceRows,
+    taxEvents: payload.taxEvents.map((event) => ({
+      ...event,
+      executedAt: event.executedAt.toISOString(),
+    })),
+  };
+  const hash = createHash("sha256").update(JSON.stringify(tracePayload)).digest("hex");
+  const folio = `LED-${payload.year ?? "ALL"}-${hash.slice(0, 12).toUpperCase()}`;
+  const search = new URLSearchParams({
+    folio,
+    hash,
+    year: payload.year ? String(payload.year) : "all",
+  });
+
+  return {
+    folio,
+    hash,
+    url: `${getVerificationBaseUrl()}/verify/report?${search.toString()}`,
+  };
+}
+
 async function getTaxEvents(user: AccessPolicyUser, year: number | null): Promise<TaxEventRow[]> {
   const range = yearRange(year);
   return prisma.taxEvent.findMany({
@@ -230,7 +280,7 @@ export async function buildDeclarationSupportPayload(input: {
     conclusion = "Debe declarar o conservar respaldo tributario de las operaciones. No se detecta impuesto inmediato a pagar por Impuesto Global Complementario.";
   }
 
-  return {
+  const payloadWithoutVerification: Omit<DeclarationSupportPayload, "verification"> = {
     generatedAt: new Date().toISOString(),
     userEmail: input.user.email,
     year: input.year,
@@ -253,6 +303,11 @@ export async function buildDeclarationSupportPayload(input: {
     assetTrace,
     traceRows,
     taxEvents,
+  };
+
+  return {
+    ...payloadWithoutVerification,
+    verification: buildVerificationData(payloadWithoutVerification),
   };
 }
 
@@ -416,7 +471,33 @@ function writeOperationsTable(doc: PDFKit.PDFDocument, rows: TraceRow[]) {
   doc.moveDown(0.7);
 }
 
+function writeVerificationBlock(doc: PDFKit.PDFDocument, payload: DeclarationSupportPayload, qrBuffer: Buffer) {
+  checkPage(doc, 650);
+  doc.moveDown(0.7);
+  const leftX = doc.page.margins.left;
+  const qrSize = 86;
+  const y = doc.y;
+
+  doc.image(qrBuffer, leftX, y, { width: qrSize, height: qrSize });
+  doc.font("Helvetica-Bold").fontSize(10).fillColor("#0F766E").text("Verificación de trazabilidad", leftX + qrSize + 18, y, { width: 360 });
+  doc.font("Helvetica").fontSize(8).fillColor("#334155")
+    .text(`Folio: ${payload.verification.folio}`, leftX + qrSize + 18, y + 18, { width: 360 })
+    .text(`Hash: ${payload.verification.hash}`, leftX + qrSize + 18, y + 32, { width: 360 })
+    .text(`URL: ${payload.verification.url}`, leftX + qrSize + 18, y + 57, { width: 360 });
+  doc.font("Helvetica").fontSize(7.8).fillColor("#64748B")
+    .text("Escanee para verificar autenticidad y trazabilidad del respaldo.", leftX + qrSize + 18, y + 76, { width: 360 });
+
+  doc.y = y + qrSize + 8;
+}
+
 export async function renderDeclarationSupportPdf(payload: DeclarationSupportPayload): Promise<Buffer> {
+  const qrDataUrl = await QRCode.toDataURL(payload.verification.url, {
+    errorCorrectionLevel: "M",
+    margin: 1,
+    width: 160,
+  });
+  const qrBuffer = Buffer.from(qrDataUrl.split(",")[1] ?? "", "base64");
+
   return new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ margin: 48, size: "A4" });
     const chunks: Buffer[] = [];
@@ -461,6 +542,7 @@ export async function renderDeclarationSupportPdf(payload: DeclarationSupportPay
 
     sectionTitle(doc, "Conclusión expresa LEDGERA");
     doc.font("Helvetica").fontSize(10).fillColor("#334155").text(payload.summary.conclusion, { lineGap: 2 });
+    writeVerificationBlock(doc, payload, qrBuffer);
 
     doc.end();
   });
@@ -488,6 +570,9 @@ export function renderDeclarationSupportXlsx(payload: DeclarationSupportPayload)
     ["Año operaciones", payload.year ?? "Todos"],
     ["Año tabla IGC", `AT ${payload.igcTaxYear}`],
     ["Generado", new Date(payload.generatedAt).toLocaleString("es-CL")],
+    ["Folio de verificación", payload.verification.folio],
+    ["Hash de trazabilidad", payload.verification.hash],
+    ["URL de verificación", payload.verification.url],
     [],
     ["Declaración / respaldo", payload.summary.declarationStatus],
     ["Pago IGC", payload.summary.paymentStatus],
