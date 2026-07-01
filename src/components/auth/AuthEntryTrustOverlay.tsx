@@ -211,8 +211,12 @@ export default function AuthEntryTrustOverlay() {
   const pathname = usePathname();
 
   useEffect(() => {
-    ensureStyles();
+    const isAuthEntry = pathname === "/login" || pathname === "/register";
     removeInjectedBlocks();
+
+    if (!isAuthEntry) return;
+
+    ensureStyles();
 
     const run = () => {
       if (pathname === "/login") injectLoginTrust();
