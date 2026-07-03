@@ -71,6 +71,8 @@ function Sidebar({
   onClose: () => void;
   onLogout: () => void;
 }) {
+  const pathname = usePathname();
+
   return (
     <>
       {open && (
@@ -144,16 +146,29 @@ function Sidebar({
         <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
           {SIDEBAR_GROUPS.map((group) => (
             <div key={group.items[0]?.href ?? "unknown"}>
-              {group.items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  style={{ display: "block", padding: "10px 24px", color: "var(--text)", fontSize: 15, fontWeight: 650, textDecoration: "none", fontFamily: fonts.body, transition: "background 0.1s" }}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {group.items.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    style={{
+                      display: "block",
+                      padding: "10px 24px",
+                      color: active ? "var(--accent)" : "var(--text)",
+                      background: active ? "var(--accent-soft)" : "transparent",
+                      fontSize: 15,
+                      fontWeight: active ? 850 : 650,
+                      textDecoration: "none",
+                      fontFamily: fonts.body,
+                      transition: "background 0.1s",
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
           ))}
 
@@ -187,10 +202,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const isPanel = pathname === "/panel";
-  const isImportsPage = pathname === "/importaciones";
-  const isAssetsPage = pathname === "/cryptoactivos";
-  const isTaxObligationsPage = pathname === "/obligaciones-tributarias";
-  const isDeclarationsPage = pathname === "/declaraciones";
   const isReportsPage = pathname === "/reportes" || pathname === "/declaraciones" || pathname === "/impuestos/reportes" || pathname === "/tax/reports" || pathname === "/experto/reportes";
 
   if (!user) return null;
@@ -297,11 +308,9 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
           margin: "0 auto",
           padding: isPanel ? "0" : "20px 16px",
           minWidth: 0,
-          ...(isPanel
-            ? {}
-            : isImportsPage || isAssetsPage || isTaxObligationsPage || isDeclarationsPage
-              ? { minHeight: "calc(100vh - 60px)", overflow: "visible", boxSizing: "border-box" as const }
-              : { height: "calc(100vh - 60px)", overflow: "hidden", boxSizing: "border-box" as const }),
+          minHeight: "calc(100vh - 60px)",
+          overflow: "visible",
+          boxSizing: "border-box",
         }}
       >
         {children}
