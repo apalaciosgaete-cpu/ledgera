@@ -166,10 +166,10 @@ export default function ConfiguracionPage() {
   const currentUser = profile ?? (user ? {
     id: user.id,
     email: user.email,
-    fullName: user.fullName,
+    fullName: user.email,
     role: user.role,
-    status: user.status,
-    subscriptionPlan: user.subscriptionPlan,
+    status: user.status ?? "active",
+    subscriptionPlan: user.subscriptionPlan ?? "BASICO",
     subscriptionExpiresAt: user.subscriptionExpiresAt ? String(user.subscriptionExpiresAt) : null,
     twoFactorEnabled: user.twoFactorEnabled === true,
     rut: "",
