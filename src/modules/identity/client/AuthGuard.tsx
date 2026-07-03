@@ -42,6 +42,7 @@ const ONBOARDING_ROUTES = [
   "/experto/reportes",
   "/documentacion",
   "/casos",
+  "/configuracion",
   "/ayuda",
 ];
 
@@ -49,10 +50,6 @@ function isOnboardingRoute(pathname: string): boolean {
   return ONBOARDING_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
-}
-
-function isConfigurationRoute(pathname: string): boolean {
-  return pathname === "/configuracion" || pathname.startsWith("/configuracion/");
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -82,11 +79,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (isAuthenticated && isConfigurationRoute(pathname)) {
-      router.replace("/panel");
-      return;
-    }
-
     if (isAuthenticated && needsOnboarding && !isOnboardingRoute(pathname)) {
       router.replace("/panel");
     }
@@ -112,10 +104,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated && !publicRoute && !wasAuthenticated.current) {
-    return null;
-  }
-
-  if (isAuthenticated && isConfigurationRoute(pathname)) {
     return null;
   }
 
