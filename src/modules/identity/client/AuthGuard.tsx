@@ -20,34 +20,22 @@ function isPublicRoute(pathname: string): boolean {
   );
 }
 
-const ONBOARDING_ROUTES = [
+const APP_ROUTES = [
   "/onboarding",
-  "/integraciones",
-  "/import",
-  "/import/manual",
-  "/import/binance",
-  "/import/bank",
   "/importaciones",
   "/panel",
-  "/patrimonio-digital",
   "/cryptoactivos",
-  "/exchanges",
-  "/wallets",
   "/origen-fondos",
   "/obligaciones-tributarias",
   "/declaraciones",
-  "/reportes",
-  "/impuestos/reportes",
-  "/tax/reports",
-  "/experto/reportes",
   "/documentacion",
   "/casos",
   "/configuracion",
   "/ayuda",
 ];
 
-function isOnboardingRoute(pathname: string): boolean {
-  return ONBOARDING_ROUTES.some(
+function isAppRoute(pathname: string): boolean {
+  return APP_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
@@ -79,7 +67,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (isAuthenticated && needsOnboarding && !isOnboardingRoute(pathname)) {
+    if (isAuthenticated && needsOnboarding && !isAppRoute(pathname)) {
       router.replace("/panel");
     }
   }, [isAuthenticated, isLoading, needsOnboarding, pathname, publicRoute, router]);
