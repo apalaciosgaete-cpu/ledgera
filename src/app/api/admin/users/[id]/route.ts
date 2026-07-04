@@ -11,9 +11,11 @@ import {
   getUserById,
 } from "@/modules/identity/infrastructure/userRepository";
 
+type RouteContext = { params: { id: string } };
+
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const auth = await getSessionFromRequest(req);
 
@@ -31,7 +33,7 @@ export async function DELETE(
     );
   }
 
-  const { id } = await params;
+  const { id } = params;
 
   if (id === auth.user.id) {
     return NextResponse.json(
