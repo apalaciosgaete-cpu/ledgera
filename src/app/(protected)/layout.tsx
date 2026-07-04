@@ -48,7 +48,6 @@ type SidebarLink = {
 };
 
 type SidebarGroup = {
-  title?: string;
   items: SidebarLink[];
 };
 
@@ -202,7 +201,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const isPanel = pathname === "/panel";
-  const isReportsPage = pathname === "/reportes" || pathname === "/declaraciones" || pathname === "/impuestos/reportes" || pathname === "/tax/reports" || pathname === "/experto/reportes";
 
   if (!user) return null;
 
@@ -223,9 +221,6 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
         fontFamily: fonts.body,
       }}
     >
-      {isReportsPage && (
-        <style>{`main h1{white-space:nowrap;}main h1+p{white-space:nowrap;}`}</style>
-      )}
       <Sidebar
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
