@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-
-export default function BankPage() {
-  redirect("/origen-fondos");
+export default function Page() {
+  return null;
 }
