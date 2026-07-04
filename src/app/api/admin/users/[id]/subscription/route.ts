@@ -14,10 +14,11 @@ import { PLAN_TO_ROLE } from "@/modules/identity/domain/user";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 const VALID_PLANS: SubscriptionPlan[] = ["BASICO", "PROFESIONAL", "EMPRESA"];
+type RouteContext = { params: { id: string } };
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const csrfResponse = enforceCsrfProtection(req);
 
@@ -41,7 +42,7 @@ export async function PATCH(
     );
   }
 
-  const { id } = await params;
+  const { id } = params;
 
   if (!id) {
     return NextResponse.json(
