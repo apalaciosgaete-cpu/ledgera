@@ -5,7 +5,6 @@ import "./globals.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
-import ChatWidget from "@/components/chat/ChatWidget";
 import SwRegister from "@/components/chat/SwRegister";
 import AuthEntryTrustOverlay from "@/components/auth/AuthEntryTrustOverlay";
 
@@ -58,49 +57,21 @@ export const metadata: Metadata = {
     "tributación cripto Chile",
     "Formulario 22 crypto",
     "declaración Bitcoin Chile",
-    "impuestos Buda",
-    "impuestos Binance Chile",
-    "como declarar crypto SII",
-    "renta crypto Chile",
-    "DJ1821",
-    "Renta 2026 crypto",
-    "conciliación Binance banco",
-    "conciliación crypto banco",
+    "declaración Binance Chile",
+    "SII criptomonedas",
+    "Buda impuestos",
+    "Binance impuestos Chile",
     "contador crypto Chile",
-    "portafolio crypto Chile",
-    "FIFO criptomonedas Chile",
   ],
   authors: [{ name: "LEDGERA" }],
   creator: "LEDGERA",
   publisher: "LEDGERA",
-  category: "finance",
-  verification: {
-    google: googleSiteVerification,
-  },
   alternates: {
     canonical: baseUrl,
   },
-  icons: {
-    icon: [
-      {
-        url: "/favicon.svg",
-        type: "image/svg+xml",
-      },
-      {
-        url: "/icon",
-        type: "image/png",
-        sizes: "512x512",
-      },
-    ],
-    apple: [
-      {
-        url: "/apple-icon",
-        type: "image/png",
-        sizes: "180x180",
-      },
-    ],
+  verification: {
+    google: googleSiteVerification,
   },
-  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     locale: "es_CL",
@@ -110,10 +81,10 @@ export const metadata: Metadata = {
     description: defaultDescription,
     images: [
       {
-        url: `${baseUrl}/opengraph-image`,
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "LEDGERA: calcula tus impuestos crypto para el SII en Chile",
+        alt: "LEDGERA - Impuestos crypto para Chile",
       },
     ],
   },
@@ -121,79 +92,45 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: defaultTitle,
     description: defaultDescription,
-    images: [`${baseUrl}/opengraph-image`],
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
   },
 };
 
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "@id": `${baseUrl}/#organization`,
   name: "LEDGERA",
   url: baseUrl,
-  email: "admin@ledgera.cl",
-  logo: `${baseUrl}/brand/ledgera-app-icon.svg`,
-  contactPoint: [
-    {
-      "@type": "ContactPoint",
-      contactType: "customer support",
-      email: "admin@ledgera.cl",
-      areaServed: "CL",
-      availableLanguage: ["es-CL", "es"],
-    },
-  ],
+  logo: `${baseUrl}/icon`,
+  sameAs: [baseUrl],
 };
 
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "@id": `${baseUrl}/#website`,
   name: "LEDGERA",
   url: baseUrl,
   inLanguage: "es-CL",
-  publisher: {
-    "@id": `${baseUrl}/#organization`,
-  },
-  description: defaultDescription,
 };
 
 const softwareSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "@id": `${baseUrl}/#software`,
   name: "LEDGERA",
   applicationCategory: "FinanceApplication",
   operatingSystem: "Web",
-  url: baseUrl,
-  description:
-    "Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu ganancia y te dice qué poner en el Formulario 22 del SII.",
-  inLanguage: "es-CL",
-  publisher: {
-    "@id": `${baseUrl}/#organization`,
-  },
   offers: {
     "@type": "Offer",
     priceCurrency: "CLP",
-    availability: "https://schema.org/InStock",
   },
+  description: defaultDescription,
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="es-CL"
@@ -219,10 +156,9 @@ export default function RootLayout({
           }}
         />
         <AuthProvider>{children}</AuthProvider>
-<AuthEntryTrustOverlay />
-<AnalyticsProviders />
+        <AuthEntryTrustOverlay />
+        <AnalyticsProviders />
         <CookieBanner />
-        <ChatWidget />
         <SwRegister />
       </body>
     </html>
