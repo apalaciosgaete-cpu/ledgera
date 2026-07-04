@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-
 import { deleteSessionByIdForUser } from "@/modules/identity/infrastructure/sessionRepository";
-
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+
+type RouteContext = { params: { id: string } };
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const csrfResponse = enforceCsrfProtection(req);
 
@@ -25,7 +25,7 @@ export async function DELETE(
     );
   }
 
-  const { id } = await params;
+  const { id } = params;
 
   if (!id) {
     return NextResponse.json(
