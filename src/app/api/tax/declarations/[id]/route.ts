@@ -16,6 +16,8 @@ const MUTABLE_STATUSES: TaxDeclarationStatus[] = [
   "VOIDED",
 ];
 
+type RouteContext = { params: { id: string } };
+
 type TaxDeclarationRecord = {
   id: string;
   taxYear: number;
@@ -91,7 +93,7 @@ function serializeDeclaration(declaration: TaxDeclarationRecord) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const auth = await requireAuth(req);
 
@@ -100,7 +102,7 @@ export async function GET(
   }
 
   try {
-    const { id } = await params;
+    const { id } = params;
 
     const declaration = (await getTaxDeclarationByIdForUser({
       id,
@@ -124,7 +126,7 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const csrfResponse = enforceCsrfProtection(req);
 
@@ -139,7 +141,7 @@ export async function PATCH(
   }
 
   try {
-    const { id } = await params;
+    const { id } = params;
     const body = (await req.json()) as { status?: string };
 
     const status = normalizeStatus(body.status);
