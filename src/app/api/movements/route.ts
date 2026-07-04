@@ -22,6 +22,13 @@ function parsePositiveNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
+function toJsonNumber(value: unknown): number {
+  if (typeof value === "bigint") return Number(value);
+  if (typeof value === "number") return value;
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function isValidMovementType(value: unknown): value is MovementType {
   return value === "BUY" || value === "SELL";
 }
@@ -85,7 +92,9 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const typeCounts = Object.fromEntries(typeGroups.map(g => [g.type, g._count.type]));
+    const typeCounts = Object.fromEntries(
+      typeGroups.map((group) => [group.type, toJsonNumber(group._count.type)]),
+    );
 
     return ok(
       {
