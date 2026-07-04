@@ -5,7 +5,6 @@ import "./globals.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
-import SwRegister from "@/components/chat/SwRegister";
 import AuthEntryTrustOverlay from "@/components/auth/AuthEntryTrustOverlay";
 
 // ── LEDGERA design system · Propuesta B "Cierre" ──
@@ -159,7 +158,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthEntryTrustOverlay />
         <AnalyticsProviders />
         <CookieBanner />
-        <SwRegister />
       </body>
     </html>
   );
