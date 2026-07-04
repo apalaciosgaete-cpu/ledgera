@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 type LogoVariant = "light" | "dark";
 type LogoSize = "sm" | "md" | "lg";
 
@@ -10,12 +8,10 @@ interface LogoProps {
   subtitle?: string;
 }
 
-const logoPngDataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANsAAACDCAYAAAAEXm7aAAA5y0lEQVR42u19eVhTV97/514IYc1GwYKJkgaoigaF2v5cC1XrRnGhE1NJq1WRVEFE9WNbrggijYFEaCIgNbSlVKGIUAgJB5fz/JE7/zjnXpjCzOU6YPN/na+E9zks4yYO98p7r3nO+55JxQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NTgX8Q/VeVnFkUG4AAAAASUVORK5CYII=";
-
-const sizes: Record<LogoSize, { width: number; height: number }> = {
-  sm: { width: 156, height: 70 },
-  md: { width: 218, height: 92 },
-  lg: { width: 300, height: 126 },
+const sizes: Record<LogoSize, { scale: number; width: number; height: number }> = {
+  sm: { scale: 0.72, width: 160, height: 72 },
+  md: { scale: 1, width: 224, height: 94 },
+  lg: { scale: 1.32, width: 296, height: 124 },
 };
 
 const officialLabel = "LEDGERA — Inteligencia financiera para crecer";
@@ -23,53 +19,57 @@ const officialLabel = "LEDGERA — Inteligencia financiera para crecer";
 export function Logo({ size = "md" }: LogoProps) {
   const s = sizes[size];
 
-  const wrap: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: s.width,
-    height: s.height,
-    maxWidth: "100%",
-    lineHeight: 0,
-    userSelect: "none",
-    overflow: "visible",
-  };
-
-  const imageStyle: CSSProperties = {
-    display: "block",
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-  };
-
   return (
-    <span style={wrap} aria-label={officialLabel} title="LEDGERA">
-      <img src={logoPngDataUri} alt="LEDGERA" style={imageStyle} draggable={false} />
+    <span
+      aria-label={officialLabel}
+      title="LEDGERA"
+      style={{
+        display: "inline-flex",
+        width: s.width,
+        height: s.height,
+        maxWidth: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "visible",
+        userSelect: "none",
+      }}
+    >
+      <span
+        style={{
+          display: "grid",
+          justifyItems: "center",
+          gap: 4,
+          transform: `scale(${s.scale})`,
+          transformOrigin: "center",
+        }}
+      >
+        <span style={{ position: "relative", display: "block", width: 86, height: 42 }}>
+          <span style={{ position: "absolute", left: 14, bottom: 7, width: 56, height: 20, border: "3px solid #d7a94a", borderTop: 0, borderRadius: "0 0 22px 22px", transform: "skewX(-18deg)", boxShadow: "0 0 10px rgba(215,169,74,.28)" }} />
+          <span style={{ position: "absolute", left: 26, bottom: 17, width: 7, height: 18, borderRadius: 2, background: "linear-gradient(180deg,#f8e7a1,#b9822d)" }} />
+          <span style={{ position: "absolute", left: 40, bottom: 17, width: 7, height: 28, borderRadius: 2, background: "linear-gradient(180deg,#f8e7a1,#b9822d)" }} />
+          <span style={{ position: "absolute", left: 54, bottom: 17, width: 7, height: 38, borderRadius: 2, background: "linear-gradient(180deg,#f8e7a1,#b9822d)" }} />
+          <span style={{ position: "absolute", left: 15, bottom: 22, width: 64, height: 6, borderTop: "4px solid #d7a94a", borderRadius: "60%", transform: "rotate(-31deg)", transformOrigin: "right center", boxShadow: "0 0 10px rgba(215,169,74,.24)" }} />
+        </span>
+        <span style={{ display: "block", color: "#eef1f6", fontFamily: "Montserrat, Inter, Arial, sans-serif", fontSize: 31, fontWeight: 800, letterSpacing: 6.2, lineHeight: "32px", textShadow: "0 2px 8px rgba(0,0,0,.45)" }}>LEDGERA</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 8, color: "#c8a765", fontFamily: "Inter, Arial, sans-serif", fontSize: 5.8, fontWeight: 800, letterSpacing: 1.3, lineHeight: "8px", textTransform: "uppercase" }}>
+          <span style={{ width: 32, height: 1, background: "#c8a765", opacity: .8 }} />
+          Inteligencia financiera para crecer
+          <span style={{ width: 32, height: 1, background: "#c8a765", opacity: .8 }} />
+        </span>
+      </span>
     </span>
   );
 }
 
 export function LogoIcon({ size = 44 }: { size?: number }) {
-  const wrap: CSSProperties = {
-    width: size,
-    height: size,
-    borderRadius: Math.round(size * 0.22),
-    overflow: "hidden",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "transparent",
-  };
-
-  const imageStyle: CSSProperties = {
-    width: Math.round(size * 2.4),
-    height: Math.round(size * 1.45),
-    objectFit: "contain",
-  };
-
   return (
-    <span style={wrap} aria-label="LEDGERA">
-      <img src={logoPngDataUri} alt="LEDGERA" style={imageStyle} draggable={false} />
+    <span aria-label="LEDGERA" style={{ display: "inline-grid", placeItems: "center", width: size, height: size, background: "transparent" }}>
+      <span style={{ position: "relative", display: "block", width: size, height: size }}>
+        <span style={{ position: "absolute", left: size * 0.15, bottom: size * 0.12, width: size * 0.7, height: size * 0.28, border: `${Math.max(2, size * 0.08)}px solid #d7a94a`, borderTop: 0, borderRadius: "0 0 999px 999px", transform: "skewX(-18deg)" }} />
+        <span style={{ position: "absolute", left: size * 0.3, bottom: size * 0.36, width: size * 0.11, height: size * 0.26, background: "linear-gradient(180deg,#f8e7a1,#b9822d)", borderRadius: 2 }} />
+        <span style={{ position: "absolute", left: size * 0.48, bottom: size * 0.36, width: size * 0.11, height: size * 0.42, background: "linear-gradient(180deg,#f8e7a1,#b9822d)", borderRadius: 2 }} />
+        <span style={{ position: "absolute", left: size * 0.15, bottom: size * 0.5, width: size * 0.72, height: size * 0.08, borderTop: `${Math.max(2, size * 0.08)}px solid #d7a94a`, borderRadius: "60%", transform: "rotate(-31deg)", transformOrigin: "right center" }} />
+      </span>
     </span>
   );
 }
