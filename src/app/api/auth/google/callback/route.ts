@@ -2,9 +2,9 @@ import crypto from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 import speakeasy from "speakeasy";
-import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
+import { optionalEnv, requireEnv } from "@/lib/env";
 import { hashPassword } from "@/modules/identity/application/passwordHash";
 import {
   buildSessionExpirationDate,
@@ -18,16 +18,15 @@ const OAUTH_STATE_COOKIE = "ledgera_google_oauth_state";
 const PENDING_2FA_COOKIE = "ledgera_pending_2fa";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
+const EXTERNAL_FETCH_TIMEOUT_MS = 7000;
 
-const REGISTRATION_2FA_TOKEN_SECRET =
-  process.env.REGISTRATION_2FA_TOKEN_SECRET ??
-  process.env.NEXTAUTH_SECRET ??
-  process.env.AUTH_SECRET ??
-  "ledgera-dev-registration-2fa-secret";
+function getRegistration2faTokenSecret() {
+  return requireEnv("REGISTRATION_2FA_TOKEN_SECRET");
+}
 
 function signSetupToken(userId: string, email: string, secret: string) {
   return crypto
-    .createHmac("sha256", REGISTRATION_2FA_TOKEN_SECRET)
+    .createHmac("sha256", getRegistration2faTokenSecret())
     .update(`${userId}:${email}:${secret}`)
     .digest("hex");
 }
@@ -45,8 +44,22 @@ type GoogleUserInfo = {
   name?: string;
 };
 
+async function fetchWithTimeout(url: string, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), EXTERNAL_FETCH_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function resolveBaseUrl(req: NextRequest): string {
-  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL;
+  const configuredUrl = optionalEnv("NEXT_PUBLIC_APP_URL") ?? optionalEnv("APP_URL");
 
   if (configuredUrl) {
     return configuredUrl.replace(/\/$/, "");
@@ -57,7 +70,7 @@ function resolveBaseUrl(req: NextRequest): string {
 
 function resolveRedirectUri(req: NextRequest): string {
   return (
-    process.env.GOOGLE_REDIRECT_URI ??
+    optionalEnv("GOOGLE_REDIRECT_URI") ??
     `${resolveBaseUrl(req)}/api/auth/google/callback`
   );
 }
@@ -69,12 +82,8 @@ function redirectToLogin(req: NextRequest, reason: string) {
 }
 
 async function exchangeCodeForAccessToken(req: NextRequest, code: string) {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) {
-    throw new Error("Google OAuth no está configurado.");
-  }
+  const clientId = requireEnv("GOOGLE_CLIENT_ID");
+  const clientSecret = requireEnv("GOOGLE_CLIENT_SECRET");
 
   const body = new URLSearchParams({
     code,
@@ -84,7 +93,7 @@ async function exchangeCodeForAccessToken(req: NextRequest, code: string) {
     grant_type: "authorization_code",
   });
 
-  const response = await fetch(GOOGLE_TOKEN_URL, {
+  const response = await fetchWithTimeout(GOOGLE_TOKEN_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -106,7 +115,7 @@ async function exchangeCodeForAccessToken(req: NextRequest, code: string) {
 }
 
 async function fetchGoogleUser(accessToken: string) {
-  const response = await fetch(GOOGLE_USERINFO_URL, {
+  const response = await fetchWithTimeout(GOOGLE_USERINFO_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -179,7 +188,6 @@ export async function GET(req: NextRequest) {
       expiresAt,
     });
 
-    // Si el usuario no tiene 2FA, forzar configuración antes de permitir acceso
     if (!user.twoFactorEnabled) {
       const secret = speakeasy.generateSecret({
         name: `LEDGERA (${user.email})`,
@@ -217,7 +225,7 @@ export async function GET(req: NextRequest) {
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         path: "/",
-        maxAge: 15 * 60, // 15 minutos
+        maxAge: 15 * 60,
       });
 
       response.cookies.set(OAUTH_STATE_COOKIE, "", {
@@ -231,7 +239,7 @@ export async function GET(req: NextRequest) {
       return response;
     }
 
-    const response = NextResponse.redirect(new URL("/portafolio", req.nextUrl.origin));
+    const response = NextResponse.redirect(new URL("/panel", req.nextUrl.origin));
 
     response.cookies.set("session_token", sessionToken, {
       httpOnly: true,
