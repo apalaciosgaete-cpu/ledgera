@@ -53,3 +53,9 @@ prisma/dev.db
 
 # uploaded documents
 /uploads
+
+# generated report artifacts
+*.pdf
+*.csv
+!public/**/*.pdf
+!public/**/*.csv
