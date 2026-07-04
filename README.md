@@ -48,3 +48,5 @@ Variables críticas:
 ## Deploy
 
 Producción sale desde la rama `main` hacia el proyecto Vercel `ledgera`.
+
+El check válido de producción es `Vercel – ledgera`.
