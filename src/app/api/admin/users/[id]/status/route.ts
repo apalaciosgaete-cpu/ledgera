@@ -14,10 +14,11 @@ import { enforceCsrfProtection } from "@/modules/security/application/csrfProtec
 
 const VALID_STATUSES = ["active", "inactive", "suspended"] as const;
 type ValidStatus = (typeof VALID_STATUSES)[number];
+type RouteContext = { params: { id: string } };
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const csrfResponse = enforceCsrfProtection(req);
 
@@ -41,7 +42,7 @@ export async function PATCH(
     );
   }
 
-  const { id } = await params;
+  const { id } = params;
 
   if (id === auth.user.id) {
     return NextResponse.json(
