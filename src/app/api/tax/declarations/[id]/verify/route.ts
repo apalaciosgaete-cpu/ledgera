@@ -10,6 +10,8 @@ import {
 import { verifyDeclarationHash } from "@/modules/tax-dj/application/verifyDeclarationHash";
 import { verifyAuditChain } from "@/modules/tax/application/auditChainService";
 
+type RouteContext = { params: { id: string } };
+
 type TaxDeclarationVerifyRecord = {
   id: string;
   taxYear: number;
@@ -40,7 +42,7 @@ function resolveRequestMetadata(req: NextRequest) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const auth = await requireAuth(req);
 
@@ -49,7 +51,7 @@ export async function GET(
   }
 
   try {
-    const { id } = await params;
+    const { id } = params;
 
     const declaration = (await getTaxDeclarationByIdForUser({
       id,
