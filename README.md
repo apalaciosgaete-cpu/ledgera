@@ -51,4 +51,4 @@ Producción sale desde la rama `main` hacia el proyecto Vercel `ledgera`.
 
 El check válido de producción es `Vercel – ledgera`.
 
-Última actualización operativa: limpieza de módulos legacy.
+Última actualización operativa: rutas legacy retiradas.
