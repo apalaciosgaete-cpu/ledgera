@@ -16,6 +16,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const runtime = "nodejs";
 
+type RouteContext = { params: { id: string } };
+
 type TaxDeclarationPdfRecord = {
   id: string;
   taxYear: number;
@@ -39,7 +41,7 @@ function resolveRequestMetadata(req: NextRequest) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext,
 ) {
   const auth = await requireAuth(req);
 
@@ -51,7 +53,7 @@ export async function GET(
   }
 
   try {
-    const { id } = await params;
+    const { id } = params;
 
     const declaration = (await getTaxDeclarationByIdForUser({
       id,
@@ -153,4 +155,3 @@ export async function GET(
     );
   }
 }
-
