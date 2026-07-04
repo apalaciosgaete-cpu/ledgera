@@ -1,8 +1,0 @@
-﻿Tipo de documento,Borrador informativo
-Advertencia,"Este archivo puede usarse para consulta o revisión con especialista, pero no constituye cierre tributario definitivo."
-Pendientes detectados,0
-Señales de riesgo detectadas,0
-
-Fecha operación,Tipo evento,Activo,Cantidad,Clasificación tributaria,Costo unitario USD,Ingreso bruto USD,Ingreso neto USD,Costo tributario USD,Fee USD,Resultado USD,Tipo cambio,Ingreso bruto CLP,Ingreso neto CLP,Costo tributario CLP,Fee CLP,Resultado CLP,ID evento,ID movimiento
-2026-04-26T00:30:00.000Z,SELL,XRP,50,No afecto,1.2756789,500,499.02,63.783945,0.98,435.236055,900,450000,449118,57405.5505,882,391712.4495,cmoi1q7680000ui2kbpzh09s5,cmof9t3ih0002uit0xys0xwqg
-2026-04-27T16:36:00.000Z,SELL,BTC,1,Mayor valor,76.248,75.71201,75.71201,76.248,0,-0.53599,900,68140.809,68140.809,68623.2,0,-482.391,cmoi1q76d0001ui2kmr1y93dv,cmohf6uui0002ui0gz0rhvapg
