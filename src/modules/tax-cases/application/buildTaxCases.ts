@@ -20,6 +20,22 @@ interface TaxonSource {
   priority: TaxCasePriority;
 }
 
+type AgentPlanRow = {
+  id: string;
+  title: string;
+  description: string;
+  priority: string;
+  created_at: Date;
+};
+
+type AutomationProposalRow = {
+  id: string;
+  title: string | null;
+  description: string | null;
+  priority: string;
+  created_at: Date;
+};
+
 function buildSourceKey(sourceType: string, sourceId: string | null): string {
   return `${sourceType}::${sourceId ?? "null"}`;
 }
@@ -61,8 +77,6 @@ function mapRowToTaxCase(row: Record<string, unknown>): TaxCase {
 }
 
 export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
-  const now = new Date();
-
   const [riskScore, rejectedDocs, activeRecommendations, agentPlans, automationProps] =
     await Promise.all([
       prisma.taxRiskScore
@@ -78,38 +92,34 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
           take: 20,
         })
         .catch(() => []),
-      prisma
-        .$queryRawUnsafe<
-          Array<{ id: string; title: string; description: string; priority: string; created_at: Date }>
-        >(
-          `SELECT id, title, description, priority, created_at FROM agent_plans WHERE user_id = $1 AND status = 'PROPOSED' ORDER BY created_at DESC LIMIT 20`,
-          userId,
-        )
-        .catch(() => []),
-      prisma
-        .$queryRawUnsafe<
-          Array<{ id: string; title: string | null; description: string | null; priority: string; created_at: Date }>
-        >(
-          `SELECT id, title, description, priority, created_at FROM automation_proposals WHERE user_id = $1 AND status = 'PROPOSED' ORDER BY created_at DESC LIMIT 20`,
-          userId,
-        )
-        .catch(() => []),
+      prisma.$queryRaw<AgentPlanRow[]>`
+        SELECT id, title, description, priority, created_at
+        FROM agent_plans
+        WHERE user_id = ${userId} AND status = 'PROPOSED'
+        ORDER BY created_at DESC
+        LIMIT 20
+      `.catch(() => []),
+      prisma.$queryRaw<AutomationProposalRow[]>`
+        SELECT id, title, description, priority, created_at
+        FROM automation_proposals
+        WHERE user_id = ${userId} AND status = 'PROPOSED'
+        ORDER BY created_at DESC
+        LIMIT 20
+      `.catch(() => []),
     ]);
 
-  // Fetch monitor-derived signals (pending tasks threshold only)
   const monitorData = await evaluateMonitoringForCases(userId).catch(() => []);
 
   const sources: TaxonSource[] = [];
 
-  // 1. Risk Score CRITICAL / HIGH
   if (riskScore) {
-    const r = riskScore as { level?: string; score?: number };
+    const r = riskScore as { id: string; level?: string; score?: number };
     if (r.level === "CRITICAL") {
       sources.push({
         title: "Riesgo tributario crítico",
         description: `LEDGERA detectó un nivel de riesgo crítico (score: ${r.score ?? "?"}). Se requiere revisión inmediata del expediente tributario.`,
         sourceType: "RIESGO_CRITICO",
-        sourceId: riskScore.id,
+        sourceId: r.id,
         priority: "CRITICAL",
       });
     } else if (r.level === "HIGH") {
@@ -117,13 +127,12 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
         title: "Riesgo tributario elevado",
         description: `LEDGERA detectó un nivel de riesgo alto (score: ${r.score ?? "?"}). Recomendamos revisar las señales y tomar acciones preventivas.`,
         sourceType: "RIESGO_CRITICO",
-        sourceId: riskScore.id,
+        sourceId: r.id,
         priority: "HIGH",
       });
     }
   }
 
-  // 2. Rejected Documents
   if (rejectedDocs > 0) {
     sources.push({
       title: `Documentos tributarios rechazados (${rejectedDocs})`,
@@ -134,20 +143,16 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
     });
   }
 
-  // 3. Monitor signals
   for (const signal of monitorData) {
-    let sourceType = signal.sourceType;
-    let priority: TaxCasePriority = signal.priority as TaxCasePriority;
     sources.push({
       title: signal.title,
       description: signal.description,
-      sourceType,
+      sourceType: signal.sourceType,
       sourceId: signal.sourceId,
-      priority,
+      priority: signal.priority as TaxCasePriority,
     });
   }
 
-  // 4. Active recommendations (grouped)
   if (activeRecommendations.length >= 5) {
     sources.push({
       title: `Múltiples recomendaciones pendientes (${activeRecommendations.length})`,
@@ -158,7 +163,6 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
     });
   }
 
-  // 5. Agent plans
   for (const plan of agentPlans) {
     const planPriority: TaxCasePriority = plan.priority === "CRITICAL" || plan.priority === "HIGH"
       ? (plan.priority as TaxCasePriority)
@@ -172,7 +176,6 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
     });
   }
 
-  // 6. Automation proposals
   for (const prop of automationProps) {
     sources.push({
       title: prop.title ?? "Propuesta de automatización",
@@ -183,11 +186,9 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
     });
   }
 
-  // Load existing active cases for dedup
   const existing = await fetchExistingActiveCases(userId);
   const newSources = deduplicateAgainstExisting(sources, existing);
 
-  // Create new cases
   const createdCases: TaxCase[] = [];
   for (const source of newSources) {
     const analysis = analyzeTaxCase(source.sourceType, source.description);
@@ -226,7 +227,6 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
     }
   }
 
-  // Merge existing + created
   const allCases = [...existing, ...createdCases].sort((a, b) => {
     const prioDiff = PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
     if (prioDiff !== 0) return prioDiff;
@@ -243,13 +243,11 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
   };
 }
 
-// Only add monitor-derived signals NOT already handled in the outer function
 async function evaluateMonitoringForCases(
   userId: string,
 ): Promise<Array<{ title: string; description: string; sourceType: string; sourceId: string; priority: string }>> {
   const signals: Array<{ title: string; description: string; sourceType: string; sourceId: string; priority: string }> = [];
 
-  // Pending tasks threshold — not handled in outer function
   const pendingTasks = await prisma.task
     .count({ where: { userId, status: { notIn: ["COMPLETED", "CANCELLED"] } } })
     .catch(() => 0);
