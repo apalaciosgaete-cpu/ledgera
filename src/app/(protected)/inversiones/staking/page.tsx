@@ -1,5 +1,5 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { StakingPage } from "@/components/staking/StakingPage";
-
-export default StakingPage;
+export default function StakingPage() {
+  redirect("/cryptoactivos");
+}
