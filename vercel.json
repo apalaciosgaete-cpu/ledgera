@@ -15,32 +15,25 @@
   },
   "functions": {
     "src/app/api/integrations/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 60
     },
     "src/app/api/tax/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 60
     },
     "src/app/api/imports/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 60
     },
     "src/app/api/tax/reports/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 60
     },
     "src/app/api/tax/declarations/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 60
     },
     "src/app/api/bank/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+      "maxDuration": 60
     },
     "src/app/api/admin/**/*.ts": {
-      "maxDuration": 30,
-      "memory": 512
+      "maxDuration": 30
     }
   },
   "crons": [
