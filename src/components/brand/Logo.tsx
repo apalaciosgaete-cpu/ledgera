@@ -10,10 +10,12 @@ interface LogoProps {
   subtitle?: string;
 }
 
+const logoPngDataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANsAAACDCAYAAAAEXm7aAAA5y0lEQVR42u19eVhTV97/514IYc1GwYKJkgaoigaF2v5cC1XrRnGhE1NJq1WRVEFE9WNbrggijYFEaCIgNbSlVKGIUAgJB5fz/JE7/zjnXpjCzOU6YPN/na+E9zks4yYO98p7r3nO+55JxQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NTgX8Q/VeVnFkUG4AAAAASUVORK5CYII=";
+
 const sizes: Record<LogoSize, { width: number; height: number }> = {
-  sm: { width: 132, height: 52 },
-  md: { width: 180, height: 58 },
-  lg: { width: 320, height: 112 },
+  sm: { width: 156, height: 70 },
+  md: { width: 218, height: 92 },
+  lg: { width: 300, height: 126 },
 };
 
 const officialLabel = "LEDGERA — Inteligencia financiera para crecer";
@@ -30,7 +32,7 @@ export function Logo({ size = "md" }: LogoProps) {
     maxWidth: "100%",
     lineHeight: 0,
     userSelect: "none",
-    overflow: "hidden",
+    overflow: "visible",
   };
 
   const imageStyle: CSSProperties = {
@@ -42,7 +44,7 @@ export function Logo({ size = "md" }: LogoProps) {
 
   return (
     <span style={wrap} aria-label={officialLabel} title="LEDGERA">
-      <img src="/brand/ledgera-logo.svg" alt="LEDGERA" style={imageStyle} draggable={false} />
+      <img src={logoPngDataUri} alt="LEDGERA" style={imageStyle} draggable={false} />
     </span>
   );
 }
@@ -56,19 +58,18 @@ export function LogoIcon({ size = 44 }: { size?: number }) {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#0A0F1A",
+    background: "transparent",
   };
 
   const imageStyle: CSSProperties = {
-    width: Math.round(size * 2.6),
-    height: Math.round(size * 1.4),
-    objectFit: "cover",
-    objectPosition: "50% 8%",
+    width: Math.round(size * 2.4),
+    height: Math.round(size * 1.45),
+    objectFit: "contain",
   };
 
   return (
     <span style={wrap} aria-label="LEDGERA">
-      <img src="/brand/ledgera-logo.svg" alt="LEDGERA" style={imageStyle} draggable={false} />
+      <img src={logoPngDataUri} alt="LEDGERA" style={imageStyle} draggable={false} />
     </span>
   );
 }
