@@ -1,2 +1,0 @@
-movementId,eventType,symbol,executedAt,quantity,averageCostUsdAtSale,proceedsGrossUsd,proceedsNetUsd,costBasisUsd,feeUsd,realizedPnlUsd,usdClp,proceedsGrossClp,proceedsNetClp,costBasisClp,feeClp,realizedPnlClp
-cmo56ss2h0001ui1wizfdlqts,SELL,BTC,2026-04-19T03:08:57.488Z,0.05,30000,1750,1750,1500,0,250,886.32,1551060,1551060,1329480,0,221580
