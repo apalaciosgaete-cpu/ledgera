@@ -9,10 +9,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const runtime = "nodejs";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id?: string }> },
-) {
+export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
 
   if (!auth || auth instanceof NextResponse) {
@@ -23,9 +20,9 @@ export async function GET(
   }
 
   try {
-    const { id } = await params;
     const searchParams = new URL(req.url).searchParams;
-    const limit = parseInt(searchParams.get("limit") ?? "100");
+    const id = searchParams.get("id") ?? undefined;
+    const limit = parseInt(searchParams.get("limit") ?? "100", 10);
 
     if (id) {
       const declaration = await getTaxDeclarationByIdForUser({
@@ -67,7 +64,7 @@ export async function GET(
           integrity: {
             status: integrityResult.status,
             issues: integrityResult.issues.filter(
-              (i) => i.data.declarationId === id,
+              (issue) => issue.data.declarationId === id,
             ),
           },
         },
