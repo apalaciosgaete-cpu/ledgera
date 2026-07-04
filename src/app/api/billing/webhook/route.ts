@@ -2,18 +2,16 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireEnv } from "@/lib/env";
 import { processBillingWebhook } from "@/modules/billing/application/processBillingWebhook";
 import { normalizeBillingWebhookPayload } from "@/modules/billing/domain/webhook";
 
-function isWebhookSecretConfigured() {
-  return Boolean(process.env.BILLING_WEBHOOK_SECRET?.trim());
+function resolveWebhookSecret() {
+  return requireEnv("BILLING_WEBHOOK_SECRET");
 }
 
 function isAuthorizedWebhook(request: NextRequest) {
-  const expectedSecret = process.env.BILLING_WEBHOOK_SECRET?.trim();
-
-  if (!expectedSecret) return true;
-
+  const expectedSecret = resolveWebhookSecret();
   const receivedSecret = request.headers.get("x-ledgera-webhook-secret")?.trim();
 
   return receivedSecret === expectedSecret;
@@ -124,15 +122,17 @@ export async function POST(request: NextRequest) {
       console.error("[billing/webhook POST logError]", logError);
     }
 
+    const missingConfig = error instanceof Error && error.message.includes("BILLING_WEBHOOK_SECRET");
+
     return NextResponse.json(
       {
         ok: false,
-        message: isWebhookSecretConfigured()
-          ? "No fue posible procesar el webhook."
-          : "No fue posible procesar el webhook. BILLING_WEBHOOK_SECRET no está configurado; modo desarrollo permitido.",
+        message: missingConfig
+          ? "BILLING_WEBHOOK_SECRET no está configurado. Webhook bloqueado."
+          : "No fue posible procesar el webhook.",
         data: null,
       },
-      { status: 500 },
+      { status: missingConfig ? 500 : 500 },
     );
   }
 }
