@@ -1,7 +1,6 @@
 // src/modules/identity/application/sessionToken.ts
 
 import { randomBytes } from "crypto";
-import { cookies } from "next/headers";
 import { getSessionWithUserByToken } from "@/modules/identity/infrastructure/sessionRepository";
 
 export function generateSessionToken(): string {
@@ -14,10 +13,29 @@ export function buildSessionExpirationDate(days = 7): Date {
   return expiresAt;
 }
 
-async function resolveTokenFromRequest(request: Request): Promise<string | null> {
-  const cookieStore = await cookies();
-  const cookieToken = cookieStore.get("session_token")?.value;
+function resolveCookieFromHeader(request: Request, name: string): string | null {
+  const cookieHeader = request.headers.get("cookie");
+  if (!cookieHeader) return null;
 
+  for (const rawCookie of cookieHeader.split(";")) {
+    const [rawName, ...rawValueParts] = rawCookie.trim().split("=");
+    if (rawName !== name) continue;
+
+    const rawValue = rawValueParts.join("=");
+    if (!rawValue) return null;
+
+    try {
+      return decodeURIComponent(rawValue);
+    } catch {
+      return rawValue;
+    }
+  }
+
+  return null;
+}
+
+function resolveTokenFromRequest(request: Request): string | null {
+  const cookieToken = resolveCookieFromHeader(request, "session_token");
   if (cookieToken) return cookieToken;
 
   const authHeader = request.headers.get("authorization");
@@ -31,7 +49,7 @@ async function resolveTokenFromRequest(request: Request): Promise<string | null>
 
 export async function getSessionFromRequest(request: Request) {
   try {
-    const token = await resolveTokenFromRequest(request);
+    const token = resolveTokenFromRequest(request);
     if (!token) return null;
 
     const auth = await getSessionWithUserByToken(token);
