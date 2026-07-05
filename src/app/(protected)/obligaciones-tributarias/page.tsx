@@ -8,10 +8,10 @@ export default function ObligacionesTributariasPage() {
     <CryptoFirstModulePage
       module={module}
       sections={[
-        "Eventos detectados automáticamente desde movimientos de Activos: ventas, swaps, staking, airdrops y transferencias.",
+        "Eventos detectados automáticamente desde operaciones confirmadas: ventas, swaps, staking, airdrops y transferencias.",
         "Eventos pendientes de clasificación o con documentación insuficiente que requieren revisión manual.",
-        "Documentos y respaldos asociados a cada evento: cartolas, comprobantes de exchange, reportes CSV.",
-        "Estado tributario consolidado: clasificación, salud fiscal y nivel de riesgo detectado.",
+        "Documentos y respaldos asociados a cada evento: cartolas, comprobantes de exchange, reportes CSV, PDF y Excel.",
+        "Estado tributario consolidado: clasificación, respaldo disponible y nivel de revisión requerido.",
       ]}
     />
   );
