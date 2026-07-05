@@ -4,21 +4,21 @@ import { PublicButton, PublicContainer, PublicCta, PublicHero, PublicShell, publ
 
 export const metadata: Metadata = {
   title: "Preguntas frecuentes | LEDGERA",
-  description: "Respuestas sobre LEDGERA, impuestos crypto en Chile, conciliación bancaria, motor FIFO, reportes y planes.",
+  description: "Respuestas sobre LEDGERA, operaciones cripto, exchanges, activos digitales, conciliación, reportes y planes.",
   alternates: { canonical: "https://ledgera.cl/preguntas" },
 };
 
 const categories = [
-  { label: "Tributación", color: "var(--accent)", faqs: [{ q: "¿LEDGERA reemplaza a un contador?", a: "No. LEDGERA organiza y prepara información financiera-tributaria, pero no reemplaza revisión profesional ni asesoría tributaria personalizada." }, { q: "¿Qué operaciones crypto pueden requerir revisión?", a: "Ventas a moneda fiat, intercambios entre activos, pagos recibidos en cripto y movimientos con ganancia realizada pueden requerir análisis según el caso." }, { q: "¿Puedo reconstruir años anteriores?", a: "Sí. Puedes ordenar movimientos históricos para revisar períodos anteriores, siempre validando el tratamiento final con un profesional." }] },
-  { label: "Plataforma", color: "var(--text-faint)", faqs: [{ q: "¿Puedo importar datos desde exchanges?", a: "LEDGERA está diseñada para trabajar con importaciones, revisión previa y confirmación antes de afectar el historial financiero." }, { q: "¿Puedo conciliar banco y exchange?", a: "Sí. El objetivo es relacionar transferencias bancarias, movimientos de exchange y portafolio para reducir desorden operacional." }, { q: "¿Qué significa que la información sea trazable?", a: "Que cada resultado pueda explicarse desde movimientos originales, fechas, cantidades, precios, comisiones y clasificaciones aplicadas." }] },
-  { label: "Planes", color: "var(--warn)", faqs: [{ q: "¿Existe plan gratuito?", a: "Sí. El plan gratuito permite explorar la plataforma con un volumen limitado de movimientos." }, { q: "¿Qué plan conviene para una persona?", a: "El plan Personal está pensado para usuarios que necesitan ordenar movimientos, revisar portafolio, conciliación y reportes." }, { q: "¿Hay planes para contadores o empresas?", a: "Sí. Los planes Contador y Empresa están orientados a operación multiusuario, clientes o revisión profesional con mayor trazabilidad." }] },
+  { label: "Tributación", color: "var(--accent)", faqs: [{ q: "¿LEDGERA reemplaza a un contador?", a: "No. LEDGERA organiza y prepara información financiera-tributaria, pero no reemplaza revisión profesional ni asesoría tributaria personalizada." }, { q: "¿Qué operaciones cripto pueden requerir revisión?", a: "Ventas a moneda fiat, intercambios entre activos, pagos recibidos en cripto y movimientos con ganancia realizada pueden requerir análisis según el caso." }, { q: "¿Puedo reconstruir años anteriores?", a: "Sí. Puedes ordenar operaciones históricas para revisar períodos anteriores, siempre validando el tratamiento final con un profesional." }] },
+  { label: "Plataforma", color: "var(--text-faint)", faqs: [{ q: "¿Puedo importar datos desde exchanges?", a: "LEDGERA está diseñada para trabajar con importaciones desde exchanges, revisión previa y confirmación antes de afectar el historial financiero." }, { q: "¿Puedo conciliar banco y exchange?", a: "Sí. El objetivo es relacionar transferencias bancarias, operaciones de exchange y portafolio para reducir desorden operacional." }, { q: "¿Qué significa que la información sea trazable?", a: "Que cada resultado pueda explicarse desde operaciones originales, fechas, cantidades, precios, comisiones y clasificaciones aplicadas." }] },
+  { label: "Planes", color: "var(--warn)", faqs: [{ q: "¿Existe plan gratuito?", a: "Sí. El plan gratuito permite explorar la plataforma con un volumen limitado de operaciones." }, { q: "¿Qué plan conviene para una persona?", a: "El plan Personal está pensado para usuarios que necesitan ordenar operaciones, revisar portafolio, conciliación y reportes." }, { q: "¿Hay planes para contadores o empresas?", a: "Sí. Los planes Profesional y Empresa están orientados a operación multiusuario, clientes o revisión profesional con mayor trazabilidad." }] },
 ];
 
 export default function PreguntasPage() {
   return (
     <PublicShell activePath="/preguntas">
-      <PublicHero eyebrow="Preguntas frecuentes" title="Respuestas claras antes de ordenar tu información crypto" description="Revisa dudas sobre tributación, conciliación, reportes, trazabilidad, planes y uso general de LEDGERA.">
-        <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap"><PublicButton href="/register">Comenzar ahora</PublicButton><PublicButton href="/planes" variant="secondary">Ver planes</PublicButton></div>
+      <PublicHero eyebrow="Preguntas frecuentes" title="Respuestas claras antes de ordenar tus operaciones cripto" description="Revisa dudas sobre tributación, exchanges, conciliación, reportes, trazabilidad, planes y uso general de LEDGERA.">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap"><PublicButton href="/register">Comenzar análisis</PublicButton><PublicButton href="/planes" variant="secondary">Ver planes</PublicButton></div>
       </PublicHero>
       <section style={{ background: publicPalette.section }}>
         <PublicContainer style={{ maxWidth: "920px" }}>
@@ -39,7 +39,7 @@ export default function PreguntasPage() {
           </div>
         </PublicContainer>
       </section>
-      <PublicCta title="¿Listo para revisar tus movimientos?" description="Crea tu cuenta y empieza a organizar información crypto, banco, portafolio y base tributaria con trazabilidad." />
+      <PublicCta title="¿Listo para revisar tus operaciones?" description="Crea tu cuenta y empieza a organizar operaciones cripto, banco, activos digitales y respaldo con trazabilidad." />
     </PublicShell>
   );
 }
