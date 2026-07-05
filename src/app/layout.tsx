@@ -32,9 +32,9 @@ const baseUrl = "https://ledgera.cl";
 const googleSiteVerification =
   process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
   "6Iatkj-oi2CtR-GyTina6GNlkzxObGIs6u115Fl064k";
-const defaultTitle = "LEDGERA | Calcula tus impuestos crypto para el SII en Chile";
+const defaultTitle = "LEDGERA | De tus exchanges a tu declaración, sin planillas";
 const defaultDescription =
-  "Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu ganancia y te dice qué poner en el Formulario 22 del SII.";
+  "Importa operaciones cripto desde exchanges, ordena activos digitales y genera respaldos tributarios trazables en PDF y Excel.";
 
 function safeJsonLd(data: Record<string, unknown>) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
@@ -50,17 +50,16 @@ export const metadata: Metadata = {
   description: defaultDescription,
   keywords: [
     "LEDGERA",
-    "impuestos crypto Chile",
-    "criptomonedas SII",
-    "declarar criptomonedas Chile",
     "tributación cripto Chile",
-    "Formulario 22 crypto",
-    "declaración Bitcoin Chile",
-    "declaración Binance Chile",
-    "SII criptomonedas",
-    "Buda impuestos",
-    "Binance impuestos Chile",
-    "contador crypto Chile",
+    "operaciones cripto Chile",
+    "activos digitales Chile",
+    "declarar operaciones cripto",
+    "respaldo tributario cripto",
+    "trazabilidad cripto",
+    "exchanges cripto Chile",
+    "declaración activos digitales",
+    "PDF Excel tributario",
+    "contador cripto Chile",
   ],
   authors: [{ name: "LEDGERA" }],
   creator: "LEDGERA",
@@ -83,7 +82,7 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "LEDGERA - Impuestos crypto para Chile",
+        alt: "LEDGERA - Respaldo tributario para operaciones cripto",
       },
     ],
   },
