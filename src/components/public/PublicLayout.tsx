@@ -14,16 +14,62 @@ export const publicNavLinks = [
 ];
 
 export const publicPalette = {
-  page: "var(--bg)", section: "var(--bg-sunken)", sectionSoft: "var(--bg-elev)", footer: "var(--bg-sunken)",
-  action: "var(--accent)", actionHover: "var(--accent)", warning: "var(--warn)",
-  text: "var(--text)", textSoft: "var(--text-soft)", textMuted: "var(--text-soft)", textFaint: "var(--text-faint)",
-  border: "var(--border)", borderStrong: "var(--border-strong)", card: "var(--bg-elev)", cardStrong: "var(--bg-elev)",
+  page: "var(--bg)",
+  section: "var(--bg-sunken)",
+  sectionSoft: "var(--bg-elev)",
+  footer: "var(--bg-sunken)",
+  action: "var(--accent)",
+  actionHover: "var(--accent)",
+  warning: "var(--warn)",
+  text: "var(--text)",
+  textSoft: "var(--text-soft)",
+  textMuted: "var(--text-soft)",
+  textFaint: "var(--text-faint)",
+  border: "var(--border)",
+  borderStrong: "var(--border-strong)",
+  card: "var(--bg-elev)",
+  cardStrong: "var(--bg-elev)",
 };
 
-const containerStyle: CSSProperties = { width: "100%", maxWidth: "1180px", margin: "0 auto", paddingLeft: "24px", paddingRight: "24px" };
-const pageStyle: CSSProperties = { minHeight: "100vh", background: "linear-gradient(180deg,var(--bg) 0%,var(--bg-sunken) 36%,var(--bg) 100%)", color: publicPalette.text, fontFamily: fonts.body, overflowX: "hidden" };
-const navLinkStyle: CSSProperties = { borderRadius: 10, color: "var(--text-soft)", fontSize: 14, fontWeight: 750, padding: "10px 12px", textDecoration: "none" };
-const primaryLinkStyle: CSSProperties = { alignItems: "center", background: "var(--accent)", border: "1px solid var(--accent)", borderRadius: 10, color: "var(--accent-contrast)", display: "inline-flex", fontSize: 14, fontWeight: 900, justifyContent: "center", minHeight: 42, padding: "0 16px", textDecoration: "none" };
+const containerStyle: CSSProperties = {
+  width: "100%",
+  maxWidth: "1180px",
+  margin: "0 auto",
+  paddingLeft: "24px",
+  paddingRight: "24px",
+};
+
+const pageStyle: CSSProperties = {
+  minHeight: "100vh",
+  background: "linear-gradient(180deg,var(--bg) 0%,var(--bg-sunken) 36%,var(--bg) 100%)",
+  color: publicPalette.text,
+  fontFamily: fonts.body,
+  overflowX: "hidden",
+};
+
+const navLinkStyle: CSSProperties = {
+  borderRadius: 10,
+  color: "var(--text-soft)",
+  fontSize: 14,
+  fontWeight: 750,
+  padding: "10px 12px",
+  textDecoration: "none",
+};
+
+const primaryLinkStyle: CSSProperties = {
+  alignItems: "center",
+  background: "var(--accent)",
+  border: "1px solid var(--accent)",
+  borderRadius: 10,
+  color: "var(--accent-contrast)",
+  display: "inline-flex",
+  fontSize: 14,
+  fontWeight: 900,
+  justifyContent: "center",
+  minHeight: 42,
+  padding: "0 16px",
+  textDecoration: "none",
+};
 
 export function PublicContainer({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return <div style={{ ...containerStyle, ...style }}>{children}</div>;
@@ -37,7 +83,9 @@ export function PublicHeader({ activePath: _activePath }: { activePath?: string 
   return (
     <header style={{ background: "var(--bg-sunken)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}>
       <div style={{ alignItems: "center", display: "flex", gap: 20, justifyContent: "space-between", minHeight: 76, padding: "0 24px" }}>
-        <Link href="/" aria-label="Inicio LEDGERA" style={{ flexShrink: 0 }}><Logo variant="light" size="lg" showSubtitle /></Link>
+        <Link href="/" aria-label="Inicio LEDGERA" style={{ flexShrink: 0 }}>
+          <Logo variant="light" size="lg" showSubtitle />
+        </Link>
         <nav className="hidden items-center gap-1 md:flex" aria-label="Navegación principal">
           {publicNavLinks.map((item) => <PublicNavLink key={item.href} href={item.href}>{item.label}</PublicNavLink>)}
           <span style={{ background: "var(--border)", height: 24, margin: "0 8px", width: 1 }} aria-hidden="true" />
@@ -59,7 +107,14 @@ export function PublicHeader({ activePath: _activePath }: { activePath?: string 
 }
 
 function FooterGroup({ title, links }: { title: string; links: Array<{ label: string; href: string }> }) {
-  return <div><p style={{ color: publicPalette.textFaint, fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", margin: "0 0 14px", textTransform: "uppercase" }}>{title}</p><div style={{ display: "grid", gap: 10 }}>{links.map((link) => <Link key={link.href} href={link.href} style={{ color: publicPalette.textMuted, fontSize: 13, fontWeight: 650, lineHeight: 1.35, textDecoration: "none" }}>{link.label}</Link>)}</div></div>;
+  return (
+    <div>
+      <p style={{ color: publicPalette.textFaint, fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", margin: "0 0 14px", textTransform: "uppercase" }}>{title}</p>
+      <div style={{ display: "grid", gap: 10 }}>
+        {links.map((link) => <Link key={link.href} href={link.href} style={{ color: publicPalette.textMuted, fontSize: 13, fontWeight: 650, lineHeight: 1.35, textDecoration: "none" }}>{link.label}</Link>)}
+      </div>
+    </div>
+  );
 }
 
 export function PublicFooter() {
@@ -67,10 +122,13 @@ export function PublicFooter() {
     <footer style={{ background: publicPalette.footer, borderTop: `1px solid ${publicPalette.border}`, padding: "52px 0 32px" }}>
       <PublicContainer>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(220px,1.5fr) repeat(3,minmax(150px,1fr))", gap: 28, alignItems: "start" }}>
-          <div><Link href="/" aria-label="Inicio LEDGERA" style={{ textDecoration: "none" }}><Logo variant="light" size="sm" showSubtitle /></Link><p style={{ color: publicPalette.textFaint, fontSize: 13, lineHeight: 1.7, margin: "16px 0 0", maxWidth: 320 }}>Sistema financiero-tributario para ordenar movimientos crypto, banco, portafolio y base tributaria trazable en Chile.</p></div>
+          <div>
+            <Link href="/" aria-label="Inicio LEDGERA" style={{ textDecoration: "none" }}><Logo variant="light" size="sm" showSubtitle /></Link>
+            <p style={{ color: publicPalette.textFaint, fontSize: 13, lineHeight: 1.7, margin: "16px 0 0", maxWidth: 320 }}>Plataforma para ordenar operaciones cripto desde exchanges, banco, portafolio y respaldo tributario trazable en Chile.</p>
+          </div>
           <FooterGroup title="Producto" links={[{ label: "Quiénes somos", href: "/quienes-somos" }, { label: "Cómo funciona", href: "/como-funciona" }, { label: "Planes", href: "/planes" }, { label: "Preguntas frecuentes", href: "/preguntas" }, { label: "Blog", href: "/blog" }]} />
-          <FooterGroup title="Recursos SEO" links={[{ label: "Impuestos crypto Chile", href: "/impuestos-crypto-chile" }, { label: "Declarar criptomonedas", href: "/como-declarar-crypto-en-chile" }, { label: "Conciliación banco crypto", href: "/conciliacion-binance-banco" }, { label: "Contador crypto", href: "/contador-crypto-chile" }]} />
-          <FooterGroup title="Legal y contacto" links={[{ label: "Términos", href: "/terminos" }, { label: "Privacidad", href: "/privacidad" }, { label: "Cookies", href: "/cookies" }, { label: PUBLIC_CONTACT_EMAIL, href: `mailto:${PUBLIC_CONTACT_EMAIL}` }]} />
+          <FooterGroup title="Recursos" links={[{ label: "Tributación cripto Chile", href: "/impuestos-crypto-chile" }, { label: "Declarar operaciones cripto", href: "/como-declarar-crypto-en-chile" }, { label: "Conciliación banco-exchange", href: "/conciliacion-binance-banco" }, { label: "Contador para activos digitales", href: "/contador-crypto-chile" }]} />
+          <FooterGroup title="Legal y contacto" links={[{ label: "Términos", href: "/terminos" }, { label: "Privacidad", href: "/privacidad" }, { label: "Cookies", href: "/cookies" }, { label: PUBLIC_CONTACT_EMAIL, href: "mailto:admin@ledgera.cl" }]} />
         </div>
         <div style={{ borderTop: `1px solid ${publicPalette.border}`, marginTop: 36, paddingTop: 22, display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <p style={{ color: "var(--text-soft)", fontSize: 12, margin: 0 }}>© {new Date().getFullYear()} LEDGERA. Todos los derechos reservados.</p>
