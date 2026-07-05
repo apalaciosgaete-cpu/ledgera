@@ -1,38 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="88" viewBox="0 0 420 88" role="img" aria-labelledby="title desc">
   <title id="title">LEDGERA</title>
-  <desc id="desc">Logo LEDGERA inspirado en el board de marca: libro azul, barras doradas y wordmark institucional.</desc>
-  <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFF1BD"/>
-      <stop offset="0.42" stop-color="#D9B668"/>
-      <stop offset="1" stop-color="#8A621F"/>
-    </linearGradient>
-    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#BDEAFF"/>
-      <stop offset="0.45" stop-color="#1E40AF"/>
-      <stop offset="1" stop-color="#38BDF8"/>
-    </linearGradient>
-    <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="0.5" stop-color="#E7EAF0"/>
-      <stop offset="1" stop-color="#9EA6B4"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
-      <feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#000000" flood-opacity="0.6"/>
-    </filter>
-  </defs>
-  <rect width="760" height="300" fill="transparent"/>
-  <g transform="translate(0 -12)" filter="url(#shadow)">
-    <path d="M278 133 L380 194 L482 133" fill="none" stroke="#063A88" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M278 133 L380 194 L482 133" fill="none" stroke="url(#blue)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M288 99 L288 132 L380 184 L472 132 L472 99" fill="none" stroke="#BDEAFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
-    <path d="M306 92 L306 124 L380 166 L454 124 L454 92" fill="none" stroke="#2D8CFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
-    <path d="M334 82 L365 64 V145 L334 158 Z" fill="url(#gold)" stroke="#FFE9A5" stroke-width="1.2"/>
-    <path d="M384 63 L416 43 V157 L384 170 Z" fill="url(#gold)" stroke="#FFE9A5" stroke-width="1.2"/>
-    <path d="M437 41 L470 20 V170 L437 183 Z" fill="url(#gold)" stroke="#FFE9A5" stroke-width="1.2"/>
-    <path d="M492 74 L520 45 L532 93 L516 89 C497 139 454 177 404 192" fill="none" stroke="url(#gold)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M322 184 C390 181 462 145 512 78" fill="none" stroke="#FFE7A6" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
-    <path d="M330 199 C392 198 454 178 504 136" fill="none" stroke="url(#silver)" stroke-width="9" stroke-linecap="round" opacity="0.92"/>
-  </g>
-  <text x="380" y="269" text-anchor="middle" fill="url(#silver)" font-family="Space Grotesk, Manrope, Inter, Arial, sans-serif" font-size="76" font-weight="900" letter-spacing="10">LEDGERA</text>
+  <desc id="desc">Wordmark textual LEDGERA sin isologo.</desc>
+  <rect width="420" height="88" fill="transparent"/>
+  <text x="210" y="58" text-anchor="middle" fill="#F8FAFC" font-family="Manrope, Inter, Arial, sans-serif" font-size="56" font-weight="900" letter-spacing="8">LEDGERA</text>
 </svg>
