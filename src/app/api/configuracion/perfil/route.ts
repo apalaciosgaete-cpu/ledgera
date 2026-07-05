@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type ProfileBody = {
   fullName?: string;
   rut?: string;

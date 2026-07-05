@@ -6,6 +6,9 @@ import { requireFeature } from "@/modules/subscription/application/requireFeatur
 import { Feature } from "@/modules/subscription/domain/planFeatures";
 import PDFDocument from "pdfkit";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function resolveYear(value: string | null): number | undefined {

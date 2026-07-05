@@ -5,6 +5,9 @@ import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 import type { SiiDocumentTypeCode } from "@/modules/sii/domain/sii";
 import { createCaf, listCafs } from "@/modules/sii/infrastructure/siiCafRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
 

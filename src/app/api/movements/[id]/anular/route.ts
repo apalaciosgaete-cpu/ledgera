@@ -5,6 +5,9 @@ import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
 import { requireAuth } from "@/shared";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RouteContext = {
   params: Promise<{ id: string }>;
 };

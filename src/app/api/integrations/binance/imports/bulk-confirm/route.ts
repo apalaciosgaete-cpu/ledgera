@@ -8,6 +8,9 @@ import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/appli
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { generateAnnualTaxSummary } from "@/modules/tax/application/generateAnnualTaxSummary";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const AUTO_CONFIRM_TYPES = new Set([

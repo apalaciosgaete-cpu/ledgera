@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 async function ensureChatTables() {
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS chat_conversations (

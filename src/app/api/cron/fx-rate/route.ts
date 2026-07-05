@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 
 import { FxRateService } from "@/services/fxRateService";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {

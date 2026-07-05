@@ -5,6 +5,9 @@ import { ok, fail, serverError } from "@/shared/apiResponse";
 import { archiveDocument } from "@/modules/documents/application/archiveDocument";
 import { getDocumentById } from "@/modules/documents/infrastructure/documentRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } },

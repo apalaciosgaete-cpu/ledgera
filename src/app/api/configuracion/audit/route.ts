@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireAuth(req);

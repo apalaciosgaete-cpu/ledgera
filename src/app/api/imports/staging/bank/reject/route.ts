@@ -5,6 +5,9 @@ import { enforceCsrfProtection } from "@/modules/security/application/csrfProtec
 import { ignoreBankMovements } from "@/modules/staging/application/ignoreBankMovements";
 import { StagingError } from "@/modules/staging/domain/StagingError";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type Body = {
   bankMovementIds?: string[];
   reason?:          string;

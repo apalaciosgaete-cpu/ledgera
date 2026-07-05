@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { fail } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function addDays(date: Date, days: number): Date {
   const result = new Date(date);
   result.setDate(result.getDate() + days);

@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getAuditEventById } from "@/modules/audit/infrastructure/auditRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } },

@@ -5,6 +5,9 @@ import { enforceCsrfProtection } from "@/modules/security/application/csrfProtec
 import { parseBankFile } from "@/modules/banking/application/parseBankFile";
 import { importBankMovements } from "@/modules/banking/application/importBankMovements";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const runtime     = "nodejs";
 export const maxDuration = 60;
 

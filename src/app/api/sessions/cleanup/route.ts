@@ -4,6 +4,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { deleteExpiredSessions } from "@/modules/identity/infrastructure/sessionRepository";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   const csrfResponse = enforceCsrfProtection(req);
 

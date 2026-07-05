@@ -9,6 +9,9 @@ import { requireActiveSubscription } from "@/modules/subscription/application/re
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RawRow = Record<string, string>;
 
 type NormalizedMovement = {

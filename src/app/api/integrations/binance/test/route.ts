@@ -7,6 +7,9 @@ import { decryptSecret } from "@/modules/security/application/encryption";
 import { fetchAccountInfo } from "@/modules/integrations/binance/infrastructure/binanceClient";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   const csrf = enforceCsrfProtection(request);
   if (csrf) return csrf;

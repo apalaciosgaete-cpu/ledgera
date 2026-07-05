@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { fail } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function statusLabel(status: string) {
   switch (status) {
     case "DRAFT": return { text: "Borrador", color: "#475569", bg: "#F1F5F9" };

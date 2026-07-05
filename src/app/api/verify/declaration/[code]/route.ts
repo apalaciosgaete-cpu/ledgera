@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { verifyDeclarationHash } from "@/modules/tax-dj/application/verifyDeclarationHash";
 import { verifyAuditChain } from "@/modules/tax/application/auditChainService";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RouteContext = {
   params: Promise<{ code: string }>;
 };

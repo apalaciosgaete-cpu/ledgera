@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { DB_PLAN_VALUE } from "@/modules/subscription/domain/planFeatures";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
 

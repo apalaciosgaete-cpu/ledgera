@@ -5,6 +5,9 @@ import { ok, fail, serverError } from "@/shared/apiResponse";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { requireAuth } from "@/shared";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ImportMovementInput = {

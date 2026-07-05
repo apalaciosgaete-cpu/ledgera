@@ -4,6 +4,9 @@ import { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { buildTaxMemory } from "@/modules/tax-memory/application/buildTaxMemory";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function ok(data: unknown) {
   return new Response(JSON.stringify({ ok: true, data }), {
     status: 200,

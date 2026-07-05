@@ -5,6 +5,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { getTaxMemory } from "@/modules/tax-memory/application/getTaxMemory";
 import { generateTaxMemory } from "@/modules/tax-memory/application/generateTaxMemory";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) {

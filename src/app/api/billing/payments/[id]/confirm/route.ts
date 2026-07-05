@@ -15,6 +15,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { activateSubscriptionFromPayment } from "@/modules/billing/application/activateSubscription";
 import { getBillingPaymentById } from "@/modules/billing/infrastructure/billingRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

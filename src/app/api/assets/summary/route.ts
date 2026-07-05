@@ -5,6 +5,9 @@ import { fail } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 import { normalizeSymbol, round } from "@/shared/utils/math";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RawMovement = {
   id: string;
   type: string;

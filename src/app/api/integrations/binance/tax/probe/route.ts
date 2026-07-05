@@ -6,6 +6,9 @@ import { decryptSecret } from "@/modules/security/application/encryption";
 import { probeBinanceTaxApi } from "@/modules/integrations/binance/infrastructure/binanceTaxClient";
 import { BINANCE_TAX_PROVIDER } from "@/modules/integrations/binance/domain/binanceProviders";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {

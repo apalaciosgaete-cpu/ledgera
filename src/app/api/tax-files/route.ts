@@ -6,6 +6,9 @@ import { listTaxFiles } from "@/modules/tax-file/application/listTaxFiles";
 import { isValidTaxFileStatus } from "@/modules/tax-file/domain/taxFile";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) {

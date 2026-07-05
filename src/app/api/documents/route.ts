@@ -5,6 +5,9 @@ import { ok, fail, serverError } from "@/shared/apiResponse";
 import { listUserDocuments } from "@/modules/documents/application/listUserDocuments";
 import { uploadDocument } from "@/modules/documents/application/uploadDocument";
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   DOCUMENT_CATEGORIES,
   type Document,
   isValidDocumentCategory,

@@ -4,6 +4,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { listTaxRiskScores } from "@/modules/risk/infrastructure/taxRiskScoreRepository";
 import { isValidTaxRiskLevel, type TaxRiskLevel } from "@/modules/risk/domain/risk";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
 

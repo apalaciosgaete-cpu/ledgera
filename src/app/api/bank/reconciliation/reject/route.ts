@@ -5,6 +5,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { logBankReconciliationAudit } from "@/modules/banking/application/logBankReconciliationAudit";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RejectBody = {
   bankMovementId?: string;
 };

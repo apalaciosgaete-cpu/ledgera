@@ -6,6 +6,9 @@ import { deleteDocument } from "@/modules/documents/application/deleteDocument";
 import { getDocumentById } from "@/modules/documents/infrastructure/documentRepository";
 import { updateDocument } from "@/modules/documents/application/updateDocument";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } },

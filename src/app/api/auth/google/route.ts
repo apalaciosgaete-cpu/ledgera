@@ -2,6 +2,9 @@ import crypto from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";

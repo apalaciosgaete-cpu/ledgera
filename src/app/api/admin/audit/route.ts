@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 import { listAdminAuditLogs } from "@/modules/admin/infrastructure/adminAuditRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function forbidden() {
   return NextResponse.json(
     {

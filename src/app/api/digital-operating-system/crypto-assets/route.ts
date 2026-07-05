@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { createCryptoAsset, getDigitalOperatingSnapshot } from "@/modules/digital-operating-system";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function ok(data: unknown, status = 200) {
   return NextResponse.json({ ok: true, data }, { status });
 }

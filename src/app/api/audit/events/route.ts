@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { listAuditEvents } from "@/modules/audit/infrastructure/auditRepository";
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   isValidAuditCategory,
   isValidAuditResult,
   isValidAuditSeverity,

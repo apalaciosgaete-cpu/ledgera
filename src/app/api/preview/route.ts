@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireEnv } from "@/lib/env";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
   const expectedToken = requireEnv("PREVIEW_BYPASS_TOKEN");

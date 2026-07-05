@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { ok, serverError } from "@/shared/apiResponse";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const movimientos = await prisma.portfolioMovement.findMany({

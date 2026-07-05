@@ -6,6 +6,9 @@ import { getAuditRequestContext } from "@/modules/admin/infrastructure/adminAudi
 import { rollbackStagingDecision } from "@/modules/staging/application/rollbackStagingDecision";
 import { StagingError } from "@/modules/staging/domain/StagingError";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   const csrf = enforceCsrfProtection(request);
   if (csrf) return csrf;

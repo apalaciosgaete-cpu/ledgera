@@ -5,6 +5,9 @@ import { ok, fail, serverError } from "@/shared/apiResponse";
 import { buildTaxFileSummary } from "@/modules/tax-file/application/buildTaxFileSummary";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RouteContext = {
   params: Promise<{ userId: string }>;
 };

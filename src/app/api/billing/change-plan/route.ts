@@ -7,6 +7,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { changePlan } from "@/modules/billing/application/changePlan";
 import { isValidBillingPlan } from "@/modules/billing/application/billingPlans";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type ChangePlanRequestBody = {
   plan?: string;
   provider?: string;

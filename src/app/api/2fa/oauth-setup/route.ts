@@ -9,6 +9,9 @@ import { requireAuth } from "@/shared";
 import { prisma } from "@/lib/prisma";
 import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 const PENDING_2FA_COOKIE = "ledgera_pending_2fa";

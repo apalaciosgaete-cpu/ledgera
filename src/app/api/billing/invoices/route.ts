@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getBillingInvoices } from "@/modules/billing/application/getBillingInvoices";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const auth = await getSessionFromRequest(request);

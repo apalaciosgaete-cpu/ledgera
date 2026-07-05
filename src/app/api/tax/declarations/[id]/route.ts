@@ -5,6 +5,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import type { TaxDeclarationStatus } from "@/modules/tax-dj/domain/declaration";
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   createTaxDeclarationAuditLog,
   getTaxDeclarationByIdForUser,
   updateTaxDeclarationStatus,

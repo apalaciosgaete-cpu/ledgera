@@ -5,6 +5,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { processDocumentIntake } from "@/modules/intake/application/processDocumentIntake";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 function resolveKindHint(value: FormDataEntryValue | null) {

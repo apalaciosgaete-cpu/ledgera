@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   decryptTwoFactorSecret,
   encryptTwoFactorSecret,
 } from "@/modules/identity/application/twoFactorSecret";

@@ -4,6 +4,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { decryptSecret, encryptSecret } from "@/modules/security/application/encryption";
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   findConnectionByUser,
   upsertConnection,
 } from "@/modules/integrations/binance/infrastructure/exchangeConnectionRepository";

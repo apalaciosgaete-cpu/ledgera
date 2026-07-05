@@ -8,6 +8,9 @@ import { validateBinanceTaxCredentials } from "@/modules/integrations/binance/in
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 import { BINANCE_TAX_PROVIDER } from "@/modules/integrations/binance/domain/binanceProviders";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   const csrf = enforceCsrfProtection(request);
   if (csrf) return csrf;

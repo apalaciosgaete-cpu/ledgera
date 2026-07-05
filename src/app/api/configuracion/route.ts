@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 const SEC = "SECURITY_";
 const DEFAULTS: Record<string, { value: string; category: string }> = {
   TAX_FIFO_ENABLED: { value: "true", category: "tax" },

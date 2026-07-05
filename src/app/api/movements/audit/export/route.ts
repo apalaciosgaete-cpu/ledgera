@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { MovementDto } from "@/shared";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function escapeCsvValue(value: string | number | Date | null | undefined) {
   if (value === null || value === undefined) return "";
 

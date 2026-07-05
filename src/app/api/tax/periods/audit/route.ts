@@ -2,6 +2,9 @@ import { NextRequest } from "next/server";
 import { listTaxPeriodAuditLogsByYear } from "@/modules/tax/infrastructure/taxPeriodAuditLogRepository";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type TaxPeriodAuditLogRow = {
   id: string;
   year: number;

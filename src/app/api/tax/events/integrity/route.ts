@@ -7,6 +7,9 @@ import type { MovementDto, TaxEventDto } from "@/shared";
 
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
 

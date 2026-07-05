@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   getTaxCaseById,
   updateTaxCaseStatus,
 } from "@/modules/tax-cases/application/buildTaxCases";

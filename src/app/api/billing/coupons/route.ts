@@ -3,6 +3,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import type { CouponType } from "@/modules/billing/domain/coupons";
 import { listCoupons, createCoupon } from "@/modules/billing/infrastructure/couponRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function isAdmin(role: string): boolean {
   return role === "admin" || role === "super_admin";
 }

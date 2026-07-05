@@ -4,6 +4,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { listSmartTaxScores } from "@/modules/tax-score/infrastructure/smartTaxScoreRepository";
 import { isValidSmartTaxScoreLevel } from "@/modules/tax-score/domain/smartTaxScore";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const auth = await getSessionFromRequest(request);

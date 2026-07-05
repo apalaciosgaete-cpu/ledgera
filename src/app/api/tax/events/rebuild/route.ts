@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado", 401);

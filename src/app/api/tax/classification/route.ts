@@ -4,6 +4,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { requireAuth } from "@/shared";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type TaxCategory =
   | "NON_TAXABLE"
   | "CAPITAL_GAIN"

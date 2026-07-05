@@ -6,6 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { reactivateSubscription } from "@/modules/billing/application/reactivateSubscription";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type ReactivateRequestBody = {
   provider?: string;
 };

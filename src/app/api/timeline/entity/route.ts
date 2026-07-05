@@ -4,6 +4,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { buildEntityTimeline } from "@/modules/timeline/application/buildEntityTimeline";
 import type { TimelineEvent } from "@/modules/timeline/domain/TimelineEvent";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export type { TimelineEvent };
 
 export async function GET(request: NextRequest) {

@@ -7,6 +7,9 @@ import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 import { requireAuth } from "@/shared";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type CreateMovementBody = {
   type?: MovementType;
   symbol?: string;

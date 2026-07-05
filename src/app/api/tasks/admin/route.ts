@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { ok, fail, serverError } from "@/shared/apiResponse";
 import { listTasks } from "@/modules/tasks/application/listTasks";
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   isValidTaskCategory,
   isValidTaskPriority,
   isValidTaskSource,

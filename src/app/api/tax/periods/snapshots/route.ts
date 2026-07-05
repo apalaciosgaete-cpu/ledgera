@@ -2,6 +2,9 @@ import { NextRequest } from "next/server";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { listTaxPeriodSnapshotsByYear } from "@/modules/tax/infrastructure/taxPeriodSnapshotRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function getBearerToken(request: NextRequest) {
   const authorization = request.headers.get("authorization");
 

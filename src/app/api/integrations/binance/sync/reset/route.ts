@@ -6,6 +6,9 @@ import { findConnectionByUser, setSyncReset } from "@/modules/integrations/binan
 import { ensurePeriodsExist, resetAllPeriods } from "@/modules/integrations/binance/infrastructure/exchangeSyncPeriodRepository";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function getStartDate(): Date {
   const raw = process.env.BINANCE_SYNC_START_DATE ?? "2018-01-01";
   const d   = new Date(raw);

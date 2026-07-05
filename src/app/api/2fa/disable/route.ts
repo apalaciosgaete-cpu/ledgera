@@ -7,6 +7,9 @@ import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   const rateLimitResponse = enforceRequestRateLimit(req, {
     scope: "2fa-disable",

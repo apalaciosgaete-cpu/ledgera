@@ -4,6 +4,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { suggestBankBinanceMatches } from "@/modules/banking/application/suggestBankBinanceMatches";
 import type { BankMatchSuggestion } from "@/modules/banking/domain/bankMatchingTypes";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function topSuggestionPerBankMovement(
   suggestions: BankMatchSuggestion[],
 ): BankMatchSuggestion[] {

@@ -3,6 +3,9 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { prisma } from "@/lib/prisma";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function resolveYear(value: string | null): number | undefined {
   if (!value) return undefined;
   const parsed = Number(value);

@@ -3,6 +3,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { verifyStagingDecision } from "@/modules/staging/application/verifyStagingDecision";
 import { StagingError } from "@/modules/staging/domain/StagingError";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ validationCode: string }> },

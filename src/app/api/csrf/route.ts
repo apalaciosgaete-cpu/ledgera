@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
   generateCsrfToken,
   setCsrfCookie,
 } from "@/modules/security/application/csrfProtection";

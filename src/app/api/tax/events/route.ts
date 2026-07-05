@@ -8,6 +8,9 @@ import { round, normalizeSymbol } from "@/shared/utils/math";
 
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type TaxHealthStatus = "OK" | "REVIEW" | "RISK";
 
 type NormalizedTaxType =

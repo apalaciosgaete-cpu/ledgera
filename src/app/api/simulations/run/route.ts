@@ -6,6 +6,9 @@ import { isValidSimulationScenarioType, type SimulationInput } from "@/modules/s
 import { runSimulationEngine } from "@/modules/simulation/application/simulationEngine";
 import { prisma } from "@/lib/prisma";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) {

@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { fail } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function scoreLabel(score: number): { label: string; color: string; icon: string } {
   if (score >= 90) return { label: "Excelente", color: "#166534", icon: "✓" };
   if (score >= 70) return { label: "Bueno", color: "#0F766E", icon: "✓" };

@@ -8,6 +8,9 @@ import { requireActiveSubscription } from "@/modules/subscription/application/re
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type ReopenBody = {
   year?: number | string;
   reopenReason?: string;

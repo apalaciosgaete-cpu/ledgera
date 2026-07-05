@@ -5,6 +5,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import type { TaxDeclarationAuditAction } from "@/modules/tax-dj/infrastructure/declarationRepository";
 import { listTaxDeclarationAuditLogs } from "@/modules/tax-dj/infrastructure/declarationRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 const VALID_ACTIONS: TaxDeclarationAuditAction[] = [
   "DECLARATION_CREATED",
   "DECLARATION_REVIEWED",

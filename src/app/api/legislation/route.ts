@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { classifyLegalContext, getLegalSourcesByDomain, legalCatalog } from "@/modules/legislation";
 import type { LegalDomain } from "@/modules/legislation";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function ok(data: unknown, status = 200) {
   return NextResponse.json({ ok: true, data }, { status });
 }

@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function getReportTypeLabel(type: string): string {
   switch (type) {
     case "STRICT_TAX_REPORT":      return "PDF verificable (contador / SII)";

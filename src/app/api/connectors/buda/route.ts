@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { decryptSecret, encryptSecret } from "@/modules/security/application/encryption";
 import { BudaConnector } from "@/services/connectors/budaConnector";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
 
 type BudaAction = "connect" | "import";

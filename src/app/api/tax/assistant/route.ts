@@ -6,6 +6,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 import { buildTaxObligationsAssistant } from "@/modules/tax/application/buildTaxObligationsAssistant";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function isPendingCategory(value: string | null | undefined) {
   const category = String(value ?? "").trim().toUpperCase();
   return category === "" || category === "PENDING" || category === "UNCLASSIFIED" || category === "SIN_CLASIFICAR";

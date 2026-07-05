@@ -4,6 +4,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { deleteSessionByIdForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RouteContext = { params: { id: string } };
 
 export async function DELETE(

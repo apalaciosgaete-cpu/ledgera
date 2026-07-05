@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { ok, fail, serverError } from "@/shared/apiResponse";
 import { getDocumentMetrics } from "@/modules/documents/application/getDocumentMetrics";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) {

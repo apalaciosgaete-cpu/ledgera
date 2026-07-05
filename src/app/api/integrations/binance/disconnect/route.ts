@@ -3,6 +3,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { disconnectBinanceConnection } from "@/modules/integrations/binance/infrastructure/connectionRepository";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const auth = await getSessionFromRequest(request);

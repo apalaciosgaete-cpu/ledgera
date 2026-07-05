@@ -59,3 +59,4 @@ prisma/dev.db
 *.csv
 !public/**/*.pdf
 !public/**/*.csv
+.env*.local

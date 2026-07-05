@@ -6,6 +6,9 @@ import { requireEnv } from "@/lib/env";
 import { processBillingWebhook } from "@/modules/billing/application/processBillingWebhook";
 import { normalizeBillingWebhookPayload } from "@/modules/billing/domain/webhook";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function resolveWebhookSecret() {
   return requireEnv("BILLING_WEBHOOK_SECRET");
 }

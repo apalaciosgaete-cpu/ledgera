@@ -7,6 +7,9 @@ import { decryptSecret } from "@/modules/security/application/encryption";
 import { importBinanceTaxTransfers } from "@/modules/integrations/binance/application/importBinanceTaxTransfers";
 import { BINANCE_TAX_PROVIDER } from "@/modules/integrations/binance/domain/binanceProviders";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {

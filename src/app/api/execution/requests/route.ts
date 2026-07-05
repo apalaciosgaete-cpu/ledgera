@@ -5,6 +5,9 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { isValidExecutionType } from "@/modules/execution-engine/domain/execution";
 import { createExecutionRequest, listUserExecutionRequests } from "@/modules/execution-engine/infrastructure/executionRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);

@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail } from "@/shared/apiResponse";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type ExportType = "matched" | "pending" | "ignored" | "audit";
 
 const EXPORT_TYPES = new Set<ExportType>(["matched", "pending", "ignored", "audit"]);

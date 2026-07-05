@@ -4,6 +4,9 @@ import { getSessionFromRequest } from "@/modules/identity/application/sessionTok
 import { getSiiStatus } from "@/modules/sii/application/getSiiStatus";
 import type { SiiEnvironment } from "@/modules/sii/domain/sii";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
 

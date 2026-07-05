@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/modules/subscription/application/requireFeature";
 import { Feature } from "@/modules/subscription/domain/planFeatures";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 function escapeCsv(value: string): string {
   if (value.includes(";") || value.includes('"') || value.includes("\n") || value.includes("\r")) {
     return `"${value.replace(/"/g, '""')}"`;

@@ -10,6 +10,9 @@ import { deleteSessionsByUserId } from "@/modules/identity/infrastructure/sessio
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 const CONFIRMATION = "ELIMINAR MI CUENTA";
 
 function ok(data: unknown, status = 200) {

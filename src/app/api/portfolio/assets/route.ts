@@ -4,6 +4,9 @@ import { getPortfolioByUserId } from "@/modules/portfolio/infrastructure/portfol
 import { getAssetBySymbol } from "@/modules/portfolio/infrastructure/assetRepository";
 import { addPortfolioAsset } from "@/modules/portfolio/infrastructure/portfolioAssetRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get("authorization");

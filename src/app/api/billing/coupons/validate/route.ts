@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateCoupon } from "@/modules/billing/application/validateCoupon";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {

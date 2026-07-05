@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { ok, fail, serverError } from "@/shared/apiResponse";
 import { dismissRecommendation } from "@/modules/recommendations/application/dismissRecommendation";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RouteContext = {
   params: Promise<{ id: string }>;
 };

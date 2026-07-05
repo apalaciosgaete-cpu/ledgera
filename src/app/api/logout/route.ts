@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { deleteSessionByToken } from "@/modules/identity/infrastructure/sessionRepository";
 import { clearCsrfCookie } from "@/modules/security/application/csrfProtection";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const sessionToken = request.cookies.get("session_token")?.value;

@@ -5,6 +5,9 @@ import { enforceCsrfProtection } from "@/modules/security/application/csrfProtec
 import { getAuditRequestContext } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { prisma } from "@/lib/prisma";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 type RouteContext = { params: { id: string } };
 
 export async function POST(

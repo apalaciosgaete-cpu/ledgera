@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
 

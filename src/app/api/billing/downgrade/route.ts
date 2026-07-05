@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { cancelSubscription } from "@/modules/billing/application/cancelSubscription";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const auth = await getSessionFromRequest(request);

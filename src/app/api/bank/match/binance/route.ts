@@ -3,6 +3,9 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { suggestBankBinanceMatches } from "@/modules/banking/application/suggestBankBinanceMatches";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 type FilterBody = {

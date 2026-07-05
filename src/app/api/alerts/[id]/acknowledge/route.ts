@@ -4,6 +4,9 @@ import { requireAuth } from "@/shared";
 import { acknowledgeAlert } from "@/modules/alerts/application/acknowledgeAlert";
 import { getAlertById } from "@/modules/alerts/infrastructure/alertRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } },

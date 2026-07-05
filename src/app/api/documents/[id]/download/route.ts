@@ -8,6 +8,9 @@ import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 import { getDocumentById } from "@/modules/documents/infrastructure/documentRepository";
 import { createDocumentStorage } from "@/modules/documents/storage/storageFactory";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } },

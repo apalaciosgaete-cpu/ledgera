@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAssets } from "@/modules/portfolio/infrastructure/assetRepository";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const assets = await getAssets();

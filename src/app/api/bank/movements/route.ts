@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 
+
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
 const VALID_STATUSES = ["IMPORTED", "REVIEW", "MATCHED", "IGNORED"] as const;
 const VALID_DIRECTIONS = ["INFLOW", "OUTFLOW"] as const;
 
