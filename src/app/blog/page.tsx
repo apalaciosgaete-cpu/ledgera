@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingCard, MarketingPage } from "@/components/marketing/MarketingLayout";
+import { blogArticles } from "@/modules/seo/blogArticles";
+import { seoPageList } from "@/modules/seo/seoPageContent";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -8,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/blog" },
 };
 
-const articles = [
+const editorialGuides = [
   {
     title: "Cómo ordenar movimientos crypto antes de declarar",
     tag: "Crypto Chile",
@@ -55,10 +57,10 @@ export default function BlogPage() {
       active="Blog"
       eyebrow="Blog LEDGERA"
       title="Información extensa para declarar, respaldar y revisar mejor."
-      description="El blog debe construir autoridad. Aquí viven las guías largas sobre cryptoactivos, SII, respaldo documental, conciliación de movimientos y buenas prácticas para preparar información tributaria en Chile."
+      description="El blog construye autoridad. Aquí viven guías largas sobre cryptoactivos, SII, respaldo documental, conciliación de movimientos y buenas prácticas para preparar información tributaria en Chile."
     >
       <section className="grid gap-5 lg:grid-cols-3">
-        {articles.map((article) => (
+        {editorialGuides.map((article) => (
           <MarketingCard key={article.title}>
             <span className="rounded-full border border-[#C9A84C]/50 bg-[#17140A] px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#C9A84C]">{article.tag}</span>
             <h2 className="mt-5 font-display text-3xl font-black tracking-[-0.04em] text-[#F2EBD8]">{article.title}</h2>
@@ -85,6 +87,31 @@ export default function BlogPage() {
         </div>
       </section>
 
+      <section className="mt-12">
+        <div className="mb-7 max-w-[820px]">
+          <p className="text-sm font-black uppercase tracking-[0.18em] text-[#C9A84C]">Artículos principales</p>
+          <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.045em] text-[#F2EBD8]">Contenido para entender, ordenar y revisar actividad crypto.</h2>
+          <p className="mt-4 text-base leading-8 text-[#BFC8D9]">
+            Conservamos el contenido SEO existente y lo presentamos dentro del nuevo sistema visual para que el blog siga funcionando como fuente de autoridad y adquisición orgánica.
+          </p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {blogArticles.map((article) => (
+            <Link key={article.slug} href={`/blog/${article.slug}`} className="rounded-3xl border border-[#24345F] bg-[#0B1430]/86 p-6 text-left no-underline transition hover:-translate-y-1 hover:border-[#C9A84C]/65">
+              <span className="inline-flex rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.14em]" style={{ borderColor: `${article.tagColor}66`, color: article.tagColor, background: `${article.tagColor}18` }}>
+                {article.tag}
+              </span>
+              <h3 className="mt-5 font-display text-2xl font-black tracking-[-0.035em] text-[#F2EBD8]">{article.title}</h3>
+              <p className="mt-4 text-sm leading-7 text-[#BFC8D9]">{article.summary}</p>
+              <div className="mt-6 flex items-center justify-between border-t border-[#24345F] pt-4 text-xs font-semibold text-[#7F8BA5]">
+                <span>{article.publishedLabel}</span>
+                <span>{article.readTime}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section id="preguntas" className="mt-12 grid gap-5 lg:grid-cols-2">
         <MarketingCard>
           <p className="text-sm font-black uppercase tracking-[0.18em] text-[#C9A84C]">Preguntas frecuentes</p>
@@ -94,12 +121,22 @@ export default function BlogPage() {
           </p>
         </MarketingCard>
         <MarketingCard>
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-[#C9A84C]">Contenido futuro</p>
-          <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] text-[#F2EBD8]">Qué temas debe cubrir el blog</h2>
+          <p className="text-sm font-black uppercase tracking-[0.18em] text-[#C9A84C]">Recursos base</p>
+          <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] text-[#F2EBD8]">Páginas guía para búsquedas clave</h2>
           <p className="mt-4 text-sm leading-7 text-[#BFC8D9]">
-            Declaración de cryptoactivos, conciliación Binance-banco, respaldo documental, diferencias entre patrimonio personal y empresa, preparación para Formulario 22 y criterios para conversar con asesores.
+            El blog mantiene enlaces internos hacia guías específicas para búsquedas como declaración crypto, conciliación Binance-banco, respaldo documental y Formulario 22.
           </p>
         </MarketingCard>
+      </section>
+
+      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {seoPageList.map((page) => (
+          <Link key={page.path} href={page.path} className="rounded-3xl border border-[#24345F] bg-[#101C3D]/70 p-6 no-underline transition hover:border-[#C9A84C]/65">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#C9A84C]">{page.eyebrow}</p>
+            <h3 className="mt-4 font-display text-2xl font-black tracking-[-0.035em] text-[#F2EBD8]">{page.h1}</h3>
+            <p className="mt-3 text-sm leading-7 text-[#BFC8D9]">{page.description}</p>
+          </Link>
+        ))}
       </section>
     </MarketingPage>
   );
