@@ -1,7 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430" role="img" aria-labelledby="title desc">
   <title id="title">LEDGERA</title>
-  <desc id="desc">Wordmark institucional LEDGERA para fondos oscuros.</desc>
-  <rect width="720" height="180" fill="transparent"/>
-  <text x="360" y="86" text-anchor="middle" fill="#F8FAFC" font-family="Manrope, Inter, Arial, sans-serif" font-size="66" font-weight="900" letter-spacing="8">LEDGERA</text>
-  <text x="360" y="126" text-anchor="middle" fill="#16A34A" font-family="Inter, Manrope, Arial, sans-serif" font-size="16" font-weight="800" letter-spacing="10">FINANZAS OS</text>
+  <desc id="desc">Logo LEDGERA con libro azul, barras doradas ascendentes y tagline.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1BD"/><stop offset="0.55" stop-color="#D9B668"/><stop offset="1" stop-color="#8A621F"/></linearGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.48" stop-color="#E7EAF0"/><stop offset="1" stop-color="#9EA6B4"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BDEAFF"/><stop offset="0.45" stop-color="#1E40AF"/><stop offset="1" stop-color="#38BDF8"/></linearGradient>
+  </defs>
+  <rect width="760" height="430" fill="transparent"/>
+  <g>
+    <path d="M250 158 L380 236 L510 158" fill="none" stroke="#063A88" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M250 158 L380 236 L510 158" fill="none" stroke="url(#blue)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M260 118 L260 158 L380 226 L500 158 L500 118" fill="none" stroke="#BDEAFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+    <path d="M282 108 L282 148 L380 204 L478 148 L478 108" fill="none" stroke="#2D8CFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+    <path d="M326 93 L363 72 V162 L326 178 Z" fill="url(#gold)" stroke="#FFE9A5" stroke-width="1.4"/>
+    <path d="M385 70 L424 45 V178 L385 191 Z" fill="url(#gold)" stroke="#FFE9A5" stroke-width="1.4"/>
+    <path d="M448 42 L488 16 V191 L448 204 Z" fill="url(#gold)" stroke="#FFE9A5" stroke-width="1.4"/>
+    <path d="M514 78 L546 44 L560 101 L543 95 C520 156 468 202 407 218" fill="none" stroke="url(#gold)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M313 206 C390 202 480 159 535 83" fill="none" stroke="#FFE7A6" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
+    <path d="M322 218 C392 219 467 194 526 142" fill="none" stroke="url(#silver)" stroke-width="11" stroke-linecap="round" opacity="0.92"/>
+  </g>
+  <text x="380" y="329" text-anchor="middle" fill="url(#silver)" font-family="Space Grotesk, Manrope, Inter, Arial, sans-serif" font-size="84" font-weight="900" letter-spacing="10">LEDGERA</text>
+  <line x1="88" y1="377" x2="176" y2="377" stroke="#D9B668" stroke-width="2"/>
+  <text x="380" y="386" text-anchor="middle" fill="#EFD996" font-family="Inter, Manrope, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="9">INTELIGENCIA FINANCIERA PARA CRECER</text>
+  <line x1="584" y1="377" x2="672" y2="377" stroke="#D9B668" stroke-width="2"/>
 </svg>
