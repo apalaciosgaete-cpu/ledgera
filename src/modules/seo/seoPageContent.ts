@@ -21,297 +21,100 @@ export type SeoPageContent = {
   }>;
 };
 
+const commonSections = [
+  {
+    heading: "De datos dispersos a respaldo revisable",
+    body: [
+      "LEDGERA ordena operaciones cripto desde exchanges, banco y registros manuales antes de llevarlas al portafolio.",
+      "El objetivo es construir una base clara para revisar activos digitales, obligaciones tributarias y documentación de respaldo.",
+    ],
+    bullets: [
+      "Importaciones revisables antes de confirmar.",
+      "Conciliación banco-exchange.",
+      "Trazabilidad por activo y operación.",
+      "Exportación de respaldo en PDF y Excel.",
+    ],
+  },
+  {
+    heading: "Revisión antes de declarar",
+    body: [
+      "La plataforma no reemplaza asesoría profesional. Entrega información ordenada para que el usuario, contador o equipo pueda revisar con mejor evidencia.",
+      "La diferencia clave es partir desde operaciones confirmadas, no desde saldos sueltos ni planillas manuales.",
+    ],
+  },
+];
+
+const relatedBase = [
+  { label: "Tributación cripto Chile", href: "/impuestos-crypto-chile" },
+  { label: "Declarar operaciones cripto", href: "/como-declarar-crypto-en-chile" },
+  { label: "Conciliación banco-exchange", href: "/conciliacion-binance-banco" },
+];
+
 export const seoPages = {
   impuestosCryptoChile: {
     path: "/impuestos-crypto-chile",
-    title: "Impuestos crypto en Chile: ordena tus movimientos antes de declarar",
-    description:
-      "Organiza movimientos crypto, revisa importaciones, concilia banco y exchange, y prepara información financiera clara para revisar impuestos en Chile.",
-    keyword: "impuestos crypto chile",
-    eyebrow: "Impuestos crypto Chile",
-    h1: "Impuestos crypto en Chile: primero ordena tus movimientos",
-    intro:
-      "Antes de pensar en declarar criptomonedas, necesitas entender qué compraste, qué vendiste, qué transferiste y qué movimientos realmente corresponden a actividad crypto. LEDGERA ayuda a ordenar ese historial desde exchange, banco y registros manuales para preparar información clara y trazable.",
-    ctaLabel: "Crear cuenta gratis",
+    title: "Tributación cripto en Chile: ordena operaciones antes de declarar",
+    description: "Organiza operaciones cripto desde exchanges, banco y registros manuales para generar respaldo tributario trazable en Chile.",
+    keyword: "tributación cripto chile",
+    eyebrow: "Tributación cripto Chile",
+    h1: "Tributación cripto en Chile: primero ordena tus operaciones",
+    intro: "Antes de revisar una declaración, necesitas entender compras, ventas, depósitos, retiros y operaciones con activos digitales. LEDGERA ayuda a convertir ese historial en respaldo tributario trazable.",
+    ctaLabel: "Comenzar análisis",
     ctaHref: "/register",
-    sections: [
-      {
-        heading: "El problema no parte en el impuesto, parte en el desorden",
-        body: [
-          "Muchos usuarios llegan al período tributario con capturas, archivos CSV, movimientos bancarios y registros de exchange que no calzan entre sí.",
-          "El problema real es que una transferencia bancaria, un depósito en exchange y una compra de activos pueden quedar separados en distintas fuentes. Sin conciliación, es difícil saber qué ocurrió realmente.",
-        ],
-        bullets: [
-          "Movimientos duplicados entre distintas fuentes.",
-          "Transferencias bancarias sin contexto.",
-          "Compras y ventas mezcladas con retiros o depósitos.",
-          "Dificultad para explicar el origen de cada movimiento.",
-        ],
-      },
-      {
-        heading: "Cómo ayuda LEDGERA",
-        body: [
-          "LEDGERA no manda todo directo al portafolio. Primero lleva cada importación a una bandeja de revisión, donde puedes confirmar, rechazar o buscar coincidencias con movimientos bancarios.",
-          "Ese flujo reduce errores operacionales y permite construir un portafolio más limpio, con información útil para revisión financiera y tributaria.",
-        ],
-        bullets: [
-          "Revisa importaciones antes de confirmarlas.",
-          "Concilia movimientos bancarios con operaciones crypto.",
-          "Separa datos confirmados de datos pendientes.",
-          "Genera una base ordenada para análisis tributario.",
-        ],
-      },
-      {
-        heading: "Información tributaria con trazabilidad",
-        body: [
-          "LEDGERA está pensado para preparar información ordenada. No reemplaza la revisión de un contador ni constituye asesoría tributaria personalizada.",
-          "El objetivo es que llegues a esa revisión con datos claros: fechas, montos, activos, movimientos confirmados y relación entre banco y exchange.",
-        ],
-      },
-    ],
-    related: [
-      {
-        label: "Binance e impuestos en Chile",
-        href: "/binance-impuestos-chile",
-      },
-      {
-        label: "Cómo declarar criptomonedas en Chile",
-        href: "/como-declarar-crypto-en-chile",
-      },
-      {
-        label: "Conciliación exchange y banco",
-        href: "/conciliacion-binance-banco",
-      },
-    ],
+    sections: commonSections,
+    related: relatedBase,
   },
-
   binanceImpuestosChile: {
     path: "/binance-impuestos-chile",
-    title: "Binance e impuestos en Chile: por qué necesitas ordenar tus datos",
-    description:
-      "Binance entrega registros, pero no siempre explica tu historia financiera completa. LEDGERA ayuda a revisar, ordenar y conciliar movimientos Binance en Chile.",
-    keyword: "binance impuestos chile",
-    eyebrow: "Binance Chile",
-    h1: "Binance e impuestos en Chile: los registros no bastan si no están ordenados",
-    intro:
-      "Binance puede entregar historial de operaciones, depósitos y retiros. Pero para entender tu situación financiera necesitas conectar esos datos con tus movimientos bancarios y confirmar qué eventos realmente corresponden a compras, ventas o transferencias.",
-    ctaLabel: "Crear cuenta gratis",
+    title: "Operaciones de exchange en Chile: convierte registros en respaldo",
+    description: "Los exchanges entregan registros, pero no siempre explican tu historia financiera completa. LEDGERA ayuda a revisar, ordenar y conciliar operaciones cripto.",
+    keyword: "operaciones exchange chile",
+    eyebrow: "Exchanges y respaldo",
+    h1: "Tus exchanges entregan registros; LEDGERA los convierte en respaldo",
+    intro: "Un exchange puede entregar historial de operaciones, depósitos y retiros. LEDGERA conecta esos datos con banco, portafolio y documentación para que puedas revisar con trazabilidad.",
+    ctaLabel: "Comenzar análisis",
     ctaHref: "/register",
-    sections: [
-      {
-        heading: "El historial de Binance no siempre cuenta toda la historia",
-        body: [
-          "Un depósito en Binance puede venir desde una transferencia bancaria. Una operación Spot puede estar relacionada con una compra previa. Un retiro puede ser una transferencia interna o una salida hacia otra plataforma.",
-          "Si miras cada fuente por separado, puedes terminar con registros duplicados o movimientos sin explicación.",
-        ],
-        bullets: [
-          "Depósitos externos.",
-          "Retiros hacia otras cuentas.",
-          "Compras y ventas Spot.",
-          "Datos Tax y Spot que pueden representar el mismo evento económico.",
-        ],
-      },
-      {
-        heading: "LEDGERA usa revisión antes de confirmar",
-        body: [
-          "El flujo correcto no es importar todo automáticamente. LEDGERA sincroniza, normaliza y deja los movimientos en Importaciones para que puedas confirmar solo lo que corresponde.",
-          "Esto evita contaminar el portafolio con duplicados y permite construir una base más confiable para análisis financiero y tributario.",
-        ],
-      },
-      {
-        heading: "Binance + banco en un mismo flujo",
-        body: [
-          "La diferencia clave es que LEDGERA no analiza Binance aislado. También permite importar cartolas bancarias y buscar coincidencias entre banco y exchange.",
-          "Ese cruce es especialmente importante para usuarios que financiaron compras crypto mediante transferencias desde cuentas bancarias chilenas.",
-        ],
-      },
-    ],
-    related: [
-      {
-        label: "Impuestos crypto en Chile",
-        href: "/impuestos-crypto-chile",
-      },
-      {
-        label: "Conciliar exchange con banco",
-        href: "/conciliacion-binance-banco",
-      },
-      {
-        label: "Contador crypto en Chile",
-        href: "/contador-crypto-chile",
-      },
-    ],
+    sections: commonSections,
+    related: relatedBase,
   },
-
   declararCryptoChile: {
     path: "/como-declarar-crypto-en-chile",
-    title: "Cómo declarar criptomonedas en Chile: empieza por ordenar tu historial",
-    description:
-      "Guía práctica para preparar información crypto antes de declarar: movimientos, exchange, banco, portafolio y trazabilidad.",
-    keyword: "declarar criptomonedas chile",
+    title: "Cómo declarar operaciones cripto en Chile: empieza por ordenar tu historial",
+    description: "Guía práctica para preparar información tributaria antes de declarar: operaciones cripto, exchanges, banco, portafolio y trazabilidad.",
+    keyword: "declarar operaciones cripto chile",
     eyebrow: "Guía práctica",
-    h1: "Cómo declarar criptomonedas en Chile: primero prepara información confiable",
-    intro:
-      "Declarar criptomonedas no parte llenando formularios. Parte entendiendo tu historial: compras, ventas, depósitos, retiros, transferencias bancarias y movimientos confirmados.",
-    ctaLabel: "Crear cuenta gratis",
+    h1: "Cómo declarar operaciones cripto en Chile: primero prepara información confiable",
+    intro: "Declarar operaciones cripto no parte llenando formularios. Parte entendiendo compras, ventas, depósitos, retiros, transferencias bancarias y movimientos confirmados.",
+    ctaLabel: "Comenzar análisis",
     ctaHref: "/register",
-    sections: [
-      {
-        heading: "Paso 1: reúne tus fuentes",
-        body: [
-          "El primer paso es tener las fuentes que explican tu actividad: exchange, banco y registros manuales si corresponde.",
-          "Para muchos usuarios, el historial de exchange y la cartola bancaria son las dos piezas principales del rompecabezas.",
-        ],
-        bullets: [
-          "Historial de exchange.",
-          "Movimientos bancarios.",
-          "Compras y ventas.",
-          "Depósitos y retiros.",
-          "Comisiones y fechas.",
-        ],
-      },
-      {
-        heading: "Paso 2: evita duplicados",
-        body: [
-          "Un mismo evento puede aparecer en más de una fuente. Por ejemplo, información Spot y Tax puede describir el mismo movimiento.",
-          "LEDGERA usa una bandeja de importaciones para revisar antes de confirmar, reduciendo el riesgo de duplicar movimientos.",
-        ],
-      },
-      {
-        heading: "Paso 3: confirma solo lo que corresponde",
-        body: [
-          "Una vez revisadas las importaciones, los movimientos confirmados pasan al portafolio. Desde ahí se puede construir una base más limpia para revisar resultados y preparar información tributaria.",
-          "Este enfoque permite separar ruido, movimientos bancarios normales y eventos crypto relevantes.",
-        ],
-      },
-    ],
-    related: [
-      {
-        label: "Impuestos crypto en Chile",
-        href: "/impuestos-crypto-chile",
-      },
-      {
-        label: "Binance impuestos Chile",
-        href: "/binance-impuestos-chile",
-      },
-      {
-        label: "Conciliación banco y exchange",
-        href: "/conciliacion-binance-banco",
-      },
-    ],
+    sections: commonSections,
+    related: relatedBase,
   },
-
   conciliacionBinanceBanco: {
     path: "/conciliacion-binance-banco",
-    title: "Conciliación banco y exchange: conecta transferencias con movimientos crypto",
-    description:
-      "Concilia movimientos bancarios con operaciones de exchange para entender qué transferencias corresponden a compras, ventas, depósitos o retiros crypto.",
-    keyword: "conciliación binance banco",
-    eyebrow: "Conciliación crypto",
+    title: "Conciliación banco y exchange: conecta transferencias con operaciones cripto",
+    description: "Concilia movimientos bancarios con operaciones de exchange para entender compras, ventas, depósitos, retiros y respaldo tributario.",
+    keyword: "conciliación banco exchange cripto",
+    eyebrow: "Conciliación cripto",
     h1: "Conciliación banco y exchange: entiende qué pasó con tu dinero",
-    intro:
-      "Para muchos usuarios, el problema no es solo el exchange. El problema es conectar una transferencia bancaria con el movimiento crypto correspondiente. LEDGERA ordena ambos lados para ayudarte a encontrar coincidencias revisables.",
-    ctaLabel: "Crear cuenta gratis",
+    intro: "El banco muestra dinero y el exchange muestra operaciones. LEDGERA ordena ambos lados para ayudarte a encontrar coincidencias revisables.",
+    ctaLabel: "Comenzar análisis",
     ctaHref: "/register",
-    sections: [
-      {
-        heading: "El banco muestra dinero, el exchange muestra crypto",
-        body: [
-          "Una cartola bancaria puede mostrar transferencias, cargos o abonos. Un exchange puede mostrar depósitos, compras o retiros. Si esos mundos no se conectan, la trazabilidad queda incompleta.",
-          "La conciliación permite revisar si una salida bancaria tiene relación con una compra crypto o si un ingreso puede venir desde un retiro o venta.",
-        ],
-      },
-      {
-        heading: "Buscar match antes de confirmar",
-        body: [
-          "LEDGERA permite buscar coincidencias entre movimientos bancarios y movimientos de portafolio ya confirmados.",
-          "El sistema propone candidatos, pero el usuario conserva el control: confirma, ignora o deja en revisión.",
-        ],
-        bullets: [
-          "Comparación por fecha.",
-          "Comparación por monto estimado.",
-          "Candidatos con explicación.",
-          "Revisión humana antes de marcar conciliado.",
-        ],
-      },
-      {
-        heading: "Por qué esto importa para impuestos",
-        body: [
-          "La conciliación no solo ordena el portafolio. También ayuda a explicar el flujo financiero: desde dónde salió el dinero, cuándo llegó al exchange y qué operación se relaciona con ese movimiento.",
-          "Ese contexto es clave para preparar información clara antes de revisar obligaciones tributarias.",
-        ],
-      },
-    ],
-    related: [
-      {
-        label: "Binance impuestos Chile",
-        href: "/binance-impuestos-chile",
-      },
-      {
-        label: "Cómo declarar crypto en Chile",
-        href: "/como-declarar-crypto-en-chile",
-      },
-      {
-        label: "Impuestos crypto Chile",
-        href: "/impuestos-crypto-chile",
-      },
-    ],
+    sections: commonSections,
+    related: relatedBase,
   },
-
   contadorCryptoChile: {
     path: "/contador-crypto-chile",
-    title: "Contador crypto en Chile: entrega información ordenada y trazable",
-    description:
-      "Prepara información clara para tu contador: movimientos crypto, banco, portafolio confirmado y trazabilidad financiera.",
-    keyword: "contador crypto chile",
+    title: "Contador para activos digitales: entrega información ordenada y trazable",
+    description: "Prepara información clara para tu contador: operaciones cripto, banco, portafolio confirmado y respaldo tributario trazable.",
+    keyword: "contador activos digitales chile",
     eyebrow: "Para usuarios y contadores",
-    h1: "Contador crypto en Chile: no llegues con archivos desordenados",
-    intro:
-      "Muchos contadores reciben historiales incompletos, Excel mezclados y movimientos difíciles de explicar. LEDGERA ayuda a transformar importaciones crypto y bancarias en información más clara para revisión profesional.",
-    ctaLabel: "Crear cuenta gratis",
+    h1: "Contador para activos digitales: no llegues con archivos desordenados",
+    intro: "LEDGERA ayuda a transformar importaciones cripto y bancarias en información clara para revisión profesional, con trazabilidad por activo y operación.",
+    ctaLabel: "Comenzar análisis",
     ctaHref: "/register",
-    sections: [
-      {
-        heading: "El contador necesita trazabilidad, no solo archivos",
-        body: [
-          "Un archivo CSV aislado no siempre permite entender qué ocurrió. Para revisar actividad crypto, importa saber qué movimientos fueron confirmados, qué se descartó y cómo se relaciona el banco con el exchange.",
-          "LEDGERA organiza esa información antes de que llegue a una revisión contable o tributaria.",
-        ],
-      },
-      {
-        heading: "Qué puede preparar LEDGERA",
-        body: [
-          "El foco no está en reemplazar el criterio profesional. El foco está en entregar una base más limpia y verificable.",
-        ],
-        bullets: [
-          "Movimientos confirmados.",
-          "Importaciones rechazadas o ignoradas.",
-          "Relación banco ↔ exchange.",
-          "Portafolio limpio.",
-          "Base de eventos tributarios.",
-        ],
-      },
-      {
-        heading: "Menos tiempo limpiando, más tiempo revisando",
-        body: [
-          "Cuando la información llega ordenada, el contador puede concentrarse en revisar criterios, riesgos y tratamientos aplicables.",
-          "Eso reduce fricción para usuarios crypto y mejora la calidad de la conversación tributaria.",
-        ],
-      },
-    ],
-    related: [
-      {
-        label: "Impuestos crypto Chile",
-        href: "/impuestos-crypto-chile",
-      },
-      {
-        label: "Cómo declarar criptomonedas",
-        href: "/como-declarar-crypto-en-chile",
-      },
-      {
-        label: "Conciliación banco y exchange",
-        href: "/conciliacion-binance-banco",
-      },
-    ],
+    sections: commonSections,
+    related: relatedBase,
   },
 } satisfies Record<string, SeoPageContent>;
 
