@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import LandingConversacional from "@/components/landing/LandingConversacional";
 
 export const metadata: Metadata = {
-  title: "Ordena activos y genera respaldo tributario",
+  title: "De tus exchanges a tu declaración, sin planillas",
   description:
-    "LEDGERA transforma movimientos de crypto, bancos e inversiones en información ordenada, trazable y exportable para revisar antes de declarar.",
+    "LEDGERA importa operaciones cripto desde exchanges, ordena activos digitales y genera respaldos tributarios trazables en PDF y Excel.",
   alternates: {
     canonical: "/",
   },
