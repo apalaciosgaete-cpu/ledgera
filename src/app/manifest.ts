@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "LEDGERA",
     short_name: "LEDGERA",
     description:
-      "Importa tus movimientos de Buda, Binance o CSV. LEDGERA calcula tu ganancia y te dice qué poner en el Formulario 22 del SII.",
+      "Importa operaciones cripto desde exchanges, ordena activos digitales y genera respaldos tributarios trazables en PDF y Excel.",
     start_url: "/",
     scope: "/",
     display: "standalone",
