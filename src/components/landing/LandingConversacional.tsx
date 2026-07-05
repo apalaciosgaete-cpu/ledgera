@@ -1,6 +1,5 @@
 // src/components/landing/LandingConversacional.tsx
-// UX 3.0.01 v1.6.1 — Hero orientado a activos y claridad
-// Migrado al sistema de diseño "Cierre": tokens bg/bg-elev/accent/warn/text-*.
+// Marketing home: bienvenida breve, nav completo, preview de producto y footer extendido.
 "use client";
 
 import Link from "next/link";
@@ -9,231 +8,193 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 
-const BRAND_SUBTITLE = "Sistema Operativo Financiero y Tributario";
-
-const PROMPTS = [
-  "Vender Bitcoin",
-  "Crear una SpA",
-  "Invertir en un inmueble",
-  "Regularizar movimientos crypto",
-] as const;
-
-const TRUST_AREAS = ["Personas", "Empresas", "Profesionales"] as const;
-const DOMAIN_AREAS = ["Cryptoactivos", "Patrimonio", "Tributación", "Finanzas"] as const;
-
-const DECISION_FLOW = [
-  ["01", "Activos", "Qué tienes, dónde está y qué movimiento estás evaluando."],
-  ["02", "Contexto", "Tu situación financiera, tributaria y patrimonial."],
-  ["03", "Normativa", "Reglas chilenas aplicables a la operación."],
-  ["04", "Escenarios", "Alternativas posibles antes de ejecutar."],
-  ["05", "Claridad", "Información ordenada para decidir mejor."],
-] as const;
-
-const PROBLEM_CARDS = [
-  ["Cryptoactivos", "Movimientos, tenencia, valorización y tributación."],
-  ["Empresas", "Estructura societaria, régimen tributario y obligaciones."],
-  ["Patrimonio", "Inversiones, inmuebles, flujos y planificación."],
-  ["Tributación", "Normas, cumplimiento, documentación y criterios aplicables."],
-] as const;
-
-const PROCESS = [
-  ["Entiende", "Recoge contexto financiero, tributario y patrimonial."],
-  ["Interpreta", "Conecta la situación con normativa chilena aplicable."],
-  ["Simula", "Compara alternativas y efectos posibles."],
-  ["Explica", "Traduce complejidad a comprensión accionable."],
-  ["Decides", "La decisión final permanece siempre en tus manos."],
-] as const;
-
-const CASES = [
-  ["Venta de Bitcoin", "Evalúa la operación, el registro necesario y el tratamiento tributario antes de mover tu posición."],
-  ["Empresa Web3", "Ordena estructura societaria, régimen tributario y modelo operativo desde el inicio."],
-  ["Patrimonio internacional", "Relaciona activos fuera de Chile con obligaciones locales y documentación necesaria."],
-  ["Tokenización", "Evalúa el modelo financiero, la operación y los criterios tributarios aplicables."],
-] as const;
-
-const FOOTER_LINKS = [
+const NAV_ITEMS = [
+  ["Inicio", "/"],
+  ["Producto", "/producto"],
+  ["Precio", "/precio"],
   ["Seguridad", "/seguridad"],
-  ["Privacidad", "/privacidad"],
-  ["Términos", "/terminos"],
+  ["Blog", "/blog"],
+  ["Contacto", "/contacto"],
 ] as const;
 
-function CinematicBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 bg-[#0F1213]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_18%,rgba(63,166,135,0.22),transparent_26%),radial-gradient(circle_at_18%_28%,rgba(63,166,135,0.18),transparent_30%),radial-gradient(circle_at_82%_72%,rgba(232,184,75,0.10),transparent_24%),linear-gradient(180deg,rgba(15,18,19,0.10)_0%,rgba(15,18,19,0.96)_82%,#0F1213_100%)]" />
-      <div className="absolute inset-0 opacity-[0.10] [background-image:linear-gradient(rgba(231,228,218,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(231,228,218,0.08)_1px,transparent_1px)] [background-size:82px_82px]" />
-      <div className="absolute left-[48%] top-[12%] h-[520px] w-[520px] rounded-full border border-[#3FA687]/20 bg-[radial-gradient(circle,rgba(63,166,135,0.18),rgba(63,166,135,0.08)_38%,transparent_70%)] shadow-[0_0_180px_rgba(63,166,135,0.16)]" />
-      <div className="absolute left-[55%] top-[22%] h-[300px] w-[300px] rounded-full border border-[#3FA687]/20" />
-      <svg className="absolute inset-0 h-full w-full opacity-80" viewBox="0 0 1440 760" preserveAspectRatio="none" fill="none">
-        <path className="premium-flow" d="M-80 570 C150 425 320 600 510 372 C650 202 824 360 1010 210 C1160 88 1260 156 1520 42" stroke="#3FA687" strokeWidth="2" strokeOpacity="0.42" />
-        <path className="premium-flow flow-b" d="M-80 650 C190 520 370 590 560 470 C740 356 820 420 980 322 C1130 230 1260 260 1520 178" stroke="#E8B84B" strokeWidth="1.4" strokeOpacity="0.24" />
-        <path className="premium-flow flow-c" d="M120 180 C300 105 460 128 620 184 C820 254 960 120 1180 202 C1300 246 1380 228 1500 202" stroke="#3FA687" strokeWidth="1.2" strokeOpacity="0.24" />
-      </svg>
-      <div className="orb left-[44%] top-[42%]" />
-      <div className="orb left-[60%] top-[28%] delay-a" />
-      <div className="orb left-[78%] top-[44%] delay-b" />
-    </div>
-  );
-}
+const TRUST_ITEMS = [
+  ["Crypto", "Binance, Buda, CSV"],
+  ["Trazabilidad", "operaciones y activos"],
+  ["Respaldo", "PDF + Excel"],
+] as const;
 
-function DecisionPanel() {
+const FOOTER_COLUMNS = [
+  {
+    title: "Producto",
+    links: [
+      ["Cómo funciona", "/producto"],
+      ["Precio", "/precio"],
+      ["Seguridad", "/seguridad"],
+      ["Comenzar", "/register"],
+    ],
+  },
+  {
+    title: "Recursos",
+    links: [
+      ["Blog", "/blog"],
+      ["Guías SII", "/blog"],
+      ["Crypto Chile", "/blog#crypto-chile"],
+      ["Preguntas frecuentes", "/blog#preguntas"],
+    ],
+  },
+  {
+    title: "Empresa",
+    links: [
+      ["Privacidad", "/privacidad"],
+      ["Términos", "/terminos"],
+      ["Contacto", "/contacto"],
+      ["Opinión", "/opinion"],
+    ],
+  },
+] as const;
+
+function ProductSnapshot() {
+  const kpis = [
+    ["Activos", "10", "text-[#F2EBD8]"],
+    ["Operaciones", "26", "text-[#F2EBD8]"],
+    ["Respaldo", "PDF + Excel", "text-[#C9A84C]"],
+  ] as const;
+
+  const rows = [
+    ["BTC", "Binance", "OK", "PDF"],
+    ["USDT", "Banco", "Revisar", "Excel"],
+    ["ETH", "CSV", "OK", "PDF"],
+  ] as const;
+
   return (
-    <aside className="relative min-h-[560px] lg:min-h-[640px]">
-      <div className="absolute left-[4%] top-[8%] h-[380px] w-[380px] rounded-full border border-[#3FA687]/20 bg-[radial-gradient(circle,rgba(63,166,135,0.17),transparent_65%)] shadow-[0_0_160px_rgba(63,166,135,0.10)]" />
-      <div className="absolute right-0 top-0 w-full max-w-[460px] space-y-4">
-        {DECISION_FLOW.map(([num, title, text]) => (
-          <article key={title} className="rounded-2xl border border-[#343B3D]/75 bg-[#1B2124]/78 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.34)] backdrop-blur-xl transition hover:border-[#3FA687]/55">
-            <div className="flex items-start gap-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#3FA687]/30 bg-[#3FA687]/10 text-sm font-black text-accent">{num}</span>
-              <div>
-                <h3 className="font-display text-[21px] font-black tracking-[-0.035em] text-text">{title}</h3>
-                <p className="mt-1 text-[15px] leading-6 text-text-soft">{text}</p>
-              </div>
-            </div>
-          </article>
+    <aside className="relative mx-auto w-full max-w-[760px] rounded-[2rem] border border-[#2B6CB0]/70 bg-[#0B1430]/92 p-4 shadow-[0_40px_140px_rgba(43,108,176,0.22)] backdrop-blur-xl sm:p-6">
+      <div className="rounded-2xl border border-[#24345F] bg-[#101C3D] px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-black text-[#F2EBD8]">LEDGERA · Respaldo tributario</p>
+          <span className="font-mono text-xs font-black text-[#C9A84C]">AT 2026</span>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        {kpis.map(([label, value, color]) => (
+          <div key={label} className="rounded-2xl border border-[#24345F] bg-[#101C3D]/90 p-4">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#7F8BA5]">{label}</p>
+            <p className={`mt-3 font-display text-2xl font-black tracking-[-0.04em] ${color}`}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 rounded-3xl border border-[#24345F] bg-[#101C3D]/90 p-5">
+        <p className="text-sm font-black text-[#F2EBD8]">Obligaciones detectadas</p>
+        <div className="mt-4 grid gap-3 text-sm font-semibold text-[#BFC8D9]">
+          <div><span className="mr-3 text-[#C9A84C]">●</span>Declarar / respaldar</div>
+          <div><span className="mr-3 text-[#4DA3FF]">●</span>Revisar fuente de fondos</div>
+          <div><span className="mr-3 text-[#7F8BA5]">●</span>Sin impuesto determinado</div>
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-hidden rounded-3xl border border-[#24345F] bg-[#101C3D]/90">
+        <div className="grid grid-cols-4 border-b border-[#24345F] px-5 py-3 font-mono text-xs text-[#7F8BA5]">
+          <span>Activo</span>
+          <span>Origen</span>
+          <span>Estado</span>
+          <span>Archivo</span>
+        </div>
+        {rows.map(([asset, source, status, file]) => (
+          <div key={`${asset}-${source}`} className="grid grid-cols-4 border-b border-[#24345F]/60 px-5 py-3 font-mono text-xs text-[#BFC8D9] last:border-0">
+            <span>{asset}</span>
+            <span>{source}</span>
+            <span className={status === "OK" ? "text-[#1D9E75]" : "text-[#C9A84C]"}>{status}</span>
+            <span>{file}</span>
+          </div>
         ))}
       </div>
     </aside>
   );
 }
 
-function HeroSection() {
-  const router = useRouter();
-  const [inputValue, setInputValue] = useState("");
-
-  const start = () => {
-    const clean = inputValue.trim();
-    if (clean) window.sessionStorage.setItem("ledgera.initialDecision", clean);
-    router.push("/register");
-  };
-
+function LandingNav({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (value: boolean) => void }) {
   return (
-    <section className="relative overflow-hidden px-5 pb-14 pt-14 sm:px-8 lg:px-10 lg:pb-20 lg:pt-20">
-      <CinematicBackground />
-      <div className="relative z-10 mx-auto grid max-w-[1380px] items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(500px,0.88fr)]">
-        <div>
-          <div className="mb-7 inline-flex rounded-full border border-[#3FA687]/35 bg-[#3FA687]/10 px-4 py-2 text-[12px] font-black uppercase tracking-[0.18em] text-accent">
-            Activos · Patrimonio · Tributación
+    <>
+      <nav className="sticky top-0 z-[100] border-b border-[#24345F]/70 bg-[#080E1F]/88 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
+        <div className="mx-auto flex min-h-[82px] max-w-[1440px] items-center justify-between gap-5">
+          <Link href="/" aria-label="Inicio LEDGERA" className="inline-flex items-center">
+            <Logo size="sm" />
+          </Link>
+          <div className="hidden items-center gap-7 lg:flex">
+            {NAV_ITEMS.map(([label, href]) => (
+              <Link key={href} href={href} className="text-sm font-bold text-[#BFC8D9] transition hover:text-[#F2EBD8]">
+                {label}
+              </Link>
+            ))}
+            <Link href="/login" className="text-sm font-black text-[#BFC8D9] transition hover:text-[#F2EBD8]">Ingresar</Link>
+            <Link href="/register" className="inline-flex rounded-2xl bg-[#C9A84C] px-5 py-3 text-sm font-black text-[#080E1F] shadow-[0_18px_60px_rgba(201,168,76,0.22)] transition hover:-translate-y-0.5 hover:bg-[#DDBB61]">
+              Comenzar
+            </Link>
           </div>
-          <h1 className="max-w-[790px] font-display text-[44px] font-black leading-[1.02] tracking-[-0.055em] text-text sm:text-[62px] lg:text-[74px] xl:text-[82px]">
-            Claridad para tus activos. Decisiones mejor informadas.
-          </h1>
-          <p className="mt-6 max-w-[650px] text-[18px] leading-[1.65] text-text-soft sm:text-[20px]">
-            LEDGERA interpreta normativa chilena, contexto patrimonial y movimientos de cryptoactivos para ayudarte a evaluar decisiones financieras y tributarias.
-          </p>
-          <form onSubmit={(e) => { e.preventDefault(); start(); }} className="mt-8 max-w-[680px]">
-            <div className="rounded-2xl border border-[#343B3D] bg-[#1B2124]/80 p-1.5 shadow-[0_24px_80px_rgba(0,0,0,0.30)] backdrop-blur-xl transition focus-within:border-[#3FA687]/70">
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="¿Qué activo o decisión necesitas evaluar?" className="min-h-[58px] flex-1 rounded-xl border-0 bg-transparent px-5 text-[17px] font-semibold text-text outline-none placeholder:text-text-faint" />
-                <button type="submit" className="min-h-[56px] rounded-xl bg-accent px-6 text-[16px] font-black text-accent-contrast transition hover:bg-[#2E7A63]">Evaluar con LEDGERA →</button>
-              </div>
-            </div>
-          </form>
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            {PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => setInputValue(prompt)} className="rounded-full border border-[#343B3D] bg-[#1B2124]/50 px-4 py-2 text-[13px] font-bold text-text-soft transition hover:border-[#3FA687]/60 hover:bg-[#3FA687]/10 hover:text-text">{prompt}</button>)}
+          <button type="button" className="rounded-2xl border border-[#24345F] bg-[#0B1430] px-4 py-3 text-sm font-black text-[#F2EBD8] lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            Menú
+          </button>
+        </div>
+      </nav>
+
+      {mobileMenuOpen ? (
+        <div className="sticky top-[82px] z-[90] border-b border-[#24345F] bg-[#080E1F]/98 px-6 py-5 backdrop-blur-xl lg:hidden">
+          <div className="grid gap-4">
+            {NAV_ITEMS.map(([label, href]) => (
+              <Link key={href} href={href} onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#BFC8D9]">
+                {label}
+              </Link>
+            ))}
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-[#BFC8D9]">Ingresar</Link>
+            <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="inline-flex justify-center rounded-2xl bg-[#C9A84C] px-5 py-4 text-center font-black text-[#080E1F]">Comenzar evaluación</Link>
           </div>
         </div>
-        <DecisionPanel />
-      </div>
-      <div className="relative z-10 mx-auto mt-8 grid max-w-[1000px] gap-5 text-center">
-        <div className="flex flex-wrap justify-center gap-3">{TRUST_AREAS.map((area) => <span key={area} className="rounded-full border border-[#343B3D]/70 bg-[#1B2124]/60 px-5 py-2 text-sm font-black text-text backdrop-blur-xl">{area}</span>)}</div>
-        <div className="flex flex-wrap justify-center gap-3">{DOMAIN_AREAS.map((area) => <span key={area} className="text-sm font-bold uppercase tracking-[0.18em] text-text-faint">{area}</span>)}</div>
-      </div>
-    </section>
-  );
-}
-
-function ProblemSection() {
-  return (
-    <section id="soluciones" className="border-t border-[#343B3D]/60 bg-bg px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
-      <div className="mx-auto max-w-[1380px]">
-        <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">El problema</p>
-        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-text sm:text-[48px]">Los activos se mueven rápido. La claridad no puede esperar.</h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {PROBLEM_CARDS.map(([title, text]) => (
-            <article key={title} className="premium-card min-h-[260px] rounded-3xl border border-[#343B3D]/80 bg-bg-elev p-7 transition hover:-translate-y-1 hover:border-[#3FA687]/65">
-              <div className="relative z-10 flex h-full flex-col justify-end">
-                <span className="mb-7 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-lg font-black text-accent-contrast">L</span>
-                <h3 className="font-display text-[26px] font-black tracking-[-0.035em] text-text">{title}</h3>
-                <p className="mt-3 text-[16px] leading-6 text-text-soft">{text}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ProcessSection() {
-  return (
-    <section className="border-t border-[#343B3D]/60 bg-bg-elev px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
-      <div className="mx-auto grid max-w-[1380px] gap-12 lg:grid-cols-[0.82fr_1.4fr] lg:items-center">
-        <div>
-          <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">Qué hace LEDGERA</p>
-          <h2 className="mt-5 font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-text sm:text-[48px]">Convierte información compleja en claridad accionable.</h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-5">
-          {PROCESS.map(([title, text], index) => (
-            <article key={title} className="rounded-3xl border border-[#343B3D]/70 bg-[#1B2124]/72 p-5">
-              <div className="mb-6 grid h-10 w-10 place-items-center rounded-full bg-accent text-sm font-black text-accent-contrast">{index + 1}</div>
-              <h3 className="text-[18px] font-black text-text">{title}</h3>
-              <p className="mt-3 text-[14px] leading-6 text-text-soft">{text}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CasesSection() {
-  return (
-    <section id="casos" className="border-t border-[#343B3D]/60 bg-bg px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
-      <div className="mx-auto max-w-[1380px]">
-        <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">Casos reales</p>
-        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-text sm:text-[48px]">Evalúa activos, estructuras y movimientos con mayor claridad.</h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {CASES.map(([title, text]) => (
-            <article key={title} className="premium-card min-h-[280px] rounded-3xl border border-[#343B3D]/80 bg-bg-elev p-7 transition hover:-translate-y-1 hover:border-[#3FA687]/65">
-              <div className="relative z-10 flex h-full flex-col justify-end">
-                <h3 className="font-display text-[25px] font-black tracking-[-0.035em] text-text">{title}</h3>
-                <p className="mt-3 text-[16px] leading-6 text-text-soft">{text}</p>
-                <span className="mt-6 text-sm font-black text-accent">Evaluar con LEDGERA →</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PrincipleSection() {
-  return (
-    <section className="border-t border-[#343B3D]/60 bg-bg-elev px-5 py-16 sm:px-8 lg:px-10">
-      <div className="mx-auto grid max-w-[1380px] items-center gap-8 lg:grid-cols-[1fr_auto]">
-        <div>
-          <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">Principio LEDGERA</p>
-          <h2 className="mt-3 font-display text-[32px] font-black tracking-[-0.045em] text-text sm:text-[42px]">LEDGERA no decide por ti.</h2>
-          <p className="mt-4 max-w-[820px] text-[17px] leading-[1.7] text-text-soft">Te ayuda a ordenar información, interpretar normas aplicables, comparar alternativas y entender cada escenario antes de actuar.</p>
-        </div>
-        <Link href="/register" className="inline-flex min-h-[56px] items-center justify-center rounded-xl bg-accent px-7 text-[16px] font-black text-accent-contrast transition hover:bg-[#2E7A63]">Evaluar con LEDGERA →</Link>
-      </div>
-    </section>
+      ) : null}
+    </>
   );
 }
 
 function LandingFooter() {
   return (
-    <footer className="border-t border-[#343B3D]/60 bg-bg px-5 py-10 sm:px-8 lg:px-10">
-      <div className="mx-auto flex max-w-[1380px] flex-col items-center gap-8 sm:flex-row sm:justify-between">
-        <Logo variant="light" size="sm" showSubtitle subtitle={BRAND_SUBTITLE} />
-        <nav className="flex flex-wrap justify-center gap-x-7 gap-y-3">
-          {FOOTER_LINKS.map(([label, href]) => <Link key={label} href={href} className="text-sm font-semibold text-text-soft transition hover:text-text">{label}</Link>)}
-          <a href="mailto:admin@ledgera.cl" className="text-sm font-semibold text-text-soft transition hover:text-text">Contacto</a>
-        </nav>
+    <footer className="border-t border-[#24345F]/70 bg-[#070B18] px-5 py-12 text-[#BFC8D9] sm:px-8 lg:px-10">
+      <div className="mx-auto grid max-w-[1440px] gap-10 lg:grid-cols-[1.1fr_1.5fr_0.8fr]">
+        <div>
+          <Logo size="sm" />
+          <p className="mt-5 max-w-[430px] text-sm leading-6 text-[#7F8BA5]">
+            Orden, trazabilidad y respaldo tributario para activos financieros. Diseñado para revisar mejor antes de declarar o tomar decisiones patrimoniales.
+          </p>
+        </div>
+
+        <div className="grid gap-8 sm:grid-cols-3">
+          {FOOTER_COLUMNS.map((column) => (
+            <div key={column.title}>
+              <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#C9A84C]">{column.title}</h3>
+              <div className="mt-4 grid gap-3">
+                {column.links.map(([label, href]) => (
+                  <Link key={`${column.title}-${href}`} href={href} className="text-sm font-semibold text-[#BFC8D9] transition hover:text-[#F2EBD8]">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-3xl border border-[#C9A84C]/45 bg-[#101C3D]/80 p-6">
+          <p className="text-sm font-black uppercase tracking-[0.18em] text-[#C9A84C]">Opinión</p>
+          <p className="mt-3 text-sm leading-6 text-[#BFC8D9]">
+            Ayúdanos a mejorar LEDGERA con feedback orgánico sobre claridad, utilidad y funcionamiento real de la app.
+          </p>
+          <Link href="/opinion" className="mt-5 inline-flex rounded-2xl border border-[#C9A84C]/70 px-5 py-3 text-sm font-black text-[#C9A84C] transition hover:bg-[#C9A84C] hover:text-[#080E1F]">
+            Sugerir una mejora
+          </Link>
+        </div>
+      </div>
+
+      <div className="mx-auto mt-10 flex max-w-[1440px] flex-col gap-3 border-t border-[#24345F]/60 pt-6 text-xs leading-5 text-[#7F8BA5] sm:flex-row sm:items-center sm:justify-between">
+        <p>LEDGERA entrega herramientas de orden, trazabilidad y respaldo. No reemplaza asesoría contable, legal ni tributaria profesional.</p>
+        <p>© 2026 LEDGERA</p>
       </div>
     </footer>
   );
@@ -249,40 +210,52 @@ export default function LandingConversacional() {
   }, [isAuthenticated, isLoading, router]);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-bg text-text">
-      <style jsx global>{`
-        @keyframes premiumDash { 0% { stroke-dashoffset: 860; } 100% { stroke-dashoffset: 0; } }
-        @keyframes orbPulse { 0%, 100% { transform: scale(1); opacity: .45; } 50% { transform: scale(1.65); opacity: 1; } }
-        .premium-flow { stroke-dasharray: 18 28; animation: premiumDash 22s linear infinite; }
-        .flow-b { animation-duration: 28s; }
-        .flow-c { animation-duration: 34s; }
-        .orb { position: absolute; width: 9px; height: 9px; border-radius: 9999px; background: #3FA687; box-shadow: 0 0 32px rgba(63,166,135,.72); animation: orbPulse 4.8s ease-in-out infinite; }
-        .delay-a { animation-delay: 700ms; }
-        .delay-b { animation-delay: 1200ms; }
-        .premium-card { position: relative; overflow: hidden; }
-        .premium-card:before { content: ""; position: absolute; inset: 0; opacity: .48; background: radial-gradient(circle at 35% 18%, rgba(63,166,135,.34), transparent 28%), linear-gradient(135deg, rgba(232,184,75,.14), transparent 42%); }
-      `}</style>
+    <main className="min-h-screen overflow-x-hidden bg-[#080E1F] text-[#F2EBD8]">
+      <LandingNav mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
-      <nav className="sticky top-0 z-[100] border-b border-[#343B3D]/60 bg-[#14181A]/88 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
-        <div className="mx-auto flex min-h-[78px] max-w-[1380px] items-center justify-between gap-6">
-          <Link href="/" aria-label="Inicio LEDGERA"><Logo variant="light" size="md" showSubtitle subtitle={BRAND_SUBTITLE} /></Link>
-          <div className="hidden items-center gap-8 lg:flex">
-            <a href="#soluciones" className="text-sm font-semibold text-text-soft transition hover:text-text">Soluciones</a>
-            <a href="#casos" className="text-sm font-semibold text-text-soft transition hover:text-text">Casos de uso</a>
-            <Link href="/login" className="text-sm font-black text-text-soft transition hover:text-text">Iniciar sesión</Link>
-            <Link href="/register" className="inline-flex items-center gap-2 rounded-xl border border-[#3FA687]/50 bg-[#3FA687]/10 px-6 py-3.5 text-sm font-black text-text transition hover:bg-accent hover:text-accent-contrast">Evaluar con LEDGERA →</Link>
+      <section className="relative overflow-hidden px-5 pb-12 pt-16 sm:px-8 lg:px-10 lg:pb-16 lg:pt-20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_14%,rgba(77,163,255,0.22),transparent_30%),radial-gradient(circle_at_14%_28%,rgba(31,78,140,0.24),transparent_28%),radial-gradient(circle_at_82%_78%,rgba(201,168,76,0.14),transparent_24%)]" aria-hidden="true" />
+        <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(191,200,217,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(191,200,217,0.08)_1px,transparent_1px)] [background-size:92px_92px]" aria-hidden="true" />
+
+        <div className="relative z-10 mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(560px,1fr)]">
+          <div>
+            <div className="inline-flex rounded-full border border-[#C9A84C]/50 bg-[#111D3E] px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#C9A84C]">
+              Bienvenido a LEDGERA
+            </div>
+            <h1 className="mt-7 max-w-[820px] font-display text-[44px] font-black leading-[1.03] tracking-[-0.055em] text-[#F2EBD8] sm:text-[62px] lg:text-[76px]">
+              Ordena tus activos, revisa tus obligaciones y genera respaldo tributario.
+            </h1>
+            <p className="mt-6 max-w-[720px] text-lg leading-8 text-[#BFC8D9] sm:text-xl">
+              LEDGERA transforma movimientos de crypto, bancos e inversiones en información ordenada, trazable y exportable para revisar antes de declarar.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/register" className="inline-flex min-h-[58px] items-center justify-center rounded-2xl bg-[#C9A84C] px-7 text-base font-black text-[#080E1F] shadow-[0_24px_80px_rgba(201,168,76,0.24)] transition hover:-translate-y-0.5 hover:bg-[#DDBB61]">
+                Comenzar evaluación →
+              </Link>
+              <Link href="/opinion" className="inline-flex min-h-[58px] items-center justify-center rounded-2xl border border-[#24345F] bg-[#0B1430]/88 px-7 text-base font-black text-[#C9A84C] transition hover:border-[#C9A84C]/70 hover:bg-[#111D3E]">
+                Ayúdanos a mejorar
+              </Link>
+            </div>
+
+            <div className="mt-8 grid max-w-[720px] gap-3 sm:grid-cols-3">
+              {TRUST_ITEMS.map(([title, text]) => (
+                <div key={title} className="rounded-3xl border border-[#24345F] bg-[#101C3D]/78 p-5">
+                  <p className="text-sm font-black text-[#C9A84C]">{title}</p>
+                  <p className="mt-2 text-xs font-semibold leading-5 text-[#7F8BA5]">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <button type="button" className="rounded-xl border border-[#343B3D] bg-[#1B2124] px-4 py-3 text-sm font-black text-text lg:hidden" onClick={() => setMobileMenuOpen((current) => !current)}>Menú</button>
+
+          <ProductSnapshot />
         </div>
-      </nav>
 
-      {mobileMenuOpen ? <div className="sticky top-[78px] z-[90] border-b border-[#343B3D]/70 bg-[#14181A]/98 px-6 py-5 backdrop-blur-xl lg:hidden"><div className="grid gap-4"><a href="#soluciones" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-text-soft">Soluciones</a><a href="#casos" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-text-soft">Casos de uso</a><Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-text-soft">Iniciar sesión</Link><Link href="/register" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-4 text-center font-black text-accent-contrast">Evaluar con LEDGERA →</Link></div></div> : null}
+        <div className="relative z-10 mx-auto mt-12 max-w-[1440px] rounded-[2rem] border border-[#24345F] bg-[#0B1430]/82 px-6 py-5 text-sm font-semibold leading-7 text-[#BFC8D9] backdrop-blur-xl sm:px-8">
+          <span className="font-black text-[#C9A84C]">Una entrada simple al producto:</span> sube tus movimientos, revisa tus activos y descarga respaldo trazable.
+        </div>
+      </section>
 
-      <HeroSection />
-      <ProblemSection />
-      <ProcessSection />
-      <CasesSection />
-      <PrincipleSection />
       <LandingFooter />
     </main>
   );
