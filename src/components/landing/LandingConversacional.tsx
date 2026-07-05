@@ -36,7 +36,7 @@ const footerColumns = [
     title: "Recursos",
     links: [
       ["Tributación cripto Chile", "/impuestos-crypto-chile"],
-      ["Declarar criptomonedas", "/como-declarar-crypto-en-chile"],
+      ["Declarar operaciones cripto", "/como-declarar-crypto-en-chile"],
       ["Conciliación banco-exchange", "/conciliacion-binance-banco"],
       ["Blog", "/blog"],
     ],
