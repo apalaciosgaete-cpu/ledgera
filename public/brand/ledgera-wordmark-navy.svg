@@ -1,23 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="88" viewBox="0 0 420 88" role="img" aria-labelledby="title desc">
   <title id="title">LEDGERA</title>
-  <desc id="desc">Logo LEDGERA con libro azul, barras doradas ascendentes y tagline.</desc>
-  <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1BD"/><stop offset="0.55" stop-color="#D9B668"/><stop offset="1" stop-color="#8A621F"/></linearGradient>
-    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BDEAFF"/><stop offset="0.45" stop-color="#1E40AF"/><stop offset="1" stop-color="#38BDF8"/></linearGradient>
-  </defs>
-  <rect width="760" height="430" fill="transparent"/>
-  <g>
-    <path d="M250 158 L380 236 L510 158" fill="none" stroke="#063A88" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M250 158 L380 236 L510 158" fill="none" stroke="url(#blue)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M260 118 L260 158 L380 226 L500 158 L500 118" fill="none" stroke="#0A0F1A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.86"/>
-    <path d="M326 93 L363 72 V162 L326 178 Z" fill="url(#gold)" stroke="#8A621F" stroke-width="1.4"/>
-    <path d="M385 70 L424 45 V178 L385 191 Z" fill="url(#gold)" stroke="#8A621F" stroke-width="1.4"/>
-    <path d="M448 42 L488 16 V191 L448 204 Z" fill="url(#gold)" stroke="#8A621F" stroke-width="1.4"/>
-    <path d="M514 78 L546 44 L560 101 L543 95 C520 156 468 202 407 218" fill="none" stroke="url(#gold)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M313 206 C390 202 480 159 535 83" fill="none" stroke="#8A621F" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
-  </g>
-  <text x="380" y="329" text-anchor="middle" fill="#0A0F1A" font-family="Space Grotesk, Manrope, Inter, Arial, sans-serif" font-size="84" font-weight="900" letter-spacing="10">LEDGERA</text>
-  <line x1="88" y1="377" x2="176" y2="377" stroke="#C9A84C" stroke-width="2"/>
-  <text x="380" y="386" text-anchor="middle" fill="#8A621F" font-family="Inter, Manrope, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="9">INTELIGENCIA FINANCIERA PARA CRECER</text>
-  <line x1="584" y1="377" x2="672" y2="377" stroke="#C9A84C" stroke-width="2"/>
+  <desc id="desc">Wordmark textual LEDGERA sin isologo.</desc>
+  <rect width="420" height="88" fill="transparent"/>
+  <text x="210" y="58" text-anchor="middle" fill="#0A0F1A" font-family="Manrope, Inter, Arial, sans-serif" font-size="56" font-weight="900" letter-spacing="8">LEDGERA</text>
 </svg>
