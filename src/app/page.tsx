@@ -1,12 +1,11 @@
 // src/app/page.tsx
-// Deployment trigger: UX 3.0.01 premium crypto landing
 import type { Metadata } from "next";
 import LandingConversacional from "@/components/landing/LandingConversacional";
 
 export const metadata: Metadata = {
-  title: "Tu sistema operativo financiero y tributario",
+  title: "Ordena activos y genera respaldo tributario",
   description:
-    "Conversa con LEDGERA y entiende las consecuencias financieras y tributarias de tus decisiones antes de actuar. No reemplaza a un contador, te ayuda a decidir mejor.",
+    "LEDGERA transforma movimientos de crypto, bancos e inversiones en información ordenada, trazable y exportable para revisar antes de declarar.",
   alternates: {
     canonical: "/",
   },
