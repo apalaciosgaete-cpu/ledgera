@@ -6,8 +6,8 @@ import { seoPageList } from "@/modules/seo/seoPageContent";
 import { fonts } from "@/styles/tokens";
 
 const baseUrl = "https://ledgera.cl";
-const title = "Blog LEDGERA | Cripto, impuestos y conciliación en Chile";
-const description = "Guías sobre impuestos crypto en Chile, revisión tributaria, método FIFO, tipo de cambio, fiscalización y conciliación financiera.";
+const title = "Blog LEDGERA | Operaciones cripto, exchanges y respaldo tributario";
+const description = "Guías sobre operaciones cripto, exchanges, activos digitales, método FIFO, trazabilidad y conciliación financiera en Chile.";
 
 export const metadata: Metadata = {
   title,
@@ -39,9 +39,9 @@ const eyebrowStyle = {
 export default function BlogPage() {
   return (
     <PublicShell activePath="/blog">
-      <PublicHero eyebrow="Blog · Recursos tributarios" title="Cripto, impuestos y conciliación en Chile" description="Guías prácticas para ordenar información crypto antes de una revisión tributaria: movimientos, banco, exchange, FIFO y trazabilidad.">
+      <PublicHero eyebrow="Blog · Recursos tributarios" title="Operaciones cripto, exchanges y respaldo en Chile" description="Guías prácticas para ordenar información antes de una revisión: operaciones, banco, exchange, activos digitales, FIFO y trazabilidad.">
         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center" }}>
-          <PublicButton href="/register">Comenzar ahora</PublicButton>
+          <PublicButton href="/register">Comenzar análisis</PublicButton>
           <PublicButton href="/planes#precios" variant="secondary">Ver planes</PublicButton>
         </div>
       </PublicHero>
@@ -50,7 +50,7 @@ export default function BlogPage() {
         <PublicContainer>
           <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
             <p style={eyebrowStyle}>Artículos principales</p>
-            <h2 style={sectionTitleStyle}>Contenido para entender, ordenar y revisar actividad crypto.</h2>
+            <h2 style={sectionTitleStyle}>Contenido para entender, ordenar y revisar operaciones cripto.</h2>
           </div>
           <div style={{ display: "grid", gap: "22px", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))" }}>
             {blogArticles.map((article) => (
@@ -74,7 +74,7 @@ export default function BlogPage() {
           <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
             <p style={eyebrowStyle}>Recursos base</p>
             <h2 style={{ ...sectionTitleStyle, fontSize: "clamp(1.8rem,4vw,2.7rem)" }}>Páginas guía para búsquedas clave de LEDGERA.</h2>
-            <p style={{ color: publicPalette.textMuted, fontSize: "15px", lineHeight: 1.75, margin: "16px 0 0" }}>Estos enlaces mantienen el enlazado interno para SEO dentro de una sección editorial coherente.</p>
+            <p style={{ color: publicPalette.textMuted, fontSize: "15px", lineHeight: 1.75, margin: "16px 0 0" }}>Estos enlaces mantienen el enlazado interno dentro de una sección editorial coherente.</p>
           </div>
           <div style={{ display: "grid", gap: "18px", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))" }}>
             {seoPageList.map((page) => (
@@ -88,7 +88,7 @@ export default function BlogPage() {
         </PublicContainer>
       </section>
 
-      <PublicCta title="Ordena tus movimientos antes de cerrar tu revisión tributaria." description="Crea una cuenta, revisa tus fuentes y construye una base financiera-tributaria trazable para Chile." primaryLabel="Comenzar ahora" primaryHref="/register" secondaryLabel="Ver planes" secondaryHref="/planes#precios" />
+      <PublicCta title="Ordena tus operaciones antes de cerrar tu revisión tributaria." description="Crea una cuenta, revisa tus fuentes y construye una base financiera-tributaria trazable para Chile." primaryLabel="Comenzar análisis" primaryHref="/register" secondaryLabel="Ver planes" secondaryHref="/planes#precios" />
     </PublicShell>
   );
 }
