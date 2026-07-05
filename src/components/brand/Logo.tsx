@@ -11,9 +11,9 @@ interface LogoProps {
 }
 
 const sizeMap: Record<LogoSize, { width: number; height: number }> = {
-  sm: { width: 178, height: 101 },
-  md: { width: 238, height: 135 },
-  lg: { width: 286, height: 162 },
+  sm: { width: 118, height: 24 },
+  md: { width: 156, height: 32 },
+  lg: { width: 188, height: 38 },
 };
 
 export function Logo({
@@ -41,8 +41,8 @@ export function Logo({
   };
 
   return (
-    <span style={wrap} aria-label="LEDGERA Inteligencia financiera para crecer">
-      <img src={src} alt="LEDGERA Inteligencia financiera para crecer" style={imageStyle} draggable={false} />
+    <span style={wrap} aria-label="LEDGERA">
+      <img src={src} alt="LEDGERA" style={imageStyle} draggable={false} />
     </span>
   );
 }
