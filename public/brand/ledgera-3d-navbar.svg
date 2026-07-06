@@ -1,0 +1,40 @@
+<svg width="360" height="92" viewBox="0 0 360 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="4" x2="0" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.18" stop-color="#eef4ff"/>
+      <stop offset="0.36" stop-color="#8b98ac"/>
+      <stop offset="0.50" stop-color="#ffffff"/>
+      <stop offset="0.66" stop-color="#b9c4d4"/>
+      <stop offset="0.86" stop-color="#526174"/>
+      <stop offset="1" stop-color="#f5f8ff"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0ea5e9" stop-opacity="0.10"/>
+      <stop offset="0.46" stop-color="#38bdf8" stop-opacity="0.80"/>
+      <stop offset="1" stop-color="#2563eb" stop-opacity="0.22"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-40%" width="140%" height="190%">
+      <feDropShadow dx="4" dy="7" stdDeviation="2.4" flood-color="#020617" flood-opacity="0.90"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="4.5" flood-color="#38bdf8" flood-opacity="0.34"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-50%" width="150%" height="220%">
+      <feGaussianBlur stdDeviation="4.5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.14 0 0 0 0 0.68 0 0 0 0 1 0 0 0 0.42 0"/>
+    </filter>
+    <style>
+      .word { font-family: Inter, Arial Black, Arial, sans-serif; font-size: 54px; font-weight: 900; letter-spacing: -7px; }
+      .depth { fill:#041226; opacity:.98; }
+      .depth2 { fill:#0a1e42; opacity:.78; }
+      .face { fill:url(#chrome); stroke:rgba(255,255,255,.78); stroke-width:.75; paint-order:stroke fill; }
+      .edge { fill:none; stroke:url(#edge); stroke-width:1.2; opacity:.72; }
+    </style>
+  </defs>
+  <ellipse cx="180" cy="65" rx="154" ry="16" fill="#38bdf8" opacity=".18" filter="url(#glow)"/>
+  <g class="word" filter="url(#shadow)">
+    <text x="17" y="58" class="depth">LEDGERA</text>
+    <text x="15" y="55" class="depth2">LEDGERA</text>
+    <text x="12" y="52" class="edge">LEDGERA</text>
+    <text x="12" y="52" class="face">LEDGERA</text>
+  </g>
+</svg>
