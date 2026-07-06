@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
-import LandingBrandLoader from "@/components/landing/LandingBrandLoader";
 import { useAuth } from "@/modules/identity/client/authContext";
 
 const navItems = [
@@ -135,11 +134,15 @@ export default function LandingConversacional() {
 
   return (
     <main className="ledgera-welcome min-h-screen overflow-x-hidden bg-[#020617] text-slate-50">
-      <LandingBrandLoader />
       <nav className="sticky top-0 z-[100] border-b border-white/10 bg-[#020617]/90 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
         <div className="mx-auto flex min-h-[82px] max-w-[1440px] items-center justify-between gap-5">
           <Link href="/" aria-label="Inicio LEDGERA" className="inline-flex items-center">
-            <Logo variant="light" size="sm" />
+            <img
+              src="/brand/ledgera-3d-navbar.svg?v=20260705-navbar"
+              alt="LEDGERA"
+              className="block h-10 w-auto select-none sm:h-11"
+              draggable={false}
+            />
           </Link>
           <div className="hidden items-center gap-7 lg:flex">
             {navItems.map(([label, href]) => (
