@@ -1,0 +1,79 @@
+<svg width="960" height="360" viewBox="0 0 960 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#1d5fae" stop-opacity="0.52"/>
+      <stop offset="42%" stop-color="#0b1a34" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+    <linearGradient id="chrome" x1="0" y1="40" x2="0" y2="235" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.16" stop-color="#eaf2ff"/>
+      <stop offset="0.34" stop-color="#8795ab"/>
+      <stop offset="0.48" stop-color="#f8fbff"/>
+      <stop offset="0.62" stop-color="#b7c2d2"/>
+      <stop offset="0.82" stop-color="#526174"/>
+      <stop offset="1" stop-color="#f2f7ff"/>
+    </linearGradient>
+    <linearGradient id="blueEdge" x1="0" y1="0" x2="960" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0ea5e9" stop-opacity="0"/>
+      <stop offset="0.42" stop-color="#38bdf8" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#2563eb" stop-opacity="0.22"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.48" stop-color="#fff" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="softBlue" x="-30%" y="-50%" width="160%" height="200%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.10 0 0 0 0 0.55 0 0 0 0 1 0 0 0 0.72 0"/>
+    </filter>
+    <filter id="shadow" x="-20%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="12" dy="18" stdDeviation="8" flood-color="#000814" flood-opacity="0.72"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="9" flood-color="#38bdf8" flood-opacity="0.42"/>
+    </filter>
+    <mask id="wordMask">
+      <rect width="960" height="360" fill="black"/>
+      <g font-family="Inter, Arial Black, Arial, sans-serif" font-weight="900" font-size="148" letter-spacing="-22" fill="white">
+        <text x="62" y="213">L</text><text x="174" y="213">E</text><text x="289" y="213">D</text><text x="419" y="213">G</text><text x="551" y="213">E</text><text x="666" y="213">R</text><text x="793" y="213">A</text>
+      </g>
+    </mask>
+    <style>
+      .grid { opacity: .09; }
+      .letter { opacity:0; transform:translateY(36px) rotateX(14deg) scale(.95); transform-box: fill-box; transform-origin: 50% 80%; animation: letterIn .72s cubic-bezier(.16,1,.3,1) forwards; }
+      .d0 { animation-delay: .16s; } .d1 { animation-delay: .29s; } .d2 { animation-delay: .42s; } .d3 { animation-delay: .55s; } .d4 { animation-delay: .68s; } .d5 { animation-delay: .81s; } .d6 { animation-delay: .94s; }
+      .depth { fill:#041226; opacity:.96; }
+      .depth2 { fill:#0a1e42; opacity:.76; }
+      .face { fill:url(#chrome); stroke:rgba(255,255,255,.78); stroke-width:1.35; paint-order:stroke fill; }
+      .edge { fill:none; stroke:url(#blueEdge); stroke-width:2.4; opacity:.64; }
+      .sweep { opacity:0; animation: sweep 1.05s cubic-bezier(.16,1,.3,1) 1.36s forwards; }
+      .line { transform-origin: 50% 50%; transform: scaleX(.08); opacity:.2; animation: lineIn 1.4s ease-out .28s forwards; }
+      @keyframes letterIn { 0%{opacity:0; transform:translateY(36px) rotateX(14deg) scale(.95)} 66%{opacity:1; transform:translateY(-4px) rotateX(0) scale(1.018)} 100%{opacity:1; transform:translateY(0) rotateX(0) scale(1)} }
+      @keyframes sweep { 0%{opacity:0; transform:translateX(-420px) skewX(-18deg)} 12%{opacity:.88} 78%{opacity:.5} 100%{opacity:0; transform:translateX(760px) skewX(-18deg)} }
+      @keyframes lineIn { to{ transform:scaleX(1); opacity:1; } }
+      @media (prefers-reduced-motion: reduce) { .letter{animation:none;opacity:1;transform:none}.sweep,.line{animation:none;opacity:0} }
+    </style>
+  </defs>
+
+  <rect width="960" height="360" fill="url(#bgGlow)"/>
+  <g class="grid" stroke="#94a3b8" stroke-width="1">
+    <path d="M0 40H960M0 100H960M0 160H960M0 220H960M0 280H960M80 0V360M160 0V360M240 0V360M320 0V360M400 0V360M480 0V360M560 0V360M640 0V360M720 0V360M800 0V360M880 0V360"/>
+  </g>
+  <ellipse cx="480" cy="236" rx="388" ry="54" fill="#38bdf8" opacity="0.18" filter="url(#softBlue)"/>
+
+  <g font-family="Inter, Arial Black, Arial, sans-serif" font-weight="900" font-size="148" letter-spacing="-22" filter="url(#shadow)">
+    <g class="letter d0"><text class="depth" x="74" y="226">L</text><text class="depth2" x="69" y="221">L</text><text class="edge" x="62" y="213">L</text><text class="face" x="62" y="213">L</text></g>
+    <g class="letter d1"><text class="depth" x="186" y="226">E</text><text class="depth2" x="181" y="221">E</text><text class="edge" x="174" y="213">E</text><text class="face" x="174" y="213">E</text></g>
+    <g class="letter d2"><text class="depth" x="301" y="226">D</text><text class="depth2" x="296" y="221">D</text><text class="edge" x="289" y="213">D</text><text class="face" x="289" y="213">D</text></g>
+    <g class="letter d3"><text class="depth" x="431" y="226">G</text><text class="depth2" x="426" y="221">G</text><text class="edge" x="419" y="213">G</text><text class="face" x="419" y="213">G</text></g>
+    <g class="letter d4"><text class="depth" x="563" y="226">E</text><text class="depth2" x="558" y="221">E</text><text class="edge" x="551" y="213">E</text><text class="face" x="551" y="213">E</text></g>
+    <g class="letter d5"><text class="depth" x="678" y="226">R</text><text class="depth2" x="673" y="221">R</text><text class="edge" x="666" y="213">R</text><text class="face" x="666" y="213">R</text></g>
+    <g class="letter d6"><text class="depth" x="805" y="226">A</text><text class="depth2" x="800" y="221">A</text><text class="edge" x="793" y="213">A</text><text class="face" x="793" y="213">A</text></g>
+  </g>
+
+  <g mask="url(#wordMask)">
+    <rect class="sweep" x="0" y="72" width="210" height="190" fill="url(#shine)" opacity="0.9"/>
+  </g>
+  <rect x="225" y="287" width="510" height="2" rx="1" fill="#38bdf8" opacity="0.15"/>
+  <rect class="line" x="225" y="287" width="510" height="2" rx="1" fill="url(#blueEdge)"/>
+</svg>
