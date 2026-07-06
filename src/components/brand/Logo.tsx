@@ -11,17 +11,16 @@ interface LogoProps {
 }
 
 const sizeMap: Record<LogoSize, { width: number; height: number }> = {
-  sm: { width: 118, height: 24 },
-  md: { width: 156, height: 32 },
-  lg: { width: 188, height: 38 },
+  sm: { width: 180, height: 42 },
+  md: { width: 220, height: 52 },
+  lg: { width: 260, height: 62 },
 };
 
 export function Logo({
-  variant = "light",
   size = "md",
 }: LogoProps) {
   const token = sizeMap[size];
-  const src = variant === "dark" ? "/brand/ledgera-wordmark-navy.svg" : "/brand/ledgera-wordmark-white.svg";
+  const src = "/brand/ledgera-3d-navbar.webp?v=20260706-direct-raster";
 
   const wrap: CSSProperties = {
     display: "inline-flex",
