@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import "./landing-brand.css";
+import "./landing-brand-override.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
