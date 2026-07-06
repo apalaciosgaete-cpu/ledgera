@@ -1,0 +1,25 @@
+/* Landing navbar brand override: use the fabricated 3D raster as the visible brand mark. */
+.ledgera-welcome nav > div {
+  min-height: 96px !important;
+}
+
+.ledgera-welcome nav img[src*="ledgera-3d-navbar"] {
+  height: 64px !important;
+  width: auto !important;
+  max-width: min(62vw, 280px) !important;
+  object-fit: contain !important;
+}
+
+@media (min-width: 640px) {
+  .ledgera-welcome nav img[src*="ledgera-3d-navbar"] {
+    height: 72px !important;
+    max-width: 320px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ledgera-welcome nav img[src*="ledgera-3d-navbar"] {
+    height: 80px !important;
+    max-width: 360px !important;
+  }
+}
