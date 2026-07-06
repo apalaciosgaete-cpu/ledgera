@@ -135,12 +135,12 @@ export default function LandingConversacional() {
   return (
     <main className="ledgera-welcome min-h-screen overflow-x-hidden bg-[#020617] text-slate-50">
       <nav className="sticky top-0 z-[100] border-b border-white/10 bg-[#020617]/90 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
-        <div className="mx-auto flex min-h-[82px] max-w-[1440px] items-center justify-between gap-5">
-          <Link href="/" aria-label="Inicio LEDGERA" className="inline-flex items-center">
+        <div className="mx-auto flex min-h-[96px] max-w-[1440px] items-center justify-between gap-5">
+          <Link href="/" aria-label="Inicio LEDGERA" className="inline-flex shrink-0 items-center">
             <img
-              src="/brand/ledgera-3d-navbar.svg?v=20260705-navbar"
+              src="/brand/ledgera-3d-navbar.webp?v=20260706-direct-raster"
               alt="LEDGERA"
-              className="block h-10 w-auto select-none sm:h-11"
+              className="block h-16 w-auto max-w-[min(62vw,280px)] select-none object-contain sm:h-[72px] sm:max-w-[320px] lg:h-20 lg:max-w-[360px]"
               draggable={false}
             />
           </Link>
@@ -171,7 +171,7 @@ export default function LandingConversacional() {
       </nav>
 
       {mobileMenuOpen ? (
-        <div className="sticky top-[82px] z-[90] border-b border-white/10 bg-[#020617]/98 px-6 py-5 backdrop-blur-xl lg:hidden">
+        <div className="sticky top-[96px] z-[90] border-b border-white/10 bg-[#020617]/98 px-6 py-5 backdrop-blur-xl lg:hidden">
           <div className="grid gap-4">
             {navItems.map(([label, href]) => (
               <Link
