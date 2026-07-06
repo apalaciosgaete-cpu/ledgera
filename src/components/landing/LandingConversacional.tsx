@@ -12,14 +12,40 @@ const navItems = [
   ["Cómo funciona", "/como-funciona"],
   ["Planes", "/planes"],
   ["Preguntas", "/preguntas"],
-  ["Blog", "/blog"],
-  ["Quiénes somos", "/quienes-somos"],
 ] as const;
 
 const trustItems = [
   ["Exchanges", "Carga CSV/API y movimientos manuales"],
   ["Activos digitales", "BTC, ETH, stablecoins y más"],
   ["Respaldo tributario", "PDF + Excel trazable"],
+] as const;
+
+const problemItems = [
+  ["Operaciones dispersas", "CSV, APIs, movimientos manuales y registros incompletos entre exchanges."],
+  ["Activos difíciles de seguir", "Compras, ventas, swaps, retiros, depósitos y comisiones mezcladas."],
+  ["Respaldo insuficiente", "Una planilla no siempre explica origen, cálculo, estado y trazabilidad."],
+] as const;
+
+const processSteps = [
+  ["01", "Importa operaciones", "Carga movimientos desde exchanges por CSV/API o registra operaciones manuales."],
+  ["02", "Revisa y ordena", "LEDGERA clasifica activos, detecta inconsistencias y consolida trazabilidad."],
+  ["03", "Genera respaldo", "Descarga PDF y Excel trazables para revisión tributaria y patrimonial."],
+] as const;
+
+const verificationItems = [
+  ["PDF tributario", "Resumen claro para revisar antes de declarar."],
+  ["Excel trazable", "Detalle por activo, operación y cálculo revisable."],
+  ["Folio interno", "Identificación única para cada respaldo generado."],
+  ["Hash y QR", "Validación de integridad documental y consulta verificable."],
+  ["No custodia", "LEDGERA no administra fondos ni llaves privadas."],
+  ["Criterio revisable", "Información preparada para análisis financiero y tributario."],
+] as const;
+
+const audienceItems = [
+  ["Personas naturales", "Ordena tus operaciones antes de revisar tu declaración."],
+  ["Inversionistas cripto", "Consolida movimientos de distintos exchanges y activos."],
+  ["Contadores y asesores", "Trabaja con información trazable y más fácil de revisar."],
+  ["Empresas", "Organiza respaldo para operaciones con activos digitales."],
 ] as const;
 
 const footerColumns = [
@@ -56,13 +82,13 @@ function ProductSnapshot() {
   const kpis = [
     ["Operaciones", "CSV/API", "text-sky-300"],
     ["Activos", "10", "text-white"],
-    ["Respaldo", "PDF + Excel", "text-emerald-300"],
+    ["Verificación", "QR + hash", "text-emerald-300"],
   ] as const;
 
   const rows = [
     ["BTC", "Exchange", "OK", "PDF"],
     ["USDT", "CSV", "Revisar", "Excel"],
-    ["ETH", "API", "OK", "PDF"],
+    ["ETH", "API", "OK", "QR"],
   ] as const;
 
   return (
@@ -119,6 +145,16 @@ function ProductSnapshot() {
           </div>
         ))}
       </div>
+
+      <div className="mt-5 grid gap-4 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-emerald-300">Verificación</p>
+          <p className="mt-2 text-sm font-bold leading-6 text-slate-200">Folio, hash, URL y QR para validar el respaldo generado.</p>
+        </div>
+        <div className="grid h-20 w-20 place-items-center rounded-2xl border border-emerald-300/30 bg-white/90 text-xs font-black text-slate-950">
+          QR
+        </div>
+      </div>
     </aside>
   );
 }
@@ -157,7 +193,7 @@ export default function LandingConversacional() {
               href="/register"
               className="inline-flex rounded-2xl bg-sky-300 px-5 py-3 text-sm font-black text-slate-950 shadow-2xl shadow-sky-950/40 transition hover:-translate-y-0.5 hover:bg-sky-200"
             >
-              Comenzar
+              Comenzar análisis
             </Link>
           </div>
           <button
@@ -216,7 +252,7 @@ export default function LandingConversacional() {
               De tus exchanges a tu declaración, sin planillas.
             </h1>
             <p className="mt-6 max-w-[740px] text-lg leading-8 text-slate-300 sm:text-xl">
-              LEDGERA importa operaciones cripto desde exchanges, ordena tus activos digitales y genera respaldos tributarios trazables en PDF y Excel.
+              LEDGERA importa tus operaciones cripto desde exchanges, ordena tus activos digitales y genera respaldos tributarios trazables en PDF y Excel para revisar mejor antes de declarar.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -249,6 +285,114 @@ export default function LandingConversacional() {
         </div>
       </section>
 
+      <section className="px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">El problema</p>
+            <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+              Tus operaciones cripto no vienen listas para declarar.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-400 sm:text-lg">
+              Los exchanges entregan movimientos, no respaldo tributario ordenado. Entre compras, ventas, swaps, retiros, depósitos y comisiones, reconstruir tu historial puede volverse lento, frágil y difícil de justificar.
+            </p>
+          </div>
+          <div className="mt-9 grid gap-4 md:grid-cols-3">
+            {problemItems.map(([title, text]) => (
+              <article key={title} className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+                <h3 className="font-display text-2xl font-black tracking-[-0.04em] text-white">{title}</h3>
+                <p className="mt-4 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-white/10 bg-white/[0.025] px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">Cómo funciona</p>
+              <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+                De movimientos cripto a respaldo tributario en 3 pasos.
+              </h2>
+            </div>
+            <p className="text-base leading-8 text-slate-400 sm:text-lg">
+              LEDGERA separa el proceso en etapas revisables para que entiendas qué se cargó, qué se ordenó y qué respaldo se genera antes de avanzar.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {processSteps.map(([number, title, text]) => (
+              <article key={number} className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                <p className="font-mono text-sm font-black text-sky-300">{number}</p>
+                <h3 className="mt-5 font-display text-2xl font-black tracking-[-0.04em] text-white">{title}</h3>
+                <p className="mt-4 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-[1440px] gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+          <div className="lg:sticky lg:top-32">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">Confianza y respaldo</p>
+            <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+              Respaldo diseñado para revisión, no solo para descargar.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-400 sm:text-lg">
+              La salida debe poder revisarse: documentos, cálculos, operaciones y verificación del respaldo generado.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {verificationItems.map(([title, text]) => (
+              <article key={title} className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+                <h3 className="font-display text-xl font-black tracking-[-0.035em] text-white">{title}</h3>
+                <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-white/10 bg-white/[0.025] px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">Para quién es</p>
+            <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+              Diseñado para quienes necesitan ordenar operaciones cripto.
+            </h2>
+          </div>
+          <div className="mt-9 grid gap-4 md:grid-cols-4">
+            {audienceItems.map(([title, text]) => (
+              <article key={title} className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                <h3 className="font-display text-xl font-black tracking-[-0.035em] text-white">{title}</h3>
+                <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1100px] rounded-[2rem] border border-sky-300/20 bg-sky-300/10 px-6 py-10 text-center sm:px-10">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">Antes de declarar</p>
+          <h2 className="mx-auto mt-4 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+            Ordena tus operaciones, revisa obligaciones y genera respaldo trazable.
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-7 text-slate-300 sm:text-base">
+            LEDGERA prepara información para revisión financiera y tributaria. La determinación final debe evaluarse según tu situación particular.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/register" className="inline-flex min-h-[58px] items-center justify-center rounded-2xl bg-sky-300 px-7 text-base font-black text-slate-950 transition hover:-translate-y-0.5 hover:bg-sky-200">
+              Comenzar análisis →
+            </Link>
+            <Link href="/preguntas" className="inline-flex min-h-[58px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-7 text-base font-black text-sky-200 transition hover:border-sky-300/40 hover:bg-sky-300/10">
+              Revisar preguntas frecuentes
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-white/10 bg-[#020617] px-5 py-12 text-slate-300 sm:px-8 lg:px-10">
         <div className="mx-auto grid max-w-[1440px] gap-10 lg:grid-cols-[1.1fr_1.5fr_0.8fr]">
           <div>
@@ -272,9 +416,9 @@ export default function LandingConversacional() {
             ))}
           </div>
           <div className="rounded-3xl border border-sky-300/20 bg-sky-300/10 p-6">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-300">Opinión</p>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-300">¿Tienes dudas?</p>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Ayúdanos a mejorar LEDGERA con feedback orgánico sobre claridad, utilidad y funcionamiento real de la app.
+              Revisa las preguntas frecuentes o comienza un análisis para ordenar tu historial cripto antes de declarar.
             </p>
             <Link href="/preguntas" className="mt-5 inline-flex rounded-2xl bg-sky-300 px-5 py-3 text-sm font-black text-slate-950">
               Revisar dudas
