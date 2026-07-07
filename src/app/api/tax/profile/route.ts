@@ -1,3 +1,6 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail } from "@/shared/apiResponse";
@@ -5,9 +8,6 @@ import { prisma } from "@/lib/prisma";
 import { validateRut } from "@/modules/tax/application/validateRut";
 import type { TaxDocumentType } from "@/modules/tax/domain/taxProfile";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   getTaxProfileByUserId,
   upsertTaxProfile,
 } from "@/modules/tax/infrastructure/taxProfileRepository";

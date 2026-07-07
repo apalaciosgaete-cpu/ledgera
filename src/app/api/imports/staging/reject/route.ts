@@ -1,12 +1,12 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { getAuditRequestContext } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   rejectNormalizedExchangeEvent,
   StagingValidationError,
 } from "@/modules/staging/application/rejectNormalizedExchangeEvent";

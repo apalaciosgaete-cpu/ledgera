@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { createAlert } from "@/modules/alerts/application/createAlert";
 import { listUserAlerts } from "@/modules/alerts/infrastructure/alertRepository";
-import {
 
 // Force dynamic rendering because routes use request.headers/cookies
 export const dynamic = 'force-dynamic';
+
+import {
   isValidAlertCategory,
   isValidAlertSeverity,
   isValidAlertStatus,

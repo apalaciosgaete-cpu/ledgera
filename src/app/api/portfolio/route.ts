@@ -1,9 +1,9 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   calculatePortfolio,
   prefetchFx,
   type PortfolioMovement,

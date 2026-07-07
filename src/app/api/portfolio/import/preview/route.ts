@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/prisma";
-import {
-
 // Force dynamic rendering because routes use request.headers/cookies
 export const dynamic = 'force-dynamic';
+
+import { prisma } from "@/lib/prisma";
+import {
   calculatePortfolio,
   type PortfolioMovement,
   type PortfolioMovementType,

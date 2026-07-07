@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import {
 
 // Force dynamic rendering because routes use request.headers/cookies
 export const dynamic = 'force-dynamic';
+
+import {
   createAsset,
   getAssetBySymbol,
 } from "@/modules/portfolio/infrastructure/assetRepository";

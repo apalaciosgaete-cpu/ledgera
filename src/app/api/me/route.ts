@@ -1,11 +1,11 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 // src/app/api/me/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   generateCsrfToken,
   getCsrfCookieName,
   setCsrfCookie,

@@ -1,12 +1,12 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import crypto from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 import speakeasy from "speakeasy";
 
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   buildSessionExpirationDate,
   generateSessionToken,
 } from "@/modules/identity/application/sessionToken";

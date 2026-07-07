@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280" fill="none">
+  <defs>
+    <!-- Gradientes del isotipo -->
+    <linearGradient id="gold1" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C9A040"/>
+      <stop offset="50%" stop-color="#D9B668"/>
+      <stop offset="100%" stop-color="#EFD996"/>
+    </linearGradient>
+    <linearGradient id="gold2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B89030"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#F0DCA0"/>
+    </linearGradient>
+    <linearGradient id="gold3" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C9A040"/>
+      <stop offset="50%" stop-color="#D9B668"/>
+      <stop offset="100%" stop-color="#EFD996"/>
+    </linearGradient>
+    <linearGradient id="blueLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3BBDF8"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="blueRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3BBDF8"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="blueEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60CDFF"/>
+      <stop offset="100%" stop-color="#3BBDF8"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#D9B668"/>
+      <stop offset="100%" stop-color="#EFD996"/>
+    </linearGradient>
+    <!-- Gradiente texto LEDGERA (plateado metálico) -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="40%" stop-color="#F5F5F5"/>
+      <stop offset="100%" stop-color="#D0D0D0"/>
+    </linearGradient>
+    <!-- Sombra del isotipo -->
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  
+  <!-- ISOTIPO (centrado arriba) -->
+  <g transform="translate(210, 15)" filter="url(#shadow)">
+    <!-- Libro abierto azul con efecto 3D -->
+    <!-- Borde exterior izquierdo -->
+    <path d="M12 55 L48 38 L48 42 L16 58 Z" fill="url(#blueEdge)"/>
+    <!-- Borde exterior derecho -->
+    <path d="M88 55 L52 38 L52 42 L84 58 Z" fill="url(#blueEdge)"/>
+    <!-- Página izquierda -->
+    <path d="M16 58 L50 42 L50 72 L16 88 Z" fill="url(#blueLeft)"/>
+    <!-- Página derecha -->
+    <path d="M84 58 L50 42 L50 72 L84 88 Z" fill="url(#blueRight)"/>
+    <!-- Brillo páginas izquierda -->
+    <path d="M20 54 L50 40 L50 48 L24 62 Z" fill="#3BBDF8" opacity="0.4"/>
+    <!-- Brillo páginas derecha -->
+    <path d="M80 54 L50 40 L50 48 L76 62 Z" fill="#3BBDF8" opacity="0.4"/>
+    <!-- Línea central del libro -->
+    <line x1="50" y1="42" x2="50" y2="72" stroke="#1E40AF" stroke-width="2"/>
+    
+    <!-- Barra 1 (corta, izquierda) -->
+    <path d="M33 40 L49 34 L49 62 L33 68 Z" fill="url(#gold1)"/>
+    
+    <!-- Barra 2 (media, centro) -->
+    <path d="M50 26 L66 20 L66 66 L50 72 Z" fill="url(#gold2)"/>
+    
+    <!-- Barra 3 (alta, derecha) -->
+    <path d="M67 10 L83 4 L83 68 L67 74 Z" fill="url(#gold3)"/>
+    
+    <!-- Flecha curva ascendente -->
+    <path d="M22 48 C34 28, 52 14, 80 6" stroke="url(#arrowGrad)" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- Punta de flecha -->
+    <polygon points="76,0 88,6 80,14" fill="#EFD996"/>
+  </g>
+  
+  <!-- WORDMARK: LEDGERA (tipografía futurista, letras con cortes) -->
+  <g transform="translate(115, 125)">
+    <!-- L -->
+    <path d="M0 0 L0 60 L35 60" stroke="url(#textGrad)" stroke-width="12" fill="none" stroke-linecap="square" stroke-linejoin="miter"/>
+    <!-- E (con barra superior e inferior extendidas) -->
+    <path d="M55 0 L95 0 M55 30 L88 30 M55 60 L95 60 M55 0 L55 60" stroke="url(#textGrad)" stroke-width="12" fill="none" stroke-linecap="square"/>
+    <!-- D (rectangular con esquina redondeada) -->
+    <path d="M115 0 L115 60 L150 60 C170 60, 170 0, 150 0 Z" stroke="url(#textGrad)" stroke-width="12" fill="none" stroke-linecap="square"/>
+    <!-- G (con corte horizontal) -->
+    <path d="M215 0 L185 0 L185 60 L215 60 L215 35 L195 35" stroke="url(#textGrad)" stroke-width="12" fill="none" stroke-linecap="square"/>
+    <!-- E -->
+    <path d="M235 0 L275 0 M235 30 L268 30 M235 60 L275 60 M235 0 L235 60" stroke="url(#textGrad)" stroke-width="12" fill="none" stroke-linecap="square"/>
+    <!-- R (con pierna diagonal) -->
+    <path d="M295 0 L295 60 M295 0 L330 0 C355 0, 355 30, 330 30 L295 30 M318 30 L345 60" stroke="url(#textGrad)" stroke-width="12" fill="none" stroke-linecap="square"/>
+    <!-- A (estilizada sin barra horizontal, punta cortada) -->
+    <path d="M375 60 L405 0 L435 60 M388 35 L422 35" stroke="url(#textGrad)" stroke-width="12" fill="none" stroke-linecap="square" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- ESLOGAN -->
+  <text x="300" y="225" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="400" fill="#D9B668" text-anchor="middle" letter-spacing="5">
+    INTELIGENCIA FINANCIERA PARA CRECER
+  </text>
+  
+  <!-- Líneas decorativas del eslogan -->
+  <line x1="110" y1="218" x2="185" y2="218" stroke="#D9B668" stroke-width="1.5" opacity="0.7"/>
+  <line x1="415" y1="218" x2="490" y2="218" stroke="#D9B668" stroke-width="1.5" opacity="0.7"/>
+</svg>

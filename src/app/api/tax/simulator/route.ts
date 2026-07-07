@@ -1,3 +1,6 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { round, normalizeSymbol } from "@/shared/utils/math";
@@ -5,9 +8,6 @@ import { requireAuth } from "@/shared";
 import { fail } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   calculatePortfolio,
   type PortfolioMovement,
 } from "@/modules/portfolio/application/calculatePortfolio";

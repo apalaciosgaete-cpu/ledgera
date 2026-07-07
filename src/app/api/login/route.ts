@@ -1,9 +1,9 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";

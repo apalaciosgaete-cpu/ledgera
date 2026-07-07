@@ -1,3 +1,6 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/shared";
@@ -5,9 +8,6 @@ import { ok, fail, serverError } from "@/shared/apiResponse";
 import { getUserTasks } from "@/modules/tasks/application/getUserTasks";
 import { createTask } from "@/modules/tasks/application/createTask";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   isValidTaskCategory,
   isValidTaskPriority,
   isValidTaskSource,

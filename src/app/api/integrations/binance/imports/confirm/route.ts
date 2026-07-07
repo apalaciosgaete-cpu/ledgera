@@ -1,12 +1,12 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   confirmImport,
   markImportAsReview,
   rejectImport,

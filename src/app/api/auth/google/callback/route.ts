@@ -1,3 +1,6 @@
+// Force dynamic rendering because routes use request.headers/cookies
+export const dynamic = 'force-dynamic';
+
 import crypto from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -7,9 +10,6 @@ import { prisma } from "@/lib/prisma";
 import { optionalEnv, requireEnv } from "@/lib/env";
 import { hashPassword } from "@/modules/identity/application/passwordHash";
 import {
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
   buildSessionExpirationDate,
   generateSessionToken,
 } from "@/modules/identity/application/sessionToken";
