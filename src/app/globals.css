@@ -40,49 +40,49 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ─── Variables ───────────────────────────────────────────────────────────────
- * LEDGERA design system · Propuesta B "Cierre" (modo oscuro — base del producto).
+ * LEDGERA design system · paleta del landing principal.
  * `--font-display`, `--font-body` y `--font-mono` los inyecta next/font en <html>;
  * aquí sólo declaramos los tokens de color, radio y sombra. */
 :root {
-  /* Fondos */
-  --bg:               #14181A;
-  --bg-elev:          #1B2124;
-  --bg-sunken:        #0F1213;
+  /* Fondos: landing dark navy */
+  --bg:               #020617;
+  --bg-elev:          #0B1120;
+  --bg-sunken:        #020617;
   /* Bordes */
-  --border:           #262C2E;
-  --border-strong:    #343B3D;
+  --border:           rgba(255, 255, 255, 0.10);
+  --border-strong:    rgba(125, 211, 252, 0.30);
   /* Texto */
-  --text:             #E7E4DA;
-  --text-soft:        #B7B4A8;
-  --text-faint:       #7C8079;
-  /* Acento / marca (== ganancia, a propósito) */
-  --accent:           #3FA687;
-  --accent-contrast:  #0B1512;
-  --accent-soft:      #1D2C27;
-  /* Semánticos */
-  --gain:             #3FA687;
-  --loss:             #C4634A;
-  --warn:             #E8B84B;
+  --text:             #F8FAFC;
+  --text-soft:        #CBD5E1;
+  --text-faint:       #94A3B8;
+  /* Acento / marca del landing */
+  --accent:           #7DD3FC;
+  --accent-contrast:  #020617;
+  --accent-soft:      rgba(125, 211, 252, 0.10);
+  /* Semánticos alineados al landing */
+  --gain:             #6EE7B7;
+  --loss:             #FDA4AF;
+  --warn:             #FCD34D;
 
   /* Fallback tipográfico para código legacy que aún referencia --font-sans */
   --font-sans:        var(--font-body), 'Inter', system-ui, sans-serif;
 
-  /* ── Compat: variables --color-* legadas remapeadas al nuevo sistema oscuro.
+  /* ── Compat: variables --color-* legadas remapeadas al sistema del landing.
    *    Se conservan para no romper componentes que aún las consumen; migrar
    *    a los tokens nuevos progresivamente. ── */
   --color-primary:        var(--accent);
-  --color-primary-hover:  var(--accent);
+  --color-primary-hover:  #BAE6FD;
   --color-primary-card:   var(--bg-elev);
   --color-primary-border: var(--border-strong);
   --color-accent:         var(--accent);
-  --color-accent-hover:   var(--accent);
+  --color-accent-hover:   #BAE6FD;
   --color-accent-muted:   var(--accent-soft);
   --color-warning:        var(--warn);
   --color-warning-hover:  var(--warn);
-  --color-warning-muted:  rgba(232, 184, 75, 0.15);
+  --color-warning-muted:  rgba(252, 211, 77, 0.14);
   --color-danger:         var(--loss);
   --color-danger-hover:   var(--loss);
-  --color-danger-muted:   rgba(196, 99, 74, 0.15);
+  --color-danger-muted:   rgba(253, 164, 175, 0.14);
   --color-bg:             var(--bg);
   --color-bg-app:         var(--bg);
   --color-surface:        var(--bg-elev);
@@ -99,9 +99,9 @@ h1, h2, h3, h4, h5, h6,
   --radius-md:            8px;
   --radius-lg:            12px;
   --radius-xl:            16px;
-  --shadow-sm:            0 1px 3px rgba(0, 0, 0, 0.30);
-  --shadow-md:            0 4px 16px rgba(0, 0, 0, 0.40);
-  --shadow-lg:            0 8px 32px rgba(0, 0, 0, 0.50);
+  --shadow-sm:            0 1px 3px rgba(2, 6, 23, 0.35);
+  --shadow-md:            0 8px 24px rgba(2, 6, 23, 0.45);
+  --shadow-lg:            0 30px 100px rgba(2, 6, 23, 0.55);
 }
 
 html, body {
@@ -166,7 +166,7 @@ body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px
 }
 
 body:has(input[placeholder*='Buscar por título']) div[style*='min-height: 400px'][style*='background: rgb(248, 250, 252)'] > div:nth-child(2)::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.35);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 999px;
 }
 
@@ -180,7 +180,7 @@ body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'
   margin-top: 0 !important;
   overflow-y: auto !important;
   z-index: 70 !important;
-  box-shadow: 0 24px 80px rgba(15, 42, 61, 0.24) !important;
+  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.45) !important;
 }
 
 body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'][style*='padding: 16px 20px'][style*='background: rgb(248, 250, 252)']::-webkit-scrollbar {
@@ -188,7 +188,7 @@ body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'
 }
 
 body:has(input[placeholder*='Buscar por título']) div[style*='margin-top: 24px'][style*='padding: 16px 20px'][style*='background: rgb(248, 250, 252)']::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.35);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 999px;
 }
 
@@ -256,31 +256,36 @@ form:has(textarea[placeholder*='Escribe']) {
 }
 
 /* ─── Protected app: puente contra paleta legacy ─────────────────────────────
- * Alcance intencional: sólo páginas internas bajo src/app/(protected). Evita que
- * utilidades antiguas slate/white/emerald/blue/red/amber vuelvan a pintar la app
- * con la paleta clara mientras se completa el reemplazo archivo por archivo. */
+ * Alcance intencional: páginas internas bajo src/app/(protected). Evita que
+ * utilidades antiguas slate/white/emerald/blue/sky/red/amber vuelvan a pintar
+ * la app con una paleta distinta al landing mientras se completa el reemplazo
+ * archivo por archivo. */
 .ledgera-protected-shell :where(.bg-white, [class*="bg-white/"], .bg-slate-50, .bg-gray-50, .bg-zinc-50) {
   background-color: var(--bg-elev) !important;
 }
 
 .ledgera-protected-shell :where(.bg-slate-100, .bg-gray-100, .bg-zinc-100, [class*="bg-slate-"][class*="/"], [class*="bg-gray-"][class*="/"], [class*="bg-zinc-"][class*="/"]) {
+  background-color: rgba(255, 255, 255, 0.035) !important;
+}
+
+.ledgera-protected-shell :where(.bg-slate-950, .bg-slate-900, .bg-gray-950, .bg-gray-900, .bg-zinc-950, .bg-zinc-900) {
   background-color: var(--bg-sunken) !important;
 }
 
-.ledgera-protected-shell :where(.bg-slate-900, .bg-gray-900, .bg-zinc-900, .bg-emerald-600, .bg-emerald-700, .bg-blue-600, .bg-blue-700) {
+.ledgera-protected-shell :where(.bg-sky-200, .bg-sky-300, .bg-sky-400, .bg-cyan-300, .bg-cyan-400, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700) {
   background-color: var(--accent) !important;
 }
 
-.ledgera-protected-shell :where(.bg-emerald-50, .bg-green-50, [class*="bg-emerald-"][class*="/"], [class*="bg-green-"][class*="/"]) {
+.ledgera-protected-shell :where(.bg-emerald-50, .bg-green-50, [class*="bg-emerald-"][class*="/"], [class*="bg-green-"][class*="/"], [class*="bg-sky-"][class*="/"], [class*="bg-blue-"][class*="/"], [class*="bg-cyan-"][class*="/"]) {
   background-color: var(--accent-soft) !important;
 }
 
 .ledgera-protected-shell :where(.bg-red-50, [class*="bg-red-"][class*="/"], [class*="bg-rose-"][class*="/"]) {
-  background-color: rgba(196, 99, 74, 0.14) !important;
+  background-color: rgba(253, 164, 175, 0.14) !important;
 }
 
 .ledgera-protected-shell :where(.bg-amber-50, .bg-yellow-50, [class*="bg-amber-"][class*="/"], [class*="bg-yellow-"][class*="/"]) {
-  background-color: rgba(232, 184, 75, 0.14) !important;
+  background-color: rgba(252, 211, 77, 0.14) !important;
 }
 
 .ledgera-protected-shell :where(.text-white, .text-slate-950, .text-slate-900, .text-slate-50, .text-gray-950, .text-gray-900, .text-zinc-950, .text-zinc-900) {
@@ -291,41 +296,58 @@ form:has(textarea[placeholder*='Escribe']) {
   color: var(--text-soft) !important;
 }
 
-.ledgera-protected-shell :where(.text-emerald-300, .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-green-500, .text-green-600, .text-blue-500, .text-blue-600, .text-cyan-300, .text-cyan-500) {
+.ledgera-protected-shell :where(.text-sky-200, .text-sky-300, .text-sky-400, .text-cyan-300, .text-cyan-400, .text-emerald-300, .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-green-500, .text-green-600, .text-blue-500, .text-blue-600, .text-cyan-500) {
   color: var(--accent) !important;
 }
 
-.ledgera-protected-shell :where(.text-red-500, .text-red-600, .text-rose-500, .text-rose-600) {
+.ledgera-protected-shell :where(.text-red-500, .text-red-600, .text-red-300, .text-rose-500, .text-rose-600, .text-rose-300) {
   color: var(--loss) !important;
 }
 
-.ledgera-protected-shell :where(.text-amber-500, .text-amber-600, .text-yellow-500, .text-yellow-600) {
+.ledgera-protected-shell :where(.text-amber-300, .text-amber-500, .text-amber-600, .text-yellow-300, .text-yellow-500, .text-yellow-600) {
   color: var(--warn) !important;
+}
+
+.ledgera-protected-shell :where(.bg-sky-200.text-slate-950, .bg-sky-300.text-slate-950, .bg-sky-400.text-slate-950, .bg-cyan-300.text-slate-950, .bg-blue-600.text-white, .bg-blue-700.text-white, .bg-emerald-600.text-white, .bg-emerald-700.text-white) {
+  color: var(--accent-contrast) !important;
 }
 
 .ledgera-protected-shell :where(.border-white\/10, [class*="border-white/"], .border-slate-100, .border-slate-200, .border-slate-300, .border-gray-100, .border-gray-200, .border-zinc-100, .border-zinc-200) {
   border-color: var(--border) !important;
 }
 
-.ledgera-protected-shell :where(.border-emerald-500, .border-emerald-600, .border-green-500, .border-blue-500, .border-cyan-500) {
+.ledgera-protected-shell :where(.border-sky-300, .border-sky-400, .border-cyan-300, .border-cyan-400, .border-emerald-400, .border-emerald-500, .border-emerald-600, .border-green-500, .border-blue-500, .border-cyan-500) {
   border-color: var(--accent) !important;
 }
 
-.ledgera-protected-shell :where(.border-red-200, .border-red-500, .border-rose-500) {
+.ledgera-protected-shell :where(.border-red-200, .border-red-300, .border-red-500, .border-rose-300, .border-rose-500) {
   border-color: var(--loss) !important;
 }
 
-.ledgera-protected-shell :where(.border-amber-400, .border-yellow-400, .border-amber-500, .border-yellow-500) {
+.ledgera-protected-shell :where(.border-amber-300, .border-amber-400, .border-yellow-300, .border-yellow-400, .border-amber-500, .border-yellow-500) {
   border-color: var(--warn) !important;
 }
 
 .ledgera-protected-shell [style*="background: rgb(248, 250, 252)"],
 .ledgera-protected-shell [style*="background-color: rgb(248, 250, 252)"],
 .ledgera-protected-shell [style*="background: #F8FAFC"],
+.ledgera-protected-shell [style*="background-color: #F8FAFC"],
 .ledgera-protected-shell [style*="background: #FFFFFF"],
-.ledgera-protected-shell [style*="background-color: #FFFFFF"] {
+.ledgera-protected-shell [style*="background-color: #FFFFFF"],
+.ledgera-protected-shell [style*="background: white"],
+.ledgera-protected-shell [style*="background-color: white"] {
   background: var(--bg-elev) !important;
   background-color: var(--bg-elev) !important;
+}
+
+.ledgera-protected-shell [style*="background: rgb(15, 23, 42)"],
+.ledgera-protected-shell [style*="background-color: rgb(15, 23, 42)"],
+.ledgera-protected-shell [style*="background: #0F172A"],
+.ledgera-protected-shell [style*="background-color: #0F172A"],
+.ledgera-protected-shell [style*="background: #020617"],
+.ledgera-protected-shell [style*="background-color: #020617"] {
+  background: var(--bg-sunken) !important;
+  background-color: var(--bg-sunken) !important;
 }
 
 .ledgera-protected-shell [style*="color: #0F172A"],
@@ -334,6 +356,15 @@ form:has(textarea[placeholder*='Escribe']) {
 }
 
 .ledgera-protected-shell [style*="color: #475569"],
-.ledgera-protected-shell [style*="color: rgb(71, 85, 105)"] {
+.ledgera-protected-shell [style*="color: rgb(71, 85, 105)"],
+.ledgera-protected-shell [style*="color: #64748B"],
+.ledgera-protected-shell [style*="color: rgb(100, 116, 139)"] {
   color: var(--text-soft) !important;
+}
+
+.ledgera-protected-shell [style*="color: #0284C7"],
+.ledgera-protected-shell [style*="color: rgb(2, 132, 199)"],
+.ledgera-protected-shell [style*="color: #0EA5E9"],
+.ledgera-protected-shell [style*="color: rgb(14, 165, 233)"] {
+  color: var(--accent) !important;
 }
