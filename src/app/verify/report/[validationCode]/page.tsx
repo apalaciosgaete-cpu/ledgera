@@ -1,37 +1,45 @@
 // src/app/verify/report/[validationCode]/page.tsx
 import { notFound } from "next/navigation";
+import { Logo } from "@/components/brand/Logo";
 import { prisma } from "@/lib/prisma";
 
 interface ReportValidationData {
-  hash:       string;
-  type:       string;
-  typeLabel:  string;
-  isValid:    boolean;
-  issuedAt:   Date;
+  hash: string;
+  type: string;
+  typeLabel: string;
+  isValid: boolean;
+  issuedAt: Date;
   issuedAtLabel: string;
-  year:       number;
-  symbol:     string | null;
-  revokedAt:  Date | null;
+  year: number;
+  symbol: string | null;
+  revokedAt: Date | null;
 }
 
 function getReportTypeLabel(type: string): string {
   switch (type) {
-    case "STRICT_TAX_REPORT":      return "Reporte tributario para contador";
-    case "INFORMATIVE_TAX_REPORT": return "Borrador informativo tributario";
-    case "STRICT_TAX_CSV":         return "Reporte contador CSV";
-    case "INFORMATIVE_TAX_CSV":    return "Borrador informativo CSV";
-    case "AUDIT_TRAIL_PDF":        return "Trazabilidad de auditoría (PDF)";
-    case "AUDIT_TRAIL_CSV":        return "Trazabilidad de auditoría (CSV)";
-    default:                       return "Reporte LEDGERA";
+    case "STRICT_TAX_REPORT":
+      return "Reporte tributario para contador";
+    case "INFORMATIVE_TAX_REPORT":
+      return "Borrador informativo tributario";
+    case "STRICT_TAX_CSV":
+      return "Reporte contador CSV";
+    case "INFORMATIVE_TAX_CSV":
+      return "Borrador informativo CSV";
+    case "AUDIT_TRAIL_PDF":
+      return "Trazabilidad de auditoría (PDF)";
+    case "AUDIT_TRAIL_CSV":
+      return "Trazabilidad de auditoría (CSV)";
+    default:
+      return "Reporte LEDGERA";
   }
 }
 
 function formatDateTime(value: Date): string {
   return new Intl.DateTimeFormat("es-CL", {
-    year:   "numeric",
-    month:  "2-digit",
-    day:    "2-digit",
-    hour:   "2-digit",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
     minute: "2-digit",
   }).format(value);
 }
@@ -41,21 +49,32 @@ async function fetchValidation(code: string): Promise<ReportValidationData | nul
     const report = await prisma.reportValidation.findUnique({
       where: { hash: code },
     });
+
     if (!report) return null;
+
     return {
-      hash:         report.hash,
-      type:         report.type,
-      typeLabel:    getReportTypeLabel(report.type),
-      isValid:      !report.revokedAt,
-      issuedAt:     report.issuedAt,
+      hash: report.hash,
+      type: report.type,
+      typeLabel: getReportTypeLabel(report.type),
+      isValid: !report.revokedAt,
+      issuedAt: report.issuedAt,
       issuedAtLabel: formatDateTime(report.issuedAt),
-      year:         report.year,
-      symbol:       report.symbol,
-      revokedAt:    report.revokedAt,
+      year: report.year,
+      symbol: report.symbol,
+      revokedAt: report.revokedAt,
     };
   } catch {
     return null;
   }
+}
+
+function DetailCard({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border bg-bg-elev p-5">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-text-faint">{label}</p>
+      <div className="mt-2 text-sm font-semibold leading-6 text-text">{children}</div>
+    </div>
+  );
 }
 
 export default async function VerifyReportPage({
@@ -68,108 +87,71 @@ export default async function VerifyReportPage({
   if (!validationCode || validationCode.length < 16) notFound();
 
   const data = await fetchValidation(validationCode);
-
-  const isValid      = data?.isValid ?? false;
-  const statusColor  = isValid ? "#3FA687" : "#C4634A";
-  const statusBg     = isValid ? "#1D2C27" : "rgba(196,99,74,0.14)";
-  const statusBorder = isValid ? "#1D2C27" : "var(--loss)";
-  const statusIcon   = isValid ? "✓" : "✗";
-  const statusText   = !data
-    ? "Documento no encontrado"
-    : isValid ? "Documento válido" : "Documento revocado";
+  const isValid = data?.isValid ?? false;
+  const statusText = !data ? "Documento no encontrado" : isValid ? "Documento válido" : "Documento revocado";
+  const statusClass = isValid
+    ? "border-accent bg-accent-soft text-gain"
+    : "border-loss bg-[rgba(253,164,175,0.14)] text-loss";
+  const statusIcon = isValid ? "✓" : "✕";
 
   return (
-    <html lang="es">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Verificación de documento — LEDGERA</title>
-        <style>{`
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-sunken); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 16px; }
-          .container { width: 100%; max-width: 560px; }
-          .header { text-align: center; margin-bottom: 32px; }
-          .logo { font-size: 1.25rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
-          .logo span { color: var(--warn); }
-          .subtitle { font-size: 0.75rem; color: var(--text-soft); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
-          .status-card { border-radius: 14px; padding: 24px; border: 1.5px solid ${statusBorder}; background: ${statusBg}; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
-          .status-icon { width: 44px; height: 44px; border-radius: 50%; background: ${statusColor}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; flex-shrink: 0; }
-          .status-title { font-size: 1.05rem; font-weight: 700; color: ${statusColor}; }
-          .status-sub { font-size: 0.8rem; color: var(--text-soft); margin-top: 3px; }
-          .section-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; }
-          .field-label { font-size: 0.7rem; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-          .field-value { font-size: 0.9rem; color: var(--text); font-weight: 500; }
-          .mono { font-family: 'Courier New', monospace; font-size: 0.78rem; word-break: break-all; color: var(--text); }
-          .not-found-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 40px 24px; text-align: center; }
-          .footer { text-align: center; font-size: 0.72rem; color: var(--text-soft); margin-top: 32px; }
-        `}</style>
-      </head>
-      <body>
-        <div className="container">
-          <div className="header">
-            <div className="logo">LEDGERA <span>·</span></div>
-            <div className="subtitle">Verificación de documentos</div>
-          </div>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_34%),linear-gradient(135deg,var(--bg-sunken),var(--bg),var(--bg-elev))] px-6 py-12 text-text">
+      <section className="mx-auto w-full max-w-3xl">
+        <header className="mb-10 flex flex-col items-center text-center">
+          <Logo variant="light" size="lg" showSubtitle />
+          <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-accent">Verificación de documentos</p>
+          <h1 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-text sm:text-5xl">
+            Respaldo verificable LEDGERA
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm font-semibold leading-7 text-text-soft">
+            Consulta pública para confirmar si un documento fue emitido por LEDGERA y si su registro sigue vigente.
+          </p>
+        </header>
 
-          <div className="status-card">
-            <div className="status-icon">{statusIcon}</div>
-            <div>
-              <div className="status-title">{statusText}</div>
-              <div className="status-sub">
-                {!data ? "El código no corresponde a ningún documento emitido por LEDGERA." :
-                 isValid ? "Este documento fue emitido y es válido." :
-                 "Este documento fue emitido pero está revocado."}
-              </div>
+        <div className={`rounded-3xl border p-6 shadow-[var(--shadow-md)] ${statusClass}`}>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-current bg-bg-sunken text-2xl font-black">
+              {statusIcon}
             </div>
-          </div>
-
-          {data && (
-            <>
-              <div className="section-card">
-                <div className="field-label">Tipo de reporte</div>
-                <div className="field-value">{data.typeLabel}</div>
-              </div>
-              <div className="section-card">
-                <div className="field-label">Período tributario</div>
-                <div className="field-value">{data.year}</div>
-              </div>
-              {data.symbol && (
-                <div className="section-card">
-                  <div className="field-label">Activo</div>
-                  <div className="field-value">{data.symbol}</div>
-                </div>
-              )}
-              <div className="section-card">
-                <div className="field-label">Fecha de emisión</div>
-                <div className="field-value">{data.issuedAtLabel}</div>
-              </div>
-              {data.revokedAt && (
-                <div className="section-card">
-                  <div className="field-label">Fecha de revocación</div>
-                  <div className="field-value">{formatDateTime(data.revokedAt)}</div>
-                </div>
-              )}
-              <div className="section-card">
-                <div className="field-label">Hash de verificación</div>
-                <div className="field-value mono">{data.hash}</div>
-              </div>
-            </>
-          )}
-
-          {!data && (
-            <div className="not-found-card">
-              <p style={{ fontSize: "2rem", marginBottom: "12px" }}>🔍</p>
-              <p style={{ fontWeight: 600, marginBottom: "6px" }}>Documento no encontrado</p>
-              <p style={{ fontSize: "0.875rem", color: "var(--text-soft)" }}>
-                Verifica que el código fue copiado correctamente desde el documento original.
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em]">Estado del documento</p>
+              <h2 className="mt-2 font-display text-2xl font-black tracking-[-0.035em] text-text">{statusText}</h2>
+              <p className="mt-2 text-sm font-semibold leading-6 text-text-soft">
+                {!data
+                  ? "El código no corresponde a ningún documento emitido por LEDGERA."
+                  : isValid
+                    ? "Este documento fue emitido por LEDGERA y su registro está vigente."
+                    : "Este documento fue emitido por LEDGERA, pero su registro está revocado."}
               </p>
             </div>
-          )}
+          </div>
         </div>
-        <div className="footer">
-          Verificación de documentos — LEDGERA · Sistema de cumplimiento tributario cripto
-        </div>
-      </body>
-    </html>
+
+        {data ? (
+          <div className="mt-6 grid gap-4">
+            <DetailCard label="Tipo de reporte">{data.typeLabel}</DetailCard>
+            <DetailCard label="Período tributario">{data.year}</DetailCard>
+            {data.symbol ? <DetailCard label="Activo">{data.symbol}</DetailCard> : null}
+            <DetailCard label="Fecha de emisión">{data.issuedAtLabel}</DetailCard>
+            {data.revokedAt ? <DetailCard label="Fecha de revocación">{formatDateTime(data.revokedAt)}</DetailCard> : null}
+            <DetailCard label="Hash de verificación">
+              <code className="break-all font-mono text-xs text-accent">{data.hash}</code>
+            </DetailCard>
+          </div>
+        ) : (
+          <div className="mt-6 rounded-3xl border border-border bg-bg-elev p-8 text-center">
+            <p className="text-3xl" aria-hidden="true">⌕</p>
+            <p className="mt-3 font-display text-xl font-black text-text">Documento no encontrado</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-text-soft">
+              Verifica que el código fue copiado correctamente desde el documento original.
+            </p>
+          </div>
+        )}
+
+        <footer className="mt-10 text-center text-xs font-semibold leading-6 text-text-faint">
+          Verificación de documentos — LEDGERA · Respaldo tributario para activos digitales.
+        </footer>
+      </section>
+    </main>
   );
 }
