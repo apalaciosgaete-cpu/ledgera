@@ -17,6 +17,7 @@ const staticPages = [
   "/terminos",
   "/privacidad",
   "/cookies",
+  "/conciliacion-exchange-banco",
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
