@@ -255,116 +255,116 @@ form:has(textarea[placeholder*='Escribe']) {
   display: none !important;
 }
 
-/* ─── Protected app: puente contra paleta legacy ─────────────────────────────
- * Alcance intencional: páginas internas bajo src/app/(protected). Evita que
- * utilidades antiguas slate/white/emerald/blue/sky/red/amber vuelvan a pintar
- * la app con una paleta distinta al landing mientras se completa el reemplazo
+/* ─── App/public pages: puente contra paleta legacy ──────────────────────────
+ * Alcance: páginas internas protegidas y páginas públicas que no sean el landing
+ * principal. Evita que utilidades slate/white/emerald/blue/sky/red/amber vuelvan
+ * a pintar la app con una paleta distinta mientras se completa el reemplazo
  * archivo por archivo. */
-.ledgera-protected-shell :where(.bg-white, [class*="bg-white/"], .bg-slate-50, .bg-gray-50, .bg-zinc-50) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-white, [class*="bg-white/"], .bg-slate-50, .bg-gray-50, .bg-zinc-50) {
   background-color: var(--bg-elev) !important;
 }
 
-.ledgera-protected-shell :where(.bg-slate-100, .bg-gray-100, .bg-zinc-100, [class*="bg-slate-"][class*="/"], [class*="bg-gray-"][class*="/"], [class*="bg-zinc-"][class*="/"]) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-slate-100, .bg-gray-100, .bg-zinc-100, [class*="bg-slate-"][class*="/"], [class*="bg-gray-"][class*="/"], [class*="bg-zinc-"][class*="/"]) {
   background-color: rgba(255, 255, 255, 0.035) !important;
 }
 
-.ledgera-protected-shell :where(.bg-slate-950, .bg-slate-900, .bg-gray-950, .bg-gray-900, .bg-zinc-950, .bg-zinc-900) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-slate-950, .bg-slate-900, .bg-gray-950, .bg-gray-900, .bg-zinc-950, .bg-zinc-900) {
   background-color: var(--bg-sunken) !important;
 }
 
-.ledgera-protected-shell :where(.bg-sky-200, .bg-sky-300, .bg-sky-400, .bg-cyan-300, .bg-cyan-400, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-sky-200, .bg-sky-300, .bg-sky-400, .bg-cyan-300, .bg-cyan-400, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700) {
   background-color: var(--accent) !important;
 }
 
-.ledgera-protected-shell :where(.bg-emerald-50, .bg-green-50, [class*="bg-emerald-"][class*="/"], [class*="bg-green-"][class*="/"], [class*="bg-sky-"][class*="/"], [class*="bg-blue-"][class*="/"], [class*="bg-cyan-"][class*="/"]) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-emerald-50, .bg-green-50, [class*="bg-emerald-"][class*="/"], [class*="bg-green-"][class*="/"], [class*="bg-sky-"][class*="/"], [class*="bg-blue-"][class*="/"], [class*="bg-cyan-"][class*="/"]) {
   background-color: var(--accent-soft) !important;
 }
 
-.ledgera-protected-shell :where(.bg-red-50, [class*="bg-red-"][class*="/"], [class*="bg-rose-"][class*="/"]) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-red-50, [class*="bg-red-"][class*="/"], [class*="bg-rose-"][class*="/"]) {
   background-color: rgba(253, 164, 175, 0.14) !important;
 }
 
-.ledgera-protected-shell :where(.bg-amber-50, .bg-yellow-50, [class*="bg-amber-"][class*="/"], [class*="bg-yellow-"][class*="/"]) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-amber-50, .bg-yellow-50, [class*="bg-amber-"][class*="/"], [class*="bg-yellow-"][class*="/"]) {
   background-color: rgba(252, 211, 77, 0.14) !important;
 }
 
-.ledgera-protected-shell :where(.text-white, .text-slate-950, .text-slate-900, .text-slate-50, .text-gray-950, .text-gray-900, .text-zinc-950, .text-zinc-900) {
-  color: var(--text) !important;
-}
-
-.ledgera-protected-shell :where([class*="text-slate-"], [class*="text-gray-"], [class*="text-zinc-"]) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where([class*="text-slate-"], [class*="text-gray-"], [class*="text-zinc-"]) {
   color: var(--text-soft) !important;
 }
 
-.ledgera-protected-shell :where(.text-sky-200, .text-sky-300, .text-sky-400, .text-cyan-300, .text-cyan-400, .text-emerald-300, .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-green-500, .text-green-600, .text-blue-500, .text-blue-600, .text-cyan-500) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.text-white, .text-slate-950, .text-slate-900, .text-slate-50, .text-gray-950, .text-gray-900, .text-zinc-950, .text-zinc-900) {
+  color: var(--text) !important;
+}
+
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.text-sky-200, .text-sky-300, .text-sky-400, .text-cyan-300, .text-cyan-400, .text-emerald-300, .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-green-500, .text-green-600, .text-blue-500, .text-blue-600, .text-cyan-500) {
   color: var(--accent) !important;
 }
 
-.ledgera-protected-shell :where(.text-red-500, .text-red-600, .text-red-300, .text-rose-500, .text-rose-600, .text-rose-300) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.text-red-500, .text-red-600, .text-red-300, .text-rose-500, .text-rose-600, .text-rose-300) {
   color: var(--loss) !important;
 }
 
-.ledgera-protected-shell :where(.text-amber-300, .text-amber-500, .text-amber-600, .text-yellow-300, .text-yellow-500, .text-yellow-600) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.text-amber-300, .text-amber-500, .text-amber-600, .text-yellow-300, .text-yellow-500, .text-yellow-600) {
   color: var(--warn) !important;
 }
 
-.ledgera-protected-shell :where(.bg-sky-200.text-slate-950, .bg-sky-300.text-slate-950, .bg-sky-400.text-slate-950, .bg-cyan-300.text-slate-950, .bg-blue-600.text-white, .bg-blue-700.text-white, .bg-emerald-600.text-white, .bg-emerald-700.text-white) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.bg-sky-200.text-slate-950, .bg-sky-300.text-slate-950, .bg-sky-400.text-slate-950, .bg-cyan-300.text-slate-950, .bg-blue-600.text-white, .bg-blue-700.text-white, .bg-emerald-600.text-white, .bg-emerald-700.text-white) {
   color: var(--accent-contrast) !important;
 }
 
-.ledgera-protected-shell :where(.border-white\/10, [class*="border-white/"], .border-slate-100, .border-slate-200, .border-slate-300, .border-gray-100, .border-gray-200, .border-zinc-100, .border-zinc-200) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.border-white\/10, [class*="border-white/"], .border-slate-100, .border-slate-200, .border-slate-300, .border-gray-100, .border-gray-200, .border-zinc-100, .border-zinc-200) {
   border-color: var(--border) !important;
 }
 
-.ledgera-protected-shell :where(.border-sky-300, .border-sky-400, .border-cyan-300, .border-cyan-400, .border-emerald-400, .border-emerald-500, .border-emerald-600, .border-green-500, .border-blue-500, .border-cyan-500) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.border-sky-300, .border-sky-400, .border-cyan-300, .border-cyan-400, .border-emerald-400, .border-emerald-500, .border-emerald-600, .border-green-500, .border-blue-500, .border-cyan-500) {
   border-color: var(--accent) !important;
 }
 
-.ledgera-protected-shell :where(.border-red-200, .border-red-300, .border-red-500, .border-rose-300, .border-rose-500) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.border-red-200, .border-red-300, .border-red-500, .border-rose-300, .border-rose-500) {
   border-color: var(--loss) !important;
 }
 
-.ledgera-protected-shell :where(.border-amber-300, .border-amber-400, .border-yellow-300, .border-yellow-400, .border-amber-500, .border-yellow-500) {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) :where(.border-amber-300, .border-amber-400, .border-yellow-300, .border-yellow-400, .border-amber-500, .border-yellow-500) {
   border-color: var(--warn) !important;
 }
 
-.ledgera-protected-shell [style*="background: rgb(248, 250, 252)"],
-.ledgera-protected-shell [style*="background-color: rgb(248, 250, 252)"],
-.ledgera-protected-shell [style*="background: #F8FAFC"],
-.ledgera-protected-shell [style*="background-color: #F8FAFC"],
-.ledgera-protected-shell [style*="background: #FFFFFF"],
-.ledgera-protected-shell [style*="background-color: #FFFFFF"],
-.ledgera-protected-shell [style*="background: white"],
-.ledgera-protected-shell [style*="background-color: white"] {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background: rgb(248, 250, 252)"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background-color: rgb(248, 250, 252)"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background: #F8FAFC"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background-color: #F8FAFC"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background: #FFFFFF"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background-color: #FFFFFF"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background: white"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background-color: white"] {
   background: var(--bg-elev) !important;
   background-color: var(--bg-elev) !important;
 }
 
-.ledgera-protected-shell [style*="background: rgb(15, 23, 42)"],
-.ledgera-protected-shell [style*="background-color: rgb(15, 23, 42)"],
-.ledgera-protected-shell [style*="background: #0F172A"],
-.ledgera-protected-shell [style*="background-color: #0F172A"],
-.ledgera-protected-shell [style*="background: #020617"],
-.ledgera-protected-shell [style*="background-color: #020617"] {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background: rgb(15, 23, 42)"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background-color: rgb(15, 23, 42)"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background: #0F172A"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background-color: #0F172A"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background: #020617"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="background-color: #020617"] {
   background: var(--bg-sunken) !important;
   background-color: var(--bg-sunken) !important;
 }
 
-.ledgera-protected-shell [style*="color: #0F172A"],
-.ledgera-protected-shell [style*="color: rgb(15, 23, 42)"] {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: #0F172A"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: rgb(15, 23, 42)"] {
   color: var(--text) !important;
 }
 
-.ledgera-protected-shell [style*="color: #475569"],
-.ledgera-protected-shell [style*="color: rgb(71, 85, 105)"],
-.ledgera-protected-shell [style*="color: #64748B"],
-.ledgera-protected-shell [style*="color: rgb(100, 116, 139)"] {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: #475569"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: rgb(71, 85, 105)"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: #64748B"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: rgb(100, 116, 139)"] {
   color: var(--text-soft) !important;
 }
 
-.ledgera-protected-shell [style*="color: #0284C7"],
-.ledgera-protected-shell [style*="color: rgb(2, 132, 199)"],
-.ledgera-protected-shell [style*="color: #0EA5E9"],
-.ledgera-protected-shell [style*="color: rgb(14, 165, 233)"] {
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: #0284C7"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: rgb(2, 132, 199)"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: #0EA5E9"],
+:where(.ledgera-protected-shell, main:not(.ledgera-welcome)) [style*="color: rgb(14, 165, 233)"] {
   color: var(--accent) !important;
 }
