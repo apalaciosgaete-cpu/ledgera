@@ -1,5 +1,4 @@
 // src/app/page.tsx
-// Deployment trigger: UX 3.0.01 premium crypto landing
 import type { Metadata } from "next";
 import LandingConversacional from "@/components/landing/LandingConversacional";
 

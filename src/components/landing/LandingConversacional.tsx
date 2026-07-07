@@ -1,6 +1,4 @@
 // src/components/landing/LandingConversacional.tsx
-// UX 3.0.01 v1.6.1 — Hero orientado a activos y claridad
-// Migrado al sistema de diseño "Cierre": tokens bg/bg-elev/accent/warn/text-*.
 "use client";
 
 import Link from "next/link";
@@ -9,233 +7,155 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/modules/identity/client/authContext";
 
-const BRAND_SUBTITLE = "Sistema Operativo Financiero y Tributario";
-
-const PROMPTS = [
-  "Vender Bitcoin",
-  "Crear una SpA",
-  "Invertir en un inmueble",
-  "Regularizar movimientos crypto",
+const navItems = [
+  ["Inicio", "/"],
+  ["Cómo funciona", "/como-funciona"],
+  ["Planes", "/planes"],
+  ["Preguntas", "/preguntas"],
 ] as const;
 
-const TRUST_AREAS = ["Personas", "Empresas", "Profesionales"] as const;
-const DOMAIN_AREAS = ["Cryptoactivos", "Patrimonio", "Tributación", "Finanzas"] as const;
-
-const DECISION_FLOW = [
-  ["01", "Activos", "Qué tienes, dónde está y qué movimiento estás evaluando."],
-  ["02", "Contexto", "Tu situación financiera, tributaria y patrimonial."],
-  ["03", "Normativa", "Reglas chilenas aplicables a la operación."],
-  ["04", "Escenarios", "Alternativas posibles antes de ejecutar."],
-  ["05", "Claridad", "Información ordenada para decidir mejor."],
+const trustItems = [
+  ["Exchanges", "Carga CSV/API y movimientos manuales"],
+  ["Activos digitales", "BTC, ETH, stablecoins y más"],
+  ["Respaldo tributario", "PDF + Excel trazable"],
 ] as const;
 
-const PROBLEM_CARDS = [
-  ["Cryptoactivos", "Movimientos, tenencia, valorización y tributación."],
-  ["Empresas", "Estructura societaria, régimen tributario y obligaciones."],
-  ["Patrimonio", "Inversiones, inmuebles, flujos y planificación."],
-  ["Tributación", "Normas, cumplimiento, documentación y criterios aplicables."],
+const problemItems = [
+  ["Operaciones dispersas", "CSV, APIs, movimientos manuales y registros incompletos entre exchanges."],
+  ["Activos difíciles de seguir", "Compras, ventas, swaps, retiros, depósitos y comisiones mezcladas."],
+  ["Respaldo insuficiente", "Una planilla no siempre explica origen, cálculo, estado y trazabilidad."],
 ] as const;
 
-const PROCESS = [
-  ["Entiende", "Recoge contexto financiero, tributario y patrimonial."],
-  ["Interpreta", "Conecta la situación con normativa chilena aplicable."],
-  ["Simula", "Compara alternativas y efectos posibles."],
-  ["Explica", "Traduce complejidad a comprensión accionable."],
-  ["Decides", "La decisión final permanece siempre en tus manos."],
+const processSteps = [
+  ["01", "Importa operaciones", "Carga movimientos desde exchanges por CSV/API o registra operaciones manuales."],
+  ["02", "Revisa y ordena", "LEDGERA clasifica activos, detecta inconsistencias y consolida trazabilidad."],
+  ["03", "Genera respaldo", "Descarga PDF y Excel trazables para revisión tributaria y patrimonial."],
 ] as const;
 
-const CASES = [
-  ["Venta de Bitcoin", "Evalúa la operación, el registro necesario y el tratamiento tributario antes de mover tu posición."],
-  ["Empresa Web3", "Ordena estructura societaria, régimen tributario y modelo operativo desde el inicio."],
-  ["Patrimonio internacional", "Relaciona activos fuera de Chile con obligaciones locales y documentación necesaria."],
-  ["Tokenización", "Evalúa el modelo financiero, la operación y los criterios tributarios aplicables."],
+const verificationItems = [
+  ["PDF tributario", "Resumen claro para revisar antes de declarar."],
+  ["Excel trazable", "Detalle por activo, operación y cálculo revisable."],
+  ["Folio interno", "Identificación única para cada respaldo generado."],
+  ["Hash y QR", "Validación de integridad documental y consulta verificable."],
+  ["No custodia", "LEDGERA no administra fondos ni llaves privadas."],
+  ["Criterio revisable", "Información preparada para análisis financiero y tributario."],
 ] as const;
 
-const FOOTER_LINKS = [
-  ["Seguridad", "/seguridad"],
-  ["Privacidad", "/privacidad"],
-  ["Términos", "/terminos"],
+const audienceItems = [
+  ["Personas naturales", "Ordena tus operaciones antes de revisar tu declaración."],
+  ["Inversionistas cripto", "Consolida movimientos de distintos exchanges y activos."],
+  ["Contadores y asesores", "Trabaja con información trazable y más fácil de revisar."],
+  ["Empresas", "Organiza respaldo para operaciones con activos digitales."],
 ] as const;
 
-function CinematicBackground() {
+const footerColumns = [
+  {
+    title: "Producto",
+    links: [
+      ["Cómo funciona", "/como-funciona"],
+      ["Planes", "/planes"],
+      ["Preguntas", "/preguntas"],
+      ["Comenzar", "/register"],
+    ],
+  },
+  {
+    title: "Recursos",
+    links: [
+      ["Tributación cripto Chile", "/impuestos-crypto-chile"],
+      ["Declarar operaciones cripto", "/como-declarar-crypto-en-chile"],
+      ["Conciliación banco-exchange", "/conciliacion-binance-banco"],
+      ["Blog", "/blog"],
+    ],
+  },
+  {
+    title: "Empresa",
+    links: [
+      ["Quiénes somos", "/quienes-somos"],
+      ["Privacidad", "/privacidad"],
+      ["Términos", "/terminos"],
+      ["Cookies", "/cookies"],
+    ],
+  },
+] as const;
+
+function ProductSnapshot() {
+  const kpis = [
+    ["Operaciones", "CSV/API", "text-sky-300"],
+    ["Activos", "10", "text-white"],
+    ["Verificación", "QR + hash", "text-emerald-300"],
+  ] as const;
+
+  const rows = [
+    ["BTC", "Exchange", "OK", "PDF"],
+    ["USDT", "CSV", "Revisar", "Excel"],
+    ["ETH", "API", "OK", "QR"],
+  ] as const;
+
   return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 bg-[#0F1213]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_18%,rgba(63,166,135,0.22),transparent_26%),radial-gradient(circle_at_18%_28%,rgba(63,166,135,0.18),transparent_30%),radial-gradient(circle_at_82%_72%,rgba(232,184,75,0.10),transparent_24%),linear-gradient(180deg,rgba(15,18,19,0.10)_0%,rgba(15,18,19,0.96)_82%,#0F1213_100%)]" />
-      <div className="absolute inset-0 opacity-[0.10] [background-image:linear-gradient(rgba(231,228,218,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(231,228,218,0.08)_1px,transparent_1px)] [background-size:82px_82px]" />
-      <div className="absolute left-[48%] top-[12%] h-[520px] w-[520px] rounded-full border border-[#3FA687]/20 bg-[radial-gradient(circle,rgba(63,166,135,0.18),rgba(63,166,135,0.08)_38%,transparent_70%)] shadow-[0_0_180px_rgba(63,166,135,0.16)]" />
-      <div className="absolute left-[55%] top-[22%] h-[300px] w-[300px] rounded-full border border-[#3FA687]/20" />
-      <svg className="absolute inset-0 h-full w-full opacity-80" viewBox="0 0 1440 760" preserveAspectRatio="none" fill="none">
-        <path className="premium-flow" d="M-80 570 C150 425 320 600 510 372 C650 202 824 360 1010 210 C1160 88 1260 156 1520 42" stroke="#3FA687" strokeWidth="2" strokeOpacity="0.42" />
-        <path className="premium-flow flow-b" d="M-80 650 C190 520 370 590 560 470 C740 356 820 420 980 322 C1130 230 1260 260 1520 178" stroke="#E8B84B" strokeWidth="1.4" strokeOpacity="0.24" />
-        <path className="premium-flow flow-c" d="M120 180 C300 105 460 128 620 184 C820 254 960 120 1180 202 C1300 246 1380 228 1500 202" stroke="#3FA687" strokeWidth="1.2" strokeOpacity="0.24" />
-      </svg>
-      <div className="orb left-[44%] top-[42%]" />
-      <div className="orb left-[60%] top-[28%] delay-a" />
-      <div className="orb left-[78%] top-[44%] delay-b" />
-    </div>
-  );
-}
+    <aside className="relative mx-auto w-full max-w-[760px] rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-[0_30px_100px_rgba(2,6,23,0.55)] backdrop-blur-xl sm:p-6">
+      <div className="rounded-2xl border border-sky-400/20 bg-white/[0.03] px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-extrabold text-white">LEDGERA · Respaldo tributario</p>
+          <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-mono text-xs font-black text-emerald-300">
+            AT 2026
+          </span>
+        </div>
+      </div>
 
-function DecisionPanel() {
-  return (
-    <aside className="relative min-h-[560px] lg:min-h-[640px]">
-      <div className="absolute left-[4%] top-[8%] h-[380px] w-[380px] rounded-full border border-[#3FA687]/20 bg-[radial-gradient(circle,rgba(63,166,135,0.17),transparent_65%)] shadow-[0_0_160px_rgba(63,166,135,0.10)]" />
-      <div className="absolute right-0 top-0 w-full max-w-[460px] space-y-4">
-        {DECISION_FLOW.map(([num, title, text]) => (
-          <article key={title} className="rounded-2xl border border-[#343B3D]/75 bg-[#1B2124]/78 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.34)] backdrop-blur-xl transition hover:border-[#3FA687]/55">
-            <div className="flex items-start gap-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#3FA687]/30 bg-[#3FA687]/10 text-sm font-black text-accent">{num}</span>
-              <div>
-                <h3 className="font-display text-[21px] font-black tracking-[-0.035em] text-text">{title}</h3>
-                <p className="mt-1 text-[15px] leading-6 text-text-soft">{text}</p>
-              </div>
-            </div>
-          </article>
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        {kpis.map(([label, value, color]) => (
+          <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-slate-400">{label}</p>
+            <p className={`mt-3 text-2xl font-black tracking-[-0.04em] ${color}`}>{value}</p>
+          </div>
         ))}
       </div>
+
+      <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+        <p className="text-sm font-extrabold text-white">Obligaciones detectadas</p>
+        <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-300">
+          <div>
+            <span className="mr-3 text-amber-300">●</span>Declarar / respaldar
+          </div>
+          <div>
+            <span className="mr-3 text-sky-300">●</span>Revisar trazabilidad de fondos
+          </div>
+          <div>
+            <span className="mr-3 text-slate-500">●</span>Sin impuesto determinado
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035]">
+        <div className="grid grid-cols-4 border-b border-white/10 px-5 py-3 font-mono text-xs text-slate-500">
+          <span>Activo</span>
+          <span>Origen</span>
+          <span>Estado</span>
+          <span>Archivo</span>
+        </div>
+        {rows.map(([asset, source, status, file]) => (
+          <div
+            key={`${asset}-${source}`}
+            className="grid grid-cols-4 border-b border-white/10 px-5 py-3 font-mono text-xs text-slate-300 last:border-0"
+          >
+            <span>{asset}</span>
+            <span>{source}</span>
+            <span className={status === "OK" ? "text-emerald-300" : "text-amber-300"}>{status}</span>
+            <span>{file}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 grid gap-4 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-emerald-300">Verificación</p>
+          <p className="mt-2 text-sm font-bold leading-6 text-slate-200">Folio, hash, URL y QR para validar el respaldo generado.</p>
+        </div>
+        <div className="grid h-20 w-20 place-items-center rounded-2xl border border-emerald-300/30 bg-white/90 text-xs font-black text-slate-950">
+          QR
+        </div>
+      </div>
     </aside>
-  );
-}
-
-function HeroSection() {
-  const router = useRouter();
-  const [inputValue, setInputValue] = useState("");
-
-  const start = () => {
-    const clean = inputValue.trim();
-    if (clean) window.sessionStorage.setItem("ledgera.initialDecision", clean);
-    router.push("/register");
-  };
-
-  return (
-    <section className="relative overflow-hidden px-5 pb-14 pt-14 sm:px-8 lg:px-10 lg:pb-20 lg:pt-20">
-      <CinematicBackground />
-      <div className="relative z-10 mx-auto grid max-w-[1380px] items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(500px,0.88fr)]">
-        <div>
-          <div className="mb-7 inline-flex rounded-full border border-[#3FA687]/35 bg-[#3FA687]/10 px-4 py-2 text-[12px] font-black uppercase tracking-[0.18em] text-accent">
-            Activos · Patrimonio · Tributación
-          </div>
-          <h1 className="max-w-[790px] font-display text-[44px] font-black leading-[1.02] tracking-[-0.055em] text-text sm:text-[62px] lg:text-[74px] xl:text-[82px]">
-            Claridad para tus activos. Decisiones mejor informadas.
-          </h1>
-          <p className="mt-6 max-w-[650px] text-[18px] leading-[1.65] text-text-soft sm:text-[20px]">
-            LEDGERA interpreta normativa chilena, contexto patrimonial y movimientos de cryptoactivos para ayudarte a evaluar decisiones financieras y tributarias.
-          </p>
-          <form onSubmit={(e) => { e.preventDefault(); start(); }} className="mt-8 max-w-[680px]">
-            <div className="rounded-2xl border border-[#343B3D] bg-[#1B2124]/80 p-1.5 shadow-[0_24px_80px_rgba(0,0,0,0.30)] backdrop-blur-xl transition focus-within:border-[#3FA687]/70">
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="¿Qué activo o decisión necesitas evaluar?" className="min-h-[58px] flex-1 rounded-xl border-0 bg-transparent px-5 text-[17px] font-semibold text-text outline-none placeholder:text-text-faint" />
-                <button type="submit" className="min-h-[56px] rounded-xl bg-accent px-6 text-[16px] font-black text-accent-contrast transition hover:bg-[#2E7A63]">Evaluar con LEDGERA →</button>
-              </div>
-            </div>
-          </form>
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            {PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => setInputValue(prompt)} className="rounded-full border border-[#343B3D] bg-[#1B2124]/50 px-4 py-2 text-[13px] font-bold text-text-soft transition hover:border-[#3FA687]/60 hover:bg-[#3FA687]/10 hover:text-text">{prompt}</button>)}
-          </div>
-        </div>
-        <DecisionPanel />
-      </div>
-      <div className="relative z-10 mx-auto mt-8 grid max-w-[1000px] gap-5 text-center">
-        <div className="flex flex-wrap justify-center gap-3">{TRUST_AREAS.map((area) => <span key={area} className="rounded-full border border-[#343B3D]/70 bg-[#1B2124]/60 px-5 py-2 text-sm font-black text-text backdrop-blur-xl">{area}</span>)}</div>
-        <div className="flex flex-wrap justify-center gap-3">{DOMAIN_AREAS.map((area) => <span key={area} className="text-sm font-bold uppercase tracking-[0.18em] text-text-faint">{area}</span>)}</div>
-      </div>
-    </section>
-  );
-}
-
-function ProblemSection() {
-  return (
-    <section id="soluciones" className="border-t border-[#343B3D]/60 bg-bg px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
-      <div className="mx-auto max-w-[1380px]">
-        <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">El problema</p>
-        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-text sm:text-[48px]">Los activos se mueven rápido. La claridad no puede esperar.</h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {PROBLEM_CARDS.map(([title, text]) => (
-            <article key={title} className="premium-card min-h-[260px] rounded-3xl border border-[#343B3D]/80 bg-bg-elev p-7 transition hover:-translate-y-1 hover:border-[#3FA687]/65">
-              <div className="relative z-10 flex h-full flex-col justify-end">
-                <span className="mb-7 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-lg font-black text-accent-contrast">L</span>
-                <h3 className="font-display text-[26px] font-black tracking-[-0.035em] text-text">{title}</h3>
-                <p className="mt-3 text-[16px] leading-6 text-text-soft">{text}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ProcessSection() {
-  return (
-    <section className="border-t border-[#343B3D]/60 bg-bg-elev px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
-      <div className="mx-auto grid max-w-[1380px] gap-12 lg:grid-cols-[0.82fr_1.4fr] lg:items-center">
-        <div>
-          <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">Qué hace LEDGERA</p>
-          <h2 className="mt-5 font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-text sm:text-[48px]">Convierte información compleja en claridad accionable.</h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-5">
-          {PROCESS.map(([title, text], index) => (
-            <article key={title} className="rounded-3xl border border-[#343B3D]/70 bg-[#1B2124]/72 p-5">
-              <div className="mb-6 grid h-10 w-10 place-items-center rounded-full bg-accent text-sm font-black text-accent-contrast">{index + 1}</div>
-              <h3 className="text-[18px] font-black text-text">{title}</h3>
-              <p className="mt-3 text-[14px] leading-6 text-text-soft">{text}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CasesSection() {
-  return (
-    <section id="casos" className="border-t border-[#343B3D]/60 bg-bg px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
-      <div className="mx-auto max-w-[1380px]">
-        <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">Casos reales</p>
-        <h2 className="mt-5 max-w-[760px] font-display text-[34px] font-black leading-[1.08] tracking-[-0.045em] text-text sm:text-[48px]">Evalúa activos, estructuras y movimientos con mayor claridad.</h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {CASES.map(([title, text]) => (
-            <article key={title} className="premium-card min-h-[280px] rounded-3xl border border-[#343B3D]/80 bg-bg-elev p-7 transition hover:-translate-y-1 hover:border-[#3FA687]/65">
-              <div className="relative z-10 flex h-full flex-col justify-end">
-                <h3 className="font-display text-[25px] font-black tracking-[-0.035em] text-text">{title}</h3>
-                <p className="mt-3 text-[16px] leading-6 text-text-soft">{text}</p>
-                <span className="mt-6 text-sm font-black text-accent">Evaluar con LEDGERA →</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PrincipleSection() {
-  return (
-    <section className="border-t border-[#343B3D]/60 bg-bg-elev px-5 py-16 sm:px-8 lg:px-10">
-      <div className="mx-auto grid max-w-[1380px] items-center gap-8 lg:grid-cols-[1fr_auto]">
-        <div>
-          <p className="text-[13px] font-black uppercase tracking-[0.22em] text-accent">Principio LEDGERA</p>
-          <h2 className="mt-3 font-display text-[32px] font-black tracking-[-0.045em] text-text sm:text-[42px]">LEDGERA no decide por ti.</h2>
-          <p className="mt-4 max-w-[820px] text-[17px] leading-[1.7] text-text-soft">Te ayuda a ordenar información, interpretar normas aplicables, comparar alternativas y entender cada escenario antes de actuar.</p>
-        </div>
-        <Link href="/register" className="inline-flex min-h-[56px] items-center justify-center rounded-xl bg-accent px-7 text-[16px] font-black text-accent-contrast transition hover:bg-[#2E7A63]">Evaluar con LEDGERA →</Link>
-      </div>
-    </section>
-  );
-}
-
-function LandingFooter() {
-  return (
-    <footer className="border-t border-[#343B3D]/60 bg-bg px-5 py-10 sm:px-8 lg:px-10">
-      <div className="mx-auto flex max-w-[1380px] flex-col items-center gap-8 sm:flex-row sm:justify-between">
-        <Logo variant="light" size="sm" showSubtitle subtitle={BRAND_SUBTITLE} />
-        <nav className="flex flex-wrap justify-center gap-x-7 gap-y-3">
-          {FOOTER_LINKS.map(([label, href]) => <Link key={label} href={href} className="text-sm font-semibold text-text-soft transition hover:text-text">{label}</Link>)}
-          <a href="mailto:admin@ledgera.cl" className="text-sm font-semibold text-text-soft transition hover:text-text">Contacto</a>
-        </nav>
-      </div>
-    </footer>
   );
 }
 
@@ -249,41 +169,263 @@ export default function LandingConversacional() {
   }, [isAuthenticated, isLoading, router]);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-bg text-text">
-      <style jsx global>{`
-        @keyframes premiumDash { 0% { stroke-dashoffset: 860; } 100% { stroke-dashoffset: 0; } }
-        @keyframes orbPulse { 0%, 100% { transform: scale(1); opacity: .45; } 50% { transform: scale(1.65); opacity: 1; } }
-        .premium-flow { stroke-dasharray: 18 28; animation: premiumDash 22s linear infinite; }
-        .flow-b { animation-duration: 28s; }
-        .flow-c { animation-duration: 34s; }
-        .orb { position: absolute; width: 9px; height: 9px; border-radius: 9999px; background: #3FA687; box-shadow: 0 0 32px rgba(63,166,135,.72); animation: orbPulse 4.8s ease-in-out infinite; }
-        .delay-a { animation-delay: 700ms; }
-        .delay-b { animation-delay: 1200ms; }
-        .premium-card { position: relative; overflow: hidden; }
-        .premium-card:before { content: ""; position: absolute; inset: 0; opacity: .48; background: radial-gradient(circle at 35% 18%, rgba(63,166,135,.34), transparent 28%), linear-gradient(135deg, rgba(232,184,75,.14), transparent 42%); }
-      `}</style>
-
-      <nav className="sticky top-0 z-[100] border-b border-[#343B3D]/60 bg-[#14181A]/88 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
-        <div className="mx-auto flex min-h-[78px] max-w-[1380px] items-center justify-between gap-6">
-          <Link href="/" aria-label="Inicio LEDGERA"><Logo variant="light" size="md" showSubtitle subtitle={BRAND_SUBTITLE} /></Link>
-          <div className="hidden items-center gap-8 lg:flex">
-            <a href="#soluciones" className="text-sm font-semibold text-text-soft transition hover:text-text">Soluciones</a>
-            <a href="#casos" className="text-sm font-semibold text-text-soft transition hover:text-text">Casos de uso</a>
-            <Link href="/login" className="text-sm font-black text-text-soft transition hover:text-text">Iniciar sesión</Link>
-            <Link href="/register" className="inline-flex items-center gap-2 rounded-xl border border-[#3FA687]/50 bg-[#3FA687]/10 px-6 py-3.5 text-sm font-black text-text transition hover:bg-accent hover:text-accent-contrast">Evaluar con LEDGERA →</Link>
+    <main className="ledgera-welcome min-h-screen overflow-x-hidden bg-[#020617] text-slate-50">
+      <nav className="sticky top-0 z-[100] border-b border-white/10 bg-[#020617]/90 px-5 backdrop-blur-xl sm:px-8 lg:px-10">
+        <div className="mx-auto flex min-h-[96px] max-w-[1440px] items-center justify-between gap-5">
+          <Link href="/" aria-label="Inicio LEDGERA" className="inline-flex shrink-0 items-center">
+            <img
+              src="/brand/ledgera-3d-navbar.webp?v=20260706-direct-raster"
+              alt="LEDGERA"
+              className="block h-16 w-auto max-w-[min(62vw,280px)] select-none object-contain sm:h-[72px] sm:max-w-[320px] lg:h-20 lg:max-w-[360px]"
+              draggable={false}
+            />
+          </Link>
+          <div className="hidden items-center gap-7 lg:flex">
+            {navItems.map(([label, href]) => (
+              <Link key={href} href={href} className="text-sm font-bold text-slate-300 transition hover:text-white">
+                {label}
+              </Link>
+            ))}
+            <Link href="/login" className="text-sm font-black text-slate-300 transition hover:text-white">
+              Ingresar
+            </Link>
+            <Link
+              href="/register"
+              className="inline-flex rounded-2xl bg-sky-300 px-5 py-3 text-sm font-black text-slate-950 shadow-2xl shadow-sky-950/40 transition hover:-translate-y-0.5 hover:bg-sky-200"
+            >
+              Comenzar análisis
+            </Link>
           </div>
-          <button type="button" className="rounded-xl border border-[#343B3D] bg-[#1B2124] px-4 py-3 text-sm font-black text-text lg:hidden" onClick={() => setMobileMenuOpen((current) => !current)}>Menú</button>
+          <button
+            type="button"
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-black text-white lg:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            Menú
+          </button>
         </div>
       </nav>
 
-      {mobileMenuOpen ? <div className="sticky top-[78px] z-[90] border-b border-[#343B3D]/70 bg-[#14181A]/98 px-6 py-5 backdrop-blur-xl lg:hidden"><div className="grid gap-4"><a href="#soluciones" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-text-soft">Soluciones</a><a href="#casos" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-text-soft">Casos de uso</a><Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-text-soft">Iniciar sesión</Link><Link href="/register" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-4 text-center font-black text-accent-contrast">Evaluar con LEDGERA →</Link></div></div> : null}
+      {mobileMenuOpen ? (
+        <div className="sticky top-[96px] z-[90] border-b border-white/10 bg-[#020617]/98 px-6 py-5 backdrop-blur-xl lg:hidden">
+          <div className="grid gap-4">
+            {navItems.map(([label, href]) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-base font-black text-slate-300"
+              >
+                {label}
+              </Link>
+            ))}
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-base font-black text-slate-300">
+              Ingresar
+            </Link>
+            <Link
+              href="/register"
+              onClick={() => setMobileMenuOpen(false)}
+              className="inline-flex justify-center rounded-2xl bg-sky-300 px-5 py-4 text-center font-black text-slate-950"
+            >
+              Comenzar análisis
+            </Link>
+          </div>
+        </div>
+      ) : null}
 
-      <HeroSection />
-      <ProblemSection />
-      <ProcessSection />
-      <CasesSection />
-      <PrincipleSection />
-      <LandingFooter />
+      <section className="relative overflow-hidden px-5 pb-12 pt-16 sm:px-8 lg:px-10 lg:pb-16 lg:pt-20">
+        <div
+          className="absolute inset-0 bg-[radial-gradient(circle_at_76%_12%,rgba(56,189,248,0.22),transparent_30%),radial-gradient(circle_at_14%_26%,rgba(34,197,94,0.12),transparent_28%),linear-gradient(180deg,#020617_0%,#0B1120_56%,#020617_100%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 opacity-[0.10] [background-image:linear-gradient(rgba(148,163,184,0.22)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.18)_1px,transparent_1px)] [background-size:88px_88px]"
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10 mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(560px,1fr)]">
+          <div>
+            <div className="inline-flex rounded-full border border-sky-300/30 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-sky-300">
+              Bienvenido a LEDGERA
+            </div>
+            <h1 className="mt-7 max-w-[860px] font-display text-[44px] font-black leading-[1.02] tracking-[-0.065em] text-white sm:text-[64px] lg:text-[82px]">
+              De tus exchanges a tu declaración, sin planillas.
+            </h1>
+            <p className="mt-6 max-w-[740px] text-lg leading-8 text-slate-300 sm:text-xl">
+              LEDGERA importa tus operaciones cripto desde exchanges, ordena tus activos digitales y genera respaldos tributarios trazables en PDF y Excel para revisar mejor antes de declarar.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/register"
+                className="inline-flex min-h-[58px] items-center justify-center rounded-2xl bg-sky-300 px-7 text-base font-black text-slate-950 shadow-2xl shadow-sky-950/40 transition hover:-translate-y-0.5 hover:bg-sky-200"
+              >
+                Comenzar análisis →
+              </Link>
+              <Link
+                href="/como-funciona"
+                className="inline-flex min-h-[58px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-7 text-base font-black text-sky-200 transition hover:border-sky-300/40 hover:bg-sky-300/10"
+              >
+                Ver cómo funciona
+              </Link>
+            </div>
+            <div className="mt-8 grid max-w-[740px] gap-3 sm:grid-cols-3">
+              {trustItems.map(([title, text]) => (
+                <div key={title} className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 backdrop-blur">
+                  <p className="text-sm font-black text-sky-300">{title}</p>
+                  <p className="mt-2 text-xs font-semibold leading-5 text-slate-400">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <ProductSnapshot />
+        </div>
+
+        <div className="relative z-10 mx-auto mt-12 max-w-[1440px] rounded-[2rem] border border-white/10 bg-white/[0.045] px-6 py-5 text-sm font-semibold leading-7 text-slate-300 backdrop-blur-xl sm:px-8">
+          <span className="font-black text-sky-300">Una entrada simple al producto:</span> carga tus movimientos de exchanges, valida activos y descarga respaldo tributario trazable.
+        </div>
+      </section>
+
+      <section className="px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">El problema</p>
+            <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+              Tus operaciones cripto no vienen listas para declarar.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-400 sm:text-lg">
+              Los exchanges entregan movimientos, no respaldo tributario ordenado. Entre compras, ventas, swaps, retiros, depósitos y comisiones, reconstruir tu historial puede volverse lento, frágil y difícil de justificar.
+            </p>
+          </div>
+          <div className="mt-9 grid gap-4 md:grid-cols-3">
+            {problemItems.map(([title, text]) => (
+              <article key={title} className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+                <h3 className="font-display text-2xl font-black tracking-[-0.04em] text-white">{title}</h3>
+                <p className="mt-4 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-white/10 bg-white/[0.025] px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">Cómo funciona</p>
+              <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+                De movimientos cripto a respaldo tributario en 3 pasos.
+              </h2>
+            </div>
+            <p className="text-base leading-8 text-slate-400 sm:text-lg">
+              LEDGERA separa el proceso en etapas revisables para que entiendas qué se cargó, qué se ordenó y qué respaldo se genera antes de avanzar.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {processSteps.map(([number, title, text]) => (
+              <article key={number} className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                <p className="font-mono text-sm font-black text-sky-300">{number}</p>
+                <h3 className="mt-5 font-display text-2xl font-black tracking-[-0.04em] text-white">{title}</h3>
+                <p className="mt-4 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-[1440px] gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+          <div className="lg:sticky lg:top-32">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">Confianza y respaldo</p>
+            <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+              Respaldo diseñado para revisión, no solo para descargar.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-400 sm:text-lg">
+              La salida debe poder revisarse: documentos, cálculos, operaciones y verificación del respaldo generado.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {verificationItems.map(([title, text]) => (
+              <article key={title} className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
+                <h3 className="font-display text-xl font-black tracking-[-0.035em] text-white">{title}</h3>
+                <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-white/10 bg-white/[0.025] px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">Para quién es</p>
+            <h2 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+              Diseñado para quienes necesitan ordenar operaciones cripto.
+            </h2>
+          </div>
+          <div className="mt-9 grid gap-4 md:grid-cols-4">
+            {audienceItems.map(([title, text]) => (
+              <article key={title} className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
+                <h3 className="font-display text-xl font-black tracking-[-0.035em] text-white">{title}</h3>
+                <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1100px] rounded-[2rem] border border-sky-300/20 bg-sky-300/10 px-6 py-10 text-center sm:px-10">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-300">Antes de declarar</p>
+          <h2 className="mx-auto mt-4 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] text-white sm:text-5xl">
+            Ordena tus operaciones, revisa obligaciones y genera respaldo trazable.
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-7 text-slate-300 sm:text-base">
+            LEDGERA prepara información para revisión financiera y tributaria. La determinación final debe evaluarse según tu situación particular.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/register" className="inline-flex min-h-[58px] items-center justify-center rounded-2xl bg-sky-300 px-7 text-base font-black text-slate-950 transition hover:-translate-y-0.5 hover:bg-sky-200">
+              Comenzar análisis →
+            </Link>
+            <Link href="/preguntas" className="inline-flex min-h-[58px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-7 text-base font-black text-sky-200 transition hover:border-sky-300/40 hover:bg-sky-300/10">
+              Revisar preguntas frecuentes
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-white/10 bg-[#020617] px-5 py-12 text-slate-300 sm:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-[1440px] gap-10 lg:grid-cols-[1.1fr_1.5fr_0.8fr]">
+          <div>
+            <Logo variant="light" size="sm" />
+            <p className="mt-5 max-w-[430px] text-sm leading-6 text-slate-400">
+              Orden, trazabilidad y respaldo tributario para activos digitales. Diseñado para revisar mejor antes de declarar o tomar decisiones patrimoniales.
+            </p>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-3">
+            {footerColumns.map((column) => (
+              <div key={column.title}>
+                <h3 className="text-sm font-black uppercase tracking-[0.18em] text-sky-300">{column.title}</h3>
+                <div className="mt-4 grid gap-3">
+                  {column.links.map(([label, href]) => (
+                    <Link key={`${column.title}-${href}`} href={href} className="text-sm font-semibold text-slate-300 transition hover:text-white">
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-3xl border border-sky-300/20 bg-sky-300/10 p-6">
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-300">¿Tienes dudas?</p>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              Revisa las preguntas frecuentes o comienza un análisis para ordenar tu historial cripto antes de declarar.
+            </p>
+            <Link href="/preguntas" className="mt-5 inline-flex rounded-2xl bg-sky-300 px-5 py-3 text-sm font-black text-slate-950">
+              Revisar dudas
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

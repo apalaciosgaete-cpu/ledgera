@@ -1,26 +1,71 @@
 // src/styles/tokens.ts
+// LEDGERA design tokens are sourced from CSS variables in src/app/globals.css.
+// Keep this TypeScript facade for legacy inline-style consumers, but do not
+// define independent hex palettes here.
+
 export const colors = {
-  primary:       "#0F2A3D",
-  primaryHover:  "#13364F",
-  accent:        "#16A34A",
-  accentHover:   "#15803D",
-  accentMuted:   "rgba(22, 163, 74, 0.15)",
-  warning:       "#F59E0B",
-  warningHover:  "#D97706",
-  warningMuted:  "rgba(245, 158, 11, 0.15)",
-  danger:        "#EF4444",
-  dangerHover:   "#DC2626",
-  dangerMuted:   "rgba(239, 68, 68, 0.15)",
-  bgApp:         "#E8EEF5",
-  surface:       "#FFFFFF",
-  surfaceAlt:    "#F8FAFC",
-  surfaceDark:   "#13364F",
-  textPrimary:   "#0F172A",
-  textSecondary: "#475569",
-  textMuted:     "#94A3B8",
-  textLight:     "#F6F8FA",
-  border:        "#E2E8F0",
-  borderDark:    "#1e4a6b",
+  primary: "var(--accent)",
+  primaryHover: "var(--accent)",
+  primaryCard: "var(--bg-elev)",
+  primaryBorder: "var(--border-strong)",
+  accent: "var(--accent)",
+  accentHover: "var(--accent)",
+  accentMuted: "var(--accent-soft)",
+  warning: "var(--warn)",
+  warningHover: "var(--warn)",
+  warningMuted: "rgba(232, 184, 75, 0.14)",
+  danger: "var(--loss)",
+  dangerHover: "var(--loss)",
+  dangerMuted: "rgba(196, 99, 74, 0.14)",
+  bg: "var(--bg)",
+  bgApp: "var(--bg)",
+  bgElev: "var(--bg-elev)",
+  bgSunken: "var(--bg-sunken)",
+  surface: "var(--bg-elev)",
+  surfaceAlt: "var(--bg-sunken)",
+  surfaceDark: "var(--bg-sunken)",
+  textPrimary: "var(--text)",
+  textSecondary: "var(--text-soft)",
+  textMuted: "var(--text-faint)",
+  textLight: "var(--text)",
+  border: "var(--border)",
+  borderDark: "var(--border-strong)",
+  gain: "var(--gain)",
+  loss: "var(--loss)",
+  warn: "var(--warn)",
+} as const;
+
+export const semanticTones = {
+  neutral: {
+    bg: "var(--bg-elev)",
+    fg: "var(--text-soft)",
+    border: "var(--border)",
+  },
+  selected: {
+    bg: "var(--accent-soft)",
+    fg: "var(--accent)",
+    border: "var(--accent)",
+  },
+  success: {
+    bg: "var(--accent-soft)",
+    fg: "var(--gain)",
+    border: "var(--accent)",
+  },
+  warning: {
+    bg: "rgba(232, 184, 75, 0.14)",
+    fg: "var(--warn)",
+    border: "rgba(232, 184, 75, 0.32)",
+  },
+  danger: {
+    bg: "rgba(196, 99, 74, 0.14)",
+    fg: "var(--loss)",
+    border: "rgba(196, 99, 74, 0.32)",
+  },
+  info: {
+    bg: "var(--accent-soft)",
+    fg: "var(--accent)",
+    border: "var(--accent)",
+  },
 } as const;
 
 export const fonts = {
@@ -63,9 +108,9 @@ export const radius = {
 } as const;
 
 export const shadows = {
-  sm: "0 1px 3px rgba(0, 0, 0, 0.06)",
-  md: "0 4px 16px rgba(0, 0, 0, 0.08)",
-  lg: "0 8px 32px rgba(0, 0, 0, 0.12)",
+  sm: "var(--shadow-sm)",
+  md: "var(--shadow-md)",
+  lg: "var(--shadow-lg)",
 } as const;
 
 export const spacing = {
