@@ -1,13 +1,15 @@
+import { Logo } from "@/components/brand/Logo";
+
 type VerifyResponse = {
   ok: boolean;
   message: string;
   data?: {
-    valid:          boolean;
-    reportType:     string;
+    valid: boolean;
+    reportType: string;
     validationCode: string;
-    contentHash:    string;
-    createdAt:      string;
-    metadata:       Record<string, unknown> | null;
+    contentHash: string;
+    createdAt: string;
+    metadata: Record<string, unknown> | null;
   };
 };
 
@@ -37,25 +39,53 @@ function formatDate(value: string): string {
   });
 }
 
+function MetricCard({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "neutral" | "success" | "warning" }) {
+  const toneClass = tone === "success"
+    ? "border-accent bg-accent-soft text-gain"
+    : tone === "warning"
+      ? "border-warn bg-[rgba(252,211,77,0.14)] text-warn"
+      : "border-border bg-bg-elev text-text";
+
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClass}`}>
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-text-faint">{label}</p>
+      <p className="mt-2 font-display text-2xl font-black tracking-[-0.04em] text-text">{value}</p>
+    </div>
+  );
+}
+
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-text-faint">{label}</p>
+      <div className="mt-2 text-sm font-semibold leading-6 text-text">{children}</div>
+    </div>
+  );
+}
+
 export default async function VerifyBankReconciliationPage({ params }: PageProps) {
   const { code } = await params;
   const result = await verifyDocument(code);
 
   if (!result.ok || !result.data?.valid) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-16">
-        <section className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-white p-8">
-          <p className="text-sm font-semibold uppercase tracking-wide text-red-600">
-            Documento no verificado
-          </p>
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_34%),linear-gradient(135deg,var(--bg-sunken),var(--bg),var(--bg-elev))] px-6 py-12 text-text">
+        <section className="mx-auto w-full max-w-2xl">
+          <header className="mb-10 flex flex-col items-center text-center">
+            <Logo variant="light" size="lg" showSubtitle />
+            <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-loss">Documento no verificado</p>
+            <h1 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-text">Código inválido</h1>
+            <p className="mt-4 max-w-xl text-sm font-semibold leading-7 text-text-soft">
+              No encontramos un reporte de conciliación asociado a este código.
+            </p>
+          </header>
 
-          <h1 className="mt-3 text-2xl font-semibold text-slate-900">
-            Código inválido
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-500">
-            No encontramos un reporte de conciliación asociado a este código.
-          </p>
+          <div className="rounded-3xl border border-loss bg-[rgba(253,164,175,0.14)] p-7 text-center shadow-[var(--shadow-md)]">
+            <p className="font-display text-xl font-black text-text">Verificación no disponible</p>
+            <p className="mt-3 text-sm font-semibold leading-6 text-text-soft">
+              Revisa el código, escanea nuevamente el QR o solicita una copia actualizada del respaldo.
+            </p>
+          </div>
         </section>
       </main>
     );
@@ -64,86 +94,36 @@ export default async function VerifyBankReconciliationPage({ params }: PageProps
   const metadata = result.data.metadata ?? {};
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-16">
-      <section className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8">
-        <p className="text-sm font-semibold uppercase tracking-wide text-green-600">
-          Documento verificado
-        </p>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_34%),linear-gradient(135deg,var(--bg-sunken),var(--bg),var(--bg-elev))] px-6 py-12 text-text">
+      <section className="mx-auto w-full max-w-4xl">
+        <header className="mb-10 flex flex-col items-center text-center">
+          <Logo variant="light" size="lg" showSubtitle />
+          <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-accent">Documento verificado</p>
+          <h1 className="mt-4 font-display text-4xl font-black tracking-[-0.055em] text-text sm:text-5xl">
+            Reporte de conciliación financiera
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm font-semibold leading-7 text-text-soft">
+            Este documento fue generado por LEDGERA y su hash coincide con un registro de verificación existente.
+          </p>
+        </header>
 
-        <h1 className="mt-3 text-2xl font-semibold text-slate-900">
-          Reporte de conciliación financiera
-        </h1>
-
-        <p className="mt-2 text-sm text-slate-500">
-          Este documento fue generado por LEDGERA y su hash coincide con un registro
-          de verificación existente.
-        </p>
-
-        <div className="mt-6 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Código de verificación
-            </p>
-            <p className="mt-1 font-mono text-slate-900">
-              {result.data.validationCode}
-            </p>
+        <div className="rounded-3xl border border-border bg-bg-elev p-6 shadow-[var(--shadow-md)]">
+          <div className="grid gap-5 rounded-2xl border border-border bg-bg-sunken p-5 text-sm">
+            <DetailRow label="Código de verificación">
+              <code className="break-all font-mono text-accent">{result.data.validationCode}</code>
+            </DetailRow>
+            <DetailRow label="Hash SHA-256">
+              <code className="break-all font-mono text-xs text-accent">{result.data.contentHash}</code>
+            </DetailRow>
+            <DetailRow label="Fecha de generación">{formatDate(result.data.createdAt)}</DetailRow>
+            <DetailRow label="Tipo de reporte">{result.data.reportType}</DetailRow>
           </div>
 
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Hash SHA-256
-            </p>
-            <p className="mt-1 break-all font-mono text-xs text-slate-900">
-              {result.data.contentHash}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Fecha de generación
-            </p>
-            <p className="mt-1 text-slate-900">
-              {formatDate(result.data.createdAt)}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Tipo de reporte
-            </p>
-            <p className="mt-1 text-slate-900">
-              {result.data.reportType}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3 md:grid-cols-4">
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-400">Total</p>
-            <p className="mt-1 text-xl font-semibold text-slate-900">
-              {String(metadata.total ?? "—")}
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-            <p className="text-xs text-green-600">Conciliados</p>
-            <p className="mt-1 text-xl font-semibold text-green-800">
-              {String(metadata.matched ?? "—")}
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-xs text-amber-600">Pendientes</p>
-            <p className="mt-1 text-xl font-semibold text-amber-800">
-              {String(metadata.pending ?? "—")}
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-400">Ignorados</p>
-            <p className="mt-1 text-xl font-semibold text-slate-900">
-              {String(metadata.ignored ?? "—")}
-            </p>
+          <div className="mt-6 grid gap-3 md:grid-cols-4">
+            <MetricCard label="Total" value={String(metadata.total ?? "—")} />
+            <MetricCard label="Conciliados" value={String(metadata.matched ?? "—")} tone="success" />
+            <MetricCard label="Pendientes" value={String(metadata.pending ?? "—")} tone="warning" />
+            <MetricCard label="Ignorados" value={String(metadata.ignored ?? "—")} />
           </div>
         </div>
       </section>
