@@ -113,13 +113,13 @@ export async function createSession(input: CreateSessionInput): Promise<Session>
 }
 
 export async function getSessionByToken(token: string): Promise<Session | null> {
-  const session = await prisma.sessions.findFirst({ where: { token } });
+  const session = await prisma.sessions.findUnique({ where: { token } });
   if (!session) return null;
   return mapRowToSession(session);
 }
 
 export async function getSessionWithUserByToken(token: string): Promise<SessionWithUser | null> {
-  const session = await prisma.sessions.findFirst({
+  const session = await prisma.sessions.findUnique({
     where: { token },
     include: {
       users: {
