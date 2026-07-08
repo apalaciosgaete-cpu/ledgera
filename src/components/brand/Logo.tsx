@@ -13,12 +13,13 @@ interface LogoProps {
 }
 
 const sizes = {
-  sm: { width: 168, height: 86 },
-  md: { width: 240, height: 123 },
-  lg: { width: 300, height: 153 },
+  sm: { width: 168, height: 48 },
+  md: { width: 240, height: 68 },
+  lg: { width: 360, height: 102 },
 };
 
 const officialAlt = "LEDGERA — Inteligencia financiera para crecer";
+const officialLogoSrc = "/brand/ledgera-3d-navbar.webp?v=20260707-official";
 
 export function Logo(props: LogoProps) {
   const { size = "md" } = props;
@@ -26,7 +27,7 @@ export function Logo(props: LogoProps) {
 
   return (
     <Image
-      src="/brand/ledgera-logo-public.svg"
+      src={officialLogoSrc}
       alt={officialAlt}
       width={s.width}
       height={s.height}
@@ -36,6 +37,8 @@ export function Logo(props: LogoProps) {
         display: "block",
         width: s.width,
         height: "auto",
+        maxWidth: "100%",
+        objectFit: "contain",
       }}
     />
   );
