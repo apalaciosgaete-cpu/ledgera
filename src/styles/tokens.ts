@@ -13,10 +13,10 @@ export const colors = {
   accentMuted: "var(--accent-soft)",
   warning: "var(--warn)",
   warningHover: "var(--warn)",
-  warningMuted: "rgba(232, 184, 75, 0.14)",
+  warningMuted: "rgba(252, 211, 77, 0.14)",
   danger: "var(--loss)",
   dangerHover: "var(--loss)",
-  dangerMuted: "rgba(196, 99, 74, 0.14)",
+  dangerMuted: "rgba(253, 164, 175, 0.14)",
   bg: "var(--bg)",
   bgApp: "var(--bg)",
   bgElev: "var(--bg-elev)",
@@ -52,14 +52,14 @@ export const semanticTones = {
     border: "var(--accent)",
   },
   warning: {
-    bg: "rgba(232, 184, 75, 0.14)",
+    bg: "rgba(252, 211, 77, 0.14)",
     fg: "var(--warn)",
-    border: "rgba(232, 184, 75, 0.32)",
+    border: "rgba(252, 211, 77, 0.32)",
   },
   danger: {
-    bg: "rgba(196, 99, 74, 0.14)",
+    bg: "rgba(253, 164, 175, 0.14)",
     fg: "var(--loss)",
-    border: "rgba(196, 99, 74, 0.32)",
+    border: "rgba(253, 164, 175, 0.32)",
   },
   info: {
     bg: "var(--accent-soft)",
@@ -69,9 +69,9 @@ export const semanticTones = {
 } as const;
 
 export const fonts = {
-  display: "var(--font-display, 'Space Grotesk', system-ui, sans-serif)",
-  body:    "var(--font-body, 'Inter', system-ui, sans-serif)",
-  mono:    "var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace)",
+  display: "'Manrope', var(--font-display, 'Space Grotesk'), system-ui, sans-serif",
+  body:    "'Manrope', var(--font-body, 'Inter'), system-ui, sans-serif",
+  mono:    "var(--font-mono, 'IBM Plex Mono'), ui-monospace, monospace",
 } as const;
 
 export const fontSize = {
@@ -91,6 +91,7 @@ export const fontWeight = {
   medium:   500,
   semibold: 600,
   bold:     700,
+  heavy:    800,
 } as const;
 
 export const lineHeight = {
