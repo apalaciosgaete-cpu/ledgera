@@ -159,6 +159,9 @@ export function AuthProvider({
     if (cachedUser) {
       setUser(cachedUser);
       setIsHydratedFromCache(true);
+      setIsLoading(false);
+      void refreshUser({ silent: true });
+      return;
     }
 
     void refreshUser();
