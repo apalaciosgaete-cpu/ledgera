@@ -6,35 +6,6 @@ const CSRF_HEADER = "x-ledgera-csrf";
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 180;
 
-const MAINTENANCE_PATH = "/mantenimiento";
-
-function isMaintenanceMode() {
-  const value = process.env.SITE_MAINTENANCE_MODE?.trim().toLowerCase();
-  const disabled = value === "false" || value === "0";
-  return process.env.NODE_ENV === "production" && !disabled;
-}
-
-function enforceMaintenanceMode(req: NextRequest) {
-  const pathname = req.nextUrl.pathname;
-
-  if (!isMaintenanceMode()) return null;
-  if (pathname === MAINTENANCE_PATH || pathname.startsWith(`${MAINTENANCE_PATH}/`)) return null;
-  if (pathname.startsWith("/api/")) return null;
-
-  const maintenanceUrl = req.nextUrl.clone();
-  maintenanceUrl.pathname = MAINTENANCE_PATH;
-  maintenanceUrl.search = "";
-
-  return NextResponse.rewrite(maintenanceUrl, {
-    status: 503,
-    headers: {
-      "Retry-After": "3600",
-      "Cache-Control": "no-store, max-age=0, must-revalidate",
-      "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet, noimageindex",
-    },
-  });
-}
-
 const protectedPagePrefixes = [
   "/panel",
   "/origen-fondos",
@@ -72,7 +43,7 @@ const publicPagePrefixes = [
   "/planes",
   "/como-funciona",
   "/quienes-somos",
-  "/mantenimiento",
+  "/contacto",
 ];
 
 type RateLimitBucket = {
@@ -216,9 +187,6 @@ function enforceProtectedPages(req: NextRequest) {
 }
 
 export function middleware(req: NextRequest) {
-  const maintenanceResponse = enforceMaintenanceMode(req);
-  if (maintenanceResponse) return maintenanceResponse;
-
   const rateLimitResponse = enforceRateLimit(req);
   if (rateLimitResponse) return rateLimitResponse;
 
