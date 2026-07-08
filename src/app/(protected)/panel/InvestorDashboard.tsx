@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { fonts } from "@/styles/tokens";
 import { httpClient } from "@/shared/http/httpClient";
 
 type AssetRow = {
@@ -46,11 +45,34 @@ type ApiResponse<T> = {
   data: T;
 };
 
+const panelFont = "'Manrope', var(--font-body, 'Inter'), system-ui, sans-serif";
+const monoFont = "var(--font-mono, 'IBM Plex Mono'), ui-monospace, monospace";
+
 const statusMeta: Record<AssetRow["status"], { label: string; bg: string; color: string; border: string }> = {
-  COMPLETO: { label: "Completo", bg: "var(--accent-soft)", color: "var(--accent)", border: "var(--accent-soft)" },
-  FALTA_PRECIO: { label: "Falta precio", bg: "rgba(196,99,74,0.14)", color: "var(--loss)", border: "rgba(196,99,74,0.14)" },
-  FALTA_BASE: { label: "Falta base", bg: "rgba(232,184,75,0.14)", color: "var(--warn)", border: "rgba(232,184,75,0.14)" },
-  REVISAR_BASE: { label: "Revisar", bg: "var(--bg-elev)", color: "var(--warn)", border: "rgba(232,184,75,0.14)" },
+  COMPLETO: {
+    label: "Completo",
+    bg: "var(--accent-soft)",
+    color: "var(--gain)",
+    border: "rgba(110, 231, 183, 0.28)",
+  },
+  FALTA_PRECIO: {
+    label: "Falta precio",
+    bg: "rgba(253, 164, 175, 0.14)",
+    color: "var(--loss)",
+    border: "rgba(253, 164, 175, 0.32)",
+  },
+  FALTA_BASE: {
+    label: "Falta base",
+    bg: "rgba(252, 211, 77, 0.14)",
+    color: "var(--warn)",
+    border: "rgba(252, 211, 77, 0.32)",
+  },
+  REVISAR_BASE: {
+    label: "Revisar",
+    bg: "rgba(252, 211, 77, 0.14)",
+    color: "var(--warn)",
+    border: "rgba(252, 211, 77, 0.32)",
+  },
 };
 
 function formatClp(value: number | null | undefined): string {
@@ -80,18 +102,40 @@ function formatDateTime(value: string | null | undefined): string {
   return date.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
 }
 
+function normalizeSource(value: string | null | undefined): string {
+  if (!value) return "Sin fuente";
+  const clean = value.trim().toLowerCase();
+  if (clean === "binance") return "Binance";
+  if (clean === "stablecoin") return "Stablecoin";
+  if (clean === "mindicador.cl") return "mindicador.cl";
+  if (clean === "fallback") return "Fallback";
+  if (clean === "sin_precio") return "Sin precio";
+  return value;
+}
+
 function resultColor(value: number | null | undefined): string {
   if (value === null || value === undefined) return "var(--text-soft)";
-  if (value > 0) return "#3FA687";
-  if (value < 0) return "#C4634A";
+  if (value > 0) return "var(--gain)";
+  if (value < 0) return "var(--loss)";
   return "var(--text-soft)";
 }
 
-function KpiCard({ label, value, helper, accent = "#3FA687" }: { label: string; value: string; helper: string; accent?: string }) {
+function KpiCard({ label, value, helper, accent = "var(--accent)" }: { label: string; value: string; helper: string; accent?: string }) {
   return (
-    <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 20, padding: 18, display: "grid", gap: 8, minHeight: 118, boxShadow: "0 14px 30px rgba(15,42,61,0.05)" }}>
-      <span style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 850, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
-      <strong style={{ color: accent, fontSize: "clamp(1.35rem,2.5vw,2rem)", fontWeight: 950, letterSpacing: "-0.045em", lineHeight: 1 }}>{value}</strong>
+    <article
+      style={{
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
+        borderRadius: 20,
+        padding: 18,
+        display: "grid",
+        gap: 8,
+        minHeight: 106,
+        boxShadow: "var(--shadow-sm)",
+      }}
+    >
+      <span style={{ color: "var(--text-faint)", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
+      <strong style={{ color: accent, fontSize: "clamp(1.2rem,2.1vw,1.72rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>{value}</strong>
       <span style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.35 }}>{helper}</span>
     </article>
   );
@@ -100,13 +144,13 @@ function KpiCard({ label, value, helper, accent = "#3FA687" }: { label: string; 
 function EmptyState() {
   return (
     <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 28, display: "grid", gap: 14, textAlign: "center" }}>
-      <h2 style={{ color: "var(--text)", fontSize: 24, fontWeight: 950, letterSpacing: "-0.04em", margin: 0 }}>Aún no hay activos valorizados</h2>
+      <h2 style={{ color: "var(--text)", fontSize: 21, fontWeight: 800, letterSpacing: "-0.035em", margin: 0 }}>Aún no hay activos valorizados</h2>
       <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6, margin: "0 auto", maxWidth: 620 }}>
         Carga movimientos o documentación para que LEDGERA consolide tus activos, base de costo y valorización en pesos chilenos.
       </p>
       <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-        <Link href="/origen-fondos" style={{ background: "var(--accent)", color: "var(--text)", borderRadius: 999, padding: "11px 16px", fontWeight: 900, textDecoration: "none", fontSize: 13 }}>Cargar origen de fondos</Link>
-        <Link href="/importaciones" style={{ background: "var(--bg-sunken)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 999, padding: "11px 16px", fontWeight: 900, textDecoration: "none", fontSize: 13 }}>Ver importaciones</Link>
+        <Link href="/origen-fondos" style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderRadius: 999, padding: "11px 16px", fontWeight: 800, textDecoration: "none", fontSize: 13 }}>Cargar origen de fondos</Link>
+        <Link href="/importaciones" style={{ background: "var(--bg-sunken)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 999, padding: "11px 16px", fontWeight: 800, textDecoration: "none", fontSize: 13 }}>Ver importaciones</Link>
       </div>
     </section>
   );
@@ -122,10 +166,18 @@ export function InvestorDashboard() {
     setLoading(true);
     setError(false);
     httpClient<ApiResponse<AssetSummary>>("/api/assets/summary", { auth: true })
-      .then((response) => { if (!cancelled) setSummary(response.data); })
-      .catch(() => { if (!cancelled) setError(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .then((response) => {
+        if (!cancelled) setSummary(response.data);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const topComposition = useMemo(() => {
@@ -138,63 +190,65 @@ export function InvestorDashboard() {
     }));
   }, [summary]);
 
-  const resultLabel = (summary?.totals.unrealizedPnlClp ?? 0) >= 0 ? "Ganancia estimada no realizada" : "Pérdida estimada no realizada";
+  const resultLabel = (summary?.totals.unrealizedPnlClp ?? 0) >= 0 ? "Resultado no realizado estimado" : "Resultado no realizado estimado";
 
   return (
-    <main style={{ minHeight: "calc(100vh - 96px)", background: "var(--bg-sunken)", color: "var(--text)", fontFamily: fonts.body, padding: "clamp(18px,3vw,34px)", boxSizing: "border-box" }}>
-      <div style={{ maxWidth: 1240, margin: "0 auto", display: "grid", gap: 18 }}>
-        <section style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 18, flexWrap: "wrap" }}>
-          <div style={{ display: "grid", gap: 7, maxWidth: 740 }}>
-            <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 900, letterSpacing: "0.08em", margin: 0, textTransform: "uppercase" }}>Resumen de activos</p>
-            <h1 style={{ color: "var(--text)", fontSize: "clamp(2rem,4vw,3.2rem)", lineHeight: 0.98, letterSpacing: "-0.06em", fontWeight: 950, margin: 0 }}>
+    <main style={{ minHeight: "calc(100vh - 96px)", background: "var(--bg-sunken)", color: "var(--text)", fontFamily: panelFont, padding: "clamp(16px,2.4vw,28px)", boxSizing: "border-box" }}>
+      <div style={{ maxWidth: 1220, margin: "0 auto", display: "grid", gap: 16 }}>
+        <section style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gap: 7, maxWidth: 720 }}>
+            <p style={{ color: "var(--accent)", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.08em", margin: 0, textTransform: "uppercase" }}>Resumen de activos</p>
+            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.7rem,2.7vw,2.35rem)", lineHeight: 1.05, letterSpacing: "-0.045em", fontWeight: 800, margin: 0 }}>
               Activos actuales, valorización y resultado estimado
             </h1>
-            <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.55, margin: 0, maxWidth: 690 }}>
-              Consulta tus activos confirmados, su precio actual en dólares, valor en pesos chilenos y resultado estimado frente a tu base de costo.
+            <p style={{ color: "var(--text-soft)", fontSize: 14.5, lineHeight: 1.55, margin: 0, maxWidth: 690 }}>
+              Consulta tus activos confirmados, su precio actual, valor en pesos chilenos y resultado patrimonial estimado frente a tu base de costo.
             </p>
           </div>
-          <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 14, minWidth: 230, display: "grid", gap: 7 }}>
-            <span style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 850 }}>Tipo de cambio usado</span>
-            <strong style={{ color: "var(--text)", fontSize: 22, fontWeight: 950 }}>{summary ? formatClp(summary.usdClp) : loading ? "Cargando..." : "—"}</strong>
-            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>Actualizado: {summary ? formatDateTime(summary.generatedAt) : "—"}</span>
+          <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 14, minWidth: 240, display: "grid", gap: 7 }}>
+            <span style={{ color: "var(--text-faint)", fontSize: 12, fontWeight: 800 }}>Tipo de cambio usado</span>
+            <strong style={{ color: "var(--text)", fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>{summary ? formatClp(summary.usdClp) : loading ? "Cargando..." : "—"}</strong>
+            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>Fuente: {summary ? normalizeSource(summary.fxSource) : "—"}</span>
+            <span style={{ color: "var(--text-faint)", fontSize: 12 }}>Actualizado: {summary ? formatDateTime(summary.generatedAt) : "—"}</span>
           </aside>
         </section>
 
         {loading ? (
           <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 28, color: "var(--text-soft)" }}>Cargando resumen de activos...</section>
         ) : error ? (
-          <section style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 22, padding: 22, color: "var(--loss)" }}>No fue posible cargar el resumen de activos.</section>
+          <section style={{ background: "rgba(253, 164, 175, 0.14)", border: "1px solid rgba(253, 164, 175, 0.32)", borderRadius: 22, padding: 22, color: "var(--loss)" }}>No fue posible cargar el resumen de activos.</section>
         ) : !summary || summary.assets.length === 0 ? (
           <EmptyState />
         ) : (
           <>
             <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 12 }}>
-              <KpiCard label="Patrimonio total estimado" value={formatClp(summary.totals.valueClp)} helper={`${formatUsd(summary.totals.valueUsd)} valorizados a USD/CLP ${formatNumber(summary.usdClp, 2)}`} />
+              <KpiCard label="Patrimonio total estimado" value={formatClp(summary.totals.valueClp)} helper={`${formatUsd(summary.totals.valueUsd)} · USD/CLP ${formatNumber(summary.usdClp, 2)} · ${normalizeSource(summary.fxSource)}`} />
               <KpiCard label={resultLabel} value={formatClp(summary.totals.unrealizedPnlClp)} helper={`Frente a base de costo: ${formatPct(summary.totals.unrealizedPnlPct)}`} accent={resultColor(summary.totals.unrealizedPnlClp)} />
-              <KpiCard label="Activos detectados" value={String(summary.counts.assets)} helper="Con saldo actual estimado" accent="#3FA687" />
-              <KpiCard label="Operaciones utilizadas" value={String(summary.counts.operations)} helper="Movimientos usados para consolidar saldos" accent="#3FA687" />
+              <KpiCard label="Activos detectados" value={String(summary.counts.assets)} helper="Con saldo actual estimado" accent="var(--accent)" />
+              <KpiCard label="Operaciones utilizadas" value={String(summary.counts.operations)} helper="Movimientos usados para consolidar saldos" accent="var(--accent)" />
             </section>
 
-            <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "0 18px 42px rgba(15,42,61,0.06)" }}>
-              <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                 <div>
-                  <h2 style={{ color: "var(--text)", fontSize: 18, fontWeight: 950, margin: 0 }}>Activos valorizados</h2>
-                  <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: "4px 0 0" }}>Valor actual estimado, conversión a CLP y resultado no realizado.</p>
+                  <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Activos valorizados</h2>
+                  <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: "4px 0 0" }}>Valor actual estimado, conversión a CLP, fuente de precio y resultado no realizado.</p>
                 </div>
-                <Link href="/cryptoactivos" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 900, textDecoration: "none" }}>Ver detalle operativo</Link>
+                <Link href="/cryptoactivos" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>Ver detalle operativo</Link>
               </div>
 
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", minWidth: 960, borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", minWidth: 1060, borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "left" }}>
+                    <tr style={{ background: "var(--bg-sunken)", color: "var(--text-faint)", fontSize: 10.8, letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "left" }}>
                       <th style={{ padding: "12px 14px" }}>Activo</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Cantidad</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Precio USD</th>
+                      <th style={{ padding: "12px 14px" }}>Fuente</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor USD</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor CLP</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Base costo CLP</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Ganancia / pérdida</th>
+                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Resultado no realizado</th>
                       <th style={{ padding: "12px 14px" }}>Estado</th>
                     </tr>
                   </thead>
@@ -203,14 +257,15 @@ export function InvestorDashboard() {
                       const meta = statusMeta[asset.status];
                       return (
                         <tr key={asset.symbol} style={{ borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 13 }}>
-                          <td style={{ padding: "13px 14px" }}><strong style={{ color: "var(--text)", fontSize: 14 }}>{asset.symbol}</strong><br /><span style={{ color: "var(--text-soft)", fontSize: 11 }}>{asset.operations} ops.</span></td>
-                          <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 800 }}>{formatNumber(asset.quantity)}</td>
-                          <td style={{ padding: "13px 14px", textAlign: "right" }}>{formatUsd(asset.priceUsd)}</td>
-                          <td style={{ padding: "13px 14px", textAlign: "right" }}>{formatUsd(asset.valueUsd)}</td>
-                          <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 900, color: "var(--text)" }}>{formatClp(asset.valueClp)}</td>
-                          <td style={{ padding: "13px 14px", textAlign: "right" }}>{formatClp(asset.costBasisClp)}</td>
-                          <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 900 }}>{formatClp(asset.unrealizedPnlClp)}<br /><span style={{ fontSize: 11 }}>{formatPct(asset.unrealizedPnlPct)}</span></td>
-                          <td style={{ padding: "13px 14px" }}><span style={{ background: meta.bg, border: `1px solid ${meta.border}`, borderRadius: 999, color: meta.color, display: "inline-flex", fontSize: 11.5, fontWeight: 900, padding: "5px 8px" }}>{meta.label}</span></td>
+                          <td style={{ padding: "13px 14px" }}><strong style={{ color: "var(--text)", fontSize: 14, fontWeight: 800 }}>{asset.symbol}</strong><br /><span style={{ color: "var(--text-faint)", fontSize: 11 }}>{asset.operations} ops.</span></td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 800, fontFamily: monoFont }}>{formatNumber(asset.quantity)}</td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatUsd(asset.priceUsd)}</td>
+                          <td style={{ padding: "13px 14px", color: "var(--text-soft)", fontSize: 12 }}>{normalizeSource(asset.priceSource)}</td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatUsd(asset.valueUsd)}</td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 800, color: "var(--text)", fontFamily: monoFont }}>{formatClp(asset.valueClp)}</td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatClp(asset.costBasisClp)}</td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatClp(asset.unrealizedPnlClp)}<br /><span style={{ fontSize: 11 }}>{formatPct(asset.unrealizedPnlPct)}</span></td>
+                          <td style={{ padding: "13px 14px" }}><span style={{ background: meta.bg, border: `1px solid ${meta.border}`, borderRadius: 999, color: meta.color, display: "inline-flex", fontSize: 11.5, fontWeight: 800, padding: "5px 8px" }}>{meta.label}</span></td>
                         </tr>
                       );
                     })}
@@ -219,25 +274,25 @@ export function InvestorDashboard() {
               </div>
             </section>
 
-            <section style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(280px,0.8fr)", gap: 14 }}>
+            <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,280px),1fr))", gap: 14 }}>
               <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 18, display: "grid", gap: 12 }}>
-                <h2 style={{ color: "var(--text)", fontSize: 17, fontWeight: 950, margin: 0 }}>Composición del portafolio</h2>
+                <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Composición del portafolio</h2>
                 {topComposition.map((item) => (
                   <div key={item.symbol} style={{ display: "grid", gap: 6 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text)", fontSize: 13 }}><strong>{item.symbol}</strong><span>{formatPct(item.pct)} · {formatClp(item.valueClp)}</span></div>
-                    <div style={{ height: 9, background: "var(--bg-elev)", borderRadius: 999, overflow: "hidden" }}><div style={{ height: "100%", width: `${Math.max(2, Math.min(100, item.pct))}%`, background: "var(--accent)", borderRadius: 999 }} /></div>
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text)", fontSize: 13, gap: 12 }}><strong>{item.symbol}</strong><span style={{ color: "var(--text-soft)", fontFamily: monoFont }}>{formatPct(item.pct)} · {formatClp(item.valueClp)}</span></div>
+                    <div style={{ height: 9, background: "var(--bg-sunken)", borderRadius: 999, overflow: "hidden" }}><div style={{ height: "100%", width: `${Math.max(2, Math.min(100, item.pct))}%`, background: "var(--accent)", borderRadius: 999 }} /></div>
                   </div>
                 ))}
               </article>
 
-              <article style={{ background: "rgba(232,184,75,0.14)", border: "1px solid rgba(232,184,75,0.14)", borderRadius: 22, padding: 18, display: "grid", gap: 12, alignContent: "start" }}>
-                <h2 style={{ color: "var(--warn)", fontSize: 17, fontWeight: 950, margin: 0 }}>Lectura tributaria preliminar</h2>
-                <p style={{ color: "var(--warn)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>
-                  La ganancia o pérdida mostrada es estimada y no realizada. Solo se transforma en resultado tributario cuando existe venta, permuta, pago, retiro con disposición u otro evento confirmado.
+              <article style={{ background: "rgba(252, 211, 77, 0.14)", border: "1px solid rgba(252, 211, 77, 0.32)", borderRadius: 22, padding: 18, display: "grid", gap: 12, alignContent: "start" }}>
+                <h2 style={{ color: "var(--warn)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Lectura tributaria preliminar</h2>
+                <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>
+                  El resultado mostrado es patrimonial y no realizado. Solo puede transformarse en resultado tributario cuando existe venta, permuta, pago, retiro con disposición u otro evento confirmado.
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <Link href="/obligaciones-tributarias" style={{ background: "var(--warn)", color: "var(--text)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 900, textDecoration: "none" }}>Ver obligaciones</Link>
-                  <Link href="/declaraciones" style={{ background: "var(--bg-elev)", color: "var(--warn)", border: "1px solid rgba(232,184,75,0.14)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 900, textDecoration: "none" }}>Descargar respaldo</Link>
+                  <Link href="/obligaciones-tributarias" style={{ background: "var(--warn)", color: "var(--accent-contrast)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Ver obligaciones</Link>
+                  <Link href="/declaraciones" style={{ background: "var(--bg-elev)", color: "var(--warn)", border: "1px solid rgba(252, 211, 77, 0.32)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Descargar respaldo</Link>
                 </div>
               </article>
             </section>
