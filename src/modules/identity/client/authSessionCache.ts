@@ -5,47 +5,61 @@
 import type { AuthUser } from "./authClient";
 
 const CACHE_KEY = "ledgera.auth.user.cache";
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
 type CachedAuthUser = {
   user: AuthUser;
   cachedAt: number;
 };
 
-export function readCachedAuthUser(): AuthUser | null {
+function getStorage(): Storage | null {
   if (typeof window === "undefined") return null;
 
   try {
-    const raw = window.sessionStorage.getItem(CACHE_KEY);
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function readCachedAuthUser(): AuthUser | null {
+  const storage = getStorage();
+  if (!storage) return null;
+
+  try {
+    const raw = storage.getItem(CACHE_KEY);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as CachedAuthUser;
     if (!parsed.user || !parsed.cachedAt) return null;
 
     if (Date.now() - parsed.cachedAt > CACHE_TTL_MS) {
-      window.sessionStorage.removeItem(CACHE_KEY);
+      storage.removeItem(CACHE_KEY);
       return null;
     }
 
     return parsed.user;
   } catch {
-    window.sessionStorage.removeItem(CACHE_KEY);
+    storage.removeItem(CACHE_KEY);
     return null;
   }
 }
 
 export function writeCachedAuthUser(user: AuthUser): void {
-  if (typeof window === "undefined") return;
+  const storage = getStorage();
+  if (!storage) return;
 
   const payload: CachedAuthUser = {
     user,
     cachedAt: Date.now(),
   };
 
-  window.sessionStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  storage.setItem(CACHE_KEY, JSON.stringify(payload));
 }
 
 export function clearCachedAuthUser(): void {
-  if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(CACHE_KEY);
+  const storage = getStorage();
+  if (!storage) return;
+
+  storage.removeItem(CACHE_KEY);
 }
