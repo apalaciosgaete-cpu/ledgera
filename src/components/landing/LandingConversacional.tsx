@@ -71,9 +71,9 @@ const footerColumns = [
     title: "Empresa",
     links: [
       ["Quiénes somos", "/quienes-somos"],
+      ["Contacto", "/contacto"],
       ["Privacidad", "/privacidad"],
       ["Términos", "/terminos"],
-      ["Cookies", "/cookies"],
     ],
   },
 ] as const;
@@ -305,7 +305,7 @@ export default function LandingConversacional() {
           <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-7 text-text-soft sm:text-base">LEDGERA prepara información para revisión financiera y tributaria. La determinación final debe evaluarse según tu situación particular.</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <CtaLink href="/register">Comenzar análisis →</CtaLink>
-            <CtaLink href="/preguntas" variant="secondary">Revisar preguntas frecuentes</CtaLink>
+            <CtaLink href="/contacto" variant="secondary">Enviar feedback</CtaLink>
           </div>
         </div>
       </section>
@@ -329,9 +329,9 @@ export default function LandingConversacional() {
             ))}
           </div>
           <div className="rounded-3xl border border-accent bg-accent-soft p-6">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-accent">¿Tienes dudas?</p>
-            <p className="mt-3 text-sm leading-6 text-text-soft">Revisa las preguntas frecuentes o comienza un análisis para ordenar tu historial cripto antes de declarar.</p>
-            <Link href="/preguntas" className="mt-5 inline-flex rounded-2xl bg-accent px-5 py-3 text-sm font-black text-accent-contrast">Revisar dudas</Link>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-accent">¿Nos das feedback?</p>
+            <p className="mt-3 text-sm leading-6 text-text-soft">Cuéntanos qué falta, qué no se entiende o qué deberíamos mejorar para que LEDGERA sea más útil al revisar tus operaciones cripto.</p>
+            <Link href="/contacto" className="mt-5 inline-flex rounded-2xl bg-accent px-5 py-3 text-sm font-black text-accent-contrast">Contactar</Link>
           </div>
         </div>
       </footer>
