@@ -190,7 +190,7 @@ export function InvestorDashboard() {
     }));
   }, [summary]);
 
-  const resultLabel = (summary?.totals.unrealizedPnlClp ?? 0) >= 0 ? "Resultado no realizado estimado" : "Resultado no realizado estimado";
+  const resultLabel = "Resultado no realizado estimado";
 
   return (
     <main style={{ minHeight: "calc(100vh - 96px)", background: "var(--bg-sunken)", color: "var(--text)", fontFamily: panelFont, padding: "clamp(16px,2.4vw,28px)", boxSizing: "border-box" }}>
@@ -285,14 +285,32 @@ export function InvestorDashboard() {
                 ))}
               </article>
 
-              <article style={{ background: "rgba(252, 211, 77, 0.14)", border: "1px solid rgba(252, 211, 77, 0.32)", borderRadius: 22, padding: 18, display: "grid", gap: 12, alignContent: "start" }}>
-                <h2 style={{ color: "var(--warn)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Lectura tributaria preliminar</h2>
-                <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>
-                  El resultado mostrado es patrimonial y no realizado. Solo puede transformarse en resultado tributario cuando existe venta, permuta, pago, retiro con disposición u otro evento confirmado.
-                </p>
+              <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 18, display: "grid", gap: 14, alignContent: "start" }}>
+                <div style={{ display: "grid", gap: 6 }}>
+                  <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Calidad del respaldo</h2>
+                  <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>
+                    Revisa la integridad de los datos usados para valorizar el portafolio antes de avanzar a obligaciones o declaraciones.
+                  </p>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10 }}>
+                  <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 16, padding: 12, display: "grid", gap: 4 }}>
+                    <span style={{ color: "var(--text-faint)", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>Operaciones base</span>
+                    <strong style={{ color: "var(--text)", fontSize: 20, fontWeight: 800, fontFamily: monoFont }}>{summary.counts.operations}</strong>
+                  </div>
+                  <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 16, padding: 12, display: "grid", gap: 4 }}>
+                    <span style={{ color: "var(--text-faint)", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>Por revisar</span>
+                    <strong style={{ color: summary.counts.review > 0 ? "var(--warn)" : "var(--gain)", fontSize: 20, fontWeight: 800, fontFamily: monoFont }}>{summary.counts.review}</strong>
+                  </div>
+                  <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 16, padding: 12, display: "grid", gap: 4 }}>
+                    <span style={{ color: "var(--text-faint)", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>Sin precio</span>
+                    <strong style={{ color: summary.counts.missingPrice > 0 ? "var(--loss)" : "var(--gain)", fontSize: 20, fontWeight: 800, fontFamily: monoFont }}>{summary.counts.missingPrice}</strong>
+                  </div>
+                </div>
+
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <Link href="/obligaciones-tributarias" style={{ background: "var(--warn)", color: "var(--accent-contrast)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Ver obligaciones</Link>
-                  <Link href="/declaraciones" style={{ background: "var(--bg-elev)", color: "var(--warn)", border: "1px solid rgba(252, 211, 77, 0.32)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Descargar respaldo</Link>
+                  <Link href="/importaciones" style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Revisar importaciones</Link>
+                  <Link href="/cryptoactivos" style={{ background: "var(--bg-sunken)", color: "var(--accent)", border: "1px solid var(--border-strong)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Ver activos</Link>
                 </div>
               </article>
             </section>
