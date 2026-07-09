@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 const FALLBACK_USD_CLP = 950;
+const EXTERNAL_FETCH_TIMEOUT_MS = 1_800;
 const FX_CACHE_TTL_MS = 60_000;
 
 const fxCache = new Map<string, { value: number; expiresAt: number }>();
@@ -42,7 +43,7 @@ async function fetchMindicadorRate(date: Date): Promise<number | null> {
     const latest = await fetch("https://mindicador.cl/api/dolar", {
       headers,
       cache: "no-store",
-      signal: AbortSignal.timeout(4500),
+      signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
     });
     if (latest.ok) {
       const data = await latest.json();
@@ -57,7 +58,7 @@ async function fetchMindicadorRate(date: Date): Promise<number | null> {
     const res = await fetch(`https://mindicador.cl/api/dolar/${formatMindicadorDate(date)}`, {
       headers,
       cache: "no-store",
-      signal: AbortSignal.timeout(4500),
+      signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -72,7 +73,7 @@ async function fetchSecondaryUsdClpRate(): Promise<number | null> {
     const res = await fetch("https://open.er-api.com/v6/latest/USD", {
       headers: { Accept: "application/json" },
       cache: "no-store",
-      signal: AbortSignal.timeout(4500),
+      signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     const data = await res.json();
