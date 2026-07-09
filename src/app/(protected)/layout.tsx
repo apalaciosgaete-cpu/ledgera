@@ -11,10 +11,10 @@ import { fonts } from "@/styles/tokens";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 
 const roleTokens: Record<string, { label: string; badgeBg: string; badgeColor: string; avatarGradient: string }> = {
-  personal: { label: "Personal", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "linear-gradient(135deg,var(--accent) 0%,var(--gain) 100%)" },
-  contador: { label: "Profesional", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "linear-gradient(135deg,var(--accent) 0%,var(--bg-elev) 100%)" },
-  empresa: { label: "Empresa", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "linear-gradient(135deg,var(--accent) 0%,var(--bg-elev) 100%)" },
-  admin: { label: "Admin", badgeBg: "rgba(196,99,74,0.14)", badgeColor: "var(--loss)", avatarGradient: "linear-gradient(135deg,var(--loss) 0%,var(--bg-elev) 100%)" },
+  personal: { label: "Personal", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
+  contador: { label: "Profesional", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
+  empresa: { label: "Empresa", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
+  admin: { label: "Admin", badgeBg: "rgba(196,99,74,0.14)", badgeColor: "var(--loss)", avatarGradient: "var(--accent)" },
 };
 
 type SidebarLink = { href: string; label: string };
@@ -27,7 +27,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   { items: [{ href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" }] },
   { items: [{ href: "/declaraciones", label: "Declaraciones" }] },
   { items: [{ href: "/configuracion", label: "Configuración" }] },
-  { items: [{ href: "/ayuda", label: "Ayuda" }] },
+  { items: [{ href: "/ayuda", label: "Ayuda" }] }
 ];
 
 function Sidebar({ open, onClose, onLogout }: { open: boolean; onClose: () => void; onLogout: () => void }) {
