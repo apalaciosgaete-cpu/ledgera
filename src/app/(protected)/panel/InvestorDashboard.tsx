@@ -17,6 +17,7 @@ type AssetRow = {
   lastDate: string;
   status: "COMPLETO" | "FALTA_PRECIO" | "FALTA_BASE" | "REVISAR_BASE";
   priceSource: string;
+  originSource?: string;
 };
 
 type AssetSummary = {
@@ -119,11 +120,32 @@ function normalizeSource(value: string | null | undefined): string {
   return value;
 }
 
+function normalizeOrigin(value: string | null | undefined): string {
+  if (!value) return "Sin origen";
+  return value;
+}
+
 function resultColor(value: number | null | undefined): string {
   if (value === null || value === undefined) return "var(--text-soft)";
   if (value > 0) return "var(--gain)";
   if (value < 0) return "var(--loss)";
   return "var(--text-soft)";
+}
+
+function HeaderCell({ children, title, align = "left" }: { children: React.ReactNode; title: string; align?: "left" | "right" | "center" }) {
+  return (
+    <th
+      title={title}
+      style={{
+        padding: "12px 14px",
+        textAlign: align,
+        cursor: "help",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </th>
+  );
 }
 
 function KpiCard({ label, value, helper, accent = "var(--accent)" }: { label: string; value: string; helper: string; accent?: string }) {
@@ -239,22 +261,24 @@ export function InvestorDashboard() {
             <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
               <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", gap: 10, whiteSpace: "nowrap", overflow: "hidden" }}>
                 <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em", flex: "0 0 auto" }}>Activos valorizados</h2>
-                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>Valor actual, conversión a CLP, fuente de precio y diferencia frente a costo.</p>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>Valor actual, conversión a CLP, origen operativo y diferencia frente a costo.</p>
               </div>
 
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", minWidth: 1120, borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", minWidth: 1320, borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "var(--bg-sunken)", color: "var(--text-faint)", fontSize: 10.8, letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "left", whiteSpace: "nowrap" }}>
-                      <th style={{ padding: "12px 14px" }}>Activo</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Cantidad</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Precio unitario USD</th>
-                      <th style={{ padding: "12px 14px" }}>Fuente</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor USD</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor CLP</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Costo de compra CLP</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Diferencia vs costo</th>
-                      <th style={{ padding: "12px 14px", textAlign: "center" }}>Estado de datos</th>
+                      <HeaderCell title="Criptoactivo o token valorizado.">Activo</HeaderCell>
+                      <HeaderCell align="center" title="Cantidad de operaciones confirmadas usadas para calcular el saldo actual de este activo.">OPS</HeaderCell>
+                      <HeaderCell align="right" title="Saldo actual del activo después de aplicar entradas y salidas confirmadas.">Cantidad</HeaderCell>
+                      <HeaderCell align="right" title="Precio unitario actual usado para valorizar una unidad del activo en dólares.">Precio unitario USD</HeaderCell>
+                      <HeaderCell title="Exchange o fuente de origen de las operaciones usadas para construir el saldo. No indica el proveedor del precio.">Origen</HeaderCell>
+                      <HeaderCell align="right" title="Valor actual del saldo en dólares: cantidad por precio unitario.">Valor USD</HeaderCell>
+                      <HeaderCell align="right" title="Valor actual convertido a pesos chilenos con el tipo de cambio usado.">Valor CLP</HeaderCell>
+                      <HeaderCell align="right" title="Costo de adquisición acumulado del saldo actual, convertido a pesos chilenos.">Costo de compra CLP</HeaderCell>
+                      <HeaderCell align="right" title="Diferencia en pesos entre el valor actual y el costo de compra.">Diferencia CLP</HeaderCell>
+                      <HeaderCell align="right" title="Diferencia porcentual entre el valor actual y el costo de compra.">Diferencia %</HeaderCell>
+                      <HeaderCell align="center" title="Nivel de integridad de los datos usados para valorizar el activo.">Estado de datos</HeaderCell>
                     </tr>
                   </thead>
                   <tbody>
@@ -262,14 +286,16 @@ export function InvestorDashboard() {
                       const meta = statusMeta[asset.status];
                       return (
                         <tr key={asset.symbol} style={{ borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 13 }}>
-                          <td style={{ padding: "13px 14px" }}><strong style={{ color: "var(--text)", fontSize: 14, fontWeight: 800 }}>{asset.symbol}</strong><br /><span style={{ color: "var(--text-faint)", fontSize: 11 }}>{asset.operations} ops.</span></td>
+                          <td style={{ padding: "13px 14px" }}><strong style={{ color: "var(--text)", fontSize: 14, fontWeight: 800 }}>{asset.symbol}</strong></td>
+                          <td style={{ padding: "13px 14px", textAlign: "center", fontWeight: 800, fontFamily: monoFont }}>{asset.operations}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 800, fontFamily: monoFont }}>{formatNumber(asset.quantity)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatUsd(asset.priceUsd)}</td>
-                          <td style={{ padding: "13px 14px", color: "var(--text-soft)", fontSize: 12 }}>{normalizeSource(asset.priceSource)}</td>
+                          <td style={{ padding: "13px 14px", color: "var(--text-soft)", fontSize: 12 }}>{normalizeOrigin(asset.originSource)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatUsd(asset.valueUsd)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 800, color: "var(--text)", fontFamily: monoFont }}>{formatClp(asset.valueClp)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatClp(asset.costBasisClp)}</td>
-                          <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatClp(asset.unrealizedPnlClp)}<br /><span style={{ fontSize: 11 }}>{formatPct(asset.unrealizedPnlPct)}</span></td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatClp(asset.unrealizedPnlClp)}</td>
+                          <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatPct(asset.unrealizedPnlPct)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "center" }}><span style={{ background: meta.bg, border: `1px solid ${meta.border}`, borderRadius: 999, color: meta.color, display: "inline-flex", fontSize: 11.5, fontWeight: 800, justifyContent: "center", padding: "5px 8px", whiteSpace: "nowrap" }}>{meta.label}</span></td>
                         </tr>
                       );
