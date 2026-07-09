@@ -4,27 +4,11 @@ import { round, normalizeSymbol } from "@/shared/utils/math";
 import { requireAuth } from "@/shared";
 import { fail } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
+import { resolveUsdClpRate } from "@/modules/market/infrastructure/exchangeRate";
 
 
 // Force dynamic rendering because routes use request.headers/cookies
 export const dynamic = 'force-dynamic';
-async function fetchUsdClp(): Promise<number> {
-  try {
-    const today = new Date();
-    const day = String(today.getUTCDate()).padStart(2, "0");
-    const month = String(today.getUTCMonth() + 1).padStart(2, "0");
-    const year = today.getUTCFullYear();
-    const res = await fetch(
-      `https://mindicador.cl/api/dolar/${day}-${month}-${year}`,
-      { headers: { Accept: "application/json" } }
-    );
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    const valor = data?.serie?.[0]?.valor;
-    if (typeof valor === "number" && valor > 0) return valor;
-  } catch { /* fallback */ }
-  return 950;
-}
 
 type Movement = {
   id: string;
@@ -93,7 +77,7 @@ export async function GET(request: NextRequest) {
       })
       .filter(Boolean) as Movement[];
 
-    const usdClp = await fetchUsdClp();
+    const usdClp = await resolveUsdClpRate(new Date());
     const ledger = new Map<string, Position>();
     const events: TaxEvent[] = [];
 
@@ -139,7 +123,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const sellIds = new Set(movements.filter((m) => m.type === "SELL").map((m) => m.id));
     const eventIds = new Set(events.map((e) => e.movementId));
     const sellWithoutEvent = movements.filter((m) => m.type === "SELL" && !eventIds.has(m.id)).length;
     const orphanEvents = 0; // Simplified: we generate events inline, so no orphans possible
