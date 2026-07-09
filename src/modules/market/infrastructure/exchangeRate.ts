@@ -6,10 +6,10 @@ const FX_CACHE_TTL_MS = 60_000;
 const fxCache = new Map<string, { value: number; expiresAt: number }>();
 
 function formatMindicadorDate(date: Date): string {
-  const d     = new Date(date);
-  const day   = String(d.getUTCDate()).padStart(2, "0");
+  const d = new Date(date);
+  const day = String(d.getUTCDate()).padStart(2, "0");
   const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const year  = d.getUTCFullYear();
+  const year = d.getUTCFullYear();
   return `${day}-${month}-${year}`;
 }
 
@@ -25,6 +25,14 @@ function readMindicadorValue(data: unknown): number | null {
   }
 
   return null;
+}
+
+function readOpenExchangeValue(data: unknown): number | null {
+  if (typeof data !== "object" || data === null) return null;
+  const rates = (data as { rates?: unknown; conversion_rates?: unknown }).rates ?? (data as { conversion_rates?: unknown }).conversion_rates;
+  if (typeof rates !== "object" || rates === null) return null;
+  const value = (rates as { CLP?: unknown }).CLP;
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
 async function fetchMindicadorRate(date: Date): Promise<number | null> {
@@ -59,13 +67,29 @@ async function fetchMindicadorRate(date: Date): Promise<number | null> {
   }
 }
 
+async function fetchSecondaryUsdClpRate(): Promise<number | null> {
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD", {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(4500),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return readOpenExchangeValue(data);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Returns the USD/CLP rate for a given date.
  * Resolution order:
  *   1. Exact match in fxRate table
  *   2. Latest Mindicador API value, then dated Mindicador endpoint
- *   3. Closest past rate in fxRate table
- *   4. Temporary support value when no source is available
+ *   3. Secondary public FX provider for operational continuity
+ *   4. Closest past rate in fxRate table
+ *   5. Temporary support value when no source is available
  */
 export async function resolveUsdClpRate(date: Date): Promise<number> {
   const dateStr = date.toISOString().slice(0, 10);
@@ -77,32 +101,48 @@ export async function resolveUsdClpRate(date: Date): Promise<number> {
   }
 
   let rate: number | null = null;
+  let source = "unknown";
 
   try {
     const exact = await prisma.fxRate.findFirst({
       where: { currency: "USD", date: dateKey },
     });
-    if (exact && Number(exact.valueClp) > 0) rate = Number(exact.valueClp);
+    if (exact && Number(exact.valueClp) > 0) {
+      rate = Number(exact.valueClp);
+      source = exact.source || "fxRate";
+    }
   } catch { /* continuar */ }
 
   if (rate === null) {
     const fetched = await fetchMindicadorRate(date);
     if (fetched && fetched > 0) {
-      try {
-        await prisma.fxRate.upsert({
-          where:  { currency_date: { currency: "USD", date: dateKey } },
-          update: { valueClp: fetched, source: "mindicador.cl" },
-          create: { currency: "USD", date: dateKey, valueClp: fetched, source: "mindicador.cl" },
-        });
-      } catch { /* no bloquear */ }
       rate = fetched;
+      source = "mindicador.cl";
     }
+  }
+
+  if (rate === null) {
+    const secondary = await fetchSecondaryUsdClpRate();
+    if (secondary && secondary > 0) {
+      rate = secondary;
+      source = "open.er-api.com";
+    }
+  }
+
+  if (rate !== null && source !== "fxRate") {
+    try {
+      await prisma.fxRate.upsert({
+        where: { currency_date: { currency: "USD", date: dateKey } },
+        update: { valueClp: rate, source },
+        create: { currency: "USD", date: dateKey, valueClp: rate, source },
+      });
+    } catch { /* no bloquear */ }
   }
 
   if (rate === null) {
     try {
       const closest = await prisma.fxRate.findFirst({
-        where:   { currency: "USD", date: { lte: dateKey } },
+        where: { currency: "USD", date: { lte: dateKey } },
         orderBy: { date: "desc" },
       });
       if (closest && Number(closest.valueClp) > 0) rate = Number(closest.valueClp);
@@ -110,9 +150,7 @@ export async function resolveUsdClpRate(date: Date): Promise<number> {
   }
 
   if (rate === null) {
-    if (cached) {
-      return cached.value;
-    }
+    if (cached) return cached.value;
     rate = FALLBACK_USD_CLP;
   }
 
