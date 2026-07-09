@@ -144,7 +144,7 @@ function KpiCard({ label, value, helper, accent = "var(--accent)" }: { label: st
     >
       <span style={{ color: "var(--text-faint)", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
       <strong style={{ color: accent, fontSize: "clamp(1.2rem,2.1vw,1.72rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>{value}</strong>
-      <span style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.35 }}>{helper}</span>
+      <span style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.35, maxWidth: 230, textAlign: "center", width: "100%" }}>{helper}</span>
     </article>
   );
 }
@@ -198,7 +198,7 @@ export function InvestorDashboard() {
     }));
   }, [summary]);
 
-  const resultLabel = "Resultado no realizado estimado";
+  const resultLabel = "Diferencia vs. base de costo";
 
   return (
     <main style={{ minHeight: "calc(100vh - 96px)", background: "var(--bg-sunken)", color: "var(--text)", fontFamily: panelFont, padding: "clamp(16px,2.4vw,28px)", boxSizing: "border-box" }}>
@@ -206,14 +206,14 @@ export function InvestorDashboard() {
         <section style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "grid", gap: 7, flex: "1 1 auto", minWidth: 0, maxWidth: "none" }}>
             <p style={{ color: "var(--accent)", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.08em", margin: 0, textTransform: "uppercase" }}>Resumen de activos</p>
-            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.9rem,2.9vw,2.55rem)", lineHeight: 1, letterSpacing: "-0.048em", fontWeight: 800, margin: 0, whiteSpace: "nowrap" }}>
-              Activos actuales, valorización y resultado estimado
+            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.9rem,2.9vw,2.55rem)", lineHeight: 1, letterSpacing: "-0.048em", fontWeight: 800, margin: 0, whiteSpace: "normal" }}>
+              Activos actuales, valorización y diferencia frente a costo
             </h1>
             <p style={{ color: "var(--text-soft)", fontSize: 14.5, lineHeight: 1.55, margin: 0, maxWidth: 690 }}>
               Consulta tus activos confirmados, su precio actual y valor en pesos chilenos.
             </p>
           </div>
-          <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 14, minWidth: 240, display: "grid", gap: 7 }}>
+          <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 14, minWidth: 240, display: "grid", gap: 7, justifyItems: "center", textAlign: "center" }}>
             <span style={{ color: "var(--text-faint)", fontSize: 12, fontWeight: 800 }}>Tipo de cambio usado</span>
             <strong style={{ color: "var(--text)", fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>{summary ? formatUsdClpRate(summary.usdClp) : loading ? "Cargando..." : "—"}</strong>
             <span style={{ color: "var(--text-soft)", fontSize: 12 }}>Fuente: {summary ? normalizeSource(summary.fxSource) : "—"}</span>
@@ -230,16 +230,16 @@ export function InvestorDashboard() {
         ) : (
           <>
             <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,280px))", gap: 12, justifyContent: "center", alignItems: "stretch" }}>
-              <KpiCard label="Patrimonio total estimado" value={formatClp(summary.totals.valueClp)} helper={`${formatUsd(summary.totals.valueUsd)} · USD/CLP ${formatNumber(summary.usdClp, 2)} · ${normalizeSource(summary.fxSource)}`} />
-              <KpiCard label={resultLabel} value={formatClp(summary.totals.unrealizedPnlClp)} helper={`Frente a base de costo: ${formatPct(summary.totals.unrealizedPnlPct)}`} accent={resultColor(summary.totals.unrealizedPnlClp)} />
-              <KpiCard label="Activos detectados" value={String(summary.counts.assets)} helper="Con saldo actual estimado" accent="var(--accent)" />
+              <KpiCard label="Valor total actual" value={formatClp(summary.totals.valueClp)} helper={`Valor USD ${formatUsd(summary.totals.valueUsd)} · TC ${formatNumber(summary.usdClp, 2)}`} />
+              <KpiCard label={resultLabel} value={formatClp(summary.totals.unrealizedPnlClp)} helper={`Variación porcentual: ${formatPct(summary.totals.unrealizedPnlPct)}`} accent={resultColor(summary.totals.unrealizedPnlClp)} />
+              <KpiCard label="Activos detectados" value={String(summary.counts.assets)} helper="Con saldo actual" accent="var(--accent)" />
               <KpiCard label="Operaciones utilizadas" value={String(summary.counts.operations)} helper="Movimientos usados para consolidar saldos" accent="var(--accent)" />
             </section>
 
             <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
               <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "grid", gap: 4 }}>
                 <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Activos valorizados</h2>
-                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Valor actual estimado, conversión a CLP, fuente de precio y resultado no realizado.</p>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Valor actual, conversión a CLP, fuente de precio y diferencia frente a costo.</p>
               </div>
 
               <div style={{ overflowX: "auto" }}>
@@ -253,7 +253,7 @@ export function InvestorDashboard() {
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor USD</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor CLP</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Base costo CLP</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Resultado no realizado</th>
+                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Diferencia vs. costo</th>
                       <th style={{ padding: "12px 14px" }}>Estado</th>
                     </tr>
                   </thead>
