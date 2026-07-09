@@ -138,6 +138,8 @@ function KpiCard({ label, value, helper, accent = "var(--accent)" }: { label: st
         gap: 8,
         minHeight: 106,
         boxShadow: "var(--shadow-sm)",
+        textAlign: "center",
+        justifyItems: "center",
       }}
     >
       <span style={{ color: "var(--text-faint)", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
@@ -202,9 +204,9 @@ export function InvestorDashboard() {
     <main style={{ minHeight: "calc(100vh - 96px)", background: "var(--bg-sunken)", color: "var(--text)", fontFamily: panelFont, padding: "clamp(16px,2.4vw,28px)", boxSizing: "border-box" }}>
       <div style={{ maxWidth: 1220, margin: "0 auto", display: "grid", gap: 16 }}>
         <section style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ display: "grid", gap: 7, maxWidth: 720 }}>
+          <div style={{ display: "grid", gap: 7, flex: "1 1 auto", minWidth: 0, maxWidth: "none" }}>
             <p style={{ color: "var(--accent)", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.08em", margin: 0, textTransform: "uppercase" }}>Resumen de activos</p>
-            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.7rem,2.7vw,2.35rem)", lineHeight: 1.05, letterSpacing: "-0.045em", fontWeight: 800, margin: 0 }}>
+            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.9rem,2.9vw,2.55rem)", lineHeight: 1, letterSpacing: "-0.048em", fontWeight: 800, margin: 0, whiteSpace: "nowrap" }}>
               Activos actuales, valorización y resultado estimado
             </h1>
             <p style={{ color: "var(--text-soft)", fontSize: 14.5, lineHeight: 1.55, margin: 0, maxWidth: 690 }}>
@@ -227,7 +229,7 @@ export function InvestorDashboard() {
           <EmptyState />
         ) : (
           <>
-            <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 12 }}>
+            <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,280px))", gap: 12, justifyContent: "center", alignItems: "stretch" }}>
               <KpiCard label="Patrimonio total estimado" value={formatClp(summary.totals.valueClp)} helper={`${formatUsd(summary.totals.valueUsd)} · USD/CLP ${formatNumber(summary.usdClp, 2)} · ${normalizeSource(summary.fxSource)}`} />
               <KpiCard label={resultLabel} value={formatClp(summary.totals.unrealizedPnlClp)} helper={`Frente a base de costo: ${formatPct(summary.totals.unrealizedPnlPct)}`} accent={resultColor(summary.totals.unrealizedPnlClp)} />
               <KpiCard label="Activos detectados" value={String(summary.counts.assets)} helper="Con saldo actual estimado" accent="var(--accent)" />
