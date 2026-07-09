@@ -243,18 +243,18 @@ export function InvestorDashboard() {
               </div>
 
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", minWidth: 1060, borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", minWidth: 1120, borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "var(--bg-sunken)", color: "var(--text-faint)", fontSize: 10.8, letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "left" }}>
+                    <tr style={{ background: "var(--bg-sunken)", color: "var(--text-faint)", fontSize: 10.8, letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "left", whiteSpace: "nowrap" }}>
                       <th style={{ padding: "12px 14px" }}>Activo</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Cantidad</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Precio USD</th>
+                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Precio unitario USD</th>
                       <th style={{ padding: "12px 14px" }}>Fuente</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor USD</th>
                       <th style={{ padding: "12px 14px", textAlign: "right" }}>Valor CLP</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Base costo CLP</th>
-                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Diferencia vs. costo</th>
-                      <th style={{ padding: "12px 14px" }}>Estado</th>
+                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Costo de compra CLP</th>
+                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Diferencia vs costo</th>
+                      <th style={{ padding: "12px 14px", textAlign: "center" }}>Estado de datos</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -270,7 +270,7 @@ export function InvestorDashboard() {
                           <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 800, color: "var(--text)", fontFamily: monoFont }}>{formatClp(asset.valueClp)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatClp(asset.costBasisClp)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatClp(asset.unrealizedPnlClp)}<br /><span style={{ fontSize: 11 }}>{formatPct(asset.unrealizedPnlPct)}</span></td>
-                          <td style={{ padding: "13px 14px" }}><span style={{ background: meta.bg, border: `1px solid ${meta.border}`, borderRadius: 999, color: meta.color, display: "inline-flex", fontSize: 11.5, fontWeight: 800, padding: "5px 8px" }}>{meta.label}</span></td>
+                          <td style={{ padding: "13px 14px", textAlign: "center" }}><span style={{ background: meta.bg, border: `1px solid ${meta.border}`, borderRadius: 999, color: meta.color, display: "inline-flex", fontSize: 11.5, fontWeight: 800, justifyContent: "center", padding: "5px 8px", whiteSpace: "nowrap" }}>{meta.label}</span></td>
                         </tr>
                       );
                     })}
