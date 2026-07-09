@@ -6,10 +6,11 @@ import { AssetLogo } from "./AssetLogo";
 import { AssetSearch } from "./AssetSearch";
 
 type Position = { symbol: string; quantity: number; totalCostUsd: number; totalCostClp: number };
-type Portfolio = { totals: { totalCostClp: number; totalCostUsd: number; symbolCount: number }; fx: { usdToClp: number }; positions: Position[]; hiddenAssets?: string[] };
+type Portfolio = { totals: { totalCostClp: number; totalCostUsd: number; symbolCount: number }; fx: { usdToClp: number; source?: string; asOf?: string }; positions: Position[]; hiddenAssets?: string[] };
 const names: Record<string, string> = { XLM: "Stellar", XRP: "Ripple", POL: "Polygon", MATIC: "Polygon", ALGO: "Algorand", BTC: "Bitcoin", ETH: "Ethereum", SOL: "Solana" };
 const clp = (v: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(v || 0);
 const usd = (v: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v || 0);
+const usdClpRate = (v: number) => `$${new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v || 0)} CLP`;
 const num = (v: number) => new Intl.NumberFormat("es-CL", { maximumFractionDigits: 8 }).format(v || 0);
 
 function Metric({ label, value, note }: { label: string; value: string; note: string }) {
@@ -63,11 +64,12 @@ export function ConsolidadoOverviewFinal() {
   if (error) return <p className="font-bold text-red-600">{error}</p>;
   if (!portfolio) return <p className="text-slate-500">Cargando consolidado...</p>;
   const hidden = portfolio.hiddenAssets ?? [];
+  const fxNote = portfolio.fx.source ? `Fuente: ${portfolio.fx.source}.` : "Referencia para mostrar valores en pesos.";
 
   return <div className="max-w-[1180px] space-y-6">
     <div className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-extrabold text-slate-950">Consolidado</h1><p className="text-sm text-slate-500">Resumen general de tu patrimonio, actividad financiera y estado tributario.</p></div><a href="/integraciones" className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-extrabold text-white no-underline">Administrar conexiones</a></div>
     {message && <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-700">{message}</div>}
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-4"><Metric label="Patrimonio estimado" value={clp(portfolio.totals.totalCostClp)} note="Valor calculado con la información disponible." /><Metric label="Activos" value={String(portfolio.totals.symbolCount)} note="Activos visibles en el consolidado." /><Metric label="Costo total USD" value={usd(portfolio.totals.totalCostUsd)} note="Base de costo histórica visible." /><Metric label="Dólar usado" value={clp(portfolio.fx.usdToClp)} note="Referencia para mostrar valores en pesos." /></div>
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-4"><Metric label="Patrimonio estimado" value={clp(portfolio.totals.totalCostClp)} note="Valor calculado con la información disponible." /><Metric label="Activos" value={String(portfolio.totals.symbolCount)} note="Activos visibles en el consolidado." /><Metric label="Costo total USD" value={usd(portfolio.totals.totalCostUsd)} note="Base de costo histórica visible." /><Metric label="Dólar usado" value={usdClpRate(portfolio.fx.usdToClp)} note={fxNote} /></div>
     <AssetSearch onMovementCreated={load} />
     <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-4"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-xl font-black text-blue-600">☆</div><div><h2 className="text-xl font-extrabold text-slate-950">Activos principales</h2><p className="text-sm text-slate-500">Detalle resumido de los saldos calculados.</p></div></div><button type="button" onClick={() => setShowHidden(!showHidden)} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-extrabold text-slate-600">{showHidden ? "Ocultar activos ocultos" : "Ver activos ocultos"}</button></div>
