@@ -237,9 +237,9 @@ export function InvestorDashboard() {
             </section>
 
             <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-              <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "grid", gap: 4 }}>
-                <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Activos valorizados</h2>
-                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Valor actual, conversión a CLP, fuente de precio y diferencia frente a costo.</p>
+              <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", gap: 10, whiteSpace: "nowrap", overflow: "hidden" }}>
+                <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em", flex: "0 0 auto" }}>Activos valorizados</h2>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>Valor actual, conversión a CLP, fuente de precio y diferencia frente a costo.</p>
               </div>
 
               <div style={{ overflowX: "auto" }}>
