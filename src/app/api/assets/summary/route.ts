@@ -16,6 +16,7 @@ type RawMovement = {
   priceUsd: number;
   feeUsd: number | null;
   executedAt: Date;
+  source: string;
 };
 
 type Position = {
@@ -26,6 +27,7 @@ type Position = {
   operations: number;
   lastDate: Date;
   needsReview: boolean;
+  origins: Set<string>;
 };
 
 type PriceQuote = { priceUsd: number | null; source: string };
@@ -82,6 +84,30 @@ function isFresh(cachedAt: number): boolean {
 
 function isMindicadorSource(source: string | null | undefined): boolean {
   return (source ?? "").trim().toLowerCase().includes("mindicador");
+}
+
+function normalizeOriginSource(value: string | null | undefined): string {
+  const original = (value ?? "").trim();
+  if (!original) return "Sin origen";
+  const clean = original.toLowerCase();
+  if (clean.includes("binance")) return "Binance";
+  if (clean.includes("buda")) return "Buda";
+  if (clean.includes("coinbase")) return "Coinbase";
+  if (clean.includes("kraken")) return "Kraken";
+  if (clean.includes("okx")) return "OKX";
+  if (clean.includes("kucoin")) return "KuCoin";
+  if (clean.includes("crypto.com")) return "Crypto.com";
+  if (clean === "manual") return "Manual";
+  return original;
+}
+
+function formatOriginSources(origins: Set<string>): string {
+  const normalized = Array.from(origins)
+    .map(normalizeOriginSource)
+    .filter((origin) => origin && origin !== "Sin origen");
+  const unique = Array.from(new Set(normalized));
+  if (unique.length === 0) return "Sin origen";
+  return unique.join(", ");
 }
 
 function classify(type: string): "IN" | "OUT" | "IGNORE" {
@@ -338,9 +364,11 @@ function buildPositions(movements: RawMovement[]): Position[] {
       operations: 0,
       lastDate: movement.executedAt,
       needsReview: false,
+      origins: new Set<string>(),
     };
 
     current.operations += 1;
+    current.origins.add(movement.source || "Sin origen");
     if (movement.executedAt.getTime() > current.lastDate.getTime()) current.lastDate = movement.executedAt;
 
     if (direction === "IN") {
@@ -388,6 +416,7 @@ export async function GET(request: NextRequest) {
         priceUsd: true,
         feeUsd: true,
         executedAt: true,
+        source: true,
       },
     })) as RawMovement[];
 
@@ -420,6 +449,7 @@ export async function GET(request: NextRequest) {
         lastDate: position.lastDate.toISOString(),
         status: priceUsd === null ? "FALTA_PRECIO" : position.needsReview ? "REVISAR_BASE" : costBasisClp <= 0 ? "FALTA_BASE" : "COMPLETO",
         priceSource: quote.source,
+        originSource: formatOriginSources(position.origins),
       };
     });
 
