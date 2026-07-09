@@ -80,6 +80,10 @@ function isFresh(cachedAt: number): boolean {
   return Date.now() - cachedAt < MARKET_CACHE_TTL_MS;
 }
 
+function isMindicadorSource(source: string | null | undefined): boolean {
+  return (source ?? "").trim().toLowerCase().includes("mindicador");
+}
+
 function classify(type: string): "IN" | "OUT" | "IGNORE" {
   const clean = type.trim().toUpperCase();
   if (["BUY", "DEPOSIT", "TRANSFER_IN", "INFLOW", "STAKING_REWARD", "REWARD", "AIRDROP"].includes(clean)) return "IN";
@@ -130,7 +134,7 @@ function setFxCache(value: number, source: string): { value: number; source: str
   return { value, source };
 }
 
-async function getRecentStoredUsdClp(): Promise<{ value: number; source: string } | null> {
+async function getRecentStoredUsdClp(options: { officialOnly?: boolean } = {}): Promise<{ value: number; source: string } | null> {
   try {
     const closest = await prisma.fxRate.findFirst({
       where: { currency: "USD" },
@@ -139,8 +143,10 @@ async function getRecentStoredUsdClp(): Promise<{ value: number; source: string 
 
     if (!closest || !Number.isFinite(closest.valueClp) || closest.valueClp <= 0) return null;
     if (Date.now() - closest.date.getTime() > RECENT_FX_MAX_AGE_MS) return null;
+    if (options.officialOnly && !isMindicadorSource(closest.source)) return null;
 
-    return { value: closest.valueClp, source: `${closest.source || "fxRate"}:bd` };
+    const source = isMindicadorSource(closest.source) ? "mindicador.cl:bd" : `${closest.source || "fxRate"}:bd`;
+    return { value: closest.valueClp, source };
   } catch {
     return null;
   }
@@ -202,21 +208,36 @@ async function fetchSecondaryUsdClp(): Promise<{ value: number; source: string }
 }
 
 async function fetchUsdClp(): Promise<{ value: number; source: string }> {
-  if (fxCache && isFresh(fxCache.cachedAt)) return { value: fxCache.value, source: fxCache.source };
-
-  const stored = await getRecentStoredUsdClp();
-  if (stored) return setFxCache(stored.value, stored.source);
-
-  const [latest, dated, secondary] = await Promise.all([fetchMindicadorLatest(), fetchMindicadorDated(), fetchSecondaryUsdClp()]);
-  const resolved = latest ?? dated ?? secondary;
-
-  if (resolved) {
-    setFxCache(resolved.value, resolved.source);
-    void persistUsdClp(resolved.value, resolved.source);
-    return resolved;
+  if (fxCache && isFresh(fxCache.cachedAt) && isMindicadorSource(fxCache.source)) {
+    return { value: fxCache.value, source: fxCache.source };
   }
 
-  if (fxCache) return { value: fxCache.value, source: `${fxCache.source}:cache` };
+  const storedOfficial = await getRecentStoredUsdClp({ officialOnly: true });
+  if (storedOfficial) return setFxCache(storedOfficial.value, storedOfficial.source);
+
+  const [latest, dated] = await Promise.all([fetchMindicadorLatest(), fetchMindicadorDated()]);
+  const mindicador = latest ?? dated;
+
+  if (mindicador) {
+    setFxCache(mindicador.value, mindicador.source);
+    void persistUsdClp(mindicador.value, mindicador.source);
+    return mindicador;
+  }
+
+  if (fxCache && isFresh(fxCache.cachedAt)) {
+    return { value: fxCache.value, source: `${fxCache.source}:cache` };
+  }
+
+  const storedFallback = await getRecentStoredUsdClp();
+  if (storedFallback) return setFxCache(storedFallback.value, storedFallback.source);
+
+  const secondary = await fetchSecondaryUsdClp();
+  if (secondary) {
+    setFxCache(secondary.value, secondary.source);
+    void persistUsdClp(secondary.value, secondary.source);
+    return secondary;
+  }
+
   return setFxCache(FALLBACK_USD_CLP, "respaldo_temporal");
 }
 
