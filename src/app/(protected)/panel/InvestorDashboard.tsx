@@ -208,7 +208,7 @@ export function InvestorDashboard() {
               Activos actuales, valorización y resultado estimado
             </h1>
             <p style={{ color: "var(--text-soft)", fontSize: 14.5, lineHeight: 1.55, margin: 0, maxWidth: 690 }}>
-              Consulta tus activos confirmados, su precio actual, valor en pesos chilenos y resultado patrimonial estimado frente a tu base de costo.
+              Consulta tus activos confirmados, su precio actual y valor en pesos chilenos.
             </p>
           </div>
           <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 14, minWidth: 240, display: "grid", gap: 7 }}>
