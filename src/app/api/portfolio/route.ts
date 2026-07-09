@@ -1,11 +1,10 @@
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   calculatePortfolio,
-  prefetchFx,
   type PortfolioMovement,
   type PortfolioMovementType,
 } from "@/modules/portfolio/application/calculatePortfolio";
@@ -33,8 +32,7 @@ export async function GET(request: NextRequest) {
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
   try {
-    const [rawMovements] = await Promise.all([
-      prisma.portfolioMovement.findMany({
+    const rawMovements = (await prisma.portfolioMovement.findMany({
       where: {
         deletedAt: null,
         ...buildUserScopeWhere(auth.user),
@@ -51,9 +49,7 @@ export async function GET(request: NextRequest) {
         feeUsd: true,
         executedAt: true,
       },
-    }) as Promise<RawPortfolioMovement[]>,
-    prefetchFx(),
-    ]);
+    })) as RawPortfolioMovement[];
 
     const movements: PortfolioMovement[] = [];
 
