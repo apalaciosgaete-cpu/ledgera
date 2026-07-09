@@ -28,7 +28,8 @@ type Position = {
   needsReview: boolean;
 };
 
-const EXTERNAL_FETCH_TIMEOUT_MS = 1600;
+const EXTERNAL_FETCH_TIMEOUT_MS = 4500;
+const FALLBACK_USD_CLP = 950;
 const STABLE_USD = new Set(["USDT", "USDC", "DAI", "BUSD", "FDUSD", "TUSD"]);
 const BINANCE_BASES = new Set([
   "BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "TRX", "AVAX", "DOT", "LINK", "LTC", "BCH", "UNI", "AAVE", "MATIC", "POL",
@@ -55,21 +56,54 @@ async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs =
   }
 }
 
+function readMindicadorValue(data: unknown): number | null {
+  if (typeof data !== "object" || data === null) return null;
+
+  const serie = (data as { serie?: unknown }).serie;
+  if (!Array.isArray(serie)) return null;
+
+  for (const entry of serie) {
+    if (typeof entry !== "object" || entry === null) continue;
+
+    const value = (entry as { valor?: unknown }).valor;
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 async function fetchUsdClp(): Promise<{ value: number; source: string }> {
+  const headers = { Accept: "application/json" };
+
+  try {
+    const latestRes = await fetchWithTimeout("https://mindicador.cl/api/dolar", { headers, cache: "no-store" });
+    if (latestRes.ok) {
+      const latestData = await latestRes.json();
+      const latestValue = readMindicadorValue(latestData);
+      if (latestValue !== null) return { value: latestValue, source: "mindicador.cl" };
+    }
+  } catch {
+    // Try dated endpoint below before using fallback.
+  }
+
   try {
     const today = new Date();
     const day = String(today.getUTCDate()).padStart(2, "0");
     const month = String(today.getUTCMonth() + 1).padStart(2, "0");
     const year = today.getUTCFullYear();
-    const res = await fetchWithTimeout(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, { headers: { Accept: "application/json" }, cache: "no-store" });
-    if (!res.ok) throw new Error("fx");
-    const data = await res.json();
-    const value = data?.serie?.[0]?.valor;
-    if (typeof value === "number" && value > 0) return { value, source: "mindicador.cl" };
+    const datedRes = await fetchWithTimeout(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, { headers, cache: "no-store" });
+    if (datedRes.ok) {
+      const datedData = await datedRes.json();
+      const datedValue = readMindicadorValue(datedData);
+      if (datedValue !== null) return { value: datedValue, source: "mindicador.cl" };
+    }
   } catch {
     // fallback below
   }
-  return { value: 950, source: "fallback" };
+
+  return { value: FALLBACK_USD_CLP, source: "respaldo_temporal" };
 }
 
 async function fetchPrices(symbols: string[]): Promise<Record<string, { priceUsd: number | null; source: string }>> {
