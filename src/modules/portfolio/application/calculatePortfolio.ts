@@ -111,6 +111,29 @@ function readMindicadorValue(data: unknown): number | null {
   return null;
 }
 
+function readOpenExchangeValue(data: unknown): number | null {
+  if (typeof data !== "object" || data === null) return null;
+  const rates = (data as { rates?: unknown; conversion_rates?: unknown }).rates ?? (data as { conversion_rates?: unknown }).conversion_rates;
+  if (typeof rates !== "object" || rates === null) return null;
+  const value = (rates as { CLP?: unknown }).CLP;
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+async function fetchSecondaryUsdClp(): Promise<number | null> {
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD", {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(4500),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return readOpenExchangeValue(data);
+  } catch {
+    return null;
+  }
+}
+
 async function fetchUsdClp(): Promise<{ rate: number; source: string; asOf: string }> {
   const now = Date.now();
   if (fxCache && now - fxCache.cachedAt < FX_TTL_MS) {
@@ -135,7 +158,7 @@ async function fetchUsdClp(): Promise<{ rate: number; source: string; asOf: stri
       }
     }
   } catch {
-    // Try dated endpoint below before using fallback.
+    // Try dated endpoint below before using secondary provider.
   }
 
   try {
@@ -154,7 +177,13 @@ async function fetchUsdClp(): Promise<{ rate: number; source: string; asOf: stri
       }
     }
   } catch {
-    // fallback below
+    // Try secondary provider below.
+  }
+
+  const secondary = await fetchSecondaryUsdClp();
+  if (secondary !== null) {
+    fxCache = { rate: secondary, source: "open.er-api.com", asOf, cachedAt: now };
+    return { rate: secondary, source: "open.er-api.com", asOf };
   }
 
   const fallback = { rate: FALLBACK_USD_CLP, source: "respaldo_temporal", asOf };
