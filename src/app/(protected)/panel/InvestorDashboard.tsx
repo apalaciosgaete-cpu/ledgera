@@ -190,6 +190,7 @@ export function InvestorDashboard() {
   const [summary, setSummary] = useState<AssetSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [hiddenAssetSymbols, setHiddenAssetSymbols] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -210,17 +211,35 @@ export function InvestorDashboard() {
     };
   }, []);
 
-  const topComposition = useMemo(() => {
+  const visibleAssets = useMemo(() => {
     const assets = summary?.assets ?? [];
-    const total = summary?.totals.valueClp ?? 0;
-    return assets.slice(0, 5).map((asset) => ({
+    if (hiddenAssetSymbols.size === 0) return assets;
+    return assets.filter((asset) => !hiddenAssetSymbols.has(asset.symbol));
+  }, [summary, hiddenAssetSymbols]);
+
+  const topComposition = useMemo(() => {
+    const total = visibleAssets.reduce((acc, asset) => acc + (asset.valueClp ?? 0), 0);
+    return visibleAssets.slice(0, 5).map((asset) => ({
       symbol: asset.symbol,
       pct: total > 0 && asset.valueClp ? (asset.valueClp / total) * 100 : 0,
       valueClp: asset.valueClp ?? 0,
     }));
-  }, [summary]);
+  }, [visibleAssets]);
 
   const resultLabel = "Diferencia vs. base de costo";
+  const hiddenAssetsCount = hiddenAssetSymbols.size;
+
+  function hideAssetFromView(symbol: string) {
+    setHiddenAssetSymbols((current) => {
+      const next = new Set(current);
+      next.add(symbol);
+      return next;
+    });
+  }
+
+  function restoreAssetView() {
+    setHiddenAssetSymbols(new Set());
+  }
 
   return (
     <main style={{ minHeight: "calc(100vh - 96px)", background: "var(--bg-sunken)", color: "var(--text)", fontFamily: panelFont, padding: "clamp(16px,2.4vw,28px)", boxSizing: "border-box" }}>
@@ -259,30 +278,49 @@ export function InvestorDashboard() {
             </section>
 
             <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-              <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", gap: 10, whiteSpace: "nowrap", overflow: "hidden" }}>
-                <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em", flex: "0 0 auto" }}>Activos valorizados</h2>
-                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>Valor actual, conversión a CLP, origen operativo y diferencia frente a costo.</p>
+              <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, whiteSpace: "nowrap", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, minWidth: 0 }}>
+                  <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em", flex: "0 0 auto" }}>Activos valorizados</h2>
+                  <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>Valor actual, conversión a CLP, origen operativo y diferencia frente a costo.</p>
+                </div>
+                {hiddenAssetsCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={restoreAssetView}
+                    title="Vuelve a mostrar todos los activos ocultos en esta vista."
+                    style={{ background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: 999, color: "var(--accent)", cursor: "pointer", flex: "0 0 auto", fontSize: 12, fontWeight: 800, padding: "7px 10px" }}
+                  >
+                    Restaurar vista ({hiddenAssetsCount})
+                  </button>
+                ) : null}
               </div>
 
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", minWidth: 1320, borderCollapse: "collapse" }}>
+                <table style={{ width: "100%", minWidth: 1400, borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "var(--bg-sunken)", color: "var(--text-faint)", fontSize: 10.8, letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "left", whiteSpace: "nowrap" }}>
                       <HeaderCell title="Criptoactivo o token valorizado.">Activo</HeaderCell>
                       <HeaderCell align="center" title="Cantidad de operaciones confirmadas usadas para calcular el saldo actual de este activo.">OPS</HeaderCell>
                       <HeaderCell align="right" title="Saldo actual del activo después de aplicar entradas y salidas confirmadas.">Cantidad</HeaderCell>
                       <HeaderCell align="right" title="Precio unitario actual usado para valorizar una unidad del activo en dólares.">Precio unitario USD</HeaderCell>
-                      <HeaderCell title="Exchange o fuente de origen de las operaciones usadas para construir el saldo. No indica el proveedor del precio.">Origen</HeaderCell>
+                      <HeaderCell title="Exchange o proveedor de servicio de origen de las operaciones usadas para construir el saldo.">Origen</HeaderCell>
                       <HeaderCell align="right" title="Valor actual del saldo en dólares: cantidad por precio unitario.">Valor USD</HeaderCell>
                       <HeaderCell align="right" title="Valor actual convertido a pesos chilenos con el tipo de cambio usado.">Valor CLP</HeaderCell>
                       <HeaderCell align="right" title="Costo de adquisición acumulado del saldo actual, convertido a pesos chilenos.">Costo de compra CLP</HeaderCell>
                       <HeaderCell align="right" title="Diferencia en pesos entre el valor actual y el costo de compra.">Diferencia CLP</HeaderCell>
                       <HeaderCell align="right" title="Diferencia porcentual entre el valor actual y el costo de compra.">Diferencia %</HeaderCell>
                       <HeaderCell align="center" title="Nivel de integridad de los datos usados para valorizar el activo.">Estado de datos</HeaderCell>
+                      <HeaderCell align="center" title="Borra el activo solo de esta vista. La información permanece en la base de datos.">Borrar</HeaderCell>
                     </tr>
                   </thead>
                   <tbody>
-                    {summary.assets.map((asset) => {
+                    {visibleAssets.length === 0 ? (
+                      <tr style={{ borderTop: "1px solid var(--border)", color: "var(--text-soft)", fontSize: 13 }}>
+                        <td colSpan={12} style={{ padding: "18px 14px", textAlign: "center" }}>
+                          Todos los activos fueron ocultados de esta vista. La información sigue guardada.
+                        </td>
+                      </tr>
+                    ) : visibleAssets.map((asset) => {
                       const meta = statusMeta[asset.status];
                       return (
                         <tr key={asset.symbol} style={{ borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 13 }}>
@@ -297,6 +335,17 @@ export function InvestorDashboard() {
                           <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatClp(asset.unrealizedPnlClp)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatPct(asset.unrealizedPnlPct)}</td>
                           <td style={{ padding: "13px 14px", textAlign: "center" }}><span style={{ background: meta.bg, border: `1px solid ${meta.border}`, borderRadius: 999, color: meta.color, display: "inline-flex", fontSize: 11.5, fontWeight: 800, justifyContent: "center", padding: "5px 8px", whiteSpace: "nowrap" }}>{meta.label}</span></td>
+                          <td style={{ padding: "13px 14px", textAlign: "center" }}>
+                            <button
+                              type="button"
+                              aria-label={`Borrar ${asset.symbol} de esta vista`}
+                              title="Borrar solo de esta vista. No elimina datos de la base de datos."
+                              onClick={() => hideAssetFromView(asset.symbol)}
+                              style={{ alignItems: "center", background: "transparent", border: "1px solid rgba(253, 164, 175, 0.35)", borderRadius: 999, color: "var(--loss)", cursor: "pointer", display: "inline-flex", fontSize: 16, fontWeight: 900, height: 26, justifyContent: "center", lineHeight: 1, width: 26 }}
+                            >
+                              ×
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
