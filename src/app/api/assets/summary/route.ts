@@ -28,12 +28,23 @@ type Position = {
   needsReview: boolean;
 };
 
-const EXTERNAL_FETCH_TIMEOUT_MS = 4500;
+type FxSnapshot = { value: number; source: string; cachedAt: number };
+type PriceSnapshot = { data: Record<string, { priceUsd: number | null; source: string }>; cachedAt: number };
+
+const EXTERNAL_FETCH_TIMEOUT_MS = 1_800;
+const MARKET_CACHE_TTL_MS = 5 * 60 * 1000;
 const FALLBACK_USD_CLP = 950;
 const STABLE_USD = new Set(["USDT", "USDC", "DAI", "BUSD", "FDUSD", "TUSD"]);
 const BINANCE_BASES = new Set([
   "BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "TRX", "AVAX", "DOT", "LINK", "LTC", "BCH", "UNI", "AAVE", "MATIC", "POL",
 ]);
+
+let fxCache: FxSnapshot | null = null;
+const priceCache = new Map<string, PriceSnapshot>();
+
+function isFresh(cachedAt: number): boolean {
+  return Date.now() - cachedAt < MARKET_CACHE_TTL_MS;
+}
 
 function classify(type: string): "IN" | "OUT" | "IGNORE" {
   const clean = type.trim().toUpperCase();
@@ -66,9 +77,7 @@ function readMindicadorValue(data: unknown): number | null {
     if (typeof entry !== "object" || entry === null) continue;
 
     const value = (entry as { valor?: unknown }).valor;
-    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-      return value;
-    }
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
   }
 
   return null;
@@ -82,7 +91,16 @@ function readOpenExchangeValue(data: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
+function setFxCache(value: number, source: string): { value: number; source: string } {
+  fxCache = { value, source, cachedAt: Date.now() };
+  return { value, source };
+}
+
 async function fetchUsdClp(): Promise<{ value: number; source: string }> {
+  if (fxCache && isFresh(fxCache.cachedAt)) {
+    return { value: fxCache.value, source: fxCache.source };
+  }
+
   const headers = { Accept: "application/json" };
 
   try {
@@ -90,7 +108,7 @@ async function fetchUsdClp(): Promise<{ value: number; source: string }> {
     if (latestRes.ok) {
       const latestData = await latestRes.json();
       const latestValue = readMindicadorValue(latestData);
-      if (latestValue !== null) return { value: latestValue, source: "mindicador.cl" };
+      if (latestValue !== null) return setFxCache(latestValue, "mindicador.cl");
     }
   } catch {
     // Try dated endpoint below before using secondary provider.
@@ -105,7 +123,7 @@ async function fetchUsdClp(): Promise<{ value: number; source: string }> {
     if (datedRes.ok) {
       const datedData = await datedRes.json();
       const datedValue = readMindicadorValue(datedData);
-      if (datedValue !== null) return { value: datedValue, source: "mindicador.cl" };
+      if (datedValue !== null) return setFxCache(datedValue, "mindicador.cl");
     }
   } catch {
     // Try secondary provider below.
@@ -116,18 +134,20 @@ async function fetchUsdClp(): Promise<{ value: number; source: string }> {
     if (secondaryRes.ok) {
       const secondaryData = await secondaryRes.json();
       const secondaryValue = readOpenExchangeValue(secondaryData);
-      if (secondaryValue !== null) return { value: secondaryValue, source: "open.er-api.com" };
+      if (secondaryValue !== null) return setFxCache(secondaryValue, "open.er-api.com");
     }
   } catch {
     // fallback below
   }
 
-  return { value: FALLBACK_USD_CLP, source: "respaldo_temporal" };
+  if (fxCache) return { value: fxCache.value, source: `${fxCache.source}:cache` };
+  return setFxCache(FALLBACK_USD_CLP, "respaldo_temporal");
 }
 
 async function fetchPrices(symbols: string[]): Promise<Record<string, { priceUsd: number | null; source: string }>> {
   const result: Record<string, { priceUsd: number | null; source: string }> = {};
-  const pairs = symbols.filter((symbol) => BINANCE_BASES.has(symbol)).map((symbol) => `${symbol}USDT`);
+  const pairs = symbols.filter((symbol) => BINANCE_BASES.has(symbol)).map((symbol) => `${symbol}USDT`).sort();
+  const cacheKey = pairs.join(",");
 
   for (const symbol of symbols) {
     result[symbol] = STABLE_USD.has(symbol) ? { priceUsd: 1, source: "stablecoin" } : { priceUsd: null, source: "sin_precio" };
@@ -135,23 +155,31 @@ async function fetchPrices(symbols: string[]): Promise<Record<string, { priceUsd
 
   if (pairs.length === 0) return result;
 
+  const cached = priceCache.get(cacheKey);
+  if (cached && isFresh(cached.cachedAt)) {
+    return { ...result, ...cached.data };
+  }
+
   try {
     const res = await fetchWithTimeout(`https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(JSON.stringify(pairs))}`, { cache: "no-store" });
     if (!res.ok) throw new Error("prices");
     const data = await res.json();
     if (!Array.isArray(data)) return result;
 
+    const fetched: Record<string, { priceUsd: number | null; source: string }> = {};
     for (const quote of data) {
       const pair = String(quote.symbol ?? "");
       const symbol = pair.replace(/USDT$/, "");
       const price = Number(quote.price);
-      if (symbol && Number.isFinite(price) && price > 0) result[symbol] = { priceUsd: price, source: "binance" };
+      if (symbol && Number.isFinite(price) && price > 0) fetched[symbol] = { priceUsd: price, source: "binance" };
     }
+
+    priceCache.set(cacheKey, { data: fetched, cachedAt: Date.now() });
+    return { ...result, ...fetched };
   } catch {
+    if (cached) return { ...result, ...cached.data };
     return result;
   }
-
-  return result;
 }
 
 function buildPositions(movements: RawMovement[]): Position[] {
