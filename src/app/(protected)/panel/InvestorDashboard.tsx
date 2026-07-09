@@ -80,6 +80,11 @@ function formatClp(value: number | null | undefined): string {
   return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(Math.round(value));
 }
 
+function formatUsdClpRate(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return `$${new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} CLP`;
+}
+
 function formatUsd(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "—";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: value < 10 ? 4 : 2 }).format(value);
@@ -87,7 +92,7 @@ function formatUsd(value: number | null | undefined): string {
 
 function formatNumber(value: number | null | undefined, digits = 8): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "—";
-  return new Intl.NumberFormat("es-CL", { maximumFractionDigits: digits }).format(value);
+  return new Intl.NumberFormat("es-CL", { minimumFractionDigits: digits === 2 ? 2 : 0, maximumFractionDigits: digits }).format(value);
 }
 
 function formatPct(value: number | null | undefined): string {
@@ -108,6 +113,7 @@ function normalizeSource(value: string | null | undefined): string {
   if (clean === "binance") return "Binance";
   if (clean === "stablecoin") return "Stablecoin";
   if (clean === "mindicador.cl") return "mindicador.cl";
+  if (clean === "open.er-api.com") return "open.er-api.com";
   if (clean === "fallback" || clean === "respaldo_temporal") return "respaldo temporal";
   if (clean === "sin_precio") return "Sin precio";
   return value;
@@ -207,7 +213,7 @@ export function InvestorDashboard() {
           </div>
           <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 14, minWidth: 240, display: "grid", gap: 7 }}>
             <span style={{ color: "var(--text-faint)", fontSize: 12, fontWeight: 800 }}>Tipo de cambio usado</span>
-            <strong style={{ color: "var(--text)", fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>{summary ? formatClp(summary.usdClp) : loading ? "Cargando..." : "—"}</strong>
+            <strong style={{ color: "var(--text)", fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>{summary ? formatUsdClpRate(summary.usdClp) : loading ? "Cargando..." : "—"}</strong>
             <span style={{ color: "var(--text-soft)", fontSize: 12 }}>Fuente: {summary ? normalizeSource(summary.fxSource) : "—"}</span>
             <span style={{ color: "var(--text-faint)", fontSize: 12 }}>Actualizado: {summary ? formatDateTime(summary.generatedAt) : "—"}</span>
           </aside>
