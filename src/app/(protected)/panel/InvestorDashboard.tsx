@@ -237,12 +237,9 @@ export function InvestorDashboard() {
             </section>
 
             <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-              <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                <div>
-                  <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Activos valorizados</h2>
-                  <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: "4px 0 0" }}>Valor actual estimado, conversión a CLP, fuente de precio y resultado no realizado.</p>
-                </div>
-                <Link href="/cryptoactivos" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 800, textDecoration: "none" }}>Ver detalle operativo</Link>
+              <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "grid", gap: 4 }}>
+                <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0, letterSpacing: "-0.025em" }}>Activos valorizados</h2>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Valor actual estimado, conversión a CLP, fuente de precio y resultado no realizado.</p>
               </div>
 
               <div style={{ overflowX: "auto" }}>
