@@ -88,6 +88,28 @@ export interface CalculatedPortfolio {
 type FxCache = { rate: number; source: string; asOf: string; cachedAt: number };
 let fxCache: FxCache | null = null;
 const FX_TTL_MS = 15 * 60 * 1000;
+const FALLBACK_USD_CLP = 950;
+
+function formatMindicadorDate(date: Date): string {
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+function readMindicadorValue(data: unknown): number | null {
+  if (typeof data !== "object" || data === null) return null;
+  const serie = (data as { serie?: unknown }).serie;
+  if (!Array.isArray(serie)) return null;
+
+  for (const entry of serie) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const value = (entry as { valor?: unknown }).valor;
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
+  }
+
+  return null;
+}
 
 async function fetchUsdClp(): Promise<{ rate: number; source: string; asOf: string }> {
   const now = Date.now();
@@ -95,27 +117,47 @@ async function fetchUsdClp(): Promise<{ rate: number; source: string; asOf: stri
     return { rate: fxCache.rate, source: fxCache.source, asOf: fxCache.asOf };
   }
 
+  const asOf = new Date().toISOString();
+  const headers = { Accept: "application/json" };
+
   try {
-    const today = new Date();
-    const day = String(today.getUTCDate()).padStart(2, "0");
-    const month = String(today.getUTCMonth() + 1).padStart(2, "0");
-    const year = today.getUTCFullYear();
-    const res = await fetch(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(3000),
+    const res = await fetch("https://mindicador.cl/api/dolar", {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(4500),
     });
-    if (!res.ok) throw new Error("no response");
-    const data = await res.json();
-    const valor = data?.serie?.[0]?.valor;
-    if (typeof valor === "number" && valor > 0) {
-      fxCache = { rate: valor, source: "MINDICADOR", asOf: today.toISOString(), cachedAt: now };
-      return { rate: valor, source: "MINDICADOR", asOf: today.toISOString() };
+    if (res.ok) {
+      const data = await res.json();
+      const value = readMindicadorValue(data);
+      if (value !== null) {
+        fxCache = { rate: value, source: "mindicador.cl", asOf, cachedAt: now };
+        return { rate: value, source: "mindicador.cl", asOf };
+      }
     }
   } catch {
-    // fallback
+    // Try dated endpoint below before using fallback.
   }
 
-  const fallback = { rate: 950, source: "STATIC", asOf: new Date().toISOString() };
+  try {
+    const today = new Date();
+    const res = await fetch(`https://mindicador.cl/api/dolar/${formatMindicadorDate(today)}`, {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(4500),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const value = readMindicadorValue(data);
+      if (value !== null) {
+        fxCache = { rate: value, source: "mindicador.cl", asOf, cachedAt: now };
+        return { rate: value, source: "mindicador.cl", asOf };
+      }
+    }
+  } catch {
+    // fallback below
+  }
+
+  const fallback = { rate: FALLBACK_USD_CLP, source: "respaldo_temporal", asOf };
   fxCache = { ...fallback, cachedAt: now };
   return fallback;
 }
