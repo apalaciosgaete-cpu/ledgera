@@ -34,6 +34,7 @@ type PriceSnapshot = { data: Record<string, PriceQuote>; cachedAt: number };
 
 const EXTERNAL_FETCH_TIMEOUT_MS = 1_800;
 const MARKET_CACHE_TTL_MS = 5 * 60 * 1000;
+const RECENT_FX_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const FALLBACK_USD_CLP = 950;
 const STABLE_USD = new Set(["USDT", "USDC", "DAI", "BUSD", "FDUSD", "TUSD"]);
 
@@ -129,48 +130,90 @@ function setFxCache(value: number, source: string): { value: number; source: str
   return { value, source };
 }
 
-async function fetchUsdClp(): Promise<{ value: number; source: string }> {
-  if (fxCache && isFresh(fxCache.cachedAt)) {
-    return { value: fxCache.value, source: fxCache.source };
+async function getRecentStoredUsdClp(): Promise<{ value: number; source: string } | null> {
+  try {
+    const closest = await prisma.fxRate.findFirst({
+      where: { currency: "USD" },
+      orderBy: { date: "desc" },
+    });
+
+    if (!closest || !Number.isFinite(closest.valueClp) || closest.valueClp <= 0) return null;
+    if (Date.now() - closest.date.getTime() > RECENT_FX_MAX_AGE_MS) return null;
+
+    return { value: closest.valueClp, source: `${closest.source || "fxRate"}:bd` };
+  } catch {
+    return null;
   }
+}
 
+async function persistUsdClp(value: number, source: string): Promise<void> {
+  try {
+    const dateKey = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00.000Z");
+    await prisma.fxRate.upsert({
+      where: { currency_date: { currency: "USD", date: dateKey } },
+      update: { valueClp: value, source },
+      create: { currency: "USD", date: dateKey, valueClp: value, source },
+    });
+  } catch {
+    // No bloquear la carga del panel por persistencia de referencia FX.
+  }
+}
+
+async function fetchMindicadorLatest(): Promise<{ value: number; source: string } | null> {
   const headers = { Accept: "application/json" };
-
   try {
     const latestRes = await fetchWithTimeout("https://mindicador.cl/api/dolar", { headers, cache: "no-store" });
-    if (latestRes.ok) {
-      const latestData = await latestRes.json();
-      const latestValue = readMindicadorValue(latestData);
-      if (latestValue !== null) return setFxCache(latestValue, "mindicador.cl");
-    }
+    if (!latestRes.ok) return null;
+    const latestData = await latestRes.json();
+    const latestValue = readMindicadorValue(latestData);
+    return latestValue !== null ? { value: latestValue, source: "mindicador.cl" } : null;
   } catch {
-    // Try dated endpoint below before using secondary provider.
+    return null;
   }
+}
 
+async function fetchMindicadorDated(): Promise<{ value: number; source: string } | null> {
+  const headers = { Accept: "application/json" };
   try {
     const today = new Date();
     const day = String(today.getUTCDate()).padStart(2, "0");
     const month = String(today.getUTCMonth() + 1).padStart(2, "0");
     const year = today.getUTCFullYear();
     const datedRes = await fetchWithTimeout(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, { headers, cache: "no-store" });
-    if (datedRes.ok) {
-      const datedData = await datedRes.json();
-      const datedValue = readMindicadorValue(datedData);
-      if (datedValue !== null) return setFxCache(datedValue, "mindicador.cl");
-    }
+    if (!datedRes.ok) return null;
+    const datedData = await datedRes.json();
+    const datedValue = readMindicadorValue(datedData);
+    return datedValue !== null ? { value: datedValue, source: "mindicador.cl" } : null;
   } catch {
-    // Try secondary provider below.
+    return null;
   }
+}
 
+async function fetchSecondaryUsdClp(): Promise<{ value: number; source: string } | null> {
   try {
-    const secondaryRes = await fetchWithTimeout("https://open.er-api.com/v6/latest/USD", { headers, cache: "no-store" });
-    if (secondaryRes.ok) {
-      const secondaryData = await secondaryRes.json();
-      const secondaryValue = readOpenExchangeValue(secondaryData);
-      if (secondaryValue !== null) return setFxCache(secondaryValue, "open.er-api.com");
-    }
+    const secondaryRes = await fetchWithTimeout("https://open.er-api.com/v6/latest/USD", { headers: { Accept: "application/json" }, cache: "no-store" });
+    if (!secondaryRes.ok) return null;
+    const secondaryData = await secondaryRes.json();
+    const secondaryValue = readOpenExchangeValue(secondaryData);
+    return secondaryValue !== null ? { value: secondaryValue, source: "open.er-api.com" } : null;
   } catch {
-    // fallback below
+    return null;
+  }
+}
+
+async function fetchUsdClp(): Promise<{ value: number; source: string }> {
+  if (fxCache && isFresh(fxCache.cachedAt)) return { value: fxCache.value, source: fxCache.source };
+
+  const stored = await getRecentStoredUsdClp();
+  if (stored) return setFxCache(stored.value, stored.source);
+
+  const [latest, dated, secondary] = await Promise.all([fetchMindicadorLatest(), fetchMindicadorDated(), fetchSecondaryUsdClp()]);
+  const resolved = latest ?? dated ?? secondary;
+
+  if (resolved) {
+    setFxCache(resolved.value, resolved.source);
+    void persistUsdClp(resolved.value, resolved.source);
+    return resolved;
   }
 
   if (fxCache) return { value: fxCache.value, source: `${fxCache.source}:cache` };
@@ -248,12 +291,8 @@ async function fetchPrices(symbols: string[]): Promise<Record<string, PriceQuote
   const result = createInitialPriceMap(normalizedSymbols);
   const nonStableSymbols = normalizedSymbols.filter((symbol) => !STABLE_USD.has(symbol));
 
-  const binancePrices = await fetchBinancePrices(nonStableSymbols);
-  Object.assign(result, binancePrices);
-
-  const stillMissing = nonStableSymbols.filter((symbol) => result[symbol]?.priceUsd === null);
-  const coingeckoPrices = await fetchCoingeckoPrices(stillMissing);
-  Object.assign(result, coingeckoPrices);
+  const [binancePrices, coingeckoPrices] = await Promise.all([fetchBinancePrices(nonStableSymbols), fetchCoingeckoPrices(nonStableSymbols)]);
+  Object.assign(result, coingeckoPrices, binancePrices);
 
   priceCache.set(cacheKey, { data: result, cachedAt: Date.now() });
   return result;
