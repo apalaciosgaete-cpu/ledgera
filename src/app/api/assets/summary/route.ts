@@ -28,16 +28,49 @@ type Position = {
   needsReview: boolean;
 };
 
+type PriceQuote = { priceUsd: number | null; source: string };
 type FxSnapshot = { value: number; source: string; cachedAt: number };
-type PriceSnapshot = { data: Record<string, { priceUsd: number | null; source: string }>; cachedAt: number };
+type PriceSnapshot = { data: Record<string, PriceQuote>; cachedAt: number };
 
 const EXTERNAL_FETCH_TIMEOUT_MS = 1_800;
 const MARKET_CACHE_TTL_MS = 5 * 60 * 1000;
 const FALLBACK_USD_CLP = 950;
 const STABLE_USD = new Set(["USDT", "USDC", "DAI", "BUSD", "FDUSD", "TUSD"]);
-const BINANCE_BASES = new Set([
-  "BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "TRX", "AVAX", "DOT", "LINK", "LTC", "BCH", "UNI", "AAVE", "MATIC", "POL",
-]);
+
+const COINGECKO_IDS: Record<string, string> = {
+  AAVE: "aave",
+  ADA: "cardano",
+  ALGO: "algorand",
+  ARB: "arbitrum",
+  ATOM: "cosmos",
+  AVAX: "avalanche-2",
+  AXL: "axelar",
+  BCH: "bitcoin-cash",
+  BNB: "binancecoin",
+  BTC: "bitcoin",
+  DAI: "dai",
+  DOGE: "dogecoin",
+  DOT: "polkadot",
+  ETH: "ethereum",
+  HBAR: "hedera-hashgraph",
+  LINK: "chainlink",
+  LTC: "litecoin",
+  MATIC: "matic-network",
+  METIS: "metis-token",
+  MTL: "metal",
+  NEAR: "near",
+  OP: "optimism",
+  POL: "polygon-ecosystem-token",
+  SOL: "solana",
+  SUI: "sui",
+  TON: "the-open-network",
+  TRX: "tron",
+  UNI: "uniswap",
+  USDC: "usd-coin",
+  USDT: "tether",
+  XLM: "stellar",
+  XRP: "ripple",
+};
 
 let fxCache: FxSnapshot | null = null;
 const priceCache = new Map<string, PriceSnapshot>();
@@ -144,42 +177,86 @@ async function fetchUsdClp(): Promise<{ value: number; source: string }> {
   return setFxCache(FALLBACK_USD_CLP, "respaldo_temporal");
 }
 
-async function fetchPrices(symbols: string[]): Promise<Record<string, { priceUsd: number | null; source: string }>> {
-  const result: Record<string, { priceUsd: number | null; source: string }> = {};
-  const pairs = symbols.filter((symbol) => BINANCE_BASES.has(symbol)).map((symbol) => `${symbol}USDT`).sort();
-  const cacheKey = pairs.join(",");
-
+function createInitialPriceMap(symbols: string[]): Record<string, PriceQuote> {
+  const result: Record<string, PriceQuote> = {};
   for (const symbol of symbols) {
     result[symbol] = STABLE_USD.has(symbol) ? { priceUsd: 1, source: "stablecoin" } : { priceUsd: null, source: "sin_precio" };
   }
+  return result;
+}
 
-  if (pairs.length === 0) return result;
-
-  const cached = priceCache.get(cacheKey);
-  if (cached && isFresh(cached.cachedAt)) {
-    return { ...result, ...cached.data };
-  }
+async function fetchBinancePrices(symbols: string[]): Promise<Record<string, PriceQuote>> {
+  const result: Record<string, PriceQuote> = {};
+  if (symbols.length === 0) return result;
 
   try {
-    const res = await fetchWithTimeout(`https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(JSON.stringify(pairs))}`, { cache: "no-store" });
-    if (!res.ok) throw new Error("prices");
+    const res = await fetchWithTimeout("https://api.binance.com/api/v3/ticker/price", { cache: "no-store" });
+    if (!res.ok) return result;
     const data = await res.json();
     if (!Array.isArray(data)) return result;
 
-    const fetched: Record<string, { priceUsd: number | null; source: string }> = {};
+    const tickers = new Map<string, number>();
     for (const quote of data) {
-      const pair = String(quote.symbol ?? "");
-      const symbol = pair.replace(/USDT$/, "");
-      const price = Number(quote.price);
-      if (symbol && Number.isFinite(price) && price > 0) fetched[symbol] = { priceUsd: price, source: "binance" };
+      const pair = String((quote as { symbol?: unknown }).symbol ?? "");
+      const price = Number((quote as { price?: unknown }).price);
+      if (pair.endsWith("USDT") && Number.isFinite(price) && price > 0) tickers.set(pair, price);
     }
 
-    priceCache.set(cacheKey, { data: fetched, cachedAt: Date.now() });
-    return { ...result, ...fetched };
+    for (const symbol of symbols) {
+      const price = tickers.get(`${symbol}USDT`);
+      if (price !== undefined) result[symbol] = { priceUsd: price, source: "binance" };
+    }
   } catch {
-    if (cached) return { ...result, ...cached.data };
     return result;
   }
+
+  return result;
+}
+
+async function fetchCoingeckoPrices(symbols: string[]): Promise<Record<string, PriceQuote>> {
+  const result: Record<string, PriceQuote> = {};
+  const ids = Array.from(new Set(symbols.map((symbol) => COINGECKO_IDS[symbol]).filter(Boolean)));
+  if (ids.length === 0) return result;
+
+  try {
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=usd`;
+    const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+    if (!res.ok) return result;
+    const data = await res.json();
+    if (typeof data !== "object" || data === null) return result;
+
+    for (const symbol of symbols) {
+      const id = COINGECKO_IDS[symbol];
+      if (!id) continue;
+      const price = Number((data as Record<string, { usd?: unknown }>)[id]?.usd);
+      if (Number.isFinite(price) && price > 0) result[symbol] = { priceUsd: price, source: "coingecko" };
+    }
+  } catch {
+    return result;
+  }
+
+  return result;
+}
+
+async function fetchPrices(symbols: string[]): Promise<Record<string, PriceQuote>> {
+  const normalizedSymbols = Array.from(new Set(symbols.map((symbol) => normalizeSymbol(symbol)).filter(Boolean))).sort();
+  const cacheKey = normalizedSymbols.join(",");
+
+  const cached = priceCache.get(cacheKey);
+  if (cached && isFresh(cached.cachedAt)) return cached.data;
+
+  const result = createInitialPriceMap(normalizedSymbols);
+  const nonStableSymbols = normalizedSymbols.filter((symbol) => !STABLE_USD.has(symbol));
+
+  const binancePrices = await fetchBinancePrices(nonStableSymbols);
+  Object.assign(result, binancePrices);
+
+  const stillMissing = nonStableSymbols.filter((symbol) => result[symbol]?.priceUsd === null);
+  const coingeckoPrices = await fetchCoingeckoPrices(stillMissing);
+  Object.assign(result, coingeckoPrices);
+
+  priceCache.set(cacheKey, { data: result, cachedAt: Date.now() });
+  return result;
 }
 
 function buildPositions(movements: RawMovement[]): Position[] {
