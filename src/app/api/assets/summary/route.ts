@@ -5,9 +5,9 @@ import { fail } from "@/shared/apiResponse";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 import { normalizeSymbol, round } from "@/shared/utils/math";
 
-
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
 type RawMovement = {
   id: string;
   type: string;
@@ -74,6 +74,14 @@ function readMindicadorValue(data: unknown): number | null {
   return null;
 }
 
+function readOpenExchangeValue(data: unknown): number | null {
+  if (typeof data !== "object" || data === null) return null;
+  const rates = (data as { rates?: unknown; conversion_rates?: unknown }).rates ?? (data as { conversion_rates?: unknown }).conversion_rates;
+  if (typeof rates !== "object" || rates === null) return null;
+  const value = (rates as { CLP?: unknown }).CLP;
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
 async function fetchUsdClp(): Promise<{ value: number; source: string }> {
   const headers = { Accept: "application/json" };
 
@@ -85,7 +93,7 @@ async function fetchUsdClp(): Promise<{ value: number; source: string }> {
       if (latestValue !== null) return { value: latestValue, source: "mindicador.cl" };
     }
   } catch {
-    // Try dated endpoint below before using fallback.
+    // Try dated endpoint below before using secondary provider.
   }
 
   try {
@@ -98,6 +106,17 @@ async function fetchUsdClp(): Promise<{ value: number; source: string }> {
       const datedData = await datedRes.json();
       const datedValue = readMindicadorValue(datedData);
       if (datedValue !== null) return { value: datedValue, source: "mindicador.cl" };
+    }
+  } catch {
+    // Try secondary provider below.
+  }
+
+  try {
+    const secondaryRes = await fetchWithTimeout("https://open.er-api.com/v6/latest/USD", { headers, cache: "no-store" });
+    if (secondaryRes.ok) {
+      const secondaryData = await secondaryRes.json();
+      const secondaryValue = readOpenExchangeValue(secondaryData);
+      if (secondaryValue !== null) return { value: secondaryValue, source: "open.er-api.com" };
     }
   } catch {
     // fallback below
