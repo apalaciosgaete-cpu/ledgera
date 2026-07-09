@@ -108,7 +108,7 @@ function normalizeSource(value: string | null | undefined): string {
   if (clean === "binance") return "Binance";
   if (clean === "stablecoin") return "Stablecoin";
   if (clean === "mindicador.cl") return "mindicador.cl";
-  if (clean === "fallback") return "Fallback";
+  if (clean === "fallback" || clean === "respaldo_temporal") return "respaldo temporal";
   if (clean === "sin_precio") return "Sin precio";
   return value;
 }
