@@ -50,6 +50,7 @@ export default function WalletDetailPage() {
   const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null);
 
   if (!wallet) notFound();
+  const resolvedWallet = wallet;
 
   const loadConnections = useCallback(async () => {
     setLoading(true);
@@ -68,8 +69,8 @@ export default function WalletDetailPage() {
   }, [loadConnections]);
 
   const walletConnections = useMemo(
-    () => connections.filter((connection) => connection.label === wallet.name || connection.label === wallet.shortName),
-    [connections, wallet.name, wallet.shortName],
+    () => connections.filter((connection) => connection.label === resolvedWallet.name || connection.label === resolvedWallet.shortName),
+    [connections, resolvedWallet.name, resolvedWallet.shortName],
   );
 
   async function connectAddress(event: FormEvent) {
@@ -85,7 +86,7 @@ export default function WalletDetailPage() {
         body: {
           network,
           address: address.trim(),
-          label: wallet.name,
+          label: resolvedWallet.name,
         },
       });
       setAddress("");
@@ -103,9 +104,9 @@ export default function WalletDetailPage() {
       <section>
         <button onClick={() => router.push("/origen-fondos/wallets")} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-soft)", fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 8 }}>← Volver a Wallets</button>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={wallet.logoUrl} alt={wallet.name} style={{ width: 58, height: 42, objectFit: "contain" }} />
+          <img src={resolvedWallet.logoUrl} alt={resolvedWallet.name} style={{ width: 58, height: 42, objectFit: "contain" }} />
           <div>
-            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>{wallet.name}</h1>
+            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>{resolvedWallet.name}</h1>
             <p style={{ margin: "4px 0 0", color: "var(--text-soft)", fontSize: 13.5, fontFamily: fonts.body }}>Wallet fría · conexión pública de solo lectura</p>
           </div>
         </div>
@@ -152,7 +153,7 @@ export default function WalletDetailPage() {
         {loading ? (
           <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12.5 }}>Cargando conexiones…</p>
         ) : walletConnections.length === 0 ? (
-          <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12.5 }}>Aún no hay direcciones asociadas a {wallet.name}.</p>
+          <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12.5 }}>Aún no hay direcciones asociadas a {resolvedWallet.name}.</p>
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
             {walletConnections.map((connection) => (
