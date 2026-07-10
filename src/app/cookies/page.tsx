@@ -1,27 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
+import { CONSENT_POLICY_VERSION, openPrivacyPreferences } from "@/lib/privacy/consent";
 
 export default function CookiesPage() {
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setShowScrollTop(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 50%, var(--bg-elev) 100%)",
-        color: "var(--text)",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
-      {/* NAV */}
+    <div style={{ minHeight: "100vh", background: "var(--bg-elev)", color: "var(--text)", fontFamily: "'Inter', sans-serif" }}>
       <nav
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -39,25 +24,13 @@ export default function CookiesPage() {
         <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
           <Logo />
         </Link>
-        <Link
-          href="/"
-          style={{
-            color: "var(--text-soft)",
-            fontSize: "0.85rem",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-soft)")}
-        >
+        <Link href="/" style={{ color: "var(--text-soft)", fontSize: "0.85rem", textDecoration: "none" }}>
           ← Volver al inicio
         </Link>
       </nav>
 
-      <main style={{ maxWidth: "860px", margin: "0 auto", padding: "4rem 2rem 6rem" }}>
-        <div style={{ marginBottom: "3rem" }}>
+      <main style={{ maxWidth: "900px", margin: "0 auto", padding: "4rem 2rem 6rem" }}>
+        <header style={{ marginBottom: "2.5rem" }}>
           <div
             style={{
               display: "inline-flex",
@@ -75,431 +48,218 @@ export default function CookiesPage() {
           >
             Documento legal
           </div>
-          <h1
-            style={{
-              fontFamily: "'Manrope', sans-serif",
-              fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-              fontWeight: 800,
-              color: "var(--text)",
-              margin: "0 0 1rem",
-              lineHeight: 1.15,
-            }}
-          >
+          <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, color: "var(--text)", margin: "0 0 1rem", lineHeight: 1.15 }}>
             Política de Cookies
           </h1>
           <p style={{ color: "var(--text-soft)", fontSize: "0.9rem" }}>
-            Última actualización: 8 de mayo de 2026 · Versión 1.0
+            Última actualización: 9 de julio de 2026 · Versión 2.0 · Consentimiento {CONSENT_POLICY_VERSION}
           </p>
-        </div>
+        </header>
 
-        <LegalSection title="1. ¿Qué son las cookies?">
+        <InfoBox>
+          LEDGERA aplica un modelo de consentimiento previo para cookies y tecnologías no esenciales. Puedes aceptar, rechazar o configurar por categoría; rechazar no esenciales es tan simple como aceptar.
+        </InfoBox>
+
+        <LegalSection title="1. Qué son las cookies y tecnologías similares">
           <p>
-            Las cookies son pequeños archivos de texto que un sitio web almacena en el navegador del
-            Usuario cuando este lo visita. Permiten que el sitio recuerde información sobre su visita
-            para mejorar la experiencia de uso.
+            Las cookies son pequeños archivos que un sitio o aplicación web almacena en el navegador. También usamos tecnologías equivalentes, como localStorage, almacenamiento de sesión y SDKs de medición, cuando cumplen una finalidad técnica o funcional.
           </p>
           <p>
-            Ledgera utiliza cookies y tecnologías similares (como localStorage y tokens de sesión)
-            para garantizar el correcto funcionamiento de la Plataforma.
+            En LEDGERA las cookies necesarias permiten operar la plataforma. Las cookies funcionales y analíticas solo se activan si das tu consentimiento expreso desde el banner o desde este panel.
           </p>
         </LegalSection>
 
-        <LegalSection title="2. Tipos de cookies que utilizamos">
+        <LegalSection title="2. Categorías utilizadas por LEDGERA">
           <CookieTable
-            type="Estrictamente necesarias"
-            color="#3FA687"
-            description="Imprescindibles para el funcionamiento de la Plataforma. Sin ellas, el servicio no puede prestarse correctamente."
-            examples={[
+            rows={[
               {
-                nombre: "session_token",
-                finalidad: "Mantener la sesión autenticada del Usuario",
-                duracion: "Sesión / 30 días",
-                tipo: "Propia",
+                category: "Estrictamente necesarias",
+                purpose: "Inicio de sesión, seguridad, prevención de fraude, protección CSRF, disponibilidad y funcionamiento básico.",
+                examples: "Tokens de sesión, cookies de seguridad, preferencias técnicas mínimas.",
+                legalBase: "Ejecución del contrato, seguridad e interés legítimo. Siempre activas.",
               },
               {
-                nombre: "csrf_token",
-                finalidad: "Protección contra ataques CSRF",
-                duracion: "Sesión",
-                tipo: "Propia",
+                category: "Funcionales",
+                purpose: "Recordar preferencias de visualización o configuración para mejorar la experiencia dentro de la aplicación.",
+                examples: "Preferencias de interfaz, período de trabajo o configuración no esencial.",
+                legalBase: "Consentimiento revocable.",
+              },
+              {
+                category: "Analíticas",
+                purpose: "Medición agregada de uso para mejorar rendimiento, usabilidad y estabilidad.",
+                examples: "Vercel Analytics, Speed Insights, Google Analytics o PostHog, solo cuando estén configurados y consentidos.",
+                legalBase: "Consentimiento revocable.",
+              },
+              {
+                category: "Publicitarias",
+                purpose: "Seguimiento para publicidad comportamental o perfiles comerciales externos.",
+                examples: "No utilizadas actualmente por LEDGERA.",
+                legalBase: "No aplica mientras la categoría no se use.",
               },
             ]}
           />
+        </LegalSection>
 
-          <CookieTable
-            type="Funcionales"
-            color="#3FA687"
-            description="Permiten recordar preferencias del Usuario para personalizar la experiencia."
-            examples={[
-              {
-                nombre: "ledgera-theme",
-                finalidad: "Preferencias de visualización",
-                duracion: "1 año",
-                tipo: "Propia",
-              },
-              {
-                nombre: "ledgera-period",
-                finalidad: "Período tributario seleccionado",
-                duracion: "Sesión",
-                tipo: "Propia",
-              },
-            ]}
-          />
-
-          <CookieTable
-            type="Analíticas"
-            color="#E8B84B"
-            description="Recogen información anónima sobre cómo los usuarios interactúan con la Plataforma."
-            examples={[
-              {
-                nombre: "Analítica interna",
-                finalidad: "Métricas de uso agregadas y anónimas (sin PII)",
-                duracion: "Variable",
-                tipo: "Propia",
-              },
-            ]}
-          />
-
-          <div
+        <LegalSection title="3. Gestión del consentimiento">
+          <p>
+            El consentimiento queda asociado a una versión de política. Si cambia la finalidad del tratamiento, las categorías o los proveedores relevantes, LEDGERA puede solicitar una nueva decisión.
+          </p>
+          <p>
+            Puedes modificar o retirar tu consentimiento en cualquier momento. El retiro no afecta la licitud del tratamiento realizado antes de la revocación.
+          </p>
+          <button
+            type="button"
+            onClick={openPrivacyPreferences}
             style={{
-              background: "rgba(99,102,241,0.06)",
-              border: "1px solid rgba(99,102,241,0.15)",
-              borderRadius: "10px",
-              padding: "1rem 1.2rem",
+              marginTop: "0.5rem",
+              border: "1px solid rgba(63,166,135,0.45)",
+              background: "rgba(63,166,135,0.13)",
+              color: "var(--text)",
+              borderRadius: "9px",
+              padding: "0.8rem 1.1rem",
+              fontWeight: 700,
+              cursor: "pointer",
             }}
           >
-            <p style={{ color: "var(--text-faint)", fontSize: "0.88rem", margin: 0 }}>
-              ℹ️{" "}
-              <strong style={{ color: "var(--text-faint)" }}>
-                Ledgera NO utiliza cookies de publicidad
-              </strong>{" "}
-              ni comparte datos de comportamiento con redes publicitarias de terceros.
-            </p>
-          </div>
+            Abrir preferencias de privacidad
+          </button>
         </LegalSection>
 
-        <LegalSection title="3. Cookies de terceros">
+        <LegalSection title="4. Registro auditable">
           <p>
-            Algunos proveedores utilizados por la Plataforma pueden instalar cookies propias:
+            Para demostrar la decisión adoptada por el titular, LEDGERA registra fecha, versión de política, categorías aceptadas o rechazadas, un identificador seudónimo y una huella criptográfica de integridad. Este registro se usa exclusivamente como prueba de cumplimiento y defensa de derechos.
           </p>
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "0.85rem",
-                color: "var(--text-soft)",
-              }}
-            >
-              <thead>
-                <tr>
-                  {["Proveedor", "Finalidad", "Política de privacidad"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "0.6rem 0.8rem",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        color: "var(--text-faint)",
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  {
-                    proveedor: "Cloudflare",
-                    finalidad: "Seguridad, CDN, protección DDoS",
-                    url: "https://www.cloudflare.com/privacypolicy/",
-                  },
-                  {
-                    proveedor: "Vercel",
-                    finalidad: "Hosting y despliegue de la aplicación",
-                    url: "https://vercel.com/legal/privacy-policy",
-                  },
-                ].map((row, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
-                    <td style={{ padding: "0.6rem 0.8rem", color: "var(--text)", fontWeight: 500 }}>
-                      {row.proveedor}
-                    </td>
-                    <td style={{ padding: "0.6rem 0.8rem" }}>{row.finalidad}</td>
-                    <td style={{ padding: "0.6rem 0.8rem" }}>
-                      <a
-                        href={row.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "var(--accent)" }}
-                      >
-                        Ver política →
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p>
+            No guardamos en claro la dirección IP ni el agente de usuario en el registro de consentimiento. Cuando se requiere trazabilidad técnica, se almacena una huella hash minimizada.
+          </p>
         </LegalSection>
 
-        <LegalSection title="4. Gestión y control de cookies">
+        <LegalSection title="5. Proveedores y transferencias internacionales">
           <p>
-            Puede gestionar, bloquear o eliminar las cookies desde la configuración de su navegador:
+            Algunos proveedores tecnológicos pueden operar fuera de Chile. En esos casos, LEDGERA informa el destinatario en su Política de Privacidad y exige garantías contractuales o mecanismos equivalentes de protección para la transferencia internacional.
           </p>
-          <ul style={{ paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-            {[
-              { name: "Google Chrome", url: "https://support.google.com/chrome/answer/95647" },
-              { name: "Mozilla Firefox", url: "https://support.mozilla.org/es/kb/habilitar-y-deshabilitar-cookies-sitios-web" },
-              { name: "Safari", url: "https://support.apple.com/es-cl/guide/safari/sfri11471/mac" },
-              { name: "Microsoft Edge", url: "https://support.microsoft.com/es-es/microsoft-edge/eliminar-las-cookies-en-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" },
-            ].map((b) => (
-              <li key={b.name}>
-                <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
-                  {b.name} →
-                </a>
-              </li>
-            ))}
+          <ProviderTable
+            rows={[
+              ["Vercel", "Hosting, despliegue, analítica opcional y rendimiento", "Estados Unidos / infraestructura global"],
+              ["Cloudflare", "CDN, seguridad, protección DDoS y disponibilidad", "Estados Unidos / infraestructura global"],
+              ["Google Analytics", "Analítica web opcional, si está configurada", "Estados Unidos / infraestructura global"],
+              ["PostHog", "Analítica de producto opcional, si está configurada", "Estados Unidos / Unión Europea según configuración"],
+            ]}
+          />
+        </LegalSection>
+
+        <LegalSection title="6. Cómo bloquear cookies desde el navegador">
+          <p>
+            También puedes bloquear o eliminar cookies desde la configuración del navegador. Si bloqueas cookies estrictamente necesarias, el inicio de sesión y ciertas funciones de LEDGERA pueden dejar de operar correctamente.
+          </p>
+          <ul style={{ paddingLeft: "1.5rem", color: "var(--text-soft)", lineHeight: 1.8 }}>
+            <li>Chrome: configuración de privacidad y seguridad.</li>
+            <li>Safari: privacidad y administración de datos de sitios web.</li>
+            <li>Firefox: privacidad y protección contra rastreo.</li>
+            <li>Edge: cookies y permisos del sitio.</li>
           </ul>
-          <p>
-            <strong style={{ color: "var(--text)" }}>Atención:</strong> deshabilitar las cookies
-            estrictamente necesarias impedirá el inicio de sesión y el funcionamiento correcto de la
-            Plataforma.
-          </p>
-        </LegalSection>
-
-        <LegalSection title="5. Consentimiento">
-          <p>
-            Al utilizar Ledgera, el Usuario acepta el uso de las cookies descritas en esta Política.
-            El consentimiento se obtiene como parte de la aceptación de los{" "}
-            <Link href="/terminos" style={{ color: "var(--accent)" }}>
-              Términos y Condiciones
-            </Link>
-            .
-          </p>
-        </LegalSection>
-
-        <LegalSection title="6. Modificaciones">
-          <p>
-            Esta Política podrá ser actualizada cuando se incorporen nuevas tecnologías o proveedores.
-            Los cambios significativos serán notificados al correo electrónico registrado.
-          </p>
         </LegalSection>
 
         <LegalSection title="7. Contacto">
           <p>
-            Consultas sobre cookies:{" "}
+            Para consultas o solicitudes sobre privacidad y cookies, escribe a {" "}
             <a href="mailto:admin@ledgera.cl" style={{ color: "var(--accent)" }}>
               admin@ledgera.cl
-            </a>
-            .
+            </a>{" "}
+            con el asunto “Privacidad y cookies”.
           </p>
         </LegalSection>
 
-        <div
-          style={{
-            marginTop: "3rem",
-            padding: "1.5rem",
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "12px",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "1rem",
-          }}
-        >
+        <div style={{ marginTop: "3rem", padding: "1.5rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", display: "flex", flexWrap: "wrap", gap: "1rem" }}>
           <span style={{ color: "var(--text-soft)", fontSize: "0.85rem", alignSelf: "center" }}>Ver también:</span>
-          <Link href="/terminos" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
-            Términos y Condiciones →
-          </Link>
           <Link href="/privacidad" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
-            Política de Privacidad →
+            Política de privacidad →
+          </Link>
+          <Link href="/terminos" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
+            Términos y condiciones →
           </Link>
         </div>
       </main>
-
-      <footer style={{ background: "var(--bg-elev)", padding: "3rem 2.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "2rem", marginBottom: "2rem" }}>
-            <div>
-              <div style={{ marginBottom: "12px" }}>
-                <Logo variant="light" size="sm" showSubtitle />
-              </div>
-              <p style={{ fontSize: "13px", color: "var(--text)", margin: 0, maxWidth: "260px", lineHeight: 1.6 }}>
-                Software tributario especializado en criptomonedas para el mercado chileno.
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap" }}>
-              <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Producto</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/register" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Comenzar gratis</Link>
-                  <Link href="/login" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Iniciar sesión</Link>
-                  <Link href="/blog" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Blog</Link>
-                </div>
-              </div>
-              <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Legal</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Link href="/terminos" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Términos y condiciones</Link>
-                  <Link href="/privacidad" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Política de privacidad</Link>
-                  <Link href="/cookies" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>Política de cookies</Link>
-                </div>
-              </div>
-              <div>
-                <p style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>Contacto</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <a href="mailto:admin@ledgera.cl" style={{ fontSize: "13px", color: "var(--text)", textDecoration: "none" }}>admin@ledgera.cl</a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-            <span style={{ fontSize: "12px", color: "var(--text)" }}>© {new Date().getFullYear()} Ledgera · Chile · Ley 21.719 protección de datos</span>
-            <span style={{ fontSize: "12px", color: "var(--text)" }}>ledgera.cl</span>
-          </div>
-        </div>
-      </footer>
-
-      {showScrollTop && (
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Volver arriba"
-          style={{ position: "fixed", bottom: "92px", right: "28px", width: "44px", height: "44px", borderRadius: "50%", background: "rgba(10,31,46,0.92)", border: "1px solid rgba(255,255,255,0.14)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 998, backdropFilter: "blur(8px)" }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M9 13V5M5 9l4-4 4 4" stroke="var(--text-faint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 }
 
 function LegalSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section style={{ marginBottom: "2.5rem" }}>
-      <h2
-        style={{
-          fontFamily: "'Manrope', sans-serif",
-          fontSize: "1.1rem",
-          fontWeight: 700,
-          color: "var(--text)",
-          marginBottom: "1rem",
-          paddingBottom: "0.5rem",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}
-      >
+    <section style={{ marginBottom: "2.4rem" }}>
+      <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         {title}
       </h2>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.85rem",
-          color: "var(--text-soft)",
-          fontSize: "0.92rem",
-          lineHeight: 1.75,
-        }}
-      >
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", color: "var(--text-soft)", fontSize: "0.92rem", lineHeight: 1.75 }}>
         {children}
       </div>
     </section>
   );
 }
 
-type CookieRow = {
-  nombre: string;
-  finalidad: string;
-  duracion: string;
-  tipo: string;
-};
+function InfoBox({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: "2.4rem", background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.18)", borderRadius: "12px", padding: "1.1rem 1.25rem", color: "var(--text-soft)", fontSize: "0.92rem", lineHeight: 1.7 }}>
+      {children}
+    </div>
+  );
+}
 
 function CookieTable({
-  type,
-  color,
-  description,
-  examples,
+  rows,
 }: {
-  type: string;
-  color: string;
-  description: string;
-  examples: CookieRow[];
+  rows: { category: string; purpose: string; examples: string; legalBase: string }[];
 }) {
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: "10px",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          padding: "0.8rem 1.2rem",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.6rem",
-        }}
-      >
-        <span
-          style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            background: color,
-            flexShrink: 0,
-          }}
-        />
-        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{type}</span>
-      </div>
-      <div style={{ padding: "0.8rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.85rem" }}>{description}</p>
-      </div>
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", color: "var(--text-soft)" }}
-        >
-          <thead>
-            <tr>
-              {["Cookie / Tecnología", "Finalidad", "Duración", "Tipo"].map((h) => (
-                <th
-                  key={h}
-                  style={{
-                    textAlign: "left",
-                    padding: "0.5rem 1rem",
-                    borderBottom: "1px solid rgba(255,255,255,0.06)",
-                    color: "var(--text-faint)",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {examples.map((row, i) => (
-              <tr key={i}>
-                <td
-                  style={{
-                    padding: "0.5rem 1rem",
-                    color: "var(--text)",
-                    fontFamily: "monospace",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  {row.nombre}
-                </td>
-                <td style={{ padding: "0.5rem 1rem" }}>{row.finalidad}</td>
-                <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>{row.duracion}</td>
-                <td style={{ padding: "0.5rem 1rem" }}>{row.tipo}</td>
-              </tr>
+    <div style={{ overflowX: "auto", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem", color: "var(--text-soft)" }}>
+        <thead>
+          <tr>
+            {["Categoría", "Finalidad", "Ejemplos", "Base"].map((header) => (
+              <th key={header} style={{ textAlign: "left", padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--text)", fontWeight: 700, whiteSpace: "nowrap" }}>
+                {header}
+              </th>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.category}>
+              <td style={{ padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.04)", color: "var(--text)", fontWeight: 700 }}>{row.category}</td>
+              <td style={{ padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{row.purpose}</td>
+              <td style={{ padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{row.examples}</td>
+              <td style={{ padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{row.legalBase}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ProviderTable({ rows }: { rows: string[][] }) {
+  return (
+    <div style={{ overflowX: "auto", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem", color: "var(--text-soft)" }}>
+        <thead>
+          <tr>
+            {["Proveedor", "Uso", "Ubicación"].map((header) => (
+              <th key={header} style={{ textAlign: "left", padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--text)", fontWeight: 700, whiteSpace: "nowrap" }}>
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([provider, use, country]) => (
+            <tr key={provider}>
+              <td style={{ padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.04)", color: "var(--text)", fontWeight: 700 }}>{provider}</td>
+              <td style={{ padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{use}</td>
+              <td style={{ padding: "0.75rem 0.85rem", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{country}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
