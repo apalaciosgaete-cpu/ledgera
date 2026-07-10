@@ -1,30 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { fonts } from "@/styles/tokens";
 import { WALLETS } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
 
 export default function WalletsSourceFundsPage() {
   const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const guide = "Selecciona el dispositivo y registra una dirección pública. La conexión es de solo lectura y nunca solicita semillas ni llaves privadas.";
-
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-    const clean = query.trim().toLowerCase();
-    if (!clean) return;
-
-    const wallet = WALLETS.find((item) => item.name.toLowerCase().includes(clean) || item.shortName.toLowerCase().includes(clean));
-    if (!wallet) {
-      setMessage("No encontramos esa wallet fría en el catálogo.");
-      return;
-    }
-
-    setMessage(null);
-    router.push(`/origen-fondos/wallets/${wallet.id}`);
-  }
 
   return (
     <main style={{ minHeight: "calc(100vh - 100px)", display: "grid", gap: 12, alignContent: "start", paddingBottom: 72 }}>
@@ -46,16 +27,6 @@ export default function WalletsSourceFundsPage() {
             </div>
           </button>
         ))}
-      </section>
-
-      <section style={{ width: "100%", border: "1px solid var(--accent-soft)", borderRadius: 18, background: "var(--bg-elev)", padding: 12, display: "grid", gap: 8, boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
-        <p style={{ margin: 0, color: "var(--text)", fontSize: 12.5, lineHeight: 1.3, fontFamily: fonts.body }}>{guide}</p>
-        {message && <p style={{ margin: 0, color: "var(--warn)", fontSize: 12, fontFamily: fonts.body }}>{message}</p>}
-        <form onSubmit={submit} style={{ width: "100%" }}>
-          <div style={{ flex: 1, minHeight: 44, borderRadius: 15, border: "1px solid var(--border)", background: "var(--bg-elev)", display: "flex", alignItems: "center", padding: "0 14px", gap: 6, minWidth: 0 }}>
-            <input value={query} onChange={(event) => { setQuery(event.target.value); setMessage(null); }} placeholder="Escribe el nombre de tu wallet..." style={{ flex: 1, border: "none", outline: "none", color: "var(--text)", fontSize: 14, fontFamily: fonts.body, minWidth: 0, background: "transparent" }} />
-          </div>
-        </form>
       </section>
     </main>
   );
