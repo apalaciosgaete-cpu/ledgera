@@ -6,34 +6,12 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-
-type ConsentState = {
-  necessary: true;
-  functional: boolean;
-  analytics: boolean;
-};
+import { CONSENT_EVENT, hasAnalyticsConsent } from "@/lib/privacy/consent";
 
 declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
-  }
-}
-
-const STORAGE_KEY = "ledgera-cookie-consent";
-const CONSENT_EVENT = "ledgera-cookie-consent-updated";
-
-function readAnalyticsConsent(): boolean {
-  if (typeof window === "undefined") return false;
-
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) return false;
-
-    const parsed = JSON.parse(stored) as Partial<ConsentState>;
-    return parsed.analytics === true;
-  } catch {
-    return false;
   }
 }
 
@@ -51,12 +29,10 @@ export default function AnalyticsProviders() {
 
   useEffect(() => {
     function refreshConsent() {
-      setAnalyticsEnabled(readAnalyticsConsent());
+      setAnalyticsEnabled(hasAnalyticsConsent());
     }
 
     refreshConsent();
-
-    const intervalId = window.setInterval(refreshConsent, 1000);
 
     window.addEventListener("storage", refreshConsent);
     window.addEventListener("focus", refreshConsent);
@@ -64,7 +40,6 @@ export default function AnalyticsProviders() {
     window.addEventListener(CONSENT_EVENT, refreshConsent as EventListener);
 
     return () => {
-      window.clearInterval(intervalId);
       window.removeEventListener("storage", refreshConsent);
       window.removeEventListener("focus", refreshConsent);
       window.removeEventListener("visibilitychange", refreshConsent);
