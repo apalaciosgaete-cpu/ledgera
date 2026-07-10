@@ -104,33 +104,40 @@ function KpiCard({ label, value, helper, accent = "var(--accent)" }: { label: st
   );
 }
 
-function ValuationCircle({ asset }: { asset: AssetRow }) {
-  const value = Math.max(0, asset.valueClp ?? 0);
-  const cost = Math.max(0, asset.costBasisClp ?? 0);
-  const total = value + cost;
-  const valueShare = total > 0 ? (value / total) * 100 : 0;
-  const pnlColor = resultColor(asset.unrealizedPnlClp);
-  const chartBackground = total > 0
-    ? `conic-gradient(var(--accent) 0 ${valueShare}%, rgba(255,255,255,.10) ${valueShare}% 100%)`
+function PortfolioValuationChart({ summary }: { summary: AssetSummary }) {
+  const currentValue = Math.max(0, summary.totals.valueClp);
+  const cost = Math.max(0, summary.totals.costBasisClp);
+  const total = currentValue + cost;
+  const currentShare = total > 0 ? (currentValue / total) * 100 : 0;
+  const pnlColor = resultColor(summary.totals.unrealizedPnlClp);
+  const background = total > 0
+    ? `conic-gradient(var(--accent) 0 ${currentShare}%, rgba(255,255,255,.10) ${currentShare}% 100%)`
     : "rgba(255,255,255,.08)";
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "70px minmax(150px,1fr)", alignItems: "center", gap: 12, minWidth: 245 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,190px) minmax(190px,1fr)", alignItems: "center", gap: 22, justifyContent: "center" }}>
       <div
         role="img"
-        aria-label={`Valor actual ${formatClp(asset.valueClp)}, costo de compra ${formatClp(asset.costBasisClp)}, diferencia ${formatPct(asset.unrealizedPnlPct)}`}
-        title={`Valor actual: ${formatClp(asset.valueClp)} · Costo: ${formatClp(asset.costBasisClp)} · Diferencia: ${formatClp(asset.unrealizedPnlClp)} (${formatPct(asset.unrealizedPnlPct)})`}
-        style={{ width: 66, height: 66, borderRadius: "50%", background: chartBackground, display: "grid", placeItems: "center", boxShadow: "inset 0 0 0 1px var(--border)" }}
+        aria-label={`Costo de compra ${formatClp(cost)}, diferencia ${formatClp(summary.totals.unrealizedPnlClp)}, diferencia porcentual ${formatPct(summary.totals.unrealizedPnlPct)}`}
+        style={{ width: 170, height: 170, borderRadius: "50%", background, display: "grid", placeItems: "center", margin: "0 auto", boxShadow: "inset 0 0 0 1px var(--border)" }}
       >
-        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--bg-elev)", display: "grid", placeItems: "center", border: "1px solid var(--border)" }}>
-          <strong style={{ color: pnlColor, fontSize: 11.5, fontFamily: monoFont, lineHeight: 1 }}>{formatPct(asset.unrealizedPnlPct)}</strong>
+        <div style={{ width: 112, height: 112, borderRadius: "50%", background: "var(--bg-elev)", border: "1px solid var(--border)", display: "grid", placeItems: "center", textAlign: "center", padding: 10 }}>
+          <span style={{ color: "var(--text-faint)", fontSize: 10.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".04em" }}>Diferencia</span>
+          <strong style={{ color: pnlColor, fontSize: 22, fontFamily: monoFont, lineHeight: 1.1 }}>{formatPct(summary.totals.unrealizedPnlPct)}</strong>
         </div>
       </div>
-      <div style={{ display: "grid", gap: 5, fontSize: 11.5 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><span style={{ color: "var(--text-faint)" }}>Costo</span><strong style={{ color: "var(--text)", fontFamily: monoFont }}>{formatClp(asset.costBasisClp)}</strong></div>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><span style={{ color: "var(--text-faint)" }}>Diferencia</span><strong style={{ color: pnlColor, fontFamily: monoFont }}>{formatClp(asset.unrealizedPnlClp)}</strong></div>
-        <div style={{ height: 1, background: "var(--border)" }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-soft)" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />Valor actual</div>
+      <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", display: "grid", gap: 4 }}>
+          <span style={{ color: "var(--text-faint)", fontSize: 11, fontWeight: 800, textTransform: "uppercase" }}>Costo de compra CLP</span>
+          <strong style={{ color: "var(--text)", fontFamily: monoFont, fontSize: 17 }}>{formatClp(summary.totals.costBasisClp)}</strong>
+        </div>
+        <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", display: "grid", gap: 4 }}>
+          <span style={{ color: "var(--text-faint)", fontSize: 11, fontWeight: 800, textTransform: "uppercase" }}>Diferencia CLP</span>
+          <strong style={{ color: pnlColor, fontFamily: monoFont, fontSize: 17 }}>{formatClp(summary.totals.unrealizedPnlClp)}</strong>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, color: "var(--text-soft)", fontSize: 12.5 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)" }} /> Valor actual del portafolio
+        </div>
       </div>
     </div>
   );
@@ -210,11 +217,11 @@ export function InvestorDashboard() {
 
           <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-              <div><h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Activos valorizados</h2><p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: "4px 0 0" }}>Valor actual, conversión a CLP, origen operativo y relación circular frente al costo.</p></div>
+              <div><h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Activos valorizados</h2><p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: "4px 0 0" }}>Valor actual, conversión a CLP, origen operativo y diferencia frente a costo.</p></div>
               {hiddenAssetSymbols.size > 0 ? <button type="button" onClick={() => setHiddenAssetSymbols(new Set())} style={{ background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: 999, color: "var(--accent)", cursor: "pointer", fontSize: 12, fontWeight: 800, padding: "7px 10px" }}>Restaurar vista ({hiddenAssetSymbols.size})</button> : null}
             </div>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", minWidth: 1260, borderCollapse: "collapse" }}>
+              <table style={{ width: "100%", minWidth: 1400, borderCollapse: "collapse" }}>
                 <thead><tr style={{ background: "var(--bg-sunken)", color: "var(--text-faint)", fontSize: 10.8, letterSpacing: ".04em", textTransform: "uppercase" }}>
                   <HeaderCell title="Criptoactivo o token valorizado.">Activo</HeaderCell>
                   <HeaderCell align="center" title="Cantidad de operaciones confirmadas usadas para calcular el saldo.">OPS</HeaderCell>
@@ -223,12 +230,14 @@ export function InvestorDashboard() {
                   <HeaderCell title="Exchange o proveedor de origen.">Origen</HeaderCell>
                   <HeaderCell align="right" title="Valor actual del saldo en dólares.">Valor USD</HeaderCell>
                   <HeaderCell align="right" title="Valor actual convertido a pesos chilenos.">Valor CLP</HeaderCell>
-                  <HeaderCell align="center" title="Gráfico circular con costo de compra, diferencia CLP y diferencia porcentual.">Valor vs. costo</HeaderCell>
+                  <HeaderCell align="right" title="Costo de adquisición acumulado del saldo actual.">Costo de compra CLP</HeaderCell>
+                  <HeaderCell align="right" title="Diferencia en pesos entre valor actual y costo.">Diferencia CLP</HeaderCell>
+                  <HeaderCell align="right" title="Diferencia porcentual entre valor actual y costo.">Diferencia %</HeaderCell>
                   <HeaderCell align="center" title="Nivel de integridad de los datos.">Estado de datos</HeaderCell>
                   <HeaderCell align="center" title="Oculta el activo solo de esta vista.">Borrar</HeaderCell>
                 </tr></thead>
                 <tbody>
-                  {visibleAssets.length === 0 ? <tr><td colSpan={10} style={{ padding: "18px 14px", textAlign: "center", color: "var(--text-soft)" }}>Todos los activos fueron ocultados de esta vista. La información sigue guardada.</td></tr>
+                  {visibleAssets.length === 0 ? <tr><td colSpan={12} style={{ padding: "18px 14px", textAlign: "center", color: "var(--text-soft)" }}>Todos los activos fueron ocultados de esta vista. La información sigue guardada.</td></tr>
                   : visibleAssets.map((asset) => { const meta = statusMeta[asset.status]; return <tr key={asset.symbol} style={{ borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 13 }}>
                     <td style={{ padding: "13px 14px" }}><strong style={{ fontSize: 14, fontWeight: 800 }}>{asset.symbol}</strong></td>
                     <td style={{ padding: "13px 14px", textAlign: "center", fontWeight: 800, fontFamily: monoFont }}>{asset.operations}</td>
@@ -237,7 +246,9 @@ export function InvestorDashboard() {
                     <td style={{ padding: "13px 14px", color: "var(--text-soft)", fontSize: 12 }}>{asset.originSource || "Sin origen"}</td>
                     <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatUsd(asset.valueUsd)}</td>
                     <td style={{ padding: "13px 14px", textAlign: "right", fontWeight: 800, fontFamily: monoFont }}>{formatClp(asset.valueClp)}</td>
-                    <td style={{ padding: "10px 14px" }}><ValuationCircle asset={asset} /></td>
+                    <td style={{ padding: "13px 14px", textAlign: "right", fontFamily: monoFont }}>{formatClp(asset.costBasisClp)}</td>
+                    <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatClp(asset.unrealizedPnlClp)}</td>
+                    <td style={{ padding: "13px 14px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatPct(asset.unrealizedPnlPct)}</td>
                     <td style={{ padding: "13px 14px", textAlign: "center" }}><span style={{ background: meta.bg, border: `1px solid ${meta.border}`, borderRadius: 999, color: meta.color, display: "inline-flex", fontSize: 11.5, fontWeight: 800, padding: "5px 8px", whiteSpace: "nowrap" }}>{meta.label}</span></td>
                     <td style={{ padding: "13px 14px", textAlign: "center" }}><button type="button" aria-label={`Borrar ${asset.symbol} de esta vista`} onClick={() => hideAssetFromView(asset.symbol)} style={{ background: "transparent", border: "1px solid rgba(253,164,175,.35)", borderRadius: 999, color: "var(--loss)", cursor: "pointer", fontSize: 16, fontWeight: 900, height: 26, width: 26 }}>×</button></td>
                   </tr>; })}
@@ -251,11 +262,9 @@ export function InvestorDashboard() {
               <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Composición del portafolio</h2>
               {topComposition.map((item) => <div key={item.symbol} style={{ display: "grid", gap: 6 }}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}><strong>{item.symbol}</strong><span style={{ color: "var(--text-soft)", fontFamily: monoFont }}>{formatPct(item.pct)} · {formatClp(item.valueClp)}</span></div><div style={{ height: 9, background: "var(--bg-sunken)", borderRadius: 999, overflow: "hidden" }}><div style={{ height: "100%", width: `${Math.max(2, Math.min(100, item.pct))}%`, background: "var(--accent)", borderRadius: 999 }} /></div></div>)}
             </article>
-            <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 18, display: "grid", gap: 14, alignContent: "start" }}>
-              <div><h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Calidad del respaldo</h2><p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: "6px 0 0" }}>Revisa la integridad de los datos usados para valorizar el portafolio antes de avanzar a obligaciones o declaraciones.</p></div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10 }}>
-                {[{ label: "Operaciones base", value: summary.counts.operations, color: "var(--text)" }, { label: "Por revisar", value: summary.counts.review, color: summary.counts.review > 0 ? "var(--warn)" : "var(--gain)" }, { label: "Sin precio", value: summary.counts.missingPrice, color: summary.counts.missingPrice > 0 ? "var(--loss)" : "var(--gain)" }].map((item) => <div key={item.label} style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 16, padding: 12, minHeight: 82, display: "grid", placeItems: "center", alignContent: "center", gap: 5, textAlign: "center" }}><span style={{ color: "var(--text-faint)", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".04em" }}>{item.label}</span><strong style={{ color: item.color, fontSize: 20, fontWeight: 800, fontFamily: monoFont }}>{item.value}</strong></div>)}
-              </div>
+            <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 18, display: "grid", gap: 18, alignContent: "start" }}>
+              <div><h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Calidad del respaldo</h2><p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: "6px 0 0" }}>Comparación consolidada entre el costo de compra y el valor actual del portafolio.</p></div>
+              <PortfolioValuationChart summary={summary} />
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Link href="/importaciones" style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Revisar importaciones</Link><Link href="/cryptoactivos" style={{ background: "var(--bg-sunken)", color: "var(--accent)", border: "1px solid var(--border-strong)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Ver activos</Link></div>
             </article>
           </section>
