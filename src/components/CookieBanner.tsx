@@ -1,58 +1,104 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  CONSENT_POLICY_VERSION,
+  PRIVACY_PREFERENCES_EVENT,
+  ConsentCategories,
+  DEFAULT_CONSENT_CATEGORIES,
+  buildConsentSnapshot,
+  normalizeConsentCategories,
+  persistConsentSnapshot,
+  readConsentSnapshot,
+} from "@/lib/privacy/consent";
 
-type ConsentState = {
-  necessary: true;
-  functional: boolean;
-  analytics: boolean;
-};
-
-const STORAGE_KEY = "ledgera-cookie-consent";
+type SaveState = "idle" | "saving" | "error";
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
-  // Ley 21.719: las categorías no esenciales arrancan desactivadas (opt-in explícito).
   const [functional, setFunctional] = useState(false);
   const [analytics, setAnalytics] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) setVisible(true);
-    } catch {
+    const current = readConsentSnapshot();
+    if (!current) {
       setVisible(true);
+      return;
     }
+
+    setFunctional(current.categories.functional);
+    setAnalytics(current.categories.analytics);
   }, []);
 
-  function save(consent: ConsentState) {
+  useEffect(() => {
+    function openPreferences() {
+      const current = readConsentSnapshot();
+      const categories = current?.categories || DEFAULT_CONSENT_CATEGORIES;
+      setFunctional(categories.functional);
+      setAnalytics(categories.analytics);
+      setVisible(true);
+      setShowPanel(true);
+      setSaveState("idle");
+    }
+
+    window.addEventListener(PRIVACY_PREFERENCES_EVENT, openPreferences);
+    return () => window.removeEventListener(PRIVACY_PREFERENCES_EVENT, openPreferences);
+  }, []);
+
+  async function save(categories: ConsentCategories) {
+    setSaveState("saving");
+
+    const normalized = normalizeConsentCategories(categories);
+    const decidedAt = new Date().toISOString();
+    const localFallback = buildConsentSnapshot({ categories: normalized, decidedAt, serverLogged: false });
+
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(consent));
-    } catch {}
-    setVisible(false);
-    setShowPanel(false);
+      const response = await fetch("/api/privacy/consent", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categories: normalized, policyVersion: CONSENT_POLICY_VERSION }),
+      });
+
+      if (!response.ok) throw new Error("consent-log-failed");
+
+      const payload = (await response.json()) as { consent?: unknown };
+      const consent = payload.consent && typeof payload.consent === "object"
+        ? buildConsentSnapshot(payload.consent as Parameters<typeof buildConsentSnapshot>[0])
+        : localFallback;
+
+      persistConsentSnapshot(consent);
+      setVisible(false);
+      setShowPanel(false);
+      setSaveState("idle");
+    } catch {
+      persistConsentSnapshot(localFallback);
+      setVisible(false);
+      setShowPanel(false);
+      setSaveState("error");
+    }
   }
 
   function acceptAll() {
-    save({ necessary: true, functional: true, analytics: true });
+    void save({ necessary: true, functional: true, analytics: true });
   }
 
   function rejectNonEssential() {
-    save({ necessary: true, functional: false, analytics: false });
+    void save({ necessary: true, functional: false, analytics: false });
   }
 
   function saveCustom() {
-    save({ necessary: true, functional, analytics });
+    void save({ necessary: true, functional, analytics });
   }
 
   if (!visible) return null;
 
   return (
     <>
-      {/* OVERLAY cuando el panel está abierto */}
-      {showPanel && (
+      {showPanel ? (
         <div
           onClick={() => setShowPanel(false)}
           style={{
@@ -63,11 +109,13 @@ export default function CookieBanner() {
             backdropFilter: "blur(2px)",
           }}
         />
-      )}
+      ) : null}
 
-      {/* PANEL DE PERSONALIZACIÓN */}
-      {showPanel && (
-        <div
+      {showPanel ? (
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="privacy-preferences-title"
           style={{
             position: "fixed",
             bottom: 0,
@@ -79,216 +127,185 @@ export default function CookieBanner() {
             borderBottom: "none",
             borderRadius: "16px 16px 0 0",
             padding: "2rem 2rem 2.5rem",
-            maxWidth: "640px",
+            maxWidth: "680px",
             margin: "0 auto",
             boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "1.5rem",
-            }}
-          >
-            <h2
-              style={{
-                fontFamily: "'Manrope', sans-serif",
-                fontSize: "1.05rem",
-                fontWeight: 700,
-                color: "var(--text)",
-                margin: 0,
-              }}
-            >
-              Personalizar cookies
-            </h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "1.2rem" }}>
+            <div>
+              <p style={{ margin: "0 0 0.25rem", color: "var(--accent)", fontSize: "0.74rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Ley 21.719 · Chile
+              </p>
+              <h2 id="privacy-preferences-title" style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
+                Preferencias de privacidad
+              </h2>
+            </div>
             <button
               onClick={() => setShowPanel(false)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--text-soft)",
-                cursor: "pointer",
-                fontSize: "1.2rem",
-                lineHeight: 1,
-                padding: "0.2rem",
-              }}
-              aria-label="Cerrar"
+              style={{ background: "none", border: "none", color: "var(--text-soft)", cursor: "pointer", fontSize: "1.2rem", lineHeight: 1, padding: "0.2rem" }}
+              aria-label="Cerrar preferencias de privacidad"
             >
               ✕
             </button>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
-            {/* Necesarias — siempre activas */}
+          <p style={{ margin: "0 0 1.25rem", color: "var(--text-soft)", fontSize: "0.86rem", lineHeight: 1.65 }}>
+            Puedes aceptar, rechazar o configurar las categorías no esenciales. Las necesarias se mantienen activas porque permiten iniciar sesión, proteger la cuenta y operar la plataforma.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem", marginBottom: "1.4rem" }}>
             <ToggleRow
               label="Estrictamente necesarias"
-              description="Imprescindibles para el inicio de sesión y el funcionamiento básico de la plataforma. No pueden desactivarse."
+              description="Sesión, seguridad, prevención de fraude, balanceo de carga y funcionamiento básico de LEDGERA. No pueden desactivarse."
               checked={true}
               locked
               onChange={() => {}}
             />
-
-            {/* Funcionales */}
             <ToggleRow
               label="Funcionales"
-              description="Recuerdan sus preferencias de visualización y el período tributario seleccionado."
+              description="Recuerdan preferencias de visualización y configuración de uso, sin fines publicitarios."
               checked={functional}
               onChange={setFunctional}
             />
-
-            {/* Analíticas */}
             <ToggleRow
               label="Analíticas"
-              description="Métricas de uso anónimas y agregadas que nos ayudan a mejorar la plataforma. No incluyen datos personales identificables."
+              description="Medición agregada para mejorar la plataforma. Incluye Vercel Analytics, Speed Insights, Google Analytics o PostHog solo si aceptas esta categoría."
               checked={analytics}
               onChange={setAnalytics}
             />
           </div>
 
+          <p style={{ margin: "0 0 1.2rem", color: "var(--text-soft)", fontSize: "0.78rem", lineHeight: 1.55 }}>
+            Guardamos una prueba auditable de la decisión: versión de política, fecha, categorías y una huella criptográfica. No usamos cookies publicitarias.
+          </p>
+
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <EqualChoiceButton onClick={rejectNonEssential} disabled={saveState === "saving"}>
+              Rechazar no esenciales
+            </EqualChoiceButton>
             <button
               onClick={saveCustom}
+              disabled={saveState === "saving"}
               style={{
                 flex: 1,
-                minWidth: "160px",
-                padding: "0.75rem 1.2rem",
-                borderRadius: "8px",
+                minWidth: "165px",
+                padding: "0.78rem 1.1rem",
+                borderRadius: "9px",
                 background: "linear-gradient(135deg, var(--accent), var(--bg-elev))",
-                border: "none",
+                border: "1px solid rgba(255,255,255,0.08)",
                 color: "#fff",
-                fontWeight: 600,
-                fontSize: "0.88rem",
-                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: "0.86rem",
+                cursor: saveState === "saving" ? "wait" : "pointer",
               }}
             >
               Guardar preferencias
             </button>
-            <button
-              onClick={acceptAll}
-              style={{
-                flex: 1,
-                minWidth: "140px",
-                padding: "0.75rem 1.2rem",
-                borderRadius: "8px",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "var(--text-soft)",
-                fontWeight: 500,
-                fontSize: "0.88rem",
-                cursor: "pointer",
-              }}
-            >
-              Aceptar todas
-            </button>
+            <EqualChoiceButton onClick={acceptAll} disabled={saveState === "saving"}>
+              Aceptar todo
+            </EqualChoiceButton>
           </div>
-        </div>
-      )}
+        </section>
+      ) : null}
 
-      {/* BANNER PRINCIPAL */}
-      {!showPanel && (
-        <div
+      {!showPanel ? (
+        <section
+          role="dialog"
+          aria-live="polite"
+          aria-label="Preferencias de privacidad"
           style={{
             position: "fixed",
             bottom: "1.5rem",
             left: "50%",
             transform: "translateX(-50%)",
-            width: "min(92vw, 680px)",
+            width: "min(92vw, 700px)",
             zIndex: 1997,
             background: "var(--bg-elev)",
             border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "14px",
-            padding: "1.2rem 1.4rem",
+            padding: "1.15rem 1.3rem",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55)",
             display: "flex",
-            gap: "1.2rem",
+            gap: "1rem",
             alignItems: "center",
             flexWrap: "wrap",
           }}
         >
-          {/* Icono */}
-          <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>🍪</span>
-
-          {/* Texto */}
-          <div style={{ flex: 1, minWidth: "200px" }}>
-            <p
-              style={{
-                margin: "0 0 0.25rem",
-                color: "var(--text)",
-                fontSize: "0.88rem",
-                fontWeight: 600,
-                lineHeight: 1.4,
-              }}
-            >
-              Usamos cookies para mejorar tu experiencia
+          <div style={{ flex: 1, minWidth: "230px" }}>
+            <p style={{ margin: "0 0 0.25rem", color: "var(--text)", fontSize: "0.9rem", fontWeight: 700, lineHeight: 1.4 }}>
+              Privacidad y cookies en LEDGERA
             </p>
-            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.8rem", lineHeight: 1.5 }}>
-              Las estrictamente necesarias siempre están activas.{" "}
+            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.8rem", lineHeight: 1.55 }}>
+              Usamos cookies necesarias y, solo con tu autorización, cookies funcionales o analíticas. Rechazar debe ser tan simple como aceptar. {" "}
               <Link href="/cookies" style={{ color: "var(--accent)", textDecoration: "none" }}>
-                Política de Cookies
+                Ver política
               </Link>
             </p>
           </div>
 
-          {/* Botones */}
           <div style={{ display: "flex", gap: "0.6rem", flexShrink: 0, flexWrap: "wrap" }}>
-            <button
-              onClick={rejectNonEssential}
-              style={{
-                padding: "0.55rem 1rem",
-                borderRadius: "8px",
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "var(--text-soft)",
-                fontSize: "0.82rem",
-                fontWeight: 500,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-faint)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-soft)")}
-            >
-              Solo necesarias
-            </button>
+            <EqualChoiceButton onClick={rejectNonEssential} disabled={saveState === "saving"} compact>
+              Rechazar
+            </EqualChoiceButton>
             <button
               onClick={() => setShowPanel(true)}
+              disabled={saveState === "saving"}
               style={{
-                padding: "0.55rem 1rem",
+                padding: "0.58rem 1rem",
                 borderRadius: "8px",
                 background: "transparent",
-                border: "1px solid rgba(99,102,241,0.4)",
+                border: "1px solid rgba(99,102,241,0.45)",
                 color: "var(--accent)",
                 fontSize: "0.82rem",
-                fontWeight: 500,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.8)")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.4)")}
-            >
-              Personalizar
-            </button>
-            <button
-              onClick={acceptAll}
-              style={{
-                padding: "0.55rem 1.1rem",
-                borderRadius: "8px",
-                background: "linear-gradient(135deg, var(--accent), var(--bg-elev))",
-                border: "none",
-                color: "#fff",
-                fontSize: "0.82rem",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: saveState === "saving" ? "wait" : "pointer",
                 whiteSpace: "nowrap",
               }}
             >
-              Aceptar todas
+              Configurar
             </button>
+            <EqualChoiceButton onClick={acceptAll} disabled={saveState === "saving"} compact>
+              Aceptar
+            </EqualChoiceButton>
           </div>
-        </div>
-      )}
+        </section>
+      ) : null}
     </>
+  );
+}
+
+function EqualChoiceButton({
+  children,
+  compact = false,
+  disabled,
+  onClick,
+}: {
+  children: React.ReactNode;
+  compact?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        flex: compact ? "0 0 auto" : 1,
+        minWidth: compact ? "104px" : "165px",
+        padding: compact ? "0.58rem 1rem" : "0.78rem 1.1rem",
+        borderRadius: "8px",
+        background: "rgba(63,166,135,0.13)",
+        border: "1px solid rgba(63,166,135,0.45)",
+        color: "var(--text)",
+        fontSize: compact ? "0.82rem" : "0.86rem",
+        fontWeight: 700,
+        cursor: disabled ? "wait" : "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -303,7 +320,7 @@ function ToggleRow({
   description: string;
   checked: boolean;
   locked?: boolean;
-  onChange: (v: boolean) => void;
+  onChange: (value: boolean) => void;
 }) {
   return (
     <div
@@ -318,31 +335,19 @@ function ToggleRow({
       }}
     >
       <div style={{ flex: 1 }}>
-        <p style={{ margin: "0 0 0.2rem", color: "var(--text)", fontWeight: 600, fontSize: "0.88rem" }}>
+        <p style={{ margin: "0 0 0.2rem", color: "var(--text)", fontWeight: 700, fontSize: "0.88rem" }}>
           {label}
-          {locked && (
-            <span
-              style={{
-                marginLeft: "0.5rem",
-                fontSize: "0.7rem",
-                color: "var(--text)",
-                background: "rgba(255,255,255,0.05)",
-                padding: "0.1rem 0.45rem",
-                borderRadius: "999px",
-                verticalAlign: "middle",
-              }}
-            >
+          {locked ? (
+            <span style={{ marginLeft: "0.5rem", fontSize: "0.7rem", color: "var(--text)", background: "rgba(255,255,255,0.05)", padding: "0.1rem 0.45rem", borderRadius: "999px", verticalAlign: "middle" }}>
               Siempre activa
             </span>
-          )}
+          ) : null}
         </p>
-        <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.8rem", lineHeight: 1.55 }}>
-          {description}
-        </p>
+        <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.8rem", lineHeight: 1.55 }}>{description}</p>
       </div>
 
-      {/* Toggle switch */}
       <button
+        type="button"
         role="switch"
         aria-checked={checked}
         disabled={locked}
@@ -353,11 +358,7 @@ function ToggleRow({
           height: "24px",
           borderRadius: "999px",
           border: "none",
-          background: checked
-            ? locked
-              ? "rgba(99,102,241,0.5)"
-              : "#3FA687"
-            : "rgba(255,255,255,0.1)",
+          background: checked ? (locked ? "rgba(99,102,241,0.45)" : "#3FA687") : "rgba(255,255,255,0.1)",
           cursor: locked ? "not-allowed" : "pointer",
           position: "relative",
           transition: "background 0.2s",
