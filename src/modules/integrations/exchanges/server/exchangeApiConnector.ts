@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
 import ccxt from "ccxt";
-import { Orionx } from "orionx-sdk";
+import Orionx from "orionx-sdk";
 
 import {
   getExchangeApiConfig,
@@ -42,7 +42,6 @@ type CcxtTradeLike = {
   side?: string;
   amount?: number;
   price?: number;
-  cost?: number;
   fee?: { cost?: number; currency?: string } | null;
   info?: unknown;
 };
@@ -56,7 +55,6 @@ type CcxtTransactionLike = {
   amount?: number;
   fee?: { cost?: number; currency?: string } | null;
   status?: string;
-  type?: string;
   info?: unknown;
 };
 
@@ -74,7 +72,6 @@ type CcxtMarketLike = {
 
 type CcxtExchangeLike = {
   has: Record<string, boolean | string | undefined>;
-  markets?: Record<string, CcxtMarketLike>;
   loadMarkets(): Promise<Record<string, CcxtMarketLike>>;
   fetchBalance(): Promise<CcxtBalanceLike>;
   fetchMyTrades(symbol?: string, since?: number, limit?: number): Promise<CcxtTradeLike[]>;
@@ -93,10 +90,8 @@ type OrionxTransaction = {
   type?: string;
   adds?: boolean;
   price?: number;
-  cost?: number;
   hash?: string | null;
   market?: {
-    code?: string;
     mainCurrency?: OrionxCurrency;
     secondaryCurrency?: OrionxCurrency;
   } | null;
@@ -109,6 +104,12 @@ type OrionxClientLike = {
   };
 };
 
+type OrionxConstructor = new (
+  apiKey: string,
+  apiSecret: string,
+  endpoint?: string,
+) => OrionxClientLike;
+
 type CryptoMktTrade = {
   id?: number | string;
   order_id?: number | string;
@@ -118,29 +119,24 @@ type CryptoMktTrade = {
   price?: string;
   fee?: string;
   timestamp?: string;
-  taker?: boolean;
 };
 
 type CryptoMktWalletTransaction = {
   id?: number | string;
   created_at?: string;
-  updated_at?: string;
   status?: string;
   type?: string;
-  subtype?: string;
   operation_id?: string;
   native?: {
     tx_id?: string;
     currency?: string;
     amount?: string | number;
     fee?: string | number;
-    hash?: string;
   };
 };
 
 const CRYPTOMKT_API_BASE = "https://api.exchange.cryptomkt.com/api/3";
 const ORIONX_GRAPHQL_ENDPOINT = "https://api.orionx.com/graphql";
-const STABLE_QUOTES = new Set(["USD", "USDT", "USDC", "BUSD", "DAI", "CLP", "EUR", "GBP"]);
 const CRYPTOMKT_QUOTES = ["USDT", "USDC", "BTC", "ETH", "DAI", "CLP", "EUR", "USD"];
 
 function asFiniteNumber(value: unknown, fallback = 0): number {
@@ -165,34 +161,45 @@ function splitCcxtSymbol(symbol?: string): { base: string; quote?: string } {
 
 function splitCryptoMktSymbol(symbol?: string): { base: string; quote?: string } {
   const clean = String(symbol ?? "").toUpperCase();
-  const quote = CRYPTOMKT_QUOTES.find((candidate) => clean.endsWith(candidate) && clean.length > candidate.length);
-  return quote
-    ? { base: clean.slice(0, -quote.length), quote }
-    : { base: clean || "UNKNOWN" };
+  const quote = CRYPTOMKT_QUOTES.find(
+    (candidate) => clean.endsWith(candidate) && clean.length > candidate.length,
+  );
+  return quote ? { base: clean.slice(0, -quote.length), quote } : { base: clean || "UNKNOWN" };
 }
 
-function normalizeCcxtTrade(exchangeId: string, trade: CcxtTradeLike): NormalizedExchangeApiEvent {
+function normalizeCcxtTrade(
+  exchangeId: string,
+  trade: CcxtTradeLike,
+): NormalizedExchangeApiEvent {
   const pair = splitCcxtSymbol(trade.symbol);
-  const timestamp = eventDate(trade.timestamp, trade.datetime);
-  const quantity = asFiniteNumber(trade.amount);
+  const executedAt = eventDate(trade.timestamp, trade.datetime);
+  const quantity = Math.abs(asFiniteNumber(trade.amount));
   const price = asFiniteNumber(trade.price);
   const side = String(trade.side ?? "").toLowerCase();
-  const externalId = String(
+  const id = String(
     trade.id ??
-      stableExternalId([exchangeId, trade.order, trade.symbol, trade.timestamp, side, quantity, price]),
+      stableExternalId([
+        exchangeId,
+        trade.order,
+        trade.symbol,
+        trade.timestamp,
+        side,
+        quantity,
+        price,
+      ]),
   );
 
   return {
-    externalId: `${exchangeId}:trade:${externalId}`,
+    externalId: `${exchangeId}:trade:${id}`,
     externalType: "trade",
     type: side === "sell" ? "SELL" : "BUY",
     symbol: pair.base,
     quantity,
     quoteSymbol: pair.quote,
     price,
-    feeAmount: asFiniteNumber(trade.fee?.cost),
+    feeAmount: Math.abs(asFiniteNumber(trade.fee?.cost)),
     feeSymbol: trade.fee?.currency?.toUpperCase(),
-    executedAt: timestamp,
+    executedAt,
     rawPayload: trade,
   };
 }
@@ -202,12 +209,18 @@ function normalizeCcxtTransaction(
   transaction: CcxtTransactionLike,
   direction: "TRANSFER_IN" | "TRANSFER_OUT",
 ): NormalizedExchangeApiEvent {
-  const timestamp = eventDate(transaction.timestamp, transaction.datetime);
+  const executedAt = eventDate(transaction.timestamp, transaction.datetime);
   const quantity = Math.abs(asFiniteNumber(transaction.amount));
   const id = String(
     transaction.id ??
       transaction.txid ??
-      stableExternalId([exchangeId, direction, transaction.currency, transaction.timestamp, quantity]),
+      stableExternalId([
+        exchangeId,
+        direction,
+        transaction.currency,
+        transaction.timestamp,
+        quantity,
+      ]),
   );
 
   return {
@@ -218,12 +231,15 @@ function normalizeCcxtTransaction(
     quantity,
     feeAmount: Math.abs(asFiniteNumber(transaction.fee?.cost)),
     feeSymbol: transaction.fee?.currency?.toUpperCase(),
-    executedAt: timestamp,
+    executedAt,
     rawPayload: transaction,
   };
 }
 
-function createCcxtExchange(config: ExchangeApiConfig, credentials: ExchangeApiCredentials): CcxtExchangeLike {
+function createCcxtExchange(
+  config: ExchangeApiConfig,
+  credentials: ExchangeApiCredentials,
+): CcxtExchangeLike {
   if (!config.ccxtId) throw new Error(`No existe adaptador CCXT para ${config.name}.`);
 
   const constructors = ccxt as unknown as Record<
@@ -242,7 +258,7 @@ function createCcxtExchange(config: ExchangeApiConfig, credentials: ExchangeApiC
   });
 }
 
-async function fetchCcxtTradesWithFallback(
+async function fetchCcxtTrades(
   exchange: CcxtExchangeLike,
   since: number,
   limit: number,
@@ -254,7 +270,10 @@ async function fetchCcxtTradesWithFallback(
     return await exchange.fetchMyTrades(undefined, since, limit);
   } catch (firstError) {
     try {
-      const [markets, balance] = await Promise.all([exchange.loadMarkets(), exchange.fetchBalance()]);
+      const [markets, balance] = await Promise.all([
+        exchange.loadMarkets(),
+        exchange.fetchBalance(),
+      ]);
       const currencies = new Set(
         Object.entries(balance.total ?? {})
           .filter(([, total]) => asFiniteNumber(total) !== 0)
@@ -262,7 +281,11 @@ async function fetchCcxtTradesWithFallback(
       );
       const symbols = Object.values(markets)
         .filter((market) => market.active !== false && market.spot !== false)
-        .filter((market) => currencies.has(String(market.base).toUpperCase()) || currencies.has(String(market.quote).toUpperCase()))
+        .filter(
+          (market) =>
+            currencies.has(String(market.base).toUpperCase()) ||
+            currencies.has(String(market.quote).toUpperCase()),
+        )
         .map((market) => market.symbol)
         .filter((symbol): symbol is string => Boolean(symbol))
         .slice(0, 24);
@@ -270,10 +293,9 @@ async function fetchCcxtTradesWithFallback(
       const trades: CcxtTradeLike[] = [];
       for (const symbol of symbols) {
         try {
-          const page = await exchange.fetchMyTrades(symbol, since, Math.min(limit, 100));
-          trades.push(...page);
+          trades.push(...(await exchange.fetchMyTrades(symbol, since, Math.min(limit, 100))));
         } catch {
-          // Un mercado sin historial no debe impedir sincronizar los demás.
+          // Un mercado sin historial no bloquea los demás mercados.
         }
       }
 
@@ -296,7 +318,10 @@ async function fetchCcxtTradesWithFallback(
   }
 }
 
-async function testCcxtConnection(config: ExchangeApiConfig, credentials: ExchangeApiCredentials): Promise<void> {
+async function testCcxtConnection(
+  config: ExchangeApiConfig,
+  credentials: ExchangeApiCredentials,
+): Promise<void> {
   const exchange = createCcxtExchange(config, credentials);
   await exchange.loadMarkets();
   await exchange.fetchBalance();
@@ -312,19 +337,29 @@ async function syncCcxt(
   const warnings: string[] = [];
   await exchange.loadMarkets();
 
-  const trades = await fetchCcxtTradesWithFallback(exchange, since, limit, warnings);
-  const events = trades.map((trade) => normalizeCcxtTrade(config.id, trade));
+  const events = (await fetchCcxtTrades(exchange, since, limit, warnings)).map((trade) =>
+    normalizeCcxtTrade(config.id, trade),
+  );
 
   if (exchange.has.fetchDeposits && exchange.fetchDeposits) {
     try {
       const deposits = await exchange.fetchDeposits(undefined, since, limit);
       events.push(
         ...deposits
-          .filter((deposit) => !["failed", "canceled", "cancelled", "rejected"].includes(String(deposit.status).toLowerCase()))
-          .map((deposit) => normalizeCcxtTransaction(config.id, deposit, "TRANSFER_IN")),
+          .filter(
+            (entry) =>
+              !["failed", "canceled", "cancelled", "rejected"].includes(
+                String(entry.status).toLowerCase(),
+              ),
+          )
+          .map((entry) => normalizeCcxtTransaction(config.id, entry, "TRANSFER_IN")),
       );
     } catch (error) {
-      warnings.push(error instanceof Error ? `Depósitos no disponibles: ${error.message}` : "Depósitos no disponibles.");
+      warnings.push(
+        error instanceof Error
+          ? `Depósitos no disponibles: ${error.message}`
+          : "Depósitos no disponibles.",
+      );
     }
   }
 
@@ -333,11 +368,20 @@ async function syncCcxt(
       const withdrawals = await exchange.fetchWithdrawals(undefined, since, limit);
       events.push(
         ...withdrawals
-          .filter((withdrawal) => !["failed", "canceled", "cancelled", "rejected"].includes(String(withdrawal.status).toLowerCase()))
-          .map((withdrawal) => normalizeCcxtTransaction(config.id, withdrawal, "TRANSFER_OUT")),
+          .filter(
+            (entry) =>
+              !["failed", "canceled", "cancelled", "rejected"].includes(
+                String(entry.status).toLowerCase(),
+              ),
+          )
+          .map((entry) => normalizeCcxtTransaction(config.id, entry, "TRANSFER_OUT")),
       );
     } catch (error) {
-      warnings.push(error instanceof Error ? `Retiros no disponibles: ${error.message}` : "Retiros no disponibles.");
+      warnings.push(
+        error instanceof Error
+          ? `Retiros no disponibles: ${error.message}`
+          : "Retiros no disponibles.",
+      );
     }
   }
 
@@ -358,35 +402,38 @@ function unwrapOrionxTransactions(value: unknown): OrionxTransaction[] {
   return [];
 }
 
-function normalizeOrionxTransaction(transaction: OrionxTransaction): NormalizedExchangeApiEvent | null {
+function normalizeOrionxTransaction(
+  transaction: OrionxTransaction,
+): NormalizedExchangeApiEvent | null {
   const currency = transaction.currency?.code?.toUpperCase() || "UNKNOWN";
   const units = Math.max(0, Number(transaction.currency?.units ?? 0));
   const divisor = 10 ** units;
   const quantity = Math.abs(asFiniteNumber(transaction.amount) / divisor);
-  const typeValue = String(transaction.type ?? "").toLowerCase();
+  const rawType = String(transaction.type ?? "").toLowerCase();
   const mainCurrency = transaction.market?.mainCurrency?.code?.toUpperCase();
 
-  if (typeValue.startsWith("trade") && mainCurrency && currency !== mainCurrency) {
-    return null;
-  }
+  if (rawType.startsWith("trade") && mainCurrency && currency !== mainCurrency) return null;
 
   let type: NormalizedExchangeApiEvent["type"] = "OTHER";
-  if (typeValue.startsWith("trade")) type = transaction.adds ? "BUY" : "SELL";
-  else if (["receive", "deposit"].some((value) => typeValue.includes(value))) type = "TRANSFER_IN";
-  else if (["send", "withdraw"].some((value) => typeValue.includes(value))) type = "TRANSFER_OUT";
-  else if (typeValue.includes("commission") || typeValue.includes("fee")) type = "FEE";
+  if (rawType.startsWith("trade")) type = transaction.adds ? "BUY" : "SELL";
+  else if (["receive", "deposit"].some((value) => rawType.includes(value))) type = "TRANSFER_IN";
+  else if (["send", "withdraw"].some((value) => rawType.includes(value))) type = "TRANSFER_OUT";
+  else if (rawType.includes("commission") || rawType.includes("fee")) type = "FEE";
 
   const executedAt = eventDate(
     typeof transaction.date === "number" ? transaction.date : undefined,
     typeof transaction.date === "string" ? transaction.date : undefined,
   );
   const id = String(
-    transaction._id ?? transaction.id ?? transaction.hash ?? stableExternalId([typeValue, currency, quantity, executedAt.toISOString()]),
+    transaction._id ??
+      transaction.id ??
+      transaction.hash ??
+      stableExternalId([rawType, currency, quantity, executedAt.toISOString()]),
   );
 
   return {
     externalId: `orionx:transaction:${id}`,
-    externalType: typeValue || "transaction",
+    externalType: rawType || "transaction",
     type,
     symbol: currency,
     quantity,
@@ -400,16 +447,16 @@ function normalizeOrionxTransaction(transaction: OrionxTransaction): NormalizedE
 }
 
 function createOrionxClient(credentials: ExchangeApiCredentials): OrionxClientLike {
-  return new Orionx(
+  const Constructor = Orionx as unknown as OrionxConstructor;
+  return new Constructor(
     credentials.apiKey,
     credentials.apiSecret,
     ORIONX_GRAPHQL_ENDPOINT,
-  ) as unknown as OrionxClientLike;
+  );
 }
 
 async function testOrionxConnection(credentials: ExchangeApiCredentials): Promise<void> {
-  const client = createOrionxClient(credentials);
-  await client.accounts.getAccounts();
+  await createOrionxClient(credentials).accounts.getAccounts();
 }
 
 async function syncOrionx(
@@ -417,8 +464,11 @@ async function syncOrionx(
   since: number,
   limit: number,
 ): Promise<ExchangeApiSyncResult> {
-  const client = createOrionxClient(credentials);
-  const raw = await client.accounts.getTransactions({ page: 1, limit, sortType: "DESC" });
+  const raw = await createOrionxClient(credentials).accounts.getTransactions({
+    page: 1,
+    limit,
+    sortType: "DESC",
+  });
   const events = unwrapOrionxTransactions(raw)
     .map(normalizeOrionxTransaction)
     .filter((event): event is NormalizedExchangeApiEvent => Boolean(event))
@@ -451,7 +501,12 @@ async function cryptoMktRequest<T>(
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      Authorization: cryptoMktAuthorization("GET", url, credentials.apiKey, credentials.apiSecret),
+      Authorization: cryptoMktAuthorization(
+        "GET",
+        url,
+        credentials.apiKey,
+        credentials.apiSecret,
+      ),
       Accept: "application/json",
     },
     cache: "no-store",
@@ -471,7 +526,9 @@ async function testCryptoMktConnection(credentials: ExchangeApiCredentials): Pro
 
 function normalizeCryptoMktTrade(trade: CryptoMktTrade): NormalizedExchangeApiEvent {
   const pair = splitCryptoMktSymbol(trade.symbol);
-  const id = String(trade.id ?? stableExternalId([trade.order_id, trade.symbol, trade.timestamp, trade.quantity]));
+  const id = String(
+    trade.id ?? stableExternalId([trade.order_id, trade.symbol, trade.timestamp, trade.quantity]),
+  );
   return {
     externalId: `crypto-mkt:trade:${id}`,
     externalType: "trade",
@@ -493,8 +550,14 @@ function normalizeCryptoMktWalletTransaction(
   if (!["SUCCESS", "PENDING"].includes(String(transaction.status).toUpperCase())) return null;
   const rawType = String(transaction.type ?? "").toUpperCase();
   if (!["DEPOSIT", "WITHDRAW"].includes(rawType)) return null;
+
   const direction = rawType === "DEPOSIT" ? "TRANSFER_IN" : "TRANSFER_OUT";
-  const id = String(transaction.id ?? transaction.native?.tx_id ?? transaction.operation_id ?? stableExternalId([transaction]));
+  const id = String(
+    transaction.id ??
+      transaction.native?.tx_id ??
+      transaction.operation_id ??
+      stableExternalId([transaction]),
+  );
 
   return {
     externalId: `crypto-mkt:${direction.toLowerCase()}:${id}`,
@@ -516,21 +579,19 @@ async function syncCryptoMkt(
 ): Promise<ExchangeApiSyncResult> {
   const from = new Date(since).toISOString();
   const warnings: string[] = [];
-  const trades = await cryptoMktRequest<CryptoMktTrade[]>("/spot/history/trade", credentials, {
-    sort: "DESC",
-    by: "timestamp",
-    from,
-    limit: String(limit),
-  });
+  const trades = await cryptoMktRequest<CryptoMktTrade[]>(
+    "/spot/history/trade",
+    credentials,
+    { sort: "DESC", by: "timestamp", from, limit: String(limit) },
+  );
   const events = trades.map(normalizeCryptoMktTrade);
 
   try {
-    const transactions = await cryptoMktRequest<CryptoMktWalletTransaction[]>("/wallet/transactions", credentials, {
-      order_by: "created_at",
-      sort: "DESC",
-      from,
-      limit: String(limit),
-    });
+    const transactions = await cryptoMktRequest<CryptoMktWalletTransaction[]>(
+      "/wallet/transactions",
+      credentials,
+      { order_by: "created_at", sort: "DESC", from, limit: String(limit) },
+    );
     events.push(
       ...transactions
         .map(normalizeCryptoMktWalletTransaction)
@@ -570,11 +631,11 @@ export async function syncExchangeApi(
   const config = getExchangeApiConfig(exchangeId);
   if (!config) throw new Error("Exchange sin conector API disponible.");
 
-  if (config.mode === "ccxt") return syncCcxt(config, credentials, options.since, options.limit);
-  if (config.mode === "orionx") return syncOrionx(credentials, options.since, options.limit);
+  if (config.mode === "ccxt") {
+    return syncCcxt(config, credentials, options.since, options.limit);
+  }
+  if (config.mode === "orionx") {
+    return syncOrionx(credentials, options.since, options.limit);
+  }
   return syncCryptoMkt(credentials, options.since, options.limit);
-}
-
-export function isStableQuote(symbol?: string): boolean {
-  return Boolean(symbol && STABLE_QUOTES.has(symbol.toUpperCase()));
 }
