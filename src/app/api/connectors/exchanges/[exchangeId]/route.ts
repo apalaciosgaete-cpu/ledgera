@@ -7,7 +7,6 @@ import { enforceCsrfProtection } from "@/modules/security/application/csrfProtec
 import { decryptSecret, encryptSecret } from "@/modules/security/application/encryption";
 import { getExchangeApiConfig } from "@/modules/integrations/exchanges/shared/exchangeApiConfig";
 import {
-  isStableQuote,
   syncExchangeApi,
   testExchangeApiConnection,
   type ExchangeApiCredentials,
@@ -34,6 +33,12 @@ type StoredCredentialBundle = {
   apiSecret: string;
   passphrase?: string;
 };
+
+const USD_EQUIVALENT_QUOTES = new Set(["USD", "USDT", "USDC", "BUSD", "DAI"]);
+
+function isUsdEquivalent(symbol?: string): boolean {
+  return Boolean(symbol && USD_EQUIVALENT_QUOTES.has(symbol.toUpperCase()));
+}
 
 function connectionCredentials(
   apiKeyEncrypted: string,
@@ -110,11 +115,11 @@ function normalizedMetadata(exchangeId: string, event: NormalizedExchangeApiEven
     quantity: event.quantity,
     quoteSymbol: quote,
     priceQuote: price,
-    priceUsd: isStableQuote(quote) ? price : 0,
+    priceUsd: isUsdEquivalent(quote) ? price : 0,
     priceClp: quote === "CLP" ? price : 0,
     feeAmount,
     feeSymbol: event.feeSymbol,
-    feeUsd: isStableQuote(event.feeSymbol) ? feeAmount : 0,
+    feeUsd: isUsdEquivalent(event.feeSymbol) ? feeAmount : 0,
     executedAt: event.executedAt,
     source: exchangeId.toUpperCase(),
     provider: exchangeId,
