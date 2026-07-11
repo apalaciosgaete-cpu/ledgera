@@ -7,6 +7,28 @@ import { findExchangeById } from "@/modules/crypto/catalogs/sourceFundsCatalogs"
 import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 import { BudaIntegrationPanel } from "@/modules/integrations/buda/client/BudaIntegrationPanel";
 
+function ExchangeIcon({ src }: { src: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 44,
+        height: 44,
+        display: "block",
+        backgroundColor: "currentColor",
+        WebkitMaskImage: `url("${src}")`,
+        maskImage: `url("${src}")`,
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskPosition: "left center",
+        maskPosition: "left center",
+        WebkitMaskSize: "126px 44px",
+        maskSize: "126px 44px",
+      }}
+    />
+  );
+}
+
 export default function ExchangeConnectionPage() {
   const router = useRouter();
   const params = useParams<{ exchangeId: string }>();
@@ -16,53 +38,85 @@ export default function ExchangeConnectionPage() {
 
   const isBinance = exchange.id === "binance";
   const isBuda = exchange.id === "buda";
-  const isAvailable = exchange.status === "available";
+  const hasApiConnection = isBinance || isBuda;
+  const documentUrl = `/origen-fondos/documentacion?provider=${encodeURIComponent(exchange.id.toUpperCase())}`;
 
   return (
-    <main style={{ minHeight: "calc(100vh - 100px)", display: "grid", gap: 16, alignContent: "start", paddingBottom: 72 }}>
-      <section>
-        <button onClick={() => router.push("/origen-fondos/exchanges")} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-soft)", fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 8 }}>← Volver a Exchanges</button>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={exchange.logoUrl} alt={exchange.name} style={{ width: 58, height: 42, objectFit: "contain" }} />
-          <div>
-            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.35rem,2.4vw,1.72rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>Conexión {exchange.name}</h1>
-            <p style={{ margin: "4px 0 0", color: "var(--text-soft)", fontSize: 13.5, fontFamily: fonts.body }}>
-              {isAvailable ? "Conector de solo lectura" : "Integración en preparación"}
-            </p>
-          </div>
-        </div>
-      </section>
+    <main style={{ minHeight: "calc(100vh - 100px)", paddingBottom: 72, fontFamily: fonts.body }}>
+      <div style={{ width: "100%", maxWidth: 1160, margin: "0 auto", display: "grid", gap: 22 }}>
+        <header style={{ display: "grid", gap: 12 }}>
+          <button
+            type="button"
+            onClick={() => router.push("/origen-fondos/exchanges")}
+            style={{ width: "fit-content", background: "transparent", border: "none", cursor: "pointer", color: "var(--text-soft)", fontSize: 13, fontFamily: fonts.body, padding: 0 }}
+          >
+            ← Volver a Exchanges
+          </button>
 
-      {isBinance && (
-        <section style={{ display: "grid", gap: 14 }}>
-          <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", padding: 14, fontFamily: fonts.body }}>
-            <strong style={{ color: "var(--text)", fontSize: 14.5 }}>Dos conexiones disponibles</strong>
-            <p style={{ margin: "4px 0 0", color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.4 }}>Spot permite validar balances y operaciones. Tax Report permite recuperar el historial tributario multi-año. Ambas credenciales deben ser de solo lectura.</p>
-          </div>
-          <BinanceIntegrationPanel />
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => router.push("/origen-fondos/documentacion?provider=BINANCE")} style={{ minHeight: 40, borderRadius: 11, border: "1px solid var(--border)", background: "var(--bg-elev)", color: "var(--text)", padding: "0 14px", fontFamily: fonts.body, fontSize: 12.5, fontWeight: 900, cursor: "pointer" }}>
-              Subir historial de Binance
-            </button>
-          </div>
-        </section>
-      )}
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ width: 64, height: 64, flex: "0 0 auto", borderRadius: 18, background: "var(--accent-soft)", color: "var(--accent)", display: "grid", placeItems: "center", overflow: "hidden" }}>
+              <ExchangeIcon src={exchange.logoUrl} />
+            </span>
 
-      {isBuda && <BudaIntegrationPanel />}
+            <div style={{ display: "grid", gap: 4 }}>
+              <h1 style={{ color: "var(--text)", fontSize: "clamp(1.65rem,3vw,2.25rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.045em", fontFamily: fonts.display }}>
+                {hasApiConnection ? `Conectar ${exchange.name}` : `Importar desde ${exchange.name}`}
+              </h1>
+              <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5 }}>
+                {hasApiConnection
+                  ? "Conexión protegida para consultar operaciones en modo de solo lectura."
+                  : "Incorpora el historial exportado desde tu cuenta para procesar y revisar sus operaciones."}
+              </p>
+            </div>
+          </div>
+        </header>
 
-      {!isBinance && !isBuda && (
-        <section style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", padding: 18, display: "grid", gap: 12, fontFamily: fonts.body }}>
-          <div>
-            <strong style={{ display: "block", color: "var(--text)", fontSize: 16, fontWeight: 900 }}>Integración API próximamente</strong>
-            <p style={{ margin: "5px 0 0", color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45 }}>La conexión de {exchange.name} todavía no está habilitada. No se solicitarán credenciales hasta que el conector pueda validar, cifrar y sincronizar información de forma segura.</p>
-          </div>
-          <div>
-            <button type="button" onClick={() => router.push(`/origen-fondos/documentacion?provider=${encodeURIComponent(exchange.id.toUpperCase())}`)} style={{ minHeight: 40, borderRadius: 11, border: "1px solid var(--border)", background: "var(--bg-elev)", color: "var(--text)", padding: "0 14px", fontSize: 12.5, fontWeight: 900, cursor: "pointer" }}>
-              Subir documento de respaldo
-            </button>
-          </div>
-        </section>
-      )}
+        {isBinance && (
+          <section style={{ display: "grid", gap: 14 }}>
+            <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", padding: 14 }}>
+              <strong style={{ color: "var(--text)", fontSize: 14.5 }}>Conexiones de solo lectura</strong>
+              <p style={{ margin: "4px 0 0", color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45 }}>
+                Spot permite validar balances y operaciones. Tax Report permite recuperar el historial tributario multi-año.
+              </p>
+            </div>
+            <BinanceIntegrationPanel />
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => router.push("/origen-fondos/documentacion?provider=BINANCE")}
+                style={{ minHeight: 40, borderRadius: 11, border: "1px solid var(--border)", background: "var(--bg-elev)", color: "var(--text)", padding: "0 14px", fontFamily: fonts.body, fontSize: 12.5, fontWeight: 900, cursor: "pointer" }}
+              >
+                Importar historial de Binance
+              </button>
+            </div>
+          </section>
+        )}
+
+        {isBuda && <BudaIntegrationPanel />}
+
+        {!hasApiConnection && (
+          <section style={{ maxWidth: 720, border: "1px solid var(--border-strong)", borderRadius: 22, background: "var(--bg-elev)", padding: 22, display: "grid", gap: 18, boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "grid", gap: 6 }}>
+              <strong style={{ color: "var(--text)", fontFamily: fonts.display, fontSize: 20, fontWeight: 900 }}>
+                Historial de {exchange.name}
+              </strong>
+              <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13, lineHeight: 1.55 }}>
+                Carga el archivo exportado desde el exchange. LEDGERA lo conservará como respaldo y enviará sus registros al flujo de revisión e importación.
+              </p>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={() => router.push(documentUrl)}
+                style={{ minHeight: 42, borderRadius: 12, border: "1px solid var(--accent)", background: "var(--accent)", color: "var(--accent-contrast, #00131f)", padding: "0 16px", fontFamily: fonts.body, fontSize: 12.5, fontWeight: 900, cursor: "pointer" }}
+              >
+                Seleccionar archivo
+              </button>
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }
