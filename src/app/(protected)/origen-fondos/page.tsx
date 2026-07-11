@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { fonts } from "@/styles/tokens";
 import { httpClient } from "@/shared/http/httpClient";
+import { fonts } from "@/styles/tokens";
 
 type ApiResponse<T> = {
   ok: boolean;
@@ -212,30 +212,33 @@ export default function OrigenFondosPage() {
     };
   }, []);
 
-  const sourceStatuses = useMemo<Record<SourceKey, string>>(() => ({
-    banks: overview.loading
-      ? "Actualizando estado…"
-      : overview.bankMovements > 0
-        ? pluralize(overview.bankMovements, "movimiento importado", "movimientos importados")
-        : overview.bankUploads > 0
-          ? pluralize(overview.bankUploads, "cartola cargada", "cartolas cargadas")
-          : "Importación de cartolas disponible",
-    exchanges: overview.loading
-      ? "Actualizando estado…"
-      : overview.exchangeConnections > 0
-        ? pluralize(overview.exchangeConnections, "conexión activa", "conexiones activas")
-        : "Binance y Buda disponibles",
-    wallets: overview.loading
-      ? "Actualizando estado…"
-      : overview.walletConnections > 0
-        ? pluralize(overview.walletConnections, "dirección asociada", "direcciones asociadas")
-        : "Direcciones públicas de solo lectura",
-    documents: overview.loading
-      ? "Actualizando estado…"
-      : overview.documents > 0
-        ? pluralize(overview.documents, "documento activo", "documentos activos")
-        : "CSV · Excel · PDF",
-  }), [overview]);
+  const sourceStatuses = useMemo<Record<SourceKey, string>>(
+    () => ({
+      banks: overview.loading
+        ? "Actualizando estado…"
+        : overview.bankMovements > 0
+          ? pluralize(overview.bankMovements, "movimiento importado", "movimientos importados")
+          : overview.bankUploads > 0
+            ? pluralize(overview.bankUploads, "cartola cargada", "cartolas cargadas")
+            : "Importación de cartolas disponible",
+      exchanges: overview.loading
+        ? "Actualizando estado…"
+        : overview.exchangeConnections > 0
+          ? pluralize(overview.exchangeConnections, "conexión activa", "conexiones activas")
+          : "Binance y Buda disponibles",
+      wallets: overview.loading
+        ? "Actualizando estado…"
+        : overview.walletConnections > 0
+          ? pluralize(overview.walletConnections, "dirección asociada", "direcciones asociadas")
+          : "Direcciones públicas de solo lectura",
+      documents: overview.loading
+        ? "Actualizando estado…"
+        : overview.documents > 0
+          ? pluralize(overview.documents, "documento activo", "documentos activos")
+          : "CSV · Excel · PDF",
+    }),
+    [overview],
+  );
 
   const sourcesWithData = useMemo(() => {
     let count = 0;
@@ -246,25 +249,25 @@ export default function OrigenFondosPage() {
     return count;
   }, [overview]);
 
-  const metrics: Array<{ label: string; value: ReactNode; hint: string }> = [
+  const metrics = [
     {
       label: "Fuentes con información",
-      value: overview.loading ? "—" : sourcesWithData,
+      value: overview.loading ? "—" : String(sourcesWithData),
       hint: "Bancos, exchanges, wallets o documentos con actividad.",
     },
     {
       label: "Operaciones registradas",
-      value: overview.loading ? "—" : overview.operations,
+      value: overview.loading ? "—" : String(overview.operations),
       hint: "Total consolidado actualmente en Importaciones.",
     },
     {
       label: "Pendientes de revisión",
-      value: overview.loading ? "—" : overview.pendingOperations,
+      value: overview.loading ? "—" : String(overview.pendingOperations),
       hint: "Registros pendientes o marcados para revisar.",
     },
     {
       label: "Operaciones confirmadas",
-      value: overview.loading ? "—" : overview.confirmedOperations,
+      value: overview.loading ? "—" : String(overview.confirmedOperations),
       hint: "Movimientos listos para alimentar Activos.",
     },
   ];
@@ -400,7 +403,9 @@ export default function OrigenFondosPage() {
               }}
             >
               {option.action}
-              <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: 17 }}>→</span>
+              <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: 17 }}>
+                →
+              </span>
             </span>
           </Link>
         ))}
@@ -418,10 +423,21 @@ export default function OrigenFondosPage() {
         }}
       >
         <div style={{ marginBottom: 15 }}>
-          <strong id="source-overview-title" style={{ display: "block", color: "var(--text)", fontSize: 15, fontWeight: 900 }}>
+          <strong
+            id="source-overview-title"
+            style={{ display: "block", color: "var(--text)", fontSize: 15, fontWeight: 900 }}
+          >
             Estado de tus fuentes
           </strong>
-          <span style={{ display: "block", color: "var(--text-soft)", fontSize: 12, lineHeight: 1.4, marginTop: 3 }}>
+          <span
+            style={{
+              display: "block",
+              color: "var(--text-soft)",
+              fontSize: 12,
+              lineHeight: 1.4,
+              marginTop: 3,
+            }}
+          >
             Resumen actualizado a partir de las conexiones e importaciones registradas.
           </span>
         </div>
@@ -442,15 +458,43 @@ export default function OrigenFondosPage() {
                 border: "1px solid var(--border)",
                 background: "var(--bg-sunken)",
                 padding: "13px 14px",
+                display: "grid",
+                alignContent: "center",
+                justifyItems: "center",
+                textAlign: "center",
               }}
             >
-              <span style={{ display: "block", color: "var(--text-soft)", fontSize: 11.5, fontWeight: 800, marginBottom: 8 }}>
+              <span
+                style={{
+                  display: "block",
+                  color: "var(--text-soft)",
+                  fontSize: 11.5,
+                  fontWeight: 800,
+                  marginBottom: 8,
+                }}
+              >
                 {metric.label}
               </span>
-              <strong style={{ display: "block", color: "var(--text)", fontSize: 24, lineHeight: 1, fontWeight: 950, marginBottom: 8 }}>
+              <strong
+                style={{
+                  display: "block",
+                  color: "var(--text)",
+                  fontSize: 24,
+                  lineHeight: 1,
+                  fontWeight: 950,
+                  marginBottom: 8,
+                }}
+              >
                 {metric.value}
               </strong>
-              <span style={{ display: "block", color: "var(--text-faint)", fontSize: 10.5, lineHeight: 1.35 }}>
+              <span
+                style={{
+                  display: "block",
+                  color: "var(--text-faint)",
+                  fontSize: 10.5,
+                  lineHeight: 1.35,
+                }}
+              >
                 {metric.hint}
               </span>
             </div>
