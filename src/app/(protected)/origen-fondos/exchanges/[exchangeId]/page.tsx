@@ -76,6 +76,7 @@ export default function ExchangeConnectionPage() {
             requiresPassphrase={apiConfig.requiresPassphrase}
             secretLabel={apiConfig.secretLabel}
             passphraseLabel={apiConfig.passphraseLabel}
+            multilineSecret={apiConfig.multilineSecret}
           />
         )}
 
