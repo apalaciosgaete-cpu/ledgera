@@ -44,28 +44,6 @@ function isApiExchange(id: string): id is ApiExchangeId {
   return id === "binance" || id === "buda";
 }
 
-function ExchangeIcon({ src }: { src: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        width: 42,
-        height: 42,
-        display: "block",
-        backgroundColor: "currentColor",
-        WebkitMaskImage: `url("${src}")`,
-        maskImage: `url("${src}")`,
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-        WebkitMaskPosition: "left center",
-        maskPosition: "left center",
-        WebkitMaskSize: "120px 42px",
-        maskSize: "120px 42px",
-      }}
-    />
-  );
-}
-
 function apiStatusLabel(connected: boolean, loading: boolean) {
   if (loading) return "Verificando…";
   return connected ? "Conectado" : "Disponible";
@@ -138,34 +116,30 @@ export default function ExchangesSourceFundsPage() {
                 type="button"
                 onClick={() => router.push(`/origen-fondos/exchanges/${exchange.id}`)}
                 style={{
-                  minHeight: 238,
+                  minHeight: 214,
                   borderRadius: 22,
                   border: "1px solid var(--border-strong)",
                   background: "var(--bg-elev)",
                   color: "var(--text)",
                   cursor: "pointer",
                   display: "grid",
-                  gridTemplateRows: "auto auto 1fr auto",
-                  gap: 13,
+                  gridTemplateRows: "auto 1fr auto",
+                  gap: 14,
                   padding: 18,
                   textAlign: "left",
                   boxShadow: "var(--shadow-sm)",
                   fontFamily: fonts.body,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ width: 58, height: 58, borderRadius: 17, background: "var(--accent-soft)", color: "var(--accent)", display: "grid", placeItems: "center", overflow: "hidden" }}>
-                    <ExchangeIcon src={exchange.logoUrl} />
-                  </span>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                  <strong style={{ minWidth: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: 19, lineHeight: 1.15, fontWeight: 900, letterSpacing: "-.035em", overflowWrap: "anywhere" }}>
+                    {exchange.name}
+                  </strong>
 
-                  <span style={{ borderRadius: 999, border: "1px solid var(--border)", background: "var(--bg-sunken)", color: connected ? "var(--accent)" : "var(--text-soft)", padding: "6px 9px", fontSize: 9.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".04em", textAlign: "center", lineHeight: 1.2 }}>
+                  <span style={{ flex: "0 0 auto", borderRadius: 999, border: "1px solid var(--border)", background: "var(--bg-sunken)", color: connected ? "var(--accent)" : "var(--text-soft)", padding: "6px 9px", fontSize: 9.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".04em", textAlign: "center", lineHeight: 1.2 }}>
                     {status}
                   </span>
                 </div>
-
-                <strong style={{ fontFamily: fonts.display, fontSize: 20, fontWeight: 900, letterSpacing: "-.035em" }}>
-                  {exchange.name}
-                </strong>
 
                 <div style={{ display: "grid", alignContent: "start", gap: 8 }}>
                   <p style={{ color: "var(--text-soft)", fontSize: 12.25, lineHeight: 1.48, margin: 0 }}>
