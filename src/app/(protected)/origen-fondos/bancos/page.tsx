@@ -20,19 +20,19 @@ const PROVIDERS: BankProvider[] = [
     id: "fintoc",
     name: "Fintoc",
     eyebrow: "Proveedor comercial",
-    description: "Conexión bancaria de solo lectura mediante una cuenta comercial propia.",
+    description: "Conexión bancaria de solo lectura que se habilitará cuando LEDGERA disponga de un acuerdo comercial.",
     capability: "Cuentas, saldos y movimientos",
-    status: "Disponible para integrar",
-    enabled: true,
+    status: "No disponible aún",
+    enabled: false,
   },
   {
     id: "floid",
     name: "Floid",
     eyebrow: "Proveedor comercial",
-    description: "Integración de datos bancarios y conciliación mediante una cuenta comercial propia.",
+    description: "Integración de datos bancarios y conciliación que se habilitará cuando LEDGERA disponga de un acuerdo comercial.",
     capability: "Datos bancarios y conciliación",
-    status: "Disponible para integrar",
-    enabled: true,
+    status: "No disponible aún",
+    enabled: false,
   },
   {
     id: "sfa",
@@ -86,7 +86,7 @@ export default function BancosOrigenFondosPage() {
             Conexión bancaria
           </h1>
           <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: 0, maxWidth: 720 }}>
-            Selecciona el proveedor mediante el cual se implementará el acceso de solo lectura a cuentas y movimientos bancarios.
+            Estas alternativas se habilitarán cuando LEDGERA disponga de los acuerdos comerciales o regulatorios necesarios.
           </p>
         </div>
       </section>
