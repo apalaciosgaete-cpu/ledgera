@@ -7,28 +7,6 @@ import { findExchangeById } from "@/modules/crypto/catalogs/sourceFundsCatalogs"
 import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 import { BudaIntegrationPanel } from "@/modules/integrations/buda/client/BudaIntegrationPanel";
 
-function ExchangeIcon({ src }: { src: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        width: 44,
-        height: 44,
-        display: "block",
-        backgroundColor: "currentColor",
-        WebkitMaskImage: `url("${src}")`,
-        maskImage: `url("${src}")`,
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-        WebkitMaskPosition: "left center",
-        maskPosition: "left center",
-        WebkitMaskSize: "126px 44px",
-        maskSize: "126px 44px",
-      }}
-    />
-  );
-}
-
 export default function ExchangeConnectionPage() {
   const router = useRouter();
   const params = useParams<{ exchangeId: string }>();
@@ -53,21 +31,15 @@ export default function ExchangeConnectionPage() {
             ← Volver a Exchanges
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 64, height: 64, flex: "0 0 auto", borderRadius: 18, background: "var(--accent-soft)", color: "var(--accent)", display: "grid", placeItems: "center", overflow: "hidden" }}>
-              <ExchangeIcon src={exchange.logoUrl} />
-            </span>
-
-            <div style={{ display: "grid", gap: 4 }}>
-              <h1 style={{ color: "var(--text)", fontSize: "clamp(1.65rem,3vw,2.25rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.045em", fontFamily: fonts.display }}>
-                {hasApiConnection ? `Conectar ${exchange.name}` : `Importar desde ${exchange.name}`}
-              </h1>
-              <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5 }}>
-                {hasApiConnection
-                  ? "Conexión protegida para consultar operaciones en modo de solo lectura."
-                  : "Incorpora el historial exportado desde tu cuenta para procesar y revisar sus operaciones."}
-              </p>
-            </div>
+          <div style={{ display: "grid", gap: 4 }}>
+            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.65rem,3vw,2.25rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.045em", fontFamily: fonts.display }}>
+              {hasApiConnection ? `Conectar ${exchange.name}` : `Importar desde ${exchange.name}`}
+            </h1>
+            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5 }}>
+              {hasApiConnection
+                ? "Conexión protegida para consultar operaciones en modo de solo lectura."
+                : "Incorpora el historial exportado desde tu cuenta para procesar y revisar sus operaciones."}
+            </p>
           </div>
         </header>
 
