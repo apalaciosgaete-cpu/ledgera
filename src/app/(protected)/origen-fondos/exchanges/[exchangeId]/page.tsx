@@ -6,6 +6,8 @@ import { fonts } from "@/styles/tokens";
 import { findExchangeById } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
 import { BinanceIntegrationPanel } from "@/modules/integrations/binance/client/BinanceIntegrationPanel";
 import { BudaIntegrationPanel } from "@/modules/integrations/buda/client/BudaIntegrationPanel";
+import { ExchangeApiIntegrationPanel } from "@/modules/integrations/exchanges/client/ExchangeApiIntegrationPanel";
+import { getExchangeApiConfig } from "@/modules/integrations/exchanges/shared/exchangeApiConfig";
 
 export default function ExchangeConnectionPage() {
   const router = useRouter();
@@ -16,7 +18,8 @@ export default function ExchangeConnectionPage() {
 
   const isBinance = exchange.id === "binance";
   const isBuda = exchange.id === "buda";
-  const hasApiConnection = isBinance || isBuda;
+  const apiConfig = getExchangeApiConfig(exchange.id);
+  const hasApiConnection = isBinance || isBuda || Boolean(apiConfig);
   const documentUrl = `/origen-fondos/documentacion?provider=${encodeURIComponent(exchange.id.toUpperCase())}`;
 
   return (
@@ -37,7 +40,7 @@ export default function ExchangeConnectionPage() {
             </h1>
             <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5 }}>
               {hasApiConnection
-                ? "Conexión protegida para consultar operaciones en modo de solo lectura."
+                ? "Conexión protegida para consultar operaciones, depósitos y retiros en modo de solo lectura."
                 : "Incorpora el historial exportado desde tu cuenta para procesar y revisar sus operaciones."}
             </p>
           </div>
@@ -65,6 +68,16 @@ export default function ExchangeConnectionPage() {
         )}
 
         {isBuda && <BudaIntegrationPanel />}
+
+        {apiConfig && (
+          <ExchangeApiIntegrationPanel
+            exchangeId={apiConfig.id}
+            exchangeName={apiConfig.name}
+            requiresPassphrase={apiConfig.requiresPassphrase}
+            secretLabel={apiConfig.secretLabel}
+            passphraseLabel={apiConfig.passphraseLabel}
+          />
+        )}
 
         {!hasApiConnection && (
           <section style={{ maxWidth: 720, border: "1px solid var(--border-strong)", borderRadius: 22, background: "var(--bg-elev)", padding: 22, display: "grid", gap: 18, boxShadow: "var(--shadow-sm)" }}>
