@@ -36,7 +36,6 @@ export default function BankConnectionPage() {
   if (!bank) notFound();
 
   const isAvailable = bank.status === "available";
-  const guide = `Estás en la conexión con ${bank.name}. Selecciona el método de conexión para continuar.`;
 
   function handleMethod(method: ConnectionMethod) {
     setActiveMethod(method);
@@ -47,7 +46,7 @@ export default function BankConnectionPage() {
   }
 
   return (
-    <main style={{ height: "calc(100vh - 92px)", overflow: "hidden", display: "grid", gap: 10, gridTemplateRows: "auto auto 1fr auto" }}>
+    <main style={{ height: "calc(100vh - 92px)", overflow: "hidden", display: "grid", gap: 10, gridTemplateRows: "auto auto 1fr" }}>
       <section>
         <button
           onClick={() => window.location.href = "/origen-fondos/bancos"}
@@ -104,10 +103,6 @@ export default function BankConnectionPage() {
             </form>
           )}
         </div>
-      </section>
-
-      <section style={{ alignSelf: "end", border: "1px solid var(--accent-soft)", borderRadius: 20, background: "var(--bg-elev)", padding: 14, boxShadow: "0 12px 28px rgba(109,74,255,0.05)" }}>
-        <p style={{ margin: 0, color: "var(--text)", fontSize: 12.5, lineHeight: 1.3, fontFamily: fonts.body }}>{guide}</p>
       </section>
     </main>
   );
