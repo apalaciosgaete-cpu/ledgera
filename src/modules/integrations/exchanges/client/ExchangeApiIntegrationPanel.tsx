@@ -34,6 +34,7 @@ type Props = {
   requiresPassphrase: boolean;
   secretLabel?: string;
   passphraseLabel?: string;
+  multilineSecret?: boolean;
 };
 
 const panelStyle: CSSProperties = {
@@ -77,6 +78,7 @@ export function ExchangeApiIntegrationPanel({
   requiresPassphrase,
   secretLabel = "API Secret",
   passphraseLabel = "Passphrase de API",
+  multilineSecret = false,
 }: Props) {
   const endpoint = `/api/connectors/exchanges/${exchangeId}`;
   const [status, setStatus] = useState<ExchangeStatus | null>(null);
@@ -207,9 +209,21 @@ export function ExchangeApiIntegrationPanel({
           )}
         </div>
 
-        <form onSubmit={connect} style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit,minmax(${requiresPassphrase ? "190px" : "230px"},1fr))`, gap: 10 }}>
+        <form onSubmit={connect} style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit,minmax(${requiresPassphrase ? "190px" : "230px"},1fr))`, gap: 10, alignItems: "start" }}>
           <input value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="API Key" autoComplete="off" style={fieldStyle} />
-          <input value={apiSecret} onChange={(event) => setApiSecret(event.target.value)} placeholder={secretLabel} type="password" autoComplete="new-password" style={fieldStyle} />
+          {multilineSecret ? (
+            <textarea
+              value={apiSecret}
+              onChange={(event) => setApiSecret(event.target.value)}
+              placeholder={secretLabel}
+              autoComplete="new-password"
+              spellCheck={false}
+              rows={4}
+              style={{ ...fieldStyle, minHeight: 92, padding: "10px 12px", resize: "vertical" }}
+            />
+          ) : (
+            <input value={apiSecret} onChange={(event) => setApiSecret(event.target.value)} placeholder={secretLabel} type="password" autoComplete="new-password" style={fieldStyle} />
+          )}
           {requiresPassphrase && (
             <input value={passphrase} onChange={(event) => setPassphrase(event.target.value)} placeholder={passphraseLabel} type="password" autoComplete="new-password" style={fieldStyle} />
           )}
