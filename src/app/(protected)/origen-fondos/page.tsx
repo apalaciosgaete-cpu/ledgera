@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 import { httpClient } from "@/shared/http/httpClient";
 import { fonts } from "@/styles/tokens";
@@ -38,7 +38,6 @@ type OverviewState = {
   bankMovements: number;
   bankUploads: number;
   exchangeConnections: number;
-  walletConnections: number;
   documents: number;
   operations: number;
   pendingOperations: number;
@@ -54,6 +53,7 @@ type SourceOption = {
   label: string;
   description: string;
   action: string;
+  enabled: boolean;
 };
 
 const SOURCE_OPTIONS: SourceOption[] = [
@@ -63,6 +63,7 @@ const SOURCE_OPTIONS: SourceOption[] = [
     label: "Bancos",
     description: "Importa cartolas y concilia movimientos con tus operaciones.",
     action: "Gestionar bancos",
+    enabled: true,
   },
   {
     key: "exchanges",
@@ -70,13 +71,15 @@ const SOURCE_OPTIONS: SourceOption[] = [
     label: "Exchanges",
     description: "Sincroniza operaciones desde Binance, Buda y otras plataformas.",
     action: "Gestionar exchanges",
+    enabled: true,
   },
   {
     key: "wallets",
     href: "/origen-fondos/wallets",
     label: "Wallets",
-    description: "Conecta wallets o asocia cuentas públicas en modo de solo lectura.",
-    action: "Gestionar wallets",
+    description: "La incorporación de wallets se encuentra suspendida mientras se evalúa su alcance.",
+    action: "En evaluación",
+    enabled: false,
   },
   {
     key: "documents",
@@ -84,6 +87,7 @@ const SOURCE_OPTIONS: SourceOption[] = [
     label: "Documentación",
     description: "Carga historiales y documentos de respaldo tributario.",
     action: "Cargar documentos",
+    enabled: true,
   },
 ];
 
@@ -91,7 +95,6 @@ const INITIAL_OVERVIEW: OverviewState = {
   bankMovements: 0,
   bankUploads: 0,
   exchangeConnections: 0,
-  walletConnections: 0,
   documents: 0,
   operations: 0,
   pendingOperations: 0,
@@ -164,6 +167,100 @@ function pluralize(value: number, singular: string, plural: string) {
   return `${value} ${value === 1 ? singular : plural}`;
 }
 
+function SourceCard({ option, status }: { option: SourceOption; status: string }) {
+  const style: CSSProperties = {
+    minHeight: 196,
+    borderRadius: 20,
+    border: "1px solid var(--border)",
+    background: option.enabled ? "var(--bg-elev)" : "var(--bg-sunken)",
+    color: "var(--text)",
+    textDecoration: "none",
+    display: "flex",
+    flexDirection: "column",
+    padding: 18,
+    boxShadow: option.enabled ? "0 10px 24px rgba(15,42,61,0.045)" : "none",
+    fontFamily: fonts.body,
+    opacity: option.enabled ? 1 : 0.62,
+    cursor: option.enabled ? "pointer" : "not-allowed",
+  };
+
+  const content = (
+    <>
+      <span
+        style={{
+          width: 50,
+          height: 50,
+          borderRadius: 15,
+          display: "grid",
+          placeItems: "center",
+          color: option.enabled ? "var(--accent)" : "var(--text-faint)",
+          background: "var(--bg-sunken)",
+          border: "1px solid var(--border)",
+          marginBottom: 18,
+        }}
+      >
+        <SourceIcon type={option.key} />
+      </span>
+
+      <strong style={{ display: "block", fontSize: 16, lineHeight: 1.2, fontWeight: 900, marginBottom: 7 }}>
+        {option.label}
+      </strong>
+
+      <span style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, marginBottom: 16 }}>
+        {option.description}
+      </span>
+
+      <span
+        style={{
+          color: option.enabled ? "var(--accent)" : "var(--text-faint)",
+          fontSize: 11.5,
+          lineHeight: 1.3,
+          fontWeight: 800,
+          marginTop: "auto",
+          marginBottom: 12,
+        }}
+      >
+        {status}
+      </span>
+
+      <span
+        style={{
+          paddingTop: 12,
+          borderTop: "1px solid var(--border)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 10,
+          color: option.enabled ? "var(--text)" : "var(--text-faint)",
+          fontSize: 12.5,
+          fontWeight: 900,
+        }}
+      >
+        {option.action}
+        {option.enabled && (
+          <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: 17 }}>
+            →
+          </span>
+        )}
+      </span>
+    </>
+  );
+
+  if (!option.enabled) {
+    return (
+      <div key={option.key} aria-disabled="true" style={style}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link key={option.key} href={option.href} style={style}>
+      {content}
+    </Link>
+  );
+}
+
 export default function OrigenFondosPage() {
   const [overview, setOverview] = useState<OverviewState>(INITIAL_OVERVIEW);
 
@@ -171,22 +268,19 @@ export default function OrigenFondosPage() {
     let cancelled = false;
 
     async function loadOverview() {
-      const [bankResult, binanceResult, budaResult, walletResult, documentResult, stagingResult] =
-        await Promise.allSettled([
-          httpClient<ApiResponse<BankSummary>>("/api/bank/summary", { auth: true }),
-          httpClient<ApiResponse<ConnectionStatus>>("/api/integrations/binance/connection", { auth: true }),
-          httpClient<ApiResponse<ConnectionStatus>>("/api/connectors/buda", { auth: true }),
-          httpClient<ApiResponse<unknown[]>>("/api/wallet-connections", { auth: true }),
-          httpClient<ApiResponse<unknown[]>>("/api/documents?status=ACTIVE", { auth: true }),
-          httpClient<ApiResponse<StagingData>>("/api/imports/staging", { auth: true }),
-        ]);
+      const [bankResult, binanceResult, budaResult, documentResult, stagingResult] = await Promise.allSettled([
+        httpClient<ApiResponse<BankSummary>>("/api/bank/summary", { auth: true }),
+        httpClient<ApiResponse<ConnectionStatus>>("/api/integrations/binance/connection", { auth: true }),
+        httpClient<ApiResponse<ConnectionStatus>>("/api/connectors/buda", { auth: true }),
+        httpClient<ApiResponse<unknown[]>>("/api/documents?status=ACTIVE", { auth: true }),
+        httpClient<ApiResponse<StagingData>>("/api/imports/staging", { auth: true }),
+      ]);
 
       if (cancelled) return;
 
       const bank = bankResult.status === "fulfilled" ? bankResult.value.data : null;
       const binance = binanceResult.status === "fulfilled" ? binanceResult.value.data : null;
       const buda = budaResult.status === "fulfilled" ? budaResult.value.data : null;
-      const wallets = walletResult.status === "fulfilled" ? walletResult.value.data : [];
       const documents = documentResult.status === "fulfilled" ? documentResult.value.data : [];
       const staging = stagingResult.status === "fulfilled" ? stagingResult.value.data : null;
 
@@ -194,7 +288,6 @@ export default function OrigenFondosPage() {
         bankMovements: bank?.totalBankMovements ?? 0,
         bankUploads: bank?.uploads.length ?? 0,
         exchangeConnections: Number(Boolean(binance?.connected)) + Number(Boolean(buda?.connected)),
-        walletConnections: wallets.length,
         documents: documents.length,
         operations: staging?.items.length ?? 0,
         pendingOperations: (staging?.counts.pending ?? 0) + (staging?.counts.review ?? 0),
@@ -225,12 +318,8 @@ export default function OrigenFondosPage() {
         ? "Actualizando estado…"
         : overview.exchangeConnections > 0
           ? pluralize(overview.exchangeConnections, "conexión activa", "conexiones activas")
-          : "Binance y Buda disponibles",
-      wallets: overview.loading
-        ? "Actualizando estado…"
-        : overview.walletConnections > 0
-          ? pluralize(overview.walletConnections, "cuenta asociada", "cuentas asociadas")
-          : "Conexiones y cuentas públicas disponibles",
+          : "Conexiones API disponibles",
+      wallets: "Sin conexiones habilitadas",
       documents: overview.loading
         ? "Actualizando estado…"
         : overview.documents > 0
@@ -244,7 +333,6 @@ export default function OrigenFondosPage() {
     let count = 0;
     if (overview.bankMovements > 0 || overview.bankUploads > 0) count += 1;
     if (overview.exchangeConnections > 0) count += 1;
-    if (overview.walletConnections > 0) count += 1;
     if (overview.documents > 0) count += 1;
     return count;
   }, [overview]);
@@ -253,7 +341,7 @@ export default function OrigenFondosPage() {
     {
       label: "Fuentes con información",
       value: overview.loading ? "—" : String(sourcesWithData),
-      hint: "Bancos, exchanges, wallets o documentos con actividad.",
+      hint: "Bancos, exchanges o documentos con actividad.",
     },
     {
       label: "Operaciones registradas",
@@ -298,116 +386,17 @@ export default function OrigenFondosPage() {
         >
           Origen de Fondos
         </h1>
-        <p
-          style={{
-            color: "var(--text-soft)",
-            fontSize: 14,
-            lineHeight: 1.45,
-            margin: 0,
-            fontFamily: fonts.body,
-          }}
-        >
+        <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.45, margin: 0, fontFamily: fonts.body }}>
           Conecta o carga las fuentes que respaldan tus movimientos.
         </p>
       </section>
 
       <section
         aria-label="Fuentes de información"
-        style={{
-          display: "grid",
-          gap: 14,
-          gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))",
-        }}
+        style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))" }}
       >
         {SOURCE_OPTIONS.map((option) => (
-          <Link
-            key={option.href}
-            href={option.href}
-            style={{
-              minHeight: 196,
-              borderRadius: 20,
-              border: "1px solid var(--border)",
-              background: "var(--bg-elev)",
-              color: "var(--text)",
-              textDecoration: "none",
-              display: "flex",
-              flexDirection: "column",
-              padding: 18,
-              boxShadow: "0 10px 24px rgba(15,42,61,0.045)",
-              fontFamily: fonts.body,
-            }}
-          >
-            <span
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 15,
-                display: "grid",
-                placeItems: "center",
-                color: "var(--accent)",
-                background: "var(--bg-sunken)",
-                border: "1px solid var(--border)",
-                marginBottom: 18,
-              }}
-            >
-              <SourceIcon type={option.key} />
-            </span>
-
-            <strong
-              style={{
-                display: "block",
-                fontSize: 16,
-                lineHeight: 1.2,
-                fontWeight: 900,
-                marginBottom: 7,
-              }}
-            >
-              {option.label}
-            </strong>
-
-            <span
-              style={{
-                color: "var(--text-soft)",
-                fontSize: 12.5,
-                lineHeight: 1.45,
-                marginBottom: 16,
-              }}
-            >
-              {option.description}
-            </span>
-
-            <span
-              style={{
-                color: "var(--accent)",
-                fontSize: 11.5,
-                lineHeight: 1.3,
-                fontWeight: 800,
-                marginTop: "auto",
-                marginBottom: 12,
-              }}
-            >
-              {sourceStatuses[option.key]}
-            </span>
-
-            <span
-              style={{
-                paddingTop: 12,
-                borderTop: "1px solid var(--border)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 10,
-                color: "var(--text)",
-                fontSize: 12.5,
-                fontWeight: 900,
-              }}
-            >
-              {option.action}
-              <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: 17 }}>
-                →
-              </span>
-            </span>
-          </Link>
+          <SourceCard key={option.key} option={option} status={sourceStatuses[option.key]} />
         ))}
       </section>
 
@@ -423,32 +412,15 @@ export default function OrigenFondosPage() {
         }}
       >
         <div style={{ marginBottom: 15 }}>
-          <strong
-            id="source-overview-title"
-            style={{ display: "block", color: "var(--text)", fontSize: 15, fontWeight: 900 }}
-          >
+          <strong id="source-overview-title" style={{ display: "block", color: "var(--text)", fontSize: 15, fontWeight: 900 }}>
             Estado de tus fuentes
           </strong>
-          <span
-            style={{
-              display: "block",
-              color: "var(--text-soft)",
-              fontSize: 12,
-              lineHeight: 1.4,
-              marginTop: 3,
-            }}
-          >
+          <span style={{ display: "block", color: "var(--text-soft)", fontSize: 12, lineHeight: 1.4, marginTop: 3 }}>
             Resumen actualizado a partir de las conexiones e importaciones registradas.
           </span>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
-            gap: 10,
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
           {metrics.map((metric) => (
             <div
               key={metric.label}
@@ -464,37 +436,13 @@ export default function OrigenFondosPage() {
                 textAlign: "center",
               }}
             >
-              <span
-                style={{
-                  display: "block",
-                  color: "var(--text-soft)",
-                  fontSize: 11.5,
-                  fontWeight: 800,
-                  marginBottom: 8,
-                }}
-              >
+              <span style={{ display: "block", color: "var(--text-soft)", fontSize: 11.5, fontWeight: 800, marginBottom: 8 }}>
                 {metric.label}
               </span>
-              <strong
-                style={{
-                  display: "block",
-                  color: "var(--text)",
-                  fontSize: 24,
-                  lineHeight: 1,
-                  fontWeight: 950,
-                  marginBottom: 8,
-                }}
-              >
+              <strong style={{ display: "block", color: "var(--text)", fontSize: 24, lineHeight: 1, fontWeight: 950, marginBottom: 8 }}>
                 {metric.value}
               </strong>
-              <span
-                style={{
-                  display: "block",
-                  color: "var(--text-faint)",
-                  fontSize: 10.5,
-                  lineHeight: 1.35,
-                }}
-              >
+              <span style={{ display: "block", color: "var(--text-faint)", fontSize: 10.5, lineHeight: 1.35 }}>
                 {metric.hint}
               </span>
             </div>
