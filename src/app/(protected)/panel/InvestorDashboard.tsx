@@ -181,7 +181,6 @@ export function InvestorDashboard() {
       <div style={{ maxWidth: 1220, margin: "0 auto", display: "grid", gap: 16 }}>
         <section style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "grid", gap: 7, flex: "1 1 auto", minWidth: 0 }}>
-            <p style={{ color: "var(--accent)", fontSize: 11.5, fontWeight: 800, letterSpacing: ".08em", margin: 0, textTransform: "uppercase" }}>Resumen de activos</p>
             <h1 style={{ color: "var(--text)", fontSize: "clamp(1.9rem,2.9vw,2.55rem)", lineHeight: 1, letterSpacing: "-.048em", fontWeight: 800, margin: 0 }}>Activos actuales, valorización y diferencia frente a costo</h1>
             <p style={{ color: "var(--text-soft)", fontSize: 14.5, lineHeight: 1.55, margin: 0 }}>Consulta tus activos confirmados, su precio actual y valor en pesos chilenos.</p>
           </div>
