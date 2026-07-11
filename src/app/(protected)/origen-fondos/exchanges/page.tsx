@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { EXCHANGES } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
@@ -17,9 +17,9 @@ type ConnectionStatus = {
   connected: boolean;
 };
 
-type ExchangeConnectionState = {
-  binance: boolean;
-  buda: boolean;
+type ImplementedExchangeId = "binance" | "buda";
+
+type ExchangeConnectionState = Record<ImplementedExchangeId, boolean> & {
   loading: boolean;
 };
 
@@ -29,34 +29,51 @@ const INITIAL_CONNECTION_STATE: ExchangeConnectionState = {
   loading: true,
 };
 
-const AVAILABLE_META: Record<"binance" | "buda", { description: string; capability: string }> = {
+const EXCHANGE_META: Record<ImplementedExchangeId, { description: string; capability: string }> = {
   binance: {
-    description: "Sincroniza operaciones e historial tributario mediante credenciales API de solo lectura.",
+    description: "Sincroniza operaciones e historial mediante una conexión API de solo lectura.",
     capability: "Operaciones, balances e historial",
   },
   buda: {
-    description: "Importa operaciones desde Buda.com mediante una conexión API protegida y de solo lectura.",
+    description: "Importa operaciones y movimientos mediante una conexión API protegida.",
     capability: "Operaciones y movimientos",
   },
 };
 
+function isImplementedExchange(id: string): id is ImplementedExchangeId {
+  return id === "binance" || id === "buda";
+}
+
+function ExchangeLogo({ src }: { src: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 94,
+        height: 42,
+        display: "block",
+        backgroundColor: "currentColor",
+        WebkitMaskImage: `url("${src}")`,
+        maskImage: `url("${src}")`,
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskPosition: "center",
+        maskPosition: "center",
+        WebkitMaskSize: "contain",
+        maskSize: "contain",
+      }}
+    />
+  );
+}
+
 function connectionLabel(connected: boolean, loading: boolean) {
-  if (loading) return "Verificando estado…";
-  return connected ? "Conectado" : "Disponible para conectar";
+  if (loading) return "Verificando…";
+  return connected ? "Conectado" : "Disponible";
 }
 
 export default function ExchangesSourceFundsPage() {
   const router = useRouter();
   const [connections, setConnections] = useState<ExchangeConnectionState>(INITIAL_CONNECTION_STATE);
-
-  const availableExchanges = useMemo(
-    () => EXCHANGES.filter((exchange) => exchange.status === "available"),
-    [],
-  );
-  const upcomingExchanges = useMemo(
-    () => EXCHANGES.filter((exchange) => exchange.status === "coming_soon"),
-    [],
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -81,7 +98,7 @@ export default function ExchangesSourceFundsPage() {
 
   return (
     <main style={{ minHeight: "calc(100vh - 100px)", paddingBottom: 72, fontFamily: fonts.body }}>
-      <div style={{ width: "100%", maxWidth: 1160, margin: "0 auto", display: "grid", gap: 28 }}>
+      <div style={{ width: "100%", maxWidth: 1160, margin: "0 auto", display: "grid", gap: 24 }}>
         <header style={{ display: "grid", gap: 8 }}>
           <button
             type="button"
@@ -96,93 +113,89 @@ export default function ExchangesSourceFundsPage() {
               Exchanges
             </h1>
             <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: 0, maxWidth: 760 }}>
-              Conecta las plataformas compatibles para sincronizar operaciones y consolidar tu historial tributario.
+              Conecta tus plataformas para sincronizar operaciones y consolidar tu historial tributario.
             </p>
-            <span style={{ color: "var(--text-faint)", fontSize: 12.5, fontWeight: 700 }}>
-              {availableExchanges.length} integraciones disponibles · {upcomingExchanges.length} en preparación
-            </span>
           </div>
         </header>
 
-        <section style={{ display: "grid", gap: 14 }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
-            <div style={{ display: "grid", gap: 4 }}>
-              <h2 style={{ color: "var(--text)", fontSize: 18, fontWeight: 900, margin: 0, fontFamily: fonts.display }}>Disponibles</h2>
-              <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: 0 }}>Conectores funcionales con acceso de solo lectura.</p>
-            </div>
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,200px),1fr))", gap: 14, alignItems: "stretch" }}>
+          {EXCHANGES.map((exchange) => {
+            const implemented = isImplementedExchange(exchange.id);
+            const connected = implemented ? connections[exchange.id] : false;
+            const enabled = implemented;
+            const meta = implemented
+              ? EXCHANGE_META[exchange.id]
+              : {
+                  description: `Integración prevista para sincronizar operaciones desde ${exchange.name}.`,
+                  capability: "Conector en preparación",
+                };
+            const status = enabled
+              ? connectionLabel(connected, connections.loading)
+              : "No disponible aún";
 
-            <button
-              type="button"
-              onClick={() => router.push("/origen-fondos/documentacion")}
-              style={{ minHeight: 38, borderRadius: 999, border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text)", padding: "0 14px", fontSize: 12.5, fontWeight: 900, cursor: "pointer", fontFamily: fonts.body }}
-            >
-              Importar historial desde archivo
-            </button>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,360px),1fr))", gap: 16 }}>
-            {availableExchanges.map((exchange) => {
-              const id = exchange.id as "binance" | "buda";
-              const connected = connections[id];
-              const meta = AVAILABLE_META[id];
-
-              return (
-                <button
-                  key={exchange.id}
-                  type="button"
-                  onClick={() => router.push(`/origen-fondos/exchanges/${exchange.id}`)}
-                  style={{ minHeight: 230, borderRadius: 22, border: "1px solid var(--border-strong)", background: "var(--bg-elev)", color: "var(--text)", cursor: "pointer", display: "grid", gridTemplateRows: "auto 1fr auto", gap: 18, padding: 22, textAlign: "left", boxShadow: "var(--shadow-sm)", fontFamily: fonts.body }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
-                    <span style={{ width: 118, height: 58, borderRadius: 15, background: "rgba(255,255,255,.96)", display: "grid", placeItems: "center", padding: "0 14px", boxSizing: "border-box" }}>
-                      <img src={exchange.logoUrl} alt={exchange.name} style={{ width: "100%", maxWidth: 88, height: 38, objectFit: "contain", display: "block" }} />
-                    </span>
-                    <span style={{ borderRadius: 999, border: `1px solid ${connected ? "var(--accent)" : "var(--border)"}`, background: connected ? "var(--accent-soft)" : "var(--bg-sunken)", color: connected ? "var(--accent)" : "var(--text-soft)", padding: "7px 10px", fontSize: 10.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".045em", textAlign: "center" }}>
-                      {connectionLabel(connected, connections.loading)}
-                    </span>
-                  </div>
-
-                  <div style={{ display: "grid", alignContent: "start", gap: 8 }}>
-                    <strong style={{ fontFamily: fonts.display, fontSize: 23, fontWeight: 900, letterSpacing: "-.035em" }}>{exchange.name}</strong>
-                    <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>{meta.description}</p>
-                    <span style={{ color: "var(--text)", fontSize: 12.5, fontWeight: 800 }}>{meta.capability}</span>
-                  </div>
-
-                  <span style={{ color: "var(--accent)", fontSize: 13, fontWeight: 900 }}>
-                    {connected ? "Administrar conexión →" : "Conectar exchange →"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section style={{ display: "grid", gap: 14 }}>
-          <div style={{ display: "grid", gap: 4 }}>
-            <h2 style={{ color: "var(--text)", fontSize: 17, fontWeight: 900, margin: 0, fontFamily: fonts.display }}>Próximamente</h2>
-            <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: 0 }}>Integraciones contempladas, todavía no habilitadas para solicitar credenciales.</p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,185px),1fr))", gap: 12 }}>
-            {upcomingExchanges.map((exchange) => (
-              <article
+            return (
+              <button
                 key={exchange.id}
-                aria-label={`${exchange.name}, próximamente`}
-                style={{ minHeight: 142, borderRadius: 18, border: "1px solid var(--border)", background: "var(--bg-sunken)", color: "var(--text)", display: "grid", gridTemplateRows: "1fr auto", gap: 12, padding: 16, opacity: 0.72, fontFamily: fonts.body }}
+                type="button"
+                disabled={!enabled}
+                onClick={() => enabled && router.push(`/origen-fondos/exchanges/${exchange.id}`)}
+                style={{
+                  minHeight: 286,
+                  borderRadius: 22,
+                  border: `1px solid ${enabled ? "var(--border-strong)" : "var(--border)"}`,
+                  background: enabled ? "var(--bg-elev)" : "var(--bg-sunken)",
+                  color: "var(--text)",
+                  cursor: enabled ? "pointer" : "not-allowed",
+                  display: "grid",
+                  gridTemplateRows: "auto auto 1fr auto",
+                  gap: 16,
+                  padding: 20,
+                  textAlign: "left",
+                  opacity: enabled ? 1 : 0.6,
+                  boxShadow: enabled ? "var(--shadow-sm)" : "none",
+                  fontFamily: fonts.body,
+                }}
               >
-                <div style={{ display: "grid", placeItems: "center" }}>
-                  <span style={{ width: 112, height: 52, borderRadius: 13, background: "rgba(255,255,255,.92)", display: "grid", placeItems: "center", padding: "0 12px", boxSizing: "border-box" }}>
-                    <img src={exchange.logoUrl} alt={exchange.name} style={{ width: "100%", maxWidth: 82, height: 34, objectFit: "contain", display: "block" }} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ width: 62, height: 62, borderRadius: 18, background: "var(--accent-soft)", color: "var(--accent)", display: "grid", placeItems: "center", overflow: "hidden" }}>
+                    <span style={{ transform: "scale(.54)", display: "grid", placeItems: "center" }}>
+                      <ExchangeLogo src={exchange.logoUrl} />
+                    </span>
+                  </span>
+
+                  <span style={{ maxWidth: 112, borderRadius: 999, border: "1px solid var(--border)", background: "var(--bg-sunken)", color: enabled && connected ? "var(--accent)" : "var(--text-faint)", padding: "6px 9px", fontSize: 9.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".04em", textAlign: "center", lineHeight: 1.25 }}>
+                    {status}
                   </span>
                 </div>
 
-                <div style={{ display: "grid", justifyItems: "center", gap: 3, textAlign: "center" }}>
-                  <strong style={{ fontSize: 12.5, fontWeight: 900 }}>{exchange.shortName}</strong>
-                  <span style={{ color: "var(--text-faint)", fontSize: 9.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".045em" }}>Próximamente</span>
+                <div style={{ display: "grid", gap: 5 }}>
+                  <span style={{ color: "var(--text-faint)", fontSize: 10.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".06em" }}>
+                    Exchange
+                  </span>
+                  <strong style={{ fontFamily: fonts.display, fontSize: 21, fontWeight: 900, letterSpacing: "-.035em" }}>
+                    {exchange.name}
+                  </strong>
                 </div>
-              </article>
-            ))}
-          </div>
+
+                <div style={{ display: "grid", alignContent: "start", gap: 10 }}>
+                  <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.5, margin: 0 }}>
+                    {meta.description}
+                  </p>
+                  <span style={{ color: "var(--text)", fontSize: 11.5, fontWeight: 800 }}>
+                    {meta.capability}
+                  </span>
+                </div>
+
+                <span style={{ color: enabled ? "var(--accent)" : "var(--text-faint)", fontSize: 12.5, fontWeight: 900 }}>
+                  {enabled
+                    ? connected
+                      ? "Administrar conexión →"
+                      : "Conectar exchange →"
+                    : "No disponible todavía"}
+                </span>
+              </button>
+            );
+          })}
         </section>
       </div>
     </main>
