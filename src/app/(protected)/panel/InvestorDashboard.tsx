@@ -36,6 +36,7 @@ type AssetSummary = {
 };
 
 type ApiResponse<T> = { ok: boolean; message: string; data: T };
+type VisibilityData = { symbols: string[] };
 
 const panelFont = "'Manrope', var(--font-body, 'Inter'), system-ui, sans-serif";
 const monoFont = "var(--font-mono, 'IBM Plex Mono'), ui-monospace, monospace";
@@ -150,30 +151,107 @@ export function InvestorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [hiddenAssetSymbols, setHiddenAssetSymbols] = useState<Set<string>>(() => new Set());
+  const [updatingAsset, setUpdatingAsset] = useState<string | null>(null);
+  const [restoringAssets, setRestoringAssets] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(false);
-    httpClient<ApiResponse<AssetSummary>>("/api/assets/summary", { auth: true })
-      .then((response) => { if (!cancelled) setSummary(response.data); })
+
+    Promise.all([
+      httpClient<ApiResponse<AssetSummary>>("/api/assets/summary", { auth: true }),
+      httpClient<ApiResponse<VisibilityData>>("/api/assets/visibility", { auth: true }),
+    ])
+      .then(([summaryResponse, visibilityResponse]) => {
+        if (cancelled) return;
+        setSummary(summaryResponse.data);
+        setHiddenAssetSymbols(new Set(visibilityResponse.data.symbols));
+      })
       .catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
+
     return () => { cancelled = true; };
   }, []);
 
-  const visibleAssets = useMemo(() => {
-    const assets = summary?.assets ?? [];
-    return hiddenAssetSymbols.size === 0 ? assets : assets.filter((asset) => !hiddenAssetSymbols.has(asset.symbol));
+  const visibleSummary = useMemo<AssetSummary | null>(() => {
+    if (!summary) return null;
+
+    const assets = hiddenAssetSymbols.size === 0
+      ? summary.assets
+      : summary.assets.filter((asset) => !hiddenAssetSymbols.has(asset.symbol));
+
+    const totals = assets.reduce(
+      (acc, asset) => {
+        acc.valueUsd += asset.valueUsd ?? 0;
+        acc.valueClp += asset.valueClp ?? 0;
+        acc.costBasisClp += asset.costBasisClp;
+        acc.unrealizedPnlClp += asset.unrealizedPnlClp ?? 0;
+        return acc;
+      },
+      { valueUsd: 0, valueClp: 0, costBasisClp: 0, unrealizedPnlClp: 0 },
+    );
+
+    return {
+      ...summary,
+      assets,
+      totals: {
+        ...totals,
+        unrealizedPnlPct: totals.costBasisClp > 0
+          ? (totals.unrealizedPnlClp / totals.costBasisClp) * 100
+          : null,
+      },
+      counts: {
+        assets: assets.length,
+        operations: assets.reduce((count, asset) => count + asset.operations, 0),
+        missingPrice: assets.filter((asset) => asset.status === "FALTA_PRECIO").length,
+        review: assets.filter((asset) => asset.status === "REVISAR_BASE" || asset.status === "FALTA_BASE").length,
+      },
+    };
   }, [summary, hiddenAssetSymbols]);
+
+  const visibleAssets = visibleSummary?.assets ?? [];
 
   const topComposition = useMemo(() => {
     const total = visibleAssets.reduce((acc, asset) => acc + (asset.valueClp ?? 0), 0);
     return visibleAssets.slice(0, 5).map((asset) => ({ symbol: asset.symbol, pct: total > 0 && asset.valueClp ? (asset.valueClp / total) * 100 : 0, valueClp: asset.valueClp ?? 0 }));
   }, [visibleAssets]);
 
-  function hideAssetFromView(symbol: string) {
-    setHiddenAssetSymbols((current) => new Set([...current, symbol]));
+  async function hideAssetFromView(symbol: string) {
+    setActionError(null);
+    setUpdatingAsset(symbol);
+
+    try {
+      await httpClient<ApiResponse<{ symbol: string }>>("/api/assets/visibility", {
+        method: "POST",
+        auth: true,
+        body: { symbol },
+      });
+      setHiddenAssetSymbols((current) => new Set([...current, symbol]));
+    } catch (requestError) {
+      setActionError(requestError instanceof Error ? requestError.message : `No fue posible ocultar ${symbol}.`);
+    } finally {
+      setUpdatingAsset(null);
+    }
+  }
+
+  async function restoreHiddenAssets() {
+    setActionError(null);
+    setRestoringAssets(true);
+
+    try {
+      await httpClient<ApiResponse<{ restored: number }>>("/api/assets/visibility", {
+        method: "DELETE",
+        auth: true,
+        body: { all: true },
+      });
+      setHiddenAssetSymbols(new Set());
+    } catch (requestError) {
+      setActionError(requestError instanceof Error ? requestError.message : "No fue posible restaurar los activos ocultos.");
+    } finally {
+      setRestoringAssets(false);
+    }
   }
 
   return (
@@ -194,19 +272,27 @@ export function InvestorDashboard() {
 
         {loading ? <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 28, color: "var(--text-soft)" }}>Cargando resumen de activos...</section>
         : error ? <section style={{ background: "rgba(253,164,175,.14)", border: "1px solid rgba(253,164,175,.32)", borderRadius: 22, padding: 22, color: "var(--loss)" }}>No fue posible cargar el resumen de activos.</section>
-        : !summary || summary.assets.length === 0 ? <EmptyState />
+        : !summary || summary.assets.length === 0 || !visibleSummary ? <EmptyState />
         : <>
           <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,280px))", gap: 12, justifyContent: "center" }}>
-            <KpiCard label="Valor total actual" value={formatClp(summary.totals.valueClp)} helper={`Valor USD ${formatUsd(summary.totals.valueUsd)} · TC ${formatNumber(summary.usdClp, 2)}`} />
-            <KpiCard label="Diferencia vs. base de costo" value={formatClp(summary.totals.unrealizedPnlClp)} helper={`Variación porcentual: ${formatPct(summary.totals.unrealizedPnlPct)}`} accent={resultColor(summary.totals.unrealizedPnlClp)} />
-            <KpiCard label="Activos detectados" value={String(summary.counts.assets)} helper="Con saldo actual" />
-            <KpiCard label="Operaciones utilizadas" value={String(summary.counts.operations)} helper="Movimientos usados para consolidar saldos" />
+            <KpiCard label="Valor total actual" value={formatClp(visibleSummary.totals.valueClp)} helper={`Valor USD ${formatUsd(visibleSummary.totals.valueUsd)} · TC ${formatNumber(visibleSummary.usdClp, 2)}`} />
+            <KpiCard label="Diferencia vs. base de costo" value={formatClp(visibleSummary.totals.unrealizedPnlClp)} helper={`Variación porcentual: ${formatPct(visibleSummary.totals.unrealizedPnlPct)}`} accent={resultColor(visibleSummary.totals.unrealizedPnlClp)} />
+            <KpiCard label="Activos detectados" value={String(visibleSummary.counts.assets)} helper="Con saldo actual y visibles en este resumen" />
+            <KpiCard label="Operaciones utilizadas" value={String(visibleSummary.counts.operations)} helper="Movimientos de los activos visibles" />
           </section>
 
           <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-              <div><h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Activos valorizados</h2><p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: "4px 0 0" }}>Valor actual, conversión a CLP, origen operativo y diferencia frente a costo.</p></div>
-              {hiddenAssetSymbols.size > 0 ? <button type="button" onClick={() => setHiddenAssetSymbols(new Set())} style={{ background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: 999, color: "var(--accent)", cursor: "pointer", fontSize: 12, fontWeight: 800, padding: "7px 10px" }}>Restaurar vista ({hiddenAssetSymbols.size})</button> : null}
+            <div style={{ padding: "15px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <div>
+                <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Activos valorizados</h2>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, margin: "4px 0 0" }}>Valor actual, conversión a CLP, origen operativo y diferencia frente a costo.</p>
+                {actionError ? <p role="alert" style={{ color: "var(--loss)", fontSize: 12, margin: "7px 0 0" }}>{actionError}</p> : null}
+              </div>
+              {hiddenAssetSymbols.size > 0 ? (
+                <button type="button" onClick={restoreHiddenAssets} disabled={restoringAssets || updatingAsset !== null} style={{ background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: 999, color: "var(--accent)", cursor: restoringAssets ? "wait" : "pointer", fontSize: 12, fontWeight: 800, padding: "7px 10px", opacity: restoringAssets ? 0.65 : 1 }}>
+                  {restoringAssets ? "Restaurando…" : `Restaurar ocultos (${hiddenAssetSymbols.size})`}
+                </button>
+              ) : null}
             </div>
             <div>
               <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
@@ -221,10 +307,10 @@ export function InvestorDashboard() {
                   <HeaderCell align="right" title="Costo de adquisición acumulado del saldo actual.">Costo de compra CLP</HeaderCell>
                   <HeaderCell align="right" title="Diferencia en pesos entre valor actual y costo.">Diferencia CLP</HeaderCell>
                   <HeaderCell align="right" title="Diferencia porcentual entre valor actual y costo.">Diferencia %</HeaderCell>
-                  <HeaderCell align="center" title="Oculta el activo solo de esta vista.">Borrar</HeaderCell>
+                  <HeaderCell align="center" title="Oculta el activo de forma persistente sin borrar sus movimientos.">Ocultar</HeaderCell>
                 </tr></thead>
                 <tbody>
-                  {visibleAssets.length === 0 ? <tr><td colSpan={11} style={{ padding: "18px 10px", textAlign: "center", color: "var(--text-soft)" }}>Todos los activos fueron ocultados de esta vista. La información sigue guardada.</td></tr>
+                  {visibleAssets.length === 0 ? <tr><td colSpan={11} style={{ padding: "18px 10px", textAlign: "center", color: "var(--text-soft)" }}>Todos los activos están ocultos. Sus movimientos y antecedentes tributarios permanecen guardados.</td></tr>
                   : visibleAssets.map((asset) => <tr key={asset.symbol} style={{ borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 11.5 }}>
                     <td style={{ padding: "12px 7px", overflow: "hidden", textOverflow: "ellipsis" }}><strong style={{ fontSize: 13, fontWeight: 800 }}>{asset.symbol}</strong></td>
                     <td style={{ padding: "12px 7px", textAlign: "center", fontWeight: 800, fontFamily: monoFont }}>{asset.operations}</td>
@@ -236,7 +322,11 @@ export function InvestorDashboard() {
                     <td style={{ padding: "12px 7px", textAlign: "right", fontFamily: monoFont, overflow: "hidden", textOverflow: "ellipsis" }}>{formatClp(asset.costBasisClp)}</td>
                     <td style={{ padding: "12px 7px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont, overflow: "hidden", textOverflow: "ellipsis" }}>{formatClp(asset.unrealizedPnlClp)}</td>
                     <td style={{ padding: "12px 7px", textAlign: "right", color: resultColor(asset.unrealizedPnlClp), fontWeight: 800, fontFamily: monoFont }}>{formatPct(asset.unrealizedPnlPct)}</td>
-                    <td style={{ padding: "12px 5px", textAlign: "center" }}><button type="button" aria-label={`Borrar ${asset.symbol} de esta vista`} title="Quitar activo de esta vista" onClick={() => hideAssetFromView(asset.symbol)} style={{ background: "transparent", border: "1px solid rgba(253,164,175,.35)", borderRadius: 999, color: "var(--loss)", cursor: "pointer", fontSize: 16, fontWeight: 900, height: 26, width: 26 }}>×</button></td>
+                    <td style={{ padding: "12px 5px", textAlign: "center" }}>
+                      <button type="button" aria-label={`Ocultar ${asset.symbol} del resumen`} title="Ocultar activo sin borrar sus movimientos" disabled={updatingAsset !== null || restoringAssets} onClick={() => hideAssetFromView(asset.symbol)} style={{ background: "transparent", border: "1px solid rgba(253,164,175,.35)", borderRadius: 999, color: "var(--loss)", cursor: updatingAsset === asset.symbol ? "wait" : "pointer", fontSize: 16, fontWeight: 900, height: 26, width: 26, opacity: updatingAsset !== null && updatingAsset !== asset.symbol ? 0.45 : 1 }}>
+                        {updatingAsset === asset.symbol ? "…" : "×"}
+                      </button>
+                    </td>
                   </tr>)}
                 </tbody>
               </table>
@@ -246,11 +336,11 @@ export function InvestorDashboard() {
           <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,280px),1fr))", gap: 14 }}>
             <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 18, display: "grid", gap: 12 }}>
               <h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Composición del portafolio</h2>
-              {topComposition.map((item) => <div key={item.symbol} style={{ display: "grid", gap: 6 }}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}><strong>{item.symbol}</strong><span style={{ color: "var(--text-soft)", fontFamily: monoFont }}>{formatPct(item.pct)} · {formatClp(item.valueClp)}</span></div><div style={{ height: 9, background: "var(--bg-sunken)", borderRadius: 999, overflow: "hidden" }}><div style={{ height: "100%", width: `${Math.max(2, Math.min(100, item.pct))}%`, background: "var(--accent)", borderRadius: 999 }} /></div></div>)}
+              {topComposition.length === 0 ? <p style={{ color: "var(--text-soft)", fontSize: 13, margin: 0 }}>No hay activos visibles para mostrar.</p> : topComposition.map((item) => <div key={item.symbol} style={{ display: "grid", gap: 6 }}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}><strong>{item.symbol}</strong><span style={{ color: "var(--text-soft)", fontFamily: monoFont }}>{formatPct(item.pct)} · {formatClp(item.valueClp)}</span></div><div style={{ height: 9, background: "var(--bg-sunken)", borderRadius: 999, overflow: "hidden" }}><div style={{ height: "100%", width: `${Math.max(2, Math.min(100, item.pct))}%`, background: "var(--accent)", borderRadius: 999 }} /></div></div>)}
             </article>
             <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 18, display: "grid", gap: 18, alignContent: "start" }}>
-              <div><h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Calidad del respaldo</h2><p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: "6px 0 0" }}>Comparación consolidada entre el costo de compra y el valor actual del portafolio.</p></div>
-              <PortfolioValuationChart summary={summary} />
+              <div><h2 style={{ color: "var(--text)", fontSize: 16.5, fontWeight: 800, margin: 0 }}>Calidad del respaldo</h2><p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: "6px 0 0" }}>Comparación consolidada entre el costo de compra y el valor actual de los activos visibles.</p></div>
+              <PortfolioValuationChart summary={visibleSummary} />
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Link href="/importaciones" style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Revisar importaciones</Link><Link href="/cryptoactivos" style={{ background: "var(--bg-sunken)", color: "var(--accent)", border: "1px solid var(--border-strong)", borderRadius: 999, padding: "9px 12px", fontSize: 12.5, fontWeight: 800, textDecoration: "none" }}>Ver activos</Link></div>
             </article>
           </section>
