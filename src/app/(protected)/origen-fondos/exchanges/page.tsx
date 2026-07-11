@@ -132,7 +132,7 @@ export default function ExchangesSourceFundsPage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                  <strong style={{ minWidth: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: 19, lineHeight: 1.15, fontWeight: 900, letterSpacing: "-.035em", overflowWrap: "anywhere" }}>
+                  <strong style={{ minWidth: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: exchange.id === "crypto-mkt" ? 16.5 : 19, lineHeight: 1.15, fontWeight: 900, letterSpacing: "-.035em", whiteSpace: "nowrap" }}>
                     {exchange.name}
                   </strong>
 
