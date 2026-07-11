@@ -30,10 +30,9 @@ function logoUrl(bank: (typeof CHILE_BANKS)[number]) {
 
 export default function BancosOrigenFondosPage() {
   const router = useRouter();
-  const guide = "Estás en Banco en Chile. Selecciona el banco que quieres conectar para continuar.";
 
   return (
-    <main style={{ height: "calc(100vh - 100px)", overflow: "hidden", display: "grid", gap: 8, gridTemplateRows: "auto 1fr auto" }}>
+    <main style={{ height: "calc(100vh - 100px)", overflow: "hidden", display: "grid", gap: 8, gridTemplateRows: "auto 1fr" }}>
       <section>
         <button onClick={() => router.push("/origen-fondos")} style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: "var(--text-soft)", fontSize: 13, fontFamily: fonts.body, padding: 0, marginBottom: 4 }}>← Volver a Origen de Fondos</button>
         <h1 style={{ color: "var(--text)", fontSize: "clamp(1.25rem,2.1vw,1.55rem)", fontWeight: 900, margin: "0 0 2px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>Banco en Chile</h1>
@@ -55,10 +54,6 @@ export default function BancosOrigenFondosPage() {
             </button>
           );
         })}
-      </section>
-
-      <section style={{ width: "100%", border: "1px solid var(--accent-soft)", borderRadius: 18, background: "var(--bg-elev)", padding: 12, display: "flex", gap: 12, alignItems: "center", boxShadow: "0 10px 22px rgba(109,74,255,0.05)", boxSizing: "border-box" }}>
-        <p style={{ margin: 0, color: "var(--text)", fontSize: 12.5, lineHeight: 1.3, fontFamily: fonts.body }}>{guide}</p>
       </section>
     </main>
   );
