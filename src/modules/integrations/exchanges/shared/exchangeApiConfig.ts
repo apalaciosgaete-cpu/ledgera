@@ -8,6 +8,7 @@ export type ExchangeApiConfig = {
   requiresPassphrase: boolean;
   secretLabel?: string;
   passphraseLabel?: string;
+  multilineSecret?: boolean;
 };
 
 export const EXCHANGE_API_CONFIGS: Record<string, ExchangeApiConfig> = {
@@ -18,6 +19,7 @@ export const EXCHANGE_API_CONFIGS: Record<string, ExchangeApiConfig> = {
     ccxtId: "coinbase",
     requiresPassphrase: false,
     secretLabel: "API Secret o clave privada",
+    multilineSecret: true,
   },
   kraken: {
     id: "kraken",
