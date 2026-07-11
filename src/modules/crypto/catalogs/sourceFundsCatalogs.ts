@@ -1,17 +1,6 @@
 export type SourceFundsItemStatus = "available" | "coming_soon";
 
-/** Tipo de wallet o cuenta pública representada en el catálogo. */
-export type WalletType = "hot" | "cold" | "network";
-
-export type ConnectionMethod =
-  | "api"
-  | "aggregator"
-  | "manual_upload"
-  | "wallet_connect"
-  | "address_scan"
-  | "device_bridge"
-  | "xpub"
-  | "account_name";
+export type ConnectionMethod = "api" | "aggregator" | "manual_upload";
 
 export type SourceFundsItem = {
   id: string;
@@ -21,8 +10,6 @@ export type SourceFundsItem = {
   logoUrl: string;
   status: SourceFundsItemStatus;
   connectionMethods: ConnectionMethod[];
-  /** Solo aplica a wallets: distingue hardware, wallet digital o red pública. */
-  walletType?: WalletType;
 };
 
 // Los exchanges con API mantienen también la carga manual como respaldo.
@@ -51,89 +38,12 @@ export const EXCHANGES: SourceFundsItem[] = [
   { id: "bit2me", name: "Bit2Me", shortName: "Bit2Me", domain: "bit2me.com", logoUrl: "/logos/bit2me.svg", status: "available", connectionMethods: EXCHANGE_FILE_CONNECTORS },
 ];
 
-/**
- * Las wallets se organizan por capacidad real, no por una lista de fabricantes.
- * D'CENT y WebAuth disponen de conexión directa. Las redes públicas cubren el
- * resto de hardware mediante dirección, XPUB o nombre de cuenta.
- */
-export const WALLETS: SourceFundsItem[] = [
-  {
-    id: "dcent",
-    name: "D'CENT",
-    shortName: "D'CENT",
-    domain: "dcentwallet.com",
-    logoUrl: "/logos/dcent.svg",
-    status: "available",
-    connectionMethods: ["device_bridge", "address_scan", "xpub"],
-    walletType: "cold",
-  },
-  {
-    id: "webauth",
-    name: "WebAuth.com",
-    shortName: "WebAuth",
-    domain: "webauth.com",
-    logoUrl: "/logos/webauth.svg",
-    status: "available",
-    connectionMethods: ["wallet_connect", "account_name"],
-    walletType: "hot",
-  },
-  {
-    id: "bitcoin",
-    name: "Bitcoin",
-    shortName: "Bitcoin",
-    domain: "bitcoin.org",
-    logoUrl: "/logos/bitcoin.svg",
-    status: "available",
-    connectionMethods: ["address_scan", "xpub"],
-    walletType: "network",
-  },
-  {
-    id: "ethereum",
-    name: "Ethereum",
-    shortName: "Ethereum",
-    domain: "ethereum.org",
-    logoUrl: "/logos/ethereum.svg",
-    status: "available",
-    connectionMethods: ["address_scan"],
-    walletType: "network",
-  },
-  {
-    id: "solana",
-    name: "Solana",
-    shortName: "Solana",
-    domain: "solana.com",
-    logoUrl: "/logos/solana.svg",
-    status: "available",
-    connectionMethods: ["address_scan"],
-    walletType: "network",
-  },
-  {
-    id: "xpr",
-    name: "XPR Network",
-    shortName: "XPR",
-    domain: "xprnetwork.org",
-    logoUrl: "/logos/xpr.svg",
-    status: "available",
-    connectionMethods: ["account_name", "wallet_connect"],
-    walletType: "network",
-  },
-];
-
-/** Retorna el logo local del item por id; cae al servicio de logos por dominio si no existe. */
+/** Retorna el logo local del exchange por dominio; cae al servicio externo si no existe. */
 export function getLogoUrl(domain: string) {
-  const item = [...EXCHANGES, ...WALLETS].find((entry) => entry.domain === domain);
+  const item = EXCHANGES.find((entry) => entry.domain === domain);
   return item?.logoUrl ?? `https://logo.clearbit.com/${domain}`;
 }
 
 export function findExchangeById(id: string) {
   return EXCHANGES.find((item) => item.id === id);
-}
-
-export function findWalletById(id: string) {
-  return WALLETS.find((item) => item.id === id);
-}
-
-/** Wallets físicas conectables directamente. */
-export function getColdWallets() {
-  return WALLETS.filter((item) => item.walletType === "cold");
 }
