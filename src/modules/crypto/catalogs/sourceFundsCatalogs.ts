@@ -1,9 +1,17 @@
 export type SourceFundsItemStatus = "available" | "coming_soon";
 
-/** Tipo de wallet: "hot" (conectada a internet) o "cold" (almacenamiento en frío / hardware). */
-export type WalletType = "hot" | "cold";
+/** Tipo de wallet o cuenta pública representada en el catálogo. */
+export type WalletType = "hot" | "cold" | "network";
 
-export type ConnectionMethod = "api" | "aggregator" | "manual_upload" | "wallet_connect" | "address_scan";
+export type ConnectionMethod =
+  | "api"
+  | "aggregator"
+  | "manual_upload"
+  | "wallet_connect"
+  | "address_scan"
+  | "device_bridge"
+  | "xpub"
+  | "account_name";
 
 export type SourceFundsItem = {
   id: string;
@@ -13,7 +21,7 @@ export type SourceFundsItem = {
   logoUrl: string;
   status: SourceFundsItemStatus;
   connectionMethods: ConnectionMethod[];
-  /** Solo aplica a wallets: distingue wallets frías de calientes. */
+  /** Solo aplica a wallets: distingue hardware, wallet digital o red pública. */
   walletType?: WalletType;
 };
 
@@ -21,7 +29,6 @@ export type SourceFundsItem = {
 const API_AND_FILE_CONNECTORS: ConnectionMethod[] = ["api", "manual_upload"];
 const BUDA_CONNECTORS: ConnectionMethod[] = ["api"];
 const EXCHANGE_FILE_CONNECTORS: ConnectionMethod[] = ["manual_upload"];
-const COLD_WALLET_CONNECTORS: ConnectionMethod[] = ["address_scan"];
 
 export const EXCHANGES: SourceFundsItem[] = [
   { id: "binance", name: "Binance", shortName: "Binance", domain: "binance.com", logoUrl: "/logos/binance.svg", status: "available", connectionMethods: API_AND_FILE_CONNECTORS },
@@ -44,21 +51,72 @@ export const EXCHANGES: SourceFundsItem[] = [
   { id: "bit2me", name: "Bit2Me", shortName: "Bit2Me", domain: "bit2me.com", logoUrl: "/logos/bit2me.svg", status: "available", connectionMethods: EXCHANGE_FILE_CONNECTORS },
 ];
 
-// Las wallets frías se conectan mediante una dirección pública de solo lectura.
+/**
+ * Las wallets se organizan por capacidad real, no por una lista de fabricantes.
+ * D'CENT y WebAuth disponen de conexión directa. Las redes públicas cubren el
+ * resto de hardware mediante dirección, XPUB o nombre de cuenta.
+ */
 export const WALLETS: SourceFundsItem[] = [
-  { id: "ledger", name: "Ledger", shortName: "Ledger", domain: "ledger.com", logoUrl: "/logos/ledger.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "trezor", name: "Trezor", shortName: "Trezor", domain: "trezor.io", logoUrl: "/logos/trezor.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "coldcard", name: "Coldcard", shortName: "Coldcard", domain: "coldcard.com", logoUrl: "/logos/coldcard.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "bitbox", name: "BitBox02", shortName: "BitBox", domain: "bitbox.swiss", logoUrl: "/logos/bitbox.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "tangem", name: "Tangem", shortName: "Tangem", domain: "tangem.com", logoUrl: "/logos/tangem.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "keystone", name: "Keystone", shortName: "Keystone", domain: "keyst.one", logoUrl: "/logos/keystone.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "onekey", name: "OneKey", shortName: "OneKey", domain: "onekey.so", logoUrl: "/logos/onekey.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "keepkey", name: "KeepKey", shortName: "KeepKey", domain: "keepkey.com", logoUrl: "/logos/keepkey.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "safepal", name: "SafePal", shortName: "SafePal", domain: "safepal.com", logoUrl: "/logos/safepal.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "ngrave", name: "NGRAVE", shortName: "NGRAVE", domain: "ngrave.io", logoUrl: "/logos/ngrave.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "ellipal", name: "ELLIPAL", shortName: "ELLIPAL", domain: "ellipal.com", logoUrl: "/logos/ellipal.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "gridplus", name: "GridPlus Lattice1", shortName: "GridPlus", domain: "gridplus.io", logoUrl: "/logos/gridplus.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
-  { id: "dcent", name: "D'CENT Wallet", shortName: "D'CENT", domain: "dcentwallet.com", logoUrl: "/logos/dcent.svg", status: "available", connectionMethods: COLD_WALLET_CONNECTORS, walletType: "cold" },
+  {
+    id: "dcent",
+    name: "D'CENT",
+    shortName: "D'CENT",
+    domain: "dcentwallet.com",
+    logoUrl: "/logos/dcent.svg",
+    status: "available",
+    connectionMethods: ["device_bridge", "address_scan", "xpub"],
+    walletType: "cold",
+  },
+  {
+    id: "webauth",
+    name: "WebAuth.com",
+    shortName: "WebAuth",
+    domain: "webauth.com",
+    logoUrl: "/logos/webauth.svg",
+    status: "available",
+    connectionMethods: ["wallet_connect", "account_name"],
+    walletType: "hot",
+  },
+  {
+    id: "bitcoin",
+    name: "Bitcoin",
+    shortName: "Bitcoin",
+    domain: "bitcoin.org",
+    logoUrl: "/logos/bitcoin.svg",
+    status: "available",
+    connectionMethods: ["address_scan", "xpub"],
+    walletType: "network",
+  },
+  {
+    id: "ethereum",
+    name: "Ethereum",
+    shortName: "Ethereum",
+    domain: "ethereum.org",
+    logoUrl: "/logos/ethereum.svg",
+    status: "available",
+    connectionMethods: ["address_scan"],
+    walletType: "network",
+  },
+  {
+    id: "solana",
+    name: "Solana",
+    shortName: "Solana",
+    domain: "solana.com",
+    logoUrl: "/logos/solana.svg",
+    status: "available",
+    connectionMethods: ["address_scan"],
+    walletType: "network",
+  },
+  {
+    id: "xpr",
+    name: "XPR Network",
+    shortName: "XPR",
+    domain: "xprnetwork.org",
+    logoUrl: "/logos/xpr.svg",
+    status: "available",
+    connectionMethods: ["account_name", "wallet_connect"],
+    walletType: "network",
+  },
 ];
 
 /** Retorna el logo local del item por id; cae al servicio de logos por dominio si no existe. */
@@ -75,7 +133,7 @@ export function findWalletById(id: string) {
   return WALLETS.find((item) => item.id === id);
 }
 
-/** Wallets frías (almacenamiento en frío / hardware). */
+/** Wallets físicas conectables directamente. */
 export function getColdWallets() {
   return WALLETS.filter((item) => item.walletType === "cold");
 }
