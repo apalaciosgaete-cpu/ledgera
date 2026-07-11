@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { EXCHANGES } from "@/modules/crypto/catalogs/sourceFundsCatalogs";
+import { isApiConnectableExchange } from "@/modules/integrations/exchanges/shared/exchangeApiConfig";
 import { httpClient } from "@/shared/http/httpClient";
 import { fonts } from "@/styles/tokens";
 
@@ -13,61 +14,45 @@ type ApiResponse<T> = {
   data: T;
 };
 
-type ConnectionStatus = {
-  connected: boolean;
+type ConnectionSummary = {
+  connections: Record<string, { connected: boolean; status: string; lastSyncAt?: string | null }>;
 };
 
-type ApiExchangeId = "binance" | "buda";
-
-type ExchangeConnectionState = Record<ApiExchangeId, boolean> & {
+type ExchangeConnectionState = {
+  connections: Record<string, boolean>;
   loading: boolean;
 };
 
 const INITIAL_CONNECTION_STATE: ExchangeConnectionState = {
-  binance: false,
-  buda: false,
+  connections: {},
   loading: true,
 };
 
-const API_EXCHANGE_META: Record<ApiExchangeId, { description: string; capability: string }> = {
-  binance: {
-    description: "Sincroniza operaciones e historial mediante una conexión API de solo lectura.",
-    capability: "API · Operaciones, balances e historial",
-  },
-  buda: {
-    description: "Importa operaciones y movimientos mediante una conexión API protegida.",
-    capability: "API · Operaciones y movimientos",
-  },
-};
-
-function isApiExchange(id: string): id is ApiExchangeId {
-  return id === "binance" || id === "buda";
-}
-
-function apiStatusLabel(connected: boolean, loading: boolean) {
+function statusLabel(connected: boolean, loading: boolean) {
   if (loading) return "Verificando…";
   return connected ? "Conectado" : "Disponible";
 }
 
 export default function ExchangesSourceFundsPage() {
   const router = useRouter();
-  const [connections, setConnections] = useState<ExchangeConnectionState>(INITIAL_CONNECTION_STATE);
+  const [connectionState, setConnectionState] = useState<ExchangeConnectionState>(INITIAL_CONNECTION_STATE);
 
   useEffect(() => {
     let cancelled = false;
 
-    Promise.allSettled([
-      httpClient<ApiResponse<ConnectionStatus>>("/api/integrations/binance/connection", { auth: true }),
-      httpClient<ApiResponse<ConnectionStatus>>("/api/connectors/buda", { auth: true }),
-    ]).then(([binanceResult, budaResult]) => {
-      if (cancelled) return;
-
-      setConnections({
-        binance: binanceResult.status === "fulfilled" && Boolean(binanceResult.value.data.connected),
-        buda: budaResult.status === "fulfilled" && Boolean(budaResult.value.data.connected),
-        loading: false,
+    httpClient<ApiResponse<ConnectionSummary>>("/api/connectors/exchanges/status", { auth: true })
+      .then((response) => {
+        if (cancelled) return;
+        setConnectionState({
+          connections: Object.fromEntries(
+            Object.entries(response.data.connections).map(([exchangeId, connection]) => [exchangeId, connection.connected]),
+          ),
+          loading: false,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setConnectionState({ connections: {}, loading: false });
       });
-    });
 
     return () => {
       cancelled = true;
@@ -91,24 +76,25 @@ export default function ExchangesSourceFundsPage() {
               Exchanges
             </h1>
             <p style={{ color: "var(--text-soft)", fontSize: 14, lineHeight: 1.55, margin: 0, maxWidth: 760 }}>
-              Conecta una cuenta compatible o incorpora su historial para consolidar tus operaciones.
+              Conecta una cuenta mediante API de solo lectura o incorpora su historial para consolidar tus operaciones.
             </p>
           </div>
         </header>
 
         <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,210px),1fr))", gap: 14, alignItems: "stretch" }}>
           {EXCHANGES.map((exchange) => {
-            const apiExchangeId = isApiExchange(exchange.id) ? exchange.id : null;
-            const connected = apiExchangeId ? connections[apiExchangeId] : false;
-            const meta = apiExchangeId
-              ? API_EXCHANGE_META[apiExchangeId]
+            const apiConnectable = isApiConnectableExchange(exchange.id);
+            const connected = Boolean(connectionState.connections[exchange.id]);
+            const meta = apiConnectable
+              ? {
+                  description: `Conecta ${exchange.name} para sincronizar operaciones y movimientos mediante API de solo lectura.`,
+                  capability: "API · Operaciones y movimientos",
+                }
               : {
                   description: `Incorpora el historial de ${exchange.name} mediante archivos de operaciones y respaldo.`,
                   capability: "Archivo · Historial y documentos",
                 };
-            const status = apiExchangeId
-              ? apiStatusLabel(connected, connections.loading)
-              : "Disponible";
+            const status = statusLabel(connected, connectionState.loading);
 
             return (
               <button
@@ -151,7 +137,7 @@ export default function ExchangesSourceFundsPage() {
                 </div>
 
                 <span style={{ color: "var(--accent)", fontSize: 12.25, fontWeight: 900 }}>
-                  {apiExchangeId
+                  {apiConnectable
                     ? connected
                       ? "Administrar conexión →"
                       : "Conectar cuenta →"
