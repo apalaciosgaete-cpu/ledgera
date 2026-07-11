@@ -7,7 +7,6 @@ export type DigitalOperatingSnapshot = {
   profile: Row | null;
   cryptoAssets: Row[];
   exchangeAccounts: Row[];
-  wallets: Row[];
   sourcesOfFunds: Row[];
   taxObligations: Row[];
   documents: Row[];
@@ -27,16 +26,15 @@ export async function ensureDigitalProfile(userId: string) {
 export async function getDigitalOperatingSnapshot(userId: string): Promise<DigitalOperatingSnapshot> {
   const profile = await ensureDigitalProfile(userId);
   const profileId = String(profile.id);
-  const [cryptoAssets, exchangeAccounts, wallets, sourcesOfFunds, taxObligations, documents, events] = await Promise.all([
+  const [cryptoAssets, exchangeAccounts, sourcesOfFunds, taxObligations, documents, events] = await Promise.all([
     prisma.$queryRawUnsafe<Row[]>("SELECT * FROM crypto_assets WHERE profile_id = $1 ORDER BY created_at DESC", profileId),
     prisma.$queryRawUnsafe<Row[]>("SELECT * FROM exchange_accounts WHERE profile_id = $1 ORDER BY created_at DESC", profileId),
-    prisma.$queryRawUnsafe<Row[]>("SELECT * FROM digital_wallets WHERE profile_id = $1 ORDER BY created_at DESC", profileId),
     prisma.$queryRawUnsafe<Row[]>("SELECT * FROM source_of_funds WHERE profile_id = $1 ORDER BY created_at DESC", profileId),
     prisma.$queryRawUnsafe<Row[]>("SELECT * FROM tax_obligations_crypto WHERE profile_id = $1 ORDER BY created_at DESC", profileId),
     prisma.$queryRawUnsafe<Row[]>("SELECT * FROM digital_documents_crypto WHERE profile_id = $1 ORDER BY created_at DESC", profileId),
     prisma.$queryRawUnsafe<Row[]>("SELECT * FROM digital_system_events WHERE user_id = $1 ORDER BY created_at DESC LIMIT 25", userId),
   ]);
-  return { profile, cryptoAssets, exchangeAccounts, wallets, sourcesOfFunds, taxObligations, documents, events };
+  return { profile, cryptoAssets, exchangeAccounts, sourcesOfFunds, taxObligations, documents, events };
 }
 
 export async function createCryptoAsset(input: { userId: string; symbol: string; name: string; quantity?: number | null }) {
@@ -52,14 +50,6 @@ export async function createExchangeAccount(input: { userId: string; provider: s
   const id = randomUUID();
   const rows = await prisma.$queryRawUnsafe<Row[]>("INSERT INTO exchange_accounts (id, profile_id, provider, account_label, status) VALUES ($1, $2, $3, $4, 'PARTIAL') RETURNING *", id, profile.id, input.provider, input.accountLabel);
   await createDigitalSystemEvent({ userId: input.userId, profileId: String(profile.id), eventType: "EXCHANGE_ACCOUNT_CREATED", description: `Exchange agregado: ${input.provider}` });
-  return rows[0];
-}
-
-export async function createWallet(input: { userId: string; label: string; network: string; publicAddress: string }) {
-  const profile = await ensureDigitalProfile(input.userId);
-  const id = randomUUID();
-  const rows = await prisma.$queryRawUnsafe<Row[]>("INSERT INTO digital_wallets (id, profile_id, label, network, address, owner_declared, status) VALUES ($1, $2, $3, $4, $5, true, 'PARTIAL') RETURNING *", id, profile.id, input.label, input.network, input.publicAddress);
-  await createDigitalSystemEvent({ userId: input.userId, profileId: String(profile.id), eventType: "WALLET_CREATED", description: `Wallet agregada: ${input.label}` });
   return rows[0];
 }
 
