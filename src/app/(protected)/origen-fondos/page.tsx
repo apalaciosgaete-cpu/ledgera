@@ -74,9 +74,9 @@ const SOURCE_OPTIONS: SourceOption[] = [
   {
     key: "wallets",
     href: "/origen-fondos/wallets",
-    label: "Wallets frías",
-    description: "Asocia direcciones públicas en modo de solo lectura.",
-    action: "Asociar wallet",
+    label: "Wallets",
+    description: "Conecta wallets o asocia cuentas públicas en modo de solo lectura.",
+    action: "Gestionar wallets",
   },
   {
     key: "documents",
@@ -229,8 +229,8 @@ export default function OrigenFondosPage() {
       wallets: overview.loading
         ? "Actualizando estado…"
         : overview.walletConnections > 0
-          ? pluralize(overview.walletConnections, "dirección asociada", "direcciones asociadas")
-          : "Direcciones públicas de solo lectura",
+          ? pluralize(overview.walletConnections, "cuenta asociada", "cuentas asociadas")
+          : "Conexiones y cuentas públicas disponibles",
       documents: overview.loading
         ? "Actualizando estado…"
         : overview.documents > 0
