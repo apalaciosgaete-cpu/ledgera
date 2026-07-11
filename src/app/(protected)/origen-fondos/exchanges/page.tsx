@@ -120,11 +120,11 @@ export default function ExchangesSourceFundsPage() {
 
         <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,200px),1fr))", gap: 14, alignItems: "stretch" }}>
           {EXCHANGES.map((exchange) => {
-            const implemented = isImplementedExchange(exchange.id);
-            const connected = implemented ? connections[exchange.id] : false;
-            const enabled = implemented;
-            const meta = implemented
-              ? EXCHANGE_META[exchange.id]
+            const implementedId = isImplementedExchange(exchange.id) ? exchange.id : null;
+            const enabled = implementedId !== null;
+            const connected = implementedId ? connections[implementedId] : false;
+            const meta = implementedId
+              ? EXCHANGE_META[implementedId]
               : {
                   description: `Integración prevista para sincronizar operaciones desde ${exchange.name}.`,
                   capability: "Conector en preparación",
