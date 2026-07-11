@@ -22,20 +22,20 @@ const PROVIDERS: Record<ProviderId, Provider> = {
     id: "fintoc",
     name: "Fintoc",
     category: "Proveedor comercial",
-    status: "Disponible para integrar",
-    enabled: true,
-    description: "Permite implementar acceso de solo lectura a cuentas, saldos y movimientos bancarios mediante su infraestructura.",
-    currentCondition: "Hasta que LEDGERA disponga de un acuerdo comercial propio, esta alternativa requiere una cuenta empresarial de Fintoc y que su costo sea asumido por el cliente que solicite la integración.",
+    status: "No disponible aún",
+    enabled: false,
+    description: "Permitirá implementar acceso de solo lectura a cuentas, saldos y movimientos bancarios mediante su infraestructura.",
+    currentCondition: "LEDGERA todavía no dispone de un acuerdo comercial con Fintoc. La conexión no está habilitada y el usuario no puede activarla directamente por su cuenta.",
     scope: ["Autorización mediante el flujo del proveedor", "Consulta de cuentas y movimientos", "Sin permisos para pagos o transferencias"],
   },
   floid: {
     id: "floid",
     name: "Floid",
     category: "Proveedor comercial",
-    status: "Disponible para integrar",
-    enabled: true,
-    description: "Permite implementar agregación de información bancaria y conciliación mediante una cuenta comercial del proveedor.",
-    currentCondition: "Hasta que LEDGERA disponga de un acuerdo comercial propio, esta alternativa requiere una cuenta empresarial de Floid y que su costo sea asumido por el cliente que solicite la integración.",
+    status: "No disponible aún",
+    enabled: false,
+    description: "Permitirá implementar agregación de información bancaria y conciliación mediante una cuenta comercial del proveedor.",
+    currentCondition: "LEDGERA todavía no dispone de un acuerdo comercial con Floid. La conexión no está habilitada y el usuario no puede activarla directamente por su cuenta.",
     scope: ["Autorización mediante el flujo del proveedor", "Acceso de solo lectura a datos bancarios", "Conciliación con movimientos registrados en LEDGERA"],
   },
   sfa: {
@@ -129,15 +129,9 @@ export default function BankProviderPage() {
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            {provider.enabled ? (
-              <span style={{ borderRadius: 999, background: "var(--accent-soft)", color: "var(--accent)", padding: "10px 14px", fontSize: 12.5, fontWeight: 900 }}>
-                Preparado para integración comercial
-              </span>
-            ) : (
-              <span style={{ borderRadius: 999, background: "var(--bg-sunken)", border: "1px solid var(--border)", color: "var(--text-faint)", padding: "10px 14px", fontSize: 12.5, fontWeight: 900 }}>
-                Integración aún no disponible
-              </span>
-            )}
+            <span style={{ borderRadius: 999, background: "var(--bg-sunken)", border: "1px solid var(--border)", color: "var(--text-faint)", padding: "10px 14px", fontSize: 12.5, fontWeight: 900 }}>
+              Integración aún no disponible
+            </span>
 
             <Link href="/import/bank" style={{ borderRadius: 999, border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text)", padding: "10px 14px", fontSize: 12.5, fontWeight: 900, textDecoration: "none" }}>
               Importar cartola mientras se habilita
