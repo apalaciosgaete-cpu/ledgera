@@ -66,11 +66,13 @@ function deviceLabel(value: unknown): string {
 }
 
 function normalizeDcentAccounts(accounts: DcentAccount[], connector: DcentConnector): SupportedDcentAccount[] {
-  return accounts.flatMap((account, index) => {
+  const supported: SupportedDcentAccount[] = [];
+
+  accounts.forEach((account, index) => {
     const group = String(account.coin_group ?? "").toUpperCase();
     const coin = String(account.coin_name ?? "").toUpperCase();
     const path = String(account.address_path ?? "").trim();
-    if (!path) return [];
+    if (!path) return;
 
     const base = {
       ...account,
@@ -79,21 +81,24 @@ function normalizeDcentAccounts(accounts: DcentAccount[], connector: DcentConnec
     };
 
     if (group.includes("BITCOIN") || coin.includes("BITCOIN")) {
-      return [{ ...base, connectionNetwork: "BITCOIN_XPUB" as const }];
+      supported.push({ ...base, connectionNetwork: "BITCOIN_XPUB" });
+      return;
     }
 
-    if (group.includes("ETHEREUM") || group === "ERC20" || coin.includes("ETHEREUM") || coin === "ERC20") {
-      return connector.coinType?.ETHEREUM
-        ? [{ ...base, connectionNetwork: "ETHEREUM" as const }]
-        : [];
+    if (
+      (group.includes("ETHEREUM") || group === "ERC20" || coin.includes("ETHEREUM") || coin === "ERC20")
+      && connector.coinType?.ETHEREUM
+    ) {
+      supported.push({ ...base, connectionNetwork: "ETHEREUM" });
+      return;
     }
 
     if ((group.includes("SOLANA") || coin.includes("SOLANA")) && connector.coinType?.SOLANA) {
-      return [{ ...base, connectionNetwork: "SOLANA" as const }];
+      supported.push({ ...base, connectionNetwork: "SOLANA" });
     }
-
-    return [];
   });
+
+  return supported;
 }
 
 function publicIdentifier(response: unknown, key: "address" | "public_key"): string {
@@ -147,13 +152,13 @@ export function DcentIntegrationPanel() {
         connector.getDeviceInfo(),
         connector.getAccountInfo(),
       ]);
-      const supported = normalizeDcentAccounts(accountList(accountInfo), connector);
+      const supportedAccounts = normalizeDcentAccounts(accountList(accountInfo), connector);
       setDeviceName(deviceLabel(deviceInfo));
-      setAccounts(supported);
+      setAccounts(supportedAccounts);
       setFeedback({
         ok: true,
-        message: supported.length > 0
-          ? `${supported.length} cuenta${supported.length === 1 ? "" : "s"} pública${supported.length === 1 ? "" : "s"} compatible${supported.length === 1 ? "" : "s"} encontrada${supported.length === 1 ? "" : "s"}.`
+        message: supportedAccounts.length > 0
+          ? `${supportedAccounts.length} cuenta${supportedAccounts.length === 1 ? "" : "s"} pública${supportedAccounts.length === 1 ? "" : "s"} compatible${supportedAccounts.length === 1 ? "" : "s"} encontrada${supportedAccounts.length === 1 ? "" : "s"}.`
           : "El dispositivo respondió, pero no contiene cuentas Bitcoin, Ethereum o Solana compatibles.",
       });
       connector.popupWindowClose?.();
