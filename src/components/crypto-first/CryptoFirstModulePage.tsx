@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -303,8 +302,8 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
 
   if (!isTaxObligations) return <GenericModulePage module={module} sections={sections} />;
 
-  const summary = useMemo(() => summarize(staging?.items ?? []), [staging]);
-  const taxAnalysis = useMemo(() => analyzeEvents(events), [events]);
+  const summary = summarize(staging?.items ?? []);
+  const taxAnalysis = analyzeEvents(events);
   const attentionCount = summary.reviewCount + taxAnalysis.pending.length;
   const hasConfirmed = summary.confirmed.length > 0;
   const analysisState: AnalysisState = attentionCount > 0
