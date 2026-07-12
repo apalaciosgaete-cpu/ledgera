@@ -364,7 +364,7 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
           {assetViews.map((view) => {
             const active = assetView === view.key;
             return (
-              <button key={view.key} type="button" aria-pressed={active} onClick={() => setAssetView(view.key)} style={{ minHeight: 118, borderRadius: 18, border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--bg-sunken)" : "var(--bg-elev)", cursor: "pointer", textAlign: "left", padding: "15px 16px", display: "grid", alignContent: "start", gap: 6, boxShadow: active ? "0 0 0 1px var(--accent), var(--shadow-sm)" : "var(--shadow-sm)", fontFamily: fonts.body }}>
+              <button key={view.key} type="button" aria-pressed={active} onClick={() => setAssetView(view.key)} style={{ minHeight: 118, borderRadius: 18, border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--bg-sunken)" : "var(--bg-elev)", cursor: "pointer", textAlign: "center", padding: "15px 16px", display: "grid", alignContent: "center", justifyItems: "center", gap: 6, boxShadow: active ? "0 0 0 1px var(--accent), var(--shadow-sm)" : "var(--shadow-sm)", fontFamily: fonts.body }}>
                 <span style={{ color: "var(--accent)", fontSize: 22, fontWeight: 950, lineHeight: 1 }}>{view.value}</span>
                 <strong style={{ color: "var(--text)", fontSize: 14, fontWeight: 900 }}>{view.label}</strong>
                 <span style={{ color: "var(--text-soft)", fontSize: 11.75, lineHeight: 1.35 }}>{view.hint}</span>
