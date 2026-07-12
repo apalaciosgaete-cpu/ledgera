@@ -77,8 +77,8 @@ const SOURCE_OPTIONS: SourceOption[] = [
     key: "wallets",
     href: "/origen-fondos/wallets",
     label: "Wallets",
-    description: "La incorporación de wallets se encuentra suspendida mientras se evalúa su alcance.",
-    action: "En evaluación",
+    description: "Integración de wallets disponible próximamente.",
+    action: "Disponible próximamente",
     enabled: false,
   },
   {
@@ -319,7 +319,7 @@ export default function OrigenFondosPage() {
         : overview.exchangeConnections > 0
           ? pluralize(overview.exchangeConnections, "conexión activa", "conexiones activas")
           : "Conexiones API disponibles",
-      wallets: "Sin conexiones habilitadas",
+      wallets: "Próximamente",
       documents: overview.loading
         ? "Actualizando estado…"
         : overview.documents > 0
