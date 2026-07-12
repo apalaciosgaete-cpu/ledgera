@@ -8,9 +8,9 @@ import { fonts } from "@/styles/tokens";
 
 type WealthStepKey = "origen-fondos" | "activos";
 type SourceOptionKey = "bancos" | "exchanges" | "wallets" | "documentacion";
-type AssetViewKey = "transacciones" | "activos-detectados" | "pendientes" | "analisis-tributario";
+type AssetViewKey = "transacciones" | "activos-detectados" | "pendientes";
 type LoadState = "LOADING" | "READY" | "ERROR";
-type TableMode = "confirmed" | "pending" | "tax";
+type TableMode = "confirmed" | "pending";
 
 type SourceOption = { key: SourceOptionKey; icon: string; label: string; hint: string };
 type AssetView = { key: AssetViewKey; label: string; value: string; hint: string };
@@ -55,10 +55,9 @@ const SOURCE_OPTIONS: SourceOption[] = [
 ];
 
 const ASSET_VIEW_CONFIG: Array<Omit<AssetView, "value">> = [
-  { key: "transacciones", label: "Transacciones", hint: "Movimientos confirmados desde tus fuentes." },
-  { key: "activos-detectados", label: "Activos", hint: "Todos los activos detectados en movimientos confirmados." },
-  { key: "pendientes", label: "Por revisar", hint: "Datos pendientes o marcados para revisión." },
-  { key: "analisis-tributario", label: "Para análisis tributario", hint: "Operaciones confirmadas disponibles para clasificación tributaria." },
+  { key: "transacciones", label: "Transacciones", hint: "Movimientos incorporados desde tus fuentes." },
+  { key: "activos-detectados", label: "Activos", hint: "Activos identificados en el consolidado." },
+  { key: "pendientes", label: "Por revisar", hint: "Registros que requieren validación." },
 ];
 
 const STEP_COPY = {
@@ -70,7 +69,7 @@ const STEP_COPY = {
   activos: {
     title: "Activos",
     subtitle: "Revisa la información consolidada y trazable antes del análisis tributario.",
-    examples: ["transacciones", "pendientes", "análisis tributario", "activos"],
+    examples: ["transacciones", "pendientes", "activos"],
   },
 } satisfies Record<WealthStepKey, { title: string; subtitle: string; examples: string[] }>;
 
@@ -103,6 +102,19 @@ function formatDate(iso: string): string {
   return Number.isNaN(date.getTime())
     ? "Fecha no disponible"
     : date.toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function periodLabel(items: StagingItem[]): string {
+  const datedItems = items
+    .map((item) => ({ iso: item.occurredAt, timestamp: new Date(item.occurredAt).getTime() }))
+    .filter((item) => Number.isFinite(item.timestamp))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (datedItems.length === 0) return "Sin período disponible";
+
+  const first = formatDate(datedItems[0].iso);
+  const last = formatDate(datedItems[datedItems.length - 1].iso);
+  return first === last ? `Período cubierto · ${first}` : `Período cubierto · ${first} al ${last}`;
 }
 
 function extractAsset(item: StagingItem): string {
@@ -211,33 +223,25 @@ function TransactionsTable({ items, mode }: { items: StagingItem[]; mode: TableM
 
   const columns = mode === "pending"
     ? "0.8fr 0.8fr 0.7fr 1fr 0.9fr 1.2fr 1fr"
-    : mode === "tax"
-      ? "0.8fr 0.8fr 1.2fr 0.7fr 1fr 1.1fr"
-      : "0.8fr 0.8fr 0.7fr 1.1fr 1fr 1.1fr";
+    : "0.8fr 0.8fr 0.7fr 1.1fr 1fr 1.1fr";
 
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflowX: "auto" }}>
       <div style={{ minWidth: mode === "pending" ? 1020 : 860 }}>
         <div style={{ display: "grid", gridTemplateColumns: columns, gap: 16, padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".04em", textTransform: "uppercase" }}>
-          <span>Fecha</span><span>Fuente</span>
-          {mode === "tax" ? <span>Operación para analizar</span> : <span>Activo</span>}
-          {mode !== "tax" && <span>Movimiento</span>}
-          {mode === "tax" && <span>Activo</span>}
+          <span>Fecha</span><span>Fuente</span><span>Activo</span><span>Movimiento</span>
           <span style={{ textAlign: "right", paddingRight: 8 }}>Monto</span>
           {mode === "pending" && <span>Motivo</span>}
-          <span style={{ paddingLeft: 18 }}>{mode === "tax" ? "Preparación" : "Estado"}</span>
+          <span style={{ paddingLeft: 18 }}>Estado</span>
         </div>
         {items.map((item) => {
           const status = statusMeta(item.status);
           return (
             <div key={item.id} style={{ display: "grid", gridTemplateColumns: columns, gap: 16, padding: "12px 14px", borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 12.5, alignItems: "center" }}>
-              <span>{formatDate(item.occurredAt)}</span><span>{sourceLabel(item)}</span>
-              {mode === "tax" ? <span>{item.title}</span> : <strong>{extractAsset(item)}</strong>}
-              {mode !== "tax" && <span>{item.title}</span>}
-              {mode === "tax" && <strong>{extractAsset(item)}</strong>}
+              <span>{formatDate(item.occurredAt)}</span><span>{sourceLabel(item)}</span><strong>{extractAsset(item)}</strong><span>{item.title}</span>
               <strong style={{ textAlign: "right", paddingRight: 8, fontVariantNumeric: "tabular-nums" }}>{amountOnly(item)}</strong>
               {mode === "pending" && <span style={{ color: "var(--text-soft)", lineHeight: 1.4 }}>{reviewReason(item)}</span>}
-              <span style={{ paddingLeft: 18, color: mode === "tax" ? "var(--accent)" : status.color, fontWeight: 900 }}>{mode === "tax" ? "Listo para analizar" : status.label}</span>
+              <span style={{ paddingLeft: 18, color: status.color, fontWeight: 900 }}>{status.label}</span>
             </div>
           );
         })}
@@ -290,9 +294,8 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   const positions = useMemo(() => buildPositions(confirmedItems), [confirmedItems]);
   const assetViews = useMemo<AssetView[]>(() => ASSET_VIEW_CONFIG.map((view) => ({
     ...view,
-    value: loadState === "LOADING" ? "—" : view.key === "transacciones" ? String(confirmedItems.length) : view.key === "activos-detectados" ? String(positions.length) : view.key === "pendientes" ? String(pendingItems.length) : String(confirmedItems.length),
+    value: loadState === "LOADING" ? "—" : view.key === "transacciones" ? String(confirmedItems.length) : view.key === "activos-detectados" ? String(positions.length) : String(pendingItems.length),
   })), [confirmedItems.length, loadState, pendingItems.length, positions.length]);
-  const selectedAssetView = assetViews.find((item) => item.key === assetView) ?? assetViews[0];
 
   const loadStagingData = useCallback(async () => {
     setLoadState("LOADING");
@@ -328,12 +331,19 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     if (loadState !== "READY") return <DataState state={loadState} error={loadError} retry={() => void loadStagingData()} />;
     if (assetView === "activos-detectados") return <AssetsTable positions={positions} />;
     if (assetView === "pendientes") return <TransactionsTable items={pendingItems} mode="pending" />;
-    if (assetView === "analisis-tributario") return <TransactionsTable items={confirmedItems} mode="tax" />;
     return <TransactionsTable items={confirmedItems} mode="confirmed" />;
   }
 
   if (activeStep === "activos") {
-    const resultCount = assetView === "activos-detectados" ? positions.length : assetView === "pendientes" ? pendingItems.length : confirmedItems.length;
+    const sectionTitle = assetView === "activos-detectados" ? "Activos consolidados" : assetView === "pendientes" ? "Registros por revisar" : "Transacciones";
+    const sectionContext = loadState !== "READY"
+      ? "Actualizando…"
+      : assetView === "activos-detectados"
+        ? `${positions.length} ${positions.length === 1 ? "activo" : "activos"} · ${confirmedItems.length} ${confirmedItems.length === 1 ? "movimiento" : "movimientos"}`
+        : assetView === "pendientes"
+          ? pendingItems.length === 0 ? "Sin observaciones pendientes" : `${pendingItems.length} ${pendingItems.length === 1 ? "registro requiere" : "registros requieren"} revisión`
+          : periodLabel(confirmedItems);
+
     return (
       <main style={{ minHeight: "calc(100vh - 100px)", display: "grid", gap: 20, alignContent: "start", paddingBottom: 80, fontFamily: fonts.body }}>
         <header style={{ display: "grid", gap: 6 }}>
@@ -356,8 +366,8 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
 
         <section style={{ display: "grid", gap: 12 }}>
           <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-            <strong style={{ color: "var(--text)", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
-            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>{loadState === "READY" ? `Consolidado completo · ${resultCount} ${resultCount === 1 ? "registro" : "registros"}` : "Actualizando…"}</span>
+            <strong style={{ color: "var(--text)", fontSize: 15, fontWeight: 900 }}>{sectionTitle}</strong>
+            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>{sectionContext}</span>
           </div>
           {renderAssetContent()}
         </section>
