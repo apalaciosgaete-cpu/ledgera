@@ -1,0 +1,98 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+import { NextRequest, NextResponse } from "next/server";
+
+import { prisma } from "@/lib/prisma";
+import { sendWelcomeEmail } from "@/lib/emails/welcome";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
+import { parseEmailVerificationIdentifier } from "@/modules/identity/application/emailVerification";
+import { consumeOneTimeToken } from "@/modules/identity/infrastructure/oneTimeTokenRepository";
+
+function resolveApplicationUrl(req: NextRequest) {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.APP_URL ??
+    process.env.NEXTAUTH_URL ??
+    req.nextUrl.origin
+  ).replace(/\/$/, "");
+}
+
+function redirectToLogin(req: NextRequest, status: "success" | "invalid") {
+  const url = new URL("/login", resolveApplicationUrl(req));
+  if (status === "success") {
+    url.searchParams.set("emailVerified", "1");
+  } else {
+    url.searchParams.set("emailVerification", "invalid");
+  }
+  return NextResponse.redirect(url);
+}
+
+export async function GET(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get("token")?.trim();
+  if (!token) return redirectToLogin(req, "invalid");
+
+  try {
+    const record = await consumeOneTimeToken(token);
+    if (!record) return redirectToLogin(req, "invalid");
+
+    const identity = parseEmailVerificationIdentifier(record.identifier);
+    if (!identity) return redirectToLogin(req, "invalid");
+
+    const user = await prisma.users.findFirst({
+      where: {
+        id: identity.userId,
+        email: identity.email,
+      },
+      select: {
+        id: true,
+        email: true,
+        full_name: true,
+        role: true,
+        email_verified_at: true,
+      },
+    });
+
+    if (!user) return redirectToLogin(req, "invalid");
+
+    const newlyVerified = !user.email_verified_at;
+    if (newlyVerified) {
+      await prisma.users.update({
+        where: { id: user.id },
+        data: {
+          email_verified_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+
+      await recordAuditEvent({
+        userId: user.id,
+        category: "SECURITY",
+        severity: "INFO",
+        event: "email_verified",
+        description: "Correo electrónico verificado",
+        result: "SUCCESS",
+        entityType: "User",
+        entityId: user.id,
+        metadata: { source: "email-verification" },
+        ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
+        userAgent: req.headers.get("user-agent") ?? null,
+      });
+
+      try {
+        await sendWelcomeEmail({
+          to: user.email,
+          fullName: user.full_name,
+          role: user.role,
+        });
+      } catch (emailError) {
+        console.warn("[email-verification/verify] Welcome email failed:", emailError);
+      }
+    }
+
+    return redirectToLogin(req, "success");
+  } catch (error) {
+    console.error("[api/email-verification/verify]", error);
+    return redirectToLogin(req, "invalid");
+  }
+}
