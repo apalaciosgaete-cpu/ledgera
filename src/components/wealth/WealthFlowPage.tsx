@@ -56,7 +56,7 @@ const SOURCE_OPTIONS: SourceOption[] = [
 
 const ASSET_VIEW_CONFIG: Array<Omit<AssetView, "value">> = [
   { key: "transacciones", label: "Transacciones", hint: "Movimientos confirmados desde tus fuentes." },
-  { key: "activos-detectados", label: "Activos", hint: "Entradas, salidas y saldos detectados desde movimientos confirmados." },
+  { key: "activos-detectados", label: "Activos", hint: "Todos los activos detectados en movimientos confirmados." },
   { key: "pendientes", label: "Por revisar", hint: "Datos pendientes o marcados para revisión." },
   { key: "analisis-tributario", label: "Para análisis tributario", hint: "Operaciones confirmadas disponibles para clasificación tributaria." },
 ];
@@ -69,7 +69,7 @@ const STEP_COPY = {
   },
   activos: {
     title: "Activos",
-    subtitle: "Revisa las operaciones confirmadas, corrige inconsistencias y valida la información antes del análisis tributario.",
+    subtitle: "Revisa la información consolidada y trazable antes del análisis tributario.",
     examples: ["transacciones", "pendientes", "análisis tributario", "activos"],
   },
 } satisfies Record<WealthStepKey, { title: string; subtitle: string; examples: string[] }>;
@@ -193,27 +193,27 @@ function DataState({ state, error, retry }: { state: LoadState; error: string; r
   return null;
 }
 
-function TransactionsTable({ items, mode, filtered, onReview }: { items: StagingItem[]; mode: TableMode; filtered: boolean; onReview: (item: StagingItem) => void }) {
+function TransactionsTable({ items, mode }: { items: StagingItem[]; mode: TableMode }) {
   if (items.length === 0) {
     return (
       <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)" }}>
         <EmptyState
-          title={filtered ? "No hay resultados" : mode === "pending" ? "No hay registros por revisar" : "Aún no hay operaciones confirmadas"}
-          body={filtered ? "Ajusta la búsqueda o elimina los filtros aplicados." : mode === "pending" ? "Los registros pendientes o con inconsistencias aparecerán aquí." : "Confirma operaciones en Importaciones para incorporarlas a Activos."}
+          title={mode === "pending" ? "No hay registros por revisar" : "Aún no hay operaciones confirmadas"}
+          body={mode === "pending" ? "Los registros pendientes o con inconsistencias aparecerán aquí." : "Confirma operaciones en Importaciones para incorporarlas a Activos."}
         />
       </div>
     );
   }
 
   const columns = mode === "pending"
-    ? "0.8fr 0.8fr 0.7fr 1fr 0.9fr 1.2fr 0.85fr 0.65fr"
+    ? "0.8fr 0.8fr 0.7fr 1fr 0.9fr 1.2fr 0.9fr"
     : mode === "tax"
-      ? "0.8fr 0.8fr 1.15fr 0.7fr 0.9fr 1fr 0.65fr"
-      : "0.8fr 0.8fr 0.7fr 1.05fr 0.9fr 0.8fr 0.65fr";
+      ? "0.8fr 0.8fr 1.2fr 0.7fr 0.9fr 1fr"
+      : "0.8fr 0.8fr 0.7fr 1.1fr 0.9fr 0.9fr";
 
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflowX: "auto" }}>
-      <div style={{ minWidth: mode === "pending" ? 1080 : 900 }}>
+      <div style={{ minWidth: mode === "pending" ? 1000 : 820 }}>
         <div style={{ display: "grid", gridTemplateColumns: columns, gap: 12, padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".04em", textTransform: "uppercase" }}>
           <span>Fecha</span><span>Fuente</span>
           {mode === "tax" ? <span>Operación para analizar</span> : <span>Activo</span>}
@@ -221,7 +221,7 @@ function TransactionsTable({ items, mode, filtered, onReview }: { items: Staging
           {mode === "tax" && <span>Activo</span>}
           <span style={{ textAlign: "right" }}>Monto</span>
           {mode === "pending" && <span>Motivo</span>}
-          <span>{mode === "tax" ? "Preparación" : "Estado"}</span><span>Acción</span>
+          <span>{mode === "tax" ? "Preparación" : "Estado"}</span>
         </div>
         {items.map((item) => {
           const status = statusMeta(item.status);
@@ -234,7 +234,6 @@ function TransactionsTable({ items, mode, filtered, onReview }: { items: Staging
               <strong style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{item.amountLabel}</strong>
               {mode === "pending" && <span style={{ color: "var(--text-soft)", lineHeight: 1.4 }}>{reviewReason(item)}</span>}
               <span style={{ color: mode === "tax" ? "var(--accent)" : status.color, fontWeight: 900 }}>{mode === "tax" ? "Listo para analizar" : status.label}</span>
-              <button type="button" onClick={() => onReview(item)} style={{ width: "fit-content", border: "none", background: "transparent", color: "var(--accent)", padding: 0, cursor: "pointer", fontSize: 12, fontWeight: 900 }}>{mode === "pending" ? "Revisar →" : "Ver →"}</button>
             </div>
           );
         })}
@@ -243,38 +242,28 @@ function TransactionsTable({ items, mode, filtered, onReview }: { items: Staging
   );
 }
 
-function AssetsTable({ positions, filtered }: { positions: AssetPosition[]; filtered: boolean }) {
+function AssetsTable({ positions }: { positions: AssetPosition[] }) {
   if (positions.length === 0) {
-    return <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)" }}><EmptyState title={filtered ? "No hay activos para estos filtros" : "Aún no hay activos detectados"} body={filtered ? "Ajusta la búsqueda o elimina los filtros aplicados." : "Los activos se calcularán a partir de movimientos confirmados."} /></div>;
+    return <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)" }}><EmptyState title="Aún no hay activos detectados" body="Los activos se incorporarán automáticamente a partir de movimientos confirmados." /></div>;
   }
 
-  const columns = "0.75fr 1fr 1fr 1fr 0.75fr 0.85fr 1.1fr";
+  const columns = "0.85fr 1.1fr 0.8fr 0.95fr 1.1fr";
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflowX: "auto" }}>
-      <div style={{ minWidth: 900 }}>
+      <div style={{ minWidth: 760 }}>
         <div style={{ display: "grid", gridTemplateColumns: columns, gap: 12, padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".04em", textTransform: "uppercase" }}>
-          <span>Activo</span><span style={{ textAlign: "right" }}>Entradas</span><span style={{ textAlign: "right" }}>Salidas</span><span style={{ textAlign: "right" }}>Saldo detectado</span><span>Movimientos</span><span>Última fecha</span><span>Estado</span>
+          <span>Activo</span><span style={{ textAlign: "right" }}>Cantidad consolidada</span><span>Movimientos</span><span>Última fecha</span><span>Estado</span>
         </div>
         {positions.map((position) => (
           <div key={position.symbol} style={{ display: "grid", gridTemplateColumns: columns, gap: 12, padding: "12px 14px", borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 12.5, alignItems: "center" }}>
             <strong>{position.symbol}</strong>
-            {[position.inflows, position.outflows, position.balance].map((value, index) => <strong key={index} style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{value.toLocaleString("es-CL", { maximumFractionDigits: 8 })}</strong>)}
-            <span>{position.count}</span><span>{formatDate(position.lastDate)}</span><span style={{ color: "var(--text-soft)", fontWeight: 800 }}>Calculado desde confirmados</span>
+            <strong style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{position.balance.toLocaleString("es-CL", { maximumFractionDigits: 8 })}</strong>
+            <span>{position.count}</span><span>{formatDate(position.lastDate)}</span><span style={{ color: "var(--accent)", fontWeight: 800 }}>Incluido en consolidado</span>
           </div>
         ))}
       </div>
     </div>
   );
-}
-
-function matchesFilters(item: StagingItem, query: string, sourceFilter: string, assetFilter: string) {
-  const source = sourceLabel(item);
-  const asset = extractAsset(item);
-  if (sourceFilter !== "ALL" && source !== sourceFilter) return false;
-  if (assetFilter !== "ALL" && asset !== assetFilter) return false;
-  const clean = normalize(query.trim());
-  if (!clean) return true;
-  return normalize([item.id, item.source, item.sources.join(" "), item.provider, item.status, item.title, item.subtitle, item.amountLabel, item.rawType, source, asset, formatDate(item.occurredAt)].join(" ")).includes(clean);
 }
 
 function newest(items: StagingItem[]) {
@@ -289,26 +278,17 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
   const [stagingData, setStagingData] = useState<StagingData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("LOADING");
   const [loadError, setLoadError] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("ALL");
-  const [assetFilter, setAssetFilter] = useState("ALL");
   const copy = STEP_COPY[activeStep];
   const selectedSourceOption = SOURCE_OPTIONS.find((item) => item.key === selectedSource);
 
-  const confirmedItems = useMemo(() => (stagingData?.items ?? []).filter((item) => item.status === "CONFIRMED"), [stagingData]);
-  const pendingItems = useMemo(() => (stagingData?.items ?? []).filter((item) => item.status === "PENDING" || item.status === "REVIEW"), [stagingData]);
+  const confirmedItems = useMemo(() => newest((stagingData?.items ?? []).filter((item) => item.status === "CONFIRMED")), [stagingData]);
+  const pendingItems = useMemo(() => newest((stagingData?.items ?? []).filter((item) => item.status === "PENDING" || item.status === "REVIEW")), [stagingData]);
   const positions = useMemo(() => buildPositions(confirmedItems), [confirmedItems]);
   const assetViews = useMemo<AssetView[]>(() => ASSET_VIEW_CONFIG.map((view) => ({
     ...view,
     value: loadState === "LOADING" ? "—" : view.key === "transacciones" ? String(confirmedItems.length) : view.key === "activos-detectados" ? String(positions.length) : view.key === "pendientes" ? String(pendingItems.length) : String(confirmedItems.length),
   })), [confirmedItems.length, loadState, pendingItems.length, positions.length]);
   const selectedAssetView = assetViews.find((item) => item.key === assetView) ?? assetViews[0];
-
-  const sourceOptions = useMemo(() => [...new Set((stagingData?.items ?? []).map(sourceLabel))].sort((a, b) => a.localeCompare(b)), [stagingData]);
-  const assetOptions = useMemo(() => [...new Set((stagingData?.items ?? []).map(extractAsset))].sort((a, b) => a.localeCompare(b)), [stagingData]);
-  const filteredConfirmed = useMemo(() => newest(confirmedItems.filter((item) => matchesFilters(item, query, sourceFilter, assetFilter))), [assetFilter, confirmedItems, query, sourceFilter]);
-  const filteredPending = useMemo(() => newest(pendingItems.filter((item) => matchesFilters(item, query, sourceFilter, assetFilter))), [assetFilter, pendingItems, query, sourceFilter]);
-  const filteredPositions = useMemo(() => buildPositions(filteredConfirmed), [filteredConfirmed]);
-  const hasFilters = Boolean(query.trim()) || sourceFilter !== "ALL" || assetFilter !== "ALL";
 
   const loadStagingData = useCallback(async () => {
     setLoadState("LOADING");
@@ -340,19 +320,16 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     if (option) openSourceOption(option);
   }
 
-  function clearFilters() { setQuery(""); setSourceFilter("ALL"); setAssetFilter("ALL"); }
-  function review(item: StagingItem) { router.push(`/importaciones?registro=${encodeURIComponent(item.id)}`); }
-
   function renderAssetContent() {
     if (loadState !== "READY") return <DataState state={loadState} error={loadError} retry={() => void loadStagingData()} />;
-    if (assetView === "activos-detectados") return <AssetsTable positions={filteredPositions} filtered={hasFilters} />;
-    if (assetView === "pendientes") return <TransactionsTable items={filteredPending} mode="pending" filtered={hasFilters} onReview={review} />;
-    if (assetView === "analisis-tributario") return <TransactionsTable items={filteredConfirmed} mode="tax" filtered={hasFilters} onReview={review} />;
-    return <TransactionsTable items={filteredConfirmed} mode="confirmed" filtered={hasFilters} onReview={review} />;
+    if (assetView === "activos-detectados") return <AssetsTable positions={positions} />;
+    if (assetView === "pendientes") return <TransactionsTable items={pendingItems} mode="pending" />;
+    if (assetView === "analisis-tributario") return <TransactionsTable items={confirmedItems} mode="tax" />;
+    return <TransactionsTable items={confirmedItems} mode="confirmed" />;
   }
 
   if (activeStep === "activos") {
-    const resultCount = assetView === "activos-detectados" ? filteredPositions.length : assetView === "pendientes" ? filteredPending.length : filteredConfirmed.length;
+    const resultCount = assetView === "activos-detectados" ? positions.length : assetView === "pendientes" ? pendingItems.length : confirmedItems.length;
     return (
       <main style={{ minHeight: "calc(100vh - 100px)", display: "grid", gap: 20, alignContent: "start", paddingBottom: 80, fontFamily: fonts.body }}>
         <header style={{ display: "grid", gap: 6 }}>
@@ -374,17 +351,9 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
         </section>
 
         <section style={{ display: "grid", gap: 12 }}>
-          <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", padding: 14, display: "grid", gap: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-              <strong style={{ color: "var(--text)", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
-              <span style={{ color: "var(--text-soft)", fontSize: 12 }}>{loadState === "READY" ? `${resultCount} ${resultCount === 1 ? "resultado" : "resultados"}` : "Actualizando…"}</span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,190px),1fr))", gap: 10 }}>
-              <label style={{ display: "grid", gap: 5, color: "var(--text-soft)", fontSize: 11.5, fontWeight: 800 }}>Buscar<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Activo, fuente, movimiento, fecha…" style={controlStyle} /></label>
-              <label style={{ display: "grid", gap: 5, color: "var(--text-soft)", fontSize: 11.5, fontWeight: 800 }}>Fuente<select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)} style={controlStyle}><option value="ALL">Todas las fuentes</option>{sourceOptions.map((source) => <option key={source} value={source}>{source}</option>)}</select></label>
-              <label style={{ display: "grid", gap: 5, color: "var(--text-soft)", fontSize: 11.5, fontWeight: 800 }}>Activo<select value={assetFilter} onChange={(event) => setAssetFilter(event.target.value)} style={controlStyle}><option value="ALL">Todos los activos</option>{assetOptions.map((asset) => <option key={asset} value={asset}>{asset}</option>)}</select></label>
-              <div style={{ display: "flex", alignItems: "end" }}><button type="button" onClick={clearFilters} disabled={!hasFilters} style={{ ...controlStyle, width: "100%", background: "transparent", color: hasFilters ? "var(--text)" : "var(--text-faint)", cursor: hasFilters ? "pointer" : "not-allowed", fontWeight: 900 }}>Limpiar filtros</button></div>
-            </div>
+          <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+            <strong style={{ color: "var(--text)", fontSize: 15, fontWeight: 900 }}>{selectedAssetView.label}</strong>
+            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>{loadState === "READY" ? `Consolidado completo · ${resultCount} ${resultCount === 1 ? "registro" : "registros"}` : "Actualizando…"}</span>
           </div>
           {renderAssetContent()}
         </section>
