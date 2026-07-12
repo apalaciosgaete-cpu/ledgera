@@ -26,10 +26,6 @@ export async function GET(req: NextRequest) {
       return fail("No autorizado.", 401);
     }
 
-    const twoFactorEnabled = Boolean(
-      auth.user.twoFactorEnabled && auth.user.twoFactorSecret,
-    );
-
     // Exponer campos que el middleware y el cliente necesitan para routing.
     const response = ok({
       user: {
@@ -39,7 +35,7 @@ export async function GET(req: NextRequest) {
         status:                auth.user.status,
         subscriptionPlan:      auth.user.subscriptionPlan,
         subscriptionExpiresAt: auth.user.subscriptionExpiresAt,
-        twoFactorEnabled,
+        twoFactorEnabled:      auth.user.twoFactorEnabled,
         needsOnboarding:       auth.user.needsOnboarding,
       },
       session: auth.session,
