@@ -1,5 +1,5 @@
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,17 +8,12 @@ import {
   createUser,
   getUserByEmail,
 } from "@/modules/identity/infrastructure/userRepository";
-import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
-import {
-  buildSessionExpirationDate,
-  generateSessionToken,
-} from "@/modules/identity/application/sessionToken";
 import { validatePasswordComplexity } from "@/modules/identity/application/password";
 import { hashPassword } from "@/modules/identity/application/passwordHash";
 import { sanitizeUser } from "@/modules/identity/application/sanitizeUser";
+import { issueEmailVerification } from "@/modules/identity/application/emailVerification";
 import { createPortfolio } from "@/modules/portfolio/infrastructure/portfolioRepository";
 import { fail, ok, serverError } from "@/shared/apiResponse";
-import { sendWelcomeEmail } from "@/lib/emails/welcome";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 const validRoles = ["personal", "contador", "empresa"] as const;
@@ -57,7 +52,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-
     const email = String(body.email ?? "").trim().toLowerCase();
     const fullName = String(body.fullName ?? "").trim();
     const password = String(body.password ?? "");
@@ -90,50 +84,31 @@ export async function POST(request: NextRequest) {
 
     await createPortfolio(user.id);
 
-    const sessionToken = generateSessionToken();
-    const expiresAt = buildSessionExpirationDate();
-
-    const session = await rotateSessionForUser({
-      userId: user.id,
-      token: sessionToken,
-      expiresAt,
-    });
-
+    let verificationEmailSent = false;
     try {
-      await sendWelcomeEmail({
-        to: email,
-        fullName,
-        role,
+      await issueEmailVerification({
+        userId: user.id,
+        email: user.email,
+        fullName: user.fullName,
       });
+      verificationEmailSent = true;
     } catch (emailError) {
-      console.warn("[users/POST] Email bienvenida falló:", emailError);
+      console.warn("[users/POST] Email de verificación falló:", emailError);
     }
 
-    const response = NextResponse.json(
+    return NextResponse.json(
       {
         ok: true,
-        message: "Usuario creado correctamente.",
+        message: verificationEmailSent
+          ? "Usuario creado. Revisa tu correo para verificar la cuenta y configura 2FA."
+          : "Usuario creado. Configura 2FA y solicita nuevamente el correo de verificación desde Seguridad.",
         data: {
           user: sanitizeUser(user),
-          session: {
-            id: session.id,
-            token: session.token,
-            expiresAt: session.expiresAt,
-          },
+          verificationEmailSent,
         },
       },
       { status: 201 },
     );
-
-    response.cookies.set("session_token", sessionToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      expires: expiresAt,
-    });
-
-    return response;
   } catch (error) {
     return serverError(error);
   }
