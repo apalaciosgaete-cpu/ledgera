@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+
 import type { DigitalModuleDefinition } from "@/modules/digital-operating-system";
 import { fonts } from "@/styles/tokens";
 
@@ -15,6 +23,7 @@ type TaxEvent = {
   symbol: string;
   executedAt: string | null;
   effectiveTaxCategory?: string | null;
+  realizedPnlClp?: number | null;
 };
 
 type StagingItem = {
@@ -23,6 +32,10 @@ type StagingItem = {
   title: string;
   subtitle: string;
   amountLabel: string;
+  occurredAt?: string | null;
+  provider?: string | null;
+  source?: string | null;
+  sources?: string[];
 };
 
 type StagingData = {
@@ -37,91 +50,170 @@ type ApiResponse<T> = {
 
 type TaxSummary = {
   confirmed: StagingItem[];
+  reviewCount: number;
   assetCount: number;
-  buyCount: number;
-  sellOrSwapCount: number;
-  yieldCount: number;
-  transferLikeCount: number;
+  sources: string[];
+  period: string;
 };
+
+type TaxAnalysis = {
+  taxable: TaxEvent[];
+  nonTaxable: TaxEvent[];
+  pending: TaxEvent[];
+  realizedPnlClp: number;
+};
+
+type AnalysisState = "CLEAR" | "REVIEW" | "IMPACT";
 
 const card: CSSProperties = {
   background: "var(--bg-elev)",
   border: "1px solid var(--border)",
   borderRadius: 18,
-  padding: "14px 16px",
+  padding: "16px 18px",
   boxShadow: "0 12px 26px rgba(15,42,61,0.04)",
 };
 
 function extractAsset(item: StagingItem): string {
-  const fromAmount = item.amountLabel.match(/\b[A-Z0-9]{2,12}\b$/)?.[0];
-  if (fromAmount) return fromAmount;
-  const fromSubtitle = item.subtitle.match(/·\s*([A-Z0-9]{2,12})\b/)?.[1];
-  return fromSubtitle ?? "ACTIVO";
+  return item.amountLabel.match(/\b[A-Z0-9]{2,12}\b$/)?.[0]
+    ?? item.subtitle.match(/·\s*([A-Z0-9]{2,12})\b/)?.[1]
+    ?? "ACTIVO";
+}
+
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "Sin fecha";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Sin fecha";
+  return date.toLocaleDateString("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatUpdated(value: Date | null): string {
+  if (!value) return "Sin actualización registrada";
+  return value.toLocaleString("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatClp(value: number): string {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function buildPeriod(items: StagingItem[]): string {
+  const dates = items
+    .map((item) => item.occurredAt)
+    .filter((value): value is string => Boolean(value))
+    .map((value) => ({ value, timestamp: new Date(value).getTime() }))
+    .filter((item) => Number.isFinite(item.timestamp))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (dates.length === 0) return "Sin período disponible";
+  const first = formatDate(dates[0].value);
+  const last = formatDate(dates[dates.length - 1].value);
+  return first === last ? first : `${first} al ${last}`;
 }
 
 function summarize(items: StagingItem[]): TaxSummary {
   const confirmed = items.filter((item) => item.status === "CONFIRMED");
-  const text = (item: StagingItem) => `${item.title} ${item.subtitle}`;
+  const reviewCount = items.filter((item) => item.status === "PENDING" || item.status === "REVIEW").length;
+  const sources = Array.from(new Set(
+    confirmed
+      .flatMap((item) => [item.provider, ...(item.sources ?? []), item.source])
+      .filter((value): value is string => Boolean(value?.trim()))
+      .map((value) => value.trim()),
+  )).sort((a, b) => a.localeCompare(b));
 
   return {
     confirmed,
+    reviewCount,
     assetCount: new Set(confirmed.map(extractAsset)).size,
-    buyCount: confirmed.filter((item) => /compra|buy/i.test(text(item))).length,
-    sellOrSwapCount: confirmed.filter((item) => /venta|sell|swap|permuta/i.test(text(item))).length,
-    yieldCount: confirmed.filter((item) => /staking|reward|airdrop|earn|rendimiento/i.test(text(item))).length,
-    transferLikeCount: confirmed.filter((item) => /retiro|withdraw|deposit|deposito|transfer/i.test(text(item))).length,
+    sources,
+    period: buildPeriod(confirmed),
   };
 }
 
-function Pill({ label, value, tone }: { label: string; value: number | string; tone: "green" | "amber" | "blue" | "red" | "slate" }) {
-  const palette = {
-    green: { bg: "rgba(22,163,74,0.09)", border: "rgba(22,163,74,0.24)", color: "var(--accent)" },
-    amber: { bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.26)", color: "var(--warn)" },
-    blue: { bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.22)", color: "var(--accent)" },
-    red: { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.22)", color: "var(--loss)" },
-    slate: { bg: "var(--bg-sunken)", border: "var(--border)", color: "var(--text)" },
-  }[tone];
+function analyzeEvents(events: TaxEvent[]): TaxAnalysis {
+  const taxable: TaxEvent[] = [];
+  const nonTaxable: TaxEvent[] = [];
+  const pending: TaxEvent[] = [];
 
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 999, border: `1px solid ${palette.border}`, background: palette.bg, color: palette.color, padding: "7px 11px", fontFamily: fonts.body, fontSize: 12, fontWeight: 850, whiteSpace: "nowrap" }}>
-      <strong>{value}</strong> {label}
-    </span>
-  );
+  for (const event of events) {
+    const category = (event.effectiveTaxCategory ?? "").trim().toUpperCase();
+    if (category === "CAPITAL_GAIN" || category === "ORDINARY_INCOME") taxable.push(event);
+    else if (category === "NON_TAXABLE") nonTaxable.push(event);
+    else pending.push(event);
+  }
+
+  return {
+    taxable,
+    nonTaxable,
+    pending,
+    realizedPnlClp: taxable.reduce((total, event) => total + Number(event.realizedPnlClp ?? 0), 0),
+  };
 }
 
-function ButtonLink({ href, children, primary = false }: { href: string; children: React.ReactNode; primary?: boolean }) {
+function ButtonLink({ href, children, primary = false }: { href: string; children: ReactNode; primary?: boolean }) {
   return (
-    <a href={href} style={{ minHeight: 34, padding: "8px 12px", borderRadius: 9, border: primary ? "1px solid var(--accent)" : "1px solid var(--border)", background: primary ? "var(--accent)" : "var(--bg-elev)", color: primary ? "var(--text)" : "var(--text)", fontSize: 12, fontWeight: 900, textDecoration: "none", display: "inline-flex", alignItems: "center", whiteSpace: "nowrap", fontFamily: fonts.body }}>
+    <a
+      href={href}
+      style={{
+        minHeight: 38,
+        padding: "9px 14px",
+        borderRadius: 10,
+        border: primary ? "1px solid var(--accent)" : "1px solid var(--border)",
+        background: primary ? "var(--accent)" : "transparent",
+        color: "var(--text)",
+        fontSize: 12.5,
+        fontWeight: 900,
+        textDecoration: "none",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        whiteSpace: "nowrap",
+        fontFamily: fonts.body,
+      }}
+    >
       {children}
     </a>
   );
 }
 
-function DecisionCard({ title, status, text, tone }: { title: string; status: string; text: string; tone: "green" | "amber" }) {
-  const color = tone === "green" ? "#3FA687" : "#E8B84B";
-  const bg = tone === "green" ? "rgba(22,163,74,0.08)" : "rgba(245,158,11,0.10)";
-  const border = tone === "green" ? "rgba(22,163,74,0.24)" : "rgba(245,158,11,0.26)";
-
+function MetricCard({ value, label, detail }: { value: number; label: string; detail: string }) {
   return (
-    <article style={{ ...card, border: `1px solid ${border}`, background: bg }}>
-      <p style={{ color, fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: "0 0 8px", textTransform: "uppercase", fontFamily: fonts.body }}>{title}</p>
-      <h3 style={{ color: "var(--text)", fontSize: 19, fontWeight: 950, margin: "0 0 6px", fontFamily: fonts.display }}>{status}</h3>
-      <p style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.45, margin: 0, fontFamily: fonts.body }}>{text}</p>
+    <article style={{ ...card, minHeight: 112, display: "grid", alignContent: "center", gap: 5, textAlign: "center" }}>
+      <strong style={{ color: "var(--accent)", fontSize: 24, lineHeight: 1, fontFamily: fonts.display }}>{value}</strong>
+      <span style={{ color: "var(--text)", fontSize: 14, fontWeight: 900, fontFamily: fonts.body }}>{label}</span>
+      <span style={{ color: "var(--text-soft)", fontSize: 12, lineHeight: 1.35, fontFamily: fonts.body }}>{detail}</span>
     </article>
   );
 }
 
-function PredictiveCard({ title, text }: { title: string; text: string }) {
+function ContextItem({ label, value }: { label: string; value: string }) {
   return (
-    <article style={card}>
-      <h3 style={{ color: "var(--text)", fontSize: 15, fontWeight: 900, margin: "0 0 6px", fontFamily: fonts.body }}>{title}</h3>
-      <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.45, margin: 0, fontFamily: fonts.body }}>{text}</p>
-    </article>
+    <div style={{ display: "grid", gap: 3 }}>
+      <span style={{ color: "var(--text-soft)", fontSize: 10.5, fontWeight: 850, letterSpacing: ".05em", textTransform: "uppercase", fontFamily: fonts.body }}>{label}</span>
+      <strong style={{ color: "var(--text)", fontSize: 12.5, lineHeight: 1.35, fontFamily: fonts.body }}>{value}</strong>
+    </div>
   );
 }
 
 function GenericModulePage({ module, sections }: Props) {
-  const cards = sections?.length ? sections : ["Esta sección se completará con información validada por LEDGERA.", "Carga y confirma movimientos para alimentar esta vista."];
+  const cards = sections?.length
+    ? sections
+    : [
+        "Esta sección se completará con información validada por LEDGERA.",
+        "Carga y confirma movimientos para alimentar esta vista.",
+      ];
 
   return (
     <main style={{ display: "grid", gap: 14, alignContent: "start" }}>
@@ -148,10 +240,11 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
   const [rebuilding, setRebuilding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const isTaxObligations = module.key === "taxObligations";
 
-  const load = useCallback(async (showLoading = true) => {
-    if (!isTaxObligations) return;
+  const load = useCallback(async (showLoading = true): Promise<boolean> => {
+    if (!isTaxObligations) return false;
 
     try {
       if (showLoading) setLoading(true);
@@ -161,34 +254,48 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
         fetch("/api/imports/staging", { cache: "no-store", credentials: "include" }),
       ]);
 
-      if (!eventsRes.ok) throw new Error(`HTTP ${eventsRes.status}`);
-      const eventsJson = await eventsRes.json();
-      const stagingJson = stagingRes.ok ? (await stagingRes.json()) as ApiResponse<StagingData> : null;
+      if (!eventsRes.ok) throw new Error("No fue posible obtener el resultado tributario.");
+      if (!stagingRes.ok) throw new Error("No fue posible obtener las operaciones confirmadas.");
 
+      const eventsJson = await eventsRes.json();
+      const stagingJson = await stagingRes.json() as ApiResponse<StagingData>;
       setEvents(eventsJson?.data?.events ?? []);
-      if (stagingJson?.data) setStaging(stagingJson.data);
+      setStaging(stagingJson.data);
+      setLastUpdated(new Date());
+      return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : "No fue posible completar el análisis.");
+      return false;
     } finally {
       if (showLoading) setLoading(false);
     }
   }, [isTaxObligations]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  async function rebuildTaxEvents() {
+  async function updateAnalysis() {
     setRebuilding(true);
     setMessage(null);
     setError(null);
 
     try {
-      const response = await fetch("/api/tax/events/rebuild", { method: "POST", cache: "no-store", credentials: "include" });
+      const response = await fetch("/api/tax/events/rebuild", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "include",
+      });
       const result = await response.json().catch(() => null);
-      if (!response.ok || result?.ok === false) throw new Error(result?.message || `HTTP ${response.status}`);
-      await load(false);
-      setMessage("Eventos tributarios recalculados correctamente.");
+      if (!response.ok || result?.ok === false) {
+        throw new Error(result?.message || "No fue posible actualizar el análisis tributario.");
+      }
+
+      const refreshed = await load(false);
+      if (!refreshed) throw new Error("El análisis se actualizó, pero no fue posible recargar el resultado.");
+      setMessage("Análisis actualizado correctamente.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No fue posible recalcular eventos tributarios.");
+      setError(err instanceof Error ? err.message : "No fue posible actualizar el análisis tributario.");
     } finally {
       setRebuilding(false);
     }
@@ -196,79 +303,205 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
 
   if (!isTaxObligations) return <GenericModulePage module={module} sections={sections} />;
 
-  const summary = summarize(staging?.items ?? []);
+  const summary = useMemo(() => summarize(staging?.items ?? []), [staging]);
+  const taxAnalysis = useMemo(() => analyzeEvents(events), [events]);
+  const attentionCount = summary.reviewCount + taxAnalysis.pending.length;
   const hasConfirmed = summary.confirmed.length > 0;
-  const hasTaxEvents = events.length > 0;
+  const analysisState: AnalysisState = attentionCount > 0
+    ? "REVIEW"
+    : taxAnalysis.taxable.length > 0
+      ? "IMPACT"
+      : "CLEAR";
+
+  const resultCopy = analysisState === "REVIEW"
+    ? {
+        eyebrow: "Necesita tu atención",
+        title: "Tu situación tributaria todavía no está completa",
+        body: `Encontramos ${attentionCount} ${attentionCount === 1 ? "registro que necesita" : "registros que necesitan"} revisión antes de cerrar el análisis. El resultado puede cambiar cuando se complete esa información.`,
+        color: "#E8B84B",
+        background: "rgba(245,158,11,0.10)",
+        border: "rgba(245,158,11,0.30)",
+      }
+    : analysisState === "IMPACT"
+      ? {
+          eyebrow: "Posible impacto tributario",
+          title: "Detectamos operaciones que debes revisar",
+          body: `LEDGERA calculó resultado para ${taxAnalysis.taxable.length} ${taxAnalysis.taxable.length === 1 ? "operación" : "operaciones"}. El resultado acumulado es ${formatClp(taxAnalysis.realizedPnlClp)}; esta cifra no corresponde todavía al impuesto final.`,
+          color: "var(--loss)",
+          background: "rgba(196,99,74,0.12)",
+          border: "rgba(196,99,74,0.30)",
+        }
+      : {
+          eyebrow: "Resultado preliminar",
+          title: "No se detecta impuesto por pagar",
+          body: `LEDGERA revisó ${summary.confirmed.length} ${summary.confirmed.length === 1 ? "operación confirmada" : "operaciones confirmadas"} asociadas a ${summary.assetCount} ${summary.assetCount === 1 ? "activo" : "activos"}. No se encontraron eventos clasificados con impacto tributario en la información incorporada.`,
+          color: "#3FA687",
+          background: "rgba(22,163,74,0.08)",
+          border: "rgba(22,163,74,0.28)",
+        };
+
+  const sourceLabel = summary.sources.length > 0
+    ? summary.sources.join(", ")
+    : "Fuentes incorporadas en LEDGERA";
 
   return (
-    <main style={{ display: "grid", gap: 12, alignContent: "start" }}>
-      <section style={{ padding: "0 14px 4px" }}>
-        <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 6px", textTransform: "uppercase", fontFamily: fonts.body }}>Situación tributaria</p>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div>
-            <h1 style={{ color: "var(--text)", fontSize: "clamp(1.3rem, 3.5vw, 1.8rem)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.04em", fontFamily: fonts.display }}>Declaración e impacto tributario</h1>
-            <p style={{ color: "var(--text-soft)", fontSize: 13, lineHeight: 1.5, maxWidth: 820, margin: 0, fontFamily: fonts.body }}>
-              LEDGERA separa lo que debes respaldar o declarar de lo que podría generar impuesto efectivo a pagar.
-            </p>
-          </div>
-          <button type="button" onClick={rebuildTaxEvents} disabled={loading || rebuilding} style={{ background: loading || rebuilding ? "var(--bg-elev)" : "var(--accent)", border: "none", borderRadius: 999, color: "var(--text)", cursor: loading || rebuilding ? "not-allowed" : "pointer", fontFamily: fonts.body, fontSize: 13, fontWeight: 850, padding: "10px 15px" }}>
-            {rebuilding ? "Recalculando…" : "Recalcular eventos"}
+    <main style={{ display: "grid", gap: 16, alignContent: "start", paddingBottom: 64, fontFamily: fonts.body }}>
+      <header style={{ display: "flex", justifyContent: "space-between", gap: 18, alignItems: "flex-start", flexWrap: "wrap", padding: "0 14px 2px" }}>
+        <div style={{ display: "grid", gap: 6, maxWidth: 820 }}>
+          <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: 0, textTransform: "uppercase" }}>Tu situación tributaria</p>
+          <h1 style={{ color: "var(--text)", fontSize: "clamp(1.65rem, 3.5vw, 2.25rem)", fontWeight: 950, margin: 0, letterSpacing: "-0.045em", fontFamily: fonts.display }}>Entiende tu resultado y qué debes hacer</h1>
+          <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>
+            Revisamos las operaciones incorporadas y te mostramos su significado en palabras simples.
+          </p>
+        </div>
+        <div style={{ display: "grid", justifyItems: "end", gap: 7 }}>
+          <span style={{ color: "var(--text-soft)", fontSize: 11.5 }}>Actualizado · {formatUpdated(lastUpdated)}</span>
+          <button
+            type="button"
+            onClick={updateAnalysis}
+            disabled={loading || rebuilding}
+            style={{
+              minHeight: 38,
+              border: "1px solid var(--border)",
+              borderRadius: 10,
+              background: "transparent",
+              color: "var(--text)",
+              cursor: loading || rebuilding ? "not-allowed" : "pointer",
+              opacity: loading || rebuilding ? 0.6 : 1,
+              fontFamily: fonts.body,
+              fontSize: 12.5,
+              fontWeight: 850,
+              padding: "8px 13px",
+            }}
+          >
+            {rebuilding ? "Actualizando…" : "Actualizar análisis"}
           </button>
         </div>
-      </section>
+      </header>
 
-      <section style={{ background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 100%)", border: "1px solid var(--border)", borderRadius: 24, padding: 18, boxShadow: "0 14px 34px rgba(15,42,61,0.06)", display: "grid", gap: 14 }}>
-        {message && <p style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 12, color: "var(--accent)", fontSize: 13, fontFamily: fonts.body, fontWeight: 750, margin: 0, padding: "9px 12px" }}>{message}</p>}
-        {error && <p style={{ background: "rgba(196,99,74,0.14)", border: "1px solid rgba(196,99,74,0.14)", borderRadius: 12, color: "var(--loss)", fontSize: 13, fontFamily: fonts.body, fontWeight: 750, margin: 0, padding: "9px 12px" }}>Error: {error}</p>}
+      {message && (
+        <p role="status" style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 12, color: "var(--accent)", fontSize: 12.5, fontWeight: 750, margin: 0, padding: "9px 12px" }}>
+          {message}
+        </p>
+      )}
 
-        {loading ? (
-          <p style={{ color: "var(--text-soft)", fontSize: 13, fontFamily: fonts.body, margin: 0 }}>Cargando situación tributaria…</p>
-        ) : !hasConfirmed ? (
-          <article style={card}>
-            <h2 style={{ color: "var(--text)", fontSize: "clamp(1.15rem,2vw,1.45rem)", fontWeight: 950, margin: "0 0 6px", fontFamily: fonts.display }}>Aún no hay operaciones para analizar</h2>
-            <p style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.45, margin: 0, fontFamily: fonts.body }}>Primero carga información en Origen de Fondos, confirma movimientos en Importaciones y revisa Activos.</p>
-          </article>
-        ) : (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10 }}>
-              <DecisionCard title="Declaración / respaldo" status="Información tributaria registrada" tone="amber" text={`${summary.confirmed.length} operaciones documentadas y ${summary.assetCount} activos con base de costo. Aunque no haya impuesto inmediato, esta información debe conservarse para respaldo y futuras declaraciones.`} />
-              <DecisionCard title="Pago estimado" status={hasTaxEvents ? "Requiere cálculo" : "Sin impuesto inmediato detectado"} tone={hasTaxEvents ? "amber" : "green"} text={hasTaxEvents ? "LEDGERA detectó eventos que podrían generar impuesto. Revisa su clasificación y resultado." : "No hay ventas, permutas ni rendimientos detectados. Con la información actual, no se observa impuesto inmediato a pagar."} />
+      {error && (
+        <div role="alert" style={{ background: "rgba(196,99,74,0.12)", border: "1px solid rgba(196,99,74,0.28)", borderRadius: 14, color: "var(--loss)", fontSize: 12.5, fontWeight: 750, padding: "11px 13px", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <span>{error}</span>
+          {!staging && <button type="button" onClick={() => void load()} style={{ border: "1px solid currentColor", borderRadius: 9, background: "transparent", color: "inherit", padding: "7px 11px", cursor: "pointer", fontWeight: 850 }}>Reintentar</button>}
+        </div>
+      )}
+
+      {loading ? (
+        <section style={{ ...card, minHeight: 250, display: "grid", placeItems: "center", color: "var(--text-soft)", fontSize: 13 }}>
+          Analizando tu situación tributaria…
+        </section>
+      ) : !hasConfirmed ? (
+        <section style={{ ...card, minHeight: 250, display: "grid", placeItems: "center", textAlign: "center" }}>
+          <div style={{ maxWidth: 560 }}>
+            <h2 style={{ color: "var(--text)", fontSize: "clamp(1.2rem, 2.5vw, 1.55rem)", fontWeight: 950, margin: "0 0 8px", fontFamily: fonts.display }}>Aún no hay operaciones para analizar</h2>
+            <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5, margin: "0 0 14px" }}>
+              Primero incorpora información en Origen de Fondos y confirma los movimientos en Importaciones.
+            </p>
+            <ButtonLink href="/origen-fondos" primary>Incorporar información</ButtonLink>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section style={{ ...card, border: `1px solid ${resultCopy.border}`, background: resultCopy.background, padding: "clamp(20px, 3vw, 30px)", display: "grid", gap: 10 }}>
+            <p style={{ color: resultCopy.color, fontSize: 11, fontWeight: 900, letterSpacing: ".08em", margin: 0, textTransform: "uppercase" }}>{resultCopy.eyebrow}</p>
+            <h2 style={{ color: "var(--text)", fontSize: "clamp(1.45rem, 3vw, 2rem)", fontWeight: 950, margin: 0, letterSpacing: "-.035em", fontFamily: fonts.display }}>{resultCopy.title}</h2>
+            <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.6, margin: 0, maxWidth: 920 }}>{resultCopy.body}</p>
+            <p style={{ color: "var(--text-soft)", fontSize: 12, lineHeight: 1.5, margin: "2px 0 0" }}>
+              Resultado preliminar basado únicamente en las operaciones y respaldos actualmente incorporados.
+            </p>
+          </section>
+
+          <section aria-labelledby="tax-why" style={{ display: "grid", gap: 10 }}>
+            <h2 id="tax-why" style={{ color: "var(--text)", fontSize: 16, fontWeight: 950, margin: 0, fontFamily: fonts.display }}>¿Por qué LEDGERA llegó a esta conclusión?</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
+              <MetricCard value={summary.confirmed.length} label="Operaciones analizadas" detail="Movimientos confirmados incorporados al análisis." />
+              <MetricCard value={summary.assetCount} label="Activos identificados" detail="Criptoactivos presentes en las operaciones confirmadas." />
+              <MetricCard
+                value={analysisState === "IMPACT" ? taxAnalysis.taxable.length : attentionCount}
+                label={analysisState === "IMPACT" ? "Con posible impacto" : "Requieren revisión"}
+                detail={analysisState === "IMPACT" ? "Operaciones con resultado tributario calculado." : "Registros que aún necesitan atención."}
+              />
             </div>
+          </section>
 
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Pill label="operaciones confirmadas" value={summary.confirmed.length} tone="green" />
-              <Pill label="activos con base de costo" value={summary.assetCount} tone="blue" />
-              <Pill label="compras/base de costo" value={summary.buyCount} tone="amber" />
-              <Pill label="ventas/permutas" value={summary.sellOrSwapCount} tone={summary.sellOrSwapCount > 0 ? "red" : "slate"} />
-              <Pill label="rendimientos" value={summary.yieldCount} tone={summary.yieldCount > 0 ? "red" : "slate"} />
-              <Pill label="eventos imponibles detectados" value={events.length} tone={events.length > 0 ? "red" : "green"} />
+          <section style={{ ...card, display: "grid", gap: 10 }}>
+            <div>
+              <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 900, letterSpacing: ".07em", margin: "0 0 5px", textTransform: "uppercase" }}>Qué debes hacer ahora</p>
+              <h2 style={{ color: "var(--text)", fontSize: "clamp(1.15rem, 2vw, 1.45rem)", fontWeight: 950, margin: "0 0 7px", fontFamily: fonts.display }}>
+                {analysisState === "REVIEW"
+                  ? `Revisa ${attentionCount} ${attentionCount === 1 ? "registro" : "registros"}`
+                  : analysisState === "IMPACT"
+                    ? "Revisa el cálculo antes de declarar"
+                    : "No tienes tareas tributarias pendientes"}
+              </h2>
+              <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0, maxWidth: 900 }}>
+                {analysisState === "REVIEW"
+                  ? "Completa o corrige la información pendiente para que LEDGERA pueda entregar un resultado confiable."
+                  : analysisState === "IMPACT"
+                    ? "Comprueba las operaciones incluidas, su resultado y los respaldos asociados antes de continuar con tu declaración."
+                    : "Conserva los comprobantes y antecedentes de tus operaciones. LEDGERA los utilizará cuando exista una venta u otra operación con impacto tributario."}
+              </p>
             </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 3 }}>
+              {analysisState === "REVIEW" ? (
+                <>
+                  <ButtonLink href="/importaciones" primary>Resolver operaciones</ButtonLink>
+                  <ButtonLink href="/cryptoactivos">Revisar activos</ButtonLink>
+                </>
+              ) : analysisState === "IMPACT" ? (
+                <>
+                  <ButtonLink href="/declaraciones" primary>Revisar cálculo</ButtonLink>
+                  <ButtonLink href="/cryptoactivos">Ver operaciones</ButtonLink>
+                </>
+              ) : (
+                <>
+                  <ButtonLink href="/documentos" primary>Ver respaldo registrado</ButtonLink>
+                  <ButtonLink href="/cryptoactivos">Revisar operaciones</ButtonLink>
+                </>
+              )}
+            </div>
+          </section>
 
-            <article style={{ ...card, border: "1px solid var(--accent-soft)", background: "var(--bg-elev)" }}>
-              <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: "0 0 6px", textTransform: "uppercase", fontFamily: fonts.body }}>IA LEDGERA dice</p>
-              <h2 style={{ color: "var(--text)", fontSize: "clamp(1.12rem,2vw,1.35rem)", fontWeight: 950, margin: "0 0 8px", fontFamily: fonts.display }}>No pagar hoy no significa no declarar ni respaldar</h2>
-              <p style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.5, margin: 0, fontFamily: fonts.body }}>
-                Detecté {summary.confirmed.length} operaciones asociadas a {summary.assetCount} activos. {summary.buyCount > 0 ? `Interpreto que ${summary.buyCount} ${summary.buyCount === 1 ? "operación corresponde" : "operaciones corresponden"} a compra/base de costo. ` : ""}Una compra spot normalmente no genera impuesto inmediato a pagar, pero sí es relevante para declarar, respaldar y calcular costo tributario futuro.
-              </p>
-              <p style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.5, margin: "6px 0 0", fontFamily: fonts.body }}>
-                Cuando exista venta, permuta, retiro tributariamente relevante, staking, reward o airdrop, usaré esta base de costo para estimar ganancia, pérdida e impacto tributario.
-              </p>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-                <ButtonLink href="/cryptoactivos" primary>Revisar activos</ButtonLink>
-                <ButtonLink href="/origen-fondos/documentacion">Subir otro documento</ButtonLink>
-                <ButtonLink href="/reportes">Preparar reportes</ButtonLink>
+          <section style={{ ...card, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16 }}>
+            <ContextItem label="Período analizado" value={summary.period} />
+            <ContextItem label="Fuentes incluidas" value={sourceLabel} />
+            <ContextItem label="Última actualización" value={formatUpdated(lastUpdated)} />
+          </section>
+
+          <details style={{ ...card, padding: 0, overflow: "hidden" }}>
+            <summary style={{ cursor: "pointer", color: "var(--text)", fontSize: 13.5, fontWeight: 900, padding: "15px 18px", listStylePosition: "inside" }}>Ver detalle técnico</summary>
+            <div style={{ borderTop: "1px solid var(--border)", padding: "14px 18px 18px", display: "grid", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
+                <ContextItem label="Eventos calculados" value={String(events.length)} />
+                <ContextItem label="Con posible impacto" value={String(taxAnalysis.taxable.length)} />
+                <ContextItem label="No afectos" value={String(taxAnalysis.nonTaxable.length)} />
+                <ContextItem label="Pendientes de clasificación" value={String(taxAnalysis.pending.length)} />
               </div>
-            </article>
-          </>
-        )}
-      </section>
+              {taxAnalysis.taxable.length > 0 && (
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.5, margin: 0 }}>
+                  Resultado acumulado calculado: <strong style={{ color: "var(--text)" }}>{formatClp(taxAnalysis.realizedPnlClp)}</strong>. Este valor representa ganancia o pérdida calculada, no el impuesto final.
+                </p>
+              )}
+            </div>
+          </details>
 
-      <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-        <PredictiveCard title="Si vendes cripto" text="LEDGERA calculará ganancia o pérdida usando la base de costo registrada." />
-        <PredictiveCard title="Si haces swap o permuta" text="Puede existir evento tributario aunque no retires dinero a banco." />
-        <PredictiveCard title="Si recibes staking, rewards o airdrops" text="La operación puede requerir clasificación tributaria adicional." />
-        <PredictiveCard title="Si mueves entre wallets propias" text="Normalmente no debería ser venta, pero conviene respaldar propiedad y trazabilidad." />
-      </section>
+          <details style={{ ...card, padding: 0, overflow: "hidden" }}>
+            <summary style={{ cursor: "pointer", color: "var(--text)", fontSize: 13.5, fontWeight: 900, padding: "15px 18px", listStylePosition: "inside" }}>Qué podría cambiar tu situación tributaria</summary>
+            <div style={{ borderTop: "1px solid var(--border)", padding: "14px 18px 18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Vender cripto</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Puede generar una ganancia o pérdida que deba calcularse.</p></article>
+              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Intercambiar un activo por otro</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Un intercambio puede requerir revisión aunque no retires dinero al banco.</p></article>
+              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Recibir staking, rewards o airdrops</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Estos ingresos pueden necesitar clasificación tributaria adicional.</p></article>
+              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Mover fondos entre cuentas propias</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Conviene mantener respaldo para demostrar propiedad y trazabilidad.</p></article>
+            </div>
+          </details>
+        </>
+      )}
     </main>
   );
 }
