@@ -27,6 +27,18 @@ import {
 
 export const runtime = "nodejs";
 
+const TWO_FACTOR_CHALLENGE_COOKIE = "ledgera_2fa_challenge";
+
+function clearChallengeCookie(response: NextResponse) {
+  response.cookies.set(TWO_FACTOR_CHALLENGE_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    path: "/api/2fa/login",
+    expires: new Date(0),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const rateLimitResponse = enforceRequestRateLimit(req, {
     scope: "2fa-login",
@@ -43,7 +55,11 @@ export async function POST(req: NextRequest) {
       challenge?: string;
       code?: string;
     };
-    const challenge = String(body.challenge ?? "").trim();
+    const challenge = String(
+      body.challenge ??
+        req.cookies.get(TWO_FACTOR_CHALLENGE_COOKIE)?.value ??
+        "",
+    ).trim();
     const code = String(body.code ?? "").replace(/\D/g, "").slice(0, 6);
 
     if (!challenge || code.length !== 6) {
@@ -55,13 +71,15 @@ export async function POST(req: NextRequest) {
 
     const challengeIdentity = await readTwoFactorLoginChallenge(challenge);
     if (!challengeIdentity) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           ok: false,
           message: "La verificación expiró. Ingresa nuevamente tu contraseña.",
         },
         { status: 401 },
       );
+      clearChallengeCookie(response);
+      return response;
     }
 
     const user = await getUserById(challengeIdentity.userId);
@@ -105,13 +123,15 @@ export async function POST(req: NextRequest) {
       consumedIdentity.userId !== user.id ||
       consumedIdentity.email !== user.email.toLowerCase()
     ) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           ok: false,
           message: "La verificación ya fue utilizada o expiró. Inicia sesión nuevamente.",
         },
         { status: 401 },
       );
+      clearChallengeCookie(response);
+      return response;
     }
 
     const sessionToken = generateSessionToken();
@@ -167,6 +187,7 @@ export async function POST(req: NextRequest) {
       path: "/",
       expires: expiresAt,
     });
+    clearChallengeCookie(response);
     setCsrfCookie(response, generateCsrfToken());
 
     return response;
