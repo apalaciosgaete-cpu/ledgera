@@ -17,9 +17,6 @@ export async function GET(req: NextRequest) {
 
   try {
     const sessions = await listSessionsByUserId(auth.user.id);
-    const twoFactorEnabled = Boolean(
-      auth.user.twoFactorEnabled && auth.user.twoFactorSecret,
-    );
 
     return NextResponse.json(
       {
@@ -34,7 +31,7 @@ export async function GET(req: NextRequest) {
             verified: Boolean(auth.user.emailVerifiedAt),
           },
           twoFactor: {
-            enabled: twoFactorEnabled,
+            enabled: auth.user.twoFactorEnabled,
           },
           sessions: sessions.map((session) => ({
             id: session.id,
