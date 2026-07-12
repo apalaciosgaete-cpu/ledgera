@@ -1,5 +1,5 @@
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -131,6 +131,10 @@ export async function POST(req: NextRequest) {
 
     clearLoginRateLimit(rateLimitKey);
 
+    const twoFactorEnabled = Boolean(
+      user.twoFactorEnabled && user.twoFactorSecret,
+    );
+
     const response = NextResponse.json({
       ok: true,
       message: "Inicio de sesión correcto.",
@@ -143,7 +147,7 @@ export async function POST(req: NextRequest) {
           status: user.status,
           subscriptionPlan: user.subscriptionPlan,
           subscriptionExpiresAt: user.subscriptionExpiresAt,
-          twoFactorEnabled: user.twoFactorEnabled,
+          twoFactorEnabled,
         },
         session: {
           id: session.id,
