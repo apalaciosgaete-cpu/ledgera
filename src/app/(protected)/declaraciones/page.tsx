@@ -110,7 +110,6 @@ export default function DeclaracionesPage() {
     <div style={{ display: "grid", gap: 16, maxWidth: 1180, width: "100%" }}>
       <section style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between" }}>
         <div style={{ maxWidth: 720 }}>
-          <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850, letterSpacing: "0.06em", margin: "0 0 7px", textTransform: "uppercase" }}>Declaraciones</p>
           <h1 style={{ color: "var(--text)", fontSize: "1.85rem", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, margin: "0 0 8px", maxWidth: 720 }}>
             Prepara tu respaldo para el Formulario 22
           </h1>
@@ -159,7 +158,7 @@ export default function DeclaracionesPage() {
         <article style={{ background: "var(--bg-elev)", border: "1px solid var(--accent-soft)", borderRadius: 20, display: "grid", gap: 14, padding: 18 }}>
           <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
             <span style={{ background: "var(--accent-soft)", borderRadius: 999, color: "var(--accent)", fontSize: 11.5, fontWeight: 900, padding: "6px 9px" }}>Documento principal</span>
-            <span style={{ color: "var(--text-soft)", fontSize: 12.5, fontWeight: 850 }}>AT {taxYear}</span>
+            <span style={{ color: "var(--text-soft)", fontSize: 12.5, fontWeight: 850 }}>Año Tributario {taxYear}</span>
           </div>
           <div>
             <h2 style={{ color: "var(--text)", fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 6px" }}>Extracto F22 para criptoactivos</h2>
@@ -188,7 +187,7 @@ export default function DeclaracionesPage() {
 
         <article style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 20, display: "grid", gap: 14, padding: 18 }}>
           <div>
-            <h2 style={{ color: "var(--text)", fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 6px" }}>Paquete tributario AT {taxYear}</h2>
+            <h2 style={{ color: "var(--text)", fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 6px" }}>Paquete tributario · Año Tributario {taxYear}</h2>
             <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.48, margin: 0 }}>
               Informe PDF y Excel con base de costo, eventos tributarios, detalle de operaciones y trazabilidad filtrados por el año comercial {commercialYear}.
             </p>
@@ -197,8 +196,8 @@ export default function DeclaracionesPage() {
             Úsalo como respaldo del cálculo que sustenta el extracto F22. El PDF incorpora verificación por QR y el Excel conserva el detalle completo.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <a href={`/api/tax/declarations/support/pdf?year=${year}`} target="_blank" rel="noopener noreferrer" style={primaryButtonStyle}>PDF anual</a>
-            <a href={`/api/tax/declarations/support/xlsx?year=${year}`} target="_blank" rel="noopener noreferrer" style={secondaryButtonStyle}>Excel anual</a>
+            <a href={`/api/tax/declarations/support/pdf?year=${year}`} target="_blank" rel="noopener noreferrer" style={{ ...primaryButtonStyle, borderRadius: 12, minWidth: 112 }}>PDF anual</a>
+            <a href={`/api/tax/declarations/support/xlsx?year=${year}`} target="_blank" rel="noopener noreferrer" style={{ ...secondaryButtonStyle, borderRadius: 12, minWidth: 112 }}>Excel anual</a>
           </div>
         </article>
       </section>
