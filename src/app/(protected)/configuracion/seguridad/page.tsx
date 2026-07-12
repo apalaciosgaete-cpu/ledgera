@@ -1,6 +1,7 @@
 "use client";
 
 import AdminSecurityPolicyPanel from "@/components/security/AdminSecurityPolicyPanel";
+import EmailVerificationPanel from "@/components/security/EmailVerificationPanel";
 import SecurityCenterPanel from "@/components/security/SecurityCenterPanel";
 import { fonts } from "@/styles/tokens";
 
@@ -17,6 +18,7 @@ export default function SeguridadPage() {
       </div>
 
       <AdminSecurityPolicyPanel />
+      <EmailVerificationPanel />
       <SecurityCenterPanel />
     </>
   );
