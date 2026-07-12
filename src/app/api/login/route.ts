@@ -26,6 +26,8 @@ import {
 
 export const runtime = "nodejs";
 
+const TWO_FACTOR_CHALLENGE_COOKIE = "ledgera_2fa_challenge";
+
 type LoginRequestBody = {
   email?: string;
   password?: string;
@@ -119,15 +121,24 @@ export async function POST(req: NextRequest) {
         email: user.email,
       });
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         ok: true,
         message: "Ingresa el código de tu aplicación autenticadora.",
         twoFactorRequired: true,
         pendingUserId: user.id,
         pendingEmail: user.email,
-        twoFactorChallenge: challenge.token,
         data: null,
       });
+
+      response.cookies.set(TWO_FACTOR_CHALLENGE_COOKIE, challenge.token, {
+        httpOnly: true,
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        path: "/api/2fa/login",
+        expires: challenge.expires,
+      });
+
+      return response;
     }
 
     const sessionToken = generateSessionToken();
