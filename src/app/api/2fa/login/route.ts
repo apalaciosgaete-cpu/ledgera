@@ -1,22 +1,31 @@
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import speakeasy from "speakeasy";
 
-import { prisma } from "@/lib/prisma";
 import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import {
+  consumeTwoFactorLoginChallenge,
+  readTwoFactorLoginChallenge,
+} from "@/modules/identity/application/twoFactorLoginChallenge";
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import {
   buildSessionExpirationDate,
   generateSessionToken,
 } from "@/modules/identity/application/sessionToken";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+import {
+  generateCsrfToken,
+  setCsrfCookie,
+} from "@/modules/security/application/csrfProtection";
+
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const rateLimitResponse = enforceRequestRateLimit(req, {
@@ -30,18 +39,39 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { userId, code } = await req.json();
+    const body = (await req.json()) as {
+      challenge?: string;
+      code?: string;
+    };
+    const challenge = String(body.challenge ?? "").trim();
+    const code = String(body.code ?? "").replace(/\D/g, "").slice(0, 6);
 
-    if (!userId || !code) {
+    if (!challenge || code.length !== 6) {
       return NextResponse.json(
-        { ok: false, message: "userId y code son requeridos." },
+        { ok: false, message: "Desafío y código 2FA son requeridos." },
         { status: 400 },
       );
     }
 
-    const user = await getUserById(userId);
+    const challengeIdentity = await readTwoFactorLoginChallenge(challenge);
+    if (!challengeIdentity) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "La verificación expiró. Ingresa nuevamente tu contraseña.",
+        },
+        { status: 401 },
+      );
+    }
 
-    if (!user || !user.twoFactorSecret) {
+    const user = await getUserById(challengeIdentity.userId);
+
+    if (
+      !user ||
+      user.email.toLowerCase() !== challengeIdentity.email ||
+      !user.twoFactorEnabled ||
+      !user.twoFactorSecret
+    ) {
       return NextResponse.json(
         { ok: false, message: "Usuario no válido o 2FA no configurado." },
         { status: 400 },
@@ -65,15 +95,23 @@ export async function POST(req: NextRequest) {
     if (!isValid) {
       return NextResponse.json(
         { ok: false, message: "Código inválido. Intenta nuevamente." },
-        { status: 400 },
+        { status: 401 },
       );
     }
 
-    if (!user.twoFactorEnabled) {
-      await prisma.users.update({
-        where: { id: user.id },
-        data: { twoFactorEnabled: true, updated_at: new Date() },
-      });
+    const consumedIdentity = await consumeTwoFactorLoginChallenge(challenge);
+    if (
+      !consumedIdentity ||
+      consumedIdentity.userId !== user.id ||
+      consumedIdentity.email !== user.email.toLowerCase()
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "La verificación ya fue utilizada o expiró. Inicia sesión nuevamente.",
+        },
+        { status: 401 },
+      );
     }
 
     const sessionToken = generateSessionToken();
@@ -129,6 +167,7 @@ export async function POST(req: NextRequest) {
       path: "/",
       expires: expiresAt,
     });
+    setCsrfCookie(response, generateCsrfToken());
 
     return response;
   } catch (error) {
