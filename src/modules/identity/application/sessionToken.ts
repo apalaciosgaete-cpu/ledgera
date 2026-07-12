@@ -65,11 +65,14 @@ export async function getSessionFromRequest(request: Request) {
       user: {
         id: user.id,
         email: user.email,
+        emailVerifiedAt: user.emailVerifiedAt,
         role: user.role,
         status: user.status,
         subscriptionPlan: user.subscriptionPlan,
         subscriptionExpiresAt: user.subscriptionExpiresAt,
-        twoFactorEnabled: user.twoFactorEnabled,
+        twoFactorEnabled: Boolean(
+          user.twoFactorEnabled && user.twoFactorSecret,
+        ),
         needsOnboarding: !user.onboardingCompleted,
       },
       session: {
