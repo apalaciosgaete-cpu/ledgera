@@ -1,5 +1,5 @@
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // src/app/api/me/route.ts
 
