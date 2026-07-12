@@ -72,6 +72,15 @@ const card: CSSProperties = {
   boxShadow: "0 12px 26px rgba(15,42,61,0.04)",
 };
 
+const genericSourceLabels = new Set([
+  "EXCHANGE",
+  "EXCHANGES",
+  "IMPORTACION",
+  "IMPORTACIÓN",
+  "API",
+  "ARCHIVO",
+]);
+
 function extractAsset(item: StagingItem): string {
   return item.amountLabel.match(/\b[A-Z0-9]{2,12}\b$/)?.[0]
     ?? item.subtitle.match(/·\s*([A-Z0-9]{2,12})\b/)?.[1]
@@ -82,6 +91,7 @@ function formatDate(value: string | null | undefined): string {
   if (!value) return "Sin fecha";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Sin fecha";
+
   return date.toLocaleDateString("es-CL", {
     day: "2-digit",
     month: "2-digit",
@@ -91,6 +101,7 @@ function formatDate(value: string | null | undefined): string {
 
 function formatUpdated(value: Date | null): string {
   if (!value) return "Sin actualización registrada";
+
   return value.toLocaleString("es-CL", {
     day: "2-digit",
     month: "2-digit",
@@ -117,6 +128,7 @@ function buildPeriod(items: StagingItem[]): string {
     .sort((a, b) => a.timestamp - b.timestamp);
 
   if (dates.length === 0) return "Sin período disponible";
+
   const first = formatDate(dates[0].value);
   const last = formatDate(dates[dates.length - 1].value);
   return first === last ? first : `${first} al ${last}`;
@@ -124,13 +136,23 @@ function buildPeriod(items: StagingItem[]): string {
 
 function summarize(items: StagingItem[]): TaxSummary {
   const confirmed = items.filter((item) => item.status === "CONFIRMED");
-  const reviewCount = items.filter((item) => item.status === "PENDING" || item.status === "REVIEW").length;
-  const sources = Array.from(new Set(
+  const reviewCount = items.filter(
+    (item) => item.status === "PENDING" || item.status === "REVIEW",
+  ).length;
+
+  const rawSources = Array.from(new Set(
     confirmed
       .flatMap((item) => [item.provider, ...(item.sources ?? []), item.source])
       .filter((value): value is string => Boolean(value?.trim()))
       .map((value) => value.trim()),
-  )).sort((a, b) => a.localeCompare(b));
+  ));
+
+  const specificSources = rawSources.filter(
+    (value) => !genericSourceLabels.has(value.toUpperCase()),
+  );
+
+  const sources = (specificSources.length > 0 ? specificSources : rawSources)
+    .sort((a, b) => a.localeCompare(b));
 
   return {
     confirmed,
@@ -148,20 +170,36 @@ function analyzeEvents(events: TaxEvent[]): TaxAnalysis {
 
   for (const event of events) {
     const category = (event.effectiveTaxCategory ?? "").trim().toUpperCase();
-    if (category === "CAPITAL_GAIN" || category === "ORDINARY_INCOME") taxable.push(event);
-    else if (category === "NON_TAXABLE") nonTaxable.push(event);
-    else pending.push(event);
+
+    if (category === "CAPITAL_GAIN" || category === "ORDINARY_INCOME") {
+      taxable.push(event);
+    } else if (category === "NON_TAXABLE") {
+      nonTaxable.push(event);
+    } else {
+      pending.push(event);
+    }
   }
 
   return {
     taxable,
     nonTaxable,
     pending,
-    realizedPnlClp: taxable.reduce((total, event) => total + Number(event.realizedPnlClp ?? 0), 0),
+    realizedPnlClp: taxable.reduce(
+      (total, event) => total + Number(event.realizedPnlClp ?? 0),
+      0,
+    ),
   };
 }
 
-function ButtonLink({ href, children, primary = false }: { href: string; children: ReactNode; primary?: boolean }) {
+function ButtonLink({
+  href,
+  children,
+  primary = false,
+}: {
+  href: string;
+  children: ReactNode;
+  primary?: boolean;
+}) {
   return (
     <a
       href={href}
@@ -187,12 +225,56 @@ function ButtonLink({ href, children, primary = false }: { href: string; childre
   );
 }
 
-function MetricCard({ value, label, detail }: { value: number; label: string; detail: string }) {
+function MetricCard({
+  value,
+  label,
+  detail,
+}: {
+  value: number;
+  label: string;
+  detail: string;
+}) {
   return (
-    <article style={{ ...card, minHeight: 112, display: "grid", alignContent: "center", gap: 5, textAlign: "center" }}>
-      <strong style={{ color: "var(--accent)", fontSize: 24, lineHeight: 1, fontFamily: fonts.display }}>{value}</strong>
-      <span style={{ color: "var(--text)", fontSize: 14, fontWeight: 900, fontFamily: fonts.body }}>{label}</span>
-      <span style={{ color: "var(--text-soft)", fontSize: 12, lineHeight: 1.35, fontFamily: fonts.body }}>{detail}</span>
+    <article
+      style={{
+        ...card,
+        minHeight: 112,
+        display: "grid",
+        alignContent: "center",
+        gap: 5,
+        textAlign: "center",
+      }}
+    >
+      <strong
+        style={{
+          color: "var(--accent)",
+          fontSize: 24,
+          lineHeight: 1,
+          fontFamily: fonts.display,
+        }}
+      >
+        {value}
+      </strong>
+      <span
+        style={{
+          color: "var(--text)",
+          fontSize: 14,
+          fontWeight: 900,
+          fontFamily: fonts.body,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          color: "var(--text-soft)",
+          fontSize: 12,
+          lineHeight: 1.35,
+          fontFamily: fonts.body,
+        }}
+      >
+        {detail}
+      </span>
     </article>
   );
 }
@@ -200,8 +282,28 @@ function MetricCard({ value, label, detail }: { value: number; label: string; de
 function ContextItem({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "grid", gap: 3 }}>
-      <span style={{ color: "var(--text-soft)", fontSize: 10.5, fontWeight: 850, letterSpacing: ".05em", textTransform: "uppercase", fontFamily: fonts.body }}>{label}</span>
-      <strong style={{ color: "var(--text)", fontSize: 12.5, lineHeight: 1.35, fontFamily: fonts.body }}>{value}</strong>
+      <span
+        style={{
+          color: "var(--text-soft)",
+          fontSize: 10.5,
+          fontWeight: 850,
+          letterSpacing: ".05em",
+          textTransform: "uppercase",
+          fontFamily: fonts.body,
+        }}
+      >
+        {label}
+      </span>
+      <strong
+        style={{
+          color: "var(--text)",
+          fontSize: 12.5,
+          lineHeight: 1.35,
+          fontFamily: fonts.body,
+        }}
+      >
+        {value}
+      </strong>
     </div>
   );
 }
@@ -217,14 +319,56 @@ function GenericModulePage({ module, sections }: Props) {
   return (
     <main style={{ display: "grid", gap: 14, alignContent: "start" }}>
       <section style={{ padding: "0 14px 4px" }}>
-        <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 850, letterSpacing: "0.08em", margin: "0 0 6px", textTransform: "uppercase", fontFamily: fonts.body }}>LEDGERA</p>
-        <h1 style={{ color: "var(--text)", fontSize: "clamp(1.3rem, 3.5vw, 1.8rem)", fontWeight: 900, margin: 0, letterSpacing: "-0.04em", fontFamily: fonts.display }}>{module.label}</h1>
+        <p
+          style={{
+            color: "var(--accent)",
+            fontSize: 11,
+            fontWeight: 850,
+            letterSpacing: "0.08em",
+            margin: "0 0 6px",
+            textTransform: "uppercase",
+            fontFamily: fonts.body,
+          }}
+        >
+          LEDGERA
+        </p>
+        <h1
+          style={{
+            color: "var(--text)",
+            fontSize: "clamp(1.3rem, 3.5vw, 1.8rem)",
+            fontWeight: 900,
+            margin: 0,
+            letterSpacing: "-0.04em",
+            fontFamily: fonts.display,
+          }}
+        >
+          {module.label}
+        </h1>
       </section>
-      <section style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+
+      <section
+        style={{
+          display: "grid",
+          gap: 10,
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        }}
+      >
         {cards.map((text, index) => (
           <article key={text} style={card}>
-            <span style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850 }}>{String(index + 1).padStart(2, "0")}</span>
-            <p style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.45, margin: "10px 0 0", fontFamily: fonts.body }}>{text}</p>
+            <span style={{ color: "var(--accent)", fontSize: 12, fontWeight: 850 }}>
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <p
+              style={{
+                color: "var(--text)",
+                fontSize: 13.5,
+                lineHeight: 1.45,
+                margin: "10px 0 0",
+                fontFamily: fonts.body,
+              }}
+            >
+              {text}
+            </p>
           </article>
         ))}
       </section>
@@ -248,16 +392,22 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
     try {
       if (showLoading) setLoading(true);
       setError(null);
+
       const [eventsRes, stagingRes] = await Promise.all([
         fetch("/api/tax/events", { cache: "no-store", credentials: "include" }),
         fetch("/api/imports/staging", { cache: "no-store", credentials: "include" }),
       ]);
 
-      if (!eventsRes.ok) throw new Error("No fue posible obtener el resultado tributario.");
-      if (!stagingRes.ok) throw new Error("No fue posible obtener las operaciones confirmadas.");
+      if (!eventsRes.ok) {
+        throw new Error("No fue posible obtener el resultado tributario.");
+      }
+      if (!stagingRes.ok) {
+        throw new Error("No fue posible obtener las operaciones confirmadas.");
+      }
 
       const eventsJson = await eventsRes.json();
       const stagingJson = await stagingRes.json() as ApiResponse<StagingData>;
+
       setEvents(eventsJson?.data?.events ?? []);
       setStaging(stagingJson.data);
       setLastUpdated(new Date());
@@ -286,21 +436,30 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
         credentials: "include",
       });
       const result = await response.json().catch(() => null);
+
       if (!response.ok || result?.ok === false) {
         throw new Error(result?.message || "No fue posible actualizar el análisis tributario.");
       }
 
       const refreshed = await load(false);
-      if (!refreshed) throw new Error("El análisis se actualizó, pero no fue posible recargar el resultado.");
+      if (!refreshed) {
+        throw new Error("El análisis se actualizó, pero no fue posible recargar el resultado.");
+      }
       setMessage("Análisis actualizado correctamente.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No fue posible actualizar el análisis tributario.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible actualizar el análisis tributario.",
+      );
     } finally {
       setRebuilding(false);
     }
   }
 
-  if (!isTaxObligations) return <GenericModulePage module={module} sections={sections} />;
+  if (!isTaxObligations) {
+    return <GenericModulePage module={module} sections={sections} />;
+  }
 
   const summary = summarize(staging?.items ?? []);
   const taxAnalysis = analyzeEvents(events);
@@ -314,47 +473,80 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
 
   const resultCopy = analysisState === "REVIEW"
     ? {
-        eyebrow: "Necesita tu atención",
+        eyebrow: "Información pendiente",
         title: "Tu situación tributaria todavía no está completa",
         body: `Encontramos ${attentionCount} ${attentionCount === 1 ? "registro que necesita" : "registros que necesitan"} revisión antes de cerrar el análisis. El resultado puede cambiar cuando se complete esa información.`,
-        color: "#E8B84B",
-        background: "rgba(245,158,11,0.10)",
-        border: "rgba(245,158,11,0.30)",
+        signal: "#E8B84B",
       }
     : analysisState === "IMPACT"
       ? {
-          eyebrow: "Posible impacto tributario",
+          eyebrow: "Revisión tributaria",
           title: "Detectamos operaciones que debes revisar",
           body: `LEDGERA calculó resultado para ${taxAnalysis.taxable.length} ${taxAnalysis.taxable.length === 1 ? "operación" : "operaciones"}. El resultado acumulado es ${formatClp(taxAnalysis.realizedPnlClp)}; esta cifra no corresponde todavía al impuesto final.`,
-          color: "var(--loss)",
-          background: "rgba(196,99,74,0.12)",
-          border: "rgba(196,99,74,0.30)",
+          signal: "var(--loss)",
         }
       : {
-          eyebrow: "Resultado preliminar",
-          title: "No se detecta impuesto por pagar",
+          eyebrow: "Estado tributario",
+          title: "Sin impuestos por pagar",
           body: `LEDGERA revisó ${summary.confirmed.length} ${summary.confirmed.length === 1 ? "operación confirmada" : "operaciones confirmadas"} asociadas a ${summary.assetCount} ${summary.assetCount === 1 ? "activo" : "activos"}. No se encontraron eventos clasificados con impacto tributario en la información incorporada.`,
-          color: "#3FA687",
-          background: "rgba(22,163,74,0.08)",
-          border: "rgba(22,163,74,0.28)",
+          signal: "#3FA687",
         };
 
   const sourceLabel = summary.sources.length > 0
     ? summary.sources.join(", ")
-    : "Fuentes incorporadas en LEDGERA";
+    : "Sin fuente identificada";
 
   return (
-    <main style={{ display: "grid", gap: 16, alignContent: "start", paddingBottom: 64, fontFamily: fonts.body }}>
-      <header style={{ display: "flex", justifyContent: "space-between", gap: 18, alignItems: "flex-start", flexWrap: "wrap", padding: "0 14px 2px" }}>
-        <div style={{ display: "grid", gap: 6, maxWidth: 820 }}>
-          <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: 0, textTransform: "uppercase" }}>Tu situación tributaria</p>
-          <h1 style={{ color: "var(--text)", fontSize: "clamp(1.65rem, 3.5vw, 2.25rem)", fontWeight: 950, margin: 0, letterSpacing: "-0.045em", fontFamily: fonts.display }}>Entiende tu resultado y qué debes hacer</h1>
-          <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>
-            Revisamos las operaciones incorporadas y te mostramos su significado en palabras simples.
+    <main
+      style={{
+        display: "grid",
+        gap: 16,
+        alignContent: "start",
+        paddingBottom: 64,
+        fontFamily: fonts.body,
+      }}
+    >
+      <header
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 18,
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+          padding: "0 14px 2px",
+        }}
+      >
+        <div style={{ display: "grid", gap: 6, maxWidth: 900 }}>
+          <p
+            style={{
+              color: "var(--accent)",
+              fontSize: 11,
+              fontWeight: 900,
+              letterSpacing: "0.08em",
+              margin: 0,
+              textTransform: "uppercase",
+            }}
+          >
+            Tu situación tributaria
           </p>
+          <h1
+            style={{
+              color: "var(--text)",
+              fontSize: "clamp(1.65rem, 3.5vw, 2.25rem)",
+              fontWeight: 950,
+              margin: 0,
+              letterSpacing: "-0.045em",
+              fontFamily: fonts.display,
+            }}
+          >
+            Operaciones detectadas y resultado tributario
+          </h1>
         </div>
+
         <div style={{ display: "grid", justifyItems: "end", gap: 7 }}>
-          <span style={{ color: "var(--text-soft)", fontSize: 11.5 }}>Actualizado · {formatUpdated(lastUpdated)}</span>
+          <span style={{ color: "var(--text-soft)", fontSize: 11.5 }}>
+            Actualizado · {formatUpdated(lastUpdated)}
+          </span>
           <button
             type="button"
             onClick={updateAnalysis}
@@ -379,67 +571,262 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
       </header>
 
       {message && (
-        <p role="status" style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-soft)", borderRadius: 12, color: "var(--accent)", fontSize: 12.5, fontWeight: 750, margin: 0, padding: "9px 12px" }}>
+        <p
+          role="status"
+          style={{
+            background: "var(--accent-soft)",
+            border: "1px solid var(--accent-soft)",
+            borderRadius: 12,
+            color: "var(--accent)",
+            fontSize: 12.5,
+            fontWeight: 750,
+            margin: 0,
+            padding: "9px 12px",
+          }}
+        >
           {message}
         </p>
       )}
 
       {error && (
-        <div role="alert" style={{ background: "rgba(196,99,74,0.12)", border: "1px solid rgba(196,99,74,0.28)", borderRadius: 14, color: "var(--loss)", fontSize: 12.5, fontWeight: 750, padding: "11px 13px", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <div
+          role="alert"
+          style={{
+            background: "rgba(196,99,74,0.12)",
+            border: "1px solid rgba(196,99,74,0.28)",
+            borderRadius: 14,
+            color: "var(--loss)",
+            fontSize: 12.5,
+            fontWeight: 750,
+            padding: "11px 13px",
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <span>{error}</span>
-          {!staging && <button type="button" onClick={() => void load()} style={{ border: "1px solid currentColor", borderRadius: 9, background: "transparent", color: "inherit", padding: "7px 11px", cursor: "pointer", fontWeight: 850 }}>Reintentar</button>}
+          {!staging && (
+            <button
+              type="button"
+              onClick={() => void load()}
+              style={{
+                border: "1px solid currentColor",
+                borderRadius: 9,
+                background: "transparent",
+                color: "inherit",
+                padding: "7px 11px",
+                cursor: "pointer",
+                fontWeight: 850,
+              }}
+            >
+              Reintentar
+            </button>
+          )}
         </div>
       )}
 
       {loading ? (
-        <section style={{ ...card, minHeight: 250, display: "grid", placeItems: "center", color: "var(--text-soft)", fontSize: 13 }}>
+        <section
+          style={{
+            ...card,
+            minHeight: 250,
+            display: "grid",
+            placeItems: "center",
+            color: "var(--text-soft)",
+            fontSize: 13,
+          }}
+        >
           Analizando tu situación tributaria…
         </section>
       ) : !hasConfirmed ? (
-        <section style={{ ...card, minHeight: 250, display: "grid", placeItems: "center", textAlign: "center" }}>
+        <section
+          style={{
+            ...card,
+            minHeight: 250,
+            display: "grid",
+            placeItems: "center",
+            textAlign: "center",
+          }}
+        >
           <div style={{ maxWidth: 560 }}>
-            <h2 style={{ color: "var(--text)", fontSize: "clamp(1.2rem, 2.5vw, 1.55rem)", fontWeight: 950, margin: "0 0 8px", fontFamily: fonts.display }}>Aún no hay operaciones para analizar</h2>
-            <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5, margin: "0 0 14px" }}>
+            <h2
+              style={{
+                color: "var(--text)",
+                fontSize: "clamp(1.2rem, 2.5vw, 1.55rem)",
+                fontWeight: 950,
+                margin: "0 0 8px",
+                fontFamily: fonts.display,
+              }}
+            >
+              Aún no hay operaciones para analizar
+            </h2>
+            <p
+              style={{
+                color: "var(--text-soft)",
+                fontSize: 13.5,
+                lineHeight: 1.5,
+                margin: "0 0 14px",
+              }}
+            >
               Primero incorpora información en Origen de Fondos y confirma los movimientos en Importaciones.
             </p>
-            <ButtonLink href="/origen-fondos" primary>Incorporar información</ButtonLink>
+            <ButtonLink href="/origen-fondos" primary>
+              Incorporar información
+            </ButtonLink>
           </div>
         </section>
       ) : (
         <>
-          <section style={{ ...card, border: `1px solid ${resultCopy.border}`, background: resultCopy.background, padding: "clamp(20px, 3vw, 30px)", display: "grid", gap: 10 }}>
-            <p style={{ color: resultCopy.color, fontSize: 11, fontWeight: 900, letterSpacing: ".08em", margin: 0, textTransform: "uppercase" }}>{resultCopy.eyebrow}</p>
-            <h2 style={{ color: "var(--text)", fontSize: "clamp(1.45rem, 3vw, 2rem)", fontWeight: 950, margin: 0, letterSpacing: "-.035em", fontFamily: fonts.display }}>{resultCopy.title}</h2>
-            <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.6, margin: 0, maxWidth: 920 }}>{resultCopy.body}</p>
-            <p style={{ color: "var(--text-soft)", fontSize: 12, lineHeight: 1.5, margin: "2px 0 0" }}>
+          <section
+            style={{
+              ...card,
+              background: "var(--bg-elev)",
+              border: "1px solid var(--border)",
+              padding: "clamp(20px, 3vw, 30px)",
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 11,
+                  height: 11,
+                  flex: "0 0 11px",
+                  borderRadius: 999,
+                  background: resultCopy.signal,
+                  boxShadow: `0 0 0 4px color-mix(in srgb, ${resultCopy.signal} 16%, transparent)`,
+                }}
+              />
+              <p
+                style={{
+                  color: "var(--text-soft)",
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: ".08em",
+                  margin: 0,
+                  textTransform: "uppercase",
+                }}
+              >
+                {resultCopy.eyebrow}
+              </p>
+            </div>
+            <h2
+              style={{
+                color: "var(--text)",
+                fontSize: "clamp(1.45rem, 3vw, 2rem)",
+                fontWeight: 950,
+                margin: 0,
+                letterSpacing: "-.035em",
+                fontFamily: fonts.display,
+              }}
+            >
+              {resultCopy.title}
+            </h2>
+            <p
+              style={{
+                color: "var(--text)",
+                fontSize: 14,
+                lineHeight: 1.6,
+                margin: 0,
+                maxWidth: 920,
+              }}
+            >
+              {resultCopy.body}
+            </p>
+            <p
+              style={{
+                color: "var(--text-soft)",
+                fontSize: 12,
+                lineHeight: 1.5,
+                margin: "2px 0 0",
+              }}
+            >
               Resultado preliminar basado únicamente en las operaciones y respaldos actualmente incorporados.
             </p>
           </section>
 
           <section aria-labelledby="tax-why" style={{ display: "grid", gap: 10 }}>
-            <h2 id="tax-why" style={{ color: "var(--text)", fontSize: 16, fontWeight: 950, margin: 0, fontFamily: fonts.display }}>¿Por qué LEDGERA llegó a esta conclusión?</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
-              <MetricCard value={summary.confirmed.length} label="Operaciones analizadas" detail="Movimientos confirmados incorporados al análisis." />
-              <MetricCard value={summary.assetCount} label="Activos identificados" detail="Criptoactivos presentes en las operaciones confirmadas." />
+            <h2
+              id="tax-why"
+              style={{
+                color: "var(--text)",
+                fontSize: 16,
+                fontWeight: 950,
+                margin: 0,
+                fontFamily: fonts.display,
+              }}
+            >
+              ¿Por qué LEDGERA llegó a esta conclusión?
+            </h2>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+                gap: 10,
+              }}
+            >
+              <MetricCard
+                value={summary.confirmed.length}
+                label="Operaciones analizadas"
+                detail="Movimientos confirmados incorporados al análisis."
+              />
+              <MetricCard
+                value={summary.assetCount}
+                label="Activos identificados"
+                detail="Criptoactivos presentes en las operaciones confirmadas."
+              />
               <MetricCard
                 value={analysisState === "IMPACT" ? taxAnalysis.taxable.length : attentionCount}
                 label={analysisState === "IMPACT" ? "Con posible impacto" : "Requieren revisión"}
-                detail={analysisState === "IMPACT" ? "Operaciones con resultado tributario calculado." : "Registros que aún necesitan atención."}
+                detail={analysisState === "IMPACT"
+                  ? "Operaciones con resultado tributario calculado."
+                  : "Registros que aún necesitan atención."}
               />
             </div>
           </section>
 
           <section style={{ ...card, display: "grid", gap: 10 }}>
             <div>
-              <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 900, letterSpacing: ".07em", margin: "0 0 5px", textTransform: "uppercase" }}>Qué debes hacer ahora</p>
-              <h2 style={{ color: "var(--text)", fontSize: "clamp(1.15rem, 2vw, 1.45rem)", fontWeight: 950, margin: "0 0 7px", fontFamily: fonts.display }}>
+              <p
+                style={{
+                  color: "var(--accent)",
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: ".07em",
+                  margin: "0 0 5px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Qué debes hacer ahora
+              </p>
+              <h2
+                style={{
+                  color: "var(--text)",
+                  fontSize: "clamp(1.15rem, 2vw, 1.45rem)",
+                  fontWeight: 950,
+                  margin: "0 0 7px",
+                  fontFamily: fonts.display,
+                }}
+              >
                 {analysisState === "REVIEW"
                   ? `Revisa ${attentionCount} ${attentionCount === 1 ? "registro" : "registros"}`
                   : analysisState === "IMPACT"
                     ? "Revisa el cálculo antes de declarar"
                     : "No tienes tareas tributarias pendientes"}
               </h2>
-              <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0, maxWidth: 900 }}>
+              <p
+                style={{
+                  color: "var(--text-soft)",
+                  fontSize: 13.5,
+                  lineHeight: 1.55,
+                  margin: 0,
+                  maxWidth: 900,
+                }}
+              >
                 {analysisState === "REVIEW"
                   ? "Completa o corrige la información pendiente para que LEDGERA pueda entregar un resultado confiable."
                   : analysisState === "IMPACT"
@@ -447,56 +834,155 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
                     : "Conserva los comprobantes y antecedentes de tus operaciones. LEDGERA los utilizará cuando exista una venta u otra operación con impacto tributario."}
               </p>
             </div>
+
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 3 }}>
               {analysisState === "REVIEW" ? (
                 <>
-                  <ButtonLink href="/importaciones" primary>Resolver operaciones</ButtonLink>
+                  <ButtonLink href="/importaciones" primary>
+                    Resolver operaciones
+                  </ButtonLink>
                   <ButtonLink href="/cryptoactivos">Revisar activos</ButtonLink>
                 </>
               ) : analysisState === "IMPACT" ? (
                 <>
-                  <ButtonLink href="/declaraciones" primary>Revisar cálculo</ButtonLink>
+                  <ButtonLink href="/declaraciones" primary>
+                    Revisar cálculo
+                  </ButtonLink>
                   <ButtonLink href="/cryptoactivos">Ver operaciones</ButtonLink>
                 </>
               ) : (
                 <>
-                  <ButtonLink href="/documentos" primary>Ver respaldo registrado</ButtonLink>
+                  <ButtonLink href="/documentos" primary>
+                    Ver respaldo registrado
+                  </ButtonLink>
                   <ButtonLink href="/cryptoactivos">Revisar operaciones</ButtonLink>
                 </>
               )}
             </div>
           </section>
 
-          <section style={{ ...card, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16 }}>
+          <section
+            style={{
+              ...card,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+              gap: 16,
+            }}
+          >
             <ContextItem label="Período analizado" value={summary.period} />
-            <ContextItem label="Fuentes incluidas" value={sourceLabel} />
+            <ContextItem label="Fuente incluida" value={sourceLabel} />
             <ContextItem label="Última actualización" value={formatUpdated(lastUpdated)} />
           </section>
 
           <details style={{ ...card, padding: 0, overflow: "hidden" }}>
-            <summary style={{ cursor: "pointer", color: "var(--text)", fontSize: 13.5, fontWeight: 900, padding: "15px 18px", listStylePosition: "inside" }}>Ver detalle técnico</summary>
-            <div style={{ borderTop: "1px solid var(--border)", padding: "14px 18px 18px", display: "grid", gap: 12 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
+            <summary
+              style={{
+                cursor: "pointer",
+                color: "var(--text)",
+                fontSize: 13.5,
+                fontWeight: 900,
+                padding: "15px 18px",
+                listStylePosition: "inside",
+              }}
+            >
+              Ver detalle técnico
+            </summary>
+            <div
+              style={{
+                borderTop: "1px solid var(--border)",
+                padding: "14px 18px 18px",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                  gap: 10,
+                }}
+              >
                 <ContextItem label="Eventos calculados" value={String(events.length)} />
                 <ContextItem label="Con posible impacto" value={String(taxAnalysis.taxable.length)} />
                 <ContextItem label="No afectos" value={String(taxAnalysis.nonTaxable.length)} />
-                <ContextItem label="Pendientes de clasificación" value={String(taxAnalysis.pending.length)} />
+                <ContextItem
+                  label="Pendientes de clasificación"
+                  value={String(taxAnalysis.pending.length)}
+                />
               </div>
+
               {taxAnalysis.taxable.length > 0 && (
-                <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.5, margin: 0 }}>
-                  Resultado acumulado calculado: <strong style={{ color: "var(--text)" }}>{formatClp(taxAnalysis.realizedPnlClp)}</strong>. Este valor representa ganancia o pérdida calculada, no el impuesto final.
+                <p
+                  style={{
+                    color: "var(--text-soft)",
+                    fontSize: 12.5,
+                    lineHeight: 1.5,
+                    margin: 0,
+                  }}
+                >
+                  Resultado acumulado calculado:{" "}
+                  <strong style={{ color: "var(--text)" }}>
+                    {formatClp(taxAnalysis.realizedPnlClp)}
+                  </strong>. Este valor representa ganancia o pérdida calculada, no el impuesto final.
                 </p>
               )}
             </div>
           </details>
 
           <details style={{ ...card, padding: 0, overflow: "hidden" }}>
-            <summary style={{ cursor: "pointer", color: "var(--text)", fontSize: 13.5, fontWeight: 900, padding: "15px 18px", listStylePosition: "inside" }}>Qué podría cambiar tu situación tributaria</summary>
-            <div style={{ borderTop: "1px solid var(--border)", padding: "14px 18px 18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Vender cripto</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Puede generar una ganancia o pérdida que deba calcularse.</p></article>
-              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Intercambiar un activo por otro</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Un intercambio puede requerir revisión aunque no retires dinero al banco.</p></article>
-              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Recibir staking, rewards o airdrops</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Estos ingresos pueden necesitar clasificación tributaria adicional.</p></article>
-              <article style={card}><strong style={{ color: "var(--text)", fontSize: 13.5 }}>Mover fondos entre cuentas propias</strong><p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>Conviene mantener respaldo para demostrar propiedad y trazabilidad.</p></article>
+            <summary
+              style={{
+                cursor: "pointer",
+                color: "var(--text)",
+                fontSize: 13.5,
+                fontWeight: 900,
+                padding: "15px 18px",
+                listStylePosition: "inside",
+              }}
+            >
+              Qué podría cambiar tu situación tributaria
+            </summary>
+            <div
+              style={{
+                borderTop: "1px solid var(--border)",
+                padding: "14px 18px 18px",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 10,
+              }}
+            >
+              <article style={card}>
+                <strong style={{ color: "var(--text)", fontSize: 13.5 }}>
+                  Vender cripto
+                </strong>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>
+                  Puede generar una ganancia o pérdida que deba calcularse.
+                </p>
+              </article>
+              <article style={card}>
+                <strong style={{ color: "var(--text)", fontSize: 13.5 }}>
+                  Intercambiar un activo por otro
+                </strong>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>
+                  Un intercambio puede requerir revisión aunque no retires dinero al banco.
+                </p>
+              </article>
+              <article style={card}>
+                <strong style={{ color: "var(--text)", fontSize: 13.5 }}>
+                  Recibir staking, rewards o airdrops
+                </strong>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>
+                  Estos ingresos pueden necesitar clasificación tributaria adicional.
+                </p>
+              </article>
+              <article style={card}>
+                <strong style={{ color: "var(--text)", fontSize: 13.5 }}>
+                  Mover fondos entre cuentas propias
+                </strong>
+                <p style={{ color: "var(--text-soft)", fontSize: 12.5, lineHeight: 1.45, margin: "6px 0 0" }}>
+                  Conviene mantener respaldo para demostrar propiedad y trazabilidad.
+                </p>
+              </article>
             </div>
           </details>
         </>
