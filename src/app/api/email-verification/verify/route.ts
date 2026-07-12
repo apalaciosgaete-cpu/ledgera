@@ -18,26 +18,22 @@ function resolveApplicationUrl(req: NextRequest) {
   ).replace(/\/$/, "");
 }
 
-function redirectToLogin(req: NextRequest, status: "success" | "invalid") {
-  const url = new URL("/login", resolveApplicationUrl(req));
-  if (status === "success") {
-    url.searchParams.set("emailVerified", "1");
-  } else {
-    url.searchParams.set("emailVerification", "invalid");
-  }
+function redirectToResult(req: NextRequest, status: "success" | "invalid") {
+  const url = new URL("/verificar-correo", resolveApplicationUrl(req));
+  url.searchParams.set("status", status);
   return NextResponse.redirect(url);
 }
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token")?.trim();
-  if (!token) return redirectToLogin(req, "invalid");
+  if (!token) return redirectToResult(req, "invalid");
 
   try {
     const record = await consumeOneTimeToken(token);
-    if (!record) return redirectToLogin(req, "invalid");
+    if (!record) return redirectToResult(req, "invalid");
 
     const identity = parseEmailVerificationIdentifier(record.identifier);
-    if (!identity) return redirectToLogin(req, "invalid");
+    if (!identity) return redirectToResult(req, "invalid");
 
     const user = await prisma.users.findFirst({
       where: {
@@ -53,7 +49,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    if (!user) return redirectToLogin(req, "invalid");
+    if (!user) return redirectToResult(req, "invalid");
 
     const newlyVerified = !user.email_verified_at;
     if (newlyVerified) {
@@ -90,9 +86,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return redirectToLogin(req, "success");
+    return redirectToResult(req, "success");
   } catch (error) {
     console.error("[api/email-verification/verify]", error);
-    return redirectToLogin(req, "invalid");
+    return redirectToResult(req, "invalid");
   }
 }
