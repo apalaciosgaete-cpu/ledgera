@@ -59,9 +59,6 @@ function resolveClientError(error: unknown, fallback: string) {
     return `Demasiados intentos. Intenta nuevamente en ${error.retryAfterSeconds} segundos.`;
   }
 
-  if (error.status === 401) return "Credenciales inválidas.";
-  if (error.status === 403) return "La cuenta no está activa o no tiene permisos para ingresar.";
-
   return error.message || fallback;
 }
 
@@ -96,7 +93,6 @@ function LoginForm() {
   const [setupCode, setSetupCode] = useState("");
   const [verifyingSetup, setVerifyingSetup] = useState(false);
   const [errorSetup, setErrorSetup] = useState("");
-  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !oauth2fa) {
@@ -108,13 +104,14 @@ function LoginForm() {
     if (!oauth2fa || !isAuthenticated || !user) return;
 
     fetch("/api/2fa/oauth-setup", { credentials: "include" })
-      .then((r) => r.json())
+      .then((response) => response.json())
       .then((json) => {
         if (json.ok && json.data) {
+          setPendingUserId(json.data.userId ?? user.id ?? "");
           setSetupQrCode(json.data.qrCode ?? "");
           setSetupSecret(json.data.secret ?? "");
           setSetupToken(json.data.setupToken ?? "");
-          setSetupEmail(user.email ?? "");
+          setSetupEmail(json.data.email ?? user.email ?? "");
           setSetupCode("");
           setErrorSetup("");
           setStep(3);
@@ -144,8 +141,16 @@ function LoginForm() {
     router.replace("/panel");
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  function returnToCredentials() {
+    setStep(1);
+    setPendingUserId("");
+    setTwoFACode("");
+    setError2FA("");
+    setPassword("");
+  }
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     setErrorMessage("");
     setSubmitting(true);
 
@@ -167,9 +172,10 @@ function LoginForm() {
         return;
       }
 
-      if (response.twoFactorRequired && response.pendingUserId) {
-        setPendingUserId(response.pendingUserId);
-        setIsRecovery(false);
+      if (response.twoFactorRequired) {
+        setPendingUserId(response.pendingUserId ?? "");
+        setTwoFACode("");
+        setError2FA("");
         setStep(2);
         return;
       }
@@ -188,15 +194,21 @@ function LoginForm() {
     }
   }
 
-  async function handle2FA(e: FormEvent) {
-    e.preventDefault();
+  async function handle2FA(event: FormEvent) {
+    event.preventDefault();
     setError2FA("");
+
+    if (twoFACode.length !== 6) {
+      setError2FA("Ingresa el código de 6 dígitos de tu aplicación autenticadora.");
+      return;
+    }
+
     setValidating2FA(true);
 
     try {
       const response = await httpClient<TwoFactorLoginResponse>("/api/2fa/login", {
         method: "POST",
-        body: { userId: pendingUserId, code: twoFACode },
+        body: { code: twoFACode },
       });
 
       const token = response.data?.session?.token;
@@ -213,8 +225,8 @@ function LoginForm() {
     }
   }
 
-  async function handleSetup2FA(e: FormEvent) {
-    e.preventDefault();
+  async function handleSetup2FA(event: FormEvent) {
+    event.preventDefault();
     setErrorSetup("");
 
     if (!pendingUserId) {
@@ -222,33 +234,33 @@ function LoginForm() {
       return;
     }
 
-    if (!setupCode || setupCode.length !== 6) {
-      setErrorSetup("Ingresa el código de 6 dígitos de tu app autenticadora.");
+    if (!setupEmail) {
+      setErrorSetup("Error de configuración: falta el correo. Recarga la página e intenta nuevamente.");
       return;
     }
 
-    const isLoginRecovery = isRecovery || !setupToken;
+    if (!setupToken) {
+      setErrorSetup("Error de configuración: falta el token de seguridad. Recarga la página e intenta nuevamente.");
+      return;
+    }
 
-    if (!isLoginRecovery) {
-      if (!setupEmail) {
-        setErrorSetup("Error de configuración: falta el correo. Recarga la página e intenta nuevamente.");
-        return;
-      }
-      if (!setupToken) {
-        setErrorSetup("Error de configuración: falta el token de seguridad. Recarga la página e intenta nuevamente.");
-        return;
-      }
+    if (setupCode.length !== 6) {
+      setErrorSetup("Ingresa el código de 6 dígitos de tu app autenticadora.");
+      return;
     }
 
     setVerifyingSetup(true);
 
     try {
-      const endpoint = isLoginRecovery ? "/api/2fa/login" : "/api/2fa/registration/verify";
-      const body = isLoginRecovery
-        ? { userId: pendingUserId, code: setupCode }
-        : { userId: pendingUserId, email: setupEmail, code: setupCode, setupToken };
-
-      const response = await httpClient<TwoFactorLoginResponse>(endpoint, { method: "POST", body });
+      const response = await httpClient<TwoFactorLoginResponse>("/api/2fa/registration/verify", {
+        method: "POST",
+        body: {
+          userId: pendingUserId,
+          email: setupEmail,
+          code: setupCode,
+          setupToken,
+        },
+      });
       const token = response.data?.session?.token;
 
       if (!token) {
@@ -261,31 +273,6 @@ function LoginForm() {
       setErrorSetup(resolveClientError(error, "Error al verificar el código."));
     } finally {
       setVerifyingSetup(false);
-    }
-  }
-
-  async function startRecovery() {
-    setError2FA("");
-    try {
-      const response = await httpClient<{ ok?: boolean; message?: string; data?: { qrCode?: string; secret?: string } }>(
-        "/api/2fa/login/setup",
-        { method: "POST", body: { userId: pendingUserId, email } },
-      );
-
-      if (response.ok && response.data) {
-        setSetupQrCode(response.data.qrCode ?? "");
-        setSetupSecret(response.data.secret ?? "");
-        setSetupEmail(email);
-        setSetupToken("");
-        setSetupCode("");
-        setErrorSetup("");
-        setIsRecovery(true);
-        setStep(3);
-      } else {
-        setError2FA(response.message || "No fue posible iniciar la recuperación.");
-      }
-    } catch (error) {
-      setError2FA(resolveClientError(error, "Error al iniciar recuperación de 2FA."));
     }
   }
 
@@ -371,6 +358,19 @@ function LoginForm() {
     fontFamily: fonts.body,
   };
 
+  const secondaryButtonStyle = {
+    width: "100%",
+    border: "1px solid var(--border-strong)",
+    borderRadius: "12px",
+    padding: "0.9rem 1rem",
+    background: "transparent",
+    color: "var(--text)",
+    fontSize: "14px",
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: fonts.body,
+  };
+
   return (
     <main style={mainStyle}>
       <div style={overlayStyle} />
@@ -400,19 +400,19 @@ function LoginForm() {
             <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
               <div>
                 <label htmlFor="email" style={labelStyle}>Correo</label>
-                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
+                <input id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required style={inputStyle} />
               </div>
               <div>
                 <label htmlFor="password" style={labelStyle}>Contraseña</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required style={{ ...inputStyle, width: "auto", flex: 1 }} />
-                  <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text-soft)", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
+                  <input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required style={{ ...inputStyle, width: "auto", flex: 1 }} />
+                  <button type="button" onClick={() => setShowPassword((visible) => !visible)} style={{ border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text-soft)", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
                     {showPassword ? "Ocultar" : "Mostrar"}
                   </button>
                 </div>
               </div>
 
-              {errorMessage ? <p style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
+              {errorMessage ? <p role="alert" style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
 
               <button type="submit" disabled={submitting} style={{ ...primaryButtonStyle, cursor: submitting ? "not-allowed" : "pointer" }}>
                 {submitting ? "Ingresando..." : "Entrar"}
@@ -424,15 +424,36 @@ function LoginForm() {
             <form onSubmit={handle2FA} style={{ display: "grid", gap: "1rem" }}>
               <div>
                 <label htmlFor="twofa" style={labelStyle}>Código 2FA</label>
-                <input id="twofa" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={twoFACode} onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ""))} required style={codeInputStyle} />
+                <input
+                  id="twofa"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={twoFACode}
+                  onChange={(event) => {
+                    setTwoFACode(event.target.value.replace(/\D/g, ""));
+                    setError2FA("");
+                  }}
+                  autoFocus
+                  required
+                  style={codeInputStyle}
+                />
               </div>
-              {error2FA ? <p style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
+
+              {error2FA ? <p role="alert" style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
+
               <button type="submit" disabled={validating2FA} style={{ ...primaryButtonStyle, cursor: validating2FA ? "not-allowed" : "pointer" }}>
                 {validating2FA ? "Validando..." : "Validar código"}
               </button>
-              <button type="button" onClick={startRecovery} style={{ width: "100%", border: "1px solid var(--border-strong)", borderRadius: "12px", padding: "0.9rem 1rem", background: "transparent", color: "var(--text)", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: fonts.body }}>
-                Reconfigurar autenticador
+
+              <button type="button" onClick={returnToCredentials} style={secondaryButtonStyle}>
+                Volver al inicio de sesión
               </button>
+
+              <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "12px", lineHeight: 1.55, textAlign: "center", fontFamily: fonts.body }}>
+                La reconfiguración del autenticador requiere un proceso de recuperación seguro y no se realiza desde esta pantalla.
+              </p>
             </form>
           )}
 
@@ -442,9 +463,9 @@ function LoginForm() {
               {setupSecret ? <p style={{ margin: 0, fontSize: "13px", color: "var(--text-soft)", lineHeight: 1.6, fontFamily: fonts.body }}>Clave manual: <strong style={{ color: "var(--text)", fontFamily: fonts.mono }}>{setupSecret}</strong></p> : null}
               <div>
                 <label htmlFor="setupCode" style={labelStyle}>Código de 6 dígitos</label>
-                <input id="setupCode" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))} required style={codeInputStyle} />
+                <input id="setupCode" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(event) => setSetupCode(event.target.value.replace(/\D/g, ""))} required style={codeInputStyle} />
               </div>
-              {errorSetup ? <p style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
+              {errorSetup ? <p role="alert" style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
               <button type="submit" disabled={verifyingSetup} style={{ ...primaryButtonStyle, cursor: verifyingSetup ? "not-allowed" : "pointer" }}>
                 {verifyingSetup ? "Verificando..." : "Activar y entrar"}
               </button>
