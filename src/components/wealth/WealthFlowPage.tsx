@@ -111,6 +111,10 @@ function extractAsset(item: StagingItem): string {
     ?? "ACTIVO";
 }
 
+function amountOnly(item: StagingItem): string {
+  return item.amountLabel.match(/-?\d[\d.,]*/)?.[0] ?? item.amountLabel;
+}
+
 function extractQuantity(item: StagingItem): number {
   const value = Number.parseFloat(item.amountLabel.replace(/,/g, ".").match(/-?\d+(?:\.\d+)?/)?.[0] ?? "0");
   return Number.isFinite(value) ? value : 0;
@@ -206,34 +210,34 @@ function TransactionsTable({ items, mode }: { items: StagingItem[]; mode: TableM
   }
 
   const columns = mode === "pending"
-    ? "0.8fr 0.8fr 0.7fr 1fr 0.9fr 1.2fr 0.9fr"
+    ? "0.8fr 0.8fr 0.7fr 1fr 0.9fr 1.2fr 1fr"
     : mode === "tax"
-      ? "0.8fr 0.8fr 1.2fr 0.7fr 0.9fr 1fr"
-      : "0.8fr 0.8fr 0.7fr 1.1fr 0.9fr 0.9fr";
+      ? "0.8fr 0.8fr 1.2fr 0.7fr 1fr 1.1fr"
+      : "0.8fr 0.8fr 0.7fr 1.1fr 1fr 1.1fr";
 
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflowX: "auto" }}>
-      <div style={{ minWidth: mode === "pending" ? 1000 : 820 }}>
-        <div style={{ display: "grid", gridTemplateColumns: columns, gap: 12, padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".04em", textTransform: "uppercase" }}>
+      <div style={{ minWidth: mode === "pending" ? 1020 : 860 }}>
+        <div style={{ display: "grid", gridTemplateColumns: columns, gap: 16, padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".04em", textTransform: "uppercase" }}>
           <span>Fecha</span><span>Fuente</span>
           {mode === "tax" ? <span>Operación para analizar</span> : <span>Activo</span>}
           {mode !== "tax" && <span>Movimiento</span>}
           {mode === "tax" && <span>Activo</span>}
-          <span style={{ textAlign: "right" }}>Monto</span>
+          <span style={{ textAlign: "right", paddingRight: 8 }}>Monto</span>
           {mode === "pending" && <span>Motivo</span>}
-          <span>{mode === "tax" ? "Preparación" : "Estado"}</span>
+          <span style={{ paddingLeft: 18 }}>{mode === "tax" ? "Preparación" : "Estado"}</span>
         </div>
         {items.map((item) => {
           const status = statusMeta(item.status);
           return (
-            <div key={item.id} style={{ display: "grid", gridTemplateColumns: columns, gap: 12, padding: "12px 14px", borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 12.5, alignItems: "center" }}>
+            <div key={item.id} style={{ display: "grid", gridTemplateColumns: columns, gap: 16, padding: "12px 14px", borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 12.5, alignItems: "center" }}>
               <span>{formatDate(item.occurredAt)}</span><span>{sourceLabel(item)}</span>
               {mode === "tax" ? <span>{item.title}</span> : <strong>{extractAsset(item)}</strong>}
               {mode !== "tax" && <span>{item.title}</span>}
               {mode === "tax" && <strong>{extractAsset(item)}</strong>}
-              <strong style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{item.amountLabel}</strong>
+              <strong style={{ textAlign: "right", paddingRight: 8, fontVariantNumeric: "tabular-nums" }}>{amountOnly(item)}</strong>
               {mode === "pending" && <span style={{ color: "var(--text-soft)", lineHeight: 1.4 }}>{reviewReason(item)}</span>}
-              <span style={{ color: mode === "tax" ? "var(--accent)" : status.color, fontWeight: 900 }}>{mode === "tax" ? "Listo para analizar" : status.label}</span>
+              <span style={{ paddingLeft: 18, color: mode === "tax" ? "var(--accent)" : status.color, fontWeight: 900 }}>{mode === "tax" ? "Listo para analizar" : status.label}</span>
             </div>
           );
         })}
