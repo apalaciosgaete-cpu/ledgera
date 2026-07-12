@@ -13,6 +13,7 @@ import {
   buildSessionExpirationDate,
   generateSessionToken,
 } from "@/modules/identity/application/sessionToken";
+import { issueTwoFactorLoginChallenge } from "@/modules/identity/application/twoFactorLoginChallenge";
 import { verifyPassword } from "@/modules/identity/application/passwordHash";
 import {
   checkLoginRateLimit,
@@ -106,6 +107,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const twoFactorEnabled = Boolean(
+      user.twoFactorEnabled && user.twoFactorSecret,
+    );
+
+    clearLoginRateLimit(rateLimitKey);
+
+    if (twoFactorEnabled) {
+      const challenge = await issueTwoFactorLoginChallenge({
+        userId: user.id,
+        email: user.email,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        message: "Ingresa el código de tu aplicación autenticadora.",
+        twoFactorRequired: true,
+        pendingUserId: user.id,
+        pendingEmail: user.email,
+        twoFactorChallenge: challenge.token,
+        data: null,
+      });
+    }
+
     const sessionToken = generateSessionToken();
     const expiresAt = buildSessionExpirationDate();
 
@@ -125,15 +149,10 @@ export async function POST(req: NextRequest) {
           source: "api/login",
           sessionId: session.id,
           sessionRotation: true,
+          twoFactor: false,
         },
       });
     }
-
-    clearLoginRateLimit(rateLimitKey);
-
-    const twoFactorEnabled = Boolean(
-      user.twoFactorEnabled && user.twoFactorSecret,
-    );
 
     const response = NextResponse.json({
       ok: true,
@@ -147,7 +166,7 @@ export async function POST(req: NextRequest) {
           status: user.status,
           subscriptionPlan: user.subscriptionPlan,
           subscriptionExpiresAt: user.subscriptionExpiresAt,
-          twoFactorEnabled,
+          twoFactorEnabled: false,
         },
         session: {
           id: session.id,
