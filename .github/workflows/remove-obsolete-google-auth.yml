@@ -14,6 +14,8 @@ jobs:
   cleanup:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ledgera
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -86,8 +88,11 @@ jobs:
           }
           NODE
 
+      - name: Refresh dependency lock
+        run: npm install --package-lock-only --ignore-scripts
+
       - name: Install dependencies
-        run: npm install --no-package-lock
+        run: npm ci
 
       - name: Validate Prisma schema
         run: |
