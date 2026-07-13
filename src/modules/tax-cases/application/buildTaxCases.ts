@@ -20,22 +20,6 @@ interface TaxonSource {
   priority: TaxCasePriority;
 }
 
-type AgentPlanRow = {
-  id: string;
-  title: string;
-  description: string;
-  priority: string;
-  created_at: Date;
-};
-
-type AutomationProposalRow = {
-  id: string;
-  title: string | null;
-  description: string | null;
-  priority: string;
-  created_at: Date;
-};
-
 function buildSourceKey(sourceType: string, sourceId: string | null): string {
   return `${sourceType}::${sourceId ?? "null"}`;
 }
@@ -77,36 +61,21 @@ function mapRowToTaxCase(row: Record<string, unknown>): TaxCase {
 }
 
 export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
-  const [riskScore, rejectedDocs, activeRecommendations, agentPlans, automationProps] =
-    await Promise.all([
-      prisma.taxRiskScore
-        .findFirst({ where: { userId }, orderBy: { evaluatedAt: "desc" } })
-        .catch(() => null),
-      prisma.taxDocument
-        .count({ where: { userId, status: "REJECTED" } })
-        .catch(() => 0),
-      prisma.recommendation
-        .findMany({
-          where: { userId, status: "ACTIVE" },
-          orderBy: { createdAt: "desc" },
-          take: 20,
-        })
-        .catch(() => []),
-      prisma.$queryRaw<AgentPlanRow[]>`
-        SELECT id, title, description, priority, created_at
-        FROM agent_plans
-        WHERE user_id = ${userId} AND status = 'PROPOSED'
-        ORDER BY created_at DESC
-        LIMIT 20
-      `.catch(() => []),
-      prisma.$queryRaw<AutomationProposalRow[]>`
-        SELECT id, title, description, priority, created_at
-        FROM automation_proposals
-        WHERE user_id = ${userId} AND status = 'PROPOSED'
-        ORDER BY created_at DESC
-        LIMIT 20
-      `.catch(() => []),
-    ]);
+  const [riskScore, rejectedDocs, activeRecommendations] = await Promise.all([
+    prisma.taxRiskScore
+      .findFirst({ where: { userId }, orderBy: { evaluatedAt: "desc" } })
+      .catch(() => null),
+    prisma.taxDocument
+      .count({ where: { userId, status: "REJECTED" } })
+      .catch(() => 0),
+    prisma.recommendation
+      .findMany({
+        where: { userId, status: "ACTIVE" },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      })
+      .catch(() => []),
+  ]);
 
   const monitorData = await evaluateMonitoringForCases(userId).catch(() => []);
 
@@ -159,29 +128,6 @@ export async function buildTaxCases(userId: string): Promise<TaxCaseSummary> {
       description: `Tienes ${activeRecommendations.length} recomendaciones tributarias activas. LEDGERA sugiere revisarlas y priorizarlas.`,
       sourceType: "CUMPLIMIENTO",
       sourceId: "recommendations-bulk",
-      priority: "MEDIUM",
-    });
-  }
-
-  for (const plan of agentPlans) {
-    const planPriority: TaxCasePriority = plan.priority === "CRITICAL" || plan.priority === "HIGH"
-      ? (plan.priority as TaxCasePriority)
-      : "MEDIUM";
-    sources.push({
-      title: plan.title ?? "Plan AI propuesto",
-      description: plan.description ?? "LEDGERA ha generado un plan supervisado que requiere tu revisión.",
-      sourceType: "AI",
-      sourceId: plan.id,
-      priority: planPriority,
-    });
-  }
-
-  for (const prop of automationProps) {
-    sources.push({
-      title: prop.title ?? "Propuesta de automatización",
-      description: prop.description ?? "LEDGERA sugiere automatizar un proceso tributario para mejorar eficiencia.",
-      sourceType: "AUTOMATIZACION",
-      sourceId: prop.id,
       priority: "MEDIUM",
     });
   }

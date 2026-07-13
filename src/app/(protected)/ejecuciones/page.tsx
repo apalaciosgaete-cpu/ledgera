@@ -75,8 +75,8 @@ export default async function EjecucionesPage() {
         )}
       </section>
 
-      <Link href="/decisiones" style={{ color: "var(--accent)", fontSize: 14, fontWeight: 850, textDecoration: "none" }}>
-        Volver al Centro de Decisiones →
+      <Link href="/panel" style={{ color: "var(--accent)", fontSize: 14, fontWeight: 850, textDecoration: "none" }}>
+        Volver al resumen →
       </Link>
     </main>
   );

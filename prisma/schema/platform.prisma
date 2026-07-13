@@ -110,7 +110,7 @@ model BillingPayment {
   paymentUrl        String?
   paidAt            DateTime?
   failedAt          DateTime?
-  metadata          String?
+  metadata           String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -209,11 +209,7 @@ model users {
   tasks                      Task[]
   documents                  Document[]
   timelineEvents             TimelineEvent[]
-  aiConversations            AIConversation[]
-  aiInsights                 AIInsight[]
-  automationProposals        AutomationProposal[]
   taxCases                   TaxCase[]
-  workflows                  Workflow[]
   dataSubjectRequests        DataSubjectRequest[]
 
   @@index([email], map: "idx_users_email")
