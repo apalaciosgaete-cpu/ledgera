@@ -1,0 +1,351 @@
+model PortfolioMovement {
+  id                      String    @id @default(cuid())
+  userId                  String    @default("")
+  type                    String
+  symbol                  String
+  quantity                Float
+  priceUsd                Float
+  feeUsd                  Float     @default(0)
+  suggestedTaxCategory    String    @default("UNCLASSIFIED")
+  appliedTaxCategory      String?
+  taxClassificationSource String    @default("SYSTEM")
+  executedAt              DateTime  @default(now())
+  deletedAt               DateTime?
+  deletedReason           String?
+  source                  String    @default("MANUAL")
+  externalId              String?
+
+  user             users                 @relation(fields: [userId], references: [id])
+  taxEvent         TaxEvent?
+  importRecord     ExchangeImportRecord?
+  taxLedgerEntries TaxLedgerEntry[]
+
+  @@index([userId])
+  @@index([executedAt])
+  @@index([userId, executedAt])
+  @@index([source])
+  @@index([type])
+  @@index([symbol])
+  @@index([userId, type])
+  @@index([userId, symbol])
+  @@map("portfolio_movements")
+}
+
+model TaxEvent {
+  id                   String   @id @default(cuid())
+  userId               String   @default("")
+  movementId           String   @unique
+  symbol               String
+  eventType            String
+  quantity             Float
+  effectiveTaxCategory String   @default("UNCLASSIFIED")
+  averageCostUsdAtSale Float    @default(0)
+  proceedsGrossUsd     Float    @default(0)
+  proceedsNetUsd       Float    @default(0)
+  costBasisUsd         Float    @default(0)
+  feeUsd               Float    @default(0)
+  realizedPnlUsd       Float    @default(0)
+  usdClp               Float
+  proceedsGrossClp     Float    @default(0)
+  proceedsNetClp       Float    @default(0)
+  costBasisClp         Float    @default(0)
+  feeClp               Float    @default(0)
+  realizedPnlClp       Float    @default(0)
+  executedAt           DateTime
+  taxYear              Int      @default(0)
+
+  user             users             @relation(fields: [userId], references: [id])
+  movement         PortfolioMovement @relation(fields: [movementId], references: [id])
+  taxLedgerEntries TaxLedgerEntry[]
+
+  @@index([userId])
+  @@index([taxYear])
+  @@index([symbol])
+  @@index([userId, taxYear])
+  @@index([userId, executedAt])
+  @@map("tax_events")
+}
+
+model TaxLedgerEntry {
+  id     String @id @default(cuid())
+  userId String
+
+  movementId String?
+  taxEventId String?
+
+  taxYear  Int
+  taxMonth Int
+
+  ledgerType     String
+  ledgerCategory String
+
+  assetSymbol String
+  quantity    Float
+
+  proceedsClp     Float @default(0)
+  costBasisClp    Float @default(0)
+  realizedGainClp Float @default(0)
+
+  taxTreatment      String
+  siiClassification String
+
+  source    String   @default("SYSTEM")
+  createdAt DateTime @default(now())
+
+  user     users              @relation(fields: [userId], references: [id])
+  taxEvent TaxEvent?          @relation(fields: [taxEventId], references: [id])
+  movement PortfolioMovement? @relation(fields: [movementId], references: [id])
+
+  @@index([userId, taxYear])
+  @@index([taxTreatment])
+  @@index([siiClassification])
+  @@map("tax_ledger_entries")
+}
+
+model AnnualTaxSummary {
+  id      String @id @default(cuid())
+  userId  String
+  taxYear Int
+
+  grossProceedsClp  Float @default(0)
+  costBasisClp      Float @default(0)
+  realizedGainClp   Float @default(0)
+  realizedLossClp   Float @default(0)
+  netTaxableGainClp Float @default(0)
+
+  reviewCount       Int @default(0)
+  taxableEventCount Int @default(0)
+
+  preliminaryTaxBaseClp Float  @default(0)
+  source                String @default("SYSTEM")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@unique([userId, taxYear])
+  @@index([taxYear])
+  @@map("annual_tax_summaries")
+}
+
+model ReportValidation {
+  id        String    @id @default(cuid())
+  userId    String    @default("")
+  type      String    @default("INFORMATIVE")
+  year      Int       @default(0)
+  hash      String    @unique @default("")
+  symbol    String?
+  issuedAt  DateTime  @default(now())
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("report_validations")
+}
+
+model TaxPeriodClose {
+  id           String    @id @default(cuid())
+  userId       String    @default("")
+  periodYear   Int
+  status       String    @default("CLOSED")
+  closedReason String?
+  closedAt     DateTime  @default(now())
+  reopenedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@unique([userId, periodYear])
+  @@map("tax_period_closures")
+}
+
+model TaxPeriodAuditLog {
+  id         String   @id @default(cuid())
+  userId     String   @default("")
+  year       Int
+  action     String
+  reason     String?
+  actorId    String?
+  actorEmail String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([year])
+  @@index([action])
+  @@index([userId, year])
+  @@map("tax_period_audit_logs")
+}
+
+model TaxPeriodSnapshot {
+  id              String   @id @default(cuid())
+  userId          String   @default("")
+  year            Int
+  contentHash     String
+  snapshotPayload String
+  createdAt       DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([year])
+  @@index([contentHash])
+  @@index([userId, year])
+  @@map("tax_period_snapshots")
+}
+
+model TaxDeclaration {
+  id              String    @id @default(cuid())
+  userId          String
+  taxYear         Int
+  declarationType String
+  status          String    @default("DRAFT")
+  source          String    @default("SYSTEM")
+  payloadJson     String
+  contentHash     String
+  generatedAt     DateTime  @default(now())
+  confirmedAt     DateTime?
+  voidedAt        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user      users                    @relation(fields: [userId], references: [id])
+  auditLogs TaxDeclarationAuditLog[]
+
+  @@index([userId])
+  @@index([taxYear])
+  @@index([declarationType])
+  @@index([status])
+  @@index([contentHash])
+  @@index([userId, taxYear])
+  @@map("tax_declarations")
+}
+
+model TaxDeclarationAuditLog {
+  id              String   @id @default(cuid())
+  userId          String
+  declarationId   String
+  action          String
+  actorId         String?
+  actorEmail      String?
+  taxYear         Int
+  declarationType String
+  statusFrom      String?
+  statusTo        String?
+  contentHash     String?
+  beforeState     String?
+  afterState      String?
+  previousHash    String?
+  currentHash     String?
+  ipAddress       String?
+  userAgent       String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+
+  user        users          @relation(fields: [userId], references: [id])
+  declaration TaxDeclaration @relation(fields: [declarationId], references: [id])
+
+  @@index([userId])
+  @@index([declarationId])
+  @@index([action])
+  @@index([taxYear])
+  @@index([createdAt])
+  @@index([userId, taxYear])
+  @@map("tax_declaration_audit_logs")
+}
+
+model TaxClassificationAuditLog {
+  id           String   @id @default(cuid())
+  userId       String
+  movementId   String
+  action       String
+  actorId      String?
+  actorEmail   String?
+  beforeState  String?
+  afterState   String?
+  previousHash String?
+  currentHash  String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     String?
+  createdAt    DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([movementId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("tax_classification_audit_logs")
+}
+
+model TaxEventAuditLog {
+  id           String   @id @default(cuid())
+  userId       String
+  taxEventId   String
+  action       String
+  actorId      String?
+  actorEmail   String?
+  taxYear      Int
+  beforeState  String?
+  afterState   String?
+  previousHash String?
+  currentHash  String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     String?
+  createdAt    DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([taxEventId])
+  @@index([action])
+  @@index([taxYear])
+  @@index([createdAt])
+  @@index([userId, taxYear])
+  @@map("tax_event_audit_logs")
+}
+
+model MovementAuditLog {
+  id           String   @id @default(cuid())
+  userId       String
+  movementId   String
+  action       String
+  actorId      String?
+  actorEmail   String?
+  beforeState  String?
+  afterState   String?
+  previousHash String?
+  currentHash  String?
+  ipAddress    String?
+  userAgent    String?
+  metadata     String?
+  createdAt    DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([movementId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("movement_audit_logs")
+}
+
+model FxRate {
+  id        String   @id @default(cuid())
+  currency  String
+  date      DateTime
+  valueClp  Float
+  source    String   @default("mindicador")
+  createdAt DateTime @default(now())
+
+  @@unique([currency, date], name: "currency_date")
+  @@map("fx_rates")
+}
