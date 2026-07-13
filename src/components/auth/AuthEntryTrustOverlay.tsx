@@ -179,31 +179,53 @@ function removeInjectedBlocks() {
   document.getElementById(REGISTER_BLOCK_ID)?.remove();
 }
 
-function injectLoginTrust() {
-  if (document.getElementById(LOGIN_BLOCK_ID)) return;
-
-  const title = Array.from(document.querySelectorAll("h1")).find((node) =>
-    node.textContent?.trim().toLowerCase().includes("iniciar sesión"),
+function findHeading(text: string) {
+  return Array.from(document.querySelectorAll("h1")).find(
+    (node) => node.textContent?.trim().toLowerCase() === text.toLowerCase(),
   );
+}
 
-  const card = title?.closest("div")?.parentElement;
-  if (!card) return;
+function injectLoginTrust() {
+  const title = findHeading("Iniciar sesión");
+  const existing = document.getElementById(LOGIN_BLOCK_ID);
 
-  const firstForm = card.querySelector("form");
-  if (!firstForm) return;
+  if (!title) {
+    existing?.remove();
+    return;
+  }
 
+  const card = title.closest("div")?.parentElement;
+  const firstForm = card?.querySelector("form");
+  if (!card || !firstForm) {
+    existing?.remove();
+    return;
+  }
+
+  if (existing && existing.nextElementSibling === firstForm) return;
+
+  existing?.remove();
   firstForm.before(buildLoginBlock());
 }
 
 function injectRegisterTrust() {
-  if (document.getElementById(REGISTER_BLOCK_ID)) return;
+  const title = findHeading("Crear cuenta");
+  const existing = document.getElementById(REGISTER_BLOCK_ID);
 
-  const form = document.querySelector("form");
-  if (!form) return;
+  if (!title) {
+    existing?.remove();
+    return;
+  }
 
-  const firstField = form.firstElementChild;
-  if (!firstField) return;
+  const form = title.closest("div")?.parentElement?.querySelector("form") ?? document.querySelector("form");
+  const firstField = form?.firstElementChild;
+  if (!form || !firstField) {
+    existing?.remove();
+    return;
+  }
 
+  if (existing && existing.nextElementSibling === firstField) return;
+
+  existing?.remove();
   firstField.before(buildRegisterBlock());
 }
 
@@ -228,19 +250,19 @@ export default function AuthEntryTrustOverlay() {
     const t2 = window.setTimeout(run, 400);
     const t3 = window.setTimeout(run, 800);
 
-    const observer = new MutationObserver(() => {
-      if (!document.getElementById(LOGIN_BLOCK_ID) && !document.getElementById(REGISTER_BLOCK_ID)) {
-        run();
-      }
+    const observer = new MutationObserver(run);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
     });
-
-    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
       window.clearTimeout(t3);
       observer.disconnect();
+      removeInjectedBlocks();
     };
   }, [pathname]);
 
