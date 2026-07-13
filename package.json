@@ -18,7 +18,6 @@
     "vercel:pull": "vercel env pull .env.local"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.7.4",
     "@prisma/client": "^6.19.3",
     "@sentry/nextjs": "^10.53.1",
     "@types/pdf-parse": "^1.1.5",
@@ -27,7 +26,6 @@
     "bcrypt": "^5.1.1",
     "ccxt": "^4.5.64",
     "next": "^14.2.35",
-    "next-auth": "^5.0.0-beta.25",
     "orionx-sdk": "^2.0.0",
     "papaparse": "^5.5.3",
     "pdf-parse": "^2.4.5",
