@@ -111,13 +111,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.users.update({
+    const updated = await prisma.users.updateMany({
       where: { id: user.id },
       data: {
         twoFactorEnabled: true,
         updated_at: new Date(),
       },
     });
+
+    if (updated.count !== 1) {
+      throw new Error("No fue posible confirmar el nuevo autenticador TOTP.");
+    }
 
     const sessionToken = generateSessionToken();
     const expiresAt = buildSessionExpirationDate();
