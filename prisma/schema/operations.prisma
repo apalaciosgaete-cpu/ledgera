@@ -74,7 +74,7 @@ model IntegrityChainEntry {
   action       String
   sequence     Int
   previousHash String?
-  currentHash  String
+  currentHash String
   payloadHash  String
   createdAt    DateTime @default(now())
 
@@ -169,31 +169,6 @@ model OnchainDecodedEvent {
   @@map("onchain_decoded_events")
 }
 
-// ── Jobs / background tasks ────────────────────────────────────────────────────
-
-model JobQueue {
-  id          String    @id @default(cuid())
-  userId      String?
-  jobType     String
-  status      String    @default("PENDING")
-  priority    Int       @default(0)
-  payload     String
-  result      String?
-  errorMsg    String?
-  attempts    Int       @default(0)
-  maxAttempts Int       @default(3)
-  scheduledAt DateTime  @default(now())
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([status, scheduledAt])
-  @@index([userId])
-  @@index([jobType])
-  @@map("job_queue")
-}
-
 // ── Chat interno ──────────────────────────────────────────────────────────────
 
 model ChatConversation {
@@ -236,72 +211,4 @@ model ChatPushSubscription {
   createdAt DateTime @default(now())
 
   @@map("chat_push_subscriptions")
-}
-
-// ── Workspaces / B2B ──────────────────────────────────────────────────────────
-
-model Workspace {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  ownerId   String
-  plan      String   @default("FREE")
-  status    String   @default("ACTIVE")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  members   WorkspaceMember[]
-  invites   WorkspaceInvite[]
-  auditLogs WorkspaceAuditLog[]
-
-  @@index([ownerId])
-  @@map("workspaces")
-}
-
-model WorkspaceMember {
-  id          String   @id @default(cuid())
-  workspaceId String
-  userId      String
-  role        String   @default("MEMBER")
-  joinedAt    DateTime @default(now())
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-
-  @@unique([workspaceId, userId])
-  @@index([userId])
-  @@map("workspace_members")
-}
-
-model WorkspaceInvite {
-  id          String    @id @default(cuid())
-  workspaceId String
-  email       String
-  role        String    @default("MEMBER")
-  token       String    @unique
-  status      String    @default("PENDING")
-  expiresAt   DateTime
-  acceptedAt  DateTime?
-  createdAt   DateTime  @default(now())
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-
-  @@index([workspaceId])
-  @@index([email])
-  @@map("workspace_invites")
-}
-
-model WorkspaceAuditLog {
-  id          String   @id @default(cuid())
-  workspaceId String
-  actorId     String
-  actorEmail  String?
-  action      String
-  metadata    String?
-  createdAt   DateTime @default(now())
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-
-  @@index([workspaceId])
-  @@index([actorId])
-  @@map("workspace_audit_logs")
 }
