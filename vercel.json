@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx prisma db execute --file prisma/schema/migrations/20260713_remove_google_oauth/migration.sql --schema prisma/schema && next build",
+  "buildCommand": "next build",
   "devCommand": "next dev",
   "framework": "nextjs",
   "installCommand": "npm install",
