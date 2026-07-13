@@ -1,0 +1,190 @@
+model ExchangeConnection {
+  id                 String    @id @default(cuid())
+  userId             String
+  exchange           String
+  apiKeyEncrypted    String
+  apiSecretEncrypted String
+  status             String
+  permissions        String
+  lastSyncAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user        users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imports     ExchangeImportRecord[]
+  syncPeriods ExchangeSyncPeriod[]
+
+  @@unique([userId, exchange])
+  @@index([userId])
+  @@map("exchange_connections")
+}
+
+model ExchangeImportRecord {
+  id                  String   @id @default(cuid())
+  userId              String
+  connectionId        String
+  provider            String
+  externalId          String
+  externalType        String
+  rawPayload          String
+  normalizedJson      String?
+  normalizedEventType String?
+  taxTreatment        String?
+  inventoryEffect     String?
+  economicEffect      String?
+  status              String   @default("PENDING")
+  movementId          String?  @unique
+  occurredAt          DateTime
+  createdAt           DateTime @default(now())
+
+  user       users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection ExchangeConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  movement   PortfolioMovement? @relation(fields: [movementId], references: [id])
+
+  @@unique([userId, provider, externalId])
+  @@index([userId])
+  @@index([connectionId])
+  @@index([status])
+  @@index([provider])
+  @@index([normalizedEventType])
+  @@map("exchange_import_records")
+}
+
+model ExchangeSyncPeriod {
+  id           String @id @default(cuid())
+  userId       String
+  connectionId String
+  provider     String
+
+  year  Int
+  month Int
+
+  status String @default("PENDING")
+
+  importedCount Int @default(0)
+  errorCount    Int @default(0)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+  lastError  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection ExchangeConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, year, month])
+  @@index([userId, year])
+  @@index([userId, provider, status])
+  @@map("exchange_sync_periods")
+}
+
+model BankFileUpload {
+  id           String   @id @default(cuid())
+  userId       String
+  bankName     String?
+  fileName     String
+  fileType     String
+  fileHash     String
+  status       String   @default("IMPORTED")
+  totalRows    Int      @default(0)
+  importedRows Int      @default(0)
+  errorRows    Int      @default(0)
+  rawJson      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user      users          @relation(fields: [userId], references: [id])
+  movements BankMovement[]
+
+  @@unique([userId, fileHash])
+  @@index([userId, createdAt])
+  @@map("bank_file_uploads")
+}
+
+model BankMovement {
+  id          String   @id @default(cuid())
+  userId      String
+  uploadId    String?
+  source      String   @default("BANK_FILE")
+  bankName    String?
+  externalId  String?
+  occurredAt  DateTime
+  description String
+  amountClp   Float
+  direction   String
+  balanceClp  Float?
+  status      String   @default("IMPORTED")
+  rawJson     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bankCategory   String?
+  categoryReason String?
+
+  matchedPortfolioMovementId String?
+  matchedConfidence          Float?
+  matchedAt                  DateTime?
+  matchedReason              String?
+
+  user   users           @relation(fields: [userId], references: [id])
+  upload BankFileUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, externalId])
+  @@index([userId, occurredAt])
+  @@index([userId, direction])
+  @@index([userId, status])
+  @@index([userId, bankName])
+  @@index([userId, matchedPortfolioMovementId])
+  @@map("bank_movements")
+}
+
+model BankReconciliationAuditLog {
+  id                  String   @id @default(cuid())
+  userId              String
+  action              String
+  bankMovementId      String
+  portfolioMovementId String?
+  confidence          Float?
+  reason              String?
+  metadata            String?
+  createdAt           DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([bankMovementId])
+  @@index([portfolioMovementId])
+  @@map("bank_reconciliation_audit_logs")
+}
+
+model BankReconciliationReportValidation {
+  id             String   @id @default(cuid())
+  userId         String
+  validationCode String   @unique
+  contentHash    String
+  reportType     String   @default("BANK_RECONCILIATION")
+  metadata       String?
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("bank_reconciliation_report_validations")
+}
+
+model BankCsvTemplate {
+  id         String   @id @default(cuid())
+  userId     String
+  bankName   String
+  colDate    String
+  colDesc    String
+  colAmount  String?
+  colDebit   String?
+  colCredit  String?
+  colBalance String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@unique([userId, bankName])
+  @@map("bank_csv_templates")
+}
