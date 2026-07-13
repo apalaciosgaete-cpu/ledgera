@@ -7,14 +7,12 @@ import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { encryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
 
-
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const REGISTRATION_2FA_TOKEN_SECRET =
   process.env.REGISTRATION_2FA_TOKEN_SECRET ??
-  process.env.NEXTAUTH_SECRET ??
   process.env.AUTH_SECRET ??
   "ledgera-dev-registration-2fa-secret";
 
