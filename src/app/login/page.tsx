@@ -1,15 +1,15 @@
 "use client";
 
 import { FormEvent, Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Logo } from "@/components/brand/Logo";
+import type { AuthUser } from "@/modules/identity/client/authClient";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { saveSessionToken } from "@/modules/identity/client/authStorage";
-import type { AuthUser } from "@/modules/identity/client/authClient";
-import { fonts } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
+import { fonts } from "@/styles/tokens";
 
 const BG_IMAGES = [
   "/login-bg1.jpg",
@@ -37,12 +37,8 @@ type LoginApiResponse = {
   ok?: boolean;
   message?: string;
   twoFactorRequired?: boolean;
-  twoFactorSetupRequired?: boolean;
   pendingUserId?: string;
   pendingEmail?: string;
-  qrCode?: string;
-  secret?: string;
-  setupToken?: string;
   data?: SessionPayload;
 };
 
@@ -69,10 +65,9 @@ function isPrimeableUser(user: Partial<AuthUser> | undefined): user is AuthUser 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, isLoading, user, refreshUser, primeAuthSession } = useAuth();
+  const { isAuthenticated, isLoading, refreshUser, primeAuthSession } = useAuth();
 
   const justRegistered = searchParams.get("registered") === "1";
-  const oauth2fa = searchParams.get("oauth2fa") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,49 +75,16 @@ function LoginForm() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [pendingUserId, setPendingUserId] = useState("");
-  const [twoFACode, setTwoFACode] = useState("");
-  const [validating2FA, setValidating2FA] = useState(false);
-  const [error2FA, setError2FA] = useState("");
-
-  const [setupQrCode, setSetupQrCode] = useState("");
-  const [setupSecret, setSetupSecret] = useState("");
-  const [setupToken, setSetupToken] = useState("");
-  const [setupEmail, setSetupEmail] = useState("");
-  const [setupCode, setSetupCode] = useState("");
-  const [verifyingSetup, setVerifyingSetup] = useState(false);
-  const [errorSetup, setErrorSetup] = useState("");
+  const [step, setStep] = useState<"credentials" | "totp">("credentials");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [validatingTwoFactor, setValidatingTwoFactor] = useState(false);
+  const [twoFactorError, setTwoFactorError] = useState("");
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !oauth2fa) {
+    if (!isLoading && isAuthenticated) {
       router.replace("/panel");
     }
-  }, [isAuthenticated, isLoading, router, oauth2fa]);
-
-  useEffect(() => {
-    if (!oauth2fa || !isAuthenticated || !user) return;
-
-    fetch("/api/2fa/oauth-setup", { credentials: "include" })
-      .then((response) => response.json())
-      .then((json) => {
-        if (json.ok && json.data) {
-          setPendingUserId(json.data.userId ?? user.id ?? "");
-          setSetupQrCode(json.data.qrCode ?? "");
-          setSetupSecret(json.data.secret ?? "");
-          setSetupToken(json.data.setupToken ?? "");
-          setSetupEmail(json.data.email ?? user.email ?? "");
-          setSetupCode("");
-          setErrorSetup("");
-          setStep(3);
-        } else {
-          setErrorSetup(json.message || "No fue posible cargar la configuración de 2FA.");
-        }
-      })
-      .catch(() => {
-        setErrorSetup("Error al cargar la configuración de 2FA. Intenta recargar la página.");
-      });
-  }, [oauth2fa, isAuthenticated, user]);
+  }, [isAuthenticated, isLoading, router]);
 
   async function finishLogin(token: string, nextUser?: Partial<AuthUser>) {
     saveSessionToken(token);
@@ -142,14 +104,13 @@ function LoginForm() {
   }
 
   function returnToCredentials() {
-    setStep(1);
-    setPendingUserId("");
-    setTwoFACode("");
-    setError2FA("");
+    setStep("credentials");
+    setTwoFactorCode("");
+    setTwoFactorError("");
     setPassword("");
   }
 
-  async function handleSubmit(event: FormEvent) {
+  async function handleCredentials(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
     setSubmitting(true);
@@ -160,29 +121,16 @@ function LoginForm() {
         body: { email, password },
       });
 
-      if (response.twoFactorSetupRequired && response.pendingUserId) {
-        setPendingUserId(response.pendingUserId);
-        setSetupEmail(response.pendingEmail ?? "");
-        setSetupQrCode(response.qrCode ?? "");
-        setSetupSecret(response.secret ?? "");
-        setSetupToken(response.setupToken ?? "");
-        setSetupCode("");
-        setErrorSetup("");
-        setStep(3);
-        return;
-      }
-
       if (response.twoFactorRequired) {
-        setPendingUserId(response.pendingUserId ?? "");
-        setTwoFACode("");
-        setError2FA("");
-        setStep(2);
+        setTwoFactorCode("");
+        setTwoFactorError("");
+        setStep("totp");
         return;
       }
 
       const token = response.data?.session?.token;
       if (!token) {
-        setErrorMessage("Respuesta de login inválida.");
+        setErrorMessage("Respuesta de inicio de sesión inválida.");
         return;
       }
 
@@ -194,85 +142,34 @@ function LoginForm() {
     }
   }
 
-  async function handle2FA(event: FormEvent) {
+  async function handleTwoFactor(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError2FA("");
+    setTwoFactorError("");
 
-    if (twoFACode.length !== 6) {
-      setError2FA("Ingresa el código de 6 dígitos de tu aplicación autenticadora.");
+    if (twoFactorCode.length !== 6) {
+      setTwoFactorError("Ingresa el código de 6 dígitos de tu aplicación autenticadora.");
       return;
     }
 
-    setValidating2FA(true);
+    setValidatingTwoFactor(true);
 
     try {
       const response = await httpClient<TwoFactorLoginResponse>("/api/2fa/login", {
         method: "POST",
-        body: { code: twoFACode },
+        body: { code: twoFactorCode },
       });
 
       const token = response.data?.session?.token;
       if (!token) {
-        setError2FA("Respuesta de autenticación inválida.");
+        setTwoFactorError("Respuesta de autenticación inválida.");
         return;
       }
 
       await finishLogin(token, response.data?.user);
     } catch (error) {
-      setError2FA(resolveClientError(error, "Error al validar el código."));
+      setTwoFactorError(resolveClientError(error, "Error al validar el código."));
     } finally {
-      setValidating2FA(false);
-    }
-  }
-
-  async function handleSetup2FA(event: FormEvent) {
-    event.preventDefault();
-    setErrorSetup("");
-
-    if (!pendingUserId) {
-      setErrorSetup("Error de sesión: falta identificador de usuario. Recarga la página e intenta nuevamente.");
-      return;
-    }
-
-    if (!setupEmail) {
-      setErrorSetup("Error de configuración: falta el correo. Recarga la página e intenta nuevamente.");
-      return;
-    }
-
-    if (!setupToken) {
-      setErrorSetup("Error de configuración: falta el token de seguridad. Recarga la página e intenta nuevamente.");
-      return;
-    }
-
-    if (setupCode.length !== 6) {
-      setErrorSetup("Ingresa el código de 6 dígitos de tu app autenticadora.");
-      return;
-    }
-
-    setVerifyingSetup(true);
-
-    try {
-      const response = await httpClient<TwoFactorLoginResponse>("/api/2fa/registration/verify", {
-        method: "POST",
-        body: {
-          userId: pendingUserId,
-          email: setupEmail,
-          code: setupCode,
-          setupToken,
-        },
-      });
-      const token = response.data?.session?.token;
-
-      if (!token) {
-        setErrorSetup("No se recibió sesión tras activar 2FA.");
-        return;
-      }
-
-      await finishLogin(token, response.data?.user);
-    } catch (error) {
-      setErrorSetup(resolveClientError(error, "Error al verificar el código."));
-    } finally {
-      setVerifyingSetup(false);
+      setValidatingTwoFactor(false);
     }
   }
 
@@ -379,29 +276,28 @@ function LoginForm() {
         <section style={cardStyle}>
           <div style={{ display: "grid", gap: "0.5rem" }}>
             <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 900, color: "var(--text)", fontFamily: fonts.display }}>
-              {step === 1 && "Iniciar sesión"}
-              {step === 2 && "Verificación 2FA"}
-              {step === 3 && "Configura tu 2FA"}
+              {step === "credentials" ? "Iniciar sesión" : "Verificación 2FA"}
             </h1>
             <p style={{ margin: 0, fontSize: "14px", color: "var(--text-soft)", lineHeight: 1.6, fontFamily: fonts.body }}>
-              {step === 1 && "Ingresa con tu cuenta para continuar con LEDGERA."}
-              {step === 2 && "Introduce el código de tu app autenticadora para ingresar."}
-              {step === 3 && "Escanea el código QR, ingresa el código de 6 dígitos y termina la configuración obligatoria."}
+              {step === "credentials"
+                ? "Ingresa con tu correo y contraseña para continuar con LEDGERA."
+                : "Introduce el código vigente de tu aplicación autenticadora."}
             </p>
           </div>
 
-          {justRegistered && step === 1 ? (
+          {justRegistered && step === "credentials" ? (
             <div style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", borderRadius: "10px", padding: "0.9rem 1rem", color: "var(--gain)", fontSize: "14px", fontWeight: 600, fontFamily: fonts.body }}>
               Tu cuenta fue creada. Ahora inicia sesión.
             </div>
           ) : null}
 
-          {step === 1 && (
-            <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
+          {step === "credentials" ? (
+            <form onSubmit={handleCredentials} style={{ display: "grid", gap: "1rem" }}>
               <div>
                 <label htmlFor="email" style={labelStyle}>Correo</label>
                 <input id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required style={inputStyle} />
               </div>
+
               <div>
                 <label htmlFor="password" style={labelStyle}>Contraseña</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -418,10 +314,8 @@ function LoginForm() {
                 {submitting ? "Ingresando..." : "Entrar"}
               </button>
             </form>
-          )}
-
-          {step === 2 && (
-            <form onSubmit={handle2FA} style={{ display: "grid", gap: "1rem" }}>
+          ) : (
+            <form onSubmit={handleTwoFactor} style={{ display: "grid", gap: "1rem" }}>
               <div>
                 <label htmlFor="twofa" style={labelStyle}>Código 2FA</label>
                 <input
@@ -430,10 +324,10 @@ function LoginForm() {
                   autoComplete="one-time-code"
                   pattern="[0-9]{6}"
                   maxLength={6}
-                  value={twoFACode}
+                  value={twoFactorCode}
                   onChange={(event) => {
-                    setTwoFACode(event.target.value.replace(/\D/g, ""));
-                    setError2FA("");
+                    setTwoFactorCode(event.target.value.replace(/\D/g, ""));
+                    setTwoFactorError("");
                   }}
                   autoFocus
                   required
@@ -441,33 +335,14 @@ function LoginForm() {
                 />
               </div>
 
-              {error2FA ? <p role="alert" style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{error2FA}</p> : null}
+              {twoFactorError ? <p role="alert" style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{twoFactorError}</p> : null}
 
-              <button type="submit" disabled={validating2FA} style={{ ...primaryButtonStyle, cursor: validating2FA ? "not-allowed" : "pointer" }}>
-                {validating2FA ? "Validando..." : "Validar código"}
+              <button type="submit" disabled={validatingTwoFactor} style={{ ...primaryButtonStyle, cursor: validatingTwoFactor ? "not-allowed" : "pointer" }}>
+                {validatingTwoFactor ? "Validando..." : "Validar código"}
               </button>
 
               <button type="button" onClick={returnToCredentials} style={secondaryButtonStyle}>
                 Volver al inicio de sesión
-              </button>
-
-              <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "12px", lineHeight: 1.55, textAlign: "center", fontFamily: fonts.body }}>
-                La reconfiguración del autenticador requiere un proceso de recuperación seguro y no se realiza desde esta pantalla.
-              </p>
-            </form>
-          )}
-
-          {step === 3 && (
-            <form onSubmit={handleSetup2FA} style={{ display: "grid", gap: "1rem" }}>
-              {setupQrCode ? <img src={setupQrCode} alt="Código QR 2FA" style={{ width: 180, height: 180, objectFit: "contain", justifySelf: "center", background: "#FFFFFF", padding: 8, borderRadius: 12 }} /> : null}
-              {setupSecret ? <p style={{ margin: 0, fontSize: "13px", color: "var(--text-soft)", lineHeight: 1.6, fontFamily: fonts.body }}>Clave manual: <strong style={{ color: "var(--text)", fontFamily: fonts.mono }}>{setupSecret}</strong></p> : null}
-              <div>
-                <label htmlFor="setupCode" style={labelStyle}>Código de 6 dígitos</label>
-                <input id="setupCode" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={setupCode} onChange={(event) => setSetupCode(event.target.value.replace(/\D/g, ""))} required style={codeInputStyle} />
-              </div>
-              {errorSetup ? <p role="alert" style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorSetup}</p> : null}
-              <button type="submit" disabled={verifyingSetup} style={{ ...primaryButtonStyle, cursor: verifyingSetup ? "not-allowed" : "pointer" }}>
-                {verifyingSetup ? "Verificando..." : "Activar y entrar"}
               </button>
             </form>
           )}
