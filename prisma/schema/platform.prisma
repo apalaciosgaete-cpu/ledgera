@@ -1,0 +1,313 @@
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  category  String   @default("general")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("system_settings")
+}
+
+model SettingsAuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userEmail String
+  action    String
+  key       String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("settings_audit_logs")
+}
+
+model AdminAuditLog {
+  id              String   @id @default(cuid())
+  action          String
+  actorId         String?
+  actorEmail      String?
+  targetUserId    String?
+  targetUserEmail String?
+  ipAddress       String?
+  userAgent       String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+
+  @@index([action])
+  @@index([actorId])
+  @@index([targetUserId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}
+
+model BillingCustomer {
+  id                 String   @id @default(cuid())
+  userId             String
+  provider           String
+  providerCustomerId String?
+  email              String
+  fullName           String?
+  metadata           String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user          users                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptions BillingSubscription[]
+  payments      BillingPayment[]
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([provider])
+  @@index([providerCustomerId])
+  @@map("billing_customers")
+}
+
+model BillingSubscription {
+  id                     String    @id @default(cuid())
+  userId                 String
+  customerId             String?
+  provider               String
+  providerSubscriptionId String?
+  plan                   String
+  status                 String    @default("PENDING")
+  currency               String    @default("CLP")
+  amount                 Int
+  interval               String    @default("MONTHLY")
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  canceledAt             DateTime?
+  metadata               String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user     users            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer BillingCustomer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  payments BillingPayment[]
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([provider])
+  @@index([providerSubscriptionId])
+  @@index([status])
+  @@index([plan])
+  @@map("billing_subscriptions")
+}
+
+model BillingPayment {
+  id                String    @id @default(cuid())
+  userId            String
+  customerId        String?
+  subscriptionId    String?
+  provider          String
+  providerPaymentId String?
+  checkoutId        String?
+  status            String    @default("PENDING")
+  amount            Int
+  currency          String    @default("CLP")
+  description       String
+  paymentUrl        String?
+  paidAt            DateTime?
+  failedAt          DateTime?
+  metadata          String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user         users                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer     BillingCustomer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  subscription BillingSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([subscriptionId])
+  @@index([provider])
+  @@index([providerPaymentId])
+  @@index([checkoutId])
+  @@index([status])
+  @@map("billing_payments")
+}
+
+model BillingWebhookEvent {
+  id              String    @id @default(cuid())
+  provider        String
+  providerEventId String?
+  eventType       String
+  status          String    @default("RECEIVED")
+  payload         String
+  processedAt     DateTime?
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+
+  @@index([provider])
+  @@index([providerEventId])
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("billing_webhook_events")
+}
+
+model users {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  full_name               String
+  password_hash           String
+  status                  String    @default("active")
+  email_verified_at       DateTime? @db.Timestamptz(6)
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime  @default(now()) @db.Timestamptz(6)
+  role                    String    @default("personal")
+  subscription_plan       String    @default("BASICO")
+  subscription_expires_at DateTime? @db.Timestamptz(6)
+  twoFactorSecret         String?
+  twoFactorEnabled        Boolean   @default(false)
+
+  // CAPA 4.1 — Activación: preparado para migración futura
+  onboardingCompleted Boolean   @default(false)
+  onboardingData      Json?
+  activatedAt         DateTime? @db.Timestamptz(6)
+  activationSource    String?
+
+  adaptiveTaxProfile AdaptiveTaxProfile?
+
+  rut     String?
+  phone   String?
+  address String?
+  commune String?
+  country String? @default("Chile")
+
+  portfolios                 portfolios[]
+  sessions                   sessions[]
+  portfolioMovements         PortfolioMovement[]
+  taxEvents                  TaxEvent[]
+  taxPeriodClosures          TaxPeriodClose[]
+  taxPeriodAuditLogs         TaxPeriodAuditLog[]
+  taxPeriodSnapshots         TaxPeriodSnapshot[]
+  taxDeclarations            TaxDeclaration[]
+  taxDeclarationAuditLogs    TaxDeclarationAuditLog[]
+  billingCustomers           BillingCustomer[]
+  billingSubscriptions       BillingSubscription[]
+  billingPayments            BillingPayment[]
+  exchangeConnections        ExchangeConnection[]
+  exchangeImportRecords      ExchangeImportRecord[]
+  taxLedgerEntries           TaxLedgerEntry[]
+  annualTaxSummaries         AnnualTaxSummary[]
+  exchangeSyncPeriods        ExchangeSyncPeriod[]
+  bankMovements              BankMovement[]
+  bankFileUploads            BankFileUpload[]
+  bankCsvTemplates           BankCsvTemplate[]
+  chatConversations          ChatConversation[]
+  taxClassificationAuditLogs TaxClassificationAuditLog[]
+  taxEventAuditLogs          TaxEventAuditLog[]
+  movementAuditLogs          MovementAuditLog[]
+  taxProfile                 TaxProfile?
+  taxDocuments               TaxDocument[]
+  alerts                     Alert[]
+  taxRiskScores              TaxRiskScore[]
+  smartTaxScores             SmartTaxScore[]
+  recommendations            Recommendation[]
+  tasks                      Task[]
+  documents                  Document[]
+  timelineEvents             TimelineEvent[]
+  aiConversations            AIConversation[]
+  aiInsights                 AIInsight[]
+  automationProposals        AutomationProposal[]
+  taxCases                   TaxCase[]
+  workflows                  Workflow[]
+  dataSubjectRequests        DataSubjectRequest[]
+
+  @@index([email], map: "idx_users_email")
+  @@map("users")
+}
+
+// Registro de solicitudes de derechos del titular (Ley 21.719) para control de plazos.
+model DataSubjectRequest {
+  id         String    @id @default(cuid())
+  userId     String?
+  email      String
+  type       String // ACCESS | RECTIFICATION | ERASURE | PORTABILITY | OPPOSITION | LIMITATION | AUTOMATED_REVIEW
+  status     String    @default("PENDING") // PENDING | IN_PROGRESS | COMPLETED | REJECTED
+  channel    String    @default("IN_APP") // IN_APP | EMAIL
+  details    String?
+  dueAt      DateTime? @db.Timestamptz(6)
+  resolvedAt DateTime? @db.Timestamptz(6)
+  resolution String?
+  ipAddress  String?
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  user users? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@map("data_subject_requests")
+}
+
+model Alert {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  category       String
+  severity       String
+  title          String
+  message        String
+  status         String    @default("OPEN")
+  metadata       Json?
+  source         String?
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  resolvedAt     DateTime? @map("resolved_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([severity])
+  @@index([category])
+  @@map("alerts")
+}
+
+model TaxRiskScore {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  score       Int
+  level       String
+  breakdown   Json
+  evaluatedAt DateTime @default(now()) @map("evaluated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([level])
+  @@index([evaluatedAt])
+  @@map("tax_risk_scores")
+}
+
+model portfolios {
+  id         String   @id @default(cuid())
+  user_id    String
+  name       String   @default("Main Portfolio")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_portfolios_user_id")
+  @@map("portfolios")
+}
+
+model sessions {
+  id         String   @id @default(cuid())
+  user_id    String
+  token      String   @unique
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  expires_at DateTime @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_sessions_user_id")
+  @@index([token], map: "idx_sessions_token")
+  @@map("sessions")
+}
