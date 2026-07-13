@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     const qrCode = await QRCode.toDataURL(secret.otpauth_url);
 
-    await prisma.users.update({
+    const updated = await prisma.users.updateMany({
       where: { id: user.id },
       data: {
         twoFactorSecret: encryptTwoFactorSecret(secret.base32),
@@ -77,6 +77,10 @@ export async function POST(req: NextRequest) {
         updated_at: new Date(),
       },
     });
+
+    if (updated.count !== 1) {
+      throw new Error("No fue posible guardar el nuevo secreto TOTP.");
+    }
 
     return NextResponse.json({
       ok: true,
