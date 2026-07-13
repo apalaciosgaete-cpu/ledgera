@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
@@ -68,15 +67,31 @@ function Card({ title, eyebrow, description, children }: CardProps) {
   );
 }
 
-function StatusPill({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "ok" | "warn" | "neutral" }) {
+function StatusBadge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "ok" | "warn" | "neutral" }) {
   const styles = {
-    ok: { background: "var(--accent-soft)", color: "var(--accent)", border: "var(--accent-soft)" },
-    warn: { background: "rgba(232,184,75,0.14)", color: "var(--warn)", border: "rgba(232,184,75,0.22)" },
-    neutral: { background: "var(--bg-sunken)", color: "var(--text-soft)", border: "var(--border)" },
+    ok: { background: "rgba(22,163,74,0.10)", color: "var(--accent)" },
+    warn: { background: "rgba(245,158,11,0.12)", color: "var(--warn)" },
+    neutral: { background: "rgba(100,116,139,0.10)", color: "var(--text-soft)" },
   }[tone];
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", width: "fit-content", border: `1px solid ${styles.border}`, borderRadius: 999, padding: "6px 9px", fontSize: 12, fontWeight: 900, background: styles.background, color: styles.color }}>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        width: "fit-content",
+        maxWidth: "100%",
+        flex: "0 0 auto",
+        borderRadius: 999,
+        padding: "4px 8px",
+        fontSize: 11,
+        fontWeight: 800,
+        lineHeight: 1.2,
+        whiteSpace: "nowrap",
+        background: styles.background,
+        color: styles.color,
+      }}
+    >
       {children}
     </span>
   );
@@ -180,25 +195,7 @@ export default function ConfiguracionPage() {
   } satisfies Profile : null);
 
   return (
-    <main style={{ display: "grid", gap: 20, color: "var(--text)", fontFamily: fonts.body }}>
-      <section style={{ display: "flex", justifyContent: "space-between", gap: 18, flexWrap: "wrap", alignItems: "flex-start" }}>
-        <div style={{ display: "grid", gap: 8, maxWidth: 740 }}>
-          <p style={{ color: "var(--accent)", fontSize: 12, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>Configuración</p>
-          <h1 style={{ color: "var(--text)", fontSize: "clamp(2rem,4vw,3.1rem)", letterSpacing: "-0.06em", lineHeight: 1, margin: 0, fontWeight: 950 }}>
-            Cuenta, seguridad y criterios tributarios
-          </h1>
-          <p style={{ color: "var(--text-soft)", fontSize: 15, lineHeight: 1.6, margin: 0 }}>
-            Administra los datos que se usarán en respaldos, reportes y verificación documental. Las preferencias tributarias críticas se muestran como criterios controlados para evitar cambios sin trazabilidad.
-          </p>
-        </div>
-
-        <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 16, minWidth: 240, display: "grid", gap: 8 }}>
-          <span style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 850 }}>Completitud del perfil</span>
-          <strong style={{ color: completion >= 80 ? "var(--accent)" : "var(--warn)", fontSize: 30, fontWeight: 950, letterSpacing: "-0.04em" }}>{completion}%</strong>
-          <span style={{ color: "var(--text-faint)", fontSize: 12 }}>Estos datos aparecen en respaldos y documentos descargables.</span>
-        </aside>
-      </section>
-
+    <main style={{ display: "grid", gap: 16, color: "var(--text)", fontFamily: fonts.body }}>
       {notice ? (
         <div style={{ background: notice.type === "ok" ? "var(--accent-soft)" : "rgba(196,99,74,0.14)", border: `1px solid ${notice.type === "ok" ? "var(--accent-soft)" : "rgba(196,99,74,0.28)"}`, color: notice.type === "ok" ? "var(--accent)" : "var(--loss)", borderRadius: 14, padding: "12px 14px", fontSize: 13, fontWeight: 850 }}>
           {notice.text}
@@ -207,6 +204,14 @@ export default function ConfiguracionPage() {
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))", gap: 16 }}>
         <Card title="Datos de cuenta" eyebrow="Perfil" description="Información del titular usada para identificar tus reportes, respaldos y declaraciones exportables.">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}>
+            <div style={{ display: "grid", gap: 2 }}>
+              <span style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 800 }}>Completitud del perfil</span>
+              <span style={{ color: "var(--text-faint)", fontSize: 11 }}>Datos usados en respaldos y documentos descargables.</span>
+            </div>
+            <strong style={{ color: completion >= 80 ? "var(--accent)" : "var(--warn)", fontSize: 20, fontWeight: 900 }}>{completion}%</strong>
+          </div>
+
           {loading ? (
             <p style={{ color: "var(--text-soft)", margin: 0 }}>Cargando perfil...</p>
           ) : (
@@ -255,9 +260,9 @@ export default function ConfiguracionPage() {
             <ReadOnlyRow label="Plan" value={currentUser?.subscriptionPlan ?? "—"} />
             <ReadOnlyRow label="Vencimiento" value={formatDate(currentUser?.subscriptionExpiresAt ?? null)} />
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <StatusPill tone={currentUser?.twoFactorEnabled ? "ok" : "warn"}>{currentUser?.twoFactorEnabled ? "Seguridad activa" : "Requiere 2FA"}</StatusPill>
-            <StatusPill>Sesión protegida</StatusPill>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <StatusBadge tone={currentUser?.twoFactorEnabled ? "ok" : "warn"}>{currentUser?.twoFactorEnabled ? "2FA activo" : "2FA pendiente"}</StatusBadge>
+            <StatusBadge>Sesión protegida</StatusBadge>
           </div>
         </Card>
       </section>
@@ -272,24 +277,12 @@ export default function ConfiguracionPage() {
           </div>
         </Card>
 
-        <Card title="Valorización" eyebrow="Mercado" description="Parámetros visibles para entender de dónde vienen precios, dólar y conversiones.">
+        <Card title="Valorización" eyebrow="Mercado" description="Parámetros visibles para entender de dónde vienen el dólar y las conversiones.">
           <div style={{ display: "grid", gap: 0 }}>
             <ReadOnlyRow label="USD/CLP" value="mindicador.cl" helper="Con fallback controlado si el proveedor no responde." />
-            <ReadOnlyRow label="Precios cripto" value="Binance + stablecoins" />
             <ReadOnlyRow label="CLP" value="Sin decimales" />
             <ReadOnlyRow label="Crypto" value="Hasta 8 decimales" />
           </div>
-          <Link href="/panel" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 900, textDecoration: "none" }}>Ver resumen valorizado</Link>
-        </Card>
-
-        <Card title="Documentos" eyebrow="Respaldo" description="Elementos obligatorios de los respaldos generados por LEDGERA.">
-          <div style={{ display: "grid", gap: 8 }}>
-            <StatusPill tone="ok">Folio documental</StatusPill>
-            <StatusPill tone="ok">Hash de verificación</StatusPill>
-            <StatusPill tone="ok">QR de validación</StatusPill>
-            <StatusPill tone="ok">Tipo de cambio usado</StatusPill>
-          </div>
-          <Link href="/declaraciones" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 900, textDecoration: "none" }}>Ir a declaraciones</Link>
         </Card>
       </section>
     </main>
