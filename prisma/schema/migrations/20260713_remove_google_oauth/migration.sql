@@ -25,3 +25,16 @@ CREATE UNIQUE INDEX IF NOT EXISTS "one_time_tokens_token_key"
   ON "one_time_tokens"("token");
 CREATE UNIQUE INDEX IF NOT EXISTS "one_time_tokens_identifier_token_key"
   ON "one_time_tokens"("identifier", "token");
+
+-- La ejecución se considera correcta solo si no queda ninguna tabla OAuth
+-- y el almacenamiento propio de tokens continúa disponible.
+DO $$
+BEGIN
+  IF to_regclass('public.auth_accounts') IS NOT NULL
+     OR to_regclass('public.auth_sessions') IS NOT NULL
+     OR to_regclass('public.auth_verification_tokens') IS NOT NULL
+     OR to_regclass('public.one_time_tokens') IS NULL THEN
+    RAISE EXCEPTION 'OAuth cleanup verification failed';
+  END IF;
+END
+$$;
