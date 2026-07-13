@@ -14,17 +14,16 @@
 - `BUY`: `NON_TAXABLE`.
 - transferencias entre wallets propias: `NON_TAXABLE`; otros casos quedan `UNCLASSIFIED`.
 
-## Auth.js
+## Autenticacion
 
-Se agrego Auth.js v5 con ruta `/api/auth/[...nextauth]`, provider Google y credentials con `bcrypt`. Las tablas del adaptador se mapearon como `auth_accounts`, `auth_sessions` y `auth_verification_tokens` para preservar la tabla `users` existente.
+LEDGERA utiliza autenticacion propia mediante correo, contraseña, sesiones `HttpOnly` y verificacion TOTP. La integracion de acceso con Google y Auth.js fue retirada; no existen endpoints OAuth ni providers sociales activos.
 
-Variables requeridas:
+Variables de seguridad utilizadas por el flujo propio:
 
 ```env
-NEXTAUTH_URL=https://ledgera.cl
-NEXTAUTH_SECRET=replace-with-a-32-byte-secret
-GOOGLE_CLIENT_ID=replace-with-google-client-id
-GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
+AUTH_SECRET=replace-with-a-32-byte-secret
+REGISTRATION_2FA_TOKEN_SECRET=replace-with-a-32-byte-secret
+NEXT_PUBLIC_APP_URL=https://ledgera.cl
 ```
 
 ## Stack estable
