@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
-import { ok, serverError } from "@/shared/apiResponse";
+import { validateRut } from "@/modules/tax/application/validateRut";
 import { requireAuth } from "@/shared";
+import { ok, serverError } from "@/shared/apiResponse";
 
+export const dynamic = "force-dynamic";
 
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
 type ProfileBody = {
   fullName?: string;
   rut?: string;
@@ -30,16 +31,78 @@ function clean(value: unknown, max: number) {
   return text.length > 0 ? text : null;
 }
 
-function normalizeRut(value: unknown) {
-  const text = clean(value, MAX_LENGTHS.rut);
-  if (!text) return null;
-  return text.toUpperCase().replace(/[^0-9K.-]/g, "");
+function normalizeChileanPhone(value: unknown) {
+  const text = clean(value, MAX_LENGTHS.phone);
+  if (!text) return { valid: true as const, value: null };
+
+  const rawDigits = text.replace(/\D/g, "");
+  const digits = rawDigits.startsWith("56") ? rawDigits.slice(2) : rawDigits;
+
+  if (digits.length !== 9) {
+    return {
+      valid: false as const,
+      message: "El teléfono debe contener 9 dígitos chilenos, por ejemplo +56 9 1234 5678.",
+    };
+  }
+
+  return {
+    valid: true as const,
+    value: `+56 ${digits.slice(0, 1)} ${digits.slice(1, 5)} ${digits.slice(5)}`,
+  };
 }
 
 async function requireSession(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
   return auth;
+}
+
+const profileSelect = {
+  id: true,
+  email: true,
+  full_name: true,
+  role: true,
+  status: true,
+  subscription_plan: true,
+  subscription_expires_at: true,
+  twoFactorEnabled: true,
+  rut: true,
+  phone: true,
+  address: true,
+  commune: true,
+  country: true,
+} as const;
+
+function serializeProfile(user: {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  status: string;
+  subscription_plan: string;
+  subscription_expires_at: Date | null;
+  twoFactorEnabled: boolean;
+  rut: string | null;
+  phone: string | null;
+  address: string | null;
+  commune: string | null;
+  country: string | null;
+}) {
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.full_name,
+    role: user.role,
+    status: user.status,
+    subscriptionPlan: user.subscription_plan,
+    subscriptionExpiresAt: user.subscription_expires_at,
+    twoFactorEnabled: user.twoFactorEnabled,
+    rut: user.rut ?? "",
+    phone: user.phone ?? "",
+    address: user.address ?? "",
+    commune: user.commune ?? "",
+    country: user.country ?? "Chile",
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -50,43 +113,14 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.users.findUnique({
       where: { id: session.user.id },
-      select: {
-        id: true,
-        email: true,
-        full_name: true,
-        role: true,
-        status: true,
-        subscription_plan: true,
-        subscription_expires_at: true,
-        twoFactorEnabled: true,
-        rut: true,
-        phone: true,
-        address: true,
-        commune: true,
-        country: true,
-      },
+      select: profileSelect,
     });
 
-    if (!user) return NextResponse.json({ ok: false, message: "Usuario no encontrado." }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ ok: false, message: "Usuario no encontrado." }, { status: 404 });
+    }
 
-    return ok(
-      {
-        id: user.id,
-        email: user.email,
-        fullName: user.full_name,
-        role: user.role,
-        status: user.status,
-        subscriptionPlan: user.subscription_plan,
-        subscriptionExpiresAt: user.subscription_expires_at,
-        twoFactorEnabled: user.twoFactorEnabled,
-        rut: user.rut ?? "",
-        phone: user.phone ?? "",
-        address: user.address ?? "",
-        commune: user.commune ?? "",
-        country: user.country ?? "Chile",
-      },
-      "Perfil cargado correctamente.",
-    );
+    return ok(serializeProfile(user), "Perfil cargado correctamente.");
   } catch (error) {
     return serverError(error);
   }
@@ -108,33 +142,52 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const updated = await prisma.users.update({
+    const rutText = clean(body.rut, MAX_LENGTHS.rut);
+    let normalizedRut: string | null = null;
+    if (rutText) {
+      const result = validateRut(rutText);
+      if (!result.valid || !result.normalized) {
+        return NextResponse.json(
+          { ok: false, message: result.message ?? "El RUT ingresado no es válido." },
+          { status: 400 },
+        );
+      }
+      normalizedRut = result.normalized;
+    }
+
+    const normalizedPhone = normalizeChileanPhone(body.phone);
+    if (!normalizedPhone.valid) {
+      return NextResponse.json(
+        { ok: false, message: normalizedPhone.message },
+        { status: 400 },
+      );
+    }
+
+    const updateResult = await prisma.users.updateMany({
       where: { id: session.user.id },
       data: {
         full_name: fullName,
-        rut: normalizeRut(body.rut),
-        phone: clean(body.phone, MAX_LENGTHS.phone),
+        rut: normalizedRut,
+        phone: normalizedPhone.value,
         address: clean(body.address, MAX_LENGTHS.address),
         commune: clean(body.commune, MAX_LENGTHS.commune),
-        country: clean(body.country, MAX_LENGTHS.country) ?? "Chile",
+        country: "Chile",
         updated_at: new Date(),
       },
-      select: {
-        id: true,
-        email: true,
-        full_name: true,
-        role: true,
-        status: true,
-        subscription_plan: true,
-        subscription_expires_at: true,
-        twoFactorEnabled: true,
-        rut: true,
-        phone: true,
-        address: true,
-        commune: true,
-        country: true,
-      },
     });
+
+    if (updateResult.count !== 1) {
+      return NextResponse.json({ ok: false, message: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    const updated = await prisma.users.findUnique({
+      where: { id: session.user.id },
+      select: profileSelect,
+    });
+
+    if (!updated) {
+      return NextResponse.json({ ok: false, message: "Usuario no encontrado." }, { status: 404 });
+    }
 
     await prisma.settingsAuditLog.create({
       data: {
@@ -147,24 +200,7 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    return ok(
-      {
-        id: updated.id,
-        email: updated.email,
-        fullName: updated.full_name,
-        role: updated.role,
-        status: updated.status,
-        subscriptionPlan: updated.subscription_plan,
-        subscriptionExpiresAt: updated.subscription_expires_at,
-        twoFactorEnabled: updated.twoFactorEnabled,
-        rut: updated.rut ?? "",
-        phone: updated.phone ?? "",
-        address: updated.address ?? "",
-        commune: updated.commune ?? "",
-        country: updated.country ?? "Chile",
-      },
-      "Perfil actualizado correctamente.",
-    );
+    return ok(serializeProfile(updated), "Perfil actualizado correctamente.");
   } catch (error) {
     return serverError(error);
   }
