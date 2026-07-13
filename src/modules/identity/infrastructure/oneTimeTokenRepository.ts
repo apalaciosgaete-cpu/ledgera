@@ -19,10 +19,10 @@ export async function issueOneTimeToken(input: {
   const expires = new Date(Date.now() + input.ttlMs);
 
   await prisma.$transaction([
-    prisma.verificationToken.deleteMany({
+    prisma.oneTimeToken.deleteMany({
       where: { identifier: input.identifier },
     }),
-    prisma.verificationToken.create({
+    prisma.oneTimeToken.create({
       data: {
         identifier: input.identifier,
         token: hashToken(token),
@@ -40,7 +40,7 @@ export async function readOneTimeToken(
   const normalized = String(token ?? "").trim();
   if (!normalized) return null;
 
-  const record = await prisma.verificationToken.findUnique({
+  const record = await prisma.oneTimeToken.findUnique({
     where: { token: hashToken(normalized) },
     select: {
       identifier: true,
@@ -51,7 +51,7 @@ export async function readOneTimeToken(
   if (!record) return null;
 
   if (record.expires.getTime() <= Date.now()) {
-    await prisma.verificationToken.deleteMany({
+    await prisma.oneTimeToken.deleteMany({
       where: { token: hashToken(normalized) },
     });
     return null;
@@ -69,7 +69,7 @@ export async function consumeOneTimeToken(
   const tokenHash = hashToken(normalized);
 
   return prisma.$transaction(async (tx) => {
-    const record = await tx.verificationToken.findUnique({
+    const record = await tx.oneTimeToken.findUnique({
       where: { token: tokenHash },
       select: {
         identifier: true,
@@ -79,7 +79,7 @@ export async function consumeOneTimeToken(
 
     if (!record) return null;
 
-    const deleted = await tx.verificationToken.deleteMany({
+    const deleted = await tx.oneTimeToken.deleteMany({
       where: { token: tokenHash },
     });
 
@@ -95,7 +95,7 @@ export async function revokeOneTimeToken(token: string) {
   const normalized = String(token ?? "").trim();
   if (!normalized) return;
 
-  await prisma.verificationToken.deleteMany({
+  await prisma.oneTimeToken.deleteMany({
     where: { token: hashToken(normalized) },
   });
 }
