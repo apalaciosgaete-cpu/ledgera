@@ -12,6 +12,10 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
+function exists(relativePath) {
+  return fs.existsSync(path.join(root, relativePath));
+}
+
 function loadTsModule(relativePath) {
   const source = read(relativePath);
   const compiled = ts.transpileModule(source, {
@@ -55,12 +59,22 @@ test("tax classification marks SELL and SWAP as capital gain", () => {
   assert.equal(TaxClassificationService.classify("BUY"), "NON_TAXABLE");
 });
 
-test("auth.js route and dependencies are present", () => {
+test("google oauth and nextauth integration are absent", () => {
   const packageJson = JSON.parse(read("package.json"));
+  const loginSource = read("src/app/login/page.tsx");
+  const layoutSource = read("src/app/layout.tsx");
 
-  assert.match(read("src/app/api/auth/[...nextauth]/route.ts"), /NextAuth/);
-  assert.ok(packageJson.dependencies["next-auth"]);
-  assert.ok(packageJson.dependencies["@auth/prisma-adapter"]);
+  assert.equal(packageJson.dependencies["next-auth"], undefined);
+  assert.equal(packageJson.dependencies["@auth/prisma-adapter"], undefined);
+  assert.equal(exists("src/app/api/auth/google/route.ts"), false);
+  assert.equal(exists("src/app/api/auth/google/callback/route.ts"), false);
+  assert.equal(exists("src/app/api/auth/[...nextauth]/route.ts"), false);
+  assert.equal(exists("src/app/api/2fa/oauth-setup/route.ts"), false);
+  assert.equal(exists("src/lib/auth.ts"), false);
+  assert.equal(exists("src/hooks/useAuth.ts"), false);
+  assert.equal(exists("src/components/auth/AuthEntryTrustOverlay.tsx"), false);
+  assert.doesNotMatch(loginSource, /oauth2fa|api\/auth\/google|Continuar con Google/);
+  assert.doesNotMatch(layoutSource, /AuthEntryTrustOverlay/);
   assert.ok(packageJson.dependencies.bcrypt);
   assert.equal(packageJson.dependencies.bcryptjs, undefined);
 });
