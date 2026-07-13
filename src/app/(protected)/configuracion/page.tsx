@@ -1,95 +1,70 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+
 import { useAuth } from "@/modules/identity/client/authContext";
-import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
+import { httpClient } from "@/shared/http/httpClient";
 import { fonts } from "@/styles/tokens";
 
-type Profile = {
-  id: string;
-  email: string;
+type ProfileSummary = {
   fullName: string;
-  role: string;
-  status: string;
-  subscriptionPlan: string;
-  subscriptionExpiresAt: string | null;
-  twoFactorEnabled: boolean;
   rut: string;
   phone: string;
   address: string;
   commune: string;
-  country: string;
 };
 
 type ApiResponse<T> = {
   ok: boolean;
-  message: string;
   data: T;
 };
 
-type CardProps = {
+type Tone = "ok" | "warn" | "neutral";
+
+type SettingsCard = {
   title: string;
-  eyebrow?: string;
   description: string;
-  children: React.ReactNode;
+  href: string;
+  action: string;
+  status: string;
+  tone: Tone;
+  icon: React.ReactNode;
 };
 
-const inputStyle = {
-  width: "100%",
-  border: "1px solid var(--border)",
-  background: "var(--bg-sunken)",
-  color: "var(--text)",
-  borderRadius: 12,
-  padding: "11px 12px",
-  fontSize: 14,
-  fontFamily: fonts.body,
-  boxSizing: "border-box" as const,
+const toneStyles: Record<Tone, { background: string; color: string; border: string }> = {
+  ok: {
+    background: "rgba(22,163,74,0.10)",
+    color: "var(--accent)",
+    border: "rgba(22,163,74,0.18)",
+  },
+  warn: {
+    background: "rgba(245,158,11,0.10)",
+    color: "var(--warn)",
+    border: "rgba(245,158,11,0.20)",
+  },
+  neutral: {
+    background: "var(--bg-sunken)",
+    color: "var(--text-soft)",
+    border: "var(--border)",
+  },
 };
 
-function label(text: string) {
-  return (
-    <span style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 850, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-      {text}
-    </span>
-  );
-}
-
-function Card({ title, eyebrow, description, children }: CardProps) {
-  return (
-    <section style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 22, padding: 20, display: "grid", gap: 16, boxShadow: "0 18px 42px rgba(0,0,0,0.08)" }}>
-      <div style={{ display: "grid", gap: 6 }}>
-        {eyebrow ? <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 900, letterSpacing: "0.08em", margin: 0, textTransform: "uppercase" }}>{eyebrow}</p> : null}
-        <h2 style={{ color: "var(--text)", fontSize: 20, fontWeight: 950, letterSpacing: "-0.04em", margin: 0 }}>{title}</h2>
-        <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>{description}</p>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function StatusBadge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "ok" | "warn" | "neutral" }) {
-  const styles = {
-    ok: { background: "rgba(22,163,74,0.10)", color: "var(--accent)" },
-    warn: { background: "rgba(245,158,11,0.12)", color: "var(--warn)" },
-    neutral: { background: "rgba(100,116,139,0.10)", color: "var(--text-soft)" },
-  }[tone];
-
+function IconFrame({ children }: { children: React.ReactNode }) {
   return (
     <span
+      aria-hidden="true"
       style={{
+        width: 38,
+        height: 38,
+        borderRadius: 10,
         display: "inline-flex",
         alignItems: "center",
-        width: "fit-content",
-        maxWidth: "100%",
-        flex: "0 0 auto",
-        borderRadius: 999,
-        padding: "4px 8px",
-        fontSize: 11,
-        fontWeight: 800,
-        lineHeight: 1.2,
-        whiteSpace: "nowrap",
-        background: styles.background,
-        color: styles.color,
+        justifyContent: "center",
+        color: "var(--accent)",
+        background: "var(--accent-soft)",
+        border: "1px solid var(--border)",
+        flexShrink: 0,
       }}
     >
       {children}
@@ -97,193 +72,223 @@ function StatusBadge({ children, tone = "neutral" }: { children: React.ReactNode
   );
 }
 
-function ReadOnlyRow({ label, value, helper }: { label: string; value: string; helper?: string }) {
+function StatusBadge({ children, tone }: { children: React.ReactNode; tone: Tone }) {
+  const style = toneStyles[tone];
   return (
-    <div style={{ display: "grid", gap: 4, padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <span style={{ color: "var(--text-soft)", fontSize: 13 }}>{label}</span>
-        <strong style={{ color: "var(--text)", fontSize: 13.5, textAlign: "right" }}>{value}</strong>
-      </div>
-      {helper ? <span style={{ color: "var(--text-faint)", fontSize: 12 }}>{helper}</span> : null}
-    </div>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        width: "fit-content",
+        maxWidth: "100%",
+        padding: "4px 8px",
+        borderRadius: 7,
+        border: `1px solid ${style.border}`,
+        background: style.background,
+        color: style.color,
+        fontSize: 11,
+        fontWeight: 800,
+        lineHeight: 1.2,
+      }}
+    >
+      {children}
+    </span>
   );
 }
 
-function formatDate(value: string | null) {
-  if (!value) return "Sin vencimiento informado";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Sin vencimiento informado";
-  return date.toLocaleDateString("es-CL", { dateStyle: "medium" });
+function SettingsCardView({ card }: { card: SettingsCard }) {
+  return (
+    <article
+      style={{
+        minHeight: 190,
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
+        borderRadius: 16,
+        padding: 18,
+        display: "grid",
+        gridTemplateRows: "auto 1fr auto",
+        gap: 16,
+        boxShadow: "0 12px 30px rgba(0,0,0,0.06)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <IconFrame>{card.icon}</IconFrame>
+        <StatusBadge tone={card.tone}>{card.status}</StatusBadge>
+      </div>
+
+      <div style={{ display: "grid", alignContent: "start", gap: 7 }}>
+        <h2 style={{ margin: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: 18, fontWeight: 800 }}>
+          {card.title}
+        </h2>
+        <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13, lineHeight: 1.55 }}>
+          {card.description}
+        </p>
+      </div>
+
+      <Link
+        href={card.href}
+        style={{
+          minHeight: 38,
+          padding: "8px 12px",
+          borderRadius: 9,
+          border: "1px solid var(--border)",
+          background: "var(--bg-sunken)",
+          color: "var(--text)",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          textDecoration: "none",
+          fontSize: 13,
+          fontWeight: 800,
+        }}
+      >
+        {card.action}
+        <span aria-hidden="true">→</span>
+      </Link>
+    </article>
+  );
 }
 
 export default function ConfiguracionPage() {
-  const { user, refreshUser } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [form, setForm] = useState({ fullName: "", rut: "", phone: "", address: "", commune: "", country: "Chile" });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<ProfileSummary | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    httpClient<ApiResponse<Profile>>("/api/configuracion/perfil", { auth: true })
+
+    httpClient<ApiResponse<ProfileSummary>>("/api/configuracion/perfil", { auth: true })
       .then((response) => {
-        if (cancelled) return;
-        setProfile(response.data);
-        setForm({
-          fullName: response.data.fullName ?? "",
-          rut: response.data.rut ?? "",
-          phone: response.data.phone ?? "",
-          address: response.data.address ?? "",
-          commune: response.data.commune ?? "",
-          country: response.data.country ?? "Chile",
-        });
+        if (!cancelled) setProfile(response.data);
       })
-      .catch((error) => {
-        if (cancelled) return;
-        setNotice({ type: "error", text: isHttpClientError(error) ? error.message : "No fue posible cargar la configuración." });
+      .catch(() => {
+        if (!cancelled) setProfile(null);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingProfile(false);
       });
+
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const completion = useMemo(() => {
-    const items = [form.fullName, form.rut, form.phone, form.address, form.commune, form.country];
-    return Math.round((items.filter((item) => item.trim().length > 0).length / items.length) * 100);
-  }, [form]);
+  const profileCompletion = useMemo(() => {
+    if (!profile) return 0;
+    const values = [profile.fullName, profile.rut, profile.phone, profile.address, profile.commune];
+    return Math.round((values.filter((value) => value.trim().length > 0).length / values.length) * 100);
+  }, [profile]);
 
-  async function saveProfile(e: FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setNotice(null);
-
-    try {
-      const response = await httpClient<ApiResponse<Profile>>("/api/configuracion/perfil", {
-        method: "PUT",
-        auth: true,
-        body: form,
-      });
-      setProfile(response.data);
-      setNotice({ type: "ok", text: "Datos de cuenta actualizados." });
-      void refreshUser({ silent: true });
-    } catch (error) {
-      setNotice({ type: "error", text: isHttpClientError(error) ? error.message : "No fue posible guardar los cambios." });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  const currentUser = profile ?? (user ? {
-    id: user.id,
-    email: user.email,
-    fullName: user.email,
-    role: user.role,
-    status: user.status ?? "active",
-    subscriptionPlan: user.subscriptionPlan ?? "BASICO",
-    subscriptionExpiresAt: user.subscriptionExpiresAt ? String(user.subscriptionExpiresAt) : null,
-    twoFactorEnabled: user.twoFactorEnabled === true,
-    rut: "",
-    phone: "",
-    address: "",
-    commune: "",
-    country: "Chile",
-  } satisfies Profile : null);
+  const cards = useMemo<SettingsCard[]>(
+    () => [
+      {
+        title: "Perfil y datos personales",
+        description: "Nombre, RUT, teléfono y domicilio usados en reportes y documentos.",
+        href: "/configuracion/perfil",
+        action: profileCompletion === 100 ? "Revisar perfil" : "Completar perfil",
+        status: loadingProfile ? "Revisando" : profileCompletion === 100 ? "Completo" : `${profileCompletion}% completo`,
+        tone: loadingProfile ? "neutral" : profileCompletion === 100 ? "ok" : "warn",
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        ),
+      },
+      {
+        title: "Seguridad y sesiones",
+        description: "Verificación TOTP, correo confirmado y control de sesiones activas.",
+        href: "/configuracion/seguridad",
+        action: "Gestionar seguridad",
+        status: user?.twoFactorEnabled ? "2FA activo" : "Requiere 2FA",
+        tone: user?.twoFactorEnabled ? "ok" : "warn",
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        ),
+      },
+      {
+        title: "Identidad tributaria",
+        description: "Datos legales y de contacto utilizados para documentos tributarios electrónicos.",
+        href: "/configuracion/identidad-tributaria",
+        action: "Revisar identidad",
+        status: "Chile",
+        tone: "neutral",
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 22h16" />
+            <path d="M6 18V9" />
+            <path d="M10 18V9" />
+            <path d="M14 18V9" />
+            <path d="M18 18V9" />
+            <path d="M3 9h18L12 3 3 9z" />
+          </svg>
+        ),
+      },
+      {
+        title: "Preferencias",
+        description: "Idioma, moneda de visualización, alertas y formato de exportación.",
+        href: "/configuracion/preferencias",
+        action: "Configurar preferencias",
+        status: "Personalizable",
+        tone: "neutral",
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-2.83 2.83-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21h-4v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06-2.83-2.83.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3v-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06 2.83-2.83.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3h4v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06 2.83 2.83-.06.06A1.65 1.65 0 0 0 19.4 9c.12.37.2.76.2 1.16V10h.4v4h-.4c0 .34-.07.67-.2 1z" />
+          </svg>
+        ),
+      },
+      {
+        title: "Facturación",
+        description: "Plan contratado, vigencia de la suscripción y opciones disponibles.",
+        href: "/configuracion/facturacion",
+        action: "Administrar facturación",
+        status: user?.subscriptionPlan ?? "BÁSICO",
+        tone: "neutral",
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+            <line x1="6" y1="15" x2="10" y2="15" />
+          </svg>
+        ),
+      },
+      {
+        title: "Auditoría",
+        description: "Consulta cambios de configuración y actividad registrada sobre la cuenta.",
+        href: "/configuracion/auditoria",
+        action: "Ver actividad",
+        status: "Trazabilidad",
+        tone: "neutral",
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 11l3 3L22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+        ),
+      },
+    ],
+    [loadingProfile, profileCompletion, user?.subscriptionPlan, user?.twoFactorEnabled],
+  );
 
   return (
-    <main style={{ display: "grid", gap: 16, color: "var(--text)", fontFamily: fonts.body }}>
-      {notice ? (
-        <div style={{ background: notice.type === "ok" ? "var(--accent-soft)" : "rgba(196,99,74,0.14)", border: `1px solid ${notice.type === "ok" ? "var(--accent-soft)" : "rgba(196,99,74,0.28)"}`, color: notice.type === "ok" ? "var(--accent)" : "var(--loss)", borderRadius: 14, padding: "12px 14px", fontSize: 13, fontWeight: 850 }}>
-          {notice.text}
-        </div>
-      ) : null}
+    <main style={{ display: "grid", gap: 20, color: "var(--text)", fontFamily: fonts.body }}>
+      <header style={{ display: "grid", gap: 5 }}>
+        <h1 style={{ margin: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: "clamp(1.7rem,3vw,2.2rem)", fontWeight: 850, letterSpacing: "-0.035em" }}>
+          Configuración
+        </h1>
+        <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55 }}>
+          Administra los datos y controles de tu cuenta desde cada sección.
+        </p>
+      </header>
 
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))", gap: 16 }}>
-        <Card title="Datos de cuenta" eyebrow="Perfil" description="Información del titular usada para identificar tus reportes, respaldos y declaraciones exportables.">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}>
-            <div style={{ display: "grid", gap: 2 }}>
-              <span style={{ color: "var(--text-soft)", fontSize: 12, fontWeight: 800 }}>Completitud del perfil</span>
-              <span style={{ color: "var(--text-faint)", fontSize: 11 }}>Datos usados en respaldos y documentos descargables.</span>
-            </div>
-            <strong style={{ color: completion >= 80 ? "var(--accent)" : "var(--warn)", fontSize: 20, fontWeight: 900 }}>{completion}%</strong>
-          </div>
-
-          {loading ? (
-            <p style={{ color: "var(--text-soft)", margin: 0 }}>Cargando perfil...</p>
-          ) : (
-            <form onSubmit={saveProfile} style={{ display: "grid", gap: 12 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
-                <label style={{ display: "grid", gap: 7 }}>
-                  {label("Nombre / razón social")}
-                  <input value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} required style={inputStyle} />
-                </label>
-                <label style={{ display: "grid", gap: 7 }}>
-                  {label("RUT")}
-                  <input value={form.rut} onChange={(e) => setForm((prev) => ({ ...prev, rut: e.target.value }))} placeholder="12.345.678-9" style={inputStyle} />
-                </label>
-                <label style={{ display: "grid", gap: 7 }}>
-                  {label("Teléfono")}
-                  <input value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} placeholder="+56 9..." style={inputStyle} />
-                </label>
-                <label style={{ display: "grid", gap: 7 }}>
-                  {label("País tributario")}
-                  <input value={form.country} onChange={(e) => setForm((prev) => ({ ...prev, country: e.target.value }))} style={inputStyle} />
-                </label>
-                <label style={{ display: "grid", gap: 7 }}>
-                  {label("Comuna")}
-                  <input value={form.commune} onChange={(e) => setForm((prev) => ({ ...prev, commune: e.target.value }))} style={inputStyle} />
-                </label>
-                <label style={{ display: "grid", gap: 7 }}>
-                  {label("Dirección")}
-                  <input value={form.address} onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value }))} style={inputStyle} />
-                </label>
-              </div>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-faint)", fontSize: 12 }}>Correo: {currentUser?.email ?? "—"}</span>
-                <button type="submit" disabled={saving} style={{ border: "none", background: "var(--accent)", color: "var(--text)", borderRadius: 999, padding: "11px 16px", fontWeight: 900, cursor: saving ? "not-allowed" : "pointer", fontFamily: fonts.body }}>
-                  {saving ? "Guardando..." : "Guardar datos"}
-                </button>
-              </div>
-            </form>
-          )}
-        </Card>
-
-        <Card title="Seguridad" eyebrow="Acceso" description="Estado de cuenta, doble factor y acciones de control de sesión.">
-          <div style={{ display: "grid", gap: 0 }}>
-            <ReadOnlyRow label="Estado de cuenta" value={currentUser?.status === "active" ? "Activa" : currentUser?.status ?? "—"} />
-            <ReadOnlyRow label="2FA" value={currentUser?.twoFactorEnabled ? "Activo" : "Pendiente"} helper={currentUser?.twoFactorEnabled ? "La cuenta tiene autenticación de doble factor." : "Configura 2FA para reforzar el acceso."} />
-            <ReadOnlyRow label="Plan" value={currentUser?.subscriptionPlan ?? "—"} />
-            <ReadOnlyRow label="Vencimiento" value={formatDate(currentUser?.subscriptionExpiresAt ?? null)} />
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <StatusBadge tone={currentUser?.twoFactorEnabled ? "ok" : "warn"}>{currentUser?.twoFactorEnabled ? "2FA activo" : "2FA pendiente"}</StatusBadge>
-            <StatusBadge>Sesión protegida</StatusBadge>
-          </div>
-        </Card>
-      </section>
-
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
-        <Card title="Tributario" eyebrow="Criterios" description="Criterios usados por LEDGERA para calcular saldos, respaldos y lectura tributaria preliminar.">
-          <div style={{ display: "grid", gap: 0 }}>
-            <ReadOnlyRow label="País tributario" value={form.country || "Chile"} />
-            <ReadOnlyRow label="Moneda de declaración" value="CLP" helper="Los reportes tributarios se emiten en pesos chilenos." />
-            <ReadOnlyRow label="Método de costo" value="FIFO" helper="Criterio recomendado y controlado para mantener trazabilidad." />
-            <ReadOnlyRow label="Stablecoins" value="Tratadas como USD" />
-          </div>
-        </Card>
-
-        <Card title="Valorización" eyebrow="Mercado" description="Parámetros visibles para entender de dónde vienen el dólar y las conversiones.">
-          <div style={{ display: "grid", gap: 0 }}>
-            <ReadOnlyRow label="USD/CLP" value="mindicador.cl" helper="Con fallback controlado si el proveedor no responde." />
-            <ReadOnlyRow label="CLP" value="Sin decimales" />
-            <ReadOnlyRow label="Crypto" value="Hasta 8 decimales" />
-          </div>
-        </Card>
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 14 }}>
+        {cards.map((card) => (
+          <SettingsCardView key={card.href} card={card} />
+        ))}
       </section>
     </main>
   );
