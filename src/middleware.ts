@@ -23,7 +23,6 @@ const protectedPagePrefixes = [
 const csrfBypassApiPrefixes = [
   "/api/csrf",
   "/api/billing/webhook",
-  "/api/auth/google",
   "/api/verify",
   "/api/health",
 ];
