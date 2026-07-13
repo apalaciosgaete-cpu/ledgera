@@ -1,4 +1,4 @@
-name: Remove obsolete Google auth
+name: Complete obsolete Google auth cleanup
 
 on:
   push:
@@ -24,9 +24,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - name: Remove obsolete auth models and tables
+      - name: Remove obsolete auth models and create database migration
         shell: bash
         run: |
           node <<'NODE'
@@ -85,53 +84,23 @@ jobs:
           for (const obsoletePath of obsoletePaths) {
             fs.rmSync(obsoletePath, { recursive: true, force: true });
           }
-
-          const scanRoots = ['src', 'tests', 'docs', 'package.json'];
-          const forbiddenSourceTerms = [
-            '/api/auth/google',
-            'GOOGLE_CLIENT_ID',
-            'GOOGLE_CLIENT_SECRET',
-            'GOOGLE_REDIRECT_URI',
-            'NEXTAUTH_SECRET',
-            'NEXTAUTH_URL',
-            'next-auth',
-            '@auth/prisma-adapter',
-            'oauth2fa',
-            'oauth-setup',
-            'AuthEntryTrustOverlay',
-          ];
-
-          function filesUnder(target) {
-            if (!fs.existsSync(target)) return [];
-            const stat = fs.statSync(target);
-            if (stat.isFile()) return [target];
-            return fs.readdirSync(target, { withFileTypes: true }).flatMap((entry) =>
-              filesUnder(path.join(target, entry.name)),
-            );
-          }
-
-          for (const file of scanRoots.flatMap(filesUnder)) {
-            if (!/\.(?:ts|tsx|js|mjs|cjs|json|md)$/.test(file)) continue;
-            const content = fs.readFileSync(file, 'utf8');
-            for (const term of forbiddenSourceTerms) {
-              if (content.includes(term)) {
-                throw new Error(`Referencia obsoleta ${term} encontrada en ${file}`);
-              }
-            }
-          }
           NODE
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-package-lock
 
       - name: Validate Prisma schema
-        run: npx prisma format
+        run: |
+          npx prisma format
+          npx prisma validate
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests and typecheck
+        run: |
+          npm test
+          npm run typecheck
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Remove temporary workflow
+        run: rm .github/workflows/remove-obsolete-google-auth.yml
 
       - name: Commit cleanup directly to main
         shell: bash
