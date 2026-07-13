@@ -17,7 +17,6 @@ export const dynamic = "force-dynamic";
 
 const CONSENT_SECRET =
   process.env.AUTH_SECRET ||
-  process.env.NEXTAUTH_SECRET ||
   process.env.LEDGERA_CONSENT_AUDIT_SECRET ||
   "ledgera-local-consent-audit-secret";
 
