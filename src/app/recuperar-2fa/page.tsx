@@ -169,7 +169,7 @@ function RecoveryContent() {
 
   const inputStyle = {
     width: "100%",
-    padding: "0.82rem 1rem",
+    padding: "0.78rem 0.9rem",
     borderRadius: 10,
     border: "1px solid var(--border-strong)",
     background: "var(--bg-sunken)",
@@ -179,13 +179,13 @@ function RecoveryContent() {
   } as const;
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--bg)", display: "grid", placeItems: "center", padding: 24 }}>
-      <section style={{ width: "100%", maxWidth: 480, background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 20, padding: 28, boxShadow: "var(--shadow-lg)", display: "grid", gap: 20 }}>
-        <div style={{ display: "grid", justifyItems: "center", gap: 14 }}>
-          <Logo variant="light" size="lg" />
-          <div style={{ textAlign: "center", display: "grid", gap: 8 }}>
-            <h1 style={{ margin: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: 28 }}>Recuperar autenticador</h1>
-            <p style={{ margin: 0, color: "var(--text-soft)", fontFamily: fonts.body, lineHeight: 1.55, fontSize: 14 }}>
+    <main style={{ minHeight: "100vh", background: "var(--bg)", display: "grid", placeItems: "center", padding: "18px 16px" }}>
+      <section style={{ width: "100%", maxWidth: 430, background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: "22px 24px", boxShadow: "var(--shadow-lg)", display: "grid", gap: 16 }}>
+        <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
+          <Logo variant="light" size="md" />
+          <div style={{ textAlign: "center", display: "grid", gap: 6 }}>
+            <h1 style={{ margin: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: 24 }}>Recuperar autenticador</h1>
+            <p style={{ margin: 0, color: "var(--text-soft)", fontFamily: fonts.body, lineHeight: 1.5, fontSize: 13 }}>
               {token
                 ? "Vincula una nueva aplicación TOTP y confirma el código generado."
                 : "Confirma tus credenciales y te enviaremos un enlace seguro al correo registrado."}
@@ -195,14 +195,14 @@ function RecoveryContent() {
 
         {!token ? (
           requestSent ? (
-            <div style={{ display: "grid", gap: 14, textAlign: "center" }}>
-              <div role="status" style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", borderRadius: 12, padding: 16, color: "var(--text)", fontFamily: fonts.body, lineHeight: 1.55 }}>
+            <div style={{ display: "grid", gap: 12, textAlign: "center" }}>
+              <div role="status" style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", borderRadius: 12, padding: 14, color: "var(--text)", fontFamily: fonts.body, lineHeight: 1.5 }}>
                 {requestMessage}
               </div>
               <Link href="/login" style={{ color: "var(--accent)", fontWeight: 800, textDecoration: "none", fontFamily: fonts.body }}>Volver al inicio de sesión</Link>
             </div>
           ) : (
-            <form onSubmit={requestRecovery} style={{ display: "grid", gap: 14 }}>
+            <form onSubmit={requestRecovery} style={{ display: "grid", gap: 12 }}>
               <label style={{ display: "grid", gap: 6, color: "var(--text-soft)", fontFamily: fonts.body, fontSize: 13, fontWeight: 700 }}>
                 Correo
                 <input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} style={inputStyle} />
@@ -220,43 +220,50 @@ function RecoveryContent() {
 
               {requestError ? <p role="alert" style={{ margin: 0, color: "var(--loss)", fontFamily: fonts.body, fontSize: 13, fontWeight: 700 }}>{requestError}</p> : null}
 
-              <button type="submit" disabled={requesting} style={{ border: 0, borderRadius: 12, padding: "0.95rem 1rem", background: "var(--accent)", color: "var(--accent-contrast)", fontFamily: fonts.body, fontWeight: 900, cursor: requesting ? "not-allowed" : "pointer" }}>
+              <button type="submit" disabled={requesting} style={{ border: 0, borderRadius: 12, padding: "0.88rem 1rem", background: "var(--accent)", color: "var(--accent-contrast)", fontFamily: fonts.body, fontWeight: 900, cursor: requesting ? "not-allowed" : "pointer" }}>
                 {requesting ? "Enviando enlace..." : "Enviar enlace de recuperación"}
               </button>
 
-              <Link href="/login" style={{ textAlign: "center", color: "var(--text-soft)", textDecoration: "none", fontFamily: fonts.body, fontSize: 14 }}>Volver al inicio de sesión</Link>
+              <Link href="/login" style={{ textAlign: "center", color: "var(--text-soft)", textDecoration: "none", fontFamily: fonts.body, fontSize: 13 }}>Volver al inicio de sesión</Link>
             </form>
           )
         ) : loadingSetup ? (
           <p style={{ margin: 0, textAlign: "center", color: "var(--text-soft)", fontFamily: fonts.body }}>Generando un nuevo autenticador...</p>
         ) : setupError && !qrCode ? (
-          <div style={{ display: "grid", gap: 14, textAlign: "center" }}>
+          <div style={{ display: "grid", gap: 12, textAlign: "center" }}>
             <p role="alert" style={{ margin: 0, color: "var(--loss)", fontFamily: fonts.body, fontWeight: 700 }}>{setupError}</p>
             <Link href="/recuperar-2fa" style={{ color: "var(--accent)", fontWeight: 800, textDecoration: "none", fontFamily: fonts.body }}>Solicitar un enlace nuevo</Link>
           </div>
         ) : (
-          <form onSubmit={verifyRecovery} style={{ display: "grid", gap: 16 }}>
-            <div style={{ display: "grid", justifyItems: "center", gap: 12 }}>
-              <div style={{ background: "#fff", borderRadius: 14, padding: 12 }}>
-                <Image src={qrCode} width={220} height={220} unoptimized alt="Código QR para vincular el nuevo autenticador TOTP" />
+          <form onSubmit={verifyRecovery} style={{ display: "grid", gap: 13 }}>
+            <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
+              <div style={{ background: "#fff", borderRadius: 12, padding: 8 }}>
+                <Image
+                  src={qrCode}
+                  width={176}
+                  height={176}
+                  unoptimized
+                  alt="Código QR para vincular el nuevo autenticador TOTP"
+                  style={{ display: "block", width: "min(176px, 52vw)", height: "auto" }}
+                />
               </div>
-              <p style={{ margin: 0, color: "var(--text-soft)", fontFamily: fonts.body, fontSize: 13, textAlign: "center", lineHeight: 1.5 }}>
+              <p style={{ margin: 0, color: "var(--text-soft)", fontFamily: fonts.body, fontSize: 12, textAlign: "center", lineHeight: 1.45 }}>
                 Escanea el QR con Google Authenticator, Microsoft Authenticator, 1Password u otra aplicación compatible con TOTP.
               </p>
-              <div style={{ width: "100%", background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 12, padding: 12, display: "grid", gap: 5 }}>
-                <span style={{ color: "var(--text-faint)", fontFamily: fonts.body, fontSize: 11, fontWeight: 800, textTransform: "uppercase" }}>Clave manual</span>
-                <code style={{ color: "var(--text)", overflowWrap: "anywhere", fontSize: 13 }}>{secret}</code>
+              <div style={{ width: "100%", background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 11, padding: 10, display: "grid", gap: 4 }}>
+                <span style={{ color: "var(--text-faint)", fontFamily: fonts.body, fontSize: 10, fontWeight: 800, textTransform: "uppercase" }}>Clave manual</span>
+                <code style={{ color: "var(--text)", overflowWrap: "anywhere", fontSize: 12 }}>{secret}</code>
               </div>
             </div>
 
             <label style={{ display: "grid", gap: 6, color: "var(--text-soft)", fontFamily: fonts.body, fontSize: 13, fontWeight: 700 }}>
               Código de 6 dígitos
-              <input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required autoFocus value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setSetupError(""); }} style={{ ...inputStyle, textAlign: "center", fontSize: 20, letterSpacing: ".25em" }} />
+              <input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required autoFocus value={code} onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setSetupError(""); }} style={{ ...inputStyle, textAlign: "center", fontSize: 18, letterSpacing: ".22em" }} />
             </label>
 
             {setupError ? <p role="alert" style={{ margin: 0, color: "var(--loss)", fontFamily: fonts.body, fontSize: 13, fontWeight: 700 }}>{setupError}</p> : null}
 
-            <button type="submit" disabled={verifying} style={{ border: 0, borderRadius: 12, padding: "0.95rem 1rem", background: "var(--accent)", color: "var(--accent-contrast)", fontFamily: fonts.body, fontWeight: 900, cursor: verifying ? "not-allowed" : "pointer" }}>
+            <button type="submit" disabled={verifying} style={{ border: 0, borderRadius: 12, padding: "0.88rem 1rem", background: "var(--accent)", color: "var(--accent-contrast)", fontFamily: fonts.body, fontWeight: 900, cursor: verifying ? "not-allowed" : "pointer" }}>
               {verifying ? "Validando..." : "Activar nuevo autenticador"}
             </button>
           </form>
