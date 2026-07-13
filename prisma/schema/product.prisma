@@ -1,0 +1,463 @@
+// ── Tax / Identity ─────────────────────────────────────────────────────────────
+
+model TaxProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  documentType     String
+  rut              String
+  legalName        String
+  businessActivity String?
+  address          String
+  commune          String
+  city              String
+  dteEmail         String
+  isValidated      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("tax_profiles")
+}
+
+model TaxDocument {
+  id                       String    @id @default(cuid())
+  userId                   String
+  paymentId                String?
+  subscriptionId           String?
+  documentType             String
+  status                   String    @default("DRAFT")
+  folio                    String?
+  externalTrackId          String?   @map("external_track_id")
+  trackId                  String?   @map("track_id")
+  submissionStatus         String?   @map("submission_status")
+  issuerRut                String    @map("issuer_rut")
+  issuerLegalName          String    @map("issuer_legal_name")
+  issuerBusinessActivity   String    @map("issuer_business_activity")
+  issuerAddress            String    @map("issuer_address")
+  issuerCommune            String    @map("issuer_commune")
+  issuerCity               String    @map("issuer_city")
+  receiverRut              String    @map("receiver_rut")
+  receiverLegalName        String    @map("receiver_legal_name")
+  receiverBusinessActivity String?   @map("receiver_business_activity")
+  receiverAddress          String    @map("receiver_address")
+  receiverCommune          String    @map("receiver_commune")
+  receiverCity             String    @map("receiver_city")
+  receiverDteEmail         String    @map("receiver_dte_email")
+  netAmount                Int       @map("net_amount")
+  exemptAmount             Int       @default(0) @map("exempt_amount")
+  ivaAmount                Int       @map("iva_amount")
+  totalAmount              Int       @map("total_amount")
+  ivaRate                  Decimal   @default(0.19) @map("iva_rate") @db.Decimal(6, 4)
+  lineItemsJson            String    @map("line_items_json")
+  referenceJson            String?   @map("reference_json")
+  xmlPayload               String?   @map("xml_payload")
+  pdfUrl                   String?   @map("pdf_url")
+  externalResponse         String?   @map("external_response")
+  rejectionReason          String?   @map("rejection_reason")
+  sentAt                   DateTime? @map("sent_at")
+  acceptedAt               DateTime? @map("accepted_at")
+  rejectedAt               DateTime? @map("rejected_at")
+  voidedAt                 DateTime? @map("voided_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([documentType])
+  @@index([createdAt])
+  @@map("tax_documents")
+}
+
+model SiiCredential {
+  id                 String    @id @default(cuid())
+  environment        String
+  issuerRut          String    @map("issuer_rut")
+  certificateName    String    @map("certificate_name")
+  certificatePath    String?   @map("certificate_path")
+  certificateExpires DateTime? @map("certificate_expires")
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([issuerRut])
+  @@index([environment])
+  @@map("sii_credentials")
+}
+
+model SiiCaf {
+  id           String   @id @default(cuid())
+  documentType String   @map("document_type")
+  folioStart   Int      @map("folio_start")
+  folioEnd     Int      @map("folio_end")
+  currentFolio Int      @map("current_folio")
+  isActive     Boolean  @default(true)
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  @@index([documentType])
+  @@index([isActive])
+  @@map("sii_cafs")
+}
+
+model SmartTaxScore {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  score       Int
+  level       String
+  breakdown   Json
+  evaluatedAt DateTime @default(now()) @map("evaluated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([level])
+  @@index([evaluatedAt])
+  @@map("smart_tax_scores")
+}
+
+model Recommendation {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  category    String
+  priority    String
+  title       String
+  description String
+  actionLabel String   @map("action_label")
+  actionUrl   String   @map("action_url")
+  status      String   @default("ACTIVE")
+  sourceType  String   @map("source_type")
+  sourceId    String?  @map("source_id")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([priority])
+  @@index([status])
+  @@index([sourceType])
+  @@index([userId, status])
+  @@map("recommendations")
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  title       String
+  description String
+  category    String
+  priority    String
+  status      String    @default("PENDING")
+  source      String
+  sourceId    String?   @map("source_id")
+  assignedTo  String?   @map("assigned_to")
+  dueDate     DateTime? @map("due_date")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([userId, status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model Document {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  category          String
+  type              String
+  status            String   @default("ACTIVE")
+  name              String
+  description       String?
+  fileName          String   @map("file_name")
+  mimeType          String   @map("mime_type")
+  fileSize          Int      @map("file_size")
+  storageKey        String   @map("storage_key")
+  checksum          String?
+  tags              Json?
+  relatedEntityType String?  @map("related_entity_type")
+  relatedEntityId   String?  @map("related_entity_id")
+  uploadedBy        String?  @map("uploaded_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
+  @@index([status])
+  @@index([type])
+  @@index([userId, status])
+  @@index([relatedEntityType, relatedEntityId])
+  @@map("documents")
+}
+
+model TimelineEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  category    String
+  severity    String
+  title       String
+  description String
+  entityType  String?
+  entityId    String?
+  metadata    Json?
+  occurredAt  DateTime
+  createdAt   DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
+  @@index([severity])
+  @@index([entityType, entityId])
+  @@index([occurredAt])
+  @@map("timeline_events")
+}
+
+model AutomationProposal {
+  id     String @id @default(cuid())
+  userId String
+
+  type     String
+  priority String @default("MEDIUM")
+
+  title       String
+  description String
+
+  sourceEntity   String?
+  sourceEntityId String?
+
+  status String @default("PROPOSED")
+
+  metadata Json?
+
+  createdAt     DateTime  @default(now())
+  approvedAt    DateTime?
+  approvedBy    String?
+  rejectedAt    DateTime?
+  rejectedBy    String?
+  executedAt    DateTime?
+  failureReason String?
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([sourceEntity, sourceEntityId])
+  @@map("automation_proposals")
+}
+
+model AdaptiveTaxProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+
+  complianceScore Float @default(0)
+
+  complianceBehavior     String
+  recommendationBehavior String
+  taskBehavior           String
+  documentBehavior       String
+  riskBehavior           String
+
+  profileType String
+
+  confidence Float @default(0)
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([profileType])
+  @@map("adaptive_tax_profiles")
+}
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String
+  message   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AIInsight {
+  id         String   @id @default(cuid())
+  userId     String
+  title      String
+  summary    String
+  severity   String
+  sourceType String
+  createdAt  DateTime @default(now())
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ── Billing / Coupons ──────────────────────────────────────────────────────────
+
+model BillingCoupon {
+  id                 String                    @id @default(cuid())
+  code               String                    @unique
+  name               String
+  description        String?
+  type               String
+  value              Decimal                   @db.Decimal(18, 2)
+  maxRedemptions     Int?
+  currentRedemptions Int                       @default(0)
+  validFrom          DateTime
+  validUntil         DateTime?
+  applicablePlans    String
+  status             String                    @default("ACTIVE")
+  createdAt          DateTime                  @default(now())
+  redemptions        BillingCouponRedemption[]
+
+  @@index([status])
+  @@index([code])
+  @@map("billing_coupons")
+}
+
+model BillingCouponRedemption {
+  id         String   @id @default(cuid())
+  couponId   String
+  userId     String?
+  email      String?
+  checkoutId String?
+  redeemedAt DateTime @default(now())
+
+  coupon BillingCoupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([checkoutId])
+  @@map("billing_coupon_redemptions")
+}
+
+// ── Audit / Compliance ─────────────────────────────────────────────────────────
+
+// ── Workflows ──────────────────────────────────────────────────────────────
+
+model Workflow {
+  id     String  @id @default(cuid())
+  userId String
+  caseId String?
+
+  title       String
+  description String
+
+  status     String @default("PENDING")
+  sourceType String @default("MANUAL")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  users          @relation(fields: [userId], references: [id])
+  steps WorkflowStep[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([caseId])
+  @@map("workflows")
+}
+
+model WorkflowStep {
+  id         String @id @default(cuid())
+  workflowId String
+  stepOrder  Int
+
+  actionType String
+  status     String @default("PENDING")
+
+  title       String
+  description String?
+
+  metadata Json?
+  result   String?
+
+  executedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([status])
+  @@map("workflow_steps")
+}
+
+// ── Tax Cases ─────────────────────────────────────────────────────────────
+
+model TaxCase {
+  id String @id @default(cuid())
+
+  userId String
+
+  title       String
+  description String
+
+  status   String
+  priority String
+
+  sourceType String
+  sourceId   String?
+
+  aiSummary        String @db.Text
+  aiRecommendation String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@map("tax_cases")
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  userId      String?  @map("user_id")
+  actorId     String?  @map("actor_id")
+  category    String
+  severity    String
+  event       String
+  description String
+  result      String
+  entityType  String?  @map("entity_type")
+  entityId    String?  @map("entity_id")
+  metadata    Json?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([category])
+  @@index([event])
+  @@index([createdAt])
+  @@map("audit_events")
+}
