@@ -7,7 +7,6 @@ import "./landing-brand-override.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
-import AuthEntryTrustOverlay from "@/components/auth/AuthEntryTrustOverlay";
 
 // ── LEDGERA design system · Propuesta B "Cierre" ──
 // Display: cifras destacadas, headlines, logo · Body: nav/texto/labels · Mono: montos, folios, tablas
@@ -156,7 +155,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <AuthProvider>{children}</AuthProvider>
-        <AuthEntryTrustOverlay />
         <AnalyticsProviders />
         <CookieBanner />
       </body>
