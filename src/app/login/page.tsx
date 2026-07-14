@@ -21,7 +21,7 @@ const BG_IMAGES = [
   "/login-bg7.jpg",
   "/login-bg8.jpg",
   "/login-bg9.jpg",
-  "/login-bg10.jpg",
+  "/login-bg10.jpg"
 ];
 
 const randomBg = BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
@@ -196,44 +196,48 @@ function LoginForm() {
     position: "relative" as const,
     zIndex: 1,
     width: "100%",
-    maxWidth: "400px",
+    maxWidth: "440px",
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
-    gap: "1.5rem",
+    gap: "1.25rem",
   };
 
   const cardStyle = {
     width: "100%",
-    background: "rgba(27,33,36,0.82)",
-    border: "1px solid var(--border)",
-    backdropFilter: "blur(16px)",
-    borderRadius: "16px",
-    padding: "2rem",
+    boxSizing: "border-box" as const,
+    background: "rgba(27,33,36,0.88)",
+    border: "1px solid rgba(255,255,255,0.11)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    borderRadius: "20px",
+    padding: "2.25rem",
     display: "flex",
     flexDirection: "column" as const,
-    gap: "1.25rem",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
+    gap: "1.15rem",
+    boxShadow: "0 24px 60px rgba(0,0,0,0.36)",
   };
 
   const labelStyle = {
     display: "block",
     fontSize: "13px",
-    fontWeight: 600,
+    fontWeight: 700,
     color: "var(--text-soft)",
-    marginBottom: "6px",
+    marginBottom: "7px",
     fontFamily: fonts.body,
   };
 
   const inputStyle = {
     width: "100%",
-    padding: "0.8rem 1rem",
-    borderRadius: "10px",
+    padding: "0.88rem 1rem",
+    borderRadius: "11px",
     border: "1px solid var(--border-strong)",
     background: "var(--bg-sunken)",
     color: "var(--text)",
     fontSize: "14px",
     fontFamily: fonts.body,
+    outline: "none",
+    boxSizing: "border-box" as const,
   } as const;
 
   const codeInputStyle = {
@@ -246,12 +250,12 @@ function LoginForm() {
   const primaryButtonStyle = {
     width: "100%",
     border: "none",
-    borderRadius: "12px",
-    padding: "0.9rem 1rem",
+    borderRadius: "13px",
+    padding: "0.95rem 1rem",
     background: "var(--accent)",
     color: "var(--accent-contrast)",
     fontSize: "15px",
-    fontWeight: 800,
+    fontWeight: 850,
     fontFamily: fonts.body,
   };
 
@@ -265,6 +269,19 @@ function LoginForm() {
     fontSize: "14px",
     fontWeight: 700,
     cursor: "pointer",
+    fontFamily: fonts.body,
+  };
+
+  const passwordToggleStyle = {
+    border: "1px solid rgba(125,203,242,0.36)",
+    background: "rgba(5,10,28,0.56)",
+    color: "var(--text-soft)",
+    borderRadius: "10px",
+    padding: "0 0.75rem",
+    minWidth: "82px",
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: 650,
     fontFamily: fonts.body,
   };
 
@@ -302,7 +319,7 @@ function LoginForm() {
                 <label htmlFor="password" style={labelStyle}>Contraseña</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
                   <input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required style={{ ...inputStyle, width: "auto", flex: 1 }} />
-                  <button type="button" onClick={() => setShowPassword((visible) => !visible)} style={{ border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text-soft)", borderRadius: "10px", padding: "0 0.9rem", cursor: "pointer", fontFamily: fonts.body }}>
+                  <button type="button" onClick={() => setShowPassword((visible) => !visible)} style={passwordToggleStyle}>
                     {showPassword ? "Ocultar" : "Mostrar"}
                   </button>
                 </div>
@@ -311,7 +328,7 @@ function LoginForm() {
               {errorMessage ? <p role="alert" style={{ margin: 0, fontSize: "13px", color: "var(--loss)", fontWeight: 600, fontFamily: fonts.body }}>{errorMessage}</p> : null}
 
               <button type="submit" disabled={submitting} style={{ ...primaryButtonStyle, cursor: submitting ? "not-allowed" : "pointer" }}>
-                {submitting ? "Ingresando..." : "Entrar"}
+                {submitting ? "Iniciando sesión..." : "Iniciar sesión"}
               </button>
             </form>
           ) : (
@@ -347,9 +364,16 @@ function LoginForm() {
             </form>
           )}
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", fontSize: "13px", fontFamily: fonts.body }}>
-            <Link href="/register" style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>Crear cuenta</Link>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", fontSize: "13px", fontFamily: fonts.body, flexWrap: "wrap" }}>
+            <Link href="/register" style={{ color: "var(--accent)", fontWeight: 750, textDecoration: "none" }}>Crear cuenta</Link>
             <Link href="/forgot-password" style={{ color: "var(--text-soft)", textDecoration: "none" }}>¿Olvidaste tu contraseña?</Link>
+          </div>
+
+          <div style={{ display: "grid", gap: "0.25rem", paddingTop: "0.85rem", borderTop: "1px solid rgba(255,255,255,0.08)", fontFamily: fonts.body }}>
+            <span style={{ color: "var(--text-soft)", fontSize: "12.5px", lineHeight: 1.4 }}>¿Sin acceso al autenticador?</span>
+            <Link href="/recuperar-2fa" style={{ color: "var(--text)", fontSize: "13px", fontWeight: 750, textDecoration: "none" }}>
+              Recuperar 2FA
+            </Link>
           </div>
         </section>
       </div>
