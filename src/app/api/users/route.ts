@@ -15,12 +15,24 @@ import { issueEmailVerification } from "@/modules/identity/application/emailVeri
 import { createPortfolio } from "@/modules/portfolio/infrastructure/portfolioRepository";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
 
 const validRoles = ["personal", "contador", "empresa"] as const;
 type Role = (typeof validRoles)[number];
 
+const DEFAULT_TERMS_VERSION = "terms-2026-07";
+const DEFAULT_PRIVACY_VERSION = "privacy-2026-07";
+
 function isValidRole(value: unknown): value is Role {
   return validRoles.includes(value as Role);
+}
+
+function resolveLegalVersion(value: unknown, fallback: string) {
+  const candidate = String(value ?? "").trim();
+  return candidate || fallback;
 }
 
 export async function GET() {
@@ -56,9 +68,28 @@ export async function POST(request: NextRequest) {
     const fullName = String(body.fullName ?? "").trim();
     const password = String(body.password ?? "");
     const role: Role = isValidRole(body.role) ? body.role : "personal";
+    const termsAccepted = body.termsAccepted === true;
+    const privacyAccepted = body.privacyAccepted === true;
+    const legalConsent = body.legalConsent && typeof body.legalConsent === "object" ? body.legalConsent : {};
+    const termsVersion = resolveLegalVersion(
+      (legalConsent as { termsVersion?: unknown }).termsVersion,
+      DEFAULT_TERMS_VERSION,
+    );
+    const privacyVersion = resolveLegalVersion(
+      (legalConsent as { privacyVersion?: unknown }).privacyVersion,
+      DEFAULT_PRIVACY_VERSION,
+    );
 
     if (!email || !fullName || !password) {
       return fail("Faltan campos obligatorios: email, fullName, password.", 400);
+    }
+
+    if (!termsAccepted) {
+      return fail("Debes aceptar los Términos y Condiciones para crear tu cuenta.", 400);
+    }
+
+    if (!privacyAccepted) {
+      return fail("Debes leer la Política de Privacidad y autorizar el tratamiento de datos personales.", 400);
     }
 
     const passwordValidation = validatePasswordComplexity(password);
@@ -80,6 +111,37 @@ export async function POST(request: NextRequest) {
       fullName,
       passwordHash,
       role,
+    });
+
+    const consentedAt = new Date().toISOString();
+    const { ipAddress, userAgent } = getAuditRequestContext(request);
+
+    await createAdminAuditLog({
+      action: "USER_LEGAL_CONSENT_RECORDED",
+      actorId: user.id,
+      actorEmail: user.email,
+      targetUserId: user.id,
+      targetUserEmail: user.email,
+      ipAddress,
+      userAgent,
+      metadata: {
+        source: "registration",
+        role,
+        consentedAt,
+        termsAccepted,
+        privacyAccepted,
+        termsVersion,
+        privacyVersion,
+        treatmentBasis: "consent",
+        purposes: [
+          "account_creation",
+          "account_administration",
+          "access_security",
+          "financial_and_tax_service_delivery",
+          "tax_file_processing",
+        ],
+        notice: "El usuario autorizó el tratamiento de datos personales para crear y administrar su cuenta, proteger el acceso y prestar servicios financieros y tributarios asociados a LEDGERA.",
+      },
     });
 
     await createPortfolio(user.id);
