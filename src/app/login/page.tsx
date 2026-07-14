@@ -48,6 +48,36 @@ type TwoFactorLoginResponse = {
   data?: SessionPayload;
 };
 
+function PasswordVisibilityIcon({ crossed }: { crossed: boolean }) {
+  return (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+      <path
+        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {crossed ? (
+        <path
+          d="M4 4l16 16"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : null}
+    </svg>
+  );
+}
+
 function resolveClientError(error: unknown, fallback: string) {
   if (!isHttpClientError(error)) return fallback;
 
@@ -181,7 +211,7 @@ function LoginForm() {
     backgroundImage: `url('${randomBg}')`,
     backgroundSize: "cover",
     backgroundPosition: "center",
-    padding: "2rem",
+    padding: "1rem 1.25rem",
     position: "relative" as const,
   };
 
@@ -200,7 +230,7 @@ function LoginForm() {
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
-    gap: "1.25rem",
+    gap: "0.45rem",
   };
 
   const cardStyle = {
@@ -211,10 +241,10 @@ function LoginForm() {
     backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)",
     borderRadius: "20px",
-    padding: "2.25rem",
+    padding: "1.65rem 2rem",
     display: "flex",
     flexDirection: "column" as const,
-    gap: "1.15rem",
+    gap: "0.9rem",
     boxShadow: "0 24px 60px rgba(0,0,0,0.36)",
   };
 
@@ -223,13 +253,13 @@ function LoginForm() {
     fontSize: "13px",
     fontWeight: 700,
     color: "var(--text-soft)",
-    marginBottom: "7px",
+    marginBottom: "6px",
     fontFamily: fonts.body,
   };
 
   const inputStyle = {
     width: "100%",
-    padding: "0.88rem 1rem",
+    padding: "0.78rem 0.95rem",
     borderRadius: "11px",
     border: "1px solid var(--border-strong)",
     background: "var(--bg-sunken)",
@@ -251,7 +281,7 @@ function LoginForm() {
     width: "100%",
     border: "none",
     borderRadius: "13px",
-    padding: "0.95rem 1rem",
+    padding: "0.86rem 1rem",
     background: "var(--accent)",
     color: "var(--accent-contrast)",
     fontSize: "15px",
@@ -263,7 +293,7 @@ function LoginForm() {
     width: "100%",
     border: "1px solid var(--border-strong)",
     borderRadius: "12px",
-    padding: "0.9rem 1rem",
+    padding: "0.8rem 1rem",
     background: "transparent",
     color: "var(--text)",
     fontSize: "14px",
@@ -273,15 +303,17 @@ function LoginForm() {
   };
 
   const passwordToggleStyle = {
-    border: "1px solid rgba(125,203,242,0.36)",
-    background: "rgba(5,10,28,0.56)",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "1px solid rgba(125,203,242,0.34)",
+    background: "rgba(5,10,28,0.48)",
     color: "var(--text-soft)",
     borderRadius: "10px",
-    padding: "0 0.75rem",
-    minWidth: "82px",
+    padding: 0,
+    width: "52px",
+    minWidth: "52px",
     cursor: "pointer",
-    fontSize: "13px",
-    fontWeight: 650,
+    display: "flex",
     fontFamily: fonts.body,
   };
 
@@ -291,11 +323,11 @@ function LoginForm() {
       <div style={wrapperStyle}>
         <Logo variant="light" size="lg" />
         <section style={cardStyle}>
-          <div style={{ display: "grid", gap: "0.5rem" }}>
-            <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 900, color: "var(--text)", fontFamily: fonts.display }}>
+          <div style={{ display: "grid", gap: "0.4rem" }}>
+            <h1 style={{ margin: 0, fontSize: "1.55rem", fontWeight: 900, color: "var(--text)", fontFamily: fonts.display }}>
               {step === "credentials" ? "Iniciar sesión" : "Verificación 2FA"}
             </h1>
-            <p style={{ margin: 0, fontSize: "14px", color: "var(--text-soft)", lineHeight: 1.6, fontFamily: fonts.body }}>
+            <p style={{ margin: 0, fontSize: "14px", color: "var(--text-soft)", lineHeight: 1.5, fontFamily: fonts.body }}>
               {step === "credentials"
                 ? "Ingresa con tu correo y contraseña para continuar con LEDGERA."
                 : "Introduce el código vigente de tu aplicación autenticadora."}
@@ -303,13 +335,13 @@ function LoginForm() {
           </div>
 
           {justRegistered && step === "credentials" ? (
-            <div style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", borderRadius: "10px", padding: "0.9rem 1rem", color: "var(--gain)", fontSize: "14px", fontWeight: 600, fontFamily: fonts.body }}>
+            <div style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", borderRadius: "10px", padding: "0.8rem 0.95rem", color: "var(--gain)", fontSize: "14px", fontWeight: 600, fontFamily: fonts.body }}>
               Tu cuenta fue creada. Ahora inicia sesión.
             </div>
           ) : null}
 
           {step === "credentials" ? (
-            <form onSubmit={handleCredentials} style={{ display: "grid", gap: "1rem" }}>
+            <form onSubmit={handleCredentials} style={{ display: "grid", gap: "0.85rem" }}>
               <div>
                 <label htmlFor="email" style={labelStyle}>Correo</label>
                 <input id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required style={inputStyle} />
@@ -319,8 +351,14 @@ function LoginForm() {
                 <label htmlFor="password" style={labelStyle}>Contraseña</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
                   <input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required style={{ ...inputStyle, width: "auto", flex: 1 }} />
-                  <button type="button" onClick={() => setShowPassword((visible) => !visible)} style={passwordToggleStyle}>
-                    {showPassword ? "Ocultar" : "Mostrar"}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    style={passwordToggleStyle}
+                  >
+                    <PasswordVisibilityIcon crossed={showPassword} />
                   </button>
                 </div>
               </div>
@@ -332,7 +370,7 @@ function LoginForm() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleTwoFactor} style={{ display: "grid", gap: "1rem" }}>
+            <form onSubmit={handleTwoFactor} style={{ display: "grid", gap: "0.85rem" }}>
               <div>
                 <label htmlFor="twofa" style={labelStyle}>Código 2FA</label>
                 <input
@@ -369,8 +407,8 @@ function LoginForm() {
             <Link href="/forgot-password" style={{ color: "var(--text-soft)", textDecoration: "none" }}>¿Olvidaste tu contraseña?</Link>
           </div>
 
-          <div style={{ display: "grid", gap: "0.25rem", paddingTop: "0.85rem", borderTop: "1px solid rgba(255,255,255,0.08)", fontFamily: fonts.body }}>
-            <span style={{ color: "var(--text-soft)", fontSize: "12.5px", lineHeight: 1.4 }}>¿Sin acceso al autenticador?</span>
+          <div style={{ display: "grid", gap: "0.2rem", paddingTop: "0.6rem", borderTop: "1px solid rgba(255,255,255,0.08)", fontFamily: fonts.body }}>
+            <span style={{ color: "var(--text-soft)", fontSize: "12.5px", lineHeight: 1.35 }}>¿Sin acceso al autenticador?</span>
             <Link href="/recuperar-2fa" style={{ color: "var(--text)", fontSize: "13px", fontWeight: 750, textDecoration: "none" }}>
               Recuperar 2FA
             </Link>
