@@ -35,24 +35,29 @@ async function loadBillingAccount(): Promise<BillingAccountOverviewData | null> 
   const auth = await getSessionWithUserByToken(token);
   if (!auth || auth.session.expiresAt.getTime() <= Date.now()) return null;
 
+  const billingLive = isLiveBillingEnabled();
+  const invoicePromise = billingLive
+    ? getBillingInvoices(auth.user.id)
+        .then((invoices) => ({ available: true, invoices }))
+        .catch((error: unknown) => {
+          if (isMissingInvoicesTable(error)) {
+            return { available: false, invoices: [] };
+          }
+
+          throw error;
+        })
+    : Promise.resolve({ available: false, invoices: [] });
+
   const [status, invoiceResult] = await Promise.all([
     getBillingStatus(auth.user.id),
-    getBillingInvoices(auth.user.id)
-      .then((invoices) => ({ available: true, invoices }))
-      .catch((error: unknown) => {
-        if (isMissingInvoicesTable(error)) {
-          return { available: false, invoices: [] };
-        }
-
-        throw error;
-      }),
+    invoicePromise,
   ]);
 
   if (!status) return null;
 
   return {
     role: auth.user.role,
-    billingLive: isLiveBillingEnabled(),
+    billingLive,
     plan: {
       normalized: status.plan.normalized,
       label: status.plan.label,
