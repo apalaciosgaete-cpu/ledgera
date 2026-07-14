@@ -195,6 +195,7 @@ export async function processBillingWebhook(
       activatedAt: periodStart,
       activationSource: `billing:${event.provider}`,
     },
+    select: { id: true },
   });
 
   console.info("[commercial]", {
