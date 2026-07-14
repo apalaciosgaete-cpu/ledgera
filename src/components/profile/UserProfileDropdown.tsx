@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { LogoutButton } from "@/components/navigation/LogoutButton";
 
 type Props = {
   name:           string;
@@ -123,33 +124,7 @@ export function UserProfileDropdown({
           </div>
 
           <div style={{ paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-            <button
-              type="button"
-              onClick={() => { setOpen(false); onLogout(); }}
-              style={{
-                display:      "flex",
-                alignItems:   "center",
-                gap:          "10px",
-                padding:      "9px 12px",
-                borderRadius: "8px",
-                fontSize:     "13px",
-                fontWeight:   600,
-                color: "var(--loss)",
-                background:   "transparent",
-                border:       "none",
-                cursor:       "pointer",
-                width:        "100%",
-                textAlign:    "left",
-                transition:   "all 0.15s ease",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Cerrar sesión
-            </button>
+            <LogoutButton onClick={() => { setOpen(false); onLogout(); }} />
           </div>
         </div>
       )}
