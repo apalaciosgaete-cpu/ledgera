@@ -101,6 +101,7 @@ export async function cancelSubscription(input: {
       subscription_expires_at: now,
       activationSource: "billing:downgrade",
     },
+    select: { id: true },
   });
 
   console.info("[commercial]", {
