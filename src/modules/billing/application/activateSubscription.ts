@@ -185,6 +185,7 @@ export async function activateSubscriptionFromPayment(
           calculateCurrentPeriodEnd(),
         updated_at: new Date(),
       },
+      select: { id: true },
     });
   }
 
@@ -196,6 +197,7 @@ export async function activateSubscriptionFromPayment(
       data: {
         updated_at: new Date(),
       },
+      select: { id: true },
     });
   }
 
