@@ -1,20 +1,30 @@
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
-
-// src/app/api/billing/checkout/route.ts
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+
 import { prisma } from "@/lib/prisma";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import {
   CHECKOUT_PLAN_CONFIG,
   buildCheckoutReturnUrl,
   normalizeCheckoutPlan,
   resolveBillingProvider,
 } from "@/modules/billing/domain/checkout";
+import {
+  BILLING_UNAVAILABLE_MESSAGE,
+  isLiveBillingEnabled,
+} from "@/modules/billing/domain/billingAvailability";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isLiveBillingEnabled()) {
+      return NextResponse.json(
+        { ok: false, message: BILLING_UNAVAILABLE_MESSAGE, data: null },
+        { status: 503 },
+      );
+    }
+
     const auth = await getSessionFromRequest(request);
 
     if (!auth) {
@@ -70,8 +80,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // CAPA 4.2.09: esta URL conserva el flujo actual y deja listo el contrato
-    // para sustituirla por Stripe Checkout, Flow o MercadoPago sin cambiar la UX.
     const checkoutUrl = buildCheckoutReturnUrl({
       origin,
       paymentId: payment.id,
