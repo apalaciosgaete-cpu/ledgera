@@ -22,6 +22,7 @@ type BillingInvoicesResponse = {
   ok: boolean;
   message?: string;
   data?: {
+    available?: boolean;
     invoices: BillingInvoice[];
   };
 };
@@ -46,11 +47,11 @@ function formatDate(value: string | null) {
 function statusLabel(status: string) {
   switch (status) {
     case "PAID":
-      return "Pagada";
+      return "Pagado";
     case "ISSUED":
-      return "Emitida";
+      return "Emitido";
     case "VOID":
-      return "Anulada";
+      return "Anulado";
     case "DRAFT":
       return "Borrador";
     default:
@@ -61,6 +62,7 @@ function statusLabel(status: string) {
 export function BillingInvoicesPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [available, setAvailable] = useState(true);
   const [invoices, setInvoices] = useState<BillingInvoice[]>([]);
 
   useEffect(() => {
@@ -76,11 +78,12 @@ export function BillingInvoicesPanel() {
         });
 
         if (mounted) {
+          setAvailable(response.data?.available !== false);
           setInvoices(response.data?.invoices ?? []);
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err.message : "No fue posible cargar las facturas.");
+          setError(err instanceof Error ? err.message : "No fue posible cargar los documentos de cobro.");
         }
       } finally {
         if (mounted) setLoading(false);
@@ -98,28 +101,34 @@ export function BillingInvoicesPanel() {
     <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }}>
       <div style={{ marginBottom: "1rem" }}>
         <h3 style={{ fontFamily: fonts.display, fontSize: 15, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
-          Facturas
+          Documentos de cobro
         </h3>
         <p style={{ margin: 0, color: "var(--text)", fontSize: 12, lineHeight: 1.5 }}>
-          Historial de facturas comerciales. PDF y XML quedarán disponibles cuando el proveedor emita documentos reales.
+          Comprobantes y documentos asociados a pagos efectivamente procesados por LEDGERA.
         </p>
       </div>
 
-      {loading && <p style={{ margin: 0, color: "var(--text)", fontSize: 13 }}>Cargando facturas...</p>}
+      {loading && <p style={{ margin: 0, color: "var(--text)", fontSize: 13 }}>Cargando documentos...</p>}
       {error && <p style={{ margin: 0, color: "var(--loss)", fontSize: 13 }}>{error}</p>}
 
-      {!loading && !error && invoices.length === 0 && (
-        <div style={{ background: "var(--bg-sunken)", border: "1px dashed var(--border)", borderRadius: 10, padding: "1rem", color: "var(--text-soft)", fontSize: 13 }}>
-          Aún no hay facturas emitidas.
+      {!loading && !error && !available && (
+        <div style={{ background: "var(--bg-sunken)", border: "1px dashed var(--border)", borderRadius: 10, padding: "1rem", color: "var(--text-soft)", fontSize: 13, lineHeight: 1.55 }}>
+          La emisión y descarga de documentos de cobro todavía no está habilitada. Esta sección se activará cuando exista una integración real de pagos y documentos.
         </div>
       )}
 
-      {!loading && !error && invoices.length > 0 && (
+      {!loading && !error && available && invoices.length === 0 && (
+        <div style={{ background: "var(--bg-sunken)", border: "1px dashed var(--border)", borderRadius: 10, padding: "1rem", color: "var(--text-soft)", fontSize: 13 }}>
+          Aún no hay documentos emitidos.
+        </div>
+      )}
+
+      {!loading && !error && available && invoices.length > 0 && (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr>
-                {["Factura", "Fecha", "Proveedor", "Total", "Estado", "Documentos"].map((header) => (
+                {["Documento", "Fecha", "Proveedor", "Total", "Estado", "Archivos"].map((header) => (
                   <th key={header} style={{ textAlign: "left", padding: "8px 10px", color: "var(--text-soft)", borderBottom: "1px solid var(--border)", fontWeight: 700 }}>
                     {header}
                   </th>
