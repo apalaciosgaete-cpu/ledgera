@@ -197,15 +197,12 @@ export default function AyudaPage() {
 
   return (
     <main style={{ width: "100%", maxWidth: 1120, color: "var(--text)", fontFamily: fonts.body }}>
-      <header style={{ display: "grid", gap: 14, marginBottom: 28 }}>
-        <div style={{ display: "grid", gap: 8 }}>
-          <p style={{ margin: 0, color: "var(--accent)", fontSize: 11, fontWeight: 850, letterSpacing: "0.14em", textTransform: "uppercase" }}>
-            Soporte LEDGERA
-          </p>
-          <h1 style={{ color: "var(--text)", fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 880, lineHeight: 1.05, margin: 0, letterSpacing: "-0.045em", fontFamily: fonts.display }}>
+      <header style={{ display: "grid", gap: 18, marginBottom: 28 }}>
+        <div style={{ display: "grid", gap: 5 }}>
+          <h1 style={{ margin: 0, color: "var(--text)", fontFamily: fonts.display, fontSize: "clamp(1.7rem,3vw,2.2rem)", fontWeight: 850, letterSpacing: "-0.035em", lineHeight: 1.12 }}>
             Centro de Ayuda
           </h1>
-          <p style={{ color: "var(--text-soft)", fontSize: 15.5, lineHeight: 1.65, margin: 0, maxWidth: 760 }}>
+          <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.55, maxWidth: 760 }}>
             Encuentra guías para importar operaciones, revisar tu expediente, entender tus obligaciones tributarias y generar reportes desde LEDGERA.
           </p>
         </div>
@@ -306,7 +303,7 @@ export default function AyudaPage() {
         </section>
       )}
 
-      <section style={{ display: "grid", gridTemplateColumns: "minmax(0,1.2fr) minmax(260px,0.8fr)", gap: 14 }}>
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 14 }}>
         <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 16, padding: 22 }}>
           <h2 style={{ margin: "0 0 8px", color: "var(--text)", fontSize: 17, fontWeight: 850, fontFamily: fonts.display }}>Soporte humano</h2>
           <p style={{ margin: "0 0 14px", color: "var(--text-soft)", fontSize: 14, lineHeight: 1.6 }}>
