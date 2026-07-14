@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { SecurityPolicySettings } from "@/modules/security/domain/securityPolicy";
+import {
+  httpClient,
+  isHttpClientError,
+} from "@/shared/http/httpClient";
 import { fonts } from "@/styles/tokens";
 
 type AdminSecurityPolicyPanelProps = {
@@ -13,11 +17,15 @@ function NumberField({
   label,
   hint,
   value,
+  min,
+  max,
   onChange,
 }: {
   label: string;
   hint: string;
   value: string;
+  min: number;
+  max: number;
   onChange: (value: string) => void;
 }) {
   return (
@@ -36,7 +44,8 @@ function NumberField({
       </span>
       <input
         type="number"
-        min="1"
+        min={min}
+        max={max}
         step="1"
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -68,21 +77,43 @@ export default function AdminSecurityPolicyPanel({
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
+  const changedEntries = useMemo(
+    () =>
+      (
+        Object.entries(settings) as [keyof SecurityPolicySettings, string][]
+      ).filter(([key, value]) => value !== original[key]),
+    [original, settings],
+  );
+
   async function saveSettings() {
     const sessionHours = Number(settings.SECURITY_SESSION_HOURS);
     const maxAttempts = Number(settings.SECURITY_MAX_LOGIN_ATTEMPTS);
 
-    if (!Number.isInteger(sessionHours) || sessionHours < 1) {
+    if (
+      !Number.isInteger(sessionHours) ||
+      sessionHours < 1 ||
+      sessionHours > 720
+    ) {
       setError(
-        "La expiración de sesión debe ser un número entero mayor que cero.",
+        "La expiración de sesión debe ser un número entero entre 1 y 720 horas.",
       );
       return;
     }
 
-    if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    if (
+      !Number.isInteger(maxAttempts) ||
+      maxAttempts < 1 ||
+      maxAttempts > 20
+    ) {
       setError(
-        "El máximo de intentos debe ser un número entero mayor que cero.",
+        "El máximo de intentos debe ser un número entero entre 1 y 20.",
       );
+      return;
+    }
+
+    if (changedEntries.length === 0) {
+      setError("");
+      setNotice("No hay cambios pendientes.");
       return;
     }
 
@@ -91,40 +122,31 @@ export default function AdminSecurityPolicyPanel({
     setError("");
 
     try {
-      const changed = (
-        Object.entries(settings) as [keyof SecurityPolicySettings, string][]
-      ).filter(([key, value]) => value !== original[key]);
+      // Inicializa o renueva la cookie CSRF antes de la mutación. El cliente
+      // HTTP lee esa cookie y adjunta automáticamente X-LEDGERA-CSRF.
+      await httpClient("/api/csrf");
 
-      await Promise.all(
-        changed.map(async ([key, value]) => {
-          const response = await fetch("/api/configuracion", {
-            method: "PUT",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ key, value }),
-          });
-          const payload = await response.json().catch(() => null);
+      await httpClient("/api/configuracion", {
+        method: "PUT",
+        body: {
+          updates: changedEntries.map(([key, value]) => ({ key, value })),
+        },
+      });
 
-          if (!response.ok) {
-            throw new Error(
-              payload?.error ??
-                "No fue posible guardar las políticas de seguridad.",
-            );
-          }
-        }),
-      );
-
-      setOriginal(settings);
+      const savedSettings = { ...settings };
+      setOriginal(savedSettings);
       setNotice(
-        changed.length > 0
-          ? "Políticas de seguridad guardadas."
-          : "No hay cambios pendientes.",
+        changedEntries.length === 1
+          ? "Política de seguridad guardada."
+          : "Políticas de seguridad guardadas.",
       );
     } catch (saveError) {
       setError(
-        saveError instanceof Error
+        isHttpClientError(saveError)
           ? saveError.message
-          : "No fue posible guardar las políticas de seguridad.",
+          : saveError instanceof Error
+            ? saveError.message
+            : "No fue posible guardar las políticas de seguridad.",
       );
     } finally {
       setSaving(false);
@@ -170,23 +192,31 @@ export default function AdminSecurityPolicyPanel({
           label="Expiración de sesión (horas)"
           hint="Las sesiones se cerrarán automáticamente al vencer este período."
           value={settings.SECURITY_SESSION_HOURS}
-          onChange={(value) =>
+          min={1}
+          max={720}
+          onChange={(value) => {
+            setNotice("");
+            setError("");
             setSettings((current) => ({
               ...current,
               SECURITY_SESSION_HOURS: value,
-            }))
-          }
+            }));
+          }}
         />
         <NumberField
           label="Máximo de intentos de acceso fallidos"
           hint="La cuenta se bloqueará temporalmente al alcanzar este límite."
           value={settings.SECURITY_MAX_LOGIN_ATTEMPTS}
-          onChange={(value) =>
+          min={1}
+          max={20}
+          onChange={(value) => {
+            setNotice("");
+            setError("");
             setSettings((current) => ({
               ...current,
               SECURITY_MAX_LOGIN_ATTEMPTS: value,
-            }))
-          }
+            }));
+          }}
         />
       </div>
 
@@ -234,7 +264,7 @@ export default function AdminSecurityPolicyPanel({
             setError("");
             setNotice("");
           }}
-          disabled={saving}
+          disabled={saving || changedEntries.length === 0}
           style={{
             padding: "9px 16px",
             borderRadius: "8px",
@@ -243,7 +273,9 @@ export default function AdminSecurityPolicyPanel({
             color: "var(--text-soft)",
             fontSize: "13px",
             fontWeight: 600,
-            cursor: saving ? "not-allowed" : "pointer",
+            cursor:
+              saving || changedEntries.length === 0 ? "not-allowed" : "pointer",
+            opacity: changedEntries.length === 0 ? 0.55 : 1,
             fontFamily: fonts.body,
           }}
         >
@@ -252,7 +284,7 @@ export default function AdminSecurityPolicyPanel({
         <button
           type="button"
           onClick={saveSettings}
-          disabled={saving}
+          disabled={saving || changedEntries.length === 0}
           style={{
             padding: "9px 18px",
             borderRadius: "8px",
@@ -261,7 +293,9 @@ export default function AdminSecurityPolicyPanel({
             color: "var(--text)",
             fontSize: "13px",
             fontWeight: 700,
-            cursor: saving ? "not-allowed" : "pointer",
+            cursor:
+              saving || changedEntries.length === 0 ? "not-allowed" : "pointer",
+            opacity: changedEntries.length === 0 ? 0.65 : 1,
             fontFamily: fonts.body,
           }}
         >
