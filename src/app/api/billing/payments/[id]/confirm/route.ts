@@ -1,28 +1,31 @@
 // src/app/api/billing/payments/[id]/confirm/route.ts
-// CAPA 4.3.01 — Confirmación simulada de pago (placeholder / testing).
-//
-// Permite aprobar un pago PENDING sin integrar una pasarela real. Útil para
-// tests de regresión, entornos locales y demos de cierre de 4.3.01 antes de
-// la integración real con Stripe/Flow/MercadoPago (4.5.03).
-//
-// En producción este endpoint debe reemplazarse por webhooks firmados del
-// proveedor de pagos. Mientras tanto requiere sesión autenticada y solo
-// permite confirmar pagos propios.
+// Confirmación simulada disponible exclusivamente para desarrollo controlado.
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { activateSubscriptionFromPayment } from "@/modules/billing/application/activateSubscription";
+import { isPlaceholderBillingEnabled } from "@/modules/billing/domain/billingAvailability";
 import { getBillingPaymentById } from "@/modules/billing/infrastructure/billingRepository";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 
+export const dynamic = "force-dynamic";
 
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    if (!isPlaceholderBillingEnabled()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "La confirmación simulada de pagos no está disponible.",
+          data: null,
+        },
+        { status: 403 },
+      );
+    }
+
     const auth = await getSessionFromRequest(request);
 
     if (!auth) {
@@ -89,7 +92,7 @@ export async function POST(
 
     return NextResponse.json({
       ok: true,
-      message: "Pago confirmado y suscripción activada.",
+      message: "Pago simulado confirmado y suscripción activada.",
       data: {
         paymentId: updatedPayment.id,
         status: updatedPayment.status,
