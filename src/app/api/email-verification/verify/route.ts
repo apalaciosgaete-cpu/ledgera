@@ -7,7 +7,10 @@ import { prisma } from "@/lib/prisma";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 import { parseEmailVerificationIdentifier } from "@/modules/identity/application/emailVerification";
-import { consumeOneTimeToken } from "@/modules/identity/infrastructure/oneTimeTokenRepository";
+import {
+  readOneTimeToken,
+  revokeOneTimeToken,
+} from "@/modules/identity/infrastructure/oneTimeTokenRepository";
 
 function resolveApplicationUrl(req: NextRequest) {
   return (
@@ -28,11 +31,16 @@ export async function GET(req: NextRequest) {
   if (!token) return redirectToResult(req, "invalid");
 
   try {
-    const record = await consumeOneTimeToken(token);
+    // El token solo se revoca después de guardar la verificación. Así, un
+    // fallo transitorio de base de datos no destruye un enlace todavía válido.
+    const record = await readOneTimeToken(token);
     if (!record) return redirectToResult(req, "invalid");
 
     const identity = parseEmailVerificationIdentifier(record.identifier);
-    if (!identity) return redirectToResult(req, "invalid");
+    if (!identity) {
+      await revokeOneTimeToken(token);
+      return redirectToResult(req, "invalid");
+    }
 
     const user = await prisma.users.findFirst({
       where: {
@@ -48,31 +56,53 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    if (!user) return redirectToResult(req, "invalid");
+    if (!user) {
+      await revokeOneTimeToken(token);
+      return redirectToResult(req, "invalid");
+    }
 
-    const newlyVerified = !user.email_verified_at;
+    // updateMany devuelve solo el conteo y evita que Prisma intente devolver
+    // columnas antiguas que ya no existen en la base de datos de producción.
+    const verificationUpdate = user.email_verified_at
+      ? { count: 0 }
+      : await prisma.users.updateMany({
+          where: {
+            id: user.id,
+            email: identity.email,
+            email_verified_at: null,
+          },
+          data: {
+            email_verified_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
+
+    const newlyVerified = verificationUpdate.count === 1;
+
+    try {
+      await revokeOneTimeToken(token);
+    } catch (revokeError) {
+      console.warn("[email-verification/verify] Token revocation failed:", revokeError);
+    }
+
     if (newlyVerified) {
-      await prisma.users.update({
-        where: { id: user.id },
-        data: {
-          email_verified_at: new Date(),
-          updated_at: new Date(),
-        },
-      });
-
-      await recordAuditEvent({
-        userId: user.id,
-        category: "SECURITY",
-        severity: "INFO",
-        event: "email_verified",
-        description: "Correo electrónico verificado",
-        result: "SUCCESS",
-        entityType: "User",
-        entityId: user.id,
-        metadata: { source: "email-verification" },
-        ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
-        userAgent: req.headers.get("user-agent") ?? null,
-      });
+      try {
+        await recordAuditEvent({
+          userId: user.id,
+          category: "SECURITY",
+          severity: "INFO",
+          event: "email_verified",
+          description: "Correo electrónico verificado",
+          result: "SUCCESS",
+          entityType: "User",
+          entityId: user.id,
+          metadata: { source: "email-verification" },
+          ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
+          userAgent: req.headers.get("user-agent") ?? null,
+        });
+      } catch (auditError) {
+        console.warn("[email-verification/verify] Audit event failed:", auditError);
+      }
 
       try {
         await sendWelcomeEmail({
