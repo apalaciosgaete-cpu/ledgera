@@ -242,11 +242,11 @@ export default function ConfiguracionPage() {
         ),
       },
       {
-        title: "Facturación",
-        description: "Plan contratado, vigencia de la suscripción y opciones disponibles.",
+        title: "Suscripción y pagos",
+        description: "Estado del acceso, pagos registrados y documentos de cobro.",
         href: "/configuracion/facturacion",
-        action: "Administrar facturación",
-        status: user?.subscriptionPlan ?? "BÁSICO",
+        action: "Revisar suscripción",
+        status: user?.role === "admin" ? "Cuenta interna" : user?.subscriptionPlan ?? "BÁSICO",
         tone: "neutral",
         icon: (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -271,7 +271,7 @@ export default function ConfiguracionPage() {
         ),
       },
     ],
-    [loadingProfile, profileCompletion, user?.subscriptionPlan, user?.twoFactorEnabled],
+    [loadingProfile, profileCompletion, user?.role, user?.subscriptionPlan, user?.twoFactorEnabled],
   );
 
   return (
