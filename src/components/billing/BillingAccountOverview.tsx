@@ -88,7 +88,7 @@ function subscriptionPresentation(data: BillingAccountOverviewData) {
     return {
       label: "Renovación cancelada",
       tone: "warning" as const,
-      description: `Mantendrás acceso hasta ${formatDate(data.subscription.currentPeriodEnd)}.`,
+      description: `Mantendrás acceso hasta ${formatDate(data.subscription?.currentPeriodEnd)}.`,
     };
   }
 
@@ -271,12 +271,7 @@ export function BillingAccountOverview({ data }: { data: BillingAccountOverviewD
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                 <thead>
                   <tr>
-                    {[
-                      "Fecha",
-                      "Concepto",
-                      "Monto",
-                      "Estado",
-                    ].map((header) => (
+                    {["Fecha", "Concepto", "Monto", "Estado"].map((header) => (
                       <th key={header} style={{ textAlign: "left", padding: "8px 10px", color: "var(--text-soft)", borderBottom: "1px solid var(--border)", fontWeight: 700 }}>{header}</th>
                     ))}
                   </tr>
