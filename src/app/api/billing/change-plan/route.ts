@@ -3,13 +3,16 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-import { changePlan } from "@/modules/billing/application/changePlan";
 import { isValidBillingPlan } from "@/modules/billing/application/billingPlans";
+import { changePlan } from "@/modules/billing/application/changePlan";
+import {
+  BILLING_UNAVAILABLE_MESSAGE,
+  isLiveBillingEnabled,
+} from "@/modules/billing/domain/billingAvailability";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 
+export const dynamic = "force-dynamic";
 
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
 type ChangePlanRequestBody = {
   plan?: string;
   provider?: string;
@@ -17,6 +20,13 @@ type ChangePlanRequestBody = {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isLiveBillingEnabled()) {
+      return NextResponse.json(
+        { ok: false, message: BILLING_UNAVAILABLE_MESSAGE, data: null },
+        { status: 503 },
+      );
+    }
+
     const auth = await getSessionFromRequest(request);
 
     if (!auth) {
