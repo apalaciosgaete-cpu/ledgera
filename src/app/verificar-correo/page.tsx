@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { Logo } from "@/components/brand/Logo";
 import { fonts } from "@/styles/tokens";
@@ -9,8 +10,13 @@ type PageProps = {
   };
 };
 
+const VERIFIED_EMAIL_COOKIE = "ledgera_verified_email";
+
 export default function VerificarCorreoPage({ searchParams }: PageProps) {
   const success = searchParams?.status === "success";
+  const verifiedEmail = success
+    ? cookies().get(VERIFIED_EMAIL_COOKIE)?.value
+    : undefined;
 
   return (
     <main
@@ -26,7 +32,7 @@ export default function VerificarCorreoPage({ searchParams }: PageProps) {
     >
       <section
         style={{
-          width: "min(100%, 520px)",
+          width: "min(100%, 560px)",
           background: "var(--bg-elev)",
           border: "1px solid var(--border)",
           borderRadius: "16px",
@@ -67,7 +73,7 @@ export default function VerificarCorreoPage({ searchParams }: PageProps) {
             margin: "0 0 12px",
           }}
         >
-          {success ? "Correo verificado" : "Enlace no válido"}
+          {success ? "Correo confirmado" : "Enlace no válido"}
         </h1>
 
         <p
@@ -75,13 +81,36 @@ export default function VerificarCorreoPage({ searchParams }: PageProps) {
             color: "var(--text-soft)",
             fontSize: "14px",
             lineHeight: 1.65,
-            margin: "0 0 24px",
+            margin: success ? "0 0 12px" : "0 0 24px",
           }}
         >
-          {success
-            ? "La dirección quedó confirmada correctamente. El estado de seguridad de tu cuenta se actualizará al volver a ingresar."
-            : "El enlace venció, ya fue utilizado o no corresponde a una verificación vigente. Solicita uno nuevo desde Configuración → Seguridad."}
+          {success ? (
+            <>
+              Verificamos correctamente{verifiedEmail ? " " : " tu dirección de correo"}
+              {verifiedEmail ? (
+                <strong style={{ color: "var(--text)", fontWeight: 800 }}>
+                  {verifiedEmail}
+                </strong>
+              ) : null}
+              . Tu cuenta dispone ahora de una vía segura para recuperar el acceso y recibir comunicaciones importantes de LEDGERA.
+            </>
+          ) : (
+            "El enlace venció, ya fue utilizado o no corresponde a una verificación vigente. Solicita uno nuevo desde Configuración → Seguridad."
+          )}
         </p>
+
+        {success ? (
+          <p
+            style={{
+              color: "var(--text-soft)",
+              fontSize: "12px",
+              lineHeight: 1.55,
+              margin: "0 0 24px",
+            }}
+          >
+            Por seguridad, este enlace ya no puede volver a utilizarse.
+          </p>
+        ) : null}
 
         <Link
           href={success ? "/login" : "/configuracion/seguridad"}
@@ -97,7 +126,7 @@ export default function VerificarCorreoPage({ searchParams }: PageProps) {
             fontWeight: 800,
           }}
         >
-          {success ? "Ir a iniciar sesión" : "Solicitar nuevo enlace"}
+          {success ? "Continuar a LEDGERA" : "Solicitar nuevo enlace"}
         </Link>
       </section>
     </main>
