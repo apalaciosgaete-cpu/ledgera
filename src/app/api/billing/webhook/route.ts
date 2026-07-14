@@ -1,14 +1,18 @@
 // src/app/api/billing/webhook/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { requireEnv } from "@/lib/env";
+import { prisma } from "@/lib/prisma";
 import { processBillingWebhook } from "@/modules/billing/application/processBillingWebhook";
+import {
+  BILLING_UNAVAILABLE_MESSAGE,
+  isLiveBillingEnabled,
+} from "@/modules/billing/domain/billingAvailability";
 import { normalizeBillingWebhookPayload } from "@/modules/billing/domain/webhook";
 
+export const dynamic = "force-dynamic";
 
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
 function resolveWebhookSecret() {
   return requireEnv("BILLING_WEBHOOK_SECRET");
 }
@@ -24,6 +28,13 @@ export async function POST(request: NextRequest) {
   let payload: unknown = null;
 
   try {
+    if (!isLiveBillingEnabled()) {
+      return NextResponse.json(
+        { ok: false, message: BILLING_UNAVAILABLE_MESSAGE, data: null },
+        { status: 503 },
+      );
+    }
+
     if (!isAuthorizedWebhook(request)) {
       return NextResponse.json(
         {
@@ -81,15 +92,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const webhookEvent = existingEvent ?? (await prisma.billingWebhookEvent.create({
-      data: {
-        provider: normalized.provider,
-        providerEventId: normalized.providerEventId,
-        eventType: normalized.eventType,
-        status: "RECEIVED",
-        payload: JSON.stringify(payload),
-      },
-    }));
+    const webhookEvent =
+      existingEvent ??
+      (await prisma.billingWebhookEvent.create({
+        data: {
+          provider: normalized.provider,
+          providerEventId: normalized.providerEventId,
+          eventType: normalized.eventType,
+          status: "RECEIVED",
+          payload: JSON.stringify(payload),
+        },
+      }));
 
     const result = await processBillingWebhook(normalized);
 
@@ -125,7 +138,8 @@ export async function POST(request: NextRequest) {
       console.error("[billing/webhook POST logError]", logError);
     }
 
-    const missingConfig = error instanceof Error && error.message.includes("BILLING_WEBHOOK_SECRET");
+    const missingConfig =
+      error instanceof Error && error.message.includes("BILLING_WEBHOOK_SECRET");
 
     return NextResponse.json(
       {
@@ -135,7 +149,7 @@ export async function POST(request: NextRequest) {
           : "No fue posible procesar el webhook.",
         data: null,
       },
-      { status: missingConfig ? 500 : 500 },
+      { status: 500 },
     );
   }
 }
