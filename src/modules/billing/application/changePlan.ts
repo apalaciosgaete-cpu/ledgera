@@ -92,6 +92,10 @@ export async function changePlan(
   const provider = resolveBillingProvider(input.provider);
   const user = await prisma.users.findUnique({
     where: { id: input.userId },
+    select: {
+      id: true,
+      subscription_plan: true,
+    },
   });
 
   if (!user) {
@@ -140,6 +144,7 @@ export async function changePlan(
         activationSource: "billing:change_plan:downgrade",
         updated_at: now,
       },
+      select: { id: true },
     });
 
     await recordTimelineEvent({
