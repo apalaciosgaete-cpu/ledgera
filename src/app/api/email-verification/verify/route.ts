@@ -12,6 +12,8 @@ import {
   revokeOneTimeToken,
 } from "@/modules/identity/infrastructure/oneTimeTokenRepository";
 
+const VERIFIED_EMAIL_COOKIE = "ledgera_verified_email";
+
 function resolveApplicationUrl(req: NextRequest) {
   return (
     process.env.NEXT_PUBLIC_APP_URL ??
@@ -20,10 +22,35 @@ function resolveApplicationUrl(req: NextRequest) {
   ).replace(/\/$/, "");
 }
 
-function redirectToResult(req: NextRequest, status: "success" | "invalid") {
+function redirectToResult(
+  req: NextRequest,
+  status: "success" | "invalid",
+  verifiedEmail?: string,
+) {
   const url = new URL("/verificar-correo", resolveApplicationUrl(req));
   url.searchParams.set("status", status);
-  return NextResponse.redirect(url);
+
+  const response = NextResponse.redirect(url);
+
+  if (status === "success" && verifiedEmail) {
+    response.cookies.set(VERIFIED_EMAIL_COOKIE, verifiedEmail, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/verificar-correo",
+      maxAge: 5 * 60,
+    });
+  } else {
+    response.cookies.set(VERIFIED_EMAIL_COOKIE, "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/verificar-correo",
+      maxAge: 0,
+    });
+  }
+
+  return response;
 }
 
 export async function GET(req: NextRequest) {
@@ -115,7 +142,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return redirectToResult(req, "success");
+    return redirectToResult(req, "success", user.email);
   } catch (error) {
     console.error("[api/email-verification/verify]", error);
     return redirectToResult(req, "invalid");
