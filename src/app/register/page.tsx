@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -52,6 +52,9 @@ type Registration2FAVerifyResponse = {
   message?: string;
 };
 
+const LEGAL_TERMS_VERSION = "terms-2026-07";
+const LEGAL_PRIVACY_VERSION = "privacy-2026-07";
+
 const roles: { value: Role; label: string; description: string }[] = [
   {
     value: "personal",
@@ -60,36 +63,88 @@ const roles: { value: Role; label: string; description: string }[] = [
   },
   {
     value: "contador",
-    label: "Contador",
+    label: "Contador / asesor tributario",
     description: "Gestiono clientes y sus obligaciones tributarias",
   },
   {
     value: "empresa",
-    label: "Empresa",
+    label: "Empresa / persona jurídica",
     description: "Soy una empresa con operaciones en cripto",
   },
 ];
 
-const fieldStyle: React.CSSProperties = {
+const fieldStyle: CSSProperties = {
   width: "100%",
-  padding: "11px 14px",
+  padding: "10px 14px",
   background: "var(--bg-sunken)",
   border: "0.5px solid var(--border-strong)",
-  borderRadius: "8px",
+  borderRadius: "9px",
   color: "var(--text)",
   fontSize: "14px",
   fontFamily: fonts.body,
+  lineHeight: 1.35,
 };
 
-const labelStyle: React.CSSProperties = {
+const labelStyle: CSSProperties = {
   display: "block",
-  fontSize: "12px",
-  fontWeight: 600,
+  fontSize: "11.5px",
+  fontWeight: 700,
   color: "var(--text-faint)",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  marginBottom: "6px",
+  marginBottom: "5px",
 };
+
+const legalLinkStyle: CSSProperties = {
+  color: "var(--accent)",
+  fontWeight: 750,
+  textDecoration: "none",
+};
+
+const passwordToggleStyle: CSSProperties = {
+  alignItems: "center",
+  justifyContent: "center",
+  border: "1px solid rgba(125,203,242,0.34)",
+  background: "rgba(5,10,28,0.48)",
+  color: "var(--text-soft)",
+  borderRadius: "10px",
+  padding: 0,
+  width: "50px",
+  minWidth: "50px",
+  cursor: "pointer",
+  display: "flex",
+  fontFamily: fonts.body,
+};
+
+function PasswordVisibilityIcon({ crossed }: { crossed: boolean }) {
+  return (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
+      <path
+        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {crossed ? (
+        <path
+          d="M4 4l16 16"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : null}
+    </svg>
+  );
+}
 
 function RegisterForm() {
   const router = useRouter();
@@ -104,6 +159,11 @@ function RegisterForm() {
     return `Pago registrado para plan ${selectedPlan}. Completa tu cuenta para activar acceso y seguridad.`;
   }, [checkoutFirst, selectedPlan]);
 
+  const passwordRequirementText = useMemo(
+    () => PASSWORD_REQUIREMENTS.map((requirement) => requirement.label).join(" · "),
+    [],
+  );
+
   const [step, setStep] = useState<RegisterStep>("account");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -111,6 +171,7 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<Role>("personal");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [registeredUser, setRegisteredUser] = useState<RegisteredUser | null>(null);
@@ -137,7 +198,12 @@ function RegisterForm() {
     setErrorMessage("");
 
     if (!acceptedTerms) {
-      setErrorMessage("Debes aceptar los Términos y Condiciones para continuar.");
+      setErrorMessage("Debes aceptar los Términos y Condiciones para crear tu cuenta.");
+      return;
+    }
+
+    if (!acceptedPrivacy) {
+      setErrorMessage("Debes leer la Política de Privacidad y autorizar el tratamiento de datos personales.");
       return;
     }
 
@@ -152,7 +218,18 @@ function RegisterForm() {
     try {
       const response = await httpClient<RegisterResponse>("/api/users", {
         method: "POST",
-        body: { fullName, email, password, role },
+        body: {
+          fullName,
+          email,
+          password,
+          role,
+          termsAccepted: acceptedTerms,
+          privacyAccepted: acceptedPrivacy,
+          legalConsent: {
+            termsVersion: LEGAL_TERMS_VERSION,
+            privacyVersion: LEGAL_PRIVACY_VERSION,
+          },
+        },
       });
 
       const user = response.data?.user;
@@ -237,7 +314,7 @@ function RegisterForm() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "24px",
+        padding: "14px 20px",
         fontFamily: fonts.body,
       }}
     >
@@ -247,32 +324,32 @@ function RegisterForm() {
         input:focus, select:focus { outline: none; border-color: var(--accent) !important; }
       `}</style>
 
-      <div style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", gap: "28px" }}>
+      <div style={{ width: "100%", maxWidth: "440px", display: "flex", flexDirection: "column", gap: "8px" }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Logo variant="light" size="lg" showSubtitle />
         </div>
 
-        <div style={{ background: "var(--bg-elev)", borderRadius: "16px", padding: "32px", border: "0.5px solid var(--border)" }}>
-          <h1 style={{ fontFamily: fonts.display, fontSize: "20px", fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
+        <div style={{ background: "var(--bg-elev)", borderRadius: "18px", padding: "24px 32px", border: "0.5px solid var(--border)", boxShadow: "0 24px 60px rgba(0,0,0,0.26)" }}>
+          <h1 style={{ fontFamily: fonts.display, fontSize: "21px", fontWeight: 850, color: "var(--text)", margin: "0 0 7px" }}>
             {step === "account" ? "Crear cuenta" : "Seguridad inicial obligatoria"}
           </h1>
 
-          <p style={{ color: "var(--text-soft)", fontSize: "13px", lineHeight: 1.5, margin: "0 0 24px" }}>
+          <p style={{ color: "var(--text-soft)", fontSize: "13px", lineHeight: 1.45, margin: "0 0 18px" }}>
             {step === "account"
-              ? acquisitionCopy ?? "LEDGERA protege información financiera y tributaria. Todas las cuentas requieren seguridad reforzada."
+              ? acquisitionCopy ?? "Crea tu cuenta para acceder a LEDGERA. Trataremos tus datos personales para administrar el servicio, proteger tu acceso y habilitar funciones financieras y tributarias."
               : "Escanea el QR con tu app autenticadora e ingresa el código de 6 dígitos."}
           </p>
 
           {errorMessage && (
-            <div style={{ background: "rgba(196,99,74,0.12)", border: "1px solid rgba(196,99,74,0.24)", borderRadius: 10, padding: 12, color: "var(--loss)", fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: "rgba(196,99,74,0.12)", border: "1px solid rgba(196,99,74,0.24)", borderRadius: 10, padding: "10px 12px", color: "var(--loss)", fontSize: 13, marginBottom: 14 }}>
               {errorMessage}
             </div>
           )}
 
           {step === "account" ? (
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 13 }}>
               <div>
-                <label htmlFor="role" style={labelStyle}>Tipo de cuenta</label>
+                <label htmlFor="role" style={labelStyle}>Tipo de contribuyente</label>
                 <select id="role" value={role} onChange={(event) => setRole(event.target.value as Role)} style={fieldStyle}>
                   {roles.map((currentRole) => (
                     <option key={currentRole.value} value={currentRole.value}>
@@ -284,12 +361,12 @@ function RegisterForm() {
 
               <div>
                 <label htmlFor="fullName" style={labelStyle}>Nombre completo</label>
-                <input id="fullName" type="text" value={fullName} onChange={(event) => setFullName(event.target.value)} required placeholder="Tu nombre" style={fieldStyle} />
+                <input id="fullName" type="text" autoComplete="name" value={fullName} onChange={(event) => setFullName(event.target.value)} required placeholder="Tu nombre" style={fieldStyle} />
               </div>
 
               <div>
                 <label htmlFor="email" style={labelStyle}>Correo electrónico</label>
-                <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required placeholder="tu@correo.cl" style={fieldStyle} />
+                <input id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required placeholder="tu@correo.cl" style={fieldStyle} />
               </div>
 
               <div>
@@ -298,36 +375,52 @@ function RegisterForm() {
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
                     minLength={PASSWORD_MIN_LENGTH}
                     maxLength={PASSWORD_MAX_LENGTH}
                     placeholder="Contraseña segura"
-                    style={fieldStyle}
+                    style={{ ...fieldStyle, width: "auto", flex: 1 }}
                   />
-                  <button type="button" onClick={() => setShowPassword((value) => !value)} style={{ border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--text-faint)", borderRadius: 8, padding: "0 10px" }}>
-                    {showPassword ? "Ocultar" : "Ver"}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    style={passwordToggleStyle}
+                  >
+                    <PasswordVisibilityIcon crossed={showPassword} />
                   </button>
                 </div>
-                <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "var(--text-faint)", fontSize: 11 }}>
-                  {PASSWORD_REQUIREMENTS.map((requirement) => (
-                    <li key={requirement.id}>{requirement.label}</li>
-                  ))}
-                </ul>
+                <p style={{ margin: "6px 0 0", color: "var(--text-faint)", fontSize: 11, lineHeight: 1.45 }}>
+                  {passwordRequirementText}
+                </p>
               </div>
 
-              <label style={{ display: "flex", gap: 8, alignItems: "flex-start", color: "var(--text-soft)", fontSize: 12, lineHeight: 1.5 }}>
-                <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
-                Acepto los Términos y Condiciones de LEDGERA.
-              </label>
+              <div style={{ display: "grid", gap: 8, paddingTop: 2 }}>
+                <label style={{ display: "flex", gap: 8, alignItems: "flex-start", color: "var(--text-soft)", fontSize: 12, lineHeight: 1.45 }}>
+                  <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} style={{ marginTop: 2 }} />
+                  <span>
+                    Acepto los <Link href="/terminos" style={legalLinkStyle}>Términos y Condiciones</Link> de LEDGERA.
+                  </span>
+                </label>
 
-              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: 10, padding: "13px 16px", background: "var(--accent)", color: "var(--accent-contrast)", fontSize: 14, fontWeight: 850, cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.72 : 1 }}>
+                <label style={{ display: "flex", gap: 8, alignItems: "flex-start", color: "var(--text-soft)", fontSize: 12, lineHeight: 1.45 }}>
+                  <input type="checkbox" checked={acceptedPrivacy} onChange={(event) => setAcceptedPrivacy(event.target.checked)} style={{ marginTop: 2 }} />
+                  <span>
+                    He leído la <Link href="/privacidad" style={legalLinkStyle}>Política de Privacidad</Link> y autorizo el tratamiento de mis datos personales para operar mi cuenta y prestar los servicios financieros y tributarios de LEDGERA.
+                  </span>
+                </label>
+              </div>
+
+              <button type="submit" disabled={submitting} style={{ width: "100%", border: "none", borderRadius: 10, padding: "12px 16px", background: "var(--accent)", color: "var(--accent-contrast)", fontSize: 14, fontWeight: 850, cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.72 : 1 }}>
                 {submitting ? "Creando cuenta..." : checkoutFirst ? "Activar cuenta pagada" : "Crear cuenta"}
               </button>
 
               <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12, textAlign: "center" }}>
-                ¿Ya tienes cuenta? <Link href="/login" style={{ color: "var(--accent)" }}>Inicia sesión</Link>
+                ¿Ya tienes cuenta? <Link href="/login" style={{ color: "var(--accent)", fontWeight: 750, textDecoration: "none" }}>Inicia sesión</Link>
               </p>
             </form>
           ) : (
