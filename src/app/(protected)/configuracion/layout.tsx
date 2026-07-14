@@ -10,8 +10,14 @@ export default function ConfiguracionLayout({ children }: { children: React.Reac
   const { user } = useAuth();
   const pathname = usePathname();
   const role = (user as { role?: string })?.role ?? "personal";
+  const normalizedPathname = pathname.replace(/\/+$/, "") || "/";
+  const isIndexPage = normalizedPathname === "/configuracion";
 
   const sections = ALL_SECTIONS.filter(s => s.roles.includes(role));
+
+  if (isIndexPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
