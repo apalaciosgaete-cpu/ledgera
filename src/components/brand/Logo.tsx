@@ -1,5 +1,10 @@
+"use client";
+
 import type { CSSProperties } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import { fonts } from "@/styles/tokens";
 
 type LogoVariant = "light" | "dark";
@@ -22,10 +27,10 @@ const officialAlt = "LEDGERA — Inteligencia financiera para crecer";
 const officialLogoSrc = "/brand/ledgera-3d-navbar.webp?v=20260707-official";
 
 export function Logo(props: LogoProps) {
+  const pathname = usePathname();
   const { size = "md" } = props;
   const s = sizes[size];
-
-  return (
+  const logo = (
     <Image
       src={officialLogoSrc}
       alt={officialAlt}
@@ -42,6 +47,21 @@ export function Logo(props: LogoProps) {
       }}
     />
   );
+
+  if (pathname === "/login" || pathname === "/register") {
+    return (
+      <Link
+        href="/"
+        aria-label="Ir a la página de inicio de LEDGERA"
+        title="Volver al inicio"
+        style={{ display: "inline-flex", maxWidth: "100%", textDecoration: "none" }}
+      >
+        {logo}
+      </Link>
+    );
+  }
+
+  return logo;
 }
 
 export function LogoIcon({ size = 44 }: { size?: number }) {
