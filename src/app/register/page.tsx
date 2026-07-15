@@ -311,7 +311,7 @@ function RegisterForm() {
       style={{
         minHeight: "100vh",
         backgroundColor: "var(--bg)",
-        backgroundImage: "url('/register-bg.svg')",
+        backgroundImage: "url('/Fondo_Loguin.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -335,7 +335,7 @@ function RegisterForm() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(180deg, rgba(4,8,20,0.58), rgba(4,8,20,0.72))",
+          background: "linear-gradient(180deg, rgba(4,8,20,0.22), rgba(4,8,20,0.38))",
           zIndex: 0,
           pointerEvents: "none",
         }}
