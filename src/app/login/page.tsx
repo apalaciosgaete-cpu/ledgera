@@ -193,7 +193,7 @@ function LoginForm() {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundImage: "url('/Fondo_Loguin.png')",
+    backgroundImage: "url('/login-bg-ledgera.svg')",
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
@@ -204,7 +204,7 @@ function LoginForm() {
   const overlayStyle = {
     position: "absolute" as const,
     inset: 0,
-    background: "linear-gradient(180deg, rgba(4,8,20,0.20), rgba(4,8,20,0.34))",
+    background: "linear-gradient(180deg, rgba(4,8,20,0.18), rgba(4,8,20,0.30))",
     zIndex: 0,
   };
 
