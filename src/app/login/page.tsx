@@ -11,6 +11,19 @@ import { saveSessionToken } from "@/modules/identity/client/authStorage";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 import { fonts } from "@/styles/tokens";
 
+const BG_IMAGES = [
+  "/login-bg1.jpg",
+  "/login-bg2.jpg",
+  "/login-bg3.jpg",
+  "/login-bg4.jpg",
+  "/login-bg5.jpg",
+  "/login-bg6.jpg",
+  "/login-bg7.jpg",
+  "/login-bg8.jpg",
+  "/login-bg9.jpg",
+  "/login-bg10.jpg",
+] as const;
+
 type SessionPayload = {
   session?: {
     token?: string;
@@ -89,11 +102,17 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [backgroundImage, setBackgroundImage] = useState<(typeof BG_IMAGES)[number]>(BG_IMAGES[0]);
 
   const [step, setStep] = useState<"credentials" | "totp">("credentials");
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [validatingTwoFactor, setValidatingTwoFactor] = useState(false);
   const [twoFactorError, setTwoFactorError] = useState("");
+
+  useEffect(() => {
+    const selectedImage = BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
+    setBackgroundImage(selectedImage);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -193,7 +212,7 @@ function LoginForm() {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundImage: "url('/login-bg-ledgera.svg')",
+    backgroundImage: `url('${backgroundImage}')`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
