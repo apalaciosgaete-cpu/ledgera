@@ -11,21 +11,6 @@ import { saveSessionToken } from "@/modules/identity/client/authStorage";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 import { fonts } from "@/styles/tokens";
 
-const BG_IMAGES = [
-  "/login-bg1.jpg",
-  "/login-bg2.jpg",
-  "/login-bg3.jpg",
-  "/login-bg4.jpg",
-  "/login-bg5.jpg",
-  "/login-bg6.jpg",
-  "/login-bg7.jpg",
-  "/login-bg8.jpg",
-  "/login-bg9.jpg",
-  "/login-bg10.jpg"
-];
-
-const randomBg = BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
-
 type SessionPayload = {
   session?: {
     token?: string;
@@ -208,9 +193,10 @@ function LoginForm() {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundImage: `url('${randomBg}')`,
+    backgroundImage: "url('/Fondo_Loguin.png')",
     backgroundSize: "cover",
     backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
     padding: "1rem 1.25rem",
     position: "relative" as const,
   };
@@ -218,7 +204,7 @@ function LoginForm() {
   const overlayStyle = {
     position: "absolute" as const,
     inset: 0,
-    background: "rgba(15,18,19,0.72)",
+    background: "linear-gradient(180deg, rgba(4,8,20,0.20), rgba(4,8,20,0.34))",
     zIndex: 0,
   };
 
@@ -236,16 +222,16 @@ function LoginForm() {
   const cardStyle = {
     width: "100%",
     boxSizing: "border-box" as const,
-    background: "rgba(27,33,36,0.88)",
-    border: "1px solid rgba(255,255,255,0.11)",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
+    background: "rgba(8,13,28,0.82)",
+    border: "1px solid rgba(125,203,242,0.16)",
+    backdropFilter: "blur(18px)",
+    WebkitBackdropFilter: "blur(18px)",
     borderRadius: "20px",
     padding: "1.65rem 2rem",
     display: "flex",
     flexDirection: "column" as const,
     gap: "0.9rem",
-    boxShadow: "0 24px 60px rgba(0,0,0,0.36)",
+    boxShadow: "0 24px 60px rgba(0,0,0,0.38)",
   };
 
   const labelStyle = {
