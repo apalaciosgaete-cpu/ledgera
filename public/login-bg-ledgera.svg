@@ -1,4 +1,129 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-  <rect width="1600" height="900" fill="#030815"/>
-  <image x="0" y="0" width="1600" height="900" preserveAspectRatio="xMidYMid slice" href="data:image/jpeg;base64,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"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1050" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081426"/>
+      <stop offset="0.45" stop-color="#061123"/>
+      <stop offset="1" stop-color="#020713"/>
+    </linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1b2737"/>
+      <stop offset="0.55" stop-color="#0d1727"/>
+      <stop offset="1" stop-color="#040916"/>
+    </linearGradient>
+    <linearGradient id="warm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f2b45d" stop-opacity="0.76"/>
+      <stop offset="1" stop-color="#ffd28a" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14335d" stop-opacity="0.82"/>
+      <stop offset="1" stop-color="#061020" stop-opacity="0.96"/>
+    </linearGradient>
+    <radialGradient id="cityGlow" cx="44%" cy="48%" r="42%">
+      <stop offset="0" stop-color="#6ebbea" stop-opacity="0.22"/>
+      <stop offset="0.45" stop-color="#2d6aa4" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#020713" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="safe" cx="56%" cy="48%" r="33%">
+      <stop offset="0" stop-color="#020713" stop-opacity="0.48"/>
+      <stop offset="0.7" stop-color="#020713" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#020713" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="28" stdDeviation="28" flood-color="#000" flood-opacity="0.52"/>
+    </filter>
+    <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.35" fill="#7dcbf2" opacity="0.24"/>
+    </pattern>
+  </defs>
+
+  <rect width="2400" height="1050" fill="url(#bg)"/>
+  <rect width="2400" height="1050" fill="url(#cityGlow)"/>
+
+  <g opacity="0.74" filter="url(#soft)">
+    <rect x="500" y="65" width="18" height="620" fill="#193458"/>
+    <rect x="760" y="40" width="14" height="680" fill="#193458"/>
+    <rect x="1050" y="25" width="18" height="700" fill="#132b4a"/>
+    <rect x="1290" y="0" width="20" height="760" fill="#10233d"/>
+  </g>
+
+  <g opacity="0.42">
+    <rect x="600" y="75" width="520" height="360" fill="url(#dots)"/>
+    <polyline points="610,350 690,315 760,335 835,280 925,310 1020,250" fill="none" stroke="#7dcbf2" stroke-width="4" stroke-opacity="0.48"/>
+    <g stroke-width="5" stroke-linecap="round">
+      <line x1="655" y1="265" x2="655" y2="325" stroke="#e7eef8" stroke-opacity="0.45"/>
+      <line x1="690" y1="220" x2="690" y2="300" stroke="#7dcbf2" stroke-opacity="0.55"/>
+      <line x1="725" y1="250" x2="725" y2="330" stroke="#f2994a" stroke-opacity="0.42"/>
+      <line x1="760" y1="190" x2="760" y2="285" stroke="#e7eef8" stroke-opacity="0.48"/>
+      <line x1="795" y1="230" x2="795" y2="315" stroke="#7dcbf2" stroke-opacity="0.55"/>
+    </g>
+  </g>
+
+  <g opacity="0.5" filter="url(#soft)">
+    <rect x="410" y="450" width="34" height="190" fill="#80c8f2"/>
+    <rect x="470" y="390" width="44" height="250" fill="#dce8f8"/>
+    <rect x="545" y="335" width="58" height="305" fill="#4c92c8"/>
+    <rect x="640" y="470" width="42" height="170" fill="#d8e7f6"/>
+    <rect x="710" y="420" width="70" height="220" fill="#69b7e3"/>
+    <rect x="820" y="300" width="76" height="340" fill="#b9d4ee"/>
+    <rect x="930" y="500" width="48" height="140" fill="#75c2ed"/>
+  </g>
+
+  <g transform="translate(0 92)" opacity="0.93">
+    <rect x="0" y="0" width="365" height="660" fill="#07101c"/>
+    <rect x="44" y="66" width="300" height="9" rx="4" fill="url(#warm)"/>
+    <rect x="44" y="246" width="300" height="9" rx="4" fill="url(#warm)"/>
+    <rect x="44" y="426" width="300" height="9" rx="4" fill="url(#warm)"/>
+    <g opacity="0.58">
+      <rect x="78" y="96" width="70" height="130" rx="8" fill="#142136"/>
+      <rect x="170" y="108" width="104" height="106" rx="10" fill="#101b2c"/>
+      <circle cx="256" cy="180" r="34" fill="#234160"/>
+      <rect x="78" y="286" width="56" height="112" rx="7" fill="#142136"/>
+      <rect x="152" y="286" width="56" height="112" rx="7" fill="#142136"/>
+      <rect x="226" y="286" width="56" height="112" rx="7" fill="#142136"/>
+      <rect x="78" y="476" width="186" height="120" rx="12" fill="#0f1a2a"/>
+    </g>
+  </g>
+
+  <g transform="translate(-30 635)" filter="url(#shadow)">
+    <polygon points="0,220 1260,40 2220,175 2400,310 0,310" fill="url(#desk)"/>
+    <polygon points="352,72 750,112 886,248 290,205" fill="#dce7f6" opacity="0.68"/>
+    <polygon points="382,104 716,132 812,224 326,192" fill="#354d6f" opacity="0.22"/>
+    <g opacity="0.48" stroke="#102745" stroke-width="4">
+      <line x1="420" y1="150" x2="650" y2="170"/>
+      <line x1="420" y1="182" x2="735" y2="207"/>
+      <rect x="466" y="128" width="34" height="70" fill="#2b5f99" stroke="none"/>
+      <rect x="518" y="110" width="34" height="92" fill="#7dcbf2" stroke="none" opacity="0.72"/>
+      <rect x="570" y="144" width="34" height="64" fill="#2b5f99" stroke="none"/>
+      <rect x="622" y="98" width="34" height="116" fill="#7dcbf2" stroke="none" opacity="0.62"/>
+    </g>
+    <rect x="270" y="215" width="320" height="48" rx="24" fill="#030712" opacity="0.92" transform="rotate(-15 430 239)"/>
+    <polygon points="552,203 625,215 555,238" fill="#c7d5e8" opacity="0.82" transform="rotate(-15 588 220)"/>
+    <polygon points="160,250 420,236 472,310 92,310" fill="#050914" opacity="0.94"/>
+  </g>
+
+  <g transform="translate(55 640)" filter="url(#shadow)" opacity="0.92">
+    <polygon points="0,0 350,24 510,168 94,150" fill="#0b1524"/>
+    <polygon points="36,22 342,42 445,135 96,122" fill="#1e334d" opacity="0.68"/>
+    <line x1="96" y1="122" x2="445" y2="135" stroke="#7dcbf2" stroke-opacity="0.15" stroke-width="5"/>
+  </g>
+
+  <g transform="translate(1710 130) rotate(10 300 230)" opacity="0.50" filter="url(#shadow)">
+    <rect x="0" y="0" width="640" height="430" rx="28" fill="url(#screen)" stroke="#7dcbf2" stroke-opacity="0.12"/>
+    <rect x="52" y="54" width="536" height="246" rx="18" fill="#030712" stroke="#7dcbf2" stroke-opacity="0.10"/>
+    <polyline points="85,242 160,205 222,224 290,162 360,188 470,116 550,150" fill="none" stroke="#7dcbf2" stroke-width="5" stroke-opacity="0.56"/>
+    <g fill="#7dcbf2" opacity="0.34">
+      <rect x="92" y="336" width="66" height="36" rx="8"/>
+      <rect x="178" y="336" width="66" height="36" rx="8"/>
+      <rect x="264" y="336" width="66" height="36" rx="8"/>
+      <rect x="350" y="336" width="66" height="36" rx="8"/>
+      <rect x="436" y="336" width="66" height="36" rx="8"/>
+    </g>
+  </g>
+
+  <rect x="1020" y="0" width="1380" height="1050" fill="#020713" opacity="0.54"/>
+  <rect width="2400" height="1050" fill="url(#safe)"/>
+  <rect width="2400" height="1050" fill="#020713" opacity="0.12"/>
 </svg>
