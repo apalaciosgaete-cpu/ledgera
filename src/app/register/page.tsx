@@ -310,12 +310,18 @@ function RegisterForm() {
     <main
       style={{
         minHeight: "100vh",
-        background: "var(--bg)",
+        backgroundColor: "var(--bg)",
+        backgroundImage: "url('/register-bg.svg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "14px 20px",
         fontFamily: fonts.body,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       <style>{`
@@ -324,7 +330,18 @@ function RegisterForm() {
         input:focus, select:focus { outline: none; border-color: var(--accent) !important; }
       `}</style>
 
-      <div style={{ width: "100%", maxWidth: "440px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(180deg, rgba(4,8,20,0.58), rgba(4,8,20,0.72))",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ width: "100%", maxWidth: "440px", display: "flex", flexDirection: "column", gap: "8px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Logo variant="light" size="lg" showSubtitle />
         </div>
