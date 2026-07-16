@@ -17,7 +17,7 @@ interface LogoProps {
 const sizes = {
   sm: { width: 168, height: 24 },
   md: { width: 240, height: 34 },
-  lg: { width: 360, height: 52 },
+  lg: { width: 290, height: 42 },
 };
 
 const officialAlt = "LEDGERA";
