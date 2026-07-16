@@ -15,22 +15,25 @@ interface LogoProps {
 }
 
 const sizes = {
-  sm: { width: 168, height: 48 },
-  md: { width: 240, height: 68 },
-  lg: { width: 360, height: 102 },
+  sm: { width: 168, height: 24 },
+  md: { width: 240, height: 34 },
+  lg: { width: 360, height: 52 },
 };
 
-const officialAlt = "LEDGERA — Inteligencia financiera para crecer";
-const officialLogoSrc = "/brand/ledgera-3d-navbar.webp?v=20260707-official";
+const officialAlt = "LEDGERA";
+const officialLogoSrc: Record<LogoVariant, string> = {
+  light: "/brand/ledgera-flat-light.svg?v=20260716-flat",
+  dark: "/brand/ledgera-flat-dark.svg?v=20260716-flat",
+};
 const officialIconSrc = "/ledgera-isotipo.svg?v=20260715-official";
 
 export function Logo(props: LogoProps) {
   const pathname = usePathname();
-  const { size = "md" } = props;
+  const { size = "md", variant = "light" } = props;
   const s = sizes[size];
   const logo = (
     <Image
-      src={officialLogoSrc}
+      src={officialLogoSrc[variant]}
       alt={officialAlt}
       width={s.width}
       height={s.height}
