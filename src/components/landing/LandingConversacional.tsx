@@ -45,7 +45,6 @@ const audienceItems = [
   ["Personas naturales", "Ordena tus operaciones antes de revisar tu declaración."],
   ["Inversionistas cripto", "Consolida movimientos de distintos exchanges y activos."],
   ["Contadores y asesores", "Trabaja con información trazable y más fácil de revisar."],
-  ["Empresas", "Organiza respaldo para operaciones con activos digitales."],
 ] as const;
 
 const footerColumns = [
@@ -287,7 +286,7 @@ export default function LandingConversacional() {
       <section className="border-y border-border bg-bg-elev/40 px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-[1440px]">
           <SectionHeading eyebrow="Para quién es" title="Diseñado para quienes necesitan ordenar operaciones cripto." />
-          <div className="mt-9 grid gap-4 md:grid-cols-4">
+          <div className="mx-auto mt-9 grid max-w-[1080px] gap-4 md:grid-cols-3">
             {audienceItems.map(([title, text]) => (
               <article key={title} className="rounded-3xl border border-border bg-bg-sunken p-6">
                 <h3 className="font-display text-xl font-black tracking-[-0.035em] text-text">{title}</h3>
@@ -303,9 +302,8 @@ export default function LandingConversacional() {
           <p className="text-xs font-black uppercase tracking-[0.22em] text-accent">Antes de declarar</p>
           <h2 className="mx-auto mt-4 max-w-3xl font-display text-4xl font-black tracking-[-0.055em] text-text sm:text-5xl">Ordena tus operaciones, revisa obligaciones y genera respaldo trazable.</h2>
           <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-7 text-text-soft sm:text-base">LEDGERA prepara información para revisión financiera y tributaria. La determinación final debe evaluarse según tu situación particular.</p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-8 flex justify-center">
             <CtaLink href="/register">Comenzar análisis →</CtaLink>
-            <CtaLink href="/contacto" variant="secondary">Enviar feedback</CtaLink>
           </div>
         </div>
       </section>
