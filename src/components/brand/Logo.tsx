@@ -1,11 +1,8 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-import { fonts } from "@/styles/tokens";
 
 type LogoVariant = "light" | "dark";
 type LogoSize = "sm" | "md" | "lg";
@@ -25,6 +22,7 @@ const sizes = {
 
 const officialAlt = "LEDGERA — Inteligencia financiera para crecer";
 const officialLogoSrc = "/brand/ledgera-3d-navbar.webp?v=20260707-official";
+const officialIconSrc = "/ledgera-isotipo.svg?v=20260715-official";
 
 export function Logo(props: LogoProps) {
   const pathname = usePathname();
@@ -65,21 +63,36 @@ export function Logo(props: LogoProps) {
 }
 
 export function LogoIcon({ size = 44 }: { size?: number }) {
-  const wrap: CSSProperties = {
-    width: size,
-    height: size,
-    borderRadius: Math.round(size * 0.22),
-    background: "#071B28",
-    border: `${Math.max(2, Math.round(size * 0.035))}px solid rgba(255,255,255,0.12)`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#F8FAFC",
-    fontFamily: fonts.display,
-    fontWeight: 900,
-  };
+  const iconHeight = Math.round((size * 120) / 140);
 
-  return <div style={wrap} aria-label="LEDGERA">L</div>;
+  return (
+    <span
+      aria-label="LEDGERA"
+      style={{
+        width: size,
+        height: size,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flex: "0 0 auto",
+      }}
+    >
+      <Image
+        src={officialIconSrc}
+        alt=""
+        width={size}
+        height={iconHeight}
+        unoptimized
+        style={{
+          display: "block",
+          width: size,
+          height: "auto",
+          maxHeight: size,
+          objectFit: "contain",
+        }}
+      />
+    </span>
+  );
 }
 
 export default Logo;
