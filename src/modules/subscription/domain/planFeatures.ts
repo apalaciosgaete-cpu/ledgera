@@ -1,23 +1,19 @@
 // src/modules/subscription/domain/planFeatures.ts
 
 /**
- * CAPA 4.2.07 — Normalización de Planes y Permisos.
+ * Fuente de verdad para permisos comerciales.
  *
- * Única fuente de verdad para permisos comerciales.
- *
- * Reglas:
- * - Planes canónicos: FREE | PERSONAL | PRO.
- * - DB legacy BASICO/BASIC → FREE; PROFESIONAL/EMPRESA → PRO.
- * - ADMIN es rol, no plan.
- * - Ningún componente debe usar `plan === "BASICO"`; usar `canAccessFeature()`.
+ * Planes canónicos: FREE | PERSONAL | PROFESIONAL.
+ * Los valores históricos PRO y EMPRESA se normalizan a PROFESIONAL para
+ * conservar acceso sin ofrecer nuevas contrataciones corporativas.
  */
 
-export type Plan = "FREE" | "PERSONAL" | "PRO";
+export type Plan = "FREE" | "PERSONAL" | "PROFESIONAL";
 
 export const Plan = {
   FREE: "FREE",
   PERSONAL: "PERSONAL",
-  PRO: "PRO",
+  PROFESIONAL: "PROFESIONAL",
 } as const;
 
 export const Feature = {
@@ -49,7 +45,7 @@ const PLAN_FEATURES: Record<Plan, Feature[]> = {
     Feature.CALENDAR,
     Feature.BILLING,
   ],
-  PRO: [
+  PROFESIONAL: [
     Feature.SII_STATUS,
     Feature.TAX_ESTIMATE,
     Feature.PDF_EXPORT,
@@ -65,22 +61,20 @@ const PLAN_FEATURES: Record<Plan, Feature[]> = {
   ],
 };
 
-/** Mapeo legacy runtime: cualquier valor desconocido cae a FREE. */
 const LEGACY_PLAN_MAP: Record<string, Plan> = {
   BASICO: "FREE",
   BASIC: "FREE",
   FREE: "FREE",
   PERSONAL: "PERSONAL",
-  PROFESIONAL: "PERSONAL",
-  EMPRESA: "PRO",
-  PRO: "PRO",
+  PROFESIONAL: "PROFESIONAL",
+  PRO: "PROFESIONAL",
+  EMPRESA: "PROFESIONAL",
 };
 
-/** Valor que aún se escribe/lee en la columna `users.subscription_plan`. */
 export const DB_PLAN_VALUE: Record<Plan, string> = {
   FREE: "BASICO",
-  PERSONAL: "PROFESIONAL",
-  PRO: "EMPRESA",
+  PERSONAL: "PERSONAL",
+  PROFESIONAL: "PROFESIONAL",
 };
 
 export function normalizePlan(plan: string | null | undefined): Plan {
@@ -99,22 +93,22 @@ export function canAccessFeature(
 export function requiredPlanForFeature(feature: Feature): Plan {
   if (PLAN_FEATURES.FREE.includes(feature)) return "FREE";
   if (PLAN_FEATURES.PERSONAL.includes(feature)) return "PERSONAL";
-  return "PRO";
+  return "PROFESIONAL";
 }
 
-/** Alias legacy; preferir `requiredPlanForFeature`. */
 export function getRequiredPlan(feature: Feature): Plan {
   return requiredPlanForFeature(feature);
 }
 
 export function getPlanLabel(plan: string | null | undefined): string {
   const normalizedPlan = normalizePlan(plan);
+
   switch (normalizedPlan) {
-    case Plan.PRO:
-      return "Pro";
+    case Plan.PROFESIONAL:
+      return "Profesional";
     case Plan.PERSONAL:
       return "Personal";
     default:
-      return "Free";
+      return "Gratuito";
   }
 }
