@@ -3,8 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 import {
-  CHECKOUT_PLAN_CONFIG,
+  getCheckoutPlanConfig,
+  normalizeBillingInterval,
+  normalizeCheckoutPlan,
   type BillingCheckoutPlan,
+  type BillingInterval,
 } from "@/modules/billing/domain/checkout";
 import {
   addBillingMonths,
@@ -18,26 +21,51 @@ type ProcessBillingWebhookResult = {
   message: string;
 };
 
-function readMetadataPlan(metadata: string | null | undefined): BillingCheckoutPlan | null {
+type MetadataCheckout = {
+  plan: BillingCheckoutPlan | null;
+  interval: BillingInterval;
+};
+
+function parseMetadata(metadata: string | null | undefined): Record<string, unknown> | null {
   if (!metadata) return null;
 
   try {
-    const parsed = JSON.parse(metadata) as { plan?: string };
-    const plan = parsed.plan?.toUpperCase().trim();
-
-    if (plan === "PERSONAL" || plan === "PROFESIONAL" || plan === "EMPRESA") {
-      return plan;
-    }
+    return JSON.parse(metadata) as Record<string, unknown>;
   } catch {
     return null;
   }
+}
 
-  return null;
+function readMetadataCheckout(
+  metadata: string | null | undefined,
+): MetadataCheckout {
+  let parsed = parseMetadata(metadata);
+  let plan: BillingCheckoutPlan | null = null;
+  let interval: BillingInterval = "MONTHLY";
+
+  for (let depth = 0; parsed && depth < 4; depth += 1) {
+    if (!plan && typeof parsed.plan === "string") {
+      plan = normalizeCheckoutPlan(parsed.plan);
+    }
+
+    if (typeof parsed.interval === "string") {
+      interval = normalizeBillingInterval(parsed.interval);
+    }
+
+    parsed =
+      typeof parsed.previousMetadata === "string"
+        ? parseMetadata(parsed.previousMetadata)
+        : null;
+  }
+
+  return { plan, interval };
 }
 
 async function findPayment(event: NormalizedBillingWebhook) {
   if (event.paymentId) {
-    const payment = await prisma.billingPayment.findUnique({ where: { id: event.paymentId } });
+    const payment = await prisma.billingPayment.findUnique({
+      where: { id: event.paymentId },
+    });
     if (payment) return payment;
   }
 
@@ -89,7 +117,7 @@ export async function processBillingWebhook(
         failedAt: new Date(),
         metadata: JSON.stringify({
           previousMetadata: payment.metadata,
-          webhookVersion: "4.2.10",
+          webhookVersion: "5.0.0",
           eventType: event.eventType,
           providerEventId: event.providerEventId,
         }),
@@ -132,7 +160,8 @@ export async function processBillingWebhook(
     };
   }
 
-  const plan = event.plan ?? readMetadataPlan(payment.metadata);
+  const metadataCheckout = readMetadataCheckout(payment.metadata);
+  const plan = event.plan ?? metadataCheckout.plan;
 
   if (!plan) {
     return {
@@ -142,9 +171,12 @@ export async function processBillingWebhook(
     };
   }
 
-  const config = CHECKOUT_PLAN_CONFIG[plan];
+  const config = getCheckoutPlanConfig(plan, metadataCheckout.interval);
   const periodStart = event.paidAt ?? new Date();
-  const periodEnd = addBillingMonths(periodStart, config.interval === "ANNUAL" ? 12 : 1);
+  const periodEnd = addBillingMonths(
+    periodStart,
+    config.interval === "ANNUAL" ? 12 : 1,
+  );
 
   const subscription = await prisma.billingSubscription.create({
     data: {
@@ -160,9 +192,10 @@ export async function processBillingWebhook(
       currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,
       metadata: JSON.stringify({
-        webhookVersion: "4.2.10",
+        webhookVersion: "5.0.0",
         sourcePaymentId: payment.id,
         checkoutPlan: plan,
+        interval: config.interval,
         providerEventId: event.providerEventId,
       }),
     },
@@ -179,10 +212,12 @@ export async function processBillingWebhook(
       paidAt: periodStart,
       metadata: JSON.stringify({
         previousMetadata: payment.metadata,
-        webhookVersion: "4.2.10",
+        webhookVersion: "5.0.0",
         eventType: event.eventType,
         providerEventId: event.providerEventId,
         activatedSubscriptionId: subscription.id,
+        plan,
+        interval: config.interval,
       }),
     },
   });
@@ -204,6 +239,7 @@ export async function processBillingWebhook(
     paymentId: updatedPayment.id,
     subscriptionId: subscription.id,
     plan,
+    interval: config.interval,
     targetSubscriptionPlan: config.targetSubscriptionPlan,
     provider: event.provider,
     occurredAt: new Date().toISOString(),
@@ -214,10 +250,15 @@ export async function processBillingWebhook(
     category: "BILLING",
     severity: "SUCCESS",
     title: "Pago confirmado",
-    description: `Tu pago fue confirmado y se activó el plan ${config.targetSubscriptionPlan}.`,
+    description: `Tu pago fue confirmado y se activó el plan ${config.label}.`,
     entityType: "BillingSubscription",
     entityId: subscription.id,
-    metadata: { plan, targetSubscriptionPlan: config.targetSubscriptionPlan, paymentId: updatedPayment.id },
+    metadata: {
+      plan,
+      interval: config.interval,
+      targetSubscriptionPlan: config.targetSubscriptionPlan,
+      paymentId: updatedPayment.id,
+    },
   });
 
   return {
