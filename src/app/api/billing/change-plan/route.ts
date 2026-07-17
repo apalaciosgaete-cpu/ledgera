@@ -1,5 +1,5 @@
 // src/app/api/billing/change-plan/route.ts
-// CAPA 4.3.01 — Cambio de plan desde el portal.
+// Los cambios pagados se procesan exclusivamente por /api/billing/checkout.
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -46,6 +46,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (plan !== "BASICO") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Los cambios a planes pagados deben iniciarse mediante el checkout externo.",
+          data: null,
+        },
+        { status: 409 },
+      );
+    }
+
     console.info("[commercial]", {
       event: "change_plan_started",
       userId: auth.user.id,
@@ -61,27 +73,14 @@ export async function POST(request: NextRequest) {
       provider: body.provider,
     });
 
-    if (result.type === "immediate") {
-      return NextResponse.json({
-        ok: true,
-        message: result.message,
-        data: {
-          type: result.type,
-          plan: result.plan,
-          subscriptionId: result.subscriptionId,
-        },
-      });
-    }
-
     return NextResponse.json({
       ok: true,
       message: result.message,
       data: {
         type: result.type,
-        paymentId: result.payment.id,
-        checkoutId: result.payment.checkoutId,
-        url: result.url,
         plan: result.plan,
+        subscriptionId:
+          result.type === "immediate" ? result.subscriptionId : null,
       },
     });
   } catch (error) {
