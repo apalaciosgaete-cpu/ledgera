@@ -33,7 +33,7 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
     plan: "PERSONAL",
     name: "Personal",
     description: "Plan para traders, inversionistas y personas con actividad cripto.",
-    amount: 5990,
+    amount: 7128,
     currency: "CLP",
     interval: "MONTHLY",
     features: [
