@@ -2,52 +2,49 @@
 
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
 import { useAuth } from "@/modules/identity/client/authContext";
-import { getPlanLabel, normalizePlan, Plan } from "@/modules/subscription/domain/planFeatures";
+import { normalizePlan, Plan } from "@/modules/subscription/domain/planFeatures";
 
 const PLANS = [
   {
     key: Plan.FREE,
     checkoutPlan: undefined as undefined,
-    name: "Free",
+    name: "Gratuito",
     price: "$0",
-    description: "Para explorar y entender tu situación",
-    features: ["Estado SII", "Patrimonio", "Activos", "Rentabilidad", "Movimientos básicos", "Conexiones"],
-  },
-  {
-    key: Plan.PERSONAL,
-    checkoutPlan: "PROFESIONAL" as const,
-    name: "Personal",
-    price: "$4.990 / mes",
-    description: "Para el inversor individual",
+    description: "Para descubrir cómo LEDGERA ordena tus operaciones",
     features: [
-      "Todo lo de Free",
-      "Impuesto estimado",
-      "PDF tributario",
-      "CSV tributario",
-      "Declaraciones",
-      "Calendario tributario",
-      "Historial tributario",
-      "Simulador",
-      "Exportaciones básicas",
+      "Hasta 100 movimientos",
+      "Una fuente de importación",
+      "Vista preliminar",
+      "Detección básica de inconsistencias",
     ],
   },
   {
-    key: Plan.PRO,
-    checkoutPlan: "EMPRESA" as const,
-    name: "Pro",
-    price: "$29.990 / mes",
-    description: "Para asesores y operación avanzada",
+    key: Plan.PERSONAL,
+    checkoutPlan: "PERSONAL" as const,
+    name: "Personal",
+    price: "$5.990 / mes",
+    description: "Para traders, inversionistas y personas con actividad cripto",
+    features: [
+      "Historial cripto continuo",
+      "Conciliación completa",
+      "Trazabilidad del costo por activo",
+      "PDF y Excel completos",
+      "Soporte por email",
+    ],
+  },
+  {
+    key: Plan.PROFESIONAL,
+    checkoutPlan: "PROFESIONAL" as const,
+    name: "Profesional",
+    price: "$29.990 + IVA / mes",
+    description: "Para contadores y asesores con varios contribuyentes",
     features: [
       "Todo lo de Personal",
-      "Modo Experto",
-      "Auditoría",
-      "Verificaciones",
-      "Evidencia",
-      "Cadena de custodia",
-      "Integridad",
-      "Reportes avanzados",
-      "Multiempresa",
-      "Exportaciones avanzadas",
+      "Hasta 5 clientes activos",
+      "Panel multicliente",
+      "Estados de avance",
+      "Reportes trazables",
+      "Soporte prioritario",
     ],
   },
 ];
@@ -106,7 +103,7 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
                 action={action}
                 style={{
                   background: "var(--accent)",
-                  color: "var(--text)",
+                  color: "var(--accent-contrast)",
                   borderRadius: 8,
                   padding: "12px 16px",
                   fontSize: 14,
@@ -120,7 +117,7 @@ export function PlanComparison({ currentPlan }: PlanComparisonProps) {
                 disabled
                 style={{
                   background: isCurrent ? "var(--accent)" : "var(--bg-elev)",
-                  color: isCurrent ? "var(--text)" : "var(--text-soft)",
+                  color: isCurrent ? "var(--accent-contrast)" : "var(--text-soft)",
                   border: "none",
                   borderRadius: 8,
                   padding: "12px 16px",
