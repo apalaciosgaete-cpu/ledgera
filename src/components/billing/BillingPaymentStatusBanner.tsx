@@ -34,33 +34,29 @@ function getBannerCopy(input: {
     if (input.status?.isActive) {
       return {
         title: "Pago confirmado",
-        message:
-          "Tu plan fue activado correctamente. La suscripción ya está disponible en tu cuenta.",
+        message: "Tu plan ya está activo y disponible en tu cuenta.",
         tone: "success",
       };
     }
 
     return {
-      title: "Pago recibido, esperando confirmación",
-      message:
-        "El proveedor aún no confirma el pago por webhook. Esto puede tardar algunos minutos.",
+      title: "Estamos confirmando tu pago",
+      message: "La activación puede tardar algunos minutos. No necesitas realizar otra acción.",
       tone: "pending",
     };
   }
 
   if (input.paymentParam === "pending") {
     return {
-      title: "Pago pendiente",
-      message:
-        "El pago está pendiente de confirmación. Actualizaremos tu plan cuando el proveedor confirme la operación.",
+      title: "Pago en proceso",
+      message: "Estamos confirmando la operación. Tu plan se activará automáticamente cuando finalice.",
       tone: "pending",
     };
   }
 
   return {
     title: "Pago no completado",
-    message:
-      "La operación no fue completada. Puedes intentarlo nuevamente con Mercado Pago.",
+    message: "No pudimos completar la operación. Puedes intentarlo nuevamente.",
     tone: "failure",
   };
 }
@@ -71,7 +67,7 @@ function resolveToneStyles(tone: BannerTone) {
       border: "1px solid rgba(22,163,74,0.35)",
       background: "rgba(22,163,74,0.10)",
       titleColor: "var(--accent)",
-      textColor: "var(--accent-soft)",
+      textColor: "var(--text-soft)",
     };
   }
 
@@ -80,7 +76,7 @@ function resolveToneStyles(tone: BannerTone) {
       border: "1px solid rgba(234,179,8,0.35)",
       background: "rgba(234,179,8,0.10)",
       titleColor: "var(--text-faint)",
-      textColor: "rgba(232,184,75,0.14)",
+      textColor: "var(--text-soft)",
     };
   }
 
@@ -88,7 +84,7 @@ function resolveToneStyles(tone: BannerTone) {
     border: "1px solid rgba(239,68,68,0.35)",
     background: "rgba(239,68,68,0.10)",
     titleColor: "var(--loss)",
-    textColor: "rgba(196,99,74,0.14)",
+    textColor: "var(--text-soft)",
   };
 }
 
@@ -188,23 +184,8 @@ export function BillingPaymentStatusBanner() {
           color: styles.textColor,
         }}
       >
-        {loading
-          ? "Consultando estado actualizado del pago..."
-          : copy.message}
+        {loading ? "Consultando el estado del pago..." : copy.message}
       </p>
-
-      {billingStatus?.latestPayment && (
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "12px",
-            color: "var(--text-soft)",
-          }}
-        >
-          Último pago: {billingStatus.latestPayment.provider} ·{" "}
-          {billingStatus.latestPayment.status}
-        </p>
-      )}
     </div>
   );
 }
