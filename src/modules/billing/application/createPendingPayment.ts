@@ -12,14 +12,18 @@ import {
 } from "@/modules/billing/infrastructure/billingRepository";
 
 import {
-  assertPaidBillingPlan,
-} from "@/modules/billing/application/billingPlans";
+  getCheckoutPlanConfig,
+  normalizeBillingInterval,
+  normalizeCheckoutPlan,
+  type BillingInterval,
+} from "@/modules/billing/domain/checkout";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 type CreatePendingPaymentInput = {
   userId: string;
   provider: BillingProvider;
   plan: BillingPlan;
+  interval?: BillingInterval | string;
   description?: string;
   checkoutId?: string | null;
   providerPaymentId?: string | null;
@@ -38,7 +42,14 @@ function serializeMetadata(
 export async function createPendingPayment(
   input: CreatePendingPaymentInput,
 ): Promise<BillingPayment> {
-  const planConfig = assertPaidBillingPlan(input.plan);
+  const checkoutPlan = normalizeCheckoutPlan(input.plan);
+
+  if (!checkoutPlan) {
+    throw new Error("El plan seleccionado no admite nuevas contrataciones.");
+  }
+
+  const interval = normalizeBillingInterval(input.interval);
+  const planConfig = getCheckoutPlanConfig(checkoutPlan, interval);
 
   const customer =
     await getBillingCustomerByUserAndProvider({
@@ -54,7 +65,8 @@ export async function createPendingPayment(
   if (
     !subscription ||
     subscription.provider !== input.provider ||
-    subscription.plan !== input.plan
+    subscription.plan !== input.plan ||
+    subscription.interval !== interval
   ) {
     subscription =
       await createBillingSubscription({
@@ -65,10 +77,11 @@ export async function createPendingPayment(
         status: "PENDING",
         currency: planConfig.currency,
         amount: planConfig.amount,
-        interval: planConfig.interval,
+        interval,
         metadata: serializeMetadata({
           source: "createPendingPayment",
           plan: input.plan,
+          interval,
           provider: input.provider,
         }),
       });
@@ -87,12 +100,16 @@ export async function createPendingPayment(
     currency: planConfig.currency,
     description:
       input.description ??
-      `LEDGERA ${planConfig.name}`,
+      `LEDGERA ${planConfig.label} ${interval === "ANNUAL" ? "anual" : "mensual"}`,
     paymentUrl: input.paymentUrl ?? null,
     metadata: serializeMetadata({
       source: "createPendingPayment",
       plan: input.plan,
+      interval,
       provider: input.provider,
+      amount: planConfig.amount,
+      netAmount: planConfig.netAmount,
+      taxAmount: planConfig.taxAmount,
       ...input.metadata,
     }),
   });
@@ -108,6 +125,7 @@ export async function createPendingPayment(
     entityId: payment.id,
     metadata: {
       plan: input.plan,
+      interval,
       provider: input.provider,
       amount: planConfig.amount,
       subscriptionId: subscription.id,
