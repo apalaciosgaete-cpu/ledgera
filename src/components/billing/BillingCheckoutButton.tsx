@@ -88,7 +88,6 @@ export function BillingCheckoutButton({
       });
 
       router.push(`/checkout?${params.toString()}`);
-
       return;
     }
 
@@ -97,8 +96,8 @@ export function BillingCheckoutButton({
     try {
       const url =
         action === "change-plan"
-          ? await createBillingChangePlan(plan, provider)
-          : await createBillingCheckout(plan, provider);
+          ? await createBillingChangePlan(plan, provider, billing)
+          : await createBillingCheckout(plan, provider, billing);
 
       setSuccess(true);
 
