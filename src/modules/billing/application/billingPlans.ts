@@ -18,59 +18,57 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
   BASICO: {
     plan: "BASICO",
     name: "Gratuito",
-    description: "Plan inicial para explorar LEDGERA.",
+    description: "Plan inicial para conocer cómo LEDGERA ordena tus operaciones.",
     amount: 0,
     currency: "CLP",
     interval: "MONTHLY",
     features: [
-      "Hasta 25 movimientos",
-      "Motor FIFO incluido",
-      "Panel tributario básico",
+      "Hasta 100 movimientos",
+      "Una fuente de importación",
+      "Vista preliminar del análisis",
+      "Detección básica de inconsistencias",
     ],
   },
   PERSONAL: {
     plan: "PERSONAL",
     name: "Personal",
-    description: "Plan para personas naturales con operación cripto activa.",
-    amount: 4990,
+    description: "Plan para traders, inversionistas y personas con actividad cripto.",
+    amount: 5990,
     currency: "CLP",
     interval: "MONTHLY",
     features: [
-      "Movimientos ilimitados",
-      "Motor FIFO automático",
-      "Exportación CSV y PDF",
-      "Auditoría completa",
+      "Historial cripto continuo",
+      "Conciliación y corrección de inconsistencias",
+      "Trazabilidad del costo por activo",
+      "Exportación PDF y Excel",
       "Soporte por email",
     ],
   },
   PROFESIONAL: {
     plan: "PROFESIONAL",
     name: "Profesional",
-    description: "Plan para asesores y equipos con clientes.",
-    amount: 14990,
+    description: "Plan para contadores y asesores que administran varios contribuyentes.",
+    amount: 35688,
     currency: "CLP",
     interval: "MONTHLY",
     features: [
       "Todo lo de Personal",
-      "Hasta 5 clientes incluidos",
-      "Cliente adicional +20% del valor del plan",
-      "Reportes verificables SII",
+      "Hasta 5 clientes activos",
+      "Panel multicliente",
+      "Reportes trazables para revisión",
       "Soporte prioritario",
     ],
   },
   EMPRESA: {
     plan: "EMPRESA",
-    name: "Empresa",
-    description: "Plan para empresas, oficinas contables y operación avanzada.",
-    amount: 29990,
+    name: "Empresa (legado)",
+    description: "Plan histórico sin nuevas contrataciones; se mantiene para compatibilidad de datos.",
+    amount: 35688,
     currency: "CLP",
     interval: "MONTHLY",
     features: [
-      "Todo lo de Profesional",
-      "Clientes ilimitados",
-      "Régimen primera categoría",
-      "Configuración tributaria",
-      "Soporte dedicado",
+      "Compatibilidad con suscripciones históricas",
+      "Acceso equivalente al plan Profesional",
     ],
   },
 };
@@ -87,8 +85,7 @@ export function isValidBillingPlan(
   return (
     value === "BASICO" ||
     value === "PERSONAL" ||
-    value === "PROFESIONAL" ||
-    value === "EMPRESA"
+    value === "PROFESIONAL"
   );
 }
 
@@ -97,9 +94,11 @@ export function assertPaidBillingPlan(
 ): BillingPlanConfig {
   const config = getBillingPlanConfig(plan);
 
-  if (config.amount <= 0) {
+  if (config.amount <= 0 || plan === "EMPRESA") {
     throw new Error(
-      "El plan seleccionado no requiere pago.",
+      plan === "EMPRESA"
+        ? "El plan Empresa no admite nuevas contrataciones."
+        : "El plan seleccionado no requiere pago.",
     );
   }
 
