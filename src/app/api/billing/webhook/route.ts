@@ -1,5 +1,6 @@
 // src/app/api/billing/webhook/route.ts
 
+import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireEnv } from "@/lib/env";
@@ -17,11 +18,29 @@ function resolveWebhookSecret() {
   return requireEnv("BILLING_WEBHOOK_SECRET");
 }
 
+function secretsMatch(received: string | null, expected: string) {
+  if (!received) return false;
+
+  const receivedBuffer = Buffer.from(received);
+  const expectedBuffer = Buffer.from(expected);
+
+  return (
+    receivedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(receivedBuffer, expectedBuffer)
+  );
+}
+
 function isAuthorizedWebhook(request: NextRequest) {
   const expectedSecret = resolveWebhookSecret();
-  const receivedSecret = request.headers.get("x-ledgera-webhook-secret")?.trim();
+  const headerSecret = request.headers
+    .get("x-ledgera-webhook-secret")
+    ?.trim() ?? null;
+  const querySecret = request.nextUrl.searchParams.get("token")?.trim() ?? null;
 
-  return receivedSecret === expectedSecret;
+  return (
+    secretsMatch(headerSecret, expectedSecret) ||
+    secretsMatch(querySecret, expectedSecret)
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -131,7 +150,8 @@ export async function POST(request: NextRequest) {
           eventType: "processing_error",
           status: "FAILED",
           payload: JSON.stringify(payload),
-          errorMessage: error instanceof Error ? error.message : "Error inesperado.",
+          errorMessage:
+            error instanceof Error ? error.message : "Error inesperado.",
         },
       });
     } catch (logError) {
@@ -139,7 +159,8 @@ export async function POST(request: NextRequest) {
     }
 
     const missingConfig =
-      error instanceof Error && error.message.includes("BILLING_WEBHOOK_SECRET");
+      error instanceof Error &&
+      error.message.includes("BILLING_WEBHOOK_SECRET");
 
     return NextResponse.json(
       {
