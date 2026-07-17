@@ -22,7 +22,7 @@ const PLANS = [
     key: Plan.PERSONAL,
     checkoutPlan: "PERSONAL" as const,
     name: "Personal",
-    price: "$5.990 / mes",
+    price: "$5.990 / mes · + IVA",
     description: "Para traders, inversionistas y personas con actividad cripto",
     features: [
       "Historial cripto continuo",
@@ -36,7 +36,7 @@ const PLANS = [
     key: Plan.PROFESIONAL,
     checkoutPlan: "PROFESIONAL" as const,
     name: "Profesional",
-    price: "$29.990 + IVA / mes",
+    price: "$29.990 / mes · + IVA",
     description: "Para contadores y asesores con varios contribuyentes",
     features: [
       "Todo lo de Personal",
