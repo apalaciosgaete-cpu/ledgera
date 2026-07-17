@@ -100,28 +100,20 @@ const plans: Plan[] = [
 
 const faqItems = [
   {
-    q: "¿Qué estoy pagando en el plan Personal?",
-    a: "Pagas por mantener un historial cripto ordenado, conciliado y documentado: corrección de inconsistencias, trazabilidad por activo y respaldos completos en PDF y Excel.",
+    q: "¿Qué incluye el plan Personal?",
+    a: "Incluye el análisis completo de tus operaciones, conciliación y corrección de inconsistencias, trazabilidad del costo por activo y respaldos en PDF y Excel. Así mantienes tu historial cripto ordenado y listo para revisión tributaria.",
   },
   {
     q: "¿Qué diferencia al plan Profesional?",
-    a: "Profesional incorpora una operación multicliente para contadores y asesores: espacios separados por contribuyente, estados de avance, reportes estandarizados y soporte prioritario.",
+    a: "Profesional permite administrar varios contribuyentes desde un solo lugar, con espacios separados por cliente, estados de avance, reportes estandarizados y soporte prioritario.",
   },
   {
     q: "¿El pago anual tiene descuento?",
-    a: "Sí. Personal cuesta $59.900 + IVA al año y Profesional $299.900 + IVA al año, equivalentes aproximadamente a dos mensualidades bonificadas.",
-  },
-  {
-    q: "¿La contratación en línea ya procesa cobros?",
-    a: "La conexión técnica con la pasarela externa está preparada, pero permanece deshabilitada hasta completar la habilitación legal y comercial. LEDGERA no realizará cargos mientras el modo de cobro siga bloqueado.",
-  },
-  {
-    q: "¿Cuándo se activa el plan?",
-    a: "Solo después de que la pasarela externa confirme el pago mediante webhook. Crear una orden pendiente o volver desde la pasarela no activa por sí solo la suscripción.",
+    a: "Sí. Obtienes 12 meses de acceso por el precio de 10. Personal cuesta $59.900 + IVA al año y ahorras $11.980 + IVA. Profesional cuesta $299.900 + IVA al año y ahorras $59.980 + IVA.",
   },
   {
     q: "¿Puedo cancelar?",
-    a: "Sí. La cancelación impide el siguiente cobro y mantiene el acceso hasta finalizar el período ya pagado, según las condiciones comerciales vigentes.",
+    a: "Sí. Puedes cancelar la renovación y mantendrás el acceso hasta el final del período que ya pagaste.",
   },
 ];
 
@@ -200,7 +192,7 @@ function PlanCard({
         ) : null}
         {billing === "annual" && plan.annual > 0 ? (
           <p className="mt-2 text-xs font-bold text-accent">
-            Aproximadamente 2 meses bonificados
+            12 meses por el precio de 10
           </p>
         ) : null}
       </div>
@@ -270,26 +262,21 @@ function PlanesContent() {
         title="Paga por orden, continuidad y respaldo"
         description="Tres niveles claros: entra gratis, mantén tu historial cripto permanentemente ordenado con Personal o administra contribuyentes desde Profesional."
       >
-        <div className="flex flex-col items-center justify-center gap-3">
-          <div className="inline-flex rounded-2xl border border-border bg-bg-elev p-1">
-            {(["monthly", "annual"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setBilling(option)}
-                className={
-                  billing === option
-                    ? "rounded-xl bg-accent px-5 py-3 text-sm font-black text-accent-contrast"
-                    : "rounded-xl px-5 py-3 text-sm font-black text-text-faint transition hover:text-text"
-                }
-              >
-                {option === "monthly" ? "Mensual" : "Anual · mayor ahorro"}
-              </button>
-            ))}
-          </div>
-          <p className="m-0 max-w-2xl text-center text-xs font-bold leading-5 text-text-faint">
-            La pasarela externa está técnicamente preparada y permanece bloqueada hasta completar la habilitación legal.
-          </p>
+        <div className="inline-flex rounded-2xl border border-border bg-bg-elev p-1">
+          {(["monthly", "annual"] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setBilling(option)}
+              className={
+                billing === option
+                  ? "rounded-xl bg-accent px-5 py-3 text-sm font-black text-accent-contrast"
+                  : "rounded-xl px-5 py-3 text-sm font-black text-text-faint transition hover:text-text"
+              }
+            >
+              {option === "monthly" ? "Mensual" : "Anual · ahorra 2 meses"}
+            </button>
+          ))}
         </div>
       </PublicHero>
 
