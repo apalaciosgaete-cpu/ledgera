@@ -1,5 +1,5 @@
 export const BILLING_UNAVAILABLE_MESSAGE =
-  "La contratación y gestión automática de cobros aún no está habilitada.";
+  "La contratación en línea está temporalmente deshabilitada mientras LEDGERA completa su habilitación legal y comercial. No se realizará ningún cargo.";
 
 export function isLiveBillingEnabled(): boolean {
   return process.env.BILLING_LIVE_MODE === "true";
