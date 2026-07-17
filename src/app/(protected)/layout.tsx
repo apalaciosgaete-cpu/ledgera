@@ -2,8 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
 import { Logo } from "@/components/brand/Logo";
@@ -20,6 +20,11 @@ const roleTokens: Record<string, { label: string; badgeBg: string; badgeColor: s
 
 type SidebarLink = { href: string; label: string };
 type SidebarGroup = { items: SidebarLink[] };
+
+type PendingCheckout = {
+  plan?: string;
+  billing?: string;
+};
 
 const SIDEBAR_GROUPS: SidebarGroup[] = [
   { items: [{ href: "/panel", label: "Inicio" }] },
@@ -81,9 +86,31 @@ function Sidebar({ open, onClose, onLogout }: { open: boolean; onClose: () => vo
 
 function ProtectedShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const isPanel = pathname === "/panel";
+
+  useEffect(() => {
+    if (!user || pathname !== "/panel") return;
+
+    const rawPendingCheckout = sessionStorage.getItem("pendingCheckout");
+    if (!rawPendingCheckout) return;
+
+    sessionStorage.removeItem("pendingCheckout");
+
+    try {
+      const pending = JSON.parse(rawPendingCheckout) as PendingCheckout;
+      const plan = pending.plan?.toUpperCase();
+
+      if (plan !== "PERSONAL" && plan !== "PROFESIONAL") return;
+
+      const billing = pending.billing === "annual" ? "annual" : "monthly";
+      router.replace(`/checkout?plan=${plan}&billing=${billing}&source=post_auth`);
+    } catch {
+      // Ignore invalid or stale checkout state.
+    }
+  }, [pathname, router, user]);
 
   if (!user) return null;
 
