@@ -1,7 +1,8 @@
 import { httpClient } from "@/shared/http/httpClient";
 
-export type BillingCheckoutPlan = "PERSONAL" | "PROFESIONAL" | "EMPRESA";
+export type BillingCheckoutPlan = "PERSONAL" | "PROFESIONAL";
 export type BillingCheckoutProvider = "stripe" | "flow" | "mercadopago";
+export type BillingCheckoutInterval = "monthly" | "annual";
 
 type BillingCheckoutResponse = {
   ok: boolean;
@@ -16,13 +17,18 @@ type BillingCheckoutResponse = {
 export async function createBillingCheckout(
   plan: BillingCheckoutPlan,
   provider: BillingCheckoutProvider = "flow",
+  billing: BillingCheckoutInterval = "monthly",
 ): Promise<string> {
   const response = await httpClient<BillingCheckoutResponse>(
     "/api/billing/checkout",
     {
       method: "POST",
       auth: true,
-      body: { plan, provider },
+      body: {
+        plan,
+        provider,
+        interval: billing === "annual" ? "ANNUAL" : "MONTHLY",
+      },
     },
   );
 
@@ -40,6 +46,7 @@ export async function createBillingCheckout(
 export async function createBillingChangePlan(
   plan: BillingCheckoutPlan | "BASICO",
   provider: BillingCheckoutProvider = "flow",
+  billing: BillingCheckoutInterval = "monthly",
 ): Promise<string> {
   const response = await httpClient<{
     ok: boolean;
@@ -54,7 +61,11 @@ export async function createBillingChangePlan(
   }>("/api/billing/change-plan", {
     method: "POST",
     auth: true,
-    body: { plan, provider },
+    body: {
+      plan,
+      provider,
+      interval: billing === "annual" ? "ANNUAL" : "MONTHLY",
+    },
   });
 
   if (response.data?.type === "immediate") {
