@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { DB_PLAN_VALUE } from "@/modules/subscription/domain/planFeatures";
 
-
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const auth = await getSessionFromRequest(req);
 
@@ -26,17 +26,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [freeUsers, personalUsers, proUsers, pendingPayments] = await Promise.all([
-      prisma.users.count({ where: { subscription_plan: DB_PLAN_VALUE.FREE } }),
-      prisma.users.count({ where: { subscription_plan: DB_PLAN_VALUE.PERSONAL } }),
-      prisma.users.count({ where: { subscription_plan: DB_PLAN_VALUE.PRO } }),
-      prisma.billingPayment.count({
-        where: {
-          userId: auth.user.id,
-          status: "PENDING",
-        },
-      }),
-    ]);
+    const [freeUsers, personalUsers, professionalUsers, pendingPayments] =
+      await Promise.all([
+        prisma.users.count({
+          where: { subscription_plan: DB_PLAN_VALUE.FREE },
+        }),
+        prisma.users.count({
+          where: { subscription_plan: DB_PLAN_VALUE.PERSONAL },
+        }),
+        prisma.users.count({
+          where: { subscription_plan: DB_PLAN_VALUE.PROFESIONAL },
+        }),
+        prisma.billingPayment.count({
+          where: {
+            userId: auth.user.id,
+            status: "PENDING",
+          },
+        }),
+      ]);
 
     return NextResponse.json({
       ok: true,
@@ -44,15 +51,14 @@ export async function GET(req: NextRequest) {
       data: {
         freeUsers,
         personalUsers,
-        proUsers,
-        // Sin eventos persistentes aún; listos para analytics futuro.
+        professionalUsers,
         upgradePromptsViewed: null,
         upgradeClicks: null,
         upgradeStarted: null,
         upgradeCompleted: null,
         ctrUpgrade: null,
         conversionFreeToPersonal: null,
-        conversionPersonalToPro: null,
+        conversionPersonalToProfessional: null,
         pendingPaymentsForCurrentUser: pendingPayments,
       },
     });
