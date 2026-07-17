@@ -6,7 +6,7 @@ export type BillingPlan =
   | "PROFESIONAL"
   | "EMPRESA";
 
-export type BillingInterval = "MONTHLY";
+export type BillingInterval = "MONTHLY" | "ANNUAL";
 
 export type BillingCurrency =
   | "CLP"
