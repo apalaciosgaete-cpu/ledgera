@@ -71,7 +71,7 @@ const plans: Plan[] = [
     ],
     disabled: [],
     note: "Mantén tu historial ordenado y preparado para revisión tributaria durante todo el año.",
-    taxLabel: "IVA incluido",
+    taxLabel: "+\u00A0IVA",
   },
   {
     key: "profesional",
@@ -94,7 +94,7 @@ const plans: Plan[] = [
     ],
     disabled: [],
     note: "Cliente activo adicional: $4.990 + IVA al mes.",
-    taxLabel: "+ IVA",
+    taxLabel: "+\u00A0IVA",
   },
 ];
 
@@ -109,7 +109,7 @@ const faqItems = [
   },
   {
     q: "¿El pago anual tiene descuento?",
-    a: "Sí. Personal cuesta $59.900 IVA incluido al año y Profesional $299.900 más IVA al año, equivalentes aproximadamente a dos mensualidades bonificadas.",
+    a: "Sí. Personal cuesta $59.900 + IVA al año y Profesional $299.900 + IVA al año, equivalentes aproximadamente a dos mensualidades bonificadas.",
   },
   {
     q: "¿La contratación en línea ya procesa cobros?",
