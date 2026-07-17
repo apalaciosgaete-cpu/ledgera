@@ -3,44 +3,74 @@
 export const BILLING_PROVIDERS = ["stripe", "flow", "mercadopago"] as const;
 export type BillingProvider = (typeof BILLING_PROVIDERS)[number];
 
-export const CHECKOUT_PLANS = ["PERSONAL", "PROFESIONAL", "EMPRESA"] as const;
+export const CHECKOUT_PLANS = ["PERSONAL", "PROFESIONAL"] as const;
 export type BillingCheckoutPlan = (typeof CHECKOUT_PLANS)[number];
 
 export type BillingInterval = "MONTHLY" | "ANNUAL";
 
-export type CheckoutPlanConfig = {
-  plan: BillingCheckoutPlan;
-  label: string;
+export type CheckoutPriceConfig = {
   amount: number;
-  currency: "CLP";
-  interval: BillingInterval;
-  targetSubscriptionPlan: "PROFESIONAL" | "EMPRESA";
+  netAmount: number;
+  taxAmount: number;
+  taxIncluded: boolean;
 };
 
-export const CHECKOUT_PLAN_CONFIG: Record<BillingCheckoutPlan, CheckoutPlanConfig> = {
+export type CheckoutPlanDefinition = {
+  plan: BillingCheckoutPlan;
+  label: string;
+  currency: "CLP";
+  targetSubscriptionPlan: "PERSONAL" | "PROFESIONAL";
+  prices: Record<BillingInterval, CheckoutPriceConfig>;
+};
+
+export type CheckoutPlanConfig = CheckoutPriceConfig & {
+  plan: BillingCheckoutPlan;
+  label: string;
+  currency: "CLP";
+  interval: BillingInterval;
+  targetSubscriptionPlan: "PERSONAL" | "PROFESIONAL";
+};
+
+export const CHECKOUT_PLAN_CONFIG: Record<BillingCheckoutPlan, CheckoutPlanDefinition> = {
   PERSONAL: {
     plan: "PERSONAL",
     label: "Personal",
-    amount: 4990,
     currency: "CLP",
-    interval: "MONTHLY",
-    targetSubscriptionPlan: "PROFESIONAL",
+    targetSubscriptionPlan: "PERSONAL",
+    prices: {
+      MONTHLY: {
+        amount: 5990,
+        netAmount: 5034,
+        taxAmount: 956,
+        taxIncluded: true,
+      },
+      ANNUAL: {
+        amount: 59900,
+        netAmount: 50336,
+        taxAmount: 9564,
+        taxIncluded: true,
+      },
+    },
   },
   PROFESIONAL: {
     plan: "PROFESIONAL",
-    label: "Pro",
-    amount: 29990,
+    label: "Profesional",
     currency: "CLP",
-    interval: "MONTHLY",
-    targetSubscriptionPlan: "EMPRESA",
-  },
-  EMPRESA: {
-    plan: "EMPRESA",
-    label: "Empresa",
-    amount: 59990,
-    currency: "CLP",
-    interval: "MONTHLY",
-    targetSubscriptionPlan: "EMPRESA",
+    targetSubscriptionPlan: "PROFESIONAL",
+    prices: {
+      MONTHLY: {
+        amount: 35688,
+        netAmount: 29990,
+        taxAmount: 5698,
+        taxIncluded: false,
+      },
+      ANNUAL: {
+        amount: 356881,
+        netAmount: 299900,
+        taxAmount: 56981,
+        taxIncluded: false,
+      },
+    },
   },
 };
 
@@ -52,6 +82,29 @@ export function normalizeCheckoutPlan(plan: string | null | undefined): BillingC
   return CHECKOUT_PLANS.includes(normalized as BillingCheckoutPlan)
     ? (normalized as BillingCheckoutPlan)
     : null;
+}
+
+export function normalizeBillingInterval(
+  interval: string | null | undefined,
+): BillingInterval {
+  return interval?.toUpperCase().trim() === "ANNUAL" ? "ANNUAL" : "MONTHLY";
+}
+
+export function getCheckoutPlanConfig(
+  plan: BillingCheckoutPlan,
+  interval: BillingInterval,
+): CheckoutPlanConfig {
+  const definition = CHECKOUT_PLAN_CONFIG[plan];
+  const price = definition.prices[interval];
+
+  return {
+    plan: definition.plan,
+    label: definition.label,
+    currency: definition.currency,
+    targetSubscriptionPlan: definition.targetSubscriptionPlan,
+    interval,
+    ...price,
+  };
 }
 
 export function resolveBillingProvider(provider: string | null | undefined): BillingProvider {
