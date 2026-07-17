@@ -48,6 +48,10 @@ export async function createBillingChangePlan(
   provider: BillingCheckoutProvider = "flow",
   billing: BillingCheckoutInterval = "monthly",
 ): Promise<string> {
+  if (plan !== "BASICO") {
+    return createBillingCheckout(plan, provider, billing);
+  }
+
   const response = await httpClient<{
     ok: boolean;
     message?: string;
@@ -61,11 +65,7 @@ export async function createBillingChangePlan(
   }>("/api/billing/change-plan", {
     method: "POST",
     auth: true,
-    body: {
-      plan,
-      provider,
-      interval: billing === "annual" ? "ANNUAL" : "MONTHLY",
-    },
+    body: { plan, provider },
   });
 
   if (response.data?.type === "immediate") {
