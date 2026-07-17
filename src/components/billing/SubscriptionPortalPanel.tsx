@@ -26,7 +26,11 @@ type BillingStatusResponse = {
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+  return new Date(value).toLocaleDateString("es-CL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 function resolveCommercialState(status: BillingState | null) {
@@ -55,7 +59,10 @@ export function SubscriptionPortalPanel() {
 
     async function load() {
       try {
-        const response = await httpClient<BillingStatusResponse>("/api/billing/status", { auth: true });
+        const response = await httpClient<BillingStatusResponse>(
+          "/api/billing/status",
+          { auth: true },
+        );
         if (mounted) setStatus(response.data ?? null);
       } finally {
         if (mounted) setLoading(false);
@@ -79,7 +86,9 @@ export function SubscriptionPortalPanel() {
       window.location.href = url;
     } catch (error) {
       setReactivateError(
-        error instanceof Error ? error.message : "No fue posible reactivar la suscripción.",
+        error instanceof Error
+          ? error.message
+          : "No fue posible reactivar la suscripción.",
       );
       setReactivateLoading(false);
     }
@@ -105,7 +114,7 @@ export function SubscriptionPortalPanel() {
       <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 10, padding: 12, marginBottom: "1rem" }}>
         <p style={{ margin: "0 0 4px", fontSize: 11, color: "var(--text-soft)", fontWeight: 800, textTransform: "uppercase" }}>Estado</p>
         <p style={{ margin: 0, fontSize: 14, color: "var(--text)", fontWeight: 800 }}>
-          {loading ? "Cargando..." : `${status?.plan.label ?? "Free"} · ${state}`}
+          {loading ? "Cargando..." : `${status?.plan.label ?? "Gratuito"} · ${state}`}
         </p>
         {state === "CANCEL_AT_PERIOD_END" && (
           <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--warn)" }}>
@@ -123,7 +132,7 @@ export function SubscriptionPortalPanel() {
             style={{
               width: "100%",
               background: "var(--accent)",
-              color: "var(--text)",
+              color: "var(--accent-contrast)",
               border: "none",
               borderRadius: 8,
               padding: "12px 14px",
@@ -147,30 +156,26 @@ export function SubscriptionPortalPanel() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
         <BillingCheckoutButton
-          plan="PROFESIONAL"
+          plan="PERSONAL"
           action="change-plan"
           disabled={state === "ACTIVE" && status?.plan.normalized === "PERSONAL"}
-          style={{ background: "var(--accent)", color: "var(--text)", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
+          style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
         >
-          {state === "EXPIRED" || state === "CANCELLED" || state === "FAILED" || state === "PAST_DUE"
-            ? "Renovar Personal"
-            : "Cambiar a Personal"}
+          {needsReactivate ? "Renovar Personal" : "Cambiar a Personal"}
         </BillingCheckoutButton>
 
         <BillingCheckoutButton
-          plan="EMPRESA"
+          plan="PROFESIONAL"
           action="change-plan"
-          disabled={state === "ACTIVE" && status?.plan.normalized === "PRO"}
+          disabled={state === "ACTIVE" && status?.plan.normalized === "PROFESIONAL"}
           style={{ background: "var(--bg-elev)", color: "var(--text)", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
         >
-          {state === "EXPIRED" || state === "CANCELLED" || state === "FAILED" || state === "PAST_DUE"
-            ? "Renovar Pro"
-            : "Cambiar a Pro"}
+          {needsReactivate ? "Renovar Profesional" : "Cambiar a Profesional"}
         </BillingCheckoutButton>
       </div>
 
       <p style={{ margin: "12px 0 0", fontSize: 11, color: "var(--text-soft)", lineHeight: 1.5 }}>
-        Compatible con Stripe, Flow y MercadoPago mediante el contrato de checkout vigente.
+        La pasarela externa permanece bloqueada hasta completar la habilitación legal. Ningún plan se activa sin webhook de pago confirmado.
       </p>
     </div>
   );
