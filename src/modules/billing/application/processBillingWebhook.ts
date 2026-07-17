@@ -178,6 +178,18 @@ export async function processBillingWebhook(
     config.interval === "ANNUAL" ? 12 : 1,
   );
 
+  await prisma.billingSubscription.updateMany({
+    where: {
+      userId: payment.userId,
+      status: "ACTIVE",
+    },
+    data: {
+      status: "CANCELLED",
+      canceledAt: periodStart,
+      currentPeriodEnd: periodStart,
+    },
+  });
+
   const subscription = await prisma.billingSubscription.create({
     data: {
       userId: payment.userId,
