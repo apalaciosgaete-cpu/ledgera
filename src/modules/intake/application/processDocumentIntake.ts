@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/modules/security/application/encryption";
+import { enforceImportSourceLimit } from "@/modules/subscription/application/enforceImportSourceLimit";
 import { parseBinanceFile } from "@/modules/integrations/binance/application/parseBinanceFile";
 import { normalizeBinanceFileRow } from "@/modules/integrations/binance/application/normalizeBinanceFileRow";
 import { upsertImportRecord } from "@/modules/integrations/binance/infrastructure/exchangeImportRepository";
@@ -120,6 +121,8 @@ function isMissingDocumentTableError(error: unknown): boolean {
 }
 
 async function getOrCreateBinanceConnection(userId: string): Promise<string> {
+  await enforceImportSourceLimit({ userId, source: "BINANCE" });
+
   const existing = await findConnectionByUser(userId, "BINANCE");
   if (existing) return existing.id;
 
