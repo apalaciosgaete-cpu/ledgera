@@ -37,6 +37,7 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
     currency: "CLP",
     interval: "MONTHLY",
     features: [
+      "Múltiples fuentes de importación",
       "Historial cripto continuo",
       "Conciliación y corrección de inconsistencias",
       "Trazabilidad del costo por activo",
@@ -53,7 +54,7 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
     interval: "MONTHLY",
     features: [
       "Todo lo de Personal",
-      "Hasta 5 clientes activos",
+      "5 clientes incluidos",
       "Panel multicliente",
       "Reportes trazables para revisión",
       "Soporte prioritario",
