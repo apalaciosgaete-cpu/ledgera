@@ -5,6 +5,10 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { decryptSecret, encryptSecret } from "@/modules/security/application/encryption";
+import {
+  enforceImportSourceLimit,
+  isImportSourceLimitError,
+} from "@/modules/subscription/application/enforceImportSourceLimit";
 import { getExchangeApiConfig } from "@/modules/integrations/exchanges/shared/exchangeApiConfig";
 import {
   syncExchangeApi,
@@ -274,6 +278,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         return fail(`La ${config.passphraseLabel || "passphrase"} es obligatoria para ${config.name}.`, 400);
       }
 
+      await enforceImportSourceLimit({
+        userId: auth.user.id,
+        source: config.id,
+      });
+
       try {
         await testExchangeApiConnection(config.id, credentials);
       } catch (error) {
@@ -372,6 +381,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       `Sincronización ${config.name} completada: ${persistence.imported} registros nuevos y ${persistence.skipped} duplicados.`,
     );
   } catch (error) {
+    if (isImportSourceLimitError(error)) {
+      return fail(error.message, error.status);
+    }
+
     return serverError(error);
   }
 }
