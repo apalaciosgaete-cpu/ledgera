@@ -12,7 +12,7 @@ const PLANS = [
     price: "$0",
     description: "Para descubrir cómo LEDGERA ordena tus operaciones",
     features: [
-      "Hasta 100 movimientos",
+      "Análisis preliminar de hasta 50 movimientos",
       "Una fuente de importación",
       "Vista preliminar",
       "Detección básica de inconsistencias",
