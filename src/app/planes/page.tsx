@@ -40,14 +40,14 @@ const plans: Plan[] = [
     cta: "Comenzar análisis",
     annualCta: "Comenzar análisis",
     features: [
-      "Hasta 100 movimientos",
+      "Análisis preliminar de hasta 50 movimientos",
       "Una fuente de importación",
       "Vista preliminar del análisis",
       "Detección básica de inconsistencias",
       "Sin PDF ni Excel finales",
     ],
     disabled: ["Sin PDF ni Excel finales"],
-    note: "El plan gratuito demuestra el valor del análisis antes de contratar.",
+    note: "Carga tu historial y descubre cómo están compuestas tus operaciones antes de contratar.",
     taxLabel: null,
   },
   {
