@@ -10,10 +10,50 @@ import { useAuth } from "@/modules/identity/client/authContext";
 import type { BillingCheckoutPlan } from "@/modules/billing/client/billingClient";
 import { fonts } from "@/styles/tokens";
 
-const PLAN_LABELS: Record<BillingCheckoutPlan, string> = {
-  PERSONAL: "Personal",
-  PROFESIONAL: "Profesional",
+type BillingCycle = "monthly" | "annual";
+
+type PlanSummary = {
+  label: string;
+  monthly: number;
+  annual: number;
+  description: string;
+  features: string[];
 };
+
+const PLAN_SUMMARIES: Record<BillingCheckoutPlan, PlanSummary> = {
+  PERSONAL: {
+    label: "Personal",
+    monthly: 5990,
+    annual: 59900,
+    description:
+      "Mantén tu historial cripto ordenado, conciliado y preparado para revisión tributaria.",
+    features: [
+      "Conciliación y corrección de inconsistencias",
+      "Trazabilidad del costo por activo",
+      "Respaldos completos en PDF y Excel",
+    ],
+  },
+  PROFESIONAL: {
+    label: "Profesional",
+    monthly: 29990,
+    annual: 299900,
+    description:
+      "Administra los historiales cripto de tus clientes desde una plataforma especializada.",
+    features: [
+      "Hasta 5 clientes activos",
+      "Panel multicliente y estados de avance",
+      "Reportes trazables y soporte prioritario",
+    ],
+  },
+};
+
+function formatClp(value: number) {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    minimumFractionDigits: 0,
+  }).format(value);
+}
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -21,13 +61,20 @@ function CheckoutContent() {
   const rawPlan = searchParams.get("plan")?.toUpperCase();
   const plan: BillingCheckoutPlan | null =
     rawPlan === "PERSONAL" || rawPlan === "PROFESIONAL" ? rawPlan : null;
-  const billing = searchParams.get("billing") === "annual" ? "annual" : "monthly";
+  const billing: BillingCycle =
+    searchParams.get("billing") === "annual" ? "annual" : "monthly";
 
   const resumePath = plan
     ? `/checkout?plan=${plan}&billing=${billing}&source=resume`
     : "/planes";
   const loginUrl = `/login?next=${encodeURIComponent(resumePath)}`;
   const registerUrl = `/register?next=${encodeURIComponent(resumePath)}`;
+  const summary = plan ? PLAN_SUMMARIES[plan] : null;
+  const price = summary
+    ? billing === "annual"
+      ? summary.annual
+      : summary.monthly
+    : 0;
 
   return (
     <main
@@ -42,7 +89,7 @@ function CheckoutContent() {
         justifyContent: "center",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 600 }}>
+      <div style={{ width: "100%", maxWidth: 640 }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
           <Logo variant="light" size="lg" showSubtitle />
         </div>
@@ -71,7 +118,7 @@ function CheckoutContent() {
               marginBottom: 18,
             }}
           >
-            Conexión de pago preparada
+            Resumen de contratación
           </span>
 
           <h1
@@ -79,42 +126,151 @@ function CheckoutContent() {
               fontFamily: fonts.display,
               fontSize: 27,
               lineHeight: 1.18,
-              margin: "0 0 12px",
+              margin: "0 0 10px",
               color: "var(--text)",
             }}
           >
-            {plan
-              ? `Plan ${PLAN_LABELS[plan]} · ${billing === "annual" ? "anual" : "mensual"}`
+            {summary
+              ? `Plan ${summary.label} · ${billing === "annual" ? "anual" : "mensual"}`
               : "Selecciona un plan para continuar"}
           </h1>
 
-          <p
-            style={{
-              margin: "0 0 18px",
-              color: "var(--text-soft)",
-              fontSize: 14,
-              lineHeight: 1.65,
-            }}
-          >
-            La integración con la pasarela externa, el retorno y el webhook de confirmación están preparados. El cobro permanece bloqueado hasta completar la habilitación legal y comercial de LEDGERA.
-          </p>
+          {summary ? (
+            <>
+              <p
+                style={{
+                  margin: "0 0 20px",
+                  color: "var(--text-soft)",
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                }}
+              >
+                {summary.description}
+              </p>
 
-          <div
-            style={{
-              background: "var(--bg-sunken)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 20,
-            }}
-          >
-            <p style={{ margin: "0 0 5px", color: "var(--text)", fontSize: 13, fontWeight: 800 }}>
-              No se realizará ningún cargo mientras el modo live esté deshabilitado
+              <div
+                style={{
+                  background: "var(--bg-sunken)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 14,
+                  padding: 18,
+                  marginBottom: 20,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    flexWrap: "wrap",
+                    marginBottom: 14,
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        margin: "0 0 4px",
+                        color: "var(--text-soft)",
+                        fontSize: 11,
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      Valor del plan
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        color: "var(--text)",
+                        fontFamily: fonts.display,
+                        fontSize: 28,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {formatClp(price)}
+                      <span
+                        style={{
+                          marginLeft: 6,
+                          color: "var(--text-soft)",
+                          fontFamily: fonts.body,
+                          fontSize: 13,
+                          fontWeight: 700,
+                        }}
+                      >
+                        /{billing === "annual" ? "año" : "mes"}
+                      </span>
+                    </p>
+                    <p
+                      style={{
+                        margin: "5px 0 0",
+                        color: "var(--text-soft)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      + IVA
+                    </p>
+                  </div>
+
+                  {billing === "annual" ? (
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: "6px 10px",
+                        background: "rgba(22,163,74,0.10)",
+                        border: "1px solid rgba(22,163,74,0.24)",
+                        color: "var(--accent)",
+                        fontSize: 11,
+                        fontWeight: 800,
+                      }}
+                    >
+                      12 meses por el precio de 10
+                    </span>
+                  ) : null}
+                </div>
+
+                <ul
+                  style={{
+                    listStyle: "none",
+                    margin: 0,
+                    padding: 0,
+                    display: "grid",
+                    gap: 9,
+                  }}
+                >
+                  {summary.features.map((feature) => (
+                    <li
+                      key={feature}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 9,
+                        color: "var(--text-soft)",
+                        fontSize: 13,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <span style={{ color: "var(--accent)", fontWeight: 900 }}>✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          ) : (
+            <p
+              style={{
+                margin: "0 0 20px",
+                color: "var(--text-soft)",
+                fontSize: 14,
+                lineHeight: 1.65,
+              }}
+            >
+              Revisa las alternativas disponibles y selecciona la que mejor se ajuste a tu uso.
             </p>
-            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12, lineHeight: 1.55 }}>
-              La suscripción solo se activa después de una confirmación válida recibida desde la pasarela externa.
-            </p>
-          </div>
+          )}
 
           {!plan ? (
             <Link
@@ -145,54 +301,66 @@ function CheckoutContent() {
               billing={billing}
               style={{
                 borderRadius: 9,
-                padding: "12px 16px",
+                padding: "13px 16px",
                 background: "var(--accent)",
                 color: "var(--accent-contrast)",
                 fontSize: 13,
                 fontWeight: 800,
               }}
             >
-              Continuar a la pasarela externa
+              Continuar con la contratación
             </BillingCheckoutButton>
           ) : (
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link
-                href={loginUrl}
+            <>
+              <p
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flex: "1 1 190px",
-                  borderRadius: 9,
-                  padding: "12px 16px",
-                  background: "var(--accent)",
-                  color: "var(--accent-contrast)",
-                  textDecoration: "none",
+                  margin: "0 0 12px",
+                  color: "var(--text-soft)",
                   fontSize: 13,
-                  fontWeight: 800,
+                  lineHeight: 1.55,
                 }}
               >
-                Iniciar sesión
-              </Link>
-              <Link
-                href={registerUrl}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flex: "1 1 190px",
-                  borderRadius: 9,
-                  padding: "12px 16px",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                  textDecoration: "none",
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
-                Crear cuenta
-              </Link>
-            </div>
+                Inicia sesión o crea tu cuenta para continuar con el plan seleccionado.
+              </p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link
+                  href={loginUrl}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flex: "1 1 190px",
+                    borderRadius: 9,
+                    padding: "12px 16px",
+                    background: "var(--accent)",
+                    color: "var(--accent-contrast)",
+                    textDecoration: "none",
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  href={registerUrl}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flex: "1 1 190px",
+                    borderRadius: 9,
+                    padding: "12px 16px",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
+                    textDecoration: "none",
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
+                >
+                  Crear cuenta
+                </Link>
+              </div>
+            </>
           )}
         </section>
       </div>
