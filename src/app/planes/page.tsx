@@ -25,7 +25,6 @@ type Plan = {
   features: string[];
   disabled: string[];
   note: string | null;
-  taxLabel: string | null;
 };
 
 const plans: Plan[] = [
@@ -48,13 +47,12 @@ const plans: Plan[] = [
     ],
     disabled: ["Sin PDF ni Excel finales"],
     note: "Carga tu historial y descubre cómo están compuestas tus operaciones antes de contratar.",
-    taxLabel: null,
   },
   {
     key: "personal",
     name: "Personal",
     monthly: 5990,
-    annual: 59900,
+    annual: 65890,
     description: "Para traders, inversionistas y personas con actividad cripto.",
     availability: "Mensual o anual",
     highlight: true,
@@ -62,6 +60,7 @@ const plans: Plan[] = [
     annualCta: "Activar Personal anual",
     checkoutPlan: "PERSONAL",
     features: [
+      "Múltiples fuentes de importación",
       "Historial cripto continuo",
       "Conciliación completa",
       "Corrección de inconsistencias",
@@ -71,15 +70,14 @@ const plans: Plan[] = [
     ],
     disabled: [],
     note: "Mantén tu historial ordenado y preparado para revisión tributaria durante todo el año.",
-    taxLabel: "+\u00A0IVA",
   },
   {
     key: "profesional",
     name: "Profesional",
     monthly: 29990,
-    annual: 299900,
+    annual: 329890,
     description: "Para contadores y asesores que administran varios contribuyentes.",
-    availability: "Hasta 5 clientes activos",
+    availability: "5 clientes incluidos",
     highlight: false,
     cta: "Activar Profesional",
     annualCta: "Activar Profesional anual",
@@ -87,29 +85,48 @@ const plans: Plan[] = [
     features: [
       "Todo lo de Personal",
       "Panel multicliente",
-      "Hasta 5 clientes activos",
+      "Administra hasta 5 clientes",
       "Estados de avance por contribuyente",
       "Reportes trazables para revisión",
       "Soporte prioritario",
     ],
     disabled: [],
-    note: "Cliente activo adicional: $4.990 + IVA al mes.",
-    taxLabel: "+\u00A0IVA",
+    note: "Cliente adicional: $4.990 + IVA/mes.",
   },
 ];
 
 const faqItems = [
   {
+    q: "¿Qué se considera una fuente de importación?",
+    a: "Cada exchange o proveedor conectado cuenta como una fuente. Puedes importar varios archivos o sincronizar varias veces desde el mismo proveedor sin consumir una fuente adicional.",
+  },
+  {
+    q: "¿Puedo importar desde más de un exchange?",
+    a: "Sí, con Personal o Profesional. Gratuito permite una sola fuente de importación; al intentar agregar una segunda, LEDGERA solicitará activar un plan pagado.",
+  },
+  {
+    q: "¿Qué se considera un movimiento?",
+    a: "Una compra, venta, depósito, retiro, transferencia, comisión, recompensa u otra operación individual detectada en el historial importado.",
+  },
+  {
     q: "¿Qué incluye el plan Personal?",
-    a: "Incluye el análisis completo de tus operaciones, conciliación y corrección de inconsistencias, trazabilidad del costo por activo y respaldos en PDF y Excel. Así mantienes tu historial cripto ordenado y listo para revisión tributaria.",
+    a: "Incluye múltiples fuentes de importación, análisis completo, conciliación y corrección de inconsistencias, trazabilidad del costo por activo y respaldos en PDF y Excel.",
   },
   {
     q: "¿Qué diferencia al plan Profesional?",
     a: "Profesional permite administrar varios contribuyentes desde un solo lugar, con espacios separados por cliente, estados de avance, reportes estandarizados y soporte prioritario.",
   },
   {
+    q: "¿Cuántos clientes incluye Profesional?",
+    a: "Incluye hasta 5 clientes. Cada cliente adicional cuesta $4.990 + IVA/mes.",
+  },
+  {
     q: "¿El pago anual tiene descuento?",
-    a: "Sí. Obtienes 12 meses de acceso por el precio de 10. Personal cuesta $59.900 + IVA al año y ahorras $11.980 + IVA. Profesional cuesta $299.900 + IVA al año y ahorras $59.980 + IVA.",
+    a: "Sí. Obtienes 12 meses de acceso por el precio de 11. Personal cuesta $65.890 + IVA/año y ahorras $5.990 + IVA. Profesional cuesta $329.890 + IVA/año y ahorras $29.990 + IVA.",
+  },
+  {
+    q: "¿Los precios incluyen IVA?",
+    a: "No. Los precios de Personal y Profesional son valores netos; el IVA se agrega al momento del cobro.",
   },
   {
     q: "¿Puedo cancelar?",
@@ -160,6 +177,7 @@ function PlanCard({
 }) {
   const price = billing === "monthly" ? plan.monthly : plan.annual;
   const ctaStyle = plan.highlight ? primaryCheckoutStyle : secondaryCheckoutStyle;
+  const period = billing === "monthly" ? "mes" : "año";
 
   return (
     <article
@@ -183,16 +201,13 @@ function PlanCard({
           </span>
           {plan.monthly > 0 ? (
             <span className="text-sm font-bold text-text-faint">
-              /{billing === "monthly" ? "mes" : "año"}
+              + IVA/{period}
             </span>
           ) : null}
         </div>
-        {plan.taxLabel ? (
-          <p className="mt-2 text-xs font-bold text-text-faint">{plan.taxLabel}</p>
-        ) : null}
         {billing === "annual" && plan.annual > 0 ? (
           <p className="mt-2 text-xs font-bold text-accent">
-            12 meses por el precio de 10
+            12 meses por el precio de 11
           </p>
         ) : null}
       </div>
@@ -274,7 +289,7 @@ function PlanesContent() {
                   : "rounded-xl px-5 py-3 text-sm font-black text-text-faint transition hover:text-text"
               }
             >
-              {option === "monthly" ? "Mensual" : "Anual · ahorra 2 meses"}
+              {option === "monthly" ? "Mensual" : "Anual · ahorra 1 mes"}
             </button>
           ))}
         </div>
