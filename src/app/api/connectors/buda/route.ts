@@ -5,6 +5,10 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { decryptSecret, encryptSecret } from "@/modules/security/application/encryption";
+import {
+  enforceImportSourceLimit,
+  isImportSourceLimitError,
+} from "@/modules/subscription/application/enforceImportSourceLimit";
 import { BudaConnector } from "@/services/connectors/budaConnector";
 
 export const dynamic = "force-dynamic";
@@ -73,6 +77,11 @@ export async function POST(request: NextRequest) {
       if (!apiKey || !apiSecret) {
         return fail("API Key y API Secret son obligatorios.", 400);
       }
+
+      await enforceImportSourceLimit({
+        userId: auth.user.id,
+        source: "BUDA",
+      });
 
       const connector = new BudaConnector({ apiKey, apiSecret });
       const test = await connector.testConnection();
@@ -217,6 +226,10 @@ export async function POST(request: NextRequest) {
       `Importación Buda.com completada: ${imported} operaciones nuevas y ${skipped} omitidas por duplicidad.`,
     );
   } catch (error) {
+    if (isImportSourceLimitError(error)) {
+      return fail(error.message, error.status);
+    }
+
     return serverError(error);
   }
 }
