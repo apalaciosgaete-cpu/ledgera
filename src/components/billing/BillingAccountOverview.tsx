@@ -70,7 +70,7 @@ function subscriptionPresentation(data: BillingAccountOverviewData) {
     return {
       label: "Cuenta administrativa",
       tone: "info" as const,
-      description: "Esta cuenta es interna y no tiene cobros ni renovación asociados.",
+      description: "Esta cuenta tiene acceso administrativo a LEDGERA.",
     };
   }
 
@@ -80,7 +80,7 @@ function subscriptionPresentation(data: BillingAccountOverviewData) {
     return {
       label: "Activa",
       tone: "success" as const,
-      description: "El acceso se encuentra vigente.",
+      description: "Tu acceso se encuentra vigente.",
     };
   }
 
@@ -94,9 +94,9 @@ function subscriptionPresentation(data: BillingAccountOverviewData) {
 
   if (status === "PENDING") {
     return {
-      label: "Pendiente de confirmación",
+      label: "En proceso",
       tone: "warning" as const,
-      description: "Existe una operación pendiente que todavía no constituye un cobro confirmado.",
+      description: "Estamos revisando el estado de tu suscripción.",
     };
   }
 
@@ -104,7 +104,7 @@ function subscriptionPresentation(data: BillingAccountOverviewData) {
     return {
       label: "Requiere atención",
       tone: "danger" as const,
-      description: "No existe una renovación confirmada para el período siguiente.",
+      description: "Revisa el estado de tu suscripción o contacta a soporte.",
     };
   }
 
@@ -112,7 +112,7 @@ function subscriptionPresentation(data: BillingAccountOverviewData) {
     return {
       label: "Inactiva",
       tone: "neutral" as const,
-      description: "No existe una suscripción pagada vigente.",
+      description: "No tienes una suscripción pagada vigente.",
     };
   }
 
@@ -120,14 +120,14 @@ function subscriptionPresentation(data: BillingAccountOverviewData) {
     return {
       label: "Plan gratuito",
       tone: "neutral" as const,
-      description: "La cuenta utiliza el acceso base sin cobros recurrentes.",
+      description: "Tu cuenta utiliza el acceso gratuito de LEDGERA.",
     };
   }
 
   return {
-    label: "Sin suscripción asociada",
+    label: "Sin suscripción activa",
     tone: "warning" as const,
-    description: "El plan registrado no tiene una suscripción comercial vinculada.",
+    description: "Selecciona un plan para continuar con las funciones pagadas.",
   };
 }
 
@@ -205,7 +205,7 @@ export function BillingAccountOverview({ data }: { data: BillingAccountOverviewD
               Resumen de la cuenta
             </h3>
             <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", lineHeight: 1.5 }}>
-              Estado contractual y vigencia del acceso a LEDGERA.
+              Revisa tu plan, su estado y la vigencia del acceso.
             </p>
           </div>
           <span style={{ display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "5px 10px", background: colors.background, border: `1px solid ${colors.border}`, color: colors.color, fontSize: 11, fontWeight: 800 }}>
@@ -216,7 +216,7 @@ export function BillingAccountOverview({ data }: { data: BillingAccountOverviewD
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
           <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
             <p style={{ margin: "0 0 5px", color: "var(--text-soft)", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>Plan</p>
-            <p style={{ margin: 0, color: "var(--text)", fontSize: 16, fontWeight: 800 }}>{isAdmin ? "Interno" : data.plan.label}</p>
+            <p style={{ margin: 0, color: "var(--text)", fontSize: 16, fontWeight: 800 }}>{isAdmin ? "Administrativo" : data.plan.label}</p>
           </div>
           <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
             <p style={{ margin: "0 0 5px", color: "var(--text-soft)", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>Estado</p>
@@ -224,7 +224,7 @@ export function BillingAccountOverview({ data }: { data: BillingAccountOverviewD
           </div>
           <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
             <p style={{ margin: "0 0 5px", color: "var(--text-soft)", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>{data.subscription?.status === "CANCEL_AT_PERIOD_END" ? "Acceso hasta" : "Vigencia"}</p>
-            <p style={{ margin: 0, color: "var(--text)", fontSize: 16, fontWeight: 800 }}>{isAdmin ? "Sin vencimiento comercial" : formatDate(renewalDate)}</p>
+            <p style={{ margin: 0, color: "var(--text)", fontSize: 16, fontWeight: 800 }}>{isAdmin ? "Sin vencimiento" : formatDate(renewalDate)}</p>
           </div>
         </div>
 
@@ -232,20 +232,9 @@ export function BillingAccountOverview({ data }: { data: BillingAccountOverviewD
           {presentation.description}
         </p>
 
-        {!isAdmin && !data.billingLive && (
-          <div style={{ marginTop: 16, padding: 14, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 10 }}>
-            <p style={{ margin: "0 0 4px", color: "var(--text)", fontSize: 13, fontWeight: 800 }}>
-              Gestión de cobros en preparación
-            </p>
-            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: 12, lineHeight: 1.55 }}>
-              Los cambios de plan, renovaciones y cancelaciones automáticas todavía no están habilitados. No se realizará ningún cargo desde esta pantalla.
-            </p>
-          </div>
-        )}
-
         {!isAdmin && (
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
-            <Link href="/planes" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: 8, padding: "10px 14px", background: "var(--accent)", color: "var(--text)", textDecoration: "none", fontSize: 13, fontWeight: 800 }}>
+            <Link href="/planes" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: 8, padding: "10px 14px", background: "var(--accent)", color: "var(--accent-contrast)", textDecoration: "none", fontSize: 13, fontWeight: 800 }}>
               Ver opciones de planes
             </Link>
             <a href="mailto:admin@ledgera.cl?subject=Gestión%20de%20suscripción%20LEDGERA" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: 8, padding: "10px 14px", background: "transparent", border: "1px solid var(--border)", color: "var(--text)", textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
@@ -259,7 +248,7 @@ export function BillingAccountOverview({ data }: { data: BillingAccountOverviewD
         <section style={cardStyle}>
           <div style={{ marginBottom: "1rem" }}>
             <h3 style={{ fontFamily: fonts.display, fontSize: 15, fontWeight: 800, color: "var(--text)", margin: "0 0 5px" }}>Historial de pagos</h3>
-            <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", lineHeight: 1.5 }}>Movimientos de cobro registrados para esta cuenta.</p>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", lineHeight: 1.5 }}>Pagos registrados para esta cuenta.</p>
           </div>
 
           {data.payments.length === 0 ? (
@@ -299,13 +288,9 @@ export function BillingAccountOverview({ data }: { data: BillingAccountOverviewD
             <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", lineHeight: 1.5 }}>Comprobantes y documentos asociados a pagos confirmados.</p>
           </div>
 
-          {!data.invoicesAvailable ? (
-            <div style={{ background: "var(--bg-sunken)", border: "1px dashed var(--border)", borderRadius: 10, padding: "1rem", color: "var(--text-soft)", fontSize: 13, lineHeight: 1.55 }}>
-              La emisión y descarga de documentos todavía no está habilitada. La sección se activará junto con la integración real de pagos.
-            </div>
-          ) : data.invoices.length === 0 ? (
+          {!data.invoicesAvailable || data.invoices.length === 0 ? (
             <div style={{ background: "var(--bg-sunken)", border: "1px dashed var(--border)", borderRadius: 10, padding: "1rem", color: "var(--text-soft)", fontSize: 13 }}>
-              No existen documentos emitidos.
+              No existen documentos de cobro disponibles.
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
