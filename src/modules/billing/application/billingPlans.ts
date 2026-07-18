@@ -23,7 +23,7 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
     currency: "CLP",
     interval: "MONTHLY",
     features: [
-      "Hasta 100 movimientos",
+      "Análisis preliminar de hasta 50 movimientos",
       "Una fuente de importación",
       "Vista preliminar del análisis",
       "Detección básica de inconsistencias",
