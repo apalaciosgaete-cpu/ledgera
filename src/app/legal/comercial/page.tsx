@@ -89,7 +89,7 @@ export default function ComercialPage() {
             Política Comercial
           </h1>
           <p style={{ color: "var(--text-soft)", fontSize: "0.9rem" }}>
-            Última actualización: 12 de junio de 2026 · Vigente para suscripciones
+            Última actualización: 18 de julio de 2026 · Vigente para suscripciones
             LEDGERA
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function ComercialPage() {
         <LegalSection title="1. Planes y precios">
           <p>
             LEDGERA ofrece los siguientes planes de suscripción para personas
-            naturales, profesionales y empresas:
+            naturales, inversionistas, contadores y asesores:
           </p>
           <ul
             style={{
@@ -139,25 +139,27 @@ export default function ComercialPage() {
           >
             <li>
               <strong style={{ color: "var(--text)" }}>Gratuito:</strong> sin costo.
-              Incluye funcionalidades básicas de prueba y exploración.
+              Incluye un análisis preliminar de hasta 50 movimientos y una fuente de
+              importación.
             </li>
             <li>
-              <strong style={{ color: "var(--text)" }}>Personal:</strong> $4.990 CLP
-              mensual. Para inversores individuales.
+              <strong style={{ color: "var(--text)" }}>Personal:</strong> $5.990 +
+              IVA/mes o $65.890 + IVA/año. Permite múltiples fuentes de importación,
+              conciliación completa y exportaciones.
             </li>
             <li>
-              <strong style={{ color: "var(--text)" }}>Profesional:</strong> $14.990
-              CLP mensual. Para asesores y equipos con clientes.
-            </li>
-            <li>
-              <strong style={{ color: "var(--text)" }}>Empresa:</strong> $29.990 CLP
-              mensual. Para operación corporativa y equipos grandes.
+              <strong style={{ color: "var(--text)" }}>Profesional:</strong> $29.990 +
+              IVA/mes o $329.890 + IVA/año. Incluye hasta 5 clientes y las funciones
+              profesionales de gestión y revisión.
             </li>
           </ul>
           <p>
-            Los precios anuales equivalen a 11 mensualidades por 12 meses de uso.
-            Pueden aplicarse cargos adicionales por cliente extra en el plan
-            Profesional según lo indicado en la página de planes.
+            Los precios publicados para los planes pagados son valores netos y el IVA
+            se agrega al cobro. La modalidad anual entrega 12 meses de acceso por el
+            precio de 11 mensualidades.
+          </p>
+          <p>
+            En Profesional, cada cliente adicional tiene un valor de $4.990 + IVA/mes.
           </p>
         </LegalSection>
 
