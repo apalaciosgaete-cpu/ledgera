@@ -13,6 +13,10 @@ import {
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 import { validateBinanceTaxCredentials } from "@/modules/integrations/binance/infrastructure/binanceTaxClient";
 import { BINANCE_TAX_PROVIDER } from "@/modules/integrations/binance/domain/binanceProviders";
+import {
+  enforceImportSourceLimit,
+  isImportSourceLimitError,
+} from "@/modules/subscription/application/enforceImportSourceLimit";
 
 type ConnectBody = {
   apiKey?:    string;
@@ -60,6 +64,11 @@ export async function POST(request: NextRequest) {
       return fail("API Key y Secret de Tax Report API son obligatorios.", 400);
     }
 
+    await enforceImportSourceLimit({
+      userId: auth.user.id,
+      source: BINANCE_TAX_PROVIDER,
+    });
+
     try {
       await validateBinanceTaxCredentials(apiKey, apiSecret);
     } catch (error) {
@@ -101,6 +110,10 @@ export async function POST(request: NextRequest) {
       201,
     );
   } catch (error) {
+    if (isImportSourceLimitError(error)) {
+      return fail(error.message, error.status);
+    }
+
     return serverError(error);
   }
 }
