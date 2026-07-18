@@ -8,20 +8,28 @@ import { confirmBillingPayment } from "@/modules/billing/client/billingClient";
 
 type CheckoutStatus = "pending" | "success" | "error";
 
-const STATUS_COPY: Record<CheckoutStatus, { title: string; description: string; tone: "info" | "success" | "error" }> = {
+type CheckoutCopy = {
+  title: string;
+  description: string;
+  tone: "info" | "success" | "error";
+};
+
+const STATUS_COPY: Record<CheckoutStatus, CheckoutCopy> = {
   pending: {
-    title: "Upgrade iniciado",
-    description: "El checkout quedó preparado para el proveedor de pago. Cuando se confirme el pago, LEDGERA podrá actualizar tu plan automáticamente.",
+    title: "Solicitud en proceso",
+    description:
+      "Estamos revisando el estado de tu contratación. Te informaremos cuando el plan quede activo.",
     tone: "info",
   },
   success: {
-    title: "Pago confirmado",
-    description: "Tu pago fue confirmado. Tu plan será actualizado automáticamente cuando el webhook del proveedor quede procesado.",
+    title: "Plan activado",
+    description: "Tu contratación fue confirmada y el plan ya está disponible en tu cuenta.",
     tone: "success",
   },
   error: {
-    title: "No fue posible completar el pago",
-    description: "El proveedor de pago no pudo completar el checkout. Puedes intentar nuevamente desde la comparación de planes.",
+    title: "No pudimos completar la contratación",
+    description:
+      "La operación no se completó. Puedes intentarlo nuevamente desde la página de planes.",
     tone: "error",
   },
 };
@@ -36,7 +44,9 @@ function normalizeCheckoutStatus(status: string | null): CheckoutStatus | null {
 
 export function BillingCheckoutStatusBanner() {
   const searchParams = useSearchParams();
-  const status = normalizeCheckoutStatus(searchParams.get("checkout") ?? searchParams.get("payment"));
+  const status = normalizeCheckoutStatus(
+    searchParams.get("checkout") ?? searchParams.get("payment"),
+  );
   const paymentId = searchParams.get("paymentId");
 
   const [confirming, setConfirming] = useState(false);
@@ -51,12 +61,10 @@ export function BillingCheckoutStatusBanner() {
         .then(() => {
           window.location.href = "/configuracion/facturacion?checkout=success";
         })
-        .catch((error: unknown) => {
+        .catch(() => {
           setConfirming(false);
           setConfirmError(
-            error instanceof Error
-              ? error.message
-              : "No fue posible confirmar el pago.",
+            "No pudimos actualizar el estado de tu plan. Intenta nuevamente en unos minutos.",
           );
         });
     }
@@ -69,20 +77,20 @@ export function BillingCheckoutStatusBanner() {
     info: {
       border: "rgba(14,165,233,0.24)",
       background: "rgba(14,165,233,0.08)",
-      title: "var(--bg-elev)",
-      text: "var(--text)",
+      title: "var(--accent)",
+      text: "var(--text-soft)",
     },
     success: {
       border: "rgba(22,163,74,0.24)",
       background: "rgba(22,163,74,0.08)",
       title: "var(--accent)",
-      text: "var(--text)",
+      text: "var(--text-soft)",
     },
     error: {
       border: "rgba(239,68,68,0.24)",
       background: "rgba(239,68,68,0.08)",
       title: "var(--loss)",
-      text: "var(--text)",
+      text: "var(--text-soft)",
     },
   }[copy.tone];
 
@@ -105,7 +113,7 @@ export function BillingCheckoutStatusBanner() {
           margin: "0 0 4px",
         }}
       >
-        {confirming ? "Confirmando pago..." : copy.title}
+        {confirming ? "Actualizando tu plan..." : copy.title}
       </h3>
       <p
         style={{
@@ -117,18 +125,6 @@ export function BillingCheckoutStatusBanner() {
       >
         {confirmError ?? copy.description}
       </p>
-      {paymentId && (
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "11px",
-            color: "var(--text)",
-            fontFamily: "monospace",
-          }}
-        >
-          paymentId: {paymentId}
-        </p>
-      )}
     </div>
   );
 }
