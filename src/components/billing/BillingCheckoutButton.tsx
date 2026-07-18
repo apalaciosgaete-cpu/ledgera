@@ -28,7 +28,7 @@ type BillingCheckoutButtonProps = {
 function resolveErrorMessage(error: unknown): string {
   if (isHttpClientError(error)) {
     if (error.status === 401) {
-      return "Debes iniciar sesión para continuar con el pago.";
+      return "Debes iniciar sesión para continuar.";
     }
 
     if (error.status === 429 && error.retryAfterSeconds) {
@@ -38,11 +38,7 @@ function resolveErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "No fue posible iniciar el pago.";
+  return "No fue posible continuar con la contratación. Intenta nuevamente en unos minutos.";
 }
 
 export function BillingCheckoutButton({
@@ -98,7 +94,6 @@ export function BillingCheckoutButton({
         action === "change-plan"
           ? await createBillingChangePlan(plan, provider, billing)
           : await createBillingCheckout(plan, provider, billing);
-
       setSuccess(true);
 
       if (autoConfirm && url.includes("paymentId=")) {
@@ -146,7 +141,7 @@ export function BillingCheckoutButton({
           ...style,
         }}
       >
-        {loading ? "Preparando pago..." : success ? "Redirigiendo..." : children}
+        {loading ? "Procesando solicitud..." : success ? "Continuando..." : children}
       </button>
 
       {success && (
@@ -158,7 +153,7 @@ export function BillingCheckoutButton({
             lineHeight: 1.5,
           }}
         >
-          Checkout iniciado correctamente. Redirigiendo...
+          Tu solicitud fue iniciada. Serás redirigido automáticamente.
         </p>
       )}
 
