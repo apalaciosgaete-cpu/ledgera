@@ -5,6 +5,7 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { processDocumentIntake } from "@/modules/intake/application/processDocumentIntake";
 import { attachDocumentIntakeMetadata } from "@/modules/intake/application/attachDocumentIntakeMetadata";
+import { isImportSourceLimitError } from "@/modules/subscription/application/enforceImportSourceLimit";
 
 // Force dynamic rendering because routes use request.headers/cookies
 export const dynamic = "force-dynamic";
@@ -83,6 +84,10 @@ export async function POST(request: NextRequest) {
       201,
     );
   } catch (error) {
+    if (isImportSourceLimitError(error)) {
+      return fail(error.message, error.status);
+    }
+
     return serverError(error);
   }
 }
