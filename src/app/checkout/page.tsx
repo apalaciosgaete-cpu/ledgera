@@ -24,10 +24,11 @@ const PLAN_SUMMARIES: Record<BillingCheckoutPlan, PlanSummary> = {
   PERSONAL: {
     label: "Personal",
     monthly: 5990,
-    annual: 59900,
+    annual: 65890,
     description:
       "Mantén tu historial cripto ordenado, conciliado y preparado para revisión tributaria.",
     features: [
+      "Múltiples fuentes de importación",
       "Conciliación y corrección de inconsistencias",
       "Trazabilidad del costo por activo",
       "Respaldos completos en PDF y Excel",
@@ -36,11 +37,11 @@ const PLAN_SUMMARIES: Record<BillingCheckoutPlan, PlanSummary> = {
   PROFESIONAL: {
     label: "Profesional",
     monthly: 29990,
-    annual: 299900,
+    annual: 329890,
     description:
       "Administra los historiales cripto de tus clientes desde una plataforma especializada.",
     features: [
-      "Hasta 5 clientes activos",
+      "5 clientes incluidos",
       "Panel multicliente y estados de avance",
       "Reportes trazables y soporte prioritario",
     ],
@@ -75,6 +76,7 @@ function CheckoutContent() {
       ? summary.annual
       : summary.monthly
     : 0;
+  const period = billing === "annual" ? "año" : "mes";
 
   return (
     <main
@@ -199,18 +201,8 @@ function CheckoutContent() {
                           fontWeight: 700,
                         }}
                       >
-                        /{billing === "annual" ? "año" : "mes"}
+                        + IVA/{period}
                       </span>
-                    </p>
-                    <p
-                      style={{
-                        margin: "5px 0 0",
-                        color: "var(--text-soft)",
-                        fontSize: 12,
-                        fontWeight: 700,
-                      }}
-                    >
-                      + IVA
                     </p>
                   </div>
 
@@ -226,7 +218,7 @@ function CheckoutContent() {
                         fontWeight: 800,
                       }}
                     >
-                      12 meses por el precio de 10
+                      12 meses por el precio de 11
                     </span>
                   ) : null}
                 </div>
