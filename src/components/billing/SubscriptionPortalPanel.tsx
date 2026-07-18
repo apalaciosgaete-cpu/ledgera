@@ -46,6 +46,27 @@ function resolveCommercialState(status: BillingState | null) {
   return "EXPIRED";
 }
 
+function commercialStateLabel(state: string) {
+  switch (state) {
+    case "ACTIVE":
+      return "Activo";
+    case "CANCEL_AT_PERIOD_END":
+      return "Renovación cancelada";
+    case "CANCELLED":
+      return "Cancelado";
+    case "EXPIRED":
+      return "Vencido";
+    case "FAILED":
+      return "Requiere revisión";
+    case "PAST_DUE":
+      return "Pago pendiente";
+    case "FREE":
+      return "Gratuito";
+    default:
+      return "Cargando...";
+  }
+}
+
 export function SubscriptionPortalPanel() {
   const [status, setStatus] = useState<BillingState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +103,7 @@ export function SubscriptionPortalPanel() {
 
     try {
       const url = await createBillingReactivate();
-      setReactivateSuccess("Reactivación preparada. Redirigiendo al checkout...");
+      setReactivateSuccess("Continuando con la reactivación...");
       window.location.href = url;
     } catch (error) {
       setReactivateError(
@@ -101,24 +122,67 @@ export function SubscriptionPortalPanel() {
     state === "PAST_DUE";
 
   return (
-    <div style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem", marginBottom: "1rem" }}>
+    <div
+      style={{
+        background: "var(--bg-elev)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        padding: "1.25rem",
+        marginBottom: "1rem",
+      }}
+    >
       <div style={{ marginBottom: "1rem" }}>
-        <h3 style={{ fontFamily: fonts.display, fontSize: 15, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
-          Portal de suscripción
+        <h3
+          style={{
+            fontFamily: fonts.display,
+            fontSize: 15,
+            fontWeight: 800,
+            color: "var(--text)",
+            margin: "0 0 4px",
+          }}
+        >
+          Gestión de suscripción
         </h3>
-        <p style={{ margin: 0, fontSize: 12, color: "var(--text)", lineHeight: 1.5 }}>
-          Cambia, renueva o reactiva tu plan desde un único centro de gestión.
+        <p
+          style={{
+            margin: 0,
+            fontSize: 12,
+            color: "var(--text-soft)",
+            lineHeight: 1.5,
+          }}
+        >
+          Revisa tu plan actual y administra su renovación desde un solo lugar.
         </p>
       </div>
 
-      <div style={{ background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: 10, padding: 12, marginBottom: "1rem" }}>
-        <p style={{ margin: "0 0 4px", fontSize: 11, color: "var(--text-soft)", fontWeight: 800, textTransform: "uppercase" }}>Estado</p>
+      <div
+        style={{
+          background: "var(--bg-sunken)",
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          padding: 12,
+          marginBottom: "1rem",
+        }}
+      >
+        <p
+          style={{
+            margin: "0 0 4px",
+            fontSize: 11,
+            color: "var(--text-soft)",
+            fontWeight: 800,
+            textTransform: "uppercase",
+          }}
+        >
+          Estado
+        </p>
         <p style={{ margin: 0, fontSize: 14, color: "var(--text)", fontWeight: 800 }}>
-          {loading ? "Cargando..." : `${status?.plan.label ?? "Gratuito"} · ${state}`}
+          {loading
+            ? "Cargando..."
+            : `${status?.plan.label ?? "Gratuito"} · ${commercialStateLabel(state)}`}
         </p>
         {state === "CANCEL_AT_PERIOD_END" && (
           <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--warn)" }}>
-            Renovación cancelada. Acceso hasta {formatDate(status?.subscription?.currentPeriodEnd)}.
+            Tendrás acceso hasta {formatDate(status?.subscription?.currentPeriodEnd)}.
           </p>
         )}
       </div>
@@ -142,24 +206,41 @@ export function SubscriptionPortalPanel() {
               opacity: reactivateLoading ? 0.72 : 1,
             }}
           >
-            {reactivateLoading ? "Preparando reactivación..." : "Reactivar suscripción"}
+            {reactivateLoading ? "Procesando solicitud..." : "Reactivar suscripción"}
           </button>
 
           {reactivateSuccess && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--accent)" }}>{reactivateSuccess}</p>
+            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--accent)" }}>
+              {reactivateSuccess}
+            </p>
           )}
           {reactivateError && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--loss)" }}>{reactivateError}</p>
+            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--loss)" }}>
+              {reactivateError}
+            </p>
           )}
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+          gap: 12,
+        }}
+      >
         <BillingCheckoutButton
           plan="PERSONAL"
           action="change-plan"
           disabled={state === "ACTIVE" && status?.plan.normalized === "PERSONAL"}
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
+          style={{
+            background: "var(--accent)",
+            color: "var(--accent-contrast)",
+            borderRadius: 8,
+            padding: "12px 14px",
+            fontSize: 13,
+            fontWeight: 800,
+          }}
         >
           {needsReactivate ? "Renovar Personal" : "Cambiar a Personal"}
         </BillingCheckoutButton>
@@ -168,15 +249,18 @@ export function SubscriptionPortalPanel() {
           plan="PROFESIONAL"
           action="change-plan"
           disabled={state === "ACTIVE" && status?.plan.normalized === "PROFESIONAL"}
-          style={{ background: "var(--bg-elev)", color: "var(--text)", borderRadius: 8, padding: "12px 14px", fontSize: 13, fontWeight: 800 }}
+          style={{
+            background: "var(--bg-elev)",
+            color: "var(--text)",
+            borderRadius: 8,
+            padding: "12px 14px",
+            fontSize: 13,
+            fontWeight: 800,
+          }}
         >
           {needsReactivate ? "Renovar Profesional" : "Cambiar a Profesional"}
         </BillingCheckoutButton>
       </div>
-
-      <p style={{ margin: "12px 0 0", fontSize: 11, color: "var(--text-soft)", lineHeight: 1.5 }}>
-        La pasarela externa permanece bloqueada hasta completar la habilitación legal. Ningún plan se activa sin webhook de pago confirmado.
-      </p>
     </div>
   );
 }
