@@ -8,6 +8,7 @@ import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/appli
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { generateAnnualTaxSummary } from "@/modules/tax/application/generateAnnualTaxSummary";
 import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 
 // Force dynamic rendering because routes use request.headers/cookies
 export const dynamic = "force-dynamic";
@@ -39,6 +40,9 @@ export async function POST(request: NextRequest) {
 
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
+
+  const subscriptionCheck = requireActiveSubscription(auth.user);
+  if (!subscriptionCheck.ok) return subscriptionCheck.response;
 
   try {
     const body  = await request.json() as { year?: number; month?: number };
