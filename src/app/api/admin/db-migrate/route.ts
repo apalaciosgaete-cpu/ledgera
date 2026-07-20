@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(req);
+  if (csrfResponse) return csrfResponse;
+
   const auth = await getSessionFromRequest(req);
   if (!auth || auth.user.role !== "admin") {
     return NextResponse.json({ ok: false }, { status: 403 });
+  }
+
+  if (process.env.DB_MIGRATION_API_ENABLED !== "true") {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "La migración manual por API está deshabilitada.",
+        data: { code: "DB_MIGRATION_API_DISABLED" },
+      },
+      { status: 404 },
+    );
   }
 
   const results: string[] = [];
@@ -27,8 +42,8 @@ export async function POST(req: NextRequest) {
       )
     `);
     results.push("chat_conversations: OK");
-  } catch (e) {
-    results.push(`chat_conversations: ERROR ${String(e)}`);
+  } catch (error) {
+    results.push(`chat_conversations: ERROR ${String(error)}`);
   }
 
   try {
@@ -38,8 +53,8 @@ export async function POST(req: NextRequest) {
     await prisma.$executeRawUnsafe(`
       CREATE INDEX IF NOT EXISTS idx_chat_conv_status ON chat_conversations (status)
     `);
-  } catch (e) {
-    results.push(`chat_conversations indexes: ${String(e)}`);
+  } catch (error) {
+    results.push(`chat_conversations indexes: ${String(error)}`);
   }
 
   try {
@@ -54,16 +69,16 @@ export async function POST(req: NextRequest) {
       )
     `);
     results.push("chat_messages: OK");
-  } catch (e) {
-    results.push(`chat_messages: ERROR ${String(e)}`);
+  } catch (error) {
+    results.push(`chat_messages: ERROR ${String(error)}`);
   }
 
   try {
     await prisma.$executeRawUnsafe(`
       CREATE INDEX IF NOT EXISTS idx_chat_msg_conv ON chat_messages ("conversationId")
     `);
-  } catch (e) {
-    results.push(`chat_messages indexes: ${String(e)}`);
+  } catch (error) {
+    results.push(`chat_messages indexes: ${String(error)}`);
   }
 
   try {
@@ -77,8 +92,8 @@ export async function POST(req: NextRequest) {
       )
     `);
     results.push("chat_push_subscriptions: OK");
-  } catch (e) {
-    results.push(`chat_push_subscriptions: ERROR ${String(e)}`);
+  } catch (error) {
+    results.push(`chat_push_subscriptions: ERROR ${String(error)}`);
   }
 
   return NextResponse.json({ ok: true, results });
