@@ -4,6 +4,8 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { requireFeatureAccess } from "@/modules/subscription/application/requireFeatureAccess";
 import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { requireProfessionalClientAccess } from "@/modules/professional/application/requireProfessionalClientAccess";
+import { ProfessionalPermission } from "@/modules/professional/domain/clientAccess";
 import { getAllTaxCasesExpert } from "@/modules/tax-cases/application/buildTaxCases";
 
 // Force dynamic rendering because routes use request.headers/cookies
@@ -15,27 +17,31 @@ export async function GET(request: NextRequest) {
     return fail("No autorizado.", 401);
   }
 
-  const access = requireFeatureAccess(auth.user, Feature.EXPERT_MODE);
-  if (!access.ok) return access.response;
-
-  const isAdmin = auth.user.role === "admin";
+  const featureAccess = requireFeatureAccess(auth.user, Feature.EXPERT_MODE);
+  if (!featureAccess.ok) return featureAccess.response;
 
   try {
     const { searchParams } = new URL(request.url);
-    const requestedUserId = searchParams.get("userId") ?? undefined;
+    const requestedUserId = searchParams.get("userId") ?? auth.user.id;
+
+    const clientAccess = await requireProfessionalClientAccess(
+      auth.user,
+      requestedUserId,
+      ProfessionalPermission.VIEW_TAX_DATA,
+    );
+    if (!clientAccess.ok) return clientAccess.response;
 
     const filters = {
       status: searchParams.get("status") ?? undefined,
       priority: searchParams.get("priority") ?? undefined,
-      // Until an explicit professional-client mandate exists, paid experts
-      // can only query their own cases. Administrators retain support scope.
-      userId: isAdmin ? requestedUserId : auth.user.id,
+      userId: requestedUserId,
     };
 
     const summary = await getAllTaxCasesExpert(filters);
     return ok(
       {
         ...summary,
+        accessScope: clientAccess.scope,
         items: summary.items.map((item) => ({
           ...item,
           createdAt: item.createdAt.toISOString(),
