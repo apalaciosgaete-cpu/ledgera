@@ -1,0 +1,20 @@
+model ProfessionalClientAccess {
+  id                 String   @id @default(cuid())
+  professionalUserId String
+  clientUserId       String
+  status             String   @default("PENDING")
+  permissions        Json?
+  invitedAt          DateTime @default(now()) @db.Timestamptz(6)
+  acceptedAt         DateTime? @db.Timestamptz(6)
+  revokedAt          DateTime? @db.Timestamptz(6)
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  professional users @relation("ProfessionalClientProfessional", fields: [professionalUserId], references: [id], onDelete: Cascade)
+  client       users @relation("ProfessionalClientClient", fields: [clientUserId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalUserId, clientUserId])
+  @@index([professionalUserId, status])
+  @@index([clientUserId, status])
+  @@map("professional_client_access")
+}
