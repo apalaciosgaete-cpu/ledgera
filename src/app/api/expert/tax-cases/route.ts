@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
+import { requireFeatureAccess } from "@/modules/subscription/application/requireFeatureAccess";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
 import { getAllTaxCasesExpert } from "@/modules/tax-cases/application/buildTaxCases";
 
 // Force dynamic rendering because routes use request.headers/cookies
@@ -13,13 +15,10 @@ export async function GET(request: NextRequest) {
     return fail("No autorizado.", 401);
   }
 
-  const user = auth.user as { id: string; role?: string };
-  const isAdmin = user.role === "admin";
-  const isProfessional = user.role === "contador";
+  const access = requireFeatureAccess(auth.user, Feature.EXPERT_MODE);
+  if (!access.ok) return access.response;
 
-  if (!isAdmin && !isProfessional) {
-    return fail("Acceso restringido a expertos.", 403);
-  }
+  const isAdmin = auth.user.role === "admin";
 
   try {
     const { searchParams } = new URL(request.url);
@@ -28,9 +27,9 @@ export async function GET(request: NextRequest) {
     const filters = {
       status: searchParams.get("status") ?? undefined,
       priority: searchParams.get("priority") ?? undefined,
-      // Until an explicit professional-client mandate exists, professionals
+      // Until an explicit professional-client mandate exists, paid experts
       // can only query their own cases. Administrators retain support scope.
-      userId: isAdmin ? requestedUserId : user.id,
+      userId: isAdmin ? requestedUserId : auth.user.id,
     };
 
     const summary = await getAllTaxCasesExpert(filters);
