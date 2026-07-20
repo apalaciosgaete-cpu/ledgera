@@ -1,5 +1,7 @@
 // src/modules/billing/domain/checkout.ts
 
+import { COMMERCIAL_PLANS } from "@/modules/billing/domain/commercialPlans";
+
 export const BILLING_PROVIDERS = ["stripe", "flow", "mercadopago"] as const;
 export type BillingProvider = (typeof BILLING_PROVIDERS)[number];
 
@@ -31,45 +33,36 @@ export type CheckoutPlanConfig = CheckoutPriceConfig & {
   targetSubscriptionPlan: "PERSONAL" | "PROFESIONAL";
 };
 
+function toCheckoutPrice(
+  price: { grossAmount: number; netAmount: number; taxAmount: number },
+): CheckoutPriceConfig {
+  return {
+    amount: price.grossAmount,
+    netAmount: price.netAmount,
+    taxAmount: price.taxAmount,
+    taxIncluded: false,
+  };
+}
+
 export const CHECKOUT_PLAN_CONFIG: Record<BillingCheckoutPlan, CheckoutPlanDefinition> = {
   PERSONAL: {
     plan: "PERSONAL",
-    label: "Personal",
+    label: COMMERCIAL_PLANS.PERSONAL.label,
     currency: "CLP",
     targetSubscriptionPlan: "PERSONAL",
     prices: {
-      MONTHLY: {
-        amount: 7128,
-        netAmount: 5990,
-        taxAmount: 1138,
-        taxIncluded: false,
-      },
-      ANNUAL: {
-        amount: 78409,
-        netAmount: 65890,
-        taxAmount: 12519,
-        taxIncluded: false,
-      },
+      MONTHLY: toCheckoutPrice(COMMERCIAL_PLANS.PERSONAL.monthly),
+      ANNUAL: toCheckoutPrice(COMMERCIAL_PLANS.PERSONAL.annual),
     },
   },
   PROFESIONAL: {
     plan: "PROFESIONAL",
-    label: "Profesional",
+    label: COMMERCIAL_PLANS.PROFESIONAL.label,
     currency: "CLP",
     targetSubscriptionPlan: "PROFESIONAL",
     prices: {
-      MONTHLY: {
-        amount: 35688,
-        netAmount: 29990,
-        taxAmount: 5698,
-        taxIncluded: false,
-      },
-      ANNUAL: {
-        amount: 392569,
-        netAmount: 329890,
-        taxAmount: 62679,
-        taxIncluded: false,
-      },
+      MONTHLY: toCheckoutPrice(COMMERCIAL_PLANS.PROFESIONAL.monthly),
+      ANNUAL: toCheckoutPrice(COMMERCIAL_PLANS.PROFESIONAL.annual),
     },
   },
 };
