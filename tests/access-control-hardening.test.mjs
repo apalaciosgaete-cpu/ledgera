@@ -145,6 +145,34 @@ for (const sourcePath of movementCreationPaths) {
   });
 }
 
+const subscriptionWritePaths = [
+  "src/app/api/movements/route.ts",
+  "src/app/api/portfolio/movements/route.ts",
+  "src/app/api/movements/import/route.ts",
+  "src/app/api/portfolio/import/confirm/route.ts",
+  "src/app/api/integrations/binance/imports/confirm/route.ts",
+  "src/app/api/integrations/binance/imports/bulk-confirm/route.ts",
+];
+
+for (const sourcePath of subscriptionWritePaths) {
+  test(`${sourcePath} blocks writes for expired subscriptions`, () => {
+    const source = read(sourcePath);
+    assert.match(source, /requireActiveSubscription/);
+    assert.match(source, /if \(!subscriptionCheck\.ok\) return subscriptionCheck\.response/);
+  });
+}
+
+test("expired subscriptions return an explicit read-only contract", () => {
+  const source = read(
+    "src/modules/subscription/application/requireActiveSubscription.ts",
+  );
+
+  assert.match(source, /SUBSCRIPTION_READ_ONLY/);
+  assert.match(source, /accessMode: isExpired \? "READ_ONLY" : "BLOCKED"/);
+  assert.match(source, /Puedes consultar tu información/);
+  assert.match(source, /status: isSuspended \? 403 : 402/);
+});
+
 test("free movement limit is canonical and returns an upgrade error", () => {
   const source = read(
     "src/modules/subscription/application/enforceMovementLimit.ts",
