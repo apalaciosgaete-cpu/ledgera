@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 export type AdminAuditAction =
   | "ADMIN_LOGIN"
   | "ADMIN_LOGOUT"
+  | "ADMIN_REAUTHENTICATED"
   | "USER_SUBSCRIPTION_UPDATED"
   | "USER_SUSPENDED"
   | "USER_REACTIVATED"
