@@ -58,12 +58,13 @@ test("public registration route does not expose the user directory", () => {
   assert.ok(queryIndex > roleIndex, "authorization must run before querying users");
 });
 
-test("expert mode is capability-gated and cannot select another tenant", () => {
+test("expert mode requires an owner, admin or active professional mandate", () => {
   const source = read("src/app/api/expert/tax-cases/route.ts");
 
   assert.match(source, /requireFeatureAccess\(auth\.user, Feature\.EXPERT_MODE\)/);
-  assert.match(source, /const isAdmin = auth\.user\.role === "admin"/);
-  assert.match(source, /userId: isAdmin \? requestedUserId : auth\.user\.id/);
+  assert.match(source, /requireProfessionalClientAccess\(/);
+  assert.match(source, /ProfessionalPermission\.VIEW_TAX_DATA/);
+  assert.match(source, /userId: requestedUserId/);
 });
 
 test("administrators bypass commercial feature checks explicitly", () => {
@@ -83,4 +84,36 @@ test("subscription updates do not rewrite operational roles", () => {
   assert.doesNotMatch(routeSource, /PLAN_TO_ROLE/);
   assert.match(routeSource, /"BASICO", "PERSONAL", "PROFESIONAL"/);
   assert.doesNotMatch(routeSource, /const VALID_PLANS[^\n]*EMPRESA/);
+});
+
+test("professional access model has explicit tenant relations", () => {
+  const schema = read("prisma/schema/professional.prisma");
+  const platform = read("prisma/schema/platform.prisma");
+
+  assert.match(schema, /model ProfessionalClientAccess/);
+  assert.match(schema, /@@unique\(\[professionalUserId, clientUserId\]\)/);
+  assert.match(schema, /status\s+String\s+@default\("PENDING"\)/);
+  assert.match(platform, /professionalClientLinks\s+ProfessionalClientAccess\[\]/);
+  assert.match(platform, /professionalAdvisorLinks\s+ProfessionalClientAccess\[\]/);
+});
+
+test("professional client API enforces plan, 2FA and five occupied seats", () => {
+  const source = read("src/app/api/professional/clients/route.ts");
+
+  assert.match(source, /Feature\.EXPERT_MODE/);
+  assert.match(source, /TWO_FACTOR_REQUIRED/);
+  assert.match(source, /PROFESSIONAL_INCLUDED_CLIENTS/);
+  assert.match(source, /PROFESSIONAL_CLIENT_LIMIT/);
+  assert.match(source, /countOccupiedProfessionalSeats/);
+});
+
+test("client mandate authorization verifies permission and active relation", () => {
+  const source = read(
+    "src/modules/professional/application/requireProfessionalClientAccess.ts",
+  );
+
+  assert.match(source, /getActiveProfessionalClientAccess/);
+  assert.match(source, /PROFESSIONAL_MANDATE_REQUIRED/);
+  assert.match(source, /PROFESSIONAL_PERMISSION_REQUIRED/);
+  assert.match(source, /TWO_FACTOR_REQUIRED/);
 });
