@@ -7,10 +7,10 @@ import { confirmImport } from "@/modules/integrations/binance/infrastructure/exc
 import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/application/fetchHistoricalCryptoPrice";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { generateAnnualTaxSummary } from "@/modules/tax/application/generateAnnualTaxSummary";
-
+import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
 
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const AUTO_CONFIRM_TYPES = new Set([
@@ -90,6 +90,8 @@ export async function POST(request: NextRequest) {
         const priceUsd = (isTransfer || isBtcQuoted)
           ? await fetchHistoricalCryptoPrice(normalized.symbol, occurredAt)
           : normalized.priceUsd;
+
+        await enforceMovementLimit({ userId: auth.user.id });
 
         const movement = await prisma.portfolioMovement.create({
           data: {
