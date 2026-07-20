@@ -6,6 +6,11 @@ import { requireFeatureAccess } from "@/modules/subscription/application/require
 import { Feature } from "@/modules/subscription/domain/planFeatures";
 import { requireProfessionalClientAccess } from "@/modules/professional/application/requireProfessionalClientAccess";
 import { ProfessionalPermission } from "@/modules/professional/domain/clientAccess";
+import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getAllTaxCasesExpert } from "@/modules/tax-cases/application/buildTaxCases";
 
 // Force dynamic rendering because routes use request.headers/cookies
@@ -38,6 +43,27 @@ export async function GET(request: NextRequest) {
     };
 
     const summary = await getAllTaxCasesExpert(filters);
+
+    if (requestedUserId !== auth.user.id) {
+      const targetUser = await getUserById(requestedUserId);
+
+      await createAdminAuditLog({
+        action: "PROFESSIONAL_CLIENT_DATA_ACCESSED",
+        actorId: auth.user.id,
+        actorEmail: auth.user.email,
+        targetUserId: requestedUserId,
+        targetUserEmail: targetUser?.email ?? null,
+        ...getAuditRequestContext(request),
+        metadata: {
+          resource: "tax_cases",
+          accessScope: clientAccess.scope,
+          mandateId: clientAccess.mandateId ?? null,
+          filters,
+          resultCount: summary.items.length,
+        },
+      });
+    }
+
     return ok(
       {
         ...summary,
