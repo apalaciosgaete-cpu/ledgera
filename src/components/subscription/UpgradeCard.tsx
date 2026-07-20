@@ -14,6 +14,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
   [Feature.SII_STATUS]: "Estado SII",
   [Feature.TAX_ESTIMATE]: "Impuesto estimado",
   [Feature.PDF_EXPORT]: "Exportación PDF",
+  [Feature.XLSX_EXPORT]: "Exportación Excel",
   [Feature.CSV_EXPORT]: "Exportación CSV",
   [Feature.DECLARATIONS]: "Declaraciones",
   [Feature.CALENDAR]: "Calendario tributario",
