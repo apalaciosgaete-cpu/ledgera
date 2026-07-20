@@ -152,19 +152,19 @@ export async function updateUserStatus(
   }
 }
 
+/**
+ * Changes commercial entitlements only. A subscription must never rewrite
+ * the user's operational identity or account type.
+ */
 export async function updateUserSubscription(
   input: UpdateSubscriptionInput,
 ): Promise<User | null> {
-  const { PLAN_TO_ROLE } = await import("@/modules/identity/domain/user");
-  const role = PLAN_TO_ROLE[input.plan];
-
   try {
     const user = await prisma.users.update({
       where: { id: input.userId },
       data: {
         subscription_plan:       input.plan,
         subscription_expires_at: input.expiresAt,
-        role,
         updated_at:              new Date(),
       },
       select: baseUserSelect,
