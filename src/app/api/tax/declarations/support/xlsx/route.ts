@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
-  const access = requireFeatureAccess(auth.user, Feature.CSV_EXPORT);
+  const access = requireFeatureAccess(auth.user, Feature.XLSX_EXPORT);
   if (!access.ok) return access.response;
 
   try {
