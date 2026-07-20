@@ -67,6 +67,15 @@ test("public registration always assigns the personal role", () => {
   assert.doesNotMatch(source, /role:\s*body\.role/);
 });
 
+test("registration UI neither displays nor submits operational roles", () => {
+  const source = read("src/app/register/page.tsx");
+
+  assert.doesNotMatch(source, /type Role =/);
+  assert.doesNotMatch(source, /id="role"/);
+  assert.doesNotMatch(source, /body:\s*\{[^}]*role/s);
+  assert.match(source, /Todas las cuentas públicas se crean como cuentas personales/);
+});
+
 test("expert mode requires an owner, admin or active professional mandate", () => {
   const source = read("src/app/api/expert/tax-cases/route.ts");
 
@@ -93,6 +102,22 @@ test("subscription updates do not rewrite operational roles", () => {
   assert.doesNotMatch(routeSource, /PLAN_TO_ROLE/);
   assert.match(routeSource, /"BASICO", "PERSONAL", "PROFESIONAL"/);
   assert.doesNotMatch(routeSource, /const VALID_PLANS[^\n]*EMPRESA/);
+});
+
+test("admin metrics are derived from billing records", () => {
+  const routeSource = read("src/app/api/admin/metrics/route.ts");
+  const pageSource = read("src/app/admin/page.tsx");
+
+  assert.match(routeSource, /billingSubscription\.findMany/);
+  assert.match(routeSource, /billingPayment\.findMany/);
+  assert.match(routeSource, /monthlyEquivalent/);
+  assert.match(routeSource, /APPROVED/);
+  assert.match(routeSource, /AUTHORIZED/);
+  assert.match(pageSource, /\/api\/admin\/metrics/);
+  assert.doesNotMatch(pageSource, /PLAN_PRICES/);
+  assert.doesNotMatch(pageSource, /PERSONAL:\s*4990/);
+  assert.doesNotMatch(pageSource, /PROFESIONAL:\s*14990/);
+  assert.doesNotMatch(pageSource, /EMPRESA:\s*29990/);
 });
 
 test("professional access model has explicit tenant relations", () => {
