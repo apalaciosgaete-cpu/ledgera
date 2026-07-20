@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/shared";
+import { requireFeatureAccess } from "@/modules/subscription/application/requireFeatureAccess";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
 import {
   buildDeclarationCsv,
   buildDeclarationCsvFilename,
@@ -50,6 +52,9 @@ export async function GET(
       { status: 401 },
     );
   }
+
+  const access = requireFeatureAccess(auth.user, Feature.CSV_EXPORT);
+  if (!access.ok) return access.response;
 
   try {
     const { id } = params;
