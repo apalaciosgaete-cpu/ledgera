@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = "force-dynamic";
-
+import {
+  requireAdminReauthentication,
+} from "@/modules/admin/application/adminReauthentication";
 import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import type { SubscriptionPlan } from "@/modules/identity/domain/user";
+import {
+  isPlatformAuth,
+} from "@/modules/identity/application/requirePlatformRole";
 import {
   getUserById,
   updateUserSubscription,
 } from "@/modules/identity/infrastructure/userRepository";
-import type { SubscriptionPlan } from "@/modules/identity/domain/user";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+
+export const dynamic = "force-dynamic";
 
 const VALID_PLANS: SubscriptionPlan[] = ["BASICO", "PERSONAL", "PROFESIONAL"];
 type RouteContext = { params: { id: string } };
@@ -23,26 +27,10 @@ export async function PATCH(
   { params }: RouteContext,
 ) {
   const csrfResponse = enforceCsrfProtection(req);
+  if (csrfResponse) return csrfResponse;
 
-  if (csrfResponse) {
-    return csrfResponse;
-  }
-
-  const auth = await getSessionFromRequest(req);
-
-  if (!auth) {
-    return NextResponse.json(
-      { ok: false, message: "No autenticado", data: null },
-      { status: 401 },
-    );
-  }
-
-  if (auth.user.role !== "admin") {
-    return NextResponse.json(
-      { ok: false, message: "Sin permisos", data: null },
-      { status: 403 },
-    );
-  }
+  const auth = await requireAdminReauthentication(req);
+  if (!isPlatformAuth(auth)) return auth;
 
   const { id } = params;
 
@@ -149,6 +137,8 @@ export async function PATCH(
       ...getAuditRequestContext(req),
       metadata: {
         source: "api/admin/users/[id]/subscription",
+        reauthenticated: true,
+        sessionId: auth.session.id,
         previousPlan: targetUser.subscriptionPlan,
         newPlan: updated.subscriptionPlan,
         accountRole: updated.role,
