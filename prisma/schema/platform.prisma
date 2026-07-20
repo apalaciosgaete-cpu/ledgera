@@ -107,7 +107,7 @@ model BillingPayment {
   amount             Int
   currency           String    @default("CLP")
   description        String
-  paymentUrl         String?
+  paymentUrl        String?
   paidAt            DateTime?
   failedAt           DateTime?
   metadata           String?
@@ -240,4 +240,72 @@ model DataSubjectRequest {
   @@index([status])
   @@index([type])
   @@map("data_subject_requests")
+}
+
+model Alert {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  category       String
+  severity       String
+  title          String
+  message        String
+  status         String    @default("OPEN")
+  metadata       Json?
+  source         String?
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  resolvedAt     DateTime? @map("resolved_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([severity])
+  @@index([category])
+  @@map("alerts")
+}
+
+model TaxRiskScore {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  score       Int
+  level       String
+  breakdown   Json
+  evaluatedAt DateTime @default(now()) @map("evaluated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([level])
+  @@index([evaluatedAt])
+  @@map("tax_risk_scores")
+}
+
+model portfolios {
+  id         String   @id @default(cuid())
+  user_id    String
+  name       String   @default("Main Portfolio")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_portfolios_user_id")
+  @@map("portfolios")
+}
+
+model sessions {
+  id         String   @id @default(cuid())
+  user_id    String
+  token      String   @unique
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  expires_at DateTime @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_sessions_user_id")
+  @@index([token], map: "idx_sessions_token")
+  @@map("sessions")
 }
