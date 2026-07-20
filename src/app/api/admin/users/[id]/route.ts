@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import {
   createAdminAuditLog,
@@ -13,6 +13,7 @@ import {
   deleteUser,
   getUserById,
 } from "@/modules/identity/infrastructure/userRepository";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 type RouteContext = { params: { id: string } };
 
@@ -20,6 +21,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: RouteContext,
 ) {
+  const csrfResponse = enforceCsrfProtection(req);
+  if (csrfResponse) return csrfResponse;
+
   const auth = await getSessionFromRequest(req);
 
   if (!auth) {
