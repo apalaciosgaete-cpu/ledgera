@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-
+import {
+  isPlatformAuth,
+  requirePlatformRole,
+} from "@/modules/identity/application/requirePlatformRole";
 
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
-  const auth = await getSessionFromRequest(req);
-  if (!auth || auth.user.role !== "admin") {
-    return NextResponse.json({ ok: false, message: "No autorizado" }, { status: 403 });
-  }
+  const auth = await requirePlatformRole(req, ["admin", "support"]);
+  if (!isPlatformAuth(auth)) return auth;
 
   const conversations = await prisma.chatConversation.findMany({
     orderBy: { updatedAt: "desc" },
@@ -19,16 +20,23 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const data = conversations.map((c) => ({
-    id: c.id,
-    sessionId: c.sessionId,
-    status: c.status,
-    guestName: c.guestName ?? c.user?.full_name ?? "Anónimo",
-    guestEmail: c.guestEmail ?? c.user?.email ?? null,
-    lastMessage: c.messages[0] ?? null,
-    updatedAt: c.updatedAt,
-    createdAt: c.createdAt,
+  const data = conversations.map((conversation) => ({
+    id: conversation.id,
+    sessionId: conversation.sessionId,
+    status: conversation.status,
+    guestName: conversation.guestName ?? conversation.user?.full_name ?? "Anónimo",
+    guestEmail: conversation.guestEmail ?? conversation.user?.email ?? null,
+    lastMessage: conversation.messages[0] ?? null,
+    updatedAt: conversation.updatedAt,
+    createdAt: conversation.createdAt,
   }));
 
-  return NextResponse.json({ ok: true, data });
+  return NextResponse.json({
+    ok: true,
+    data,
+    access: {
+      role: auth.user.role,
+      scope: "SUPPORT_CHAT_ONLY",
+    },
+  });
 }
