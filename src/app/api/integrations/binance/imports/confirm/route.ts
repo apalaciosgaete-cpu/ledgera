@@ -1,5 +1,5 @@
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -16,11 +16,12 @@ import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
 import type { NormalizedImportRecord } from "@/modules/integrations/binance/domain/binanceTypes";
 import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/application/fetchHistoricalCryptoPrice";
+import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
 
 type ConfirmBody = {
   action:       "CONFIRM" | "REJECT" | "REVIEW";
   recordId:     string;
-  duplicateIds?: string[];  // other records in same staging group — linked to same PortfolioMovement
+  duplicateIds?: string[];
   override?: {
     movementType?: "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
     priceUsd?:     number;
@@ -55,16 +56,13 @@ export async function POST(request: NextRequest) {
       return fail("El registro ya fue procesado.", 409);
     }
 
-    // ── REVIEW: marcar para revisión manual ───────────────────────────────
     if (action === "REVIEW") {
       await markImportAsReview(recordId, auth.user.id);
       return ok({ recordId, status: "REVIEW" }, "Registro marcado para revisión manual.");
     }
 
-    // ── REJECT ────────────────────────────────────────────────────────────
     if (action === "REJECT") {
       await rejectImport(recordId, auth.user.id);
-      // Reject all duplicates in the same staging group
       for (const dupId of duplicateIds) {
         const dup = await prisma.exchangeImportRecord.findFirst({
           where: { id: dupId, userId: auth.user.id, status: { notIn: ["CONFIRMED"] } },
@@ -81,30 +79,26 @@ export async function POST(request: NextRequest) {
       return ok({ recordId, status: "REJECTED", rejectedDuplicates: duplicateIds.length }, "Registro rechazado.");
     }
 
-    // ── CONFIRM ───────────────────────────────────────────────────────────
-
     const taxTreatment    = record.taxTreatment   ?? "REVIEW";
     const inventoryEffect = record.inventoryEffect ?? "REVIEW";
     const needsReview     = taxTreatment === "REVIEW" || inventoryEffect === "REVIEW";
 
-    // Gate tributario: si el evento requiere revisión, solo puede pasar si el
-    // usuario provee override explícito (movementType + priceUsd).
     if (needsReview && (!override?.movementType || override.priceUsd === undefined)) {
       return fail(
         `El evento "${record.normalizedEventType ?? record.externalType}" requiere revisión manual antes de confirmar. ` +
-        `Proporciona tipo, precio y fee para confirmarlo con ajustes.`,
+        "Proporciona tipo, precio y fee para confirmarlo con ajustes.",
         422,
       );
     }
 
     const normalized = JSON.parse(record.normalizedJson ?? "{}") as NormalizedImportRecord;
 
-    // Aplicar overrides cuando el usuario resolvió manualmente el evento REVIEW
     if (override?.movementType) normalized.movementType = override.movementType;
     if (override?.priceUsd !== undefined && override.priceUsd >= 0) normalized.priceUsd = override.priceUsd;
     if (override?.feeUsd   !== undefined && override.feeUsd   >= 0) normalized.feeUsd   = override.feeUsd;
 
-    // DEPOSIT/WITHDRAW: precio histórico desde Binance público en la fecha del evento
+    await enforceMovementLimit({ userId: auth.user.id });
+
     if (normalized.movementType === "DEPOSIT" || normalized.movementType === "WITHDRAW") {
       const historicalPrice = await fetchHistoricalCryptoPrice(
         normalized.symbol,
@@ -124,7 +118,6 @@ export async function POST(request: NextRequest) {
         },
       });
       await confirmImport(recordId, auth.user.id, transferMovement.id);
-      // Link duplicates (other sources of same event) to the same PortfolioMovement
       for (const dupId of duplicateIds) {
         await confirmImport(dupId, auth.user.id, transferMovement.id);
       }
@@ -138,7 +131,6 @@ export async function POST(request: NextRequest) {
       return ok({ recordId, status: "CONFIRMED", movementId: transferMovement.id, linkedDuplicates: duplicateIds.length }, "Registro confirmado (trazabilidad patrimonial).");
     }
 
-    // BUY/SELL: verificar período abierto
     try {
       await assertPeriodOpen(normalized.occurredAt, auth.user.id);
     } catch (err) {
@@ -171,7 +163,6 @@ export async function POST(request: NextRequest) {
     });
 
     await confirmImport(recordId, auth.user.id, movement.id);
-    // Link duplicates (other sources of same event) to the same PortfolioMovement
     for (const dupId of duplicateIds) {
       await confirmImport(dupId, auth.user.id, movement.id);
     }
