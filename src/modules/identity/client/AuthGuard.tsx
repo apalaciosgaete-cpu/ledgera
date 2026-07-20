@@ -45,9 +45,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading, isHydratedFromCache, user } = useAuth();
   const publicRoute = isPublicRoute(pathname);
+  const appRoute = isAppRoute(pathname);
   const wasAuthenticated = useRef(false);
 
   const needsOnboarding = user?.needsOnboarding === true;
+  const isSupport = user?.role === "support";
   const canRenderFromCache = isLoading && isAuthenticated && isHydratedFromCache;
 
   useEffect(() => {
@@ -67,10 +69,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (isAuthenticated && needsOnboarding && !isAppRoute(pathname)) {
+    if (isAuthenticated && isSupport && appRoute) {
+      router.replace("/admin/chat");
+      return;
+    }
+
+    if (isAuthenticated && needsOnboarding && !appRoute && !isSupport) {
       router.replace("/panel");
     }
-  }, [isAuthenticated, isLoading, needsOnboarding, pathname, publicRoute, router]);
+  }, [appRoute, isAuthenticated, isLoading, isSupport, needsOnboarding, publicRoute, router]);
 
   if (isLoading && !canRenderFromCache) {
     return (
@@ -92,6 +99,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated && !publicRoute && !wasAuthenticated.current) {
+    return null;
+  }
+
+  if (isSupport && appRoute) {
     return null;
   }
 
