@@ -17,6 +17,7 @@ import { logBinanceAuditEvent } from "@/modules/integrations/binance/application
 import type { NormalizedImportRecord } from "@/modules/integrations/binance/domain/binanceTypes";
 import { fetchHistoricalCryptoPrice } from "@/modules/integrations/binance/application/fetchHistoricalCryptoPrice";
 import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 
 type ConfirmBody = {
   action:       "CONFIRM" | "REJECT" | "REVIEW";
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest) {
 
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
+
+  const subscriptionCheck = requireActiveSubscription(auth.user);
+  if (!subscriptionCheck.ok) return subscriptionCheck.response;
 
   try {
     const body = (await request.json()) as ConfirmBody;
