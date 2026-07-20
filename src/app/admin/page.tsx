@@ -1,7 +1,7 @@
 // src/app/admin/page.tsx
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
 import { Logo } from "@/components/brand/Logo";
@@ -9,10 +9,11 @@ import { fonts, radius, shadows } from "@/styles/tokens";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
 
 type SubscriptionPlan = "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
+type SelectablePlan = Exclude<SubscriptionPlan, "EMPRESA">;
 type UserStatus = "active" | "inactive" | "suspended";
 type UserRole = "personal" | "contador" | "empresa" | "admin";
 
-interface AdminUser {
+type AdminUser = {
   id: string;
   email: string;
   fullName: string;
@@ -21,39 +22,38 @@ interface AdminUser {
   subscriptionPlan: SubscriptionPlan;
   subscriptionExpiresAt: string | null;
   createdAt: string;
-}
-
-type AdminUsersResponse = {
-  ok: boolean;
-  message?: string;
-  data: AdminUser[];
 };
 
-type MutationResponse<T = unknown> = {
+type AdminMetrics = {
+  currency: "CLP";
+  mrr: number;
+  collectedThisMonth: number;
+  activeBillingSubscriptions: number;
+  pendingPayments: number;
+  pastDueSubscriptions: number;
+  planMrr: Record<string, number>;
+  calculatedAt: string;
+  source: "billing_subscriptions_and_payments";
+};
+
+type ApiResponse<T> = {
   ok: boolean;
   message?: string;
-  data?: T;
+  data: T;
 };
 
 const PLAN_LABELS: Record<SubscriptionPlan, string> = {
-  BASICO:      "Básico",
-  PERSONAL:    "Personal",
-  PROFESIONAL: "Contador",
-  EMPRESA:     "Empresa",
+  BASICO: "Gratuito",
+  PERSONAL: "Personal",
+  PROFESIONAL: "Profesional",
+  EMPRESA: "Empresa (legado)",
 };
 
-const PLAN_PRICES: Record<SubscriptionPlan, number> = {
-  BASICO:      0,
-  PERSONAL:    4990,
-  PROFESIONAL: 14990,
-  EMPRESA:     29990,
-};
-
-const PLAN_COLORS: Record<SubscriptionPlan, string> = {
-  BASICO: "var(--bg-elev)",
-  PERSONAL: "var(--accent)",
-  PROFESIONAL: "var(--bg-elev)",
-  EMPRESA: "var(--accent)",
+const ROLE_LABELS: Record<UserRole, string> = {
+  personal: "Cuenta personal",
+  contador: "Contador",
+  empresa: "Empresa (legado)",
+  admin: "Administrador",
 };
 
 const STATUS_LABELS: Record<UserStatus, string> = {
@@ -62,781 +62,401 @@ const STATUS_LABELS: Record<UserStatus, string> = {
   suspended: "Suspendido",
 };
 
-const STATUS_COLORS: Record<UserStatus, string> = {
-  active: "var(--accent)",
-  inactive: "var(--bg-elev)",
-  suspended: "var(--loss)",
+const cardStyle: CSSProperties = {
+  background: "var(--bg-elev)",
+  border: "1px solid var(--border)",
+  borderRadius: radius.lg,
+  boxShadow: shadows.sm,
+  padding: 18,
 };
 
-function isExpired(expiresAt: string | null): boolean {
-  if (!expiresAt) return false;
-  return new Date(expiresAt) < new Date();
+const buttonStyle: CSSProperties = {
+  border: "1px solid var(--border-strong)",
+  borderRadius: radius.md,
+  background: "var(--bg-elev)",
+  color: "var(--text)",
+  cursor: "pointer",
+  fontFamily: fonts.body,
+  fontSize: 12,
+  fontWeight: 750,
+  padding: "8px 11px",
+};
+
+function formatClp(value: number) {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-function daysLeft(expiresAt: string | null): string {
-  if (!expiresAt) return "Sin configurar";
-
-  const diff = new Date(expiresAt).getTime() - Date.now();
-
-  if (diff < 0) return "Vencida";
-
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  return `${days} días`;
+function formatDate(value: string | null) {
+  if (!value) return "Sin vencimiento";
+  return new Date(value).toLocaleDateString("es-CL");
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("es-CL", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+function isExpired(value: string | null) {
+  return Boolean(value && new Date(value).getTime() < Date.now());
 }
 
-function resolveErrorMessage(error: unknown, fallback: string) {
-  if (!isHttpClientError(error)) {
-    return fallback;
-  }
-
-  if (error.status === 429 && error.retryAfterSeconds) {
-    return `Demasiadas solicitudes. Intenta nuevamente en ${error.retryAfterSeconds} segundos.`;
-  }
-
-  return error.message || fallback;
+function errorMessage(error: unknown, fallback: string) {
+  return isHttpClientError(error) ? error.message || fallback : fallback;
 }
 
 export default function AdminPage() {
   const router = useRouter();
-
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<AdminUser | null>(null);
-  const [editSubscription, setEditSubscription] = useState<AdminUser | null>(
-    null,
-  );
-  const [selectedPlan, setSelectedPlan] =
-    useState<SubscriptionPlan>("BASICO");
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<SelectablePlan>("PERSONAL");
   const [daysToAdd, setDaysToAdd] = useState(30);
-  const [toast, setToast] = useState<{ message: string; ok: boolean } | null>(
-    null,
-  );
 
-  function showToast(message: string, ok: boolean) {
-    setToast({ message, ok });
-    setTimeout(() => setToast(null), 3500);
-  }
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  function handleHttpError(error: unknown, fallback: string) {
-    if (isHttpClientError(error)) {
-      if (error.status === 401) {
+    try {
+      const [usersResponse, metricsResponse] = await Promise.all([
+        httpClient<ApiResponse<AdminUser[]>>("/api/admin/users"),
+        httpClient<ApiResponse<AdminMetrics>>("/api/admin/metrics"),
+      ]);
+
+      setUsers(usersResponse.data ?? []);
+      setMetrics(metricsResponse.data ?? null);
+    } catch (currentError) {
+      if (isHttpClientError(currentError) && currentError.status === 401) {
         router.push("/login");
         return;
       }
 
-      if (error.status === 402) {
-        router.push("/blocked");
-        return;
-      }
-
-      if (error.status === 403) {
-        setError("Acceso denegado. Se requiere rol administrador.");
-        return;
-      }
-
-      setError(resolveErrorMessage(error, fallback));
-      return;
-    }
-
-    setError(fallback);
-  }
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response =
-        await httpClient<AdminUsersResponse>("/api/admin/users");
-
-      setUsers(response.data ?? []);
-    } catch (err) {
-      handleHttpError(err, "Error al cargar usuarios");
+      setError(errorMessage(currentError, "No fue posible cargar el panel administrativo."));
     } finally {
       setLoading(false);
     }
   }, [router]);
 
   useEffect(() => {
-    void fetchUsers();
-  }, [fetchUsers]);
+    void loadDashboard();
+  }, [loadDashboard]);
 
-  async function handleDelete(user: AdminUser) {
-    setActionLoading(user.id);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 3500);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
-    try {
-      const response = await httpClient<MutationResponse>(
-        `/api/admin/users/${user.id}`,
-        {
-          method: "DELETE",
-        },
-      );
+  const userSummary = useMemo(() => {
+    const active = users.filter((user) => user.status === "active").length;
+    const suspended = users.filter((user) => user.status === "suspended").length;
+    const expired = users.filter((user) => isExpired(user.subscriptionExpiresAt)).length;
 
-      showToast(response.message ?? "Usuario eliminado correctamente.", true);
-      setUsers((prev) => prev.filter((item) => item.id !== user.id));
-    } catch (err) {
-      showToast(resolveErrorMessage(err, "Error al eliminar usuario"), false);
-    } finally {
-      setActionLoading(null);
-      setConfirmDelete(null);
-    }
-  }
+    return { total: users.length, active, suspended, expired };
+  }, [users]);
 
-  async function handleStatusToggle(user: AdminUser) {
-    const newStatus: UserStatus =
-      user.status === "active" ? "suspended" : "active";
-
-    setActionLoading(`${user.id}_status`);
+  async function toggleStatus(user: AdminUser) {
+    const status: UserStatus = user.status === "active" ? "suspended" : "active";
+    setActionLoading(`status:${user.id}`);
 
     try {
-      const response = await httpClient<MutationResponse<AdminUser>>(
-        `/api/admin/users/${user.id}/status`,
-        {
-          method: "PATCH",
-          body: {
-            status: newStatus,
-          },
-        },
-      );
+      await httpClient<ApiResponse<AdminUser>>(`/api/admin/users/${user.id}/status`, {
+        method: "PATCH",
+        body: { status },
+      });
 
-      showToast(response.message ?? "Estado actualizado correctamente.", true);
-
-      setUsers((prev) =>
-        prev.map((item) =>
-          item.id === user.id ? { ...item, status: newStatus } : item,
-        ),
+      setUsers((current) =>
+        current.map((item) => item.id === user.id ? { ...item, status } : item),
       );
-    } catch (err) {
-      showToast(resolveErrorMessage(err, "Error al cambiar estado"), false);
+      setToast(`Estado de ${user.email} actualizado.`);
+    } catch (currentError) {
+      setError(errorMessage(currentError, "No fue posible actualizar el estado."));
     } finally {
       setActionLoading(null);
     }
   }
 
-  async function handleUpdateSubscription() {
-    if (!editSubscription) return;
+  function openSubscriptionEditor(user: AdminUser) {
+    setEditingUser(user);
+    setSelectedPlan(user.subscriptionPlan === "EMPRESA" ? "PROFESIONAL" : user.subscriptionPlan);
+    setDaysToAdd(30);
+  }
 
-    setActionLoading(`${editSubscription.id}_sub`);
+  async function updateSubscription() {
+    if (!editingUser) return;
+    setActionLoading(`subscription:${editingUser.id}`);
 
     try {
-      const response = await httpClient<MutationResponse<AdminUser>>(
-        `/api/admin/users/${editSubscription.id}/subscription`,
+      await httpClient<ApiResponse<AdminUser>>(
+        `/api/admin/users/${editingUser.id}/subscription`,
         {
           method: "PATCH",
-          body: {
-            plan: selectedPlan,
-            daysToAdd,
-          },
+          body: { plan: selectedPlan, daysToAdd },
         },
       );
 
-      showToast(
-        response.message ?? "Suscripción actualizada correctamente.",
-        true,
-      );
-
-      await fetchUsers();
-    } catch (err) {
-      showToast(
-        resolveErrorMessage(err, "Error al actualizar suscripción"),
-        false,
-      );
+      setEditingUser(null);
+      setToast(`Suscripción de ${editingUser.email} actualizada.`);
+      await loadDashboard();
+    } catch (currentError) {
+      setError(errorMessage(currentError, "No fue posible actualizar la suscripción."));
     } finally {
       setActionLoading(null);
-      setEditSubscription(null);
     }
   }
 
-  const totalUsers  = users.length;
-  const activeUsers = users.filter(u => u.status === "active").length;
-  const expiredUsers = users.filter(u => isExpired(u.subscriptionExpiresAt)).length;
+  async function deleteUser(user: AdminUser) {
+    const confirmed = window.confirm(
+      `Esta acción eliminará la cuenta ${user.email}. ¿Deseas continuar?`,
+    );
+    if (!confirmed) return;
 
-  const expiringUsers = users.filter(u => {
-    if (!u.subscriptionExpiresAt || u.status !== "active") return false;
-    const diff = new Date(u.subscriptionExpiresAt).getTime() - Date.now();
-    return diff > 0 && diff <= 7 * 24 * 60 * 60 * 1000;
-  }).length;
+    setActionLoading(`delete:${user.id}`);
 
-  const mrr = users
-    .filter(u => u.status === "active" && !isExpired(u.subscriptionExpiresAt))
-    .reduce((acc, u) => acc + PLAN_PRICES[u.subscriptionPlan], 0);
-
-  const planCounts: Record<SubscriptionPlan, number> = {
-    BASICO:      users.filter(u => u.subscriptionPlan === "BASICO").length,
-    PERSONAL:    users.filter(u => u.subscriptionPlan === "PERSONAL").length,
-    PROFESIONAL: users.filter(u => u.subscriptionPlan === "PROFESIONAL").length,
-    EMPRESA:     users.filter(u => u.subscriptionPlan === "EMPRESA").length,
-  };
-
-  const roleCounts: Record<UserRole, number> = {
-    personal: users.filter(u => u.role === "personal").length,
-    contador: users.filter(u => u.role === "contador").length,
-    empresa:  users.filter(u => u.role === "empresa").length,
-    admin:    users.filter(u => u.role === "admin").length,
-  };
-
-  const suspendedUsers = users.filter(u => u.status === "suspended").length;
-  const inactiveUsers  = users.filter(u => u.status === "inactive").length;
+    try {
+      await httpClient<ApiResponse<{ id: string }>>(`/api/admin/users/${user.id}`, {
+        method: "DELETE",
+      });
+      setUsers((current) => current.filter((item) => item.id !== user.id));
+      setToast(`Cuenta ${user.email} eliminada.`);
+    } catch (currentError) {
+      setError(errorMessage(currentError, "No fue posible eliminar la cuenta."));
+    } finally {
+      setActionLoading(null);
+    }
+  }
 
   return (
-    <div
+    <main
       style={{
         minHeight: "100vh",
         background: "var(--bg)",
+        color: "var(--text)",
         fontFamily: fonts.body,
       }}
     >
       <header
         style={{
+          borderBottom: "1px solid var(--border)",
           background: "var(--bg-elev)",
-          borderBottom: `1px solid ${"var(--border-strong)"}`,
-          padding: "0 32px",
+          padding: "14px 24px",
         }}
       >
         <div
           style={{
-            maxWidth: "1400px",
+            maxWidth: 1440,
             margin: "0 auto",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "16px 0",
+            gap: 16,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <Logo variant="light" size="md" showSubtitle />
-            <span
-              style={{
-                fontSize: "12px",
-                color: "var(--text)",
-                background: "var(--bg-elev)",
-                padding: "2px 10px",
-                borderRadius: "20px",
-              }}
-            >
-              Admin
-            </span>
+            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>Administración</span>
           </div>
-
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              onClick={() => router.push("/admin/chat")}
-              style={{
-                background: "var(--bg-elev)",
-                border: "none",
-                borderRadius: "8px",
-                color: "#fff",
-                fontSize: "14px",
-                padding: "8px 16px",
-                cursor: "pointer",
-                fontFamily: fonts.body,
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              💬 Chat soporte
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={() => router.push("/admin/chat")} style={buttonStyle}>
+              Chat de soporte
             </button>
-            <button
-              onClick={() => router.push("/portafolio")}
-              style={{
-                background: "transparent",
-                border: `1px solid ${"var(--border-strong)"}`,
-                borderRadius: "8px",
-                color: "var(--text-faint)",
-                fontSize: "14px",
-                padding: "8px 16px",
-                cursor: "pointer",
-                fontFamily: fonts.body,
-              }}
-            >
-              ← Volver a la app
+            <button type="button" onClick={() => router.push("/panel")} style={buttonStyle}>
+              Volver a la app
             </button>
           </div>
         </div>
       </header>
 
-      <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "40px 32px" }}>
-        <div style={{ marginBottom: "32px" }}>
-          <h1
-            style={{
-              fontFamily: fonts.display,
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "var(--text)",
-              margin: "0 0 4px",
-            }}
-          >
-            Panel de Administración
-          </h1>
-
-          <p style={{ fontSize: "14px", color: "var(--text-soft)", margin: 0 }}>
-            Gestión de usuarios y suscripciones
-          </p>
-        </div>
-
-        {/* Métricas */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px", marginBottom: "24px" }}>
-          {[
-            { label: "Total usuarios",       value: totalUsers,    color: "var(--text)", sub: "registrados" },
-            { label: "Cuentas activas",      value: activeUsers,   color: "var(--accent)",      sub: "en uso" },
-            { label: "Suscripciones vencidas", value: expiredUsers, color: "var(--loss)",     sub: "requieren acción" },
-            { label: "Por vencer (≤7 días)", value: expiringUsers, color: "var(--warn)",     sub: "avisar al cliente" },
-            { label: "MRR estimado",         value: loading ? "—" : `$${mrr.toLocaleString("es-CL")}`, color: "var(--text-soft)", sub: "CLP/mes activo", isText: true },
-          ].map(m => (
-            <div key={m.label} style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "20px" }}>
-              <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.label}</p>
-              <p style={{ fontSize: m.isText ? "22px" : "30px", fontWeight: 700, color: m.color, margin: "0 0 4px", fontFamily: fonts.display, lineHeight: 1 }}>
-                {loading ? "—" : (m.isText ? m.value : m.value)}
-              </p>
-              <p style={{ fontSize: "11px", color: "var(--text-faint)", margin: 0 }}>{m.sub}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Analytics */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
-
-          {/* Distribución por plan */}
-          <div style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "24px" }}>
-            <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", margin: "0 0 20px" }}>Distribución por plan</p>
-            <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-              {/* Donut */}
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                {(() => {
-                  const tot = totalUsers || 1;
-                  const d1 = planCounts.BASICO      / tot * 360;
-                  const d2 = planCounts.PROFESIONAL  / tot * 360;
-                  const d3 = planCounts.EMPRESA      / tot * 360;
-                  const a1 = d1;
-                  const a2 = a1 + d2;
-                  const gradient = totalUsers === 0
-                    ? `conic-gradient(var(--border-strong) 0deg 360deg)`
-                    : `conic-gradient(${PLAN_COLORS.BASICO} 0deg ${a1}deg, ${PLAN_COLORS.PROFESIONAL} ${a1}deg ${a2}deg, ${PLAN_COLORS.EMPRESA} ${a2}deg 360deg)`;
-                  return (
-                    <div style={{ width: 110, height: 110, borderRadius: "50%", background: gradient, position: "relative" }}>
-                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 66, height: 66, borderRadius: "50%", background: "var(--bg-elev)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
-                        <span style={{ fontSize: "18px", fontWeight: 700, color: "var(--text)", lineHeight: 1, fontFamily: fonts.display }}>{loading ? "—" : totalUsers}</span>
-                        <span style={{ fontSize: "9px", color: "var(--text-faint)", letterSpacing: "0.04em" }}>usuarios</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-              {/* Leyenda */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
-                {(["BASICO", "PROFESIONAL", "EMPRESA"] as SubscriptionPlan[]).map(plan => (
-                  <div key={plan} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: 10, height: 10, borderRadius: "3px", background: PLAN_COLORS[plan], flexShrink: 0 }} />
-                      <span style={{ fontSize: "12px", color: "var(--text-soft)" }}>{PLAN_LABELS[plan]}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: 80, height: 6, background: "var(--bg-sunken)", borderRadius: "3px", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${totalUsers ? planCounts[plan] / totalUsers * 100 : 0}%`, background: PLAN_COLORS[plan], borderRadius: "3px" }} />
-                      </div>
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", minWidth: "16px", textAlign: "right" }}>{loading ? "—" : planCounts[plan]}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <section style={{ maxWidth: 1440, margin: "0 auto", padding: "30px 24px 48px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 22 }}>
+          <div>
+            <h1 style={{ margin: 0, fontFamily: fonts.display, fontSize: 25 }}>
+              Panel administrativo
+            </h1>
+            <p style={{ margin: "6px 0 0", color: "var(--text-soft)", fontSize: 13 }}>
+              Usuarios, suscripciones y métricas provenientes de facturación real.
+            </p>
           </div>
-
-          {/* Desglose de cuentas */}
-          <div style={{ background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: "12px", padding: "24px" }}>
-            <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", margin: "0 0 20px" }}>Desglose de cuentas</p>
-            <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por estado</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {[
-                { label: "Activos",      value: activeUsers,    color: "var(--accent)" },
-                { label: "Suspendidos",  value: suspendedUsers, color: "var(--loss)" },
-                { label: "Inactivos",    value: inactiveUsers,  color: "var(--text-faint)" },
-              ].map(row => (
-                <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "12px", color: "var(--text-soft)", width: "80px" }}>{row.label}</span>
-                  <div style={{ flex: 1, height: 8, background: "var(--bg-sunken)", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${totalUsers ? row.value / totalUsers * 100 : 0}%`, background: row.color, borderRadius: "4px", transition: "width 0.4s ease" }} />
-                  </div>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-faint)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Por rol</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {[
-                { label: "Personal",  value: roleCounts.personal, color: "var(--accent)" },
-                { label: "Contador",  value: roleCounts.contador,  color: "var(--accent)" },
-                { label: "Empresa",   value: roleCounts.empresa,   color: "var(--text-soft)" },
-                { label: "Admin",     value: roleCounts.admin,     color: "var(--warn)" },
-              ].map(row => (
-                <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "12px", color: "var(--text-soft)", width: "80px" }}>{row.label}</span>
-                  <div style={{ flex: 1, height: 8, background: "var(--bg-sunken)", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${totalUsers ? row.value / totalUsers * 100 : 0}%`, background: row.color, borderRadius: "4px", transition: "width 0.4s ease" }} />
-                  </div>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", minWidth: "20px", textAlign: "right" }}>{loading ? "—" : row.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <button type="button" onClick={() => void loadDashboard()} style={buttonStyle}>
+            Actualizar
+          </button>
         </div>
+
+        {error ? (
+          <div style={{ ...cardStyle, borderColor: "var(--loss)", marginBottom: 18, color: "var(--loss)" }}>
+            {error}
+          </div>
+        ) : null}
+
+        {toast ? (
+          <div style={{ ...cardStyle, borderColor: "var(--accent)", marginBottom: 18 }}>
+            {toast}
+          </div>
+        ) : null}
 
         <div
           style={{
-            background: "var(--bg-elev)",
-            border: `1px solid ${"var(--border)"}`,
-            borderRadius: "12px",
-            overflow: "hidden",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+            gap: 12,
+            marginBottom: 22,
           }}
         >
-          <div
-            style={{
-              padding: "20px 24px",
-              borderBottom: `1px solid ${"var(--border)"}`,
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "16px",
-                fontWeight: 600,
-                color: "var(--text)",
-                margin: 0,
-              }}
-            >
-              Usuarios ({totalUsers})
-            </h2>
+          {[
+            ["Usuarios", userSummary.total, `${userSummary.active} activos`],
+            ["Suspendidos", userSummary.suspended, "requieren revisión"],
+            ["Suscripciones vencidas", userSummary.expired, "modo solo lectura"],
+            ["MRR contractual", metrics ? formatClp(metrics.mrr) : "—", `${metrics?.activeBillingSubscriptions ?? 0} suscripciones`],
+            ["Recaudado este mes", metrics ? formatClp(metrics.collectedThisMonth) : "—", "pagos aprobados/autorizados"],
+            ["Cobranza pendiente", metrics?.pendingPayments ?? "—", `${metrics?.pastDueSubscriptions ?? 0} morosas`],
+          ].map(([label, value, detail]) => (
+            <article key={String(label)} style={cardStyle}>
+              <div style={{ color: "var(--text-soft)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                {label}
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 850, marginTop: 8 }}>{value}</div>
+              <div style={{ color: "var(--text-faint)", fontSize: 12, marginTop: 4 }}>{detail}</div>
+            </article>
+          ))}
+        </div>
+
+        <section style={{ ...cardStyle, padding: 0, overflow: "hidden" }}>
+          <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--border)" }}>
+            <strong>Usuarios</strong>
+            <span style={{ color: "var(--text-soft)", fontSize: 12, marginLeft: 8 }}>
+              Empresa se conserva únicamente como plan legado.
+            </span>
           </div>
 
-          {loading && (
-            <div
-              style={{
-                padding: "48px",
-                textAlign: "center",
-                color: "var(--text-faint)",
-              }}
-            >
-              Cargando usuarios...
-            </div>
-          )}
-
-          {error && (
-            <div
-              style={{
-                padding: "48px",
-                textAlign: "center",
-                color: "var(--loss)",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          {!loading && !error && users.length === 0 && (
-            <div
-              style={{
-                padding: "48px",
-                textAlign: "center",
-                color: "var(--text-faint)",
-              }}
-            >
-              No hay usuarios registrados
-            </div>
-          )}
-
-          {!loading && !error && users.length > 0 && (
+          {loading ? (
+            <div style={{ padding: 30, color: "var(--text-soft)" }}>Cargando información…</div>
+          ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 980 }}>
                 <thead>
-                  <tr style={{ background: "var(--bg-sunken)" }}>
-                    {[
-                      "Usuario",
-                      "Rol",
-                      "Estado",
-                      "Plan",
-                      "Suscripción",
-                      "Registro",
-                      "Acciones",
-                    ].map((header) => (
-                      <th
-                        key={header}
-                        style={{
-                          padding: "12px 16px",
-                          textAlign: "left",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          color: "var(--text-soft)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                          borderBottom: `1px solid ${"var(--border)"}`,
-                        }}
-                      >
-                        {header}
+                  <tr style={{ background: "var(--bg-sunken)", textAlign: "left" }}>
+                    {["Usuario", "Cuenta", "Plan", "Estado", "Vencimiento", "Registro", "Acciones"].map((label) => (
+                      <th key={label} style={{ padding: "11px 14px", fontSize: 11, color: "var(--text-soft)" }}>
+                        {label}
                       </th>
                     ))}
                   </tr>
                 </thead>
-
                 <tbody>
-                  {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      style={{ borderBottom: "1px solid var(--border)" }}
-                    >
-                      <td style={{ padding: "14px 16px" }}>
-                        <p
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: 500,
-                            color: "var(--text)",
-                            margin: "0 0 2px",
-                          }}
-                        >
-                          {user.fullName}
-                        </p>
-                        <p
-                          style={{
-                            fontSize: "12px",
-                            color: "var(--text-faint)",
-                            margin: 0,
-                          }}
-                        >
-                          {user.email}
-                        </p>
-                      </td>
-
-                      <td style={{ padding: "14px 16px" }}>{user.role}</td>
-
-                      <td style={{ padding: "14px 16px" }}>
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            color: STATUS_COLORS[user.status],
-                            fontWeight: 500,
-                          }}
-                        >
-                          ● {STATUS_LABELS[user.status]}
-                        </span>
-                      </td>
-
-                      <td style={{ padding: "14px 16px" }}>
-                        {PLAN_LABELS[user.subscriptionPlan]}
-                      </td>
-
-                      <td style={{ padding: "14px 16px" }}>
-                        <span
-                          style={{
-                            color: isExpired(user.subscriptionExpiresAt)
-                              ? "var(--loss)" : "var(--accent)",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {daysLeft(user.subscriptionExpiresAt)}
-                        </span>
-                      </td>
-
-                      <td style={{ padding: "14px 16px" }}>
-                        {formatDate(user.createdAt)}
-                      </td>
-
-                      <td style={{ padding: "14px 16px" }}>
-                        {user.role !== "admin" ? (
-                          <div style={{ display: "flex", gap: "6px" }}>
+                  {users.map((user) => {
+                    const expired = isExpired(user.subscriptionExpiresAt);
+                    return (
+                      <tr key={user.id} style={{ borderTop: "1px solid var(--border)" }}>
+                        <td style={{ padding: "12px 14px" }}>
+                          <div style={{ fontWeight: 750 }}>{user.fullName}</div>
+                          <div style={{ color: "var(--text-soft)", fontSize: 12 }}>{user.email}</div>
+                        </td>
+                        <td style={{ padding: "12px 14px", fontSize: 12 }}>{ROLE_LABELS[user.role]}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 12 }}>{PLAN_LABELS[user.subscriptionPlan]}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 12 }}>
+                          {STATUS_LABELS[user.status]}{expired ? " · Solo lectura" : ""}
+                        </td>
+                        <td style={{ padding: "12px 14px", fontSize: 12 }}>{formatDate(user.subscriptionExpiresAt)}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 12 }}>{formatDate(user.createdAt)}</td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                             <button
-                              onClick={() => { setEditSubscription(user); setSelectedPlan(user.subscriptionPlan); setDaysToAdd(30); }}
-                              disabled={actionLoading === `${user.id}_sub`}
-                              style={{ background: "var(--bg-elev)", color: "var(--text-soft)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                              type="button"
+                              style={buttonStyle}
+                              disabled={Boolean(actionLoading)}
+                              onClick={() => openSubscriptionEditor(user)}
                             >
                               Suscripción
                             </button>
-
                             <button
-                              onClick={() => handleStatusToggle(user)}
-                              disabled={actionLoading === `${user.id}_status`}
-                              style={{ background: user.status === "active" ? "rgba(232,184,75,0.15)" : "var(--accent-soft)", color: user.status === "active" ? "var(--warn)" : "var(--accent)", border: `1px solid ${user.status === "active" ? "var(--warn)" : "var(--accent)"}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                              type="button"
+                              style={buttonStyle}
+                              disabled={Boolean(actionLoading) || user.role === "admin"}
+                              onClick={() => void toggleStatus(user)}
                             >
-                              {user.status === "active" ? "Suspender" : "Activar"}
+                              {actionLoading === `status:${user.id}` ? "Procesando…" : user.status === "active" ? "Suspender" : "Activar"}
                             </button>
-
                             <button
-                              onClick={() => setConfirmDelete(user)}
-                              disabled={actionLoading === user.id}
-                              style={{ background: "rgba(196,99,74,0.15)", color: "var(--loss)", border: `1px solid ${"var(--loss)"}`, borderRadius: radius.sm, padding: "5px 12px", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
+                              type="button"
+                              style={{ ...buttonStyle, color: "var(--loss)" }}
+                              disabled={Boolean(actionLoading) || user.role === "admin"}
+                              onClick={() => void deleteUser(user)}
                             >
-                              Eliminar
+                              {actionLoading === `delete:${user.id}` ? "Eliminando…" : "Eliminar"}
                             </button>
                           </div>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
-        </div>
-      </main>
+        </section>
+      </section>
 
-      {confirmDelete && (
+      {editingUser ? (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            background: "rgba(0,0,0,0.62)",
+            display: "grid",
+            placeItems: "center",
+            padding: 20,
             zIndex: 100,
-            padding: "32px",
           }}
         >
-          <div
-            style={{
-              background: "var(--bg-elev)",
-              borderRadius: radius.xl,
-              padding: "32px",
-              maxWidth: "440px",
-              width: "100%",
-              boxShadow: shadows.lg,
-            }}
-          >
-            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
-              ¿Eliminar usuario?
-            </h2>
-            <p style={{ fontFamily: fonts.body, fontSize: "14px", color: "var(--text-soft)", margin: "0 0 4px" }}>
-              Esta acción es irreversible.
-            </p>
-            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: "var(--text-faint)", margin: "0 0 24px" }}>
-              {confirmDelete.email}
-            </p>
+          <div style={{ ...cardStyle, width: "min(440px, 100%)", padding: 24 }}>
+            <h2 style={{ margin: 0, fontFamily: fonts.display, fontSize: 20 }}>Actualizar suscripción</h2>
+            <p style={{ color: "var(--text-soft)", fontSize: 13 }}>{editingUser.email}</p>
 
-            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setConfirmDelete(null)}
-                style={{ background: "var(--bg-elev)", color: "var(--text-soft)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleDelete(confirmDelete)}
-                style={{ background: "var(--loss)", color: "var(--text)", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
-              >
-                {actionLoading === confirmDelete.id ? "Eliminando..." : "Eliminar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {editSubscription && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: "32px",
-          }}
-        >
-          <div
-            style={{
-              background: "var(--bg-elev)",
-              borderRadius: radius.xl,
-              padding: "32px",
-              maxWidth: "440px",
-              width: "100%",
-              boxShadow: shadows.lg,
-            }}
-          >
-            <h2 style={{ fontFamily: fonts.display, fontSize: "18px", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>
-              Actualizar suscripción
-            </h2>
-            <p style={{ fontFamily: fonts.body, fontSize: "13px", color: "var(--text-faint)", margin: "0 0 24px" }}>
-              {editSubscription.email}
-            </p>
-
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                Plan
-              </label>
+            <label style={{ display: "grid", gap: 6, marginTop: 16, fontSize: 12 }}>
+              Plan
               <select
                 value={selectedPlan}
-                onChange={(event) => setSelectedPlan(event.target.value as SubscriptionPlan)}
-                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: "var(--text)", background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 12px", outline: "none" }}
+                onChange={(event) => setSelectedPlan(event.target.value as SelectablePlan)}
+                style={{ ...buttonStyle, width: "100%" }}
               >
-                <option value="BASICO">Básico</option>
+                <option value="BASICO">Gratuito</option>
+                <option value="PERSONAL">Personal</option>
                 <option value="PROFESIONAL">Profesional</option>
-                <option value="EMPRESA">Empresa</option>
               </select>
-            </div>
+            </label>
 
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontFamily: fonts.body, fontSize: "12px", fontWeight: 600, color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                Días a agregar
-              </label>
+            <label style={{ display: "grid", gap: 6, marginTop: 14, fontSize: 12 }}>
+              Días de vigencia
               <input
                 type="number"
                 min={1}
-                max={365}
+                max={366}
                 value={daysToAdd}
-                onChange={(event) => setDaysToAdd(Number(event.target.value))}
-                style={{ width: "100%", fontFamily: fonts.body, fontSize: "14px", color: "var(--text)", background: "var(--bg-elev)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 12px", outline: "none", boxSizing: "border-box" }}
+                onChange={(event) => setDaysToAdd(Math.max(1, Number(event.target.value) || 1))}
+                style={{ ...buttonStyle, width: "100%" }}
               />
-            </div>
+            </label>
 
-            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setEditSubscription(null)}
-                style={{ background: "var(--bg-elev)", color: "var(--text-soft)", border: `1px solid ${"var(--border)"}`, borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: fonts.body }}
-              >
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 20 }}>
+              <button type="button" style={buttonStyle} onClick={() => setEditingUser(null)}>
                 Cancelar
               </button>
               <button
-                onClick={handleUpdateSubscription}
-                style={{ background: "var(--accent)", color: "var(--text)", border: "none", borderRadius: radius.md, padding: "8px 18px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: fonts.body }}
+                type="button"
+                style={{ ...buttonStyle, background: "var(--accent)", color: "var(--accent-contrast)" }}
+                disabled={Boolean(actionLoading)}
+                onClick={() => void updateSubscription()}
               >
-                {actionLoading === `${editSubscription.id}_sub` ? "Guardando..." : "Guardar"}
+                {actionLoading === `subscription:${editingUser.id}` ? "Guardando…" : "Guardar"}
               </button>
             </div>
           </div>
         </div>
-      )}
-
-      {toast && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "32px",
-            right: "32px",
-            background: toast.ok ? "var(--accent)" : "var(--loss)",
-            color: "var(--text)",
-            padding: "14px 20px",
-            borderRadius: "10px",
-            fontSize: "14px",
-            fontWeight: 500,
-            zIndex: 200,
-            boxShadow: shadows.md,
-            maxWidth: "360px",
-          }}
-        >
-          {toast.message}
-        </div>
-      )}
-    </div>
+      ) : null}
+    </main>
   );
 }
