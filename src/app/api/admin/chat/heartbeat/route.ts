@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import {
+  isPlatformAuth,
+  requirePlatformRole,
+} from "@/modules/identity/application/requirePlatformRole";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
 // Force dynamic rendering because routes use request.headers/cookies
@@ -10,10 +13,8 @@ export async function POST(req: NextRequest) {
   const csrfResponse = enforceCsrfProtection(req);
   if (csrfResponse) return csrfResponse;
 
-  const auth = await getSessionFromRequest(req);
-  if (!auth || auth.user.role !== "admin") {
-    return NextResponse.json({ ok: false }, { status: 403 });
-  }
+  const auth = await requirePlatformRole(req, ["admin", "support"]);
+  if (!isPlatformAuth(auth)) return auth;
 
   await prisma.systemSetting.upsert({
     where: { key: "chat_admin_last_seen" },
@@ -25,5 +26,11 @@ export async function POST(req: NextRequest) {
     update: { value: new Date().toISOString() },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    data: {
+      role: auth.user.role,
+      scope: "SUPPORT_CHAT_ONLY",
+    },
+  });
 }
