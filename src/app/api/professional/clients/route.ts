@@ -23,10 +23,6 @@ import {
 
 export const dynamic = "force-dynamic";
 
-type AuthUser = NonNullable<Awaited<ReturnType<typeof requireAuth>>> extends NextResponse
-  ? never
-  : never;
-
 function requireProfessionalSecurity(user: {
   id: string;
   role?: string | null;
