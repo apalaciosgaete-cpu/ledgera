@@ -21,15 +21,9 @@ import {
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 
-const validRoles = ["personal", "contador", "empresa"] as const;
-type Role = (typeof validRoles)[number];
-
 const DEFAULT_TERMS_VERSION = "terms-2026-07";
 const DEFAULT_PRIVACY_VERSION = "privacy-2026-07";
-
-function isValidRole(value: unknown): value is Role {
-  return validRoles.includes(value as Role);
-}
+const PUBLIC_REGISTRATION_ROLE = "personal" as const;
 
 function resolveLegalVersion(value: unknown, fallback: string) {
   const candidate = String(value ?? "").trim();
@@ -78,7 +72,8 @@ export async function POST(request: NextRequest) {
     const email = String(body.email ?? "").trim().toLowerCase();
     const fullName = String(body.fullName ?? "").trim();
     const password = String(body.password ?? "");
-    const role: Role = isValidRole(body.role) ? body.role : "personal";
+    const requestedRole = String(body.role ?? "").trim().toLowerCase() || null;
+    const role = PUBLIC_REGISTRATION_ROLE;
     const termsAccepted = body.termsAccepted === true;
     const privacyAccepted = body.privacyAccepted === true;
     const legalConsent = body.legalConsent && typeof body.legalConsent === "object" ? body.legalConsent : {};
@@ -137,7 +132,8 @@ export async function POST(request: NextRequest) {
       userAgent,
       metadata: {
         source: "registration",
-        role,
+        assignedRole: role,
+        requestedRole,
         consentedAt,
         termsAccepted,
         privacyAccepted,
