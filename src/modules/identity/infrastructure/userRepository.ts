@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import type { User, SubscriptionPlan } from "@/modules/identity/domain/user";
+import type {
+  User,
+  SubscriptionPlan,
+  UserRole,
+} from "@/modules/identity/domain/user";
 
 interface CreateUserInput {
   email:        string;
   fullName:     string;
   passwordHash: string;
-  role:         "personal" | "contador" | "empresa" | "admin";
+  role:         UserRole;
 }
 
 interface UpdateSubscriptionInput {
@@ -104,13 +108,12 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   });
   if (user) return mapRowToUser(user);
 
-  // Fallback para emails con mayúsculas en BD legacy
   const users = await prisma.users.findMany({
     where: { email: { contains: lowerEmail } },
     take: 2,
     select: baseUserSelect,
   });
-  const match = users.find((u) => u.email.toLowerCase() === lowerEmail);
+  const match = users.find((currentUser) => currentUser.email.toLowerCase() === lowerEmail);
   return match ? mapRowToUser(match) : null;
 }
 
