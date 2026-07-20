@@ -16,7 +16,7 @@ const protectedExports = [
   },
   {
     path: "src/app/api/tax/declarations/support/xlsx/route.ts",
-    feature: "Feature.CSV_EXPORT",
+    feature: "Feature.XLSX_EXPORT",
   },
   {
     path: "src/app/api/tax/declarations/f22-crypto/pdf/route.ts",
@@ -56,6 +56,15 @@ test("public registration route does not expose the user directory", () => {
   assert.ok(authIndex >= 0, "GET /api/users must authenticate");
   assert.ok(roleIndex > authIndex, "GET /api/users must require admin role");
   assert.ok(queryIndex > roleIndex, "authorization must run before querying users");
+});
+
+test("public registration always assigns the personal role", () => {
+  const source = read("src/app/api/users/route.ts");
+
+  assert.match(source, /PUBLIC_REGISTRATION_ROLE = "personal"/);
+  assert.match(source, /const role = PUBLIC_REGISTRATION_ROLE/);
+  assert.doesNotMatch(source, /isValidRole\(body\.role\)/);
+  assert.doesNotMatch(source, /role:\s*body\.role/);
 });
 
 test("expert mode requires an owner, admin or active professional mandate", () => {
