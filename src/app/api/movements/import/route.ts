@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ok, fail, serverError } from "@/shared/apiResponse";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import { requireAuth } from "@/shared";
 
 // Force dynamic rendering because routes use request.headers/cookies
@@ -112,6 +113,9 @@ function validateInventory(
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado", 401);
+
+  const subscriptionCheck = requireActiveSubscription(auth.user);
+  if (!subscriptionCheck.ok) return subscriptionCheck.response;
 
   try {
     const body = await request.json();
