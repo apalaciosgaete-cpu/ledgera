@@ -3,25 +3,32 @@ import type {
   BillingInterval,
   BillingPlan,
 } from "@/modules/billing/domain/billing";
+import { COMMERCIAL_PLANS } from "@/modules/billing/domain/commercialPlans";
 
 export type BillingPlanConfig = {
   plan: BillingPlan;
   name: string;
   description: string;
   amount: number;
+  netAmount: number;
+  taxAmount: number;
   currency: BillingCurrency;
   interval: BillingInterval;
+  sellable: boolean;
   features: string[];
 };
 
 export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
   BASICO: {
     plan: "BASICO",
-    name: "Gratuito",
+    name: COMMERCIAL_PLANS.FREE.label,
     description: "Plan inicial para conocer cómo LEDGERA ordena tus operaciones.",
-    amount: 0,
+    amount: COMMERCIAL_PLANS.FREE.monthly.grossAmount,
+    netAmount: COMMERCIAL_PLANS.FREE.monthly.netAmount,
+    taxAmount: COMMERCIAL_PLANS.FREE.monthly.taxAmount,
     currency: "CLP",
     interval: "MONTHLY",
+    sellable: true,
     features: [
       "Análisis preliminar de hasta 50 movimientos",
       "Una fuente de importación",
@@ -31,11 +38,14 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
   },
   PERSONAL: {
     plan: "PERSONAL",
-    name: "Personal",
+    name: COMMERCIAL_PLANS.PERSONAL.label,
     description: "Plan para traders, inversionistas y personas con actividad cripto.",
-    amount: 7128,
+    amount: COMMERCIAL_PLANS.PERSONAL.monthly.grossAmount,
+    netAmount: COMMERCIAL_PLANS.PERSONAL.monthly.netAmount,
+    taxAmount: COMMERCIAL_PLANS.PERSONAL.monthly.taxAmount,
     currency: "CLP",
     interval: "MONTHLY",
+    sellable: true,
     features: [
       "Múltiples fuentes de importación",
       "Historial cripto continuo",
@@ -47,11 +57,14 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
   },
   PROFESIONAL: {
     plan: "PROFESIONAL",
-    name: "Profesional",
+    name: COMMERCIAL_PLANS.PROFESIONAL.label,
     description: "Plan para contadores y asesores que administran varios contribuyentes.",
-    amount: 35688,
+    amount: COMMERCIAL_PLANS.PROFESIONAL.monthly.grossAmount,
+    netAmount: COMMERCIAL_PLANS.PROFESIONAL.monthly.netAmount,
+    taxAmount: COMMERCIAL_PLANS.PROFESIONAL.monthly.taxAmount,
     currency: "CLP",
     interval: "MONTHLY",
+    sellable: true,
     features: [
       "Todo lo de Personal",
       "5 clientes incluidos",
@@ -64,9 +77,12 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
     plan: "EMPRESA",
     name: "Empresa (legado)",
     description: "Plan histórico sin nuevas contrataciones; se mantiene para compatibilidad de datos.",
-    amount: 35688,
+    amount: COMMERCIAL_PLANS.PROFESIONAL.monthly.grossAmount,
+    netAmount: COMMERCIAL_PLANS.PROFESIONAL.monthly.netAmount,
+    taxAmount: COMMERCIAL_PLANS.PROFESIONAL.monthly.taxAmount,
     currency: "CLP",
     interval: "MONTHLY",
+    sellable: false,
     features: [
       "Compatibilidad con suscripciones históricas",
       "Acceso equivalente al plan Profesional",
@@ -95,7 +111,7 @@ export function assertPaidBillingPlan(
 ): BillingPlanConfig {
   const config = getBillingPlanConfig(plan);
 
-  if (config.amount <= 0 || plan === "EMPRESA") {
+  if (config.amount <= 0 || !config.sellable) {
     throw new Error(
       plan === "EMPRESA"
         ? "El plan Empresa no admite nuevas contrataciones."
