@@ -7,10 +7,10 @@ import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
 import { buildUserScopeWhere } from "@/modules/identity/domain/accessPolicy";
 import { requireAuth } from "@/shared";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
-
+import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
 
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 type CreateMovementBody = {
   type?: MovementType;
   symbol?: string;
@@ -158,6 +158,8 @@ export async function POST(request: NextRequest) {
 
     const validation = validateSellInventory({ movements: allMovements, type, symbol, quantity, executedAt });
     if (!validation.ok) return fail(validation.message, 400);
+
+    await enforceMovementLimit({ userId: auth.user.id });
 
     const movement = await prisma.portfolioMovement.create({
       data: { type, symbol, quantity, priceUsd, feeUsd, executedAt, userId: auth.user.id },

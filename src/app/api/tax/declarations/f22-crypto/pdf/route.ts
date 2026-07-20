@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/shared";
 import { fail, serverError } from "@/shared/apiResponse";
+import { requireFeatureAccess } from "@/modules/subscription/application/requireFeatureAccess";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
 import {
   buildF22CryptoExtractPayload,
   parseF22CommercialYear,
@@ -15,6 +17,9 @@ export const maxDuration = 60;
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
+
+  const access = requireFeatureAccess(auth.user, Feature.DECLARATIONS);
+  if (!access.ok) return access.response;
 
   try {
     const commercialYear = parseF22CommercialYear(request.nextUrl.searchParams.get("year"));

@@ -7,7 +7,7 @@ export type AuthUser = {
   email: string;
   role: "personal" | "contador" | "empresa" | "admin";
   status?: "active" | "inactive" | "suspended";
-  subscriptionPlan?: "BASICO" | "PROFESIONAL" | "EMPRESA";
+  subscriptionPlan?: "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
   subscriptionExpiresAt?: string | null;
   twoFactorEnabled?: boolean;
   needsOnboarding?: boolean;

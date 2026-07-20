@@ -104,15 +104,15 @@ model BillingPayment {
   providerPaymentId String?
   checkoutId        String?
   status            String    @default("PENDING")
-  amount            Int
-  currency          String    @default("CLP")
-  description       String
+  amount             Int
+  currency           String    @default("CLP")
+  description        String
   paymentUrl        String?
   paidAt            DateTime?
-  failedAt          DateTime?
+  failedAt           DateTime?
   metadata           String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user         users                @relation(fields: [userId], references: [id], onDelete: Cascade)
   customer     BillingCustomer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
@@ -211,6 +211,8 @@ model users {
   timelineEvents             TimelineEvent[]
   taxCases                   TaxCase[]
   dataSubjectRequests        DataSubjectRequest[]
+  professionalClientLinks    ProfessionalClientAccess[] @relation("ProfessionalClientProfessional")
+  professionalAdvisorLinks   ProfessionalClientAccess[] @relation("ProfessionalClientClient")
 
   @@index([email], map: "idx_users_email")
   @@map("users")

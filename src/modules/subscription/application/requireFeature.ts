@@ -12,10 +12,19 @@ type RequireFeatureResult =
   | { ok: true }
   | { ok: false; response: NextResponse };
 
+type FeatureUser = {
+  role?: string | null;
+  subscriptionPlan?: string | null;
+};
+
 export function requireFeature(
-  user: { subscriptionPlan?: string | null },
+  user: FeatureUser,
   feature: Feature,
 ): RequireFeatureResult {
+  if (user.role === "admin") {
+    return { ok: true };
+  }
+
   if (canAccessFeature(user.subscriptionPlan, feature)) {
     return { ok: true };
   }

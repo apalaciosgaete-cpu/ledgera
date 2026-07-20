@@ -6,12 +6,12 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
-
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 type RawRow = Record<string, string>;
 
 type NormalizedMovement = {
@@ -245,6 +245,8 @@ export async function POST(req: NextRequest) {
 
         continue;
       }
+
+      await enforceMovementLimit({ userId: auth.user.id });
 
       const created = await prisma.portfolioMovement.create({
         data: {

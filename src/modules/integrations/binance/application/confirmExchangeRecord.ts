@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { confirmImport } from "../infrastructure/exchangeImportRepository";
 import { fetchHistoricalCryptoPrice } from "./fetchHistoricalCryptoPrice";
 import { assertPeriodOpen } from "@/modules/tax/domain/periodGuard";
+import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
 import type { NormalizedImportRecord } from "../domain/binanceTypes";
 
 export type ConfirmOverride = {
@@ -57,6 +58,8 @@ export async function confirmExchangeRecord(
   if (!isTransfer) {
     await assertPeriodOpen(occurredAt, record.userId);
   }
+
+  await enforceMovementLimit({ userId: record.userId });
 
   const movement = await prisma.portfolioMovement.create({
     data: {

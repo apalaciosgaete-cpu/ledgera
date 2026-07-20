@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
+import { canAccessFeature, Feature } from "@/modules/subscription/domain/planFeatures";
 import { Logo } from "@/components/brand/Logo";
 import { LogoutButton } from "@/components/navigation/LogoutButton";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
@@ -13,8 +14,8 @@ import { fonts } from "@/styles/tokens";
 
 const roleTokens: Record<string, { label: string; badgeBg: string; badgeColor: string; avatarGradient: string }> = {
   personal: { label: "Personal", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
-  contador: { label: "Profesional", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
-  empresa: { label: "Empresa", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
+  contador: { label: "Asesor", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
+  empresa: { label: "Organización", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
   admin: { label: "Admin", badgeBg: "rgba(196,99,74,0.14)", badgeColor: "var(--loss)", avatarGradient: "var(--accent)" },
 };
 
@@ -26,18 +27,36 @@ type PendingCheckout = {
   billing?: string;
 };
 
-const SIDEBAR_GROUPS: SidebarGroup[] = [
+const BASE_SIDEBAR_GROUPS: SidebarGroup[] = [
   { items: [{ href: "/panel", label: "Inicio" }] },
   { items: [{ href: "/origen-fondos", label: "Origen de Fondos" }] },
   { items: [{ href: "/cryptoactivos", label: "Activos" }] },
   { items: [{ href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" }] },
   { items: [{ href: "/declaraciones", label: "Declaraciones" }] },
+  { items: [{ href: "/accesos-profesionales", label: "Accesos profesionales" }] },
   { items: [{ href: "/configuracion", label: "Configuración" }] },
   { items: [{ href: "/ayuda", label: "Ayuda" }] },
 ];
 
-function Sidebar({ open, onClose, onLogout }: { open: boolean; onClose: () => void; onLogout: () => void }) {
+const PROFESSIONAL_GROUP: SidebarGroup = {
+  items: [{ href: "/profesional/clientes", label: "Clientes" }],
+};
+
+function Sidebar({
+  open,
+  onClose,
+  onLogout,
+  showProfessional,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onLogout: () => void;
+  showProfessional: boolean;
+}) {
   const pathname = usePathname();
+  const sidebarGroups = showProfessional
+    ? [BASE_SIDEBAR_GROUPS[0], PROFESSIONAL_GROUP, ...BASE_SIDEBAR_GROUPS.slice(1)]
+    : BASE_SIDEBAR_GROUPS;
 
   return (
     <>
@@ -48,7 +67,7 @@ function Sidebar({ open, onClose, onLogout }: { open: boolean; onClose: () => vo
           <button onClick={onClose} style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-faint)", cursor: "pointer", fontSize: 14, padding: "4px 9px", lineHeight: 1.4, fontFamily: fonts.body }}>✕</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
-          {SIDEBAR_GROUPS.map((group) => (
+          {sidebarGroups.map((group) => (
             <div key={group.items[0]?.href ?? "unknown"}>
               {group.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -117,6 +136,10 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const role = (user as { role?: string })?.role ?? "personal";
   const token = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
+  const showProfessional = role === "admin" || canAccessFeature(
+    user.subscriptionPlan,
+    Feature.EXPERT_MODE,
+  );
 
   async function handleLogout() {
     await logout();
@@ -125,7 +148,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="ledgera-protected-shell" style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: fonts.body }}>
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} onLogout={handleLogout} />
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} onLogout={handleLogout} showProfessional={showProfessional} />
       <header style={{ background: "var(--bg-sunken)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 50, minHeight: 60 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", minHeight: 60, padding: "0 20px" }}>
           <div style={{ justifySelf: "start" }}>

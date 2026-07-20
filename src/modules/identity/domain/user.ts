@@ -25,13 +25,6 @@ export interface User {
   country:              string | null;
 }
 
-export const PLAN_TO_ROLE: Record<SubscriptionPlan, UserRole> = {
-  BASICO:      "personal",
-  PERSONAL:    "personal",
-  PROFESIONAL: "contador",
-  EMPRESA:     "empresa",
-};
-
 export function isSubscriptionActive(user: User): boolean {
   if (!user.subscriptionExpiresAt) return false;
   return new Date(user.subscriptionExpiresAt) > new Date();

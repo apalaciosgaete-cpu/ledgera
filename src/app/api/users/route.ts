@@ -8,6 +8,7 @@ import {
   createUser,
   getUserByEmail,
 } from "@/modules/identity/infrastructure/userRepository";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { validatePasswordComplexity } from "@/modules/identity/application/password";
 import { hashPassword } from "@/modules/identity/application/passwordHash";
 import { sanitizeUser } from "@/modules/identity/application/sanitizeUser";
@@ -35,7 +36,17 @@ function resolveLegalVersion(value: unknown, fallback: string) {
   return candidate || fallback;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await getSessionFromRequest(request);
+
+  if (!auth) {
+    return fail("No autenticado.", 401);
+  }
+
+  if (auth.user.role !== "admin") {
+    return fail("Sin permisos para consultar el directorio de usuarios.", 403);
+  }
+
   try {
     const users = await getUsers();
 

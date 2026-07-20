@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { confirmImport } from "../infrastructure/exchangeImportRepository";
 import { fetchHistoricalCryptoPrice } from "./fetchHistoricalCryptoPrice";
+import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
 
 // Eventos que se auto-confirman sin intervención manual.
 const AUTO_CONFIRM_TYPES = new Set([
@@ -31,7 +32,7 @@ export type AutoConfirmResult = {
  * Auto-confirma las importaciones PENDING de Binance.
  *
  * SPOT_BUY / SPOT_SELL        → crea PortfolioMovement + CONFIRMED
- * EXTERNAL_DEPOSIT/WITHDRAW   → CONFIRMED sin movimiento (neutral)
+ * EXTERNAL_DEPOSIT/WITHDRAW   → crea movimiento de trazabilidad patrimonial
  * Todo lo demás               → REVIEW (aparece en tabla de excepciones)
  *
  * Sin assertPeriodOpen: la importación histórica debe funcionar
@@ -71,16 +72,15 @@ export async function autoConfirmImports(
 
       const normalized = JSON.parse(record.normalizedJson ?? "{}") as ParsedNormalized;
 
-      // ── Crear movimiento de portafolio ──
       const occurredAt  = new Date(normalized.occurredAt);
       const isTransfer  = eventType === "EXTERNAL_DEPOSIT" || eventType === "EXTERNAL_WITHDRAW";
       const isBtcQuoted = !isTransfer && normalized.quoteAsset === "BTC";
 
-      // Depósitos/retiros → precio histórico desde klines públicos.
-      // Pares BTC-cotizados (ETHBTC, SOLBTC…) → precio en BTC, no USD → convertir.
       const priceUsd = (isTransfer || isBtcQuoted)
         ? await fetchHistoricalCryptoPrice(normalized.symbol, occurredAt)
         : normalized.priceUsd;
+
+      await enforceMovementLimit({ userId });
 
       const movement = await prisma.portfolioMovement.create({
         data: {
