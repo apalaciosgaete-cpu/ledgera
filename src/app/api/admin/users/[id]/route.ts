@@ -1,19 +1,23 @@
 // src/app/api/admin/users/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = "force-dynamic";
-
+import {
+  isPlatformAuth,
+} from "@/modules/identity/application/requirePlatformRole";
+import {
+  requireAdminReauthentication,
+} from "@/modules/admin/application/adminReauthentication";
 import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import {
   deleteUser,
   getUserById,
 } from "@/modules/identity/infrastructure/userRepository";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+
+export const dynamic = "force-dynamic";
 
 type RouteContext = { params: { id: string } };
 
@@ -24,21 +28,8 @@ export async function DELETE(
   const csrfResponse = enforceCsrfProtection(req);
   if (csrfResponse) return csrfResponse;
 
-  const auth = await getSessionFromRequest(req);
-
-  if (!auth) {
-    return NextResponse.json(
-      { ok: false, message: "No autenticado", data: null },
-      { status: 401 },
-    );
-  }
-
-  if (auth.user.role !== "admin") {
-    return NextResponse.json(
-      { ok: false, message: "Sin permisos", data: null },
-      { status: 403 },
-    );
-  }
+  const auth = await requireAdminReauthentication(req);
+  if (!isPlatformAuth(auth)) return auth;
 
   const { id } = params;
 
@@ -96,6 +87,8 @@ export async function DELETE(
       ...getAuditRequestContext(req),
       metadata: {
         source: "api/admin/users/[id]",
+        reauthenticated: true,
+        sessionId: auth.session.id,
         deletedRole: user.role,
         deletedStatus: user.status,
         deletedSubscriptionPlan: user.subscriptionPlan,
