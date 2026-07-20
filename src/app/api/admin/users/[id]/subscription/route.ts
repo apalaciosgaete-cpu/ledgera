@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import {
   createAdminAuditLog,
@@ -13,10 +13,9 @@ import {
   updateUserSubscription,
 } from "@/modules/identity/infrastructure/userRepository";
 import type { SubscriptionPlan } from "@/modules/identity/domain/user";
-import { PLAN_TO_ROLE } from "@/modules/identity/domain/user";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 
-const VALID_PLANS: SubscriptionPlan[] = ["BASICO", "PROFESIONAL", "EMPRESA"];
+const VALID_PLANS: SubscriptionPlan[] = ["BASICO", "PERSONAL", "PROFESIONAL"];
 type RouteContext = { params: { id: string } };
 
 export async function PATCH(
@@ -152,8 +151,7 @@ export async function PATCH(
         source: "api/admin/users/[id]/subscription",
         previousPlan: targetUser.subscriptionPlan,
         newPlan: updated.subscriptionPlan,
-        previousRole: targetUser.role,
-        newRole: updated.role,
+        accountRole: updated.role,
         previousExpiresAt: targetUser.subscriptionExpiresAt,
         subscriptionExpiresAt: updated.subscriptionExpiresAt,
       },
@@ -161,9 +159,7 @@ export async function PATCH(
 
     return NextResponse.json({
       ok: true,
-      message: `Suscripción actualizada. Plan: ${plan} → Rol: ${
-        PLAN_TO_ROLE[plan as SubscriptionPlan]
-      }`,
+      message: `Suscripción actualizada. Plan: ${plan}. El rol de cuenta se mantiene sin cambios.`,
       data: {
         id: updated.id,
         email: updated.email,
