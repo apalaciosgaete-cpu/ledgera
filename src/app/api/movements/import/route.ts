@@ -3,12 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, fail, serverError } from "@/shared/apiResponse";
 import { rebuildTaxEvents } from "@/modules/tax/application/rebuildTaxEvents";
+import { enforceMovementLimit } from "@/modules/subscription/application/enforceMovementLimit";
 import { requireAuth } from "@/shared";
 
-
 // Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
-// ─── Types ────────────────────────────────────────────────────────────────────
+export const dynamic = "force-dynamic";
 
 type ImportMovementInput = {
   type:       "BUY" | "SELL";
@@ -31,8 +30,6 @@ type NegativeInventoryDetail = {
   missingQuantity: number;
 };
 
-// ─── Normalización ────────────────────────────────────────────────────────────
-
 function normalizeMovement(movement: ImportMovementInput): ImportMovementInput {
   return {
     type:       movement.type,
@@ -44,8 +41,6 @@ function normalizeMovement(movement: ImportMovementInput): ImportMovementInput {
   };
 }
 
-// ─── Validación por fila ──────────────────────────────────────────────────────
-
 function validateMovement(movement: ImportMovementInput, rowIndex: number) {
   if (!["BUY", "SELL"].includes(movement.type)) throw new Error(`INVALID_MOVEMENT_TYPE:${rowIndex}`);
   if (!movement.symbol)                          throw new Error(`SYMBOL_REQUIRED:${rowIndex}`);
@@ -54,11 +49,9 @@ function validateMovement(movement: ImportMovementInput, rowIndex: number) {
   if ((movement.feeUsd ?? 0) < 0)                throw new Error(`INVALID_FEE:${rowIndex}`);
 }
 
-// ─── Validación FIFO ──────────────────────────────────────────────────────────
-
 function validateInventory(
   existingMovements: Array<{ type: string; symbol: string; quantity: number; priceUsd: number }>,
-  importedMovements: ImportMovementInput[]
+  importedMovements: ImportMovementInput[],
 ) {
   const inventory = new Map<string, InventoryLot[]>();
 
@@ -116,8 +109,6 @@ function validateInventory(
   }
 }
 
-// ─── Endpoint POST ────────────────────────────────────────────────────────────
-
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado", 401);
@@ -138,8 +129,8 @@ export async function POST(request: NextRequest) {
     const years = [
       ...new Set(
         importedMovements.map((m) =>
-          new Date(m.executedAt ?? new Date()).getUTCFullYear()
-        )
+          new Date(m.executedAt ?? new Date()).getUTCFullYear(),
+        ),
       ),
     ];
 
@@ -158,6 +149,13 @@ export async function POST(request: NextRequest) {
     });
 
     validateInventory(existingMovements, importedMovements);
+
+    if (importedMovements.length > 0) {
+      await enforceMovementLimit({
+        userId: auth.user.id,
+        requestedCount: importedMovements.length,
+      });
+    }
 
     await prisma.$transaction(async (tx) => {
       for (const movement of importedMovements) {
@@ -188,7 +186,7 @@ export async function POST(request: NextRequest) {
         warnings:         result.data?.warnings ?? [],
         taxEngineVersion: result.data?.taxEngineVersion,
       },
-      "Movimientos importados correctamente."
+      "Movimientos importados correctamente.",
     );
   } catch (error) {
     console.error("[import/route]", error);
@@ -198,7 +196,7 @@ export async function POST(request: NextRequest) {
       return fail(
         `Inventario negativo para ${detail.symbol} en fila ${detail.rowIndex}. Faltan ${detail.missingQuantity.toFixed(8)} unidades.`,
         400,
-        detail
+        detail,
       );
     }
 
@@ -217,6 +215,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return serverError("Error interno importando movimientos.");
+    return serverError(error);
   }
 }
