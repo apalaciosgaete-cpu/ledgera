@@ -58,12 +58,12 @@ test("public registration route does not expose the user directory", () => {
   assert.ok(queryIndex > roleIndex, "authorization must run before querying users");
 });
 
-test("professional tax case access cannot select another tenant", () => {
+test("expert mode is capability-gated and cannot select another tenant", () => {
   const source = read("src/app/api/expert/tax-cases/route.ts");
 
-  assert.match(source, /const isAdmin = user\.role === "admin"/);
-  assert.match(source, /const isProfessional = user\.role === "contador"/);
-  assert.match(source, /userId: isAdmin \? requestedUserId : user\.id/);
+  assert.match(source, /requireFeatureAccess\(auth\.user, Feature\.EXPERT_MODE\)/);
+  assert.match(source, /const isAdmin = auth\.user\.role === "admin"/);
+  assert.match(source, /userId: isAdmin \? requestedUserId : auth\.user\.id/);
 });
 
 test("administrators bypass commercial feature checks explicitly", () => {
@@ -71,4 +71,16 @@ test("administrators bypass commercial feature checks explicitly", () => {
 
   assert.match(source, /user\.role === "admin"/);
   assert.match(source, /return \{ ok: true \}/);
+});
+
+test("subscription updates do not rewrite operational roles", () => {
+  const repositorySource = read("src/modules/identity/infrastructure/userRepository.ts");
+  const routeSource = read("src/app/api/admin/users/[id]/subscription/route.ts");
+  const domainSource = read("src/modules/identity/domain/user.ts");
+
+  assert.doesNotMatch(repositorySource, /PLAN_TO_ROLE/);
+  assert.doesNotMatch(domainSource, /PLAN_TO_ROLE/);
+  assert.doesNotMatch(routeSource, /PLAN_TO_ROLE/);
+  assert.match(routeSource, /"BASICO", "PERSONAL", "PROFESIONAL"/);
+  assert.doesNotMatch(routeSource, /const VALID_PLANS[^\n]*EMPRESA/);
 });
