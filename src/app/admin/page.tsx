@@ -4,14 +4,20 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
+import { AdminReauthenticationModal } from "@/components/admin/AdminReauthenticationModal";
 import { Logo } from "@/components/brand/Logo";
-import { fonts, radius, shadows } from "@/styles/tokens";
+import {
+  clearAdminReauthentication,
+  getAdminReauthenticationHeaders,
+} from "@/modules/admin/client/adminReauthenticationClient";
 import { httpClient, isHttpClientError } from "@/shared/http/httpClient";
+import { fonts, radius, shadows } from "@/styles/tokens";
 
 type SubscriptionPlan = "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
 type SelectablePlan = Exclude<SubscriptionPlan, "EMPRESA">;
 type UserStatus = "active" | "inactive" | "suspended";
-type UserRole = "personal" | "contador" | "empresa" | "admin";
+type UserRole = "personal" | "contador" | "empresa" | "support" | "admin";
+type CriticalAction = () => Promise<void>;
 
 type AdminUser = {
   id: string;
@@ -53,6 +59,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   personal: "Cuenta personal",
   contador: "Contador",
   empresa: "Empresa (legado)",
+  support: "Soporte limitado",
   admin: "Administrador",
 };
 
@@ -114,6 +121,7 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<SelectablePlan>("PERSONAL");
   const [daysToAdd, setDaysToAdd] = useState(30);
+  const [pendingCriticalAction, setPendingCriticalAction] = useState<CriticalAction | null>(null);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -157,13 +165,47 @@ export default function AdminPage() {
     return { total: users.length, active, suspended, expired };
   }, [users]);
 
-  async function toggleStatus(user: AdminUser) {
+  function queueCriticalAction(action: CriticalAction) {
+    const headers = getAdminReauthenticationHeaders();
+
+    if (!headers) {
+      setPendingCriticalAction(() => action);
+      return;
+    }
+
+    void action();
+  }
+
+  function criticalHeaders() {
+    const headers = getAdminReauthenticationHeaders();
+    if (!headers) {
+      throw new Error("Reautenticación administrativa requerida.");
+    }
+    return headers;
+  }
+
+  function handleCriticalError(currentError: unknown, action: CriticalAction, fallback: string) {
+    if (
+      isHttpClientError(currentError) &&
+      (currentError.code === "ADMIN_REAUTH_REQUIRED" || currentError.status === 428)
+    ) {
+      clearAdminReauthentication();
+      setPendingCriticalAction(() => action);
+      return;
+    }
+
+    setError(errorMessage(currentError, fallback));
+  }
+
+  async function toggleStatusAuthorized(user: AdminUser) {
     const status: UserStatus = user.status === "active" ? "suspended" : "active";
+    const retry = () => toggleStatusAuthorized(user);
     setActionLoading(`status:${user.id}`);
 
     try {
       await httpClient<ApiResponse<AdminUser>>(`/api/admin/users/${user.id}/status`, {
         method: "PATCH",
+        headers: criticalHeaders(),
         body: { status },
       });
 
@@ -172,7 +214,7 @@ export default function AdminPage() {
       );
       setToast(`Estado de ${user.email} actualizado.`);
     } catch (currentError) {
-      setError(errorMessage(currentError, "No fue posible actualizar el estado."));
+      handleCriticalError(currentError, retry, "No fue posible actualizar el estado.");
     } finally {
       setActionLoading(null);
     }
@@ -184,48 +226,63 @@ export default function AdminPage() {
     setDaysToAdd(30);
   }
 
-  async function updateSubscription() {
+  async function updateSubscriptionAuthorized() {
     if (!editingUser) return;
-    setActionLoading(`subscription:${editingUser.id}`);
+    const target = editingUser;
+    const retry = () => updateSubscriptionAuthorized();
+    setActionLoading(`subscription:${target.id}`);
 
     try {
       await httpClient<ApiResponse<AdminUser>>(
-        `/api/admin/users/${editingUser.id}/subscription`,
+        `/api/admin/users/${target.id}/subscription`,
         {
           method: "PATCH",
+          headers: criticalHeaders(),
           body: { plan: selectedPlan, daysToAdd },
         },
       );
 
       setEditingUser(null);
-      setToast(`Suscripción de ${editingUser.email} actualizada.`);
+      setToast(`Suscripción de ${target.email} actualizada.`);
       await loadDashboard();
     } catch (currentError) {
-      setError(errorMessage(currentError, "No fue posible actualizar la suscripción."));
+      handleCriticalError(currentError, retry, "No fue posible actualizar la suscripción.");
     } finally {
       setActionLoading(null);
     }
   }
 
-  async function deleteUser(user: AdminUser) {
-    const confirmed = window.confirm(
-      `Esta acción eliminará la cuenta ${user.email}. ¿Deseas continuar?`,
-    );
-    if (!confirmed) return;
-
+  async function deleteUserAuthorized(user: AdminUser) {
+    const retry = () => deleteUserAuthorized(user);
     setActionLoading(`delete:${user.id}`);
 
     try {
       await httpClient<ApiResponse<{ id: string }>>(`/api/admin/users/${user.id}`, {
         method: "DELETE",
+        headers: criticalHeaders(),
       });
       setUsers((current) => current.filter((item) => item.id !== user.id));
       setToast(`Cuenta ${user.email} eliminada.`);
     } catch (currentError) {
-      setError(errorMessage(currentError, "No fue posible eliminar la cuenta."));
+      handleCriticalError(currentError, retry, "No fue posible eliminar la cuenta.");
     } finally {
       setActionLoading(null);
     }
+  }
+
+  function requestDelete(user: AdminUser) {
+    const confirmed = window.confirm(
+      `Esta acción eliminará la cuenta ${user.email}. ¿Deseas continuar?`,
+    );
+    if (!confirmed) return;
+
+    queueCriticalAction(() => deleteUserAuthorized(user));
+  }
+
+  async function runPendingCriticalAction() {
+    const action = pendingCriticalAction;
+    setPendingCriticalAction(null);
+    if (action) await action();
   }
 
   return (
@@ -326,7 +383,7 @@ export default function AdminPage() {
           <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--border)" }}>
             <strong>Usuarios</strong>
             <span style={{ color: "var(--text-soft)", fontSize: 12, marginLeft: 8 }}>
-              Empresa se conserva únicamente como plan legado.
+              Las acciones críticas requieren contraseña y 2FA. Empresa se conserva únicamente como plan legado.
             </span>
           </div>
 
@@ -347,6 +404,7 @@ export default function AdminPage() {
                 <tbody>
                   {users.map((user) => {
                     const expired = isExpired(user.subscriptionExpiresAt);
+                    const immutableAdmin = user.role === "admin";
                     return (
                       <tr key={user.id} style={{ borderTop: "1px solid var(--border)" }}>
                         <td style={{ padding: "12px 14px" }}>
@@ -365,7 +423,7 @@ export default function AdminPage() {
                             <button
                               type="button"
                               style={buttonStyle}
-                              disabled={Boolean(actionLoading)}
+                              disabled={Boolean(actionLoading) || immutableAdmin}
                               onClick={() => openSubscriptionEditor(user)}
                             >
                               Suscripción
@@ -373,16 +431,16 @@ export default function AdminPage() {
                             <button
                               type="button"
                               style={buttonStyle}
-                              disabled={Boolean(actionLoading) || user.role === "admin"}
-                              onClick={() => void toggleStatus(user)}
+                              disabled={Boolean(actionLoading) || immutableAdmin}
+                              onClick={() => queueCriticalAction(() => toggleStatusAuthorized(user))}
                             >
                               {actionLoading === `status:${user.id}` ? "Procesando…" : user.status === "active" ? "Suspender" : "Activar"}
                             </button>
                             <button
                               type="button"
                               style={{ ...buttonStyle, color: "var(--loss)" }}
-                              disabled={Boolean(actionLoading) || user.role === "admin"}
-                              onClick={() => void deleteUser(user)}
+                              disabled={Boolean(actionLoading) || immutableAdmin}
+                              onClick={() => requestDelete(user)}
                             >
                               {actionLoading === `delete:${user.id}` ? "Eliminando…" : "Eliminar"}
                             </button>
@@ -449,13 +507,20 @@ export default function AdminPage() {
                 type="button"
                 style={{ ...buttonStyle, background: "var(--accent)", color: "var(--accent-contrast)" }}
                 disabled={Boolean(actionLoading)}
-                onClick={() => void updateSubscription()}
+                onClick={() => queueCriticalAction(updateSubscriptionAuthorized)}
               >
                 {actionLoading === `subscription:${editingUser.id}` ? "Guardando…" : "Guardar"}
               </button>
             </div>
           </div>
         </div>
+      ) : null}
+
+      {pendingCriticalAction ? (
+        <AdminReauthenticationModal
+          onAuthenticated={runPendingCriticalAction}
+          onClose={() => setPendingCriticalAction(null)}
+        />
       ) : null}
     </main>
   );
