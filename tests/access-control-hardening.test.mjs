@@ -117,3 +117,34 @@ test("client mandate authorization verifies permission and active relation", () 
   assert.match(source, /PROFESSIONAL_PERMISSION_REQUIRED/);
   assert.match(source, /TWO_FACTOR_REQUIRED/);
 });
+
+const movementCreationPaths = [
+  "src/app/api/movements/route.ts",
+  "src/app/api/portfolio/movements/route.ts",
+  "src/app/api/movements/import/route.ts",
+  "src/app/api/portfolio/import/confirm/route.ts",
+  "src/app/api/integrations/binance/imports/confirm/route.ts",
+  "src/app/api/integrations/binance/imports/bulk-confirm/route.ts",
+  "src/modules/integrations/binance/application/confirmExchangeRecord.ts",
+  "src/modules/integrations/binance/application/autoConfirmImports.ts",
+];
+
+for (const sourcePath of movementCreationPaths) {
+  test(`${sourcePath} enforces the free movement limit`, () => {
+    const source = read(sourcePath);
+    assert.match(source, /enforceMovementLimit/);
+  });
+}
+
+test("free movement limit is canonical and returns an upgrade error", () => {
+  const source = read(
+    "src/modules/subscription/application/enforceMovementLimit.ts",
+  );
+  const apiResponse = read("src/shared/apiResponse.ts");
+
+  assert.match(source, /FREE_MOVEMENT_LIMIT = 50/);
+  assert.match(source, /normalizePlan\(user\.subscription_plan\) !== Plan\.FREE/);
+  assert.match(source, /currentCount \+ requestedCount > FREE_MOVEMENT_LIMIT/);
+  assert.match(apiResponse, /code: "FREE_MOVEMENT_LIMIT"/);
+  assert.match(apiResponse, /status: 403/);
+});
