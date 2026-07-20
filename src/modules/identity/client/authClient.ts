@@ -5,7 +5,7 @@ import { httpClient } from "@/shared/http/httpClient";
 export type AuthUser = {
   id: string;
   email: string;
-  role: "personal" | "contador" | "empresa" | "admin";
+  role: "personal" | "contador" | "empresa" | "support" | "admin";
   status?: "active" | "inactive" | "suspended";
   subscriptionPlan?: "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
   subscriptionExpiresAt?: string | null;
