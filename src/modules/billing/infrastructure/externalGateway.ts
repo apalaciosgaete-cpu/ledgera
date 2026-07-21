@@ -1,6 +1,5 @@
 import { optionalEnv, requireEnv } from "@/lib/env";
 import type {
-  BillingCheckoutPlan,
   BillingInterval,
   BillingProvider,
 } from "@/modules/billing/domain/checkout";
@@ -8,7 +7,7 @@ import type {
 type ExternalGatewayCheckoutInput = {
   provider: BillingProvider;
   paymentId: string;
-  plan: BillingCheckoutPlan;
+  plan: string;
   interval: BillingInterval;
   amount: number;
   netAmount: number;
