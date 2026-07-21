@@ -25,13 +25,37 @@ type ClientAccess = {
   };
 };
 
+type ExtraSeatPrice = {
+  label: string;
+  currency: "CLP";
+  interval: "MONTHLY";
+  netAmount: number;
+  taxAmount: number;
+  amount: number;
+};
+
 type ClientsResponse = {
   ok: boolean;
   data: {
     includedSeats: number;
+    purchasedSeats: number;
+    totalSeats: number;
+    activeSeatSubscriptions: number;
+    nextSeatExpirationAt: string | null;
     occupiedSeats: number;
     availableSeats: number;
+    extraSeatPrice: ExtraSeatPrice;
     clients: ClientAccess[];
+  };
+};
+
+type SeatCheckoutResponse = {
+  ok: boolean;
+  data: {
+    paymentId: string;
+    checkoutId: string | null;
+    url: string;
+    price: ExtraSeatPrice;
   };
 };
 
@@ -51,11 +75,20 @@ function formatDate(value: string | null) {
   });
 }
 
+function formatClp(value: number) {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 export default function ProfessionalClientsPage() {
   const [data, setData] = useState<ClientsResponse["data"] | null>(null);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [buyingSeat, setBuyingSeat] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -110,6 +143,34 @@ export default function ProfessionalClientsPage() {
     }
   }
 
+  async function buyExtraSeat() {
+    setBuyingSeat(true);
+    setMessage(null);
+
+    try {
+      const response = await httpClient<SeatCheckoutResponse>(
+        "/api/billing/professional-client-seat/checkout",
+        { method: "POST" },
+      );
+
+      if (!response.data.url) {
+        throw new Error("La pasarela no devolvió una URL de pago.");
+      }
+
+      window.location.assign(response.data.url);
+    } catch (error) {
+      setMessage({
+        ok: false,
+        text: isHttpClientError(error)
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "No fue posible iniciar el pago del cupo adicional.",
+      });
+      setBuyingSeat(false);
+    }
+  }
+
   async function revokeClient(client: ClientAccess) {
     setActionId(client.id);
     setMessage(null);
@@ -158,9 +219,11 @@ export default function ProfessionalClientsPage() {
         </div>
       ) : null}
 
-      <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))" }}>
+      <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))" }}>
         {[
-          ["Clientes incluidos", data?.includedSeats ?? "—"],
+          ["Cupos incluidos", data?.includedSeats ?? "—"],
+          ["Cupos adicionales", data?.purchasedSeats ?? "—"],
+          ["Capacidad total", data?.totalSeats ?? "—"],
           ["Cupos ocupados", data?.occupiedSeats ?? "—"],
           ["Cupos disponibles", data?.availableSeats ?? "—"],
         ].map(([label, value]) => (
@@ -169,6 +232,32 @@ export default function ProfessionalClientsPage() {
             <strong style={{ color: "var(--text)", fontSize: 24 }}>{loading ? "…" : value}</strong>
           </article>
         ))}
+      </section>
+
+      <section style={{ alignItems: "center", background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "space-between", padding: 18 }}>
+        <div>
+          <strong style={{ color: "var(--text)", display: "block", fontSize: 15 }}>
+            Cliente adicional Profesional
+          </strong>
+          <span style={{ color: "var(--text-soft)", display: "block", fontSize: 12, marginTop: 5 }}>
+            {data?.extraSeatPrice
+              ? `${formatClp(data.extraSeatPrice.netAmount)} + IVA al mes · total ${formatClp(data.extraSeatPrice.amount)}`
+              : "$4.990 + IVA al mes"}
+          </span>
+          {data?.nextSeatExpirationAt ? (
+            <span style={{ color: "var(--text-faint)", display: "block", fontSize: 11, marginTop: 4 }}>
+              Próximo vencimiento de cupo: {formatDate(data.nextSeatExpirationAt)}
+            </span>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          onClick={() => void buyExtraSeat()}
+          disabled={buyingSeat}
+          style={{ background: "var(--accent)", border: 0, borderRadius: 10, color: "var(--accent-contrast)", cursor: buyingSeat ? "wait" : "pointer", fontWeight: 900, minHeight: 42, padding: "0 17px" }}
+        >
+          {buyingSeat ? "Abriendo pago…" : "Contratar cliente adicional"}
+        </button>
       </section>
 
       <form onSubmit={inviteClient} style={{ alignItems: "end", background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, display: "grid", gap: 12, gridTemplateColumns: "minmax(220px,1fr) auto", padding: 18 }}>
@@ -183,7 +272,7 @@ export default function ProfessionalClientsPage() {
             style={{ background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: 10, color: "var(--text)", minHeight: 44, padding: "0 12px" }}
           />
         </label>
-        <button type="submit" disabled={submitting || (data?.availableSeats ?? 0) <= 0} style={{ background: "var(--accent)", border: 0, borderRadius: 10, color: "var(--accent-contrast)", cursor: submitting ? "wait" : "pointer", fontWeight: 900, minHeight: 44, padding: "0 18px" }}>
+        <button type="submit" disabled={submitting || (data?.availableSeats ?? 0) <= 0} style={{ background: "var(--accent)", border: 0, borderRadius: 10, color: "var(--accent-contrast)", cursor: submitting ? "wait" : "pointer", fontWeight: 900, minHeight: 44, padding: "0 18px", opacity: (data?.availableSeats ?? 0) <= 0 ? 0.55 : 1 }}>
           {submitting ? "Enviando…" : "Invitar cliente"}
         </button>
       </form>
