@@ -1,12 +1,17 @@
 import { NextRequest } from "next/server";
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+
 import { connectBinanceAccount } from "@/modules/integrations/binance/application/connectBinanceAccount";
+import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 
+export const dynamic = "force-dynamic";
 
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(request);
+  if (csrfResponse) return csrfResponse;
+
   try {
     const auth = await getSessionFromRequest(request);
 
@@ -14,9 +19,12 @@ export async function POST(request: NextRequest) {
       return fail("No autorizado.", 401);
     }
 
+    const subscriptionCheck = requireActiveSubscription(auth.user);
+    if (!subscriptionCheck.ok) return subscriptionCheck.response;
+
     const body = await request.json();
 
-    const apiKey    = String(body.apiKey    ?? "").trim();
+    const apiKey = String(body.apiKey ?? "").trim();
     const apiSecret = String(body.apiSecret ?? "").trim();
 
     const result = await connectBinanceAccount({
@@ -31,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     return ok(
       {
-        status:     result.status,
+        status: result.status,
         connection: result.connection,
       },
       result.message,
