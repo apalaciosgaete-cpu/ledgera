@@ -11,44 +11,27 @@
   font-display: swap;
 }
 
-/* ─── Inter — Variable Font ───────────────────────────────────────────────── */
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
-
 /* ─── Reset ───────────────────────────────────────────────────────────────── */
 *, *::before, *::after {
-  font-family: 'Manrope', var(--font-body), 'Inter', system-ui, sans-serif;
+  font-family: 'Manrope', system-ui, sans-serif;
   box-sizing: border-box;
 }
 
 h1, h2, h3, h4, h5, h6,
 .font-display,
 .text-display {
-  font-family: 'Manrope', var(--font-display), 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Manrope', system-ui, sans-serif;
 }
 
 code, pre, kbd, samp,
 .font-mono {
-  font-family: var(--font-mono), 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 /* ─── Variables ───────────────────────────────────────────────────────────────
  * LEDGERA design system · paleta del landing principal.
- * `--font-display`, `--font-body` y `--font-mono` los inyecta next/font en <html>;
- * aquí declaramos los tokens de color, radio, sombra y la compatibilidad tipográfica. */
+ * `--font-mono` lo inyecta next/font en <html>; Manrope se sirve localmente.
+ * Aquí declaramos los tokens de color, radio, sombra y la compatibilidad tipográfica. */
 :root {
   /* Fondos: landing dark navy */
   --bg:               #020617;
@@ -71,7 +54,7 @@ code, pre, kbd, samp,
   --warn:             #FCD34D;
 
   /* Fallback tipográfico para código legacy que aún referencia --font-sans */
-  --font-sans:        'Manrope', var(--font-body), 'Inter', system-ui, sans-serif;
+  --font-sans:        'Manrope', system-ui, sans-serif;
 
   /* ── Compat: variables --color-* legadas remapeadas al sistema del landing.
    *    Se conservan para no romper componentes que aún las consumen; migrar
@@ -116,7 +99,7 @@ html, body {
   min-height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Manrope', var(--font-body), 'Inter', system-ui, sans-serif;
+  font-family: 'Manrope', system-ui, sans-serif;
 }
 
 a {
@@ -126,17 +109,17 @@ a {
 
 .text-body,
 .font-body {
-  font-family: 'Manrope', var(--font-body), 'Inter', system-ui, sans-serif;
+  font-family: 'Manrope', system-ui, sans-serif;
 }
 
 .ledgera-welcome,
 .ledgera-welcome * {
-  font-family: 'Manrope', var(--font-body), 'Inter', system-ui, sans-serif;
+  font-family: 'Manrope', system-ui, sans-serif;
 }
 
 .ledgera-welcome .font-display,
 .ledgera-welcome .text-display {
-  font-family: 'Manrope', var(--font-display), 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Manrope', system-ui, sans-serif;
 }
 
 .ledgera-welcome .font-mono,
@@ -144,7 +127,7 @@ a {
 .ledgera-welcome pre,
 .ledgera-welcome kbd,
 .ledgera-welcome samp {
-  font-family: var(--font-mono), 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 /* ─── Importaciones: kanban operativo ───────────────────────────────────────

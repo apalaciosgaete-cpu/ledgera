@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import "./landing-brand.css";
 import "./landing-brand-override.css";
@@ -10,19 +10,7 @@ import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 
 // ── LEDGERA design system · Propuesta B "Cierre" ──
-// Display: cifras destacadas, headlines, logo · Body: nav/texto/labels · Mono: montos, folios, tablas
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-display",
-  display: "swap",
-});
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-body",
-  display: "swap",
-});
+// Manrope se sirve localmente desde globals.css · Mono: montos, folios, hashes y tablas
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
@@ -134,7 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="es-CL"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${plexMono.variable}`}
+      className={plexMono.variable}
     >
       <body>
         <script

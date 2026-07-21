@@ -38,7 +38,7 @@ type AssetSummary = {
 type ApiResponse<T> = { ok: boolean; message: string; data: T };
 type VisibilityData = { symbols: string[] };
 
-const panelFont = "'Manrope', var(--font-body, 'Inter'), system-ui, sans-serif";
+const panelFont = "'Manrope', system-ui, sans-serif";
 const monoFont = "var(--font-mono, 'IBM Plex Mono'), ui-monospace, monospace";
 
 function formatClp(value: number | null | undefined) {

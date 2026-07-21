@@ -34,7 +34,7 @@
     </filter>
     <mask id="wordMask">
       <rect width="960" height="360" fill="black"/>
-      <g font-family="Inter, Arial Black, Arial, sans-serif" font-weight="900" font-size="148" letter-spacing="-22" fill="white">
+      <g font-family="Manrope, Arial Black, Arial, sans-serif" font-weight="900" font-size="148" letter-spacing="-22" fill="white">
         <text x="62" y="213">L</text><text x="174" y="213">E</text><text x="289" y="213">D</text><text x="419" y="213">G</text><text x="551" y="213">E</text><text x="666" y="213">R</text><text x="793" y="213">A</text>
       </g>
     </mask>
@@ -61,7 +61,7 @@
   </g>
   <ellipse cx="480" cy="236" rx="388" ry="54" fill="#38bdf8" opacity="0.18" filter="url(#softBlue)"/>
 
-  <g font-family="Inter, Arial Black, Arial, sans-serif" font-weight="900" font-size="148" letter-spacing="-22" filter="url(#shadow)">
+  <g font-family="Manrope, Arial Black, Arial, sans-serif" font-weight="900" font-size="148" letter-spacing="-22" filter="url(#shadow)">
     <g class="letter d0"><text class="depth" x="74" y="226">L</text><text class="depth2" x="69" y="221">L</text><text class="edge" x="62" y="213">L</text><text class="face" x="62" y="213">L</text></g>
     <g class="letter d1"><text class="depth" x="186" y="226">E</text><text class="depth2" x="181" y="221">E</text><text class="edge" x="174" y="213">E</text><text class="face" x="174" y="213">E</text></g>
     <g class="letter d2"><text class="depth" x="301" y="226">D</text><text class="depth2" x="296" y="221">D</text><text class="edge" x="289" y="213">D</text><text class="face" x="289" y="213">D</text></g>

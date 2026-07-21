@@ -69,9 +69,9 @@ export const semanticTones = {
 } as const;
 
 export const fonts = {
-  display: "'Manrope', var(--font-display, 'Space Grotesk'), system-ui, sans-serif",
-  body:    "'Manrope', var(--font-body, 'Inter'), system-ui, sans-serif",
-  mono:    "var(--font-mono, 'IBM Plex Mono'), ui-monospace, monospace",
+  display: "'Manrope', system-ui, sans-serif",
+  body:    "'Manrope', system-ui, sans-serif",
+  mono:    "var(--font-mono), ui-monospace, monospace",
 } as const;
 
 export const fontSize = {

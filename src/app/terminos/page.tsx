@@ -18,7 +18,7 @@ export default function TerminosPage() {
         minHeight: "100vh",
         background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 50%, var(--bg-elev) 100%)",
         color: "var(--text)",
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Manrope', system-ui, sans-serif",
       }}
     >
       {/* NAV */}

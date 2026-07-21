@@ -13,7 +13,7 @@
 
 ## Fundamento instalado
 
-- `src/app/layout.tsx`: fuentes vía `next/font/google` (Space Grotesk / Inter / IBM Plex Mono) → variables `--font-display`, `--font-body`, `--font-mono` en `<html>`.
+- `src/app/layout.tsx`: IBM Plex Mono vía `next/font/google` para datos técnicos; Manrope se sirve localmente y cubre display/body.
 - `tailwind.config.ts`: tokens de color (`bg`, `bg-elev`, `accent`, `gain`, `loss`, `warn`, …), `fontFamily` (`display`/`body`/`mono`) y `borderRadius` (`DEFAULT` 10px, `card` 12px).
 - `src/app/globals.css`: variables base del modo oscuro + remapeo de variables `--color-*` legadas al sistema actual.
 - `src/styles/tokens.ts`: fachada TypeScript para consumidores inline, sin paleta propia.

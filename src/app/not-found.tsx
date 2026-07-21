@@ -21,7 +21,7 @@ export default function NotFound() {
         alignItems: "center",
         justifyContent: "center",
         padding: "2rem",
-        fontFamily: "Inter, system-ui, sans-serif",
+        fontFamily: "Manrope, system-ui, sans-serif",
       }}
     >
       <section

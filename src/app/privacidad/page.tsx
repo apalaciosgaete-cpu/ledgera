@@ -6,7 +6,7 @@ import { openPrivacyPreferences } from "@/lib/privacy/consent";
 
 export default function PrivacidadPage() {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-elev)", color: "var(--text)", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-elev)", color: "var(--text)", fontFamily: "'Manrope', system-ui, sans-serif" }}>
       <nav
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.06)",

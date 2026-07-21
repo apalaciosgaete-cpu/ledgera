@@ -28,8 +28,8 @@ const config: Config = {
         warn: "var(--warn)",
       },
       fontFamily: {
-        display: ["var(--font-display)"],
-        body: ["var(--font-body)"],
+        display: ["Manrope", "system-ui", "sans-serif"],
+        body: ["Manrope", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)"],
       },
       borderRadius: {

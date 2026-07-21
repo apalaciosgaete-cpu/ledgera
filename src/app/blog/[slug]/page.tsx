@@ -78,7 +78,7 @@ export default async function BlogArticlePage({
   ];
 
   return (
-    <main style={{ fontFamily: "var(--font-body, 'Inter', system-ui, sans-serif)", background: "var(--bg-elev)", color: "var(--text)", minHeight: "100vh" }}>
+    <main style={{ fontFamily: "'Manrope', system-ui, sans-serif", background: "var(--bg-elev)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={schema} />
 
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(7,21,32,0.94)", backdropFilter: "blur(16px)", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "0 2.5rem", minHeight: "76px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

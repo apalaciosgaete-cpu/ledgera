@@ -15,7 +15,7 @@ export default function VerifyReportPage({ searchParams }: { searchParams: { fol
   const valid = isValidFolio(folio) && isValidHash(hash);
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--bg-sunken)", color: "var(--text)", display: "grid", placeItems: "center", padding: 24, fontFamily: "Inter, system-ui, sans-serif" }}>
+    <main style={{ minHeight: "100vh", background: "var(--bg-sunken)", color: "var(--text)", display: "grid", placeItems: "center", padding: 24, fontFamily: "Manrope, system-ui, sans-serif" }}>
       <section style={{ width: "min(760px, 100%)", background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 24, boxShadow: "0 24px 70px rgba(15,42,61,0.10)", padding: 28, display: "grid", gap: 18 }}>
         <header style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
           <div>

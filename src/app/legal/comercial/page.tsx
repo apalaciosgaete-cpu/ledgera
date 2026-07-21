@@ -11,7 +11,7 @@ export default function ComercialPage() {
         minHeight: "100vh",
         background: "linear-gradient(135deg, var(--bg-elev) 0%, var(--bg-elev) 50%, var(--bg-elev) 100%)",
         color: "var(--text)",
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Manrope', system-ui, sans-serif",
       }}
     >
       <nav
