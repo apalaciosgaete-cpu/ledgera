@@ -156,7 +156,7 @@ export default async function BlogArticlePage({
           }
 
           if (section.type === "callout") {
-            return <div key={`${section.type}-${index}`} style={{ margin: "1.5rem 0", padding: "1.25rem 1.5rem", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.24)", borderRadius: "14px", borderLeft: "4px solid var(--warn)" }}><p style={{ fontSize: "15px", color: "rgba(232,184,75,0.14)", margin: 0, lineHeight: 1.7 }}>{section.content as string}</p></div>;
+            return <div key={`${section.type}-${index}`} style={{ margin: "1.5rem 0", padding: "1.25rem 1.5rem", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.24)", borderRadius: "14px", borderLeft: "4px solid var(--warn)" }}><p style={{ fontSize: "15px", color: "var(--text-faint)", margin: 0, lineHeight: 1.7 }}>{section.content as string}</p></div>;
           }
 
           return null;
