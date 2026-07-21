@@ -1,24 +1,26 @@
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
-
 import { NextRequest, NextResponse } from "next/server";
 
-import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
-import { listAuditEvents } from "@/modules/audit/infrastructure/auditRepository";
+import {
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import {
   isValidAuditCategory,
   isValidAuditResult,
   isValidAuditSeverity,
 } from "@/modules/audit/domain/audit";
+import { listAuditEvents } from "@/modules/audit/infrastructure/auditRepository";
+import { requireProfessionalClientAccess } from "@/modules/professional/application/requireProfessionalClientAccess";
+import { ProfessionalPermission } from "@/modules/professional/domain/clientAccess";
+import { requireAuth } from "@/shared";
+import { fail, serverError } from "@/shared/apiResponse";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const auth = await getSessionFromRequest(req);
-
-  if (!auth) {
-    return NextResponse.json(
-      { ok: false, message: "No autenticado", data: null },
-      { status: 401 },
-    );
+  const auth = await requireAuth(req);
+  if (!auth || auth instanceof NextResponse) {
+    return fail("No autenticado.", 401);
   }
 
   try {
@@ -33,12 +35,21 @@ export async function GET(req: NextRequest) {
 
     const isAdmin = auth.user.role === "admin";
     const requestedUserId = userId || (isAdmin ? undefined : auth.user.id);
+    let accessScope: "OWNER" | "ADMIN" | "ADMIN_ALL" | "MANDATE" = isAdmin && !requestedUserId
+      ? "ADMIN_ALL"
+      : "OWNER";
+    let mandateId: string | undefined;
 
-    if (userId && !isAdmin && userId !== auth.user.id) {
-      return NextResponse.json(
-        { ok: false, message: "Sin permisos", data: null },
-        { status: 403 },
+    if (requestedUserId) {
+      const access = await requireProfessionalClientAccess(
+        auth.user,
+        requestedUserId,
+        ProfessionalPermission.VIEW_AUDIT,
       );
+      if (!access.ok) return access.response;
+
+      accessScope = access.scope;
+      mandateId = access.mandateId;
     }
 
     const events = await listAuditEvents({
@@ -51,29 +62,42 @@ export async function GET(req: NextRequest) {
       limit: 100,
     });
 
+    if (accessScope === "MANDATE" && requestedUserId) {
+      await createAdminAuditLog({
+        action: "PROFESSIONAL_CLIENT_DATA_ACCESSED",
+        actorId: auth.user.id,
+        actorEmail: auth.user.email,
+        targetUserId: requestedUserId,
+        ...getAuditRequestContext(req),
+        metadata: {
+          source: "api/audit/events",
+          mandateId,
+          permission: ProfessionalPermission.VIEW_AUDIT,
+        },
+      });
+    }
+
     return NextResponse.json({
       ok: true,
       message: "Eventos de auditoría obtenidos.",
-      data: events.map((event) => ({
-        id: event.id,
-        userId: event.userId,
-        actorId: event.actorId,
-        category: event.category,
-        severity: event.severity,
-        event: event.event,
-        description: event.description,
-        result: event.result,
-        entityType: event.entityType,
-        entityId: event.entityId,
-        createdAt: event.createdAt.toISOString(),
-      })),
+      data: {
+        accessScope,
+        events: events.map((event) => ({
+          id: event.id,
+          userId: event.userId,
+          actorId: event.actorId,
+          category: event.category,
+          severity: event.severity,
+          event: event.event,
+          description: event.description,
+          result: event.result,
+          entityType: event.entityType,
+          entityId: event.entityId,
+          createdAt: event.createdAt.toISOString(),
+        })),
+      },
     });
   } catch (error) {
-    console.error("[audit/events GET]", error);
-
-    return NextResponse.json(
-      { ok: false, message: "Error al obtener eventos de auditoría.", data: null },
-      { status: 500 },
-    );
+    return serverError(error);
   }
 }
