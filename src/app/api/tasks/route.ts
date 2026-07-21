@@ -1,18 +1,19 @@
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
-
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/shared";
-import { ok, fail, serverError } from "@/shared/apiResponse";
-import { getUserTasks } from "@/modules/tasks/application/getUserTasks";
 import { createTask } from "@/modules/tasks/application/createTask";
+import { getUserTasks } from "@/modules/tasks/application/getUserTasks";
 import {
   isValidTaskCategory,
   isValidTaskPriority,
   isValidTaskSource,
   isValidTaskStatus,
 } from "@/modules/tasks/domain/task";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { requireAuth } from "@/shared";
+import { ok, fail, serverError } from "@/shared/apiResponse";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -39,13 +40,13 @@ export async function GET(request: NextRequest) {
     }
 
     return ok(
-      result.tasks.map((t) => ({
-        ...t,
-        dueDate: t.dueDate?.toISOString() ?? null,
-        startedAt: t.startedAt?.toISOString() ?? null,
-        completedAt: t.completedAt?.toISOString() ?? null,
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
+      result.tasks.map((task) => ({
+        ...task,
+        dueDate: task.dueDate?.toISOString() ?? null,
+        startedAt: task.startedAt?.toISOString() ?? null,
+        completedAt: task.completedAt?.toISOString() ?? null,
+        createdAt: task.createdAt.toISOString(),
+        updatedAt: task.updatedAt.toISOString(),
       })),
       "Tareas obtenidas.",
     );
@@ -55,10 +56,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(request);
+  if (csrfResponse) return csrfResponse;
+
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) {
     return fail("No autorizado.", 401);
   }
+
+  const subscriptionCheck = requireActiveSubscription(auth.user);
+  if (!subscriptionCheck.ok) return subscriptionCheck.response;
 
   try {
     const body = (await request.json()) as {
