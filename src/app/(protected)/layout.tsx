@@ -6,20 +6,26 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthGuard } from "@/modules/identity/client/AuthGuard";
 import { useAuth } from "@/modules/identity/client/authContext";
-import { canAccessFeature, Feature } from "@/modules/subscription/domain/planFeatures";
+import {
+  canAccessFeature,
+  Feature,
+  getPlanLabel,
+} from "@/modules/subscription/domain/planFeatures";
 import { Logo } from "@/components/brand/Logo";
 import { LogoutButton } from "@/components/navigation/LogoutButton";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
+import { SubscriptionAccessBanner } from "@/components/subscription/SubscriptionAccessBanner";
 import { fonts } from "@/styles/tokens";
 
 const roleTokens: Record<string, { label: string; badgeBg: string; badgeColor: string; avatarGradient: string }> = {
   personal: { label: "Personal", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
   contador: { label: "Asesor", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
   empresa: { label: "Organización", badgeBg: "var(--accent-soft)", badgeColor: "var(--accent)", avatarGradient: "var(--accent)" },
+  support: { label: "Soporte", badgeBg: "rgba(75,155,110,0.14)", badgeColor: "var(--gain)", avatarGradient: "var(--accent)" },
   admin: { label: "Admin", badgeBg: "rgba(196,99,74,0.14)", badgeColor: "var(--loss)", avatarGradient: "var(--accent)" },
 };
 
-type SidebarLink = { href: string; label: string };
+type SidebarLink = { href: string; label: string; feature?: Feature };
 type SidebarGroup = { items: SidebarLink[] };
 
 type PendingCheckout = {
@@ -32,31 +38,40 @@ const BASE_SIDEBAR_GROUPS: SidebarGroup[] = [
   { items: [{ href: "/origen-fondos", label: "Origen de Fondos" }] },
   { items: [{ href: "/cryptoactivos", label: "Activos" }] },
   { items: [{ href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" }] },
-  { items: [{ href: "/declaraciones", label: "Declaraciones" }] },
+  { items: [{ href: "/declaraciones", label: "Declaraciones", feature: Feature.DECLARATIONS }] },
   { items: [{ href: "/accesos-profesionales", label: "Accesos profesionales" }] },
   { items: [{ href: "/configuracion", label: "Configuración" }] },
   { items: [{ href: "/ayuda", label: "Ayuda" }] },
 ];
 
 const PROFESSIONAL_GROUP: SidebarGroup = {
-  items: [{ href: "/profesional/clientes", label: "Clientes" }],
+  items: [{ href: "/profesional/clientes", label: "Clientes", feature: Feature.EXPERT_MODE }],
 };
 
 function Sidebar({
   open,
   onClose,
   onLogout,
-  showProfessional,
+  plan,
+  isAdmin,
 }: {
   open: boolean;
   onClose: () => void;
   onLogout: () => void;
-  showProfessional: boolean;
+  plan: string | null | undefined;
+  isAdmin: boolean;
 }) {
   const pathname = usePathname();
-  const sidebarGroups = showProfessional
+  const allGroups = isAdmin || canAccessFeature(plan, Feature.EXPERT_MODE)
     ? [BASE_SIDEBAR_GROUPS[0], PROFESSIONAL_GROUP, ...BASE_SIDEBAR_GROUPS.slice(1)]
     : BASE_SIDEBAR_GROUPS;
+  const sidebarGroups = allGroups
+    .map((group) => ({
+      items: group.items.filter(
+        (item) => !item.feature || isAdmin || canAccessFeature(plan, item.feature),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <>
@@ -111,7 +126,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   const isPanel = pathname === "/panel";
 
   useEffect(() => {
-    if (!user || pathname !== "/panel") return;
+    if (!user || pathname !== "/panel" || user.role === "support") return;
 
     const rawPendingCheckout = sessionStorage.getItem("pendingCheckout");
     if (!rawPendingCheckout) return;
@@ -131,15 +146,15 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router, user]);
 
-  if (!user) return null;
+  if (!user || user.role === "support") return null;
 
-  const role = (user as { role?: string })?.role ?? "personal";
+  const role = user.role ?? "personal";
   const token = roleTokens[role] ?? roleTokens.personal;
   const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "??";
-  const showProfessional = role === "admin" || canAccessFeature(
-    user.subscriptionPlan,
-    Feature.EXPERT_MODE,
-  );
+  const isAdmin = role === "admin";
+  const accountLabel = isAdmin
+    ? token.label
+    : `${token.label} · ${getPlanLabel(user.subscriptionPlan)}`;
 
   async function handleLogout() {
     await logout();
@@ -148,7 +163,13 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="ledgera-protected-shell" style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: fonts.body }}>
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} onLogout={handleLogout} showProfessional={showProfessional} />
+      <Sidebar
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onLogout={handleLogout}
+        plan={user.subscriptionPlan}
+        isAdmin={isAdmin}
+      />
       <header style={{ background: "var(--bg-sunken)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 50, minHeight: 60 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", minHeight: 60, padding: "0 20px" }}>
           <div style={{ justifySelf: "start" }}>
@@ -158,10 +179,11 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
             <Logo variant="light" size="md" showSubtitle />
           </Link>
           <div style={{ justifySelf: "end" }}>
-            <UserProfileDropdown name={user.email} initials={initials} avatarGradient={token.avatarGradient} badgeBg={token.badgeBg} badgeColor={token.badgeColor} roleLabel={token.label} isAdmin={role === "admin"} onLogout={handleLogout} />
+            <UserProfileDropdown name={user.email} initials={initials} avatarGradient={token.avatarGradient} badgeBg={token.badgeBg} badgeColor={token.badgeColor} roleLabel={accountLabel} isAdmin={isAdmin} onLogout={handleLogout} />
           </div>
         </div>
       </header>
+      <SubscriptionAccessBanner />
       <main className="ledgera-protected-content" style={{ maxWidth: isPanel ? "none" : "1400px", margin: "0 auto", padding: isPanel ? "0" : "20px 16px", minWidth: 0, minHeight: "calc(100vh - 60px)", overflow: "visible", boxSizing: "border-box" }}>
         {children}
       </main>
