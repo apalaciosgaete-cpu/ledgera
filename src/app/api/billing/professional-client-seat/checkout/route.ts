@@ -68,18 +68,23 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const successUrl = buildCheckoutReturnUrl({
-      origin,
-      paymentId: payment.id,
-      status: "success",
-    });
-    successUrl.searchParams?.set?.("product", PROFESSIONAL_EXTRA_CLIENT_PRODUCT);
+    const successUrl = new URL(
+      buildCheckoutReturnUrl({
+        origin,
+        paymentId: payment.id,
+        status: "success",
+      }),
+    );
+    successUrl.searchParams.set("product", PROFESSIONAL_EXTRA_CLIENT_PRODUCT);
 
-    const cancelUrl = buildCheckoutReturnUrl({
-      origin,
-      paymentId: payment.id,
-      status: "error",
-    });
+    const cancelUrl = new URL(
+      buildCheckoutReturnUrl({
+        origin,
+        paymentId: payment.id,
+        status: "error",
+      }),
+    );
+    cancelUrl.searchParams.set("product", PROFESSIONAL_EXTRA_CLIENT_PRODUCT);
 
     const webhookUrl = new URL("/api/billing/webhook", origin);
     webhookUrl.searchParams.set(
@@ -102,8 +107,8 @@ export async function POST(request: NextRequest) {
           id: auth.user.id,
           email: auth.user.email,
         },
-        successUrl: String(successUrl),
-        cancelUrl,
+        successUrl: successUrl.toString(),
+        cancelUrl: cancelUrl.toString(),
         webhookUrl: webhookUrl.toString(),
       });
 
