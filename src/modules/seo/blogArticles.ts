@@ -75,6 +75,245 @@ const baseRelated = [
 
 export const blogArticles: BlogArticle[] = [
   {
+    slug: "dj-1963-1964-criptoactivos-chile",
+    title: "DJ 1963 y 1964: qué cambia para los criptoactivos en Chile desde 2026",
+    summary:
+      "Las nuevas declaraciones juradas incorporan información de criptoactivos al estándar CARF. Revisa quién informa, qué operaciones se reportan y qué debe ordenar cada usuario.",
+    tag: "Actualidad tributaria",
+    tagColor: "#16A34A",
+    readTime: "9 min",
+    publishedLabel: "21 de julio, 2026",
+    publishedAt: "2026-07-21",
+    updatedAt: "2026-07-21",
+    sections: [
+      {
+        type: "p",
+        content:
+          "Desde la Operación Renta 2026, Chile cuenta con dos nuevas declaraciones juradas anuales sobre activos digitales. La DJ 1963 se refiere a usuarios con residencia tributaria en el extranjero y la DJ 1964 a usuarios con residencia o domicilio en Chile. Ambas forman parte de la adopción del Crypto-Asset Reporting Framework (CARF).",
+      },
+      {
+        type: "callout",
+        content:
+          "Punto clave: las DJ 1963 y 1964 son obligaciones de los proveedores de servicios de activos digitales que cumplen los requisitos establecidos por el SII. No son formularios que toda persona que compra bitcoin deba presentar directamente.",
+      },
+      {
+        type: "h2",
+        content: "Qué diferencia existe entre la DJ 1963 y la DJ 1964",
+      },
+      {
+        type: "ul",
+        content: [
+          "DJ 1963: identifica y reporta operaciones especificadas de usuarios con residencia tributaria en el extranjero.",
+          "DJ 1964: identifica y reporta operaciones especificadas de usuarios con residencia o domicilio en Chile.",
+          "En ambos casos, el obligado a informar es el proveedor de servicios de activos digitales o criptoactivos alcanzado por la resolución.",
+          "El plazo informado por el SII para ambas declaraciones en el Año Tributario 2026 fue el 30 de junio.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Qué significa esto para un usuario de exchange",
+      },
+      {
+        type: "p",
+        content:
+          "Aunque el usuario no presente estas declaraciones, la información que conserva un proveedor puede llegar al SII y, en el caso de usuarios extranjeros, ser objeto de intercambio automático con otras administraciones tributarias. Por eso los historiales incompletos, los costos sin respaldo y las diferencias entre banco y exchange tienen hoy mayor relevancia práctica.",
+      },
+      {
+        type: "h2",
+        content: "Qué conviene ordenar desde ahora",
+      },
+      {
+        type: "ol",
+        content: [
+          "Descarga historiales completos de compra, venta, canje, depósitos y retiros desde cada plataforma.",
+          "Identifica transferencias entre cuentas o wallets propias para no confundirlas con ventas.",
+          "Conserva comprobantes bancarios y documentos que acrediten el origen de fondos.",
+          "Registra comisiones, fechas, moneda de origen y criterio de conversión a pesos chilenos.",
+          "Reconstruye el costo de adquisición y revisa que el saldo resultante coincida con tus tenencias.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Qué ya está observando el SII",
+      },
+      {
+        type: "p",
+        content:
+          "El SII informó en septiembre de 2025 que había finalizado 13 fiscalizaciones vinculadas con criptoactivos, con un rendimiento total cercano a $4.702 millones. Entre los problemas mencionó pagos por servicios recibidos en criptomonedas que no fueron incorporados en Renta y costos que el contribuyente no logró acreditar.",
+      },
+      {
+        type: "callout",
+        content:
+          "Que un exchange informe operaciones no determina por sí solo el impuesto final. El resultado depende de la naturaleza de cada movimiento, del costo acreditable, del contribuyente y del período tributario.",
+      },
+    ],
+    related: [
+      { label: "Instrucciones oficiales DJ 1963 · SII", href: "https://www.sii.cl/ayudas/ayudas_por_servicios/renta/2026/instrucciones_dj1963.pdf" },
+      { label: "Instrucciones oficiales DJ 1964 · SII", href: "https://www.sii.cl/ayudas/ayudas_por_servicios/renta/2026/instrucciones_dj1964.pdf" },
+      { label: "Fiscalización de criptoactivos · SII", href: "https://www.sii.cl/noticias/2025/220925noti02pcr.htm" },
+      { label: "Cómo preparar la declaración", href: "/blog/como-declarar-criptomonedas-sii-chile" },
+    ],
+  },
+  {
+    slug: "stablecoins-chile-riesgos-respaldo-2026",
+    title: "Stablecoins en 2026: qué prometen, qué riesgos tienen y qué revisar antes de usarlas",
+    summary:
+      "USDT, USDC y otras stablecoins buscan mantener un valor estable, pero no eliminan los riesgos. Aprende a revisar emisor, reservas, red, custodia y posibilidad de rescate.",
+    tag: "Educación financiera",
+    tagColor: "#0EA5E9",
+    readTime: "8 min",
+    publishedLabel: "21 de julio, 2026",
+    publishedAt: "2026-07-21",
+    updatedAt: "2026-07-21",
+    sections: [
+      {
+        type: "p",
+        content:
+          "Las stablecoins se usan para mover valor, operar en exchanges, acceder a protocolos descentralizados y reducir la exposición inmediata a la volatilidad de otros criptoactivos. Su nombre puede sugerir ausencia de riesgo, pero la estabilidad es un objetivo de diseño, no una garantía universal.",
+      },
+      {
+        type: "h2",
+        content: "No todas las stablecoins funcionan igual",
+      },
+      {
+        type: "ul",
+        content: [
+          "Respaldadas por activos: dependen de la calidad, liquidez y custodia de sus reservas.",
+          "Sobrecolateralizadas con criptoactivos: dependen de garantías, liquidaciones y contratos inteligentes.",
+          "Algorítmicas o híbridas: intentan sostener el precio mediante incentivos y mecanismos de oferta, con riesgos adicionales de pérdida de paridad.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "La mirada reciente del Banco Central de Chile",
+      },
+      {
+        type: "p",
+        content:
+          "En junio de 2026, el Banco Central destacó que las stablecoins plenamente respaldadas por activos líquidos de alta calidad, redimibles a la par y con respaldo uno a uno reorganizan mediante tecnología funciones ya conocidas en los pagos. Esa comparación ayuda a mirar más allá del token: importan el emisor, el activo de respaldo y la promesa real de rescate.",
+      },
+      {
+        type: "h2",
+        content: "Cinco preguntas antes de mantener un saldo importante",
+      },
+      {
+        type: "ol",
+        content: [
+          "¿Quién emite el token y bajo qué jurisdicción opera?",
+          "¿Qué activos componen las reservas y con qué frecuencia se publican informes?",
+          "¿Existe un derecho claro de rescate y quién puede ejercerlo?",
+          "¿En qué red está el token y cuál es la dirección correcta del contrato?",
+          "¿Quién controla las llaves: tú, un exchange o un custodio externo?",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Riesgos que suelen confundirse",
+      },
+      {
+        type: "p",
+        content:
+          "La paridad con el dólar es solo una dimensión. También existen riesgo del emisor, congelamiento, falla del custodio, hackeo del contrato, error de red, pérdida de llaves, liquidez insuficiente y riesgo de la plataforma donde se mantiene el saldo.",
+      },
+      {
+        type: "h2",
+        content: "Cómo documentar compras y transferencias",
+      },
+      {
+        type: "p",
+        content:
+          "Conserva el comprobante de adquisición, la moneda usada, el tipo de cambio, las comisiones, el hash de la transacción y la dirección de origen y destino. Si transfieres entre cuentas propias, deja evidencia de que ambas te pertenecen: el movimiento puede parecer una salida económica cuando se mira cada fuente por separado.",
+      },
+      {
+        type: "callout",
+        content:
+          "Una stablecoin puede cotizar cerca de un dólar y aun así incorporar riesgos financieros, tecnológicos, operacionales y regulatorios. No evalúes una posición solo por su baja volatilidad histórica.",
+      },
+    ],
+    related: [
+      { label: "Análisis de stablecoins · Banco Central de Chile", href: "https://www.bcentral.cl/w/blog/stablecoins-nuevo-envoltorio-viejos-problemas" },
+      { label: "Tipo de cambio y activos digitales", href: "/blog/tipo-cambio-bcch-criptomonedas" },
+      { label: "Conciliación banco-exchange", href: "/conciliacion-binance-banco" },
+    ],
+  },
+  {
+    slug: "estafas-cripto-chile-como-detectarlas",
+    title: "Cómo detectar una estafa cripto antes de transferir: señales y verificaciones útiles",
+    summary:
+      "Promesas de rentabilidad, suplantación, asesores falsos y retiros bloqueados se repiten. Esta lista ayuda a verificar una oferta antes de enviar dinero o conectar una wallet.",
+    tag: "Seguridad",
+    tagColor: "#F59E0B",
+    readTime: "7 min",
+    publishedLabel: "21 de julio, 2026",
+    publishedAt: "2026-07-21",
+    updatedAt: "2026-07-21",
+    sections: [
+      {
+        type: "p",
+        content:
+          "Las estafas cripto rara vez comienzan con una explicación técnica compleja. Suelen comenzar con confianza: un contacto por mensajería, un supuesto asesor, una recomendación en redes sociales o una plataforma que muestra ganancias rápidas dentro de un panel controlado por el propio estafador.",
+      },
+      {
+        type: "h2",
+        content: "Señales de alerta frecuentes",
+      },
+      {
+        type: "ul",
+        content: [
+          "Rentabilidad fija o garantizada sin una explicación verificable del riesgo.",
+          "Presión para depositar hoy, aumentar el monto o pedir dinero prestado.",
+          "Contacto que migra rápidamente a WhatsApp, Telegram u otro canal privado.",
+          "Solicitud de instalar software de acceso remoto o compartir códigos de seguridad.",
+          "Cobros adicionales por impuestos, desbloqueo, seguro o verificación antes de retirar.",
+          "Direcciones web parecidas a una empresa conocida, pero con letras o dominios distintos.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Verificaciones antes de enviar dinero",
+      },
+      {
+        type: "ol",
+        content: [
+          "Busca el nombre de la entidad y su dominio en las alertas ciudadanas de la CMF.",
+          "Comprueba si la actividad que ofrece requiere inscripción en un registro oficial.",
+          "Escribe tú mismo la dirección web; no ingreses desde enlaces recibidos por mensaje.",
+          "Verifica por un canal independiente la identidad de quien recomienda la inversión.",
+          "Haz una prueba de retiro pequeña antes de aumentar la exposición.",
+          "Nunca entregues tu frase semilla, clave privada ni códigos de autenticación.",
+        ],
+      },
+      {
+        type: "h2",
+        content: "Si ya transferiste",
+      },
+      {
+        type: "p",
+        content:
+          "Interrumpe nuevos pagos, guarda conversaciones, correos, comprobantes, direcciones de wallet y hashes de transacción. Contacta de inmediato al banco o exchange involucrado y realiza la denuncia ante las autoridades competentes. Desconfía de quienes prometen recuperar los fondos a cambio de un pago anticipado: la estafa de recuperación es una segunda forma frecuente de engaño.",
+      },
+      {
+        type: "h2",
+        content: "La trazabilidad también sirve para seguridad",
+      },
+      {
+        type: "p",
+        content:
+          "Un registro ordenado permite identificar cuándo salió el dinero, desde qué cuenta, hacia qué dirección y mediante qué plataforma. Esa evidencia no garantiza recuperar fondos, pero mejora la calidad del reporte y evita depender de capturas aisladas.",
+      },
+      {
+        type: "callout",
+        content:
+          "Ver aparecer un saldo o una ganancia dentro de una plataforma no demuestra que los activos existan. La prueba práctica es poder verificar la entidad, la operación y la posibilidad real de retirar.",
+      },
+    ],
+    related: [
+      { label: "Alertas ciudadanas · CMF Chile", href: "https://www.cmfchile.cl/portal/principal/623/w4-propertyvalue-48784.html" },
+      { label: "Registro de prestadores · CMF Chile", href: "https://www.cmfchile.cl/portal/principal/623/w4-article-60920.html" },
+      { label: "Cómo ordenar respaldos", href: "/blog/fiscalizacion-sii-criptomonedas" },
+    ],
+  },
+  {
     slug: "guia-impuestos-criptomonedas-chile",
     title: "Guía de tributación cripto en Chile: qué revisar y cómo ordenar operaciones",
     summary:
