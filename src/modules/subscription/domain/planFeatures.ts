@@ -34,6 +34,29 @@ export const Feature = {
 } as const;
 
 export type Feature = (typeof Feature)[keyof typeof Feature];
+export type FeatureAvailability = "ACTIVE" | "PLANNED";
+
+/**
+ * A capability may exist in the domain before it is ready for sale. Planned
+ * capabilities are deliberately excluded from every plan and fail closed in
+ * backend authorization.
+ */
+export const FEATURE_AVAILABILITY: Record<Feature, FeatureAvailability> = {
+  [Feature.SII_STATUS]: "ACTIVE",
+  [Feature.TAX_ESTIMATE]: "ACTIVE",
+  [Feature.PDF_EXPORT]: "ACTIVE",
+  [Feature.XLSX_EXPORT]: "ACTIVE",
+  [Feature.CSV_EXPORT]: "ACTIVE",
+  [Feature.DECLARATIONS]: "ACTIVE",
+  [Feature.CALENDAR]: "ACTIVE",
+  [Feature.EXPERT_MODE]: "ACTIVE",
+  [Feature.AUDIT]: "ACTIVE",
+  [Feature.VERIFICATIONS]: "PLANNED",
+  [Feature.CUSTODY]: "PLANNED",
+  [Feature.ADVANCED_REPORTS]: "PLANNED",
+  [Feature.BILLING]: "ACTIVE",
+  [Feature.ADMIN]: "ACTIVE",
+};
 
 const PLAN_FEATURES: Record<Plan, Feature[]> = {
   FREE: [Feature.SII_STATUS],
@@ -57,9 +80,6 @@ const PLAN_FEATURES: Record<Plan, Feature[]> = {
     Feature.CALENDAR,
     Feature.EXPERT_MODE,
     Feature.AUDIT,
-    Feature.VERIFICATIONS,
-    Feature.CUSTODY,
-    Feature.ADVANCED_REPORTS,
     Feature.BILLING,
   ],
 };
@@ -85,10 +105,16 @@ export function normalizePlan(plan: string | null | undefined): Plan {
   return LEGACY_PLAN_MAP[plan.toUpperCase().trim()] ?? "FREE";
 }
 
+export function isFeatureAvailable(feature: Feature): boolean {
+  return FEATURE_AVAILABILITY[feature] === "ACTIVE";
+}
+
 export function canAccessFeature(
   plan: string | null | undefined,
   feature: Feature,
 ): boolean {
+  if (!isFeatureAvailable(feature)) return false;
+
   const normalizedPlan = normalizePlan(plan);
   return PLAN_FEATURES[normalizedPlan].includes(feature);
 }
