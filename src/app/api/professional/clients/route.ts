@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/shared";
-import { fail, ok, serverError } from "@/shared/apiResponse";
-import { requireFeatureAccess } from "@/modules/subscription/application/requireFeatureAccess";
-import { Feature } from "@/modules/subscription/domain/planFeatures";
-import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
-import { getUserByEmail } from "@/modules/identity/infrastructure/userRepository";
 import {
-  PROFESSIONAL_INCLUDED_CLIENTS,
+  createAdminAuditLog,
+  getAuditRequestContext,
+} from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import { getUserByEmail } from "@/modules/identity/infrastructure/userRepository";
+import { getProfessionalSeatEntitlement } from "@/modules/professional/application/getProfessionalSeatEntitlement";
+import {
   ProfessionalAccessStatus,
   normalizeProfessionalPermissions,
 } from "@/modules/professional/domain/clientAccess";
+import { professionalExtraClientPrice } from "@/modules/professional/domain/professionalSeatBilling";
 import {
   countOccupiedProfessionalSeats,
   createOrRenewProfessionalInvitation,
   listProfessionalClients,
 } from "@/modules/professional/infrastructure/professionalClientAccessRepository";
-import {
-  createAdminAuditLog,
-  getAuditRequestContext,
-} from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { requireFeatureAccess } from "@/modules/subscription/application/requireFeatureAccess";
+import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { fail, ok, serverError } from "@/shared/apiResponse";
+import { requireAuth } from "@/shared";
 
 export const dynamic = "force-dynamic";
 
@@ -56,16 +57,20 @@ export async function GET(request: NextRequest) {
   if (securityResponse) return securityResponse;
 
   try {
-    const clients = await listProfessionalClients(auth.user.id);
+    const [clients, seatEntitlement] = await Promise.all([
+      listProfessionalClients(auth.user.id),
+      getProfessionalSeatEntitlement(auth.user.id),
+    ]);
     const occupiedSeats = clients.filter((item) =>
       item.status === ProfessionalAccessStatus.PENDING ||
       item.status === ProfessionalAccessStatus.ACTIVE,
     ).length;
 
     return ok({
-      includedSeats: PROFESSIONAL_INCLUDED_CLIENTS,
+      ...seatEntitlement,
       occupiedSeats,
-      availableSeats: Math.max(PROFESSIONAL_INCLUDED_CLIENTS - occupiedSeats, 0),
+      availableSeats: Math.max(seatEntitlement.totalSeats - occupiedSeats, 0),
+      extraSeatPrice: professionalExtraClientPrice,
       clients: clients.map((item) => ({
         id: item.id,
         clientUserId: item.clientUserId,
@@ -131,16 +136,23 @@ export async function POST(request: NextRequest) {
       return fail("El cliente ya tiene una invitación o mandato activo.", 409);
     }
 
-    const occupiedSeats = await countOccupiedProfessionalSeats(auth.user.id);
-    if (occupiedSeats >= PROFESSIONAL_INCLUDED_CLIENTS) {
+    const [occupiedSeats, seatEntitlement] = await Promise.all([
+      countOccupiedProfessionalSeats(auth.user.id),
+      getProfessionalSeatEntitlement(auth.user.id),
+    ]);
+
+    if (occupiedSeats >= seatEntitlement.totalSeats) {
       return NextResponse.json(
         {
           ok: false,
-          message: `El plan Profesional incluye ${PROFESSIONAL_INCLUDED_CLIENTS} clientes. Libera un cupo o contrata un cliente adicional.`,
+          message: `Tienes ${seatEntitlement.totalSeats} cupos disponibles: ${seatEntitlement.includedSeats} incluidos y ${seatEntitlement.purchasedSeats} adicionales. Libera un cupo o contrata otro cliente adicional.`,
           data: {
             code: "PROFESSIONAL_CLIENT_LIMIT",
-            limit: PROFESSIONAL_INCLUDED_CLIENTS,
+            includedSeats: seatEntitlement.includedSeats,
+            purchasedSeats: seatEntitlement.purchasedSeats,
+            totalSeats: seatEntitlement.totalSeats,
             occupiedSeats,
+            extraSeatPrice: professionalExtraClientPrice,
           },
         },
         { status: 409 },
@@ -163,6 +175,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         mandateId: invitation.id,
         permissions,
+        occupiedSeatsBeforeInvitation: occupiedSeats,
+        totalSeats: seatEntitlement.totalSeats,
       },
     });
 
@@ -176,6 +190,13 @@ export async function POST(request: NextRequest) {
           clientEmail: targetUser.email,
           status: invitation.status,
           permissions,
+          seats: {
+            includedSeats: seatEntitlement.includedSeats,
+            purchasedSeats: seatEntitlement.purchasedSeats,
+            totalSeats: seatEntitlement.totalSeats,
+            occupiedSeats: occupiedSeats + 1,
+            availableSeats: Math.max(seatEntitlement.totalSeats - occupiedSeats - 1, 0),
+          },
         },
       },
       { status: 201 },
