@@ -2,7 +2,9 @@ import { prisma } from "@/lib/prisma";
 import {
   DEFAULT_PROFESSIONAL_PERMISSIONS,
   ProfessionalAccessStatus,
+  ProfessionalWorkflowStatus,
   type ProfessionalPermission,
+  type ProfessionalWorkflowStatus as ProfessionalWorkflowStatusValue,
 } from "@/modules/professional/domain/clientAccess";
 
 export async function countOccupiedProfessionalSeats(
@@ -24,12 +26,15 @@ export async function countOccupiedProfessionalSeats(
 export async function listProfessionalClients(professionalUserId: string) {
   return prisma.professionalClientAccess.findMany({
     where: { professionalUserId },
-    orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+    orderBy: [{ status: "asc" }, { workflowUpdatedAt: "desc" }],
     select: {
       id: true,
       clientUserId: true,
       status: true,
       permissions: true,
+      workflowStatus: true,
+      workflowNote: true,
+      workflowUpdatedAt: true,
       invitedAt: true,
       acceptedAt: true,
       revokedAt: true,
@@ -56,6 +61,7 @@ export async function listClientProfessionalInvitations(clientUserId: string) {
       professionalUserId: true,
       status: true,
       permissions: true,
+      workflowStatus: true,
       invitedAt: true,
       acceptedAt: true,
       revokedAt: true,
@@ -91,6 +97,9 @@ export async function createOrRenewProfessionalInvitation(input: {
     update: {
       status: ProfessionalAccessStatus.PENDING,
       permissions,
+      workflowStatus: ProfessionalWorkflowStatus.INVITED,
+      workflowNote: null,
+      workflowUpdatedAt: now,
       invitedAt: now,
       acceptedAt: null,
       revokedAt: null,
@@ -101,6 +110,8 @@ export async function createOrRenewProfessionalInvitation(input: {
       clientUserId: input.clientUserId,
       status: ProfessionalAccessStatus.PENDING,
       permissions,
+      workflowStatus: ProfessionalWorkflowStatus.INVITED,
+      workflowUpdatedAt: now,
       invitedAt: now,
     },
   });
@@ -120,6 +131,9 @@ export async function acceptProfessionalInvitation(input: {
     },
     data: {
       status: ProfessionalAccessStatus.ACTIVE,
+      workflowStatus: ProfessionalWorkflowStatus.DATA_PENDING,
+      workflowNote: null,
+      workflowUpdatedAt: now,
       acceptedAt: now,
       revokedAt: null,
       updatedAt: now,
@@ -131,6 +145,8 @@ export async function declineProfessionalInvitation(input: {
   id: string;
   clientUserId: string;
 }) {
+  const now = new Date();
+
   return prisma.professionalClientAccess.updateMany({
     where: {
       id: input.id,
@@ -139,7 +155,10 @@ export async function declineProfessionalInvitation(input: {
     },
     data: {
       status: ProfessionalAccessStatus.DECLINED,
-      updatedAt: new Date(),
+      workflowStatus: ProfessionalWorkflowStatus.BLOCKED,
+      workflowNote: "Invitación rechazada por el cliente.",
+      workflowUpdatedAt: now,
+      updatedAt: now,
     },
   });
 }
@@ -163,6 +182,9 @@ export async function revokeProfessionalClientAccess(input: {
     },
     data: {
       status: ProfessionalAccessStatus.REVOKED,
+      workflowStatus: ProfessionalWorkflowStatus.BLOCKED,
+      workflowNote: "Acceso revocado por el profesional.",
+      workflowUpdatedAt: now,
       revokedAt: now,
       updatedAt: now,
     },
@@ -183,7 +205,33 @@ export async function revokeProfessionalAccessAsClient(input: {
     },
     data: {
       status: ProfessionalAccessStatus.REVOKED,
+      workflowStatus: ProfessionalWorkflowStatus.BLOCKED,
+      workflowNote: "Acceso revocado por el cliente.",
+      workflowUpdatedAt: now,
       revokedAt: now,
+      updatedAt: now,
+    },
+  });
+}
+
+export async function updateProfessionalClientWorkflow(input: {
+  professionalUserId: string;
+  clientUserId: string;
+  workflowStatus: ProfessionalWorkflowStatusValue;
+  workflowNote: string | null;
+}) {
+  const now = new Date();
+
+  return prisma.professionalClientAccess.updateMany({
+    where: {
+      professionalUserId: input.professionalUserId,
+      clientUserId: input.clientUserId,
+      status: ProfessionalAccessStatus.ACTIVE,
+    },
+    data: {
+      workflowStatus: input.workflowStatus,
+      workflowNote: input.workflowNote,
+      workflowUpdatedAt: now,
       updatedAt: now,
     },
   });
@@ -203,6 +251,9 @@ export async function getActiveProfessionalClientAccess(input: {
       id: true,
       permissions: true,
       acceptedAt: true,
+      workflowStatus: true,
+      workflowNote: true,
+      workflowUpdatedAt: true,
     },
   });
 }
