@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/shared";
-
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import {
   findConnectionByUser,
   setSyncFailed,
@@ -23,8 +20,10 @@ import {
   setPeriodFailed,
   setPeriodRunning,
 } from "@/modules/integrations/binance/infrastructure/exchangeSyncPeriodRepository";
-import { prisma } from "@/lib/prisma";
 import { logBinanceAuditEvent } from "@/modules/integrations/binance/application/logBinanceAuditEvent";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const MONTH_ES = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
@@ -35,8 +34,8 @@ function getStaleSyncMinutes(): number {
 
 function getStartDate(): Date {
   const raw = process.env.BINANCE_SYNC_START_DATE ?? "2018-01-01";
-  const d   = new Date(raw);
-  return isNaN(d.getTime()) ? new Date("2018-01-01") : d;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? new Date("2018-01-01") : date;
 }
 
 function getMonthsPerRun(): number {
@@ -51,15 +50,17 @@ export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
-  try {
-    const conn = await findConnectionByUser(auth.user.id, "BINANCE");
-    if (!conn) return fail("No hay conexión con Binance configurada.", 404);
-    if (conn.status === "REVOKED") return fail("La conexión ha sido revocada.", 403);
+  const subscriptionCheck = requireActiveSubscription(auth.user);
+  if (!subscriptionCheck.ok) return subscriptionCheck.response;
 
-    // ── Bloqueo doble sync ─────────────────────────────────────────────
-    if (conn.status === "SYNCING") {
-      const staleMs   = getStaleSyncMinutes() * 60 * 1000;
-      const startedAt = conn.updatedAt?.getTime() ?? 0;
+  try {
+    const connection = await findConnectionByUser(auth.user.id, "BINANCE");
+    if (!connection) return fail("No hay conexión con Binance configurada.", 404);
+    if (connection.status === "REVOKED") return fail("La conexión ha sido revocada.", 403);
+
+    if (connection.status === "SYNCING") {
+      const staleMs = getStaleSyncMinutes() * 60 * 1000;
+      const startedAt = connection.updatedAt?.getTime() ?? 0;
 
       if (Date.now() - startedAt < staleMs) {
         return fail(
@@ -69,86 +70,89 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const apiKey    = decryptSecret(conn.apiKeyEncrypted);
-    const apiSecret = decryptSecret(conn.apiSecretEncrypted);
+    const apiKey = decryptSecret(connection.apiKeyEncrypted);
+    const apiSecret = decryptSecret(connection.apiSecretEncrypted);
 
-    // ── Inicializar períodos mensuales desde fecha de inicio hasta hoy ──
     const startDate = getStartDate();
-    const today     = new Date();
-    await ensurePeriodsExist(auth.user.id, conn.id, "BINANCE", startDate, today);
+    const today = new Date();
+    await ensurePeriodsExist(auth.user.id, connection.id, "BINANCE", startDate, today);
 
-    // ── Selección de períodos: específico o secuencial ─────────────────
-    const body        = await request.json().catch(() => ({})) as { year?: number; month?: number };
-    const forceYear   = typeof body.year  === "number" ? body.year  : null;
-    const forceMonth  = typeof body.month === "number" ? body.month : null;
+    const body = await request.json().catch(() => ({})) as { year?: number; month?: number };
+    const forceYear = typeof body.year === "number" ? body.year : null;
+    const forceMonth = typeof body.month === "number" ? body.month : null;
 
     let periods;
     if (forceYear && forceMonth) {
-      // Forzar un mes específico (reset a PENDING para re-sincronizar)
       const specific = await prisma.exchangeSyncPeriod.findFirst({
         where: { userId: auth.user.id, provider: "BINANCE", year: forceYear, month: forceMonth },
       });
       if (!specific) return fail("Período no encontrado.", 404);
       await prisma.exchangeSyncPeriod.update({
         where: { id: specific.id },
-        data:  { status: "PENDING", importedCount: 0, finishedAt: null, lastError: null },
+        data: { status: "PENDING", importedCount: 0, finishedAt: null, lastError: null },
       });
       periods = [{ ...specific, status: "PENDING" as const }];
     } else {
-      const monthsPerRun = getMonthsPerRun();
-      periods = await getNextPendingPeriods(auth.user.id, "BINANCE", monthsPerRun);
+      periods = await getNextPendingPeriods(
+        auth.user.id,
+        "BINANCE",
+        getMonthsPerRun(),
+      );
     }
 
     if (periods.length === 0) {
-      if (conn.status === "SYNCING") await setSyncFinished(conn.id, {});
+      if (connection.status === "SYNCING") await setSyncFinished(connection.id, {});
       return ok(
-        { imported: 0, skipped: 0, autoConfirmed: 0, pendingReview: 0, errors: [], taxRebuilt: false, allPeriodsSynced: true },
+        {
+          imported: 0,
+          skipped: 0,
+          autoConfirmed: 0,
+          pendingReview: 0,
+          errors: [],
+          taxRebuilt: false,
+          allPeriodsSynced: true,
+        },
         "Todo el historial está sincronizado. No hay períodos pendientes.",
       );
     }
 
-    // ── Marcar conexión RUNNING ────────────────────────────────────────
-    await setSyncRunning(conn.id);
+    await setSyncRunning(connection.id);
 
-    const periodLabels = periods.map(p => `${MONTH_ES[p.month]} ${p.year}`);
+    const periodLabels = periods.map((period) => `${MONTH_ES[period.month]} ${period.year}`);
 
     await logBinanceAuditEvent(request, "BINANCE_SYNC_STARTED", auth.user.id, auth.user.email, {
-      provider:     "BINANCE",
-      status:       "SUCCESS",
-      connectionId: conn.id,
-      periods:      periodLabels,
+      provider: "BINANCE",
+      status: "SUCCESS",
+      connectionId: connection.id,
+      periods: periodLabels,
     });
 
     let totalImported = 0;
-    let totalSkipped  = 0;
+    let totalSkipped = 0;
     const allErrors: string[] = [];
     const periodResults: Array<{ year: number; month: number; imported: number; status: string }> = [];
 
-    // ── Sincronizar cada período ───────────────────────────────────────
     for (const period of periods) {
       await setPeriodRunning(period.id);
 
       try {
         const result = await syncBinanceMonth(
           auth.user.id,
-          conn.id,
+          connection.id,
           apiKey,
           apiSecret,
           period.year,
           period.month,
         );
-
         const periodTotal = result.imported + result.skipped;
 
         if (result.errors.length > 0 && periodTotal === 0) {
-          // Zero imports + errors → fallo real
           await setPeriodFailed(period.id, result.errors.slice(0, 3).join(" | "), 0);
-          allErrors.push(...result.errors.map(e => `${MONTH_ES[period.month]} ${period.year}: ${e}`));
+          allErrors.push(...result.errors.map((error) => `${MONTH_ES[period.month]} ${period.year}: ${error}`));
           periodResults.push({ year: period.year, month: period.month, imported: 0, status: "FAILED" });
         } else if (result.errors.length > 0 && periodTotal > 0) {
-          // Datos importados + algunos pares fallaron → completado parcial (no bloquea el mes)
           await setPeriodCompleted(period.id, periodTotal);
-          allErrors.push(...result.errors.map(e => `${MONTH_ES[period.month]} ${period.year}: ${e}`));
+          allErrors.push(...result.errors.map((error) => `${MONTH_ES[period.month]} ${period.year}: ${error}`));
           periodResults.push({ year: period.year, month: period.month, imported: periodTotal, status: "COMPLETED" });
         } else if (periodTotal === 0) {
           await setPeriodEmpty(period.id);
@@ -159,55 +163,51 @@ export async function POST(request: NextRequest) {
         }
 
         totalImported += result.imported;
-        totalSkipped  += result.skipped;
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Error desconocido";
-        await setPeriodFailed(period.id, msg, 0);
-        allErrors.push(`${MONTH_ES[period.month]} ${period.year}: ${msg}`);
+        totalSkipped += result.skipped;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Error desconocido";
+        await setPeriodFailed(period.id, message, 0);
+        allErrors.push(`${MONTH_ES[period.month]} ${period.year}: ${message}`);
         periodResults.push({ year: period.year, month: period.month, imported: 0, status: "FAILED" });
       }
     }
 
-    // ── Persistir estado conexión ─────────────────────────────────────
     const hasFailed = allErrors.length > 0;
     if (hasFailed) {
-      await setSyncFailed(conn.id, allErrors.slice(0, 3).join(" | "));
+      await setSyncFailed(connection.id, allErrors.slice(0, 3).join(" | "));
     } else {
-      await setSyncFinished(conn.id, {});
+      await setSyncFinished(connection.id, {});
     }
 
-    // ── Auditoría ─────────────────────────────────────────────────────
     await logBinanceAuditEvent(
       request,
       hasFailed ? "BINANCE_SYNC_FAILED" : "BINANCE_SYNC_COMPLETED",
       auth.user.id,
       auth.user.email,
       {
-        provider:      "BINANCE",
-        status:        hasFailed ? "FAILED" : "SUCCESS",
-        connectionId:  conn.id,
-        imported:      totalImported,
-        skipped:       totalSkipped,
-        errors:        allErrors.length,
+        provider: "BINANCE",
+        status: hasFailed ? "FAILED" : "SUCCESS",
+        connectionId: connection.id,
+        imported: totalImported,
+        skipped: totalSkipped,
+        errors: allErrors.length,
         periodResults,
       },
     );
 
-    const hasErrors   = allErrors.length > 0;
     const periodLabel = periodLabels.join(", ");
-
-    const message = hasErrors
+    const message = hasFailed
       ? `Sincronización parcial (${periodLabel}): ${totalImported} importados, ${totalSkipped} omitidos, ${allErrors.length} errores. Revisa en Importaciones.`
       : `Sincronización completa (${periodLabel}): ${totalImported} importados, ${totalSkipped} omitidos. Revisa en Importaciones.`;
 
     return ok(
       {
-        imported:         totalImported,
-        skipped:          totalSkipped,
-        autoConfirmed:    0,
-        pendingReview:    totalImported,
-        errors:           allErrors,
-        taxRebuilt:       false,
+        imported: totalImported,
+        skipped: totalSkipped,
+        autoConfirmed: 0,
+        pendingReview: totalImported,
+        errors: allErrors,
+        taxRebuilt: false,
         periodResults,
         allPeriodsSynced: false,
       },
