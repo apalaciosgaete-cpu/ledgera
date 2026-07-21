@@ -6,8 +6,8 @@ import { seoPageList } from "@/modules/seo/seoPageContent";
 import { fonts } from "@/styles/tokens";
 
 const baseUrl = "https://ledgera.cl";
-const title = "Blog LEDGERA | Operaciones cripto, exchanges y respaldo tributario";
-const description = "Guías sobre operaciones cripto, exchanges, activos digitales, método FIFO, trazabilidad y conciliación financiera en Chile.";
+const title = "Blog LEDGERA | Cripto, regulación, seguridad e impuestos en Chile";
+const description = "Noticias y guías prácticas sobre criptoactivos en Chile: regulación, impuestos, stablecoins, seguridad, exchanges, trazabilidad y educación financiera.";
 
 export const metadata: Metadata = {
   title,
@@ -39,7 +39,7 @@ const eyebrowStyle = {
 export default function BlogPage() {
   return (
     <PublicShell activePath="/blog">
-      <PublicHero eyebrow="Blog · Recursos tributarios" title="Operaciones cripto, exchanges y respaldo en Chile" description="Guías prácticas para ordenar información antes de una revisión: operaciones, banco, exchange, activos digitales, FIFO y trazabilidad.">
+      <PublicHero eyebrow="Blog · Cripto en Chile" title="Información útil para entender y usar cripto con más criterio" description="Actualidad, regulación, impuestos, seguridad y guías prácticas para tomar mejores decisiones con activos digitales en Chile.">
         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center" }}>
           <PublicButton href="/register">Comenzar análisis</PublicButton>
           <PublicButton href="/planes#precios" variant="secondary">Ver planes</PublicButton>
@@ -49,8 +49,8 @@ export default function BlogPage() {
       <section style={{ background: publicPalette.page, padding: "76px 0" }}>
         <PublicContainer>
           <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
-            <p style={eyebrowStyle}>Artículos principales</p>
-            <h2 style={sectionTitleStyle}>Contenido para entender, ordenar y revisar operaciones cripto.</h2>
+            <p style={eyebrowStyle}>Actualidad y guías</p>
+            <h2 style={sectionTitleStyle}>Cripto explicado con contexto chileno y fuentes verificables.</h2>
           </div>
           <div style={{ display: "grid", gap: "22px", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))" }}>
             {blogArticles.map((article) => (
@@ -72,9 +72,9 @@ export default function BlogPage() {
       <section style={{ background: publicPalette.section, padding: "76px 0" }}>
         <PublicContainer>
           <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
-            <p style={eyebrowStyle}>Recursos base</p>
-            <h2 style={{ ...sectionTitleStyle, fontSize: "clamp(1.8rem,4vw,2.7rem)" }}>Páginas guía para búsquedas clave de LEDGERA.</h2>
-            <p style={{ color: publicPalette.textMuted, fontSize: "15px", lineHeight: 1.75, margin: "16px 0 0" }}>Estos enlaces mantienen el enlazado interno dentro de una sección editorial coherente.</p>
+            <p style={eyebrowStyle}>Profundiza</p>
+            <h2 style={{ ...sectionTitleStyle, fontSize: "clamp(1.8rem,4vw,2.7rem)" }}>Guías para ordenar operaciones y preparar su revisión.</h2>
+            <p style={{ color: publicPalette.textMuted, fontSize: "15px", lineHeight: 1.75, margin: "16px 0 0" }}>Contenido práctico sobre conciliación, declaración, exchanges y trazabilidad financiera.</p>
           </div>
           <div style={{ display: "grid", gap: "18px", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))" }}>
             {seoPageList.map((page) => (
