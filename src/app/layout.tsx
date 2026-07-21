@@ -66,9 +66,6 @@ export const metadata: Metadata = {
   authors: [{ name: "LEDGERA" }],
   creator: "LEDGERA",
   publisher: "LEDGERA",
-  alternates: {
-    canonical: baseUrl,
-  },
   verification: {
     google: googleSiteVerification,
   },

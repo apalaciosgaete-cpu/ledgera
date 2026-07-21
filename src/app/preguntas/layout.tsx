@@ -7,25 +7,23 @@ import {
 } from "@/modules/seo/structuredData";
 
 const baseUrl = "https://ledgera.cl";
-const title = "Preguntas frecuentes | Impuestos crypto, conciliación y LEDGERA";
+const title = "Preguntas frecuentes sobre cripto, impuestos y conciliación";
 const description =
   "Respuestas sobre impuestos crypto en Chile, importaciones, conciliación banco-exchange, portafolio, reportes y uso de LEDGERA.";
 
 const faqSchema = buildFaqPageSchema([
   {
-    question: "¿Es obligatorio declarar criptomonedas al SII en Chile?",
-    answer:
-      "Las ganancias por venta de criptomonedas pueden constituir renta y deben revisarse dentro de la declaración anual correspondiente. LEDGERA ayuda a ordenar la información, pero la interpretación final debe validarse con un contador o asesor tributario.",
+    question: "¿LEDGERA reemplaza a un contador?",
+    answer: "No. LEDGERA organiza y prepara información financiera-tributaria, pero no reemplaza revisión profesional ni asesoría tributaria personalizada.",
   },
   {
-    question: "¿Qué operaciones pueden requerir revisión tributaria?",
+    question: "¿Qué operaciones cripto pueden requerir revisión?",
     answer:
-      "Ventas a moneda fiat, intercambios entre activos, pagos recibidos en cripto y movimientos con ganancia realizada pueden requerir análisis. La simple compra o tenencia normalmente no genera impuesto por sí sola.",
+      "Ventas a moneda fiat, intercambios entre activos, pagos recibidos en cripto y movimientos con ganancia realizada pueden requerir análisis según el caso.",
   },
   {
-    question: "¿Cómo funciona el motor FIFO de LEDGERA?",
-    answer:
-      "El motor procesa movimientos confirmados en orden cronológico. Cuando existe una venta, consume primero las unidades más antiguas y calcula costo, resultado y trazabilidad desde los movimientos disponibles.",
+    question: "¿Puedo reconstruir años anteriores?",
+    answer: "Sí. Puedes ordenar operaciones históricas para revisar períodos anteriores, siempre validando el tratamiento final con un profesional.",
   },
   {
     question: "¿Puedo conciliar banco y exchange?",
@@ -33,14 +31,25 @@ const faqSchema = buildFaqPageSchema([
       "Sí. El objetivo es relacionar transferencias bancarias, movimientos de exchange y portafolio para reducir desorden operacional.",
   },
   {
-    question: "¿LEDGERA reemplaza a un contador?",
-    answer:
-      "No. LEDGERA organiza y prepara información financiera-tributaria. No reemplaza la revisión profesional ni constituye asesoría tributaria personalizada.",
+    question: "¿Puedo importar datos desde exchanges?",
+    answer: "LEDGERA está diseñada para trabajar con importaciones desde exchanges, revisión previa y confirmación antes de afectar el historial financiero.",
+  },
+  {
+    question: "¿Qué significa que la información sea trazable?",
+    answer: "Que cada resultado pueda explicarse desde operaciones originales, fechas, cantidades, precios, comisiones y clasificaciones aplicadas.",
+  },
+  {
+    question: "¿Existe plan gratuito?",
+    answer: "Sí. El plan gratuito permite explorar la plataforma con un volumen limitado de operaciones.",
+  },
+  {
+    question: "¿Qué plan conviene para una persona?",
+    answer: "El plan Personal está pensado para usuarios que necesitan ordenar operaciones, revisar portafolio, conciliación y reportes.",
   },
   {
     question: "¿Hay planes para contadores o empresas?",
     answer:
-      "Sí. Los planes Contador y Empresa están orientados a operación multiusuario, clientes o revisión profesional con mayor trazabilidad.",
+      "Sí. Los planes Profesional y Empresa están orientados a operación multiusuario, clientes o revisión profesional con mayor trazabilidad.",
   },
 ]);
 

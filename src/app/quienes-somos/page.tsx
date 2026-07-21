@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PublicButton, PublicContainer, PublicCta, PublicHero, PublicShell, publicPalette } from "@/components/public/PublicLayout";
 
 export const metadata: Metadata = {
-  title: "Quiénes somos | LEDGERA",
+  title: "Quiénes somos",
   description: "Conoce LEDGERA, plataforma chilena para ordenar operaciones cripto desde exchanges, activos digitales y respaldo trazable.",
   alternates: { canonical: "https://ledgera.cl/quienes-somos" },
 };

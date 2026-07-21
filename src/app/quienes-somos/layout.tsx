@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 
 const baseUrl = "https://ledgera.cl";
-const title = "Quiénes somos | LEDGERA";
+const title = "Quiénes somos";
 const description =
   "Conoce LEDGERA, una plataforma chilena para ordenar movimientos crypto, conciliación financiera, portafolio y base tributaria trazable.";
 

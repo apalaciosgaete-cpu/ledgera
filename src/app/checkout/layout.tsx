@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Checkout | LEDGERA",
+  title: "Checkout",
   description: "Selección y activación segura de planes LEDGERA.",
   robots: {
     index: false,

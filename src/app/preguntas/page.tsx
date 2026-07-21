@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PublicButton, PublicContainer, PublicCta, PublicHero, PublicShell, publicPalette } from "@/components/public/PublicLayout";
 
 export const metadata: Metadata = {
-  title: "Preguntas frecuentes | LEDGERA",
+  title: "Preguntas frecuentes sobre cripto y tributación",
   description: "Respuestas sobre LEDGERA, operaciones cripto, exchanges, activos digitales, conciliación, reportes y planes.",
   alternates: { canonical: "https://ledgera.cl/preguntas" },
 };

@@ -104,6 +104,11 @@ export function buildBlogPostingSchema(article: BlogArticle): JsonLdObject {
       name: "LEDGERA",
       url: seoBaseUrl,
     },
+    reviewedBy: {
+      "@type": "Organization",
+      name: "Equipo editorial LEDGERA",
+      url: seoBaseUrl,
+    },
     publisher: {
       "@type": "Organization",
       name: "LEDGERA",

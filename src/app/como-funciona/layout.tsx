@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 
 const baseUrl = "https://ledgera.cl";
-const title = "Cómo funciona LEDGERA | Importación, conciliación y base tributaria crypto";
+const title = "Importación, conciliación y respaldo tributario";
 const description =
   "Aprende cómo LEDGERA ordena movimientos crypto, revisa importaciones, concilia banco y exchange, y prepara información financiera-tributaria trazable en Chile.";
 

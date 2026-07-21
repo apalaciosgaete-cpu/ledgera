@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PublicButton, PublicContainer, PublicCta, PublicHero, PublicShell, publicPalette } from "@/components/public/PublicLayout";
 
 export const metadata: Metadata = {
-  title: "Cómo funciona | LEDGERA",
+  title: "Cómo funciona la plataforma",
   description: "Conoce cómo LEDGERA importa operaciones cripto desde exchanges, ordena activos digitales y genera respaldo trazable.",
   alternates: { canonical: "https://ledgera.cl/como-funciona" },
 };

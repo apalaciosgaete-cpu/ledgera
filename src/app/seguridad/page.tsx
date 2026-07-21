@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 
 export const metadata: Metadata = {
-  title: "Seguridad | LEDGERA",
+  title: "Seguridad de la plataforma",
   description: "Principios de seguridad y alcance responsable de LEDGERA.",
 };
 

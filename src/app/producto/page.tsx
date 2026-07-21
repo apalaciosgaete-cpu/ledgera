@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 
 export const metadata: Metadata = {
-  title: "Producto | LEDGERA",
+  title: "Producto financiero y tributario",
   description: "Cómo LEDGERA ordena activos, revisa obligaciones y genera respaldo tributario.",
 };
 

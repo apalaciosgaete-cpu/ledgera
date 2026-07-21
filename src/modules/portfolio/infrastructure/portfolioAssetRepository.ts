@@ -1,4 +1,4 @@
-import { db } from "@/infrastructure/db/client";
+import { getDb } from "@/infrastructure/db/client";
 import type { PortfolioAsset } from "@/modules/portfolio/domain/portfolioAsset";
 
 interface AddPortfolioAssetInput {
@@ -31,7 +31,7 @@ function mapRow(row: {
 export async function getPortfolioAssets(
   portfolioId: string
 ): Promise<PortfolioAsset[]> {
-  const result = await db.query(
+  const result = await getDb().query(
     `
       select
         id,
@@ -54,7 +54,7 @@ export async function getPortfolioAssets(
 export async function addPortfolioAsset(
   input: AddPortfolioAssetInput
 ): Promise<PortfolioAsset> {
-  const result = await db.query(
+  const result = await getDb().query(
     `
       insert into portfolio_assets (
         portfolio_id,

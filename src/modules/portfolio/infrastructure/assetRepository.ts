@@ -1,4 +1,4 @@
-import { db } from "@/infrastructure/db/client";
+import { getDb } from "@/infrastructure/db/client";
 import type { Asset } from "@/modules/portfolio/domain/asset";
 
 interface CreateAssetInput {
@@ -28,7 +28,7 @@ function mapRow(row: {
 }
 
 export async function getAssets(): Promise<Asset[]> {
-  const result = await db.query(
+  const result = await getDb().query(
     `
       select
         id,
@@ -47,7 +47,7 @@ export async function getAssets(): Promise<Asset[]> {
 }
 
 export async function getAssetBySymbol(symbol: string): Promise<Asset | null> {
-  const result = await db.query(
+  const result = await getDb().query(
     `
       select
         id,
@@ -72,7 +72,7 @@ export async function getAssetBySymbol(symbol: string): Promise<Asset | null> {
 }
 
 export async function createAsset(input: CreateAssetInput): Promise<Asset> {
-  const result = await db.query(
+  const result = await getDb().query(
     `
       insert into assets (
         symbol,

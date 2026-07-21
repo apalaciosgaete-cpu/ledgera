@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 
 const baseUrl = "https://ledgera.cl";
-const title = "Planes LEDGERA | Gratuito, Personal y Profesional";
+const title = "Planes Gratuito, Personal y Profesional";
 const description =
   "Compara los planes Gratuito, Personal y Profesional de LEDGERA para ordenar operaciones cripto, conciliar movimientos y generar respaldos trazables en Chile.";
 

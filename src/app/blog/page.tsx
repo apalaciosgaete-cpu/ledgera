@@ -6,7 +6,7 @@ import { seoPageList } from "@/modules/seo/seoPageContent";
 import { fonts } from "@/styles/tokens";
 
 const baseUrl = "https://ledgera.cl";
-const title = "Blog LEDGERA | Operaciones cripto, exchanges y respaldo tributario";
+const title = "Blog sobre cripto, exchanges y tributación en Chile";
 const description = "Guías sobre operaciones cripto, exchanges, activos digitales, método FIFO, trazabilidad y conciliación financiera en Chile.";
 
 export const metadata: Metadata = {
@@ -74,7 +74,7 @@ export default function BlogPage() {
           <div style={{ maxWidth: "760px", marginBottom: "32px" }}>
             <p style={eyebrowStyle}>Recursos base</p>
             <h2 style={{ ...sectionTitleStyle, fontSize: "clamp(1.8rem,4vw,2.7rem)" }}>Páginas guía para búsquedas clave de LEDGERA.</h2>
-            <p style={{ color: publicPalette.textMuted, fontSize: "15px", lineHeight: 1.75, margin: "16px 0 0" }}>Estos enlaces mantienen el enlazado interno dentro de una sección editorial coherente.</p>
+            <p style={{ color: publicPalette.textMuted, fontSize: "15px", lineHeight: 1.75, margin: "16px 0 0" }}>Guías especializadas para resolver las principales dudas financieras y tributarias sobre activos digitales en Chile.</p>
           </div>
           <div style={{ display: "grid", gap: "18px", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))" }}>
             {seoPageList.map((page) => (

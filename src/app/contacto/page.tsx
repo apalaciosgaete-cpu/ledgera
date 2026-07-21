@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 
 export const metadata: Metadata = {
-  title: "Contacto | LEDGERA",
+  title: "Contacto",
   description: "Contacta a LEDGERA para soporte, ventas o alianzas.",
 };
 

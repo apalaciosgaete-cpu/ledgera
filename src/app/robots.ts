@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 
 const baseUrl = "https://ledgera.cl";
 const isProduction = process.env.NODE_ENV === "production";
-const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE !== "false" && isProduction;
+const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE === "true" && isProduction;
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -15,6 +15,7 @@ export default function robots(): MetadataRoute.Robots {
       : {
           userAgent: "*",
           allow: "/",
+          disallow: ["/api/", "/admin/", "/panel", "/configuracion/", "/checkout", "/login", "/register", "/onboarding", "/verify/", "/import/", "/importaciones", "/declaraciones", "/documentacion", "/obligaciones-tributarias"],
         },
     sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,
