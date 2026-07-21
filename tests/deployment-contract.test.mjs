@@ -29,10 +29,24 @@ test("existing production database baseline is bounded and fail-closed", () => {
   const script = read("scripts/deploy-database.mjs");
 
   assert.match(script, /baselineCutoff = "20260713010000_remove_unused_domains"/);
-  assert.match(script, /firstOutput\.includes\("P3005"\)/);
+  assert.match(script, /deployOutput\.includes\("P3005"\)/);
   assert.match(script, /migrate", "resolve", "--applied"/);
   assert.match(script, /pendingMigrations\.length === 0/);
   assert.match(script, /migrate", "deploy"/);
+});
+
+test("known failed smart tax migration can be recovered safely", () => {
+  const script = read("scripts/deploy-database.mjs");
+  const migration = read(
+    "prisma/migrations/20260613000000_add_smart_tax_scores/migration.sql",
+  );
+
+  assert.match(script, /recoverableFailedMigration = "20260613000000_add_smart_tax_scores"/);
+  assert.match(script, /deployOutput\.includes\("P3009"\)/);
+  assert.match(script, /migrate",\s*"resolve",\s*"--rolled-back"/);
+  assert.match(migration, /TIMESTAMP\(3\)/);
+  assert.doesNotMatch(migration, /DATETIME/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS/);
 });
 
 test("professional workflow migration is versioned", () => {

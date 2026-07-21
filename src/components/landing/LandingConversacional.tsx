@@ -206,7 +206,7 @@ export default function LandingConversacional() {
       ) : null}
 
       <section className="relative overflow-hidden px-5 pb-12 pt-16 sm:px-8 lg:px-10 lg:pb-16 lg:pt-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_12%,var(--accent-soft),transparent_30%),radial-gradient(circle_at_14%_26%,rgba(110,231,183,0.12),transparent_28%),linear-gradient(180deg,var(--bg)_0%,var(--bg-elev)_56%,var(--bg)_100%)]" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_12%,var(--accent-soft),transparent_30%),radial-gradient(circle_at_14%_26%,rgba(110,231,184,0.12),transparent_28%),linear-gradient(180deg,var(--bg)_0%,var(--bg-elev)_56%,var(--bg)_100%)]" aria-hidden="true" />
         <div className="absolute inset-0 opacity-[0.10] [background-image:linear-gradient(rgba(148,163,184,0.22)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.18)_1px,transparent_1px)] [background-size:88px_88px]" aria-hidden="true" />
 
         <div className="relative z-10 mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(560px,1fr)]">
@@ -309,7 +309,7 @@ export default function LandingConversacional() {
       </section>
 
       <footer className="border-t border-border bg-bg px-5 py-12 text-text-soft sm:px-8 lg:px-10">
-        <div className="mx-auto grid max-w-[1440px] gap-10 lg:grid-cols-[1.1fr_1.5fr_0.8fr]">
+        <div className="mx-auto grid max-w-[1440px] gap-10 lg:grid-cols-[1.1fr_1.5fr]">
           <div>
             <Logo variant="light" size="sm" showSubtitle />
             <p className="mt-5 max-w-[430px] text-sm leading-6 text-text-faint">Orden, trazabilidad y respaldo tributario para activos digitales. Diseñado para revisar mejor antes de declarar o tomar decisiones patrimoniales.</p>
@@ -325,11 +325,6 @@ export default function LandingConversacional() {
                 </div>
               </div>
             ))}
-          </div>
-          <div className="rounded-3xl border border-accent bg-accent-soft p-6">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-accent">¿Nos das feedback?</p>
-            <p className="mt-3 text-sm leading-6 text-text-soft">Cuéntanos qué falta, qué no se entiende o qué deberíamos mejorar para que LEDGERA sea más útil al revisar tus operaciones cripto.</p>
-            <Link href="/contacto" className="mt-5 inline-flex rounded-2xl bg-accent px-5 py-3 text-sm font-black text-accent-contrast">Contactar</Link>
           </div>
         </div>
       </footer>

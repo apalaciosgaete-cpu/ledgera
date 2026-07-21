@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 
 const migrationsDirectory = resolve(process.cwd(), "prisma/migrations");
 const baselineCutoff = "20260713010000_remove_unused_domains";
+const recoverableFailedMigration = "20260613000000_add_smart_tax_scores";
 const npxCommand = process.platform === "win32" ? "npx.cmd" : "npx";
 
 function runPrisma(args, { capture = false } = {}) {
@@ -18,6 +19,10 @@ function runPrisma(args, { capture = false } = {}) {
 function printCaptured(result) {
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
+}
+
+function outputOf(result) {
+  return `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
 }
 
 function migrationDirectories() {
@@ -72,17 +77,55 @@ function baselineExistingDatabase() {
   }
 }
 
-const firstDeploy = runPrisma(["migrate", "deploy"], { capture: true });
-printCaptured(firstDeploy);
+function recoverKnownFailedMigration(output) {
+  const isKnownFailure = output.includes("P3009") &&
+    output.includes(recoverableFailedMigration);
 
-if (firstDeploy.status === 0) {
+  if (!isKnownFailure) return false;
+
+  console.log(
+    `[prisma-recovery] Se detectó la migración fallida conocida ${recoverableFailedMigration}. Se marcará como revertida antes de reintentar.`,
+  );
+
+  const resolved = runPrisma([
+    "migrate",
+    "resolve",
+    "--rolled-back",
+    recoverableFailedMigration,
+  ]);
+
+  if (resolved.status !== 0) {
+    throw new Error(
+      `No fue posible marcar como revertida la migración ${recoverableFailedMigration}.`,
+    );
+  }
+
+  return true;
+}
+
+let deploy = runPrisma(["migrate", "deploy"], { capture: true });
+printCaptured(deploy);
+
+if (deploy.status === 0) {
   process.exit(0);
 }
 
-const firstOutput = `${firstDeploy.stdout ?? ""}\n${firstDeploy.stderr ?? ""}`;
+let deployOutput = outputOf(deploy);
 
-if (!firstOutput.includes("P3005")) {
-  process.exit(firstDeploy.status ?? 1);
+if (recoverKnownFailedMigration(deployOutput)) {
+  console.log("[prisma-recovery] Estado reparado. Reintentando migraciones.");
+  deploy = runPrisma(["migrate", "deploy"], { capture: true });
+  printCaptured(deploy);
+
+  if (deploy.status === 0) {
+    process.exit(0);
+  }
+
+  deployOutput = outputOf(deploy);
+}
+
+if (!deployOutput.includes("P3005")) {
+  process.exit(deploy.status ?? 1);
 }
 
 baselineExistingDatabase();
