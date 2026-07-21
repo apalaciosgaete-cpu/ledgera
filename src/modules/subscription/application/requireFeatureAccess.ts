@@ -1,4 +1,9 @@
-import { Feature } from "@/modules/subscription/domain/planFeatures";
+import { NextResponse } from "next/server";
+
+import {
+  Feature,
+  isFeatureAvailable,
+} from "@/modules/subscription/domain/planFeatures";
 import { requireActiveSubscription } from "./requireActiveSubscription";
 import { requireFeature } from "./requireFeature";
 
@@ -13,7 +18,8 @@ type FeatureAccessUser = {
 type FeatureAccessResult =
   | { ok: true }
   | ReturnType<typeof requireActiveSubscription>
-  | ReturnType<typeof requireFeature>;
+  | ReturnType<typeof requireFeature>
+  | { ok: false; response: NextResponse };
 
 /**
  * Enforces the commercial access contract in backend routes.
@@ -23,6 +29,24 @@ export function requireFeatureAccess(
   user: FeatureAccessUser,
   feature: Feature,
 ): FeatureAccessResult {
+  if (!isFeatureAvailable(feature)) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          ok: false,
+          message: "Esta función todavía no está disponible en producción.",
+          data: {
+            code: "FEATURE_NOT_AVAILABLE",
+            feature,
+            availability: "PLANNED",
+          },
+        },
+        { status: 501 },
+      ),
+    };
+  }
+
   const subscriptionCheck = requireActiveSubscription(user);
   if (!subscriptionCheck.ok) return subscriptionCheck;
 
