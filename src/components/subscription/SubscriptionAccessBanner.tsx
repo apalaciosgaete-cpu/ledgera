@@ -12,7 +12,6 @@ export function SubscriptionAccessBanner() {
   if (!user || user.role === "admin" || user.role === "support") return null;
 
   const state = resolveSubscriptionState({
-    id: user.id,
     role: user.role,
     status: user.status,
     subscriptionPlan: user.subscriptionPlan,
