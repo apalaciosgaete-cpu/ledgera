@@ -111,6 +111,7 @@ test("admin metrics are derived from billing records", () => {
   assert.match(routeSource, /billingSubscription\.findMany/);
   assert.match(routeSource, /billingPayment\.findMany/);
   assert.match(routeSource, /monthlyEquivalent/);
+  assert.match(routeSource, /PAID/);
   assert.match(routeSource, /APPROVED/);
   assert.match(routeSource, /AUTHORIZED/);
   assert.match(pageSource, /\/api\/admin\/metrics/);
@@ -131,14 +132,15 @@ test("professional access model has explicit tenant relations", () => {
   assert.match(platform, /professionalAdvisorLinks\s+ProfessionalClientAccess\[\]/);
 });
 
-test("professional client API enforces plan, 2FA and five occupied seats", () => {
+test("professional client API enforces plan, 2FA and dynamic seats", () => {
   const source = read("src/app/api/professional/clients/route.ts");
 
   assert.match(source, /Feature\.EXPERT_MODE/);
   assert.match(source, /TWO_FACTOR_REQUIRED/);
-  assert.match(source, /PROFESSIONAL_INCLUDED_CLIENTS/);
+  assert.match(source, /getProfessionalSeatEntitlement/);
   assert.match(source, /PROFESSIONAL_CLIENT_LIMIT/);
   assert.match(source, /countOccupiedProfessionalSeats/);
+  assert.match(source, /occupiedSeats >= seatEntitlement\.totalSeats/);
 });
 
 test("client mandate authorization verifies permission and active relation", () => {
@@ -177,6 +179,11 @@ const subscriptionWritePaths = [
   "src/app/api/portfolio/import/confirm/route.ts",
   "src/app/api/integrations/binance/imports/confirm/route.ts",
   "src/app/api/integrations/binance/imports/bulk-confirm/route.ts",
+  "src/app/api/integrations/binance/connect/route.ts",
+  "src/app/api/integrations/binance/sync/route.ts",
+  "src/app/api/bank/import/route.ts",
+  "src/app/api/documents/route.ts",
+  "src/app/api/tasks/route.ts",
 ];
 
 for (const sourcePath of subscriptionWritePaths) {
@@ -184,6 +191,21 @@ for (const sourcePath of subscriptionWritePaths) {
     const source = read(sourcePath);
     assert.match(source, /requireActiveSubscription/);
     assert.match(source, /if \(!subscriptionCheck\.ok\) return subscriptionCheck\.response/);
+  });
+}
+
+const csrfProtectedWrites = [
+  "src/app/api/integrations/binance/connect/route.ts",
+  "src/app/api/integrations/binance/sync/route.ts",
+  "src/app/api/bank/import/route.ts",
+  "src/app/api/documents/route.ts",
+  "src/app/api/tasks/route.ts",
+];
+
+for (const sourcePath of csrfProtectedWrites) {
+  test(`${sourcePath} enforces CSRF protection on writes`, () => {
+    const source = read(sourcePath);
+    assert.match(source, /enforceCsrfProtection/);
   });
 }
 
