@@ -121,6 +121,8 @@ export default function FeedbackWidget() {
         setCollapsed(stored.collapsed);
         setPosition(stored.position);
       }
+    } else {
+      removeStoredWidgetState();
     }
 
     setHydrated(true);
@@ -236,21 +238,33 @@ export default function FeedbackWidget() {
     if (!current || !node) return;
 
     const step = event.shiftKey ? 32 : 12;
-    const direction = {
-      ArrowLeft: [-step, 0],
-      ArrowRight: [step, 0],
-      ArrowUp: [0, -step],
-      ArrowDown: [0, step],
-    }[event.key];
+    let deltaX = 0;
+    let deltaY = 0;
 
-    if (!direction) return;
+    switch (event.key) {
+      case "ArrowLeft":
+        deltaX = -step;
+        break;
+      case "ArrowRight":
+        deltaX = step;
+        break;
+      case "ArrowUp":
+        deltaY = -step;
+        break;
+      case "ArrowDown":
+        deltaY = step;
+        break;
+      default:
+        return;
+    }
+
     event.preventDefault();
 
     const rect = node.getBoundingClientRect();
     const next = clampPosition(
       {
-        x: current.x + direction[0],
-        y: current.y + direction[1],
+        x: current.x + deltaX,
+        y: current.y + deltaY,
       },
       rect.width,
       rect.height,
