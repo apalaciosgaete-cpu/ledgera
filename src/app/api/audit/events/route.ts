@@ -49,7 +49,9 @@ export async function GET(req: NextRequest) {
       if (!access.ok) return access.response;
 
       accessScope = access.scope;
-      mandateId = access.mandateId;
+      if (access.scope === "MANDATE") {
+        mandateId = access.mandateId;
+      }
     }
 
     const events = await listAuditEvents({
@@ -62,7 +64,7 @@ export async function GET(req: NextRequest) {
       limit: 100,
     });
 
-    if (accessScope === "MANDATE" && requestedUserId) {
+    if (accessScope === "MANDATE" && requestedUserId && mandateId) {
       await createAdminAuditLog({
         action: "PROFESSIONAL_CLIENT_DATA_ACCESSED",
         actorId: auth.user.id,
