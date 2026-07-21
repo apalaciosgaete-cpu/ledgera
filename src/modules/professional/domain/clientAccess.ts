@@ -10,6 +10,32 @@ export const ProfessionalAccessStatus = {
 export type ProfessionalAccessStatus =
   (typeof ProfessionalAccessStatus)[keyof typeof ProfessionalAccessStatus];
 
+export const ProfessionalWorkflowStatus = {
+  INVITED: "INVITED",
+  DATA_PENDING: "DATA_PENDING",
+  REVIEWING: "REVIEWING",
+  READY_TO_FILE: "READY_TO_FILE",
+  COMPLETED: "COMPLETED",
+  BLOCKED: "BLOCKED",
+} as const;
+
+export type ProfessionalWorkflowStatus =
+  (typeof ProfessionalWorkflowStatus)[keyof typeof ProfessionalWorkflowStatus];
+
+const VALID_WORKFLOW_STATUSES = new Set<string>(
+  Object.values(ProfessionalWorkflowStatus),
+);
+
+export function normalizeProfessionalWorkflowStatus(
+  value: unknown,
+): ProfessionalWorkflowStatus | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toUpperCase();
+  return VALID_WORKFLOW_STATUSES.has(normalized)
+    ? (normalized as ProfessionalWorkflowStatus)
+    : null;
+}
+
 export const ProfessionalPermission = {
   VIEW_TAX_DATA: "VIEW_TAX_DATA",
   MANAGE_IMPORTS: "MANAGE_IMPORTS",
