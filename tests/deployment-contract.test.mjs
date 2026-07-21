@@ -11,7 +11,8 @@ test("Vercel executes the repository build script", () => {
   const packageJson = JSON.parse(read("package.json"));
 
   assert.equal(config.buildCommand, "npm run build");
-  assert.equal(packageJson.scripts.build, "prisma migrate deploy && next build");
+  assert.equal(packageJson.scripts.build, "node scripts/deploy-database.mjs && next build");
+  assert.equal(packageJson.scripts["db:deploy"], "node scripts/deploy-database.mjs");
 });
 
 test("Prisma uses the canonical config file and schema folder", () => {
@@ -22,6 +23,16 @@ test("Prisma uses the canonical config file and schema folder", () => {
   assert.match(config, /schema: "prisma\/schema"/);
   assert.match(config, /path: "prisma\/migrations"/);
   assert.equal(packageJson.prisma, undefined);
+});
+
+test("existing production database baseline is bounded and fail-closed", () => {
+  const script = read("scripts/deploy-database.mjs");
+
+  assert.match(script, /baselineCutoff = "20260713010000_remove_unused_domains"/);
+  assert.match(script, /firstOutput\.includes\("P3005"\)/);
+  assert.match(script, /migrate", "resolve", "--applied"/);
+  assert.match(script, /pendingMigrations\.length === 0/);
+  assert.match(script, /migrate", "deploy"/);
 });
 
 test("professional workflow migration is versioned", () => {
