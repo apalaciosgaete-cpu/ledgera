@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
 import { parseBankFile } from "@/modules/banking/application/parseBankFile";
 import { importBankMovements } from "@/modules/banking/application/importBankMovements";
 
-
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
-export const runtime     = "nodejs";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
@@ -18,18 +17,21 @@ export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) return fail("No autorizado", 401);
 
+  const subscriptionCheck = requireActiveSubscription(auth.user);
+  if (!subscriptionCheck.ok) return subscriptionCheck.response;
+
   try {
     const formData = await request.formData();
-    const file     = formData.get("file") as File | null;
+    const file = formData.get("file") as File | null;
     const bankName = ((formData.get("bankName") as string) || "").trim();
 
-    if (!file)     return fail("Archivo requerido.", 400);
+    if (!file) return fail("Archivo requerido.", 400);
     if (!bankName) return fail("bankName requerido.", 400);
 
-    const buffer   = Buffer.from(await file.arrayBuffer());
+    const buffer = Buffer.from(await file.arrayBuffer());
     const fileName = file.name;
 
-    const { fileHash, rows, errorRows, rawPreview } = await parseBankFile(fileName, buffer);
+    const { fileHash, rows, errorRows } = await parseBankFile(fileName, buffer);
 
     const result = await importBankMovements(
       auth.user.id,
@@ -42,16 +44,16 @@ export async function POST(request: NextRequest) {
 
     return ok(
       {
-        uploadId:     result.uploadId,
-        duplicate:    result.duplicate,
-        totalRows:    result.totalRows,
+        uploadId: result.uploadId,
+        duplicate: result.duplicate,
+        totalRows: result.totalRows,
         importedRows: result.importedRows,
-        errorRows:    result.errorRows,
+        errorRows: result.errorRows,
         preview: rows.slice(0, 20).map((row) => ({
-          occurredAt:  row.occurredAt.toISOString(),
+          occurredAt: row.occurredAt.toISOString(),
           description: row.description,
-          amountClp:   row.amountClp,
-          direction:   row.direction,
+          amountClp: row.amountClp,
+          direction: row.direction,
         })),
       },
       result.duplicate
