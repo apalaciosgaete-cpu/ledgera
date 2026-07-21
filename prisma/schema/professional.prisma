@@ -4,6 +4,9 @@ model ProfessionalClientAccess {
   clientUserId       String
   status             String   @default("PENDING")
   permissions        Json?
+  workflowStatus     String   @default("INVITED")
+  workflowNote       String?
+  workflowUpdatedAt  DateTime @default(now()) @db.Timestamptz(6)
   invitedAt          DateTime @default(now()) @db.Timestamptz(6)
   acceptedAt         DateTime? @db.Timestamptz(6)
   revokedAt          DateTime? @db.Timestamptz(6)
@@ -15,6 +18,7 @@ model ProfessionalClientAccess {
 
   @@unique([professionalUserId, clientUserId])
   @@index([professionalUserId, status])
+  @@index([professionalUserId, workflowStatus])
   @@index([clientUserId, status])
   @@map("professional_client_access")
 }
