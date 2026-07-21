@@ -1,10 +1,5 @@
-// Force dynamic rendering because routes use request.headers/cookies
-export const dynamic = 'force-dynamic';
-
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/shared";
-import { ok, fail, serverError } from "@/shared/apiResponse";
 import { listUserDocuments } from "@/modules/documents/application/listUserDocuments";
 import { uploadDocument } from "@/modules/documents/application/uploadDocument";
 import {
@@ -12,6 +7,12 @@ import {
   type Document,
   isValidDocumentCategory,
 } from "@/modules/documents/domain/document";
+import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
+import { requireActiveSubscription } from "@/modules/subscription/application/requireActiveSubscription";
+import { requireAuth } from "@/shared";
+import { ok, fail, serverError } from "@/shared/apiResponse";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -42,10 +43,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const csrfResponse = enforceCsrfProtection(request);
+  if (csrfResponse) return csrfResponse;
+
   const auth = await requireAuth(request);
   if (!auth || auth instanceof NextResponse) {
     return fail("No autorizado.", 401);
   }
+
+  const subscriptionCheck = requireActiveSubscription(auth.user);
+  if (!subscriptionCheck.ok) return subscriptionCheck.response;
 
   try {
     const formData = await request.formData();
@@ -65,7 +72,7 @@ export async function POST(request: NextRequest) {
     const tagsRaw = formData.get("tags")?.toString() ?? "";
     const tags = tagsRaw
       .split(",")
-      .map((t) => t.trim())
+      .map((tag) => tag.trim())
       .filter(Boolean);
     const relatedEntityType = formData.get("relatedEntityType")?.toString();
     const relatedEntityId = formData.get("relatedEntityId")?.toString();
