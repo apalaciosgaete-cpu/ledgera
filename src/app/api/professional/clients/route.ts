@@ -76,6 +76,9 @@ export async function GET(request: NextRequest) {
         clientUserId: item.clientUserId,
         status: item.status,
         permissions: normalizeProfessionalPermissions(item.permissions),
+        workflowStatus: item.workflowStatus,
+        workflowNote: item.workflowNote,
+        workflowUpdatedAt: item.workflowUpdatedAt,
         invitedAt: item.invitedAt,
         acceptedAt: item.acceptedAt,
         revokedAt: item.revokedAt,
@@ -175,6 +178,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         mandateId: invitation.id,
         permissions,
+        workflowStatus: invitation.workflowStatus,
         occupiedSeatsBeforeInvitation: occupiedSeats,
         totalSeats: seatEntitlement.totalSeats,
       },
@@ -189,6 +193,7 @@ export async function POST(request: NextRequest) {
           clientUserId: targetUser.id,
           clientEmail: targetUser.email,
           status: invitation.status,
+          workflowStatus: invitation.workflowStatus,
           permissions,
           seats: {
             includedSeats: seatEntitlement.includedSeats,
