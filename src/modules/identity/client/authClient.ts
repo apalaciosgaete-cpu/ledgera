@@ -1,13 +1,18 @@
 // src/modules/identity/client/authClient.ts
 
+import type {
+  SubscriptionPlan,
+  UserRole,
+  UserStatus,
+} from "@/modules/identity/domain/user";
 import { httpClient } from "@/shared/http/httpClient";
 
 export type AuthUser = {
   id: string;
   email: string;
-  role: "personal" | "contador" | "empresa" | "support" | "admin";
-  status?: "active" | "inactive" | "suspended";
-  subscriptionPlan?: "BASICO" | "PERSONAL" | "PROFESIONAL" | "EMPRESA";
+  role: UserRole;
+  status?: UserStatus;
+  subscriptionPlan?: SubscriptionPlan;
   subscriptionExpiresAt?: string | null;
   twoFactorEnabled?: boolean;
   needsOnboarding?: boolean;
