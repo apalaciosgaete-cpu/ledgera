@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
@@ -7,7 +7,7 @@ import { fail, ok, serverError } from "@/shared/apiResponse";
 export const dynamic = "force-dynamic";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ["ACTIVE", "CANCEL_AT_PERIOD_END"] as const;
-const PAID_PAYMENT_STATUSES = ["APPROVED", "AUTHORIZED"] as const;
+const PAID_PAYMENT_STATUSES = ["PAID", "APPROVED", "AUTHORIZED"] as const;
 
 function monthlyEquivalent(amount: number, interval: string) {
   return interval === "ANNUAL" ? Math.round(amount / 12) : amount;
