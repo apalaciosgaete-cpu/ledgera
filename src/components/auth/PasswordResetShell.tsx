@@ -4,11 +4,12 @@ import { Logo } from "@/components/brand/Logo";
 import { fonts } from "@/styles/tokens";
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
-  return <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem 1.25rem", position: "relative", background: "linear-gradient(135deg,#07111f 0%,#102742 52%,#08101d 100%)" }}>
-    <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 25% 20%,rgba(14,165,233,.18),transparent 36%)" }} />
-    <div style={{ position: "relative", width: "100%", maxWidth: 440, display: "grid", gap: ".65rem", justifyItems: "center" }}>
+  return <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem 1.25rem", position: "relative", overflow: "hidden", backgroundColor: "#07111f", backgroundImage: "url('/Fondo_Loguin.png')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
+    <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 50% 40%,rgba(12,30,54,.18) 0%,rgba(3,9,20,.42) 72%,rgba(2,7,16,.72) 100%),linear-gradient(180deg,rgba(4,8,20,.16),rgba(4,8,20,.34))" }} />
+    <div aria-hidden="true" style={{ position: "absolute", width: "min(38rem,90vw)", height: "min(38rem,90vw)", left: "50%", top: "48%", transform: "translate(-50%,-50%)", borderRadius: "999px", background: "rgba(14,165,233,.08)", filter: "blur(90px)" }} />
+    <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 440, display: "grid", gap: ".65rem", justifyItems: "center" }}>
       <Logo variant="light" size="lg" />
-      <section style={{ width: "100%", boxSizing: "border-box", background: "rgba(8,13,28,.86)", border: "1px solid rgba(125,203,242,.18)", borderRadius: 20, padding: "1.8rem 2rem", boxShadow: "0 24px 60px rgba(0,0,0,.38)", display: "grid", gap: "1rem", backdropFilter: "blur(18px)" }}>{children}</section>
+      <section style={{ width: "100%", boxSizing: "border-box", background: "rgba(8,13,28,.84)", border: "1px solid rgba(125,203,242,.22)", borderRadius: 20, padding: "1.8rem 2rem", boxShadow: "0 28px 72px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.035)", display: "grid", gap: "1rem", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>{children}</section>
     </div>
   </main>;
 }
