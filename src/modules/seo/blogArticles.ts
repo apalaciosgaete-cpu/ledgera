@@ -22,7 +22,7 @@ export type BlogArticle = {
   }>;
 };
 
-const baseSections: BlogSection[] = [
+const taxGuideSections: BlogSection[] = [
   {
     type: "p",
     content:
@@ -72,6 +72,57 @@ const baseRelated = [
   { label: "Declarar operaciones cripto", href: "/como-declarar-crypto-en-chile" },
   { label: "Conciliación banco-exchange", href: "/conciliacion-binance-banco" },
 ];
+
+const declarationSections: BlogSection[] = [
+  { type: "p", content: "Preparar una declaración comienza antes del Formulario 22. El primer objetivo es reconstruir el período completo y separar los hechos que pueden producir un resultado tributario de los simples movimientos entre cuentas propias." },
+  { type: "h2", content: "Paso 1: reúne todas las fuentes" },
+  { type: "ul", content: ["Historial completo de cada exchange.", "Movimientos de wallets propias.", "Cartolas bancarias y comprobantes.", "Registros de pagos, recompensas y comisiones."] },
+  { type: "h2", content: "Paso 2: clasifica cada operación" },
+  { type: "p", content: "Distingue compras, ventas, swaps, depósitos, retiros, ingresos y transferencias propias. No clasifiques una salida como venta sólo porque abandonó un exchange: puede haber llegado a otra wallet del mismo titular." },
+  { type: "h2", content: "Paso 3: reconstruye costo y valor en pesos" },
+  { type: "p", content: "Cada resultado debe conservar fecha, cantidad, costo atribuible, valor de enajenación, comisiones y criterio de conversión a CLP. La consistencia del método importa tanto como el número final." },
+  { type: "h2", content: "Paso 4: revisa el perfil del contribuyente" },
+  { type: "p", content: "La determinación final varía según se trate de una persona natural o una empresa, su régimen y los antecedentes del caso. Entrega el respaldo a un profesional antes de presentar o rectificar la declaración." },
+  { type: "callout", content: "El SII indica que el mayor valor obtenido en la compra y venta de criptomonedas constituye renta afecta a impuestos. La forma de declararlo depende del tipo de contribuyente y del caso concreto." },
+];
+
+const auditSections: BlogSection[] = [
+  { type: "p", content: "Ante una revisión del SII, el desafío no es entregar más archivos: es demostrar cómo cada cifra se construyó desde operaciones identificables y documentos coherentes." },
+  { type: "h2", content: "Arma una carpeta por período y fuente" },
+  { type: "ul", content: ["Exportaciones originales de exchanges, sin editar.", "Cartolas bancarias y comprobantes relacionados.", "Direcciones de wallets y transacciones relevantes.", "Informe de costo, resultado, comisiones y tipos de cambio.", "Registro de correcciones y criterios aplicados."] },
+  { type: "h2", content: "Explica las transferencias entre cuentas propias" },
+  { type: "p", content: "Un retiro desde un exchange no acredita por sí solo una venta. Conserva la dirección de destino y la continuidad del activo cuando se trate de un traslado entre cuentas del mismo titular." },
+  { type: "h2", content: "Reconcilia banco y exchange" },
+  { type: "p", content: "Relaciona depósitos y retiros bancarios con las operaciones que los originaron. Documenta desfases, comisiones y agrupaciones cuando los montos no coincidan exactamente." },
+  { type: "h2", content: "Entrega una trazabilidad reproducible" },
+  { type: "p", content: "Un tercero debe poder pasar del total declarado al detalle por activo y desde allí al registro original. LEDGERA mantiene ese recorrido y permite exportarlo para revisión." },
+  { type: "callout", content: "No alteres los archivos originales. Conserva una copia intacta y documenta por separado cualquier normalización o corrección realizada durante la revisión." },
+];
+
+const taxpayerProfileSections: BlogSection[] = [
+  { type: "p", content: "Usar una sociedad no transforma automáticamente una operación en más conveniente ni elimina las obligaciones personales. La revisión cambia porque el contribuyente, la contabilidad y la forma de determinar la renta pueden ser diferentes." },
+  { type: "h2", content: "Cuando opera una persona natural" },
+  { type: "p", content: "El SII señala que el mayor valor obtenido por una persona natural puede quedar afecto a impuestos finales según corresponda. Se deben reconstruir costo, valor de enajenación y antecedentes del período, considerando siempre las circunstancias particulares." },
+  { type: "h2", content: "Cuando opera una empresa" },
+  { type: "p", content: "La empresa debe integrar las operaciones a su contabilidad y régimen tributario, respaldar activos, ingresos, costos y comisiones, y mantener separados sus fondos de los de socios o administradores." },
+  { type: "ul", content: ["Titular real de las cuentas y wallets.", "Origen de los fondos utilizados.", "Registro contable de compras y ventas.", "Documentos emitidos o recibidos.", "Retiros, distribuciones o cuentas con relacionados."] },
+  { type: "h2", content: "Preguntas antes de elegir una estructura" },
+  { type: "ul", content: ["¿La actividad es personal o forma parte de un negocio organizado?", "¿Quién asume el riesgo y aporta los fondos?", "¿Existe operación recurrente, clientes o prestación de servicios?", "¿Qué régimen y obligaciones contables tendría la sociedad?", "¿Cómo se retirarán los recursos desde la empresa?"] },
+  { type: "callout", content: "La elección entre persona natural y empresa exige análisis legal, contable y tributario previo. LEDGERA organiza la evidencia, pero no recomienda una estructura sin conocer el caso completo." },
+];
+
+const importSections: BlogSection[] = [
+  { type: "p", content: "Una importación fiable conserva el archivo original y valida su contenido antes de incorporarlo al historial confirmado. El objetivo es detectar ausencias y duplicados cuando todavía pueden corregirse sin alterar resultados." },
+  { type: "h2", content: "Descarga el historial correcto" },
+  { type: "ul", content: ["Selecciona el período completo.", "Incluye trades, conversiones, depósitos y retiros.", "Descarga comisiones y recompensas cuando estén separadas.", "No cambies encabezados ni formatos antes de cargar."] },
+  { type: "h2", content: "Revisa la vista previa" },
+  { type: "p", content: "Comprueba fechas, zonas horarias, símbolos, cantidades y tipos de movimiento. Si el exchange divide el historial en varios archivos, verifica que no existan períodos solapados." },
+  { type: "h2", content: "Resuelve duplicados y movimientos desconocidos" },
+  { type: "p", content: "Un identificador repetido, una operación ya confirmada o una fila sin activo suficiente deben quedar pendientes. No confirmes en bloque datos que todavía no puedes explicar." },
+  { type: "h2", content: "Concilia después de confirmar la fuente" },
+  { type: "p", content: "Cuando el historial del exchange está limpio, relaciónalo con banco y wallets. Así puedes distinguir compras financiadas desde el banco, retiros de dinero y transferencias propias." },
+];
+
 
 export const blogArticles: BlogArticle[] = [
   {
@@ -324,7 +375,7 @@ export const blogArticles: BlogArticle[] = [
     publishedLabel: "28 de mayo, 2026",
     publishedAt: "2026-05-28",
     updatedAt: "2026-05-28",
-    sections: baseSections,
+    sections: taxGuideSections,
     related: [
       ...baseRelated,
       { label: "Método FIFO en activos digitales", href: "/blog/metodo-fifo-criptomonedas-chile" },
@@ -340,8 +391,8 @@ export const blogArticles: BlogArticle[] = [
     readTime: "8 min",
     publishedLabel: "12 de mayo, 2025",
     publishedAt: "2025-05-12",
-    updatedAt: "2026-05-27",
-    sections: baseSections,
+    updatedAt: "2026-07-21",
+    sections: declarationSections,
     related: [
       { label: "Guía de tributación cripto en Chile", href: "/blog/guia-impuestos-criptomonedas-chile" },
       ...baseRelated,
@@ -413,8 +464,8 @@ export const blogArticles: BlogArticle[] = [
     readTime: "7 min",
     publishedLabel: "15 de abril, 2025",
     publishedAt: "2025-04-15",
-    updatedAt: "2026-05-27",
-    sections: baseSections,
+    updatedAt: "2026-07-21",
+    sections: auditSections,
     related: [
       ...baseRelated,
       { label: "Preguntas frecuentes", href: "/preguntas" },
@@ -478,8 +529,8 @@ export const blogArticles: BlogArticle[] = [
     readTime: "6 min",
     publishedLabel: "20 de marzo, 2025",
     publishedAt: "2025-03-20",
-    updatedAt: "2026-05-27",
-    sections: baseSections,
+    updatedAt: "2026-07-21",
+    sections: taxpayerProfileSections,
     related: [
       ...baseRelated,
       { label: "Planes LEDGERA", href: "/planes" },
@@ -495,8 +546,8 @@ export const blogArticles: BlogArticle[] = [
     readTime: "4 min",
     publishedLabel: "10 de marzo, 2025",
     publishedAt: "2025-03-10",
-    updatedAt: "2026-05-27",
-    sections: baseSections,
+    updatedAt: "2026-07-21",
+    sections: importSections,
     related: [
       ...baseRelated,
       { label: "Cómo funciona LEDGERA", href: "/como-funciona" },
