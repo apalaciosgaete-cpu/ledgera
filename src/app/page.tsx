@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import LandingConversacional from "@/components/landing/LandingConversacional";
 
 export const metadata: Metadata = {
-  title: "LEDGERA — Sistema Operativo Financiero y Tributario para Crypto en Chile",
+  title: "LEDGERA | De tus exchanges a tu declaración, sin planillas",
   description:
-    "Conversa con LEDGERA y entiende las consecuencias financieras y tributarias de tus decisiones antes de actuar. Declaración de criptomonedas, conciliación bancaria y cumplimiento tributario en Chile. No reemplaza a un contador, te ayuda a decidir mejor.",
+    "Importa operaciones cripto desde exchanges, ordena activos digitales, detecta inconsistencias y genera respaldos tributarios trazables en PDF y Excel para revisión antes de declarar en Chile.",
   alternates: {
     canonical: "/",
   },
