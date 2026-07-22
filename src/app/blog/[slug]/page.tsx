@@ -26,7 +26,7 @@ export async function generateMetadata({
 
   if (!article) {
     return {
-      title: "Artículo no encontrado | LEDGERA",
+      title: "Artículo no encontrado",
       robots: { index: false, follow: false },
     };
   }
@@ -34,7 +34,7 @@ export async function generateMetadata({
   const canonicalUrl = `${baseUrl}/blog/${article.slug}`;
 
   return {
-    title: `${article.title} | LEDGERA`,
+    title: article.title,
     description: article.summary,
     alternates: { canonical: canonicalUrl },
     openGraph: {
@@ -68,6 +68,7 @@ export default async function BlogArticlePage({
   if (!article) notFound();
 
   const articleUrl = `${baseUrl}/blog/${article.slug}`;
+  const updatedLabel = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${article.updatedAt}T00:00:00Z`));
   const schema = [
     buildBlogPostingSchema(article),
     buildBreadcrumbList([
@@ -78,7 +79,7 @@ export default async function BlogArticlePage({
   ];
 
   return (
-    <main style={{ fontFamily: "'Manrope', system-ui, sans-serif", background: "var(--bg-elev)", color: "var(--text)", minHeight: "100vh" }}>
+    <main style={{ fontFamily: "var(--font-body, 'Manrope', system-ui, sans-serif)", background: "var(--bg-elev)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={schema} />
 
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(7,21,32,0.94)", backdropFilter: "blur(16px)", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "0 2.5rem", minHeight: "76px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -115,6 +116,9 @@ export default async function BlogArticlePage({
           </h1>
           <p style={{ fontSize: "18px", color: "var(--text-faint)", margin: 0, lineHeight: 1.75, maxWidth: "720px" }}>
             {article.summary}
+          </p>
+          <p style={{ fontSize: "13px", color: "var(--text-soft)", margin: "1.25rem 0 0", lineHeight: 1.6 }}>
+            Por Equipo editorial LEDGERA · Revisado el <time dateTime={article.updatedAt}>{updatedLabel}</time>
           </p>
         </div>
       </section>
@@ -161,6 +165,24 @@ export default async function BlogArticlePage({
 
           return null;
         })}
+
+        <section style={{ marginTop: "3rem", padding: "1.5rem", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", background: "rgba(255,255,255,0.025)" }}>
+          <h2 style={{ fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)", fontSize: "20px", fontWeight: 900, color: "var(--text)", margin: "0 0 0.75rem" }}>Fuentes oficiales</h2>
+          <p style={{ fontSize: "14px", color: "var(--text-soft)", lineHeight: 1.7, margin: "0 0 1rem" }}>Contenido educativo revisado con referencias públicas del Servicio de Impuestos Internos.</p>
+          <ul style={{ margin: 0, paddingLeft: "1.2rem", display: "grid", gap: "0.65rem" }}>
+            <li><a href="https://www.sii.cl/preguntas_frecuentes/criptomonedas/arbol_faqs_criptomonedas_1653.htm" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", fontSize: "14px" }}>SII: preguntas frecuentes sobre activos digitales</a></li>
+            <li><a href="https://www.sii.cl/preguntas_frecuentes/criptomonedas/001_250_7872.htm" target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", fontSize: "14px" }}>SII: tributación del mayor valor en criptomonedas</a></li>
+          </ul>
+        </section>
+
+        <section style={{ marginTop: "2rem", padding: "1.5rem", border: "1px solid rgba(22,163,74,0.25)", borderRadius: "16px", background: "rgba(22,163,74,0.06)" }}>
+          <h2 style={{ fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)", fontSize: "20px", fontWeight: 900, color: "var(--text)", margin: "0 0 0.75rem" }}>Cómo revisamos este contenido</h2>
+          <p style={{ fontSize: "14px", color: "var(--text-soft)", lineHeight: 1.7, margin: "0 0 1rem" }}>Separamos hechos verificables, interpretación educativa y funcionamiento de LEDGERA. Contrastamos normativa y datos con fuentes oficiales, registramos la fecha de revisión y señalamos los límites: el contenido no reemplaza un análisis tributario del caso concreto.</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            <Link href="/seguridad" style={{ color: "var(--accent)", fontSize: "14px", fontWeight: 750, textDecoration: "none" }}>Seguridad de la plataforma →</Link>
+            <Link href="/como-funciona" style={{ color: "var(--accent)", fontSize: "14px", fontWeight: 750, textDecoration: "none" }}>Metodología y trazabilidad →</Link>
+          </div>
+        </section>
 
         <section style={{ marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           <h2 style={{ fontFamily: "var(--font-display, 'Manrope', system-ui, sans-serif)", fontSize: "22px", fontWeight: 900, color: "var(--text)", margin: "0 0 1rem", letterSpacing: "-0.03em" }}>
