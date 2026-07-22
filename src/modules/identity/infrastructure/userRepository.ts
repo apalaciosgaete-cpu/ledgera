@@ -210,3 +210,14 @@ export async function updateUserProfile(
     return null;
   }
 }
+
+export async function updateUserPassword(
+  userId: string,
+  passwordHash: string,
+): Promise<boolean> {
+  const result = await prisma.users.updateMany({
+    where: { id: userId },
+    data: { password_hash: passwordHash, updated_at: new Date() },
+  });
+  return result.count === 1;
+}
