@@ -12,6 +12,7 @@ const navItems = [
   ["Cómo funciona", "/como-funciona"],
   ["Planes", "/planes"],
   ["Preguntas", "/preguntas"],
+  ["Blog", "/blog"],
 ] as const;
 
 const trustItems = [
