@@ -4,8 +4,6 @@ import { requireAuth } from "@/shared";
 import { fail, ok, serverError } from "@/shared/apiResponse";
 import { requireFeatureAccess } from "@/modules/subscription/application/requireFeatureAccess";
 import { Feature } from "@/modules/subscription/domain/planFeatures";
-import { requireProfessionalClientAccess } from "@/modules/professional/application/requireProfessionalClientAccess";
-import { ProfessionalPermission } from "@/modules/professional/domain/clientAccess";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import {
   createAdminAuditLog,
@@ -28,13 +26,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const requestedUserId = searchParams.get("userId") ?? auth.user.id;
+    const isAdmin = auth.user.role === "admin";
 
-    const clientAccess = await requireProfessionalClientAccess(
-      auth.user,
-      requestedUserId,
-      ProfessionalPermission.VIEW_TAX_DATA,
-    );
-    if (!clientAccess.ok) return clientAccess.response;
+    if (!isAdmin && requestedUserId !== auth.user.id) {
+      return fail("No puedes consultar casos tributarios de otra cuenta.", 403);
+    }
 
     const filters = {
       status: searchParams.get("status") ?? undefined,
@@ -44,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const summary = await getAllTaxCasesExpert(filters);
 
-    if (requestedUserId !== auth.user.id) {
+    if (isAdmin && requestedUserId !== auth.user.id) {
       const targetUser = await getUserById(requestedUserId);
 
       await createAdminAuditLog({
@@ -56,8 +52,7 @@ export async function GET(request: NextRequest) {
         ...getAuditRequestContext(request),
         metadata: {
           resource: "tax_cases",
-          accessScope: clientAccess.scope,
-          mandateId: clientAccess.mandateId ?? null,
+          accessScope: "ADMIN",
           filters,
           resultCount: summary.items.length,
         },
@@ -67,7 +62,9 @@ export async function GET(request: NextRequest) {
     return ok(
       {
         ...summary,
-        accessScope: clientAccess.scope,
+        accessScope: isAdmin && requestedUserId !== auth.user.id
+          ? "ADMIN"
+          : "OWNER",
         items: summary.items.map((item) => ({
           ...item,
           createdAt: item.createdAt.toISOString(),

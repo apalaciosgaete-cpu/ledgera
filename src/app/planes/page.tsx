@@ -76,22 +76,21 @@ const plans: Plan[] = [
     name: "Profesional",
     monthly: 29990,
     annual: 329890,
-    description: "Para contadores y asesores que administran varios contribuyentes.",
-    availability: "5 clientes incluidos",
+    description: "Para contribuyentes que necesitan una revisión técnica más profunda.",
+    availability: "Herramientas avanzadas",
     highlight: false,
     cta: "Activar Profesional",
     annualCta: "Activar Profesional anual",
     checkoutPlan: "PROFESIONAL",
     features: [
       "Todo lo de Personal",
-      "Panel multicliente",
-      "Administra hasta 5 clientes",
-      "Estados de avance por contribuyente",
+      "Vista experta de casos tributarios",
+      "Auditoría ampliada de eventos",
       "Reportes trazables para revisión",
       "Soporte prioritario",
     ],
     disabled: [],
-    note: "Cliente adicional: $4.990 + IVA/mes.",
+    note: "Pensado para operaciones que requieren mayor control y revisión.",
   },
 ];
 
@@ -114,11 +113,7 @@ const faqItems = [
   },
   {
     q: "¿Qué diferencia al plan Profesional?",
-    a: "Profesional permite administrar varios contribuyentes desde un solo lugar, con espacios separados por cliente, estados de avance, reportes estandarizados y soporte prioritario.",
-  },
-  {
-    q: "¿Cuántos clientes incluye Profesional?",
-    a: "Incluye hasta 5 clientes. Cada cliente adicional cuesta $4.990 + IVA/mes.",
+    a: "Profesional agrega vista experta de casos tributarios, auditoría ampliada, reportes trazables para revisión y soporte prioritario.",
   },
   {
     q: "¿El pago anual tiene descuento?",

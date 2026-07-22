@@ -58,7 +58,7 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
   PROFESIONAL: {
     plan: "PROFESIONAL",
     name: COMMERCIAL_PLANS.PROFESIONAL.label,
-    description: "Plan para contadores y asesores que administran varios contribuyentes.",
+    description: "Plan para contribuyentes que necesitan revisión técnica avanzada.",
     amount: COMMERCIAL_PLANS.PROFESIONAL.monthly.grossAmount,
     netAmount: COMMERCIAL_PLANS.PROFESIONAL.monthly.netAmount,
     taxAmount: COMMERCIAL_PLANS.PROFESIONAL.monthly.taxAmount,
@@ -67,8 +67,8 @@ export const BILLING_PLANS: Record<BillingPlan, BillingPlanConfig> = {
     sellable: true,
     features: [
       "Todo lo de Personal",
-      "5 clientes incluidos",
-      "Panel multicliente",
+      "Vista experta de casos tributarios",
+      "Auditoría ampliada de eventos",
       "Reportes trazables para revisión",
       "Soporte prioritario",
     ],

@@ -39,10 +39,10 @@ const PLAN_SUMMARIES: Record<BillingCheckoutPlan, PlanSummary> = {
     monthly: 29990,
     annual: 329890,
     description:
-      "Administra los historiales cripto de tus clientes desde una plataforma especializada.",
+      "Profundiza la revisión de tu operación cripto con herramientas técnicas avanzadas.",
     features: [
-      "5 clientes incluidos",
-      "Panel multicliente y estados de avance",
+      "Vista experta de casos tributarios",
+      "Auditoría ampliada de eventos",
       "Reportes trazables y soporte prioritario",
     ],
   },

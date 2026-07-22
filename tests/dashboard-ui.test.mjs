@@ -23,10 +23,11 @@ test("Expert dashboard page renders executive title and sections", () => {
   assert.match(source, /Pagos pendientes/);
 });
 
-test("Unified shell replaces the removed legacy expert dashboard navigation", () => {
+test("Unified shell omits retired client-management navigation", () => {
   const source = read("src/app/(protected)/layout.tsx");
 
-  assert.match(source, /\/profesional\/clientes/);
+  assert.doesNotMatch(source, /\/profesional\/clientes/);
+  assert.doesNotMatch(source, /\/accesos-profesionales/);
   assert.doesNotMatch(source, /\/experto\/dashboard/);
 });
 

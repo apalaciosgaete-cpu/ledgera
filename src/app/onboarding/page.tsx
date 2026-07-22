@@ -12,7 +12,6 @@ type ProfileType = "persona" | "empresa" | "profesional";
 type OccupationType = "empleado" | "independiente" | "empresario" | "inversionista";
 type TaxExperience = "si" | "no" | "no_estoy_seguro";
 type CompanyType = "spa" | "ltda" | "eirl" | "sa" | "otra";
-type ClientType = "personas" | "empresas" | "ambos";
 
 type OnboardingData = {
   profileType?: ProfileType;
@@ -27,7 +26,6 @@ type OnboardingData = {
   businessOperations?: string[];
   // Profesional
   specialty?: string;
-  clientType?: ClientType;
 };
 
 type Step =
@@ -41,7 +39,6 @@ type Step =
   | "TAX_REGIME"
   | "BUSINESS_OPS"
   | "SPECIALTY"
-  | "CLIENT_TYPE"
   | "SUMMARY"
   | "DONE";
 
@@ -114,12 +111,6 @@ const SPECIALTIES = [
   "Otro",
 ];
 
-const CLIENT_TYPES: { value: ClientType; label: string }[] = [
-  { value: "personas", label: "Personas" },
-  { value: "empresas", label: "Empresas" },
-  { value: "ambos", label: "Ambos" },
-];
-
 let msgIdCounter = 0;
 function nextId() {
   return `msg_${++msgIdCounter}`;
@@ -137,10 +128,6 @@ function labelForTax(v: TaxExperience) {
 function labelForCompany(v: CompanyType) {
   return COMPANY_TYPES.find(o => o.value === v)?.label ?? v;
 }
-function labelForClient(v: ClientType) {
-  return CLIENT_TYPES.find(o => o.value === v)?.label ?? v;
-}
-
 // ─── Typewriter hook ────────────────────────────────────────────────────────
 
 function useTypewriter(fullText: string, speedMs = 22) {
@@ -384,17 +371,6 @@ export default function OnboardingPage() {
     setData(prev => ({ ...prev, specialty: value }));
     addUserMsg(value);
     setShowOptions(false);
-    setTimeout(() => {
-      addLedgeraMsg("¿Con qué tipo de clientes trabajas?");
-      setStep("CLIENT_TYPE");
-      setTimeout(() => setShowOptions(true), 1500);
-    }, 800);
-  }
-
-  function handleClientType(value: ClientType) {
-    setData(prev => ({ ...prev, clientType: value }));
-    addUserMsg(labelForClient(value));
-    setShowOptions(false);
     setTimeout(() => showSummary(), 800);
   }
 
@@ -423,7 +399,6 @@ export default function OnboardingPage() {
       items.push({ label: "Operaciones", value: data.businessOperations.join(", ") });
     }
     if (data.specialty) items.push({ label: "Especialidad", value: data.specialty });
-    if (data.clientType) items.push({ label: "Clientes", value: labelForClient(data.clientType) });
     return items;
   }
 
@@ -856,13 +831,6 @@ export default function OnboardingPage() {
                 />
               )}
 
-              {/* CLIENT_TYPE */}
-              {step === "CLIENT_TYPE" && (
-                <OptionsRow
-                  options={CLIENT_TYPES.map(o => ({ label: o.label, value: o.value }))}
-                  onClick={(v) => handleClientType(v as ClientType)}
-                />
-              )}
             </div>
           )}
         </div>

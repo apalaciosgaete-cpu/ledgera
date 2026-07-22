@@ -13,7 +13,9 @@ test("Audit events API route supports GET with filters", () => {
   const source = read("src/app/api/audit/events/route.ts");
 
   assert.match(source, /requireAuth/);
-  assert.match(source, /requireProfessionalClientAccess/);
+  assert.match(source, /auth\.user\.role === "admin"/);
+  assert.match(source, /userId !== auth\.user\.id/);
+  assert.doesNotMatch(source, /requireProfessionalClientAccess/);
   assert.match(source, /GET/);
   assert.match(source, /listAuditEvents/);
   assert.match(source, /category/);

@@ -76,12 +76,13 @@ test("registration UI neither displays nor submits operational roles", () => {
   assert.match(source, /Todas las cuentas públicas se crean como cuentas personales/);
 });
 
-test("expert mode requires an owner, admin or active professional mandate", () => {
+test("expert mode is limited to the owner or an administrator", () => {
   const source = read("src/app/api/expert/tax-cases/route.ts");
 
   assert.match(source, /requireFeatureAccess\(auth\.user, Feature\.EXPERT_MODE\)/);
-  assert.match(source, /requireProfessionalClientAccess\(/);
-  assert.match(source, /ProfessionalPermission\.VIEW_TAX_DATA/);
+  assert.match(source, /auth\.user\.role === "admin"/);
+  assert.match(source, /requestedUserId !== auth\.user\.id/);
+  assert.doesNotMatch(source, /requireProfessionalClientAccess/);
   assert.match(source, /userId: requestedUserId/);
 });
 
@@ -121,7 +122,7 @@ test("admin metrics are derived from billing records", () => {
   assert.doesNotMatch(pageSource, /EMPRESA:\s*29990/);
 });
 
-test("professional access model has explicit tenant relations", () => {
+test("historical professional access relations remain for data compatibility", () => {
   const schema = read("prisma/schema/professional.prisma");
   const platform = read("prisma/schema/platform.prisma");
 
@@ -132,26 +133,14 @@ test("professional access model has explicit tenant relations", () => {
   assert.match(platform, /professionalAdvisorLinks\s+ProfessionalClientAccess\[\]/);
 });
 
-test("professional client API enforces plan, 2FA and dynamic seats", () => {
-  const source = read("src/app/api/professional/clients/route.ts");
-
-  assert.match(source, /Feature\.EXPERT_MODE/);
-  assert.match(source, /TWO_FACTOR_REQUIRED/);
-  assert.match(source, /getProfessionalSeatEntitlement/);
-  assert.match(source, /PROFESSIONAL_CLIENT_LIMIT/);
-  assert.match(source, /countOccupiedProfessionalSeats/);
-  assert.match(source, /occupiedSeats >= seatEntitlement\.totalSeats/);
-});
-
-test("client mandate authorization verifies permission and active relation", () => {
-  const source = read(
-    "src/modules/professional/application/requireProfessionalClientAccess.ts",
-  );
-
-  assert.match(source, /getActiveProfessionalClientAccess/);
-  assert.match(source, /PROFESSIONAL_MANDATE_REQUIRED/);
-  assert.match(source, /PROFESSIONAL_PERMISSION_REQUIRED/);
-  assert.match(source, /TWO_FACTOR_REQUIRED/);
+test("professional client runtime endpoints remain removed", () => {
+  for (const relativePath of [
+    "src/app/api/professional/clients/route.ts",
+    "src/app/api/professional/invitations/route.ts",
+    "src/app/api/billing/professional-client-seat/checkout/route.ts",
+  ]) {
+    assert.equal(fs.existsSync(path.join(root, relativePath)), false);
+  }
 });
 
 const movementCreationPaths = [

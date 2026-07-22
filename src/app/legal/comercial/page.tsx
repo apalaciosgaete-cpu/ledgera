@@ -149,17 +149,14 @@ export default function ComercialPage() {
             </li>
             <li>
               <strong style={{ color: "var(--text)" }}>Profesional:</strong> $29.990 +
-              IVA/mes o $329.890 + IVA/año. Incluye hasta 5 clientes y las funciones
-              profesionales de gestión y revisión.
+              IVA/mes o $329.890 + IVA/año. Incluye herramientas avanzadas de
+              revisión, auditoría y trazabilidad.
             </li>
           </ul>
           <p>
             Los precios publicados para los planes pagados son valores netos y el IVA
             se agrega al cobro. La modalidad anual entrega 12 meses de acceso por el
             precio de 11 mensualidades.
-          </p>
-          <p>
-            En Profesional, cada cliente adicional tiene un valor de $4.990 + IVA/mes.
           </p>
         </LegalSection>
 

@@ -39,14 +39,9 @@ const BASE_SIDEBAR_GROUPS: SidebarGroup[] = [
   { items: [{ href: "/cryptoactivos", label: "Activos" }] },
   { items: [{ href: "/obligaciones-tributarias", label: "Obligaciones Tributarias" }] },
   { items: [{ href: "/declaraciones", label: "Declaraciones", feature: Feature.DECLARATIONS }] },
-  { items: [{ href: "/accesos-profesionales", label: "Accesos profesionales" }] },
   { items: [{ href: "/configuracion", label: "Configuración" }] },
   { items: [{ href: "/ayuda", label: "Ayuda" }] },
 ];
-
-const PROFESSIONAL_GROUP: SidebarGroup = {
-  items: [{ href: "/profesional/clientes", label: "Clientes", feature: Feature.EXPERT_MODE }],
-};
 
 function Sidebar({
   open,
@@ -62,10 +57,7 @@ function Sidebar({
   isAdmin: boolean;
 }) {
   const pathname = usePathname();
-  const allGroups = isAdmin || canAccessFeature(plan, Feature.EXPERT_MODE)
-    ? [BASE_SIDEBAR_GROUPS[0], PROFESSIONAL_GROUP, ...BASE_SIDEBAR_GROUPS.slice(1)]
-    : BASE_SIDEBAR_GROUPS;
-  const sidebarGroups = allGroups
+  const sidebarGroups = BASE_SIDEBAR_GROUPS
     .map((group) => ({
       items: group.items.filter(
         (item) => !item.feature || isAdmin || canAccessFeature(plan, item.feature),

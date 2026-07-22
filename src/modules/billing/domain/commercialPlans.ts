@@ -24,7 +24,6 @@ export type CommercialPlanDefinition = {
   annual: CommercialPrice;
   includedImportSources: number | null;
   includedMovements: number | null;
-  includedClients: number;
 };
 
 export function calculateCommercialPrice(netAmount: number): CommercialPrice {
@@ -46,7 +45,6 @@ export const COMMERCIAL_PLANS: Record<CommercialPlan, CommercialPlanDefinition> 
     annual: calculateCommercialPrice(0),
     includedImportSources: 1,
     includedMovements: 50,
-    includedClients: 0,
   },
   PERSONAL: {
     plan: "PERSONAL",
@@ -57,7 +55,6 @@ export const COMMERCIAL_PLANS: Record<CommercialPlan, CommercialPlanDefinition> 
     annual: calculateCommercialPrice(65_890),
     includedImportSources: null,
     includedMovements: null,
-    includedClients: 1,
   },
   PROFESIONAL: {
     plan: "PROFESIONAL",
@@ -68,12 +65,7 @@ export const COMMERCIAL_PLANS: Record<CommercialPlan, CommercialPlanDefinition> 
     annual: calculateCommercialPrice(329_890),
     includedImportSources: null,
     includedMovements: null,
-    includedClients: 5,
   },
-};
-
-export const PROFESSIONAL_ADDITIONAL_CLIENT = {
-  monthly: calculateCommercialPrice(4_990),
 };
 
 export function getCommercialPlan(plan: CommercialPlan) {

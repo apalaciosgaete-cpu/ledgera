@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  createAdminAuditLog,
-  getAuditRequestContext,
-} from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getDocumentMetrics } from "@/modules/documents/application/getDocumentMetrics";
-import { requireProfessionalClientAccess } from "@/modules/professional/application/requireProfessionalClientAccess";
-import { ProfessionalPermission } from "@/modules/professional/domain/clientAccess";
 import { requireAuth } from "@/shared";
 import { ok, fail, serverError } from "@/shared/apiResponse";
 
@@ -20,40 +14,25 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId") ?? auth.user.id;
+    const requestedUserId = searchParams.get("userId") ?? auth.user.id;
+    const isAdmin = auth.user.role === "admin";
 
-    const access = await requireProfessionalClientAccess(
-      auth.user,
-      userId,
-      ProfessionalPermission.VIEW_TAX_DATA,
-    );
-    if (!access.ok) return access.response;
+    if (!isAdmin && requestedUserId !== auth.user.id) {
+      return fail("No puedes consultar los documentos de otra cuenta.", 403);
+    }
 
-    const result = await getDocumentMetrics(userId);
+    const result = await getDocumentMetrics(requestedUserId);
 
     if (!result.ok) {
       return fail(result.message, 400);
     }
 
-    if (access.scope === "MANDATE") {
-      await createAdminAuditLog({
-        action: "PROFESSIONAL_CLIENT_DATA_ACCESSED",
-        actorId: auth.user.id,
-        actorEmail: auth.user.email,
-        targetUserId: userId,
-        ...getAuditRequestContext(request),
-        metadata: {
-          source: "api/documents/metrics",
-          mandateId: access.mandateId,
-          permission: ProfessionalPermission.VIEW_TAX_DATA,
-        },
-      });
-    }
-
     return ok(
       {
         ...result.metrics,
-        accessScope: access.scope,
+        accessScope: isAdmin && requestedUserId !== auth.user.id
+          ? "ADMIN"
+          : "OWNER",
       },
       "Métricas obtenidas.",
     );

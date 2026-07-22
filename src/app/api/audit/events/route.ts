@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  createAdminAuditLog,
-  getAuditRequestContext,
-} from "@/modules/admin/infrastructure/adminAuditLogRepository";
-import {
   isValidAuditCategory,
   isValidAuditResult,
   isValidAuditSeverity,
 } from "@/modules/audit/domain/audit";
 import { listAuditEvents } from "@/modules/audit/infrastructure/auditRepository";
-import { requireProfessionalClientAccess } from "@/modules/professional/application/requireProfessionalClientAccess";
-import { ProfessionalPermission } from "@/modules/professional/domain/clientAccess";
 import { requireAuth } from "@/shared";
 import { fail, serverError } from "@/shared/apiResponse";
 
@@ -34,25 +28,18 @@ export async function GET(req: NextRequest) {
     const dateTo = searchParams.get("dateTo");
 
     const isAdmin = auth.user.role === "admin";
-    const requestedUserId = userId || (isAdmin ? undefined : auth.user.id);
-    let accessScope: "OWNER" | "ADMIN" | "ADMIN_ALL" | "MANDATE" = isAdmin && !requestedUserId
-      ? "ADMIN_ALL"
-      : "OWNER";
-    let mandateId: string | undefined;
-
-    if (requestedUserId) {
-      const access = await requireProfessionalClientAccess(
-        auth.user,
-        requestedUserId,
-        ProfessionalPermission.VIEW_AUDIT,
-      );
-      if (!access.ok) return access.response;
-
-      accessScope = access.scope;
-      if (access.scope === "MANDATE") {
-        mandateId = access.mandateId;
-      }
+    if (!isAdmin && userId && userId !== auth.user.id) {
+      return fail("No puedes consultar la auditoría de otra cuenta.", 403);
     }
+
+    const requestedUserId = isAdmin
+      ? userId || undefined
+      : auth.user.id;
+    const accessScope: "OWNER" | "ADMIN" | "ADMIN_ALL" = isAdmin && !requestedUserId
+      ? "ADMIN_ALL"
+      : isAdmin
+        ? "ADMIN"
+        : "OWNER";
 
     const events = await listAuditEvents({
       category: isValidAuditCategory(category) ? category : undefined,
@@ -63,21 +50,6 @@ export async function GET(req: NextRequest) {
       dateTo: dateTo ? new Date(dateTo) : undefined,
       limit: 100,
     });
-
-    if (accessScope === "MANDATE" && requestedUserId && mandateId) {
-      await createAdminAuditLog({
-        action: "PROFESSIONAL_CLIENT_DATA_ACCESSED",
-        actorId: auth.user.id,
-        actorEmail: auth.user.email,
-        targetUserId: requestedUserId,
-        ...getAuditRequestContext(req),
-        metadata: {
-          source: "api/audit/events",
-          mandateId,
-          permission: ProfessionalPermission.VIEW_AUDIT,
-        },
-      });
-    }
 
     return NextResponse.json({
       ok: true,

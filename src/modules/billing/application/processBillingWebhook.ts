@@ -12,10 +12,6 @@ import {
   addBillingMonths,
   type NormalizedBillingWebhook,
 } from "@/modules/billing/domain/webhook";
-import {
-  PROFESSIONAL_EXTRA_CLIENT_PRODUCT,
-  professionalExtraClientPrice,
-} from "@/modules/professional/domain/professionalSeatBilling";
 import { recordTimelineEvent } from "@/modules/timeline/application/recordTimelineEvent";
 
 type ProcessBillingWebhookResult = {
@@ -28,8 +24,6 @@ type ProcessBillingWebhookResult = {
 type MetadataCheckout = {
   plan: BillingCheckoutPlan | null;
   interval: BillingInterval;
-  product: string | null;
-  quantity: number;
 };
 
 function parseMetadata(metadata: string | null | undefined): Record<string, unknown> | null {
@@ -48,28 +42,14 @@ function readMetadataCheckout(
   let parsed = parseMetadata(metadata);
   let plan: BillingCheckoutPlan | null = null;
   let interval: BillingInterval = "MONTHLY";
-  let product: string | null = null;
-  let quantity = 1;
 
   for (let depth = 0; parsed && depth < 6; depth += 1) {
     if (!plan && typeof parsed.plan === "string") {
       plan = normalizeCheckoutPlan(parsed.plan);
     }
 
-    if (!product && typeof parsed.product === "string" && parsed.product.trim()) {
-      product = parsed.product.trim();
-    }
-
     if (typeof parsed.interval === "string") {
       interval = normalizeBillingInterval(parsed.interval);
-    }
-
-    if (
-      typeof parsed.quantity === "number" &&
-      Number.isInteger(parsed.quantity) &&
-      parsed.quantity > 0
-    ) {
-      quantity = parsed.quantity;
     }
 
     parsed =
@@ -78,7 +58,7 @@ function readMetadataCheckout(
         : null;
   }
 
-  return { plan, interval, product, quantity };
+  return { plan, interval };
 }
 
 async function findPayment(event: NormalizedBillingWebhook) {
@@ -114,99 +94,6 @@ async function findPayment(event: NormalizedBillingWebhook) {
   return null;
 }
 
-async function processProfessionalExtraClientPayment(input: {
-  payment: NonNullable<Awaited<ReturnType<typeof findPayment>>>;
-  event: NormalizedBillingWebhook;
-  metadata: MetadataCheckout;
-}): Promise<ProcessBillingWebhookResult> {
-  const { payment, event, metadata } = input;
-  const periodStart = event.paidAt ?? new Date();
-  const periodEnd = addBillingMonths(periodStart, 1);
-  const quantity = Math.max(metadata.quantity, 1);
-
-  const subscription = await prisma.billingSubscription.create({
-    data: {
-      userId: payment.userId,
-      customerId: payment.customerId,
-      provider: event.provider,
-      providerSubscriptionId: event.checkoutId ?? event.providerPaymentId,
-      plan: PROFESSIONAL_EXTRA_CLIENT_PRODUCT,
-      status: "ACTIVE",
-      currency: professionalExtraClientPrice.currency,
-      amount: professionalExtraClientPrice.amount * quantity,
-      interval: professionalExtraClientPrice.interval,
-      currentPeriodStart: periodStart,
-      currentPeriodEnd: periodEnd,
-      metadata: JSON.stringify({
-        webhookVersion: "5.1.0",
-        sourcePaymentId: payment.id,
-        product: PROFESSIONAL_EXTRA_CLIENT_PRODUCT,
-        quantity,
-        unitAmount: professionalExtraClientPrice.amount,
-        unitNetAmount: professionalExtraClientPrice.netAmount,
-        unitTaxAmount: professionalExtraClientPrice.taxAmount,
-        providerEventId: event.providerEventId,
-      }),
-    },
-  });
-
-  const updatedPayment = await prisma.billingPayment.update({
-    where: { id: payment.id },
-    data: {
-      subscriptionId: subscription.id,
-      provider: event.provider,
-      providerPaymentId: event.providerPaymentId ?? payment.providerPaymentId,
-      checkoutId: event.checkoutId ?? payment.checkoutId,
-      status: "PAID",
-      paidAt: periodStart,
-      metadata: JSON.stringify({
-        previousMetadata: payment.metadata,
-        webhookVersion: "5.1.0",
-        eventType: event.eventType,
-        providerEventId: event.providerEventId,
-        activatedSubscriptionId: subscription.id,
-        product: PROFESSIONAL_EXTRA_CLIENT_PRODUCT,
-        quantity,
-        interval: professionalExtraClientPrice.interval,
-      }),
-    },
-  });
-
-  console.info("[commercial]", {
-    event: "professional_extra_client_completed",
-    userId: payment.userId,
-    paymentId: updatedPayment.id,
-    subscriptionId: subscription.id,
-    product: PROFESSIONAL_EXTRA_CLIENT_PRODUCT,
-    quantity,
-    provider: event.provider,
-    occurredAt: new Date().toISOString(),
-  });
-
-  await recordTimelineEvent({
-    userId: payment.userId,
-    category: "BILLING",
-    severity: "SUCCESS",
-    title: "Cliente adicional activado",
-    description: `Se activó ${quantity} cupo adicional para el panel Profesional.`,
-    entityType: "BillingSubscription",
-    entityId: subscription.id,
-    metadata: {
-      product: PROFESSIONAL_EXTRA_CLIENT_PRODUCT,
-      quantity,
-      paymentId: updatedPayment.id,
-      currentPeriodEnd: periodEnd.toISOString(),
-    },
-  });
-
-  return {
-    status: "processed",
-    paymentId: updatedPayment.id,
-    subscriptionId: subscription.id,
-    message: "Pago confirmado y cupo adicional activado.",
-  };
-}
-
 export async function processBillingWebhook(
   event: NormalizedBillingWebhook,
 ): Promise<ProcessBillingWebhookResult> {
@@ -221,9 +108,6 @@ export async function processBillingWebhook(
   }
 
   const metadataCheckout = readMetadataCheckout(payment.metadata);
-  const isExtraClientProduct =
-    metadataCheckout.product === PROFESSIONAL_EXTRA_CLIENT_PRODUCT;
-
   if (event.eventType === "payment_failed") {
     const updatedPayment = await prisma.billingPayment.update({
       where: { id: payment.id },
@@ -234,10 +118,9 @@ export async function processBillingWebhook(
         failedAt: new Date(),
         metadata: JSON.stringify({
           previousMetadata: payment.metadata,
-          webhookVersion: isExtraClientProduct ? "5.1.0" : "5.0.0",
+          webhookVersion: "5.0.0",
           eventType: event.eventType,
           providerEventId: event.providerEventId,
-          product: metadataCheckout.product,
         }),
       },
     });
@@ -267,9 +150,6 @@ export async function processBillingWebhook(
           userId: payment.userId,
           provider: event.provider,
           status: "ACTIVE",
-          ...(isExtraClientProduct
-            ? { plan: PROFESSIONAL_EXTRA_CLIENT_PRODUCT }
-            : { plan: { not: PROFESSIONAL_EXTRA_CLIENT_PRODUCT } }),
         },
         data: {
           status: "CANCELLED",
@@ -282,9 +162,7 @@ export async function processBillingWebhook(
       status: "processed",
       paymentId: payment.id,
       subscriptionId: payment.subscriptionId,
-      message: isExtraClientProduct
-        ? "Cupo adicional cancelado."
-        : "Suscripción cancelada.",
+      message: "Suscripción cancelada.",
     };
   }
 
@@ -295,14 +173,6 @@ export async function processBillingWebhook(
       subscriptionId: payment.subscriptionId,
       message: "El pago ya estaba confirmado.",
     };
-  }
-
-  if (isExtraClientProduct) {
-    return processProfessionalExtraClientPayment({
-      payment,
-      event,
-      metadata: metadataCheckout,
-    });
   }
 
   const plan = event.plan ?? metadataCheckout.plan;
@@ -326,7 +196,6 @@ export async function processBillingWebhook(
     where: {
       userId: payment.userId,
       status: "ACTIVE",
-      plan: { not: PROFESSIONAL_EXTRA_CLIENT_PRODUCT },
     },
     data: {
       status: "CANCELLED",

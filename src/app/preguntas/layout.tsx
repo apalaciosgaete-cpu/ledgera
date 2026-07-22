@@ -38,9 +38,9 @@ const faqSchema = buildFaqPageSchema([
       "No. LEDGERA organiza y prepara información financiera-tributaria. No reemplaza la revisión profesional ni constituye asesoría tributaria personalizada.",
   },
   {
-    question: "¿Hay planes para contadores o empresas?",
+    question: "¿Qué agrega el plan Profesional?",
     answer:
-      "Sí. Los planes Contador y Empresa están orientados a operación multiusuario, clientes o revisión profesional con mayor trazabilidad.",
+      "El plan Profesional agrega herramientas de revisión técnica, auditoría ampliada, reportes trazables y soporte prioritario para operaciones más complejas.",
   },
 ]);
 
