@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -413,9 +414,9 @@ function NextStepCta({ confirmed, rejected }: { confirmed: number; rejected: num
         {confirmed} confirmados{rejected > 0 ? ` · ${rejected} rechazados` : ""}. Siguiente recomendado: revisar los activos generados.
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <a href="/cryptoactivos" style={ctaLinkStyle("primary")}>Ver activos</a>
-        <a href="/obligaciones-tributarias" style={ctaLinkStyle("secondary")}>Obligaciones tributarias</a>
-        <a href="/origen-fondos/documentacion" style={ctaLinkStyle("secondary")}>Subir otro documento</a>
+        <Link href="/cryptoactivos" style={ctaLinkStyle("primary")}>Ver activos</Link>
+        <Link href="/obligaciones-tributarias" style={ctaLinkStyle("secondary")}>Obligaciones tributarias</Link>
+        <Link href="/origen-fondos/documentacion" style={ctaLinkStyle("secondary")}>Subir otro documento</Link>
       </div>
     </section>
   );

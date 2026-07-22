@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { httpClient } from "@/shared/http/httpClient";
+
 type TaxSummary = {
   availableYears: number[];
   decision?: {
@@ -16,6 +18,12 @@ type TaxSummary = {
     baseImponibleClp?: number;
     confidenceLevel?: number;
   };
+};
+
+type ApiResponse<T> = {
+  ok: boolean;
+  message: string;
+  data: T;
 };
 
 function formatClp(value: number | undefined): string {
@@ -68,18 +76,20 @@ export default function DeclaracionesPage() {
       setLoading(true);
       setLoadError(false);
       try {
-        const res = await fetch(`/api/tax/summary?year=${year}`, { cache: "no-store" });
-        const json = await res.json();
+        const response = await httpClient<ApiResponse<TaxSummary>>(
+          `/api/tax/summary?year=${year}`,
+          { auth: true },
+        );
         if (!active) return;
-        if (!res.ok || !json.data) throw new Error(json.message || "No fue posible cargar el resumen.");
+        if (!response.data) throw new Error(response.message || "No fue posible cargar el resumen.");
 
-        const years = Array.isArray(json.data.availableYears) ? json.data.availableYears : [];
+        const years = Array.isArray(response.data.availableYears) ? response.data.availableYears : [];
         if (years.length > 0 && !years.includes(Number(year))) {
           setYear(String(years[0]));
           return;
         }
 
-        setSummary(json.data as TaxSummary);
+        setSummary(response.data);
       } catch {
         if (!active) return;
         setSummary(null);

@@ -70,6 +70,7 @@ export async function meRequest() {
   const response = await httpClient<MeResponse>("/api/me", {
     method: "GET",
     auth: true,
+    cacheTtlMs: 0,
   });
 
   const user = response.data?.user ?? response.user;

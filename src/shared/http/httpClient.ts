@@ -8,6 +8,7 @@ type RequestOptions = {
   headers?: HeadersInit;
   auth?: boolean;
   timeoutMs?: number;
+  cacheTtlMs?: number;
 };
 
 type ErrorPayload = {
@@ -43,6 +44,31 @@ export class HttpClientError extends Error {
 const CSRF_COOKIE_NAME = "ledgera_csrf";
 const CSRF_HEADER_NAME = "X-LEDGERA-CSRF";
 const DEFAULT_TIMEOUT_MS = 10000;
+const DEFAULT_AUTH_GET_CACHE_TTL_MS = 30_000;
+
+type CachedResponse = {
+  expiresAt: number;
+  value: unknown;
+};
+
+const responseCache = new Map<string, CachedResponse>();
+const pendingGetRequests = new Map<string, Promise<unknown>>();
+let cacheGeneration = 0;
+
+function clearResponseCache(): void {
+  cacheGeneration += 1;
+  responseCache.clear();
+  pendingGetRequests.clear();
+}
+
+function buildCacheKey(url: string, headers: Headers): string {
+  const headerScope = Array.from(headers.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}:${value}`)
+    .join("|");
+
+  return `${url}|${headerScope}`;
+}
 
 function isErrorPayload(value: unknown): value is ErrorPayload {
   return typeof value === "object" && value !== null;
@@ -154,6 +180,7 @@ export async function httpClient<T = unknown>(
     headers,
     auth = false,
     timeoutMs = DEFAULT_TIMEOUT_MS,
+    cacheTtlMs,
   } = options;
 
   const finalHeaders = new Headers(headers ?? {});
@@ -178,6 +205,70 @@ export async function httpClient<T = unknown>(
     }
   }
 
+  const resolvedCacheTtlMs = method === "GET"
+    ? Math.max(0, cacheTtlMs ?? (auth ? DEFAULT_AUTH_GET_CACHE_TTL_MS : 0))
+    : 0;
+  const cacheKey = resolvedCacheTtlMs > 0
+    ? buildCacheKey(url, finalHeaders)
+    : null;
+
+  if (cacheKey) {
+    const cached = responseCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.value as T;
+    }
+
+    if (cached) responseCache.delete(cacheKey);
+
+    const pending = pendingGetRequests.get(cacheKey);
+    if (pending) return pending as Promise<T>;
+  }
+
+  const requestPromise = executeRequest<T>({
+    url,
+    method,
+    body,
+    headers: finalHeaders,
+    timeoutMs,
+  });
+
+  if (!cacheKey) {
+    const result = await requestPromise;
+    if (isMutationMethod(method)) clearResponseCache();
+    return result;
+  }
+
+  const requestGeneration = cacheGeneration;
+  pendingGetRequests.set(cacheKey, requestPromise);
+
+  try {
+    const result = await requestPromise;
+    if (requestGeneration === cacheGeneration) {
+      responseCache.set(cacheKey, {
+        expiresAt: Date.now() + resolvedCacheTtlMs,
+        value: result,
+      });
+    }
+    return result;
+  } finally {
+    pendingGetRequests.delete(cacheKey);
+  }
+}
+
+async function executeRequest<T>({
+  url,
+  method,
+  body,
+  headers,
+  timeoutMs,
+}: {
+  url: string;
+  method: HttpMethod;
+  body: unknown;
+  headers: Headers;
+  timeoutMs: number;
+}): Promise<T> {
+
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
@@ -186,7 +277,7 @@ export async function httpClient<T = unknown>(
   try {
     response = await fetch(url, {
       method,
-      headers: finalHeaders,
+      headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       cache: "no-store",
       credentials: "include",

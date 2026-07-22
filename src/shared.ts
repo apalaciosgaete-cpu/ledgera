@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionByToken } from "@/modules/identity/infrastructure/sessionRepository";
-import { getUserById } from "@/modules/identity/infrastructure/userRepository";
+import { getSessionWithUserByToken } from "@/modules/identity/infrastructure/sessionRepository";
 
 export type MovementType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW" | "STAKING_REWARD";
 
@@ -69,15 +68,14 @@ function extractToken(req: NextRequest): string | null {
 async function getSessionFromToken(token: string): Promise<SessionData | null> {
   if (!token) return null;
 
-  const session = await getSessionByToken(token);
-  if (!session) return null;
+  const auth = await getSessionWithUserByToken(token);
+  if (!auth) return null;
+
+  const { session, user } = auth;
 
   if (new Date(session.expiresAt).getTime() <= Date.now()) {
     return null;
   }
-
-  const user = await getUserById(session.userId);
-  if (!user) return null;
 
   if (user.status !== "active") {
     return null;

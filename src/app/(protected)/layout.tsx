@@ -15,6 +15,7 @@ import { Logo } from "@/components/brand/Logo";
 import { LogoutButton } from "@/components/navigation/LogoutButton";
 import { UserProfileDropdown } from "@/components/profile/UserProfileDropdown";
 import { SubscriptionAccessBanner } from "@/components/subscription/SubscriptionAccessBanner";
+import { prefetchProtectedRoute } from "@/shared/http/prefetchProtectedRoute";
 import { fonts } from "@/styles/tokens";
 
 const roleTokens: Record<string, { label: string; badgeBg: string; badgeColor: string; avatarGradient: string }> = {
@@ -83,6 +84,9 @@ function Sidebar({
                     key={item.href}
                     href={item.href}
                     onClick={onClose}
+                    onFocus={() => void prefetchProtectedRoute(item.href)}
+                    onMouseEnter={() => void prefetchProtectedRoute(item.href)}
+                    onPointerDown={() => void prefetchProtectedRoute(item.href)}
                     style={{
                       display: "block",
                       padding: "10px 24px",

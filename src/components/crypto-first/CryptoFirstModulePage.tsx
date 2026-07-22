@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -186,7 +187,7 @@ function ButtonLink({
   primary?: boolean;
 }) {
   return (
-    <a
+    <Link
       href={href}
       style={{
         minHeight: 38,
@@ -206,7 +207,7 @@ function ButtonLink({
       }}
     >
       {children}
-    </a>
+    </Link>
   );
 }
 

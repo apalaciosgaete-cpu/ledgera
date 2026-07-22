@@ -32,11 +32,11 @@ type AssetSummary = {
     unrealizedPnlPct: number | null;
   };
   counts: { assets: number; operations: number; missingPrice: number; review: number };
+  hiddenAssetSymbols?: string[];
   assets: AssetRow[];
 };
 
 type ApiResponse<T> = { ok: boolean; message: string; data: T };
-type VisibilityData = { symbols: string[] };
 
 const panelFont = "'Manrope', system-ui, sans-serif";
 const monoFont = "var(--font-mono, 'IBM Plex Mono'), ui-monospace, monospace";
@@ -160,14 +160,11 @@ export function InvestorDashboard() {
     setLoading(true);
     setError(false);
 
-    Promise.all([
-      httpClient<ApiResponse<AssetSummary>>("/api/assets/summary", { auth: true }),
-      httpClient<ApiResponse<VisibilityData>>("/api/assets/visibility", { auth: true }),
-    ])
-      .then(([summaryResponse, visibilityResponse]) => {
+    httpClient<ApiResponse<AssetSummary>>("/api/assets/summary", { auth: true })
+      .then((summaryResponse) => {
         if (cancelled) return;
         setSummary(summaryResponse.data);
-        setHiddenAssetSymbols(new Set(visibilityResponse.data.symbols));
+        setHiddenAssetSymbols(new Set(summaryResponse.data.hiddenAssetSymbols ?? []));
       })
       .catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });

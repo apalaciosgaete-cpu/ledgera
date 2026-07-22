@@ -33,6 +33,8 @@ type Position = {
 type PriceQuote = { priceUsd: number | null; source: string };
 type FxSnapshot = { value: number; source: string; cachedAt: number };
 type PriceSnapshot = { data: Record<string, PriceQuote>; cachedAt: number };
+type HiddenAssetRow = { symbol: string };
+type CachedFetchInit = RequestInit & { next?: { revalidate?: number } };
 
 const EXTERNAL_FETCH_TIMEOUT_MS = 1_800;
 const MARKET_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -117,7 +119,7 @@ function classify(type: string): "IN" | "OUT" | "IGNORE" {
   return "IGNORE";
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = EXTERNAL_FETCH_TIMEOUT_MS): Promise<Response> {
+async function fetchWithTimeout(url: string, init: CachedFetchInit = {}, timeoutMs = EXTERNAL_FETCH_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -194,7 +196,7 @@ async function persistUsdClp(value: number, source: string): Promise<void> {
 async function fetchMindicadorLatest(): Promise<{ value: number; source: string } | null> {
   const headers = { Accept: "application/json" };
   try {
-    const latestRes = await fetchWithTimeout("https://mindicador.cl/api/dolar", { headers, cache: "no-store" });
+    const latestRes = await fetchWithTimeout("https://mindicador.cl/api/dolar", { headers, next: { revalidate: 60 * 60 } });
     if (!latestRes.ok) return null;
     const latestData = await latestRes.json();
     const latestValue = readMindicadorValue(latestData);
@@ -211,7 +213,7 @@ async function fetchMindicadorDated(): Promise<{ value: number; source: string }
     const day = String(today.getUTCDate()).padStart(2, "0");
     const month = String(today.getUTCMonth() + 1).padStart(2, "0");
     const year = today.getUTCFullYear();
-    const datedRes = await fetchWithTimeout(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, { headers, cache: "no-store" });
+    const datedRes = await fetchWithTimeout(`https://mindicador.cl/api/dolar/${day}-${month}-${year}`, { headers, next: { revalidate: 60 * 60 } });
     if (!datedRes.ok) return null;
     const datedData = await datedRes.json();
     const datedValue = readMindicadorValue(datedData);
@@ -223,7 +225,7 @@ async function fetchMindicadorDated(): Promise<{ value: number; source: string }
 
 async function fetchSecondaryUsdClp(): Promise<{ value: number; source: string } | null> {
   try {
-    const secondaryRes = await fetchWithTimeout("https://open.er-api.com/v6/latest/USD", { headers: { Accept: "application/json" }, cache: "no-store" });
+    const secondaryRes = await fetchWithTimeout("https://open.er-api.com/v6/latest/USD", { headers: { Accept: "application/json" }, next: { revalidate: 60 * 60 } });
     if (!secondaryRes.ok) return null;
     const secondaryData = await secondaryRes.json();
     const secondaryValue = readOpenExchangeValue(secondaryData);
@@ -280,7 +282,7 @@ async function fetchBinancePrices(symbols: string[]): Promise<Record<string, Pri
   if (symbols.length === 0) return result;
 
   try {
-    const res = await fetchWithTimeout("https://api.binance.com/api/v3/ticker/price", { cache: "no-store" });
+    const res = await fetchWithTimeout("https://api.binance.com/api/v3/ticker/price", { next: { revalidate: 5 * 60 } });
     if (!res.ok) return result;
     const data = await res.json();
     if (!Array.isArray(data)) return result;
@@ -310,7 +312,7 @@ async function fetchCoingeckoPrices(symbols: string[]): Promise<Record<string, P
 
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=usd`;
-    const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+    const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" }, next: { revalidate: 5 * 60 } });
     if (!res.ok) return result;
     const data = await res.json();
     if (typeof data !== "object" || data === null) return result;
@@ -402,23 +404,32 @@ export async function GET(request: NextRequest) {
   if (!auth || auth instanceof NextResponse) return fail("No autorizado.", 401);
 
   try {
-    const movements = (await prisma.portfolioMovement.findMany({
-      where: {
-        deletedAt: null,
-        ...buildUserScopeWhere(auth.user),
-      },
-      orderBy: { executedAt: "asc" },
-      select: {
-        id: true,
-        type: true,
-        symbol: true,
-        quantity: true,
-        priceUsd: true,
-        feeUsd: true,
-        executedAt: true,
-        source: true,
-      },
-    })) as RawMovement[];
+    const [rawMovements, hiddenAssetRows] = await Promise.all([
+      prisma.portfolioMovement.findMany({
+        where: {
+          deletedAt: null,
+          ...buildUserScopeWhere(auth.user),
+        },
+        orderBy: { executedAt: "asc" },
+        select: {
+          id: true,
+          type: true,
+          symbol: true,
+          quantity: true,
+          priceUsd: true,
+          feeUsd: true,
+          executedAt: true,
+          source: true,
+        },
+      }),
+      prisma.$queryRaw<HiddenAssetRow[]>`
+        SELECT symbol
+        FROM asset_visibility_preferences
+        WHERE "userId" = ${auth.user.id}
+        ORDER BY symbol ASC
+      `,
+    ]);
+    const movements = rawMovements as RawMovement[];
 
     const positions = buildPositions(movements);
     const [fx, prices] = await Promise.all([
@@ -484,6 +495,7 @@ export async function GET(request: NextRequest) {
           missingPrice: assets.filter((asset) => asset.status === "FALTA_PRECIO").length,
           review: assets.filter((asset) => asset.status === "REVISAR_BASE" || asset.status === "FALTA_BASE").length,
         },
+        hiddenAssetSymbols: hiddenAssetRows.map((row) => row.symbol),
         assets: assets.sort((a, b) => (b.valueClp ?? 0) - (a.valueClp ?? 0)),
       },
     });
