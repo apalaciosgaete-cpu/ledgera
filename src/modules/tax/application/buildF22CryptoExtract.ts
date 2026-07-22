@@ -232,42 +232,52 @@ export async function renderF22CryptoExtractPdf(payload: F22CryptoExtractPayload
       .text(`Operaciones del año comercial ${payload.commercialYear}: 1 ene ${payload.commercialYear} – 31 dic ${payload.commercialYear}`, 62, 252, { width: contentWidth - 28 });
 
     doc.font("Helvetica-Bold").fontSize(11).fillColor("#0F766E")
-      .text("BASE IMPONIBLE IUSC O IGC O IA", 48, 302, { width: contentWidth });
+      .text("BASE IMPONIBLE REFERENCIAL PARA IGC O IA", 48, 302, { width: contentWidth });
+
+    doc.roundedRect(48, 320, contentWidth, 44, 8).fillAndStroke("#F8FAFC", "#E2E8F0");
+    doc.font("Helvetica-Bold").fontSize(7.8).fillColor("#0F2A3D")
+      .text("IGC:", 60, 330, { continued: true })
+      .font("Helvetica")
+      .text(" aplica generalmente a personas naturales con domicilio o residencia en Chile.");
+    doc.font("Helvetica-Bold").fontSize(7.8).fillColor("#0F2A3D")
+      .text("IA:", 60, 346, { continued: true })
+      .font("Helvetica")
+      .text(" aplica a contribuyentes sin domicilio ni residencia en Chile.");
 
     drawCodeRow(doc, {
-      y: 326,
+      y: 380,
       summary: payload.code1032,
       note: "Asignación preliminar para mayor valor clasificado como ganancia de capital. Requiere confirmar letra m) del art. 17 N° 8 LIR y contraparte no relacionada.",
     });
     drawCodeRow(doc, {
-      y: 416,
+      y: 470,
       summary: payload.code1865,
       note: "Asignación preliminar para operaciones clasificadas como otras rentas cuando no corresponde el tratamiento referencial del código 1032.",
     });
 
-    doc.roundedRect(48, 510, contentWidth, 66, 10).fillAndStroke("#F8FAFC", "#E2E8F0");
+    doc.roundedRect(48, 564, contentWidth, 66, 10).fillAndStroke("#F8FAFC", "#E2E8F0");
     doc.font("Helvetica-Bold").fontSize(8.5).fillColor("#0F2A3D")
-      .text("Control de integridad", 60, 522);
+      .text("Control de integridad", 60, 576);
     doc.font("Helvetica").fontSize(8).fillColor("#475569")
-      .text(`Eventos tributarios incluidos: ${payload.totalTaxEvents}`, 60, 540)
-      .text(`Eventos pendientes de clasificación: ${payload.pendingClassificationEvents}`, 60, 554);
+      .text(`Eventos tributarios incluidos: ${payload.totalTaxEvents}`, 60, 594)
+      .text(`Eventos pendientes de clasificación: ${payload.pendingClassificationEvents}`, 60, 608);
     doc.font("Helvetica").fontSize(7.6).fillColor("#64748B")
-      .text("Los montos propuestos muestran el resultado neto positivo por código. Un resultado neto negativo se conserva en el respaldo y se presenta como $0 en esta hoja referencial.", 275, 530, { width: 258, lineGap: 2 });
+      .text("Los montos propuestos muestran el resultado neto positivo por código. Un resultado neto negativo se conserva en el respaldo y se presenta como $0 en esta hoja referencial.", 275, 584, { width: 258, lineGap: 2 });
 
     doc.font("Helvetica-Bold").fontSize(9).fillColor("#0F2A3D")
-      .text("Criterio de uso", 48, 600, { width: contentWidth });
+      .text("Criterio de uso", 48, 654, { width: contentWidth });
     doc.font("Helvetica").fontSize(8).fillColor("#475569")
-      .text("Esta hoja no reemplaza el Formulario 22. La asignación entre 1032 y 1865 debe revisarse con el perfil del contribuyente, la relación con la contraparte y los demás antecedentes del año tributario.", 48, 617, { width: contentWidth, lineGap: 2 });
+      .text("Esta hoja no reemplaza el Formulario 22. La asignación entre 1032 y 1865 debe revisarse con el perfil del contribuyente, la relación con la contraparte y los demás antecedentes del año tributario.", 48, 671, { width: contentWidth, lineGap: 2 });
 
-    doc.moveTo(48, 675).lineTo(pageWidth - 48, 675).strokeColor("#E2E8F0").stroke();
-    doc.image(qrBuffer, 48, 692, { width: 68, height: 68 });
-    doc.link(48, 692, 68, 68, payload.verification.url);
+    doc.moveTo(48, 715).lineTo(pageWidth - 48, 715).strokeColor("#E2E8F0").stroke();
+    doc.image(qrBuffer, 48, 730, { width: 68, height: 68 });
+    doc.link(48, 730, 68, 68, payload.verification.url);
     doc.font("Helvetica-Bold").fontSize(9).fillColor("#0F766E")
-      .text("Verificación de trazabilidad", 132, 694, { width: 200 });
+      .text("Verificación de trazabilidad", 132, 732, { width: 200 });
     doc.font("Helvetica").fontSize(7.2).fillColor("#475569")
-      .text(`Folio: ${payload.verification.folio}`, 132, 711, { width: 400 })
-      .text(`Hash: ${payload.verification.hash}`, 132, 726, { width: 400 })
-      .text("Escanee el QR y compare el folio y hash impresos.", 132, 744, { width: 400 });
+      .text(`Folio: ${payload.verification.folio}`, 132, 749, { width: 400 })
+      .text(`Hash: ${payload.verification.hash}`, 132, 764, { width: 400 })
+      .text("Escanee el QR y compare el folio y hash impresos.", 132, 782, { width: 400 });
 
     doc.end();
   });
