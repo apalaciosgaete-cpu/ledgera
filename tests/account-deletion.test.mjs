@@ -26,4 +26,16 @@ test("account deletion still anonymizes identity, revokes sessions and records e
   assert.match(route, /deleteSessionsByUserId\(userId\)/);
   assert.match(route, /type: "ERASURE"/);
   assert.match(route, /event: "account_deleted"/);
+  assert.match(route, /audit failed after account closure/);
+  assert.match(route, /\.catch\(\(auditError\)/);
+});
+
+test("production repair migration recreates the missing audit table idempotently", async () => {
+  const migration = await source(
+    "prisma/migrations/20260722200500_repair_audit_events/migration.sql",
+  );
+
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS "audit_events"/);
+  assert.match(migration, /CREATE INDEX IF NOT EXISTS "audit_events_user_id_idx"/);
+  assert.match(migration, /"metadata" JSONB/);
 });

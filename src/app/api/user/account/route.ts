@@ -135,6 +135,8 @@ export async function DELETE(req: NextRequest) {
     metadata: { legalBasis: "Ley 21.719 Art. 9", retention: "Art. 200 Código Tributario" },
     ipAddress: req.ip ?? req.headers.get("x-forwarded-for") ?? null,
     userAgent: req.headers.get("user-agent") ?? null,
+  }).catch((auditError) => {
+    console.error("[api/user/account] audit failed after account closure", auditError);
   });
 
   const response = ok({
