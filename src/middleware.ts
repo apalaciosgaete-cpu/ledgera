@@ -43,6 +43,7 @@ const publicPagePrefixes = [
   "/como-funciona",
   "/quienes-somos",
   "/contacto",
+  "/opinion",
 ];
 
 type RateLimitBucket = {
