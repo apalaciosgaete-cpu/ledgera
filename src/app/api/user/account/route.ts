@@ -57,7 +57,17 @@ export async function DELETE(req: NextRequest) {
 
   const userId = auth.user.id;
 
-  const existing = await prisma.users.findUnique({ where: { id: userId } });
+  // Limit the projection to the fields required by this operation. This keeps
+  // account closure available while older production databases complete
+  // non-essential profile migrations.
+  const existing = await prisma.users.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      status: true,
+    },
+  });
   if (!existing) return fail("Usuario no encontrado.", 404);
   if (existing.status === "deleted") {
     return fail("La cuenta ya fue eliminada.", 409);
