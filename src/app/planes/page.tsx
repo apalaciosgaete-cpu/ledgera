@@ -4,12 +4,7 @@ import Link from "next/link";
 import { Suspense, useState, type CSSProperties } from "react";
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
 import { BillingPaymentStatusBanner } from "@/components/billing/BillingPaymentStatusBanner";
-import {
-  PublicContainer,
-  PublicHero,
-  PublicShell,
-  publicPalette,
-} from "@/components/public/PublicLayout";
+import { PublicContainer, PublicHero, PublicShell, publicPalette } from "@/components/public/PublicLayout";
 import { useAuth } from "@/modules/identity/client/authContext";
 
 type PlanKey = "free" | "personal" | "profesional";
@@ -100,13 +95,6 @@ const plans: Plan[] = [
   },
 ];
 
-const assistedFeatures = [
-  "Revisión humana de inconsistencias detectadas",
-  "Solicitud ordenada de antecedentes faltantes",
-  "Correcciones documentadas sobre el expediente",
-  "PDF y Excel actualizados cuando el caso queda resuelto",
-];
-
 const faqItems = [
   {
     q: "¿Qué se considera una fuente de importación?",
@@ -131,10 +119,6 @@ const faqItems = [
   {
     q: "¿Cuántos clientes incluye Profesional?",
     a: "Incluye hasta 5 clientes. Cada cliente adicional cuesta $4.990 + IVA/mes.",
-  },
-  {
-    q: "¿El servicio asistido está incluido en los planes?",
-    a: "No. Es una contratación complementaria por caso para expedientes que quedan bloqueados por datos faltantes o inconsistencias que requieren revisión humana. El alcance y el valor se informan antes de comenzar.",
   },
   {
     q: "¿El pago anual tiene descuento?",
@@ -216,11 +200,15 @@ function PlanCard({
             {formatClp(price)}
           </span>
           {plan.monthly > 0 ? (
-            <span className="text-sm font-bold text-text-faint">+ IVA/{period}</span>
+            <span className="text-sm font-bold text-text-faint">
+              + IVA/{period}
+            </span>
           ) : null}
         </div>
         {billing === "annual" && plan.annual > 0 ? (
-          <p className="mt-2 text-xs font-bold text-accent">12 meses por el precio de 11</p>
+          <p className="mt-2 text-xs font-bold text-accent">
+            12 meses por el precio de 11
+          </p>
         ) : null}
       </div>
 
@@ -259,67 +247,22 @@ function PlanCard({
       ) : null}
 
       {!plan.checkoutPlan ? (
-        <Link href={isAuthenticated ? "/panel" : "/register"} style={secondaryCheckoutStyle}>
+        <Link
+          href={isAuthenticated ? "/panel" : "/register"}
+          style={secondaryCheckoutStyle}
+        >
           {isAuthenticated ? "Ir al panel" : plan.cta}
         </Link>
       ) : (
-        <BillingCheckoutButton plan={plan.checkoutPlan} billing={billing} style={ctaStyle}>
+        <BillingCheckoutButton
+          plan={plan.checkoutPlan}
+          billing={billing}
+          style={ctaStyle}
+        >
           {billing === "annual" ? plan.annualCta : plan.cta}
         </BillingCheckoutButton>
       )}
     </article>
-  );
-}
-
-function AssistedServiceBlock() {
-  return (
-    <section id="servicio-asistido" style={{ background: publicPalette.page }}>
-      <PublicContainer>
-        <div className="py-16">
-          <div className="grid gap-7 rounded-[2rem] border border-accent bg-accent-soft p-7 md:p-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-accent">
-                Complemento por caso
-              </p>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl font-black tracking-[-0.045em] text-text md:text-5xl">
-                ¿Tu expediente quedó bloqueado por inconsistencias?
-              </h2>
-              <p className="mt-5 max-w-3xl text-base leading-8 text-text-soft">
-                El servicio asistido agrega revisión humana cuando no puedes resolver por tu cuenta
-                transferencias sin contraparte, costos incompletos o historiales fragmentados. No es
-                un cuarto plan ni una mensualidad adicional: se cotiza y contrata por caso.
-              </p>
-              <Link
-                href="/servicio-asistido"
-                className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl bg-accent px-6 text-sm font-black text-accent-contrast transition hover:-translate-y-0.5"
-              >
-                Conocer el servicio asistido →
-              </Link>
-            </div>
-
-            <div className="rounded-3xl border border-border bg-bg-elev p-6">
-              <p className="text-sm font-black text-text">Puede incluir</p>
-              <ul className="mt-5 grid gap-3 p-0">
-                {assistedFeatures.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex list-none items-start gap-3 text-sm leading-6 text-text-soft"
-                  >
-                    <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-accent text-xs font-black text-accent">
-                      ✓
-                    </span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-5 border-t border-border pt-5 text-xs font-bold leading-6 text-text-faint">
-                La evaluación inicial define viabilidad, alcance, plazo y valor antes de comenzar.
-              </p>
-            </div>
-          </div>
-        </div>
-      </PublicContainer>
-    </section>
   );
 }
 
@@ -372,9 +315,7 @@ function PlanesContent() {
         </PublicContainer>
       </section>
 
-      <AssistedServiceBlock />
-
-      <section style={{ background: publicPalette.section }}>
+      <section style={{ background: publicPalette.page }}>
         <PublicContainer style={{ maxWidth: "860px" }}>
           <div className="py-16">
             <div className="mb-8 text-center">
