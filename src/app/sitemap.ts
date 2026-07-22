@@ -5,7 +5,7 @@ import { seoPageList } from "@/modules/seo/seoPageContent";
 
 const baseUrl = "https://ledgera.cl";
 const isProduction = process.env.NODE_ENV === "production";
-const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE !== "false" && isProduction;
+const isMaintenanceMode = process.env.SITE_MAINTENANCE_MODE === "true" && isProduction;
 
 const staticPages = [
   "",
@@ -32,18 +32,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ];
   }
 
-  const now = new Date();
+  const publicContentUpdatedAt = new Date("2026-07-21");
 
   const publicRoutes: MetadataRoute.Sitemap = [
     ...staticPages.map((path) => ({
       url: `${baseUrl}${path}`,
-      lastModified: now,
+      lastModified: publicContentUpdatedAt,
       changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),
       priority: path === "" ? 1 : 0.7,
     })),
     ...seoPageList.map((page) => ({
       url: `${baseUrl}${page.path}`,
-      lastModified: now,
+      lastModified: publicContentUpdatedAt,
       changeFrequency: "monthly" as const,
       priority: 0.75,
     })),
