@@ -75,8 +75,11 @@ export async function DELETE(req: NextRequest) {
 
   // Anonimización de datos identificatorios. El email se reemplaza por un valor
   // único no reversible para liberar la restricción de unicidad sin colisiones.
-  await prisma.users.update({
-    where: { id: userId },
+  const anonymized = await prisma.users.updateMany({
+    where: {
+      id: userId,
+      status: { not: "deleted" },
+    },
     data: {
       status: "deleted",
       email: `eliminado+${userId}@anonimizado.ledgera.cl`,
@@ -90,6 +93,10 @@ export async function DELETE(req: NextRequest) {
       updated_at: new Date(),
     },
   });
+
+  if (anonymized.count !== 1) {
+    return fail("No fue posible eliminar la cuenta.", 409);
+  }
 
   // Revocar todas las sesiones activas del titular.
   await deleteSessionsByUserId(userId).catch(() => 0);
