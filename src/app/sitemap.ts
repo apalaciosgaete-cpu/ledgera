@@ -11,7 +11,6 @@ const staticPages = [
   "",
   "/como-funciona",
   "/planes",
-  "/servicio-asistido",
   "/quienes-somos",
   "/preguntas",
   "/blog",
@@ -40,7 +39,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}${path}`,
       lastModified: publicContentUpdatedAt,
       changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),
-      priority: path === "" ? 1 : path === "/servicio-asistido" ? 0.8 : 0.7,
+      priority: path === "" ? 1 : 0.7,
     })),
     ...seoPageList.map((page) => ({
       url: `${baseUrl}${page.path}`,
