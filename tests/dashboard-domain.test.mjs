@@ -38,7 +38,10 @@ function loadTsModule(relativePath, mocks = {}) {
 const domain = loadTsModule("src/modules/dashboard/domain/executiveDashboard.ts");
 
 test("Dashboard domain defines metric keys", () => {
-  assert.equal(domain.DASHBOARD_METRIC_KEYS.length, 37);
+  assert.equal(
+    new Set(domain.DASHBOARD_METRIC_KEYS).size,
+    domain.DASHBOARD_METRIC_KEYS.length,
+  );
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("total_documents"));
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("tax_documents"));
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("documents_pending_review"));
@@ -59,6 +62,10 @@ test("Dashboard domain defines metric keys", () => {
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("critical_tax_files"));
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("attention_required_tax_files"));
   assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("healthy_tax_files"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("profiles_optimized"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("profiles_standard"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("profiles_attention_required"));
+  assert.ok(domain.DASHBOARD_METRIC_KEYS.includes("profiles_critical"));
 });
 
 test("createEmptyDashboard returns zeroed structure", () => {

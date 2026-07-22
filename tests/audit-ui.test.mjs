@@ -48,9 +48,11 @@ test("Audit integration exists in DTE service", () => {
   assert.match(source, /tax_document_created/);
 });
 
-test("Audit integration exists in auth configuration", () => {
-  const source = read("src/lib/auth.ts");
+test("Audit integration exists in the canonical login route", () => {
+  const source = read("src/app/api/login/route.ts");
 
+  assert.match(source, /recordAuditEvent/);
   assert.match(source, /login_success/);
   assert.match(source, /login_failed/);
+  assert.match(source, /category: "SECURITY"/);
 });

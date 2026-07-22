@@ -38,11 +38,11 @@ test("Expert recommendations page includes filters and table", () => {
   assert.match(source, /Recomendación/);
 });
 
-test("Expert layout links to recommendations", () => {
-  const source = read("src/app/(protected)/experto/layout.tsx");
+test("Unified shell omits the removed legacy expert recommendations link", () => {
+  const source = read("src/app/(protected)/layout.tsx");
 
-  assert.match(source, /Recomendaciones/);
-  assert.match(source, /\/experto\/recomendaciones/);
+  assert.match(source, /BASE_SIDEBAR_GROUPS/);
+  assert.doesNotMatch(source, /\/experto\/recomendaciones/);
 });
 
 test("Expert dashboard includes recommendation metrics", () => {

@@ -60,6 +60,10 @@ function buildPrismaMock(overrides = {}) {
     recommendation: { count: async () => 0, findMany: async () => [], ...overrides.recommendation },
     task: { count: async () => 0, findMany: async () => [], ...overrides.task },
     document: { count: async () => 0, ...overrides.document },
+    adaptiveTaxProfile: {
+      count: async () => 0,
+      ...overrides.adaptiveTaxProfile,
+    },
     users: { findUnique: async () => ({ subscription_plan: "BASICO", subscription_expires_at: null }), ...overrides.users },
   };
 }

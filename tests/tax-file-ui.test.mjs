@@ -29,12 +29,21 @@ test("User tax file page handles all statuses", () => {
   assert.match(source, /CRITICAL/);
 });
 
-test("Expert tax files page lists users with status filter", () => {
-  const source = read("src/app/(protected)/experto/expedientes/page.tsx");
+test("Legacy expert tax files index remains removed", () => {
+  assert.equal(
+    fs.existsSync(
+      path.join(root, "src/app/(protected)/experto/expedientes/page.tsx"),
+    ),
+    false,
+  );
+});
 
-  assert.match(source, /\/api\/tax-files/);
-  assert.match(source, /Expedientes tributarios/);
-  assert.match(source, /\/experto\/expedientes/);
+test("Expert tax file API retains status-filtered listing", () => {
+  const source = read("src/app/api/tax-files/route.ts");
+
+  assert.match(source, /listTaxFiles/);
+  assert.match(source, /status/);
+  assert.match(source, /requireAuth/);
 });
 
 test("Expert tax file detail page shows all sections", () => {
@@ -47,11 +56,11 @@ test("Expert tax file detail page shows all sections", () => {
   assert.match(source, /Conexiones y auditoría/);
 });
 
-test("Expert layout links to tax files", () => {
-  const source = read("src/app/(protected)/experto/layout.tsx");
+test("Unified shell omits the removed legacy tax files index link", () => {
+  const source = read("src/app/(protected)/layout.tsx");
 
-  assert.match(source, /Expedientes/);
-  assert.match(source, /\/experto\/expedientes/);
+  assert.match(source, /BASE_SIDEBAR_GROUPS/);
+  assert.doesNotMatch(source, /\/experto\/expedientes/);
 });
 
 test("Expert dashboard includes tax file widgets", () => {

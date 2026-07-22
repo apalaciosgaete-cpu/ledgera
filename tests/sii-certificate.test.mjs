@@ -128,15 +128,20 @@ test("SII credential repository exposes getActiveCredential and createCredential
   assert.match(source, /listCredentials/);
 });
 
-test("signXml service exposes placeholder signing", async () => {
+test("signXml fails closed while real certificate signing is unavailable", async () => {
+  let auditEvent = null;
   const { signXml } = loadTsModule("src/modules/sii/application/signXml.ts", {
     "@/modules/audit/application/recordAuditEvent": {
-      recordAuditEvent: async () => {},
+      recordAuditEvent: async (event) => {
+        auditEvent = event;
+      },
     },
   });
 
   const result = await signXml("<DTE></DTE>");
 
-  assert.equal(result.signed, true);
-  assert.match(result.xml, /SIGNED_PLACEHOLDER/);
+  assert.equal(result.signed, false);
+  assert.match(result.xml, /PENDING_SIGNATURE/);
+  assert.equal(auditEvent.event, "xml_sign_placeholder");
+  assert.equal(auditEvent.result, "PARTIAL");
 });

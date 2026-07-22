@@ -12,12 +12,13 @@ test("public paid plan selection uses checkout first flow", () => {
   assert.doesNotMatch(checkoutButton, /router\.push\(`\/register\?\$\{params\.toString\(\)\}`\)/);
 });
 
-test("public checkout captures plan before registration", () => {
-  assert.match(checkoutPage, /Checkout primero/);
-  assert.match(checkoutPage, /pendingCheckout/);
-  assert.match(checkoutPage, /paidFirstCheckout/);
-  assert.match(checkoutPage, /provider_before_registration/);
-  assert.match(checkoutPage, /Continuar después del pago/);
+test("public checkout preserves plan context before authentication", () => {
+  assert.match(checkoutPage, /PLAN_SUMMARIES/);
+  assert.match(checkoutPage, /const resumePath = plan/);
+  assert.match(checkoutPage, /\/login\?next=/);
+  assert.match(checkoutPage, /\/register\?next=/);
+  assert.match(checkoutPage, /Resumen de contratación/);
+  assert.doesNotMatch(checkoutPage, /paidFirstCheckout/);
 });
 
 test("registration recognizes paid first acquisition", () => {

@@ -7,6 +7,7 @@ import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { getUserByEmail } from "@/modules/identity/infrastructure/userRepository";
 import {
@@ -32,6 +33,33 @@ type LoginRequestBody = {
   email?: string;
   password?: string;
 };
+
+async function recordLoginAudit(input: {
+  userId: string;
+  event: "login_success" | "login_failed";
+  description: string;
+  result: "SUCCESS" | "FAILED";
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    await recordAuditEvent({
+      userId: input.userId,
+      category: "SECURITY",
+      severity: input.result === "FAILED" ? "WARNING" : "INFO",
+      event: input.event,
+      description: input.description,
+      result: input.result,
+      entityType: "User",
+      entityId: input.userId,
+      metadata: {
+        provider: "credentials",
+        ...input.metadata,
+      },
+    });
+  } catch (auditError) {
+    console.warn(`[audit] ${input.event} failed`, auditError);
+  }
+}
 
 function getClientIp(req: NextRequest): string {
   const forwardedFor = req.headers.get("x-forwarded-for");
@@ -96,6 +124,14 @@ export async function POST(req: NextRequest) {
     const passwordIsValid = await verifyPassword(password, user.passwordHash);
 
     if (!passwordIsValid) {
+      await recordLoginAudit({
+        userId: user.id,
+        event: "login_failed",
+        description: "Intento de inicio de sesión fallido por credenciales inválidas",
+        result: "FAILED",
+        metadata: { reason: "INVALID_CREDENTIALS" },
+      });
+
       return NextResponse.json(
         { ok: false, message: "Credenciales inválidas.", data: null },
         { status: 401 },
@@ -103,6 +139,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (user.status !== "active") {
+      await recordLoginAudit({
+        userId: user.id,
+        event: "login_failed",
+        description: "Intento de inicio de sesión rechazado para una cuenta inactiva",
+        result: "FAILED",
+        metadata: { reason: "USER_INACTIVE" },
+      });
+
       return NextResponse.json(
         { ok: false, message: "El usuario no está activo.", data: null },
         { status: 403 },
@@ -148,6 +192,18 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       token: sessionToken,
       expiresAt,
+    });
+
+    await recordLoginAudit({
+      userId: user.id,
+      event: "login_success",
+      description: "Inicio de sesión exitoso mediante credenciales",
+      result: "SUCCESS",
+      metadata: {
+        sessionId: session.id,
+        sessionRotation: true,
+        twoFactor: false,
+      },
     });
 
     if (user.role === "admin") {

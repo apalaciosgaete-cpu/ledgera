@@ -190,7 +190,10 @@ for (const sourcePath of subscriptionWritePaths) {
   test(`${sourcePath} blocks writes for expired subscriptions`, () => {
     const source = read(sourcePath);
     assert.match(source, /requireActiveSubscription/);
-    assert.match(source, /if \(!subscriptionCheck\.ok\) return subscriptionCheck\.response/);
+    assert.match(
+      source,
+      /if \(!subscriptionCheck\.ok\)\s*\{?\s*return subscriptionCheck\.response;/,
+    );
   });
 }
 

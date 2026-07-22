@@ -42,8 +42,8 @@ test("known failed smart tax migration can be recovered safely", () => {
   );
 
   assert.match(script, /recoverableFailedMigration = "20260613000000_add_smart_tax_scores"/);
-  assert.match(script, /deployOutput\.includes\("P3009"\)/);
-  assert.match(script, /migrate",\s*"resolve",\s*"--rolled-back"/);
+  assert.match(script, /output\.includes\("P3009"\)/);
+  assert.match(script, /"migrate",\s*"resolve",\s*"--rolled-back"/);
   assert.match(migration, /TIMESTAMP\(3\)/);
   assert.doesNotMatch(migration, /DATETIME/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS/);

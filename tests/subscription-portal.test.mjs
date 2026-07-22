@@ -65,9 +65,9 @@ test("planFeatures normalizes legacy plans and resolves access", () => {
   assert.equal(normalizePlan("BASIC"), Plan.FREE);
   assert.equal(normalizePlan("FREE"), Plan.FREE);
   assert.equal(normalizePlan("PERSONAL"), Plan.PERSONAL);
-  assert.equal(normalizePlan("PROFESIONAL"), Plan.PERSONAL);
-  assert.equal(normalizePlan("EMPRESA"), Plan.PRO);
-  assert.equal(normalizePlan("PRO"), Plan.PRO);
+  assert.equal(normalizePlan("PROFESIONAL"), Plan.PROFESIONAL);
+  assert.equal(normalizePlan("EMPRESA"), Plan.PROFESIONAL);
+  assert.equal(normalizePlan("PRO"), Plan.PROFESIONAL);
   assert.equal(normalizePlan(null), Plan.FREE);
   assert.equal(normalizePlan("desconocido"), Plan.FREE);
 
@@ -78,11 +78,11 @@ test("planFeatures normalizes legacy plans and resolves access", () => {
 
   assert.equal(requiredPlanForFeature(Feature.SII_STATUS), Plan.FREE);
   assert.equal(requiredPlanForFeature(Feature.PDF_EXPORT), Plan.PERSONAL);
-  assert.equal(requiredPlanForFeature(Feature.EXPERT_MODE), Plan.PRO);
+  assert.equal(requiredPlanForFeature(Feature.EXPERT_MODE), Plan.PROFESIONAL);
 
-  assert.equal(getPlanLabel("BASICO"), "Free");
+  assert.equal(getPlanLabel("BASICO"), "Gratuito");
   assert.equal(getPlanLabel("PERSONAL"), "Personal");
-  assert.equal(getPlanLabel("EMPRESA"), "Pro");
+  assert.equal(getPlanLabel("EMPRESA"), "Profesional");
 });
 
 // ─── 2. Subscription state resolver ───────────────────────────────────────────
@@ -220,8 +220,9 @@ const ROUTES = [
       /changePlan\(/,
       /No autorizado/,
       /Plan inválido/,
-      /paymentId: result\.payment\.id/,
-      /url: result\.url/,
+      /plan !== "BASICO"/,
+      /checkout externo/,
+      /subscriptionId:/,
     ],
   },
   {

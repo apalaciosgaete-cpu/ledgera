@@ -26,10 +26,12 @@ test("billing invoices route is authenticated", () => {
   assert.match(route, /getBillingInvoices/);
 });
 
-test("billing invoices panel renders invoice lifecycle", () => {
+test("billing documents panel renders the complete document lifecycle", () => {
   assert.match(panel, /DRAFT/);
   assert.match(panel, /ISSUED/);
   assert.match(panel, /PAID/);
   assert.match(panel, /VOID/);
-  assert.match(panel, /Facturas/);
+  assert.match(panel, /Documentos de cobro/);
+  assert.match(panel, /PDF listo/);
+  assert.match(panel, /XML listo/);
 });

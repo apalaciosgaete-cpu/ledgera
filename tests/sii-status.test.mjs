@@ -37,10 +37,6 @@ function loadTsModule(relativePath, mocks = {}) {
 
 const domain = loadTsModule("src/modules/sii/domain/sii.ts");
 
-const checkTaxpayerStatus = loadTsModule(
-  "src/modules/sii/application/checkTaxpayerStatus.ts",
-);
-
 test("SII domain defines environments", () => {
   const source = read("src/modules/sii/domain/sii.ts");
 
@@ -77,10 +73,47 @@ test("toSiiDocumentTypeCode maps document types", () => {
   assert.equal(domain.toSiiDocumentTypeCode("UNKNOWN"), null);
 });
 
-test("checkTaxpayerStatus returns placeholder CONNECTED", async () => {
-  const result = await checkTaxpayerStatus.checkTaxpayerStatus();
+test("checkTaxpayerStatus delegates to the configured credential status", async () => {
+  let receivedEnvironment = null;
+  let receivedIssuerRut = null;
+  const checkTaxpayerStatus = loadTsModule(
+    "src/modules/sii/application/checkTaxpayerStatus.ts",
+    {
+      "./getSiiStatus": {
+        getSiiStatus: async (environment, issuerRut) => {
+          receivedEnvironment = environment;
+          receivedIssuerRut = issuerRut;
+          return { environment, status: "CERTIFICATE_EXPIRED" };
+        },
+      },
+    },
+  );
 
-  assert.equal(result.status, "CONNECTED");
+  const result = await checkTaxpayerStatus.checkTaxpayerStatus(
+    "76.123.456-7",
+    "CERTIFICACION",
+  );
+
+  assert.equal(result.status, "CERTIFICATE_EXPIRED");
+  assert.equal(receivedEnvironment, "CERTIFICACION");
+  assert.equal(receivedIssuerRut, "76.123.456-7");
+});
+
+test("checkTaxpayerStatus returns DISCONNECTED when status lookup fails", async () => {
+  const checkTaxpayerStatus = loadTsModule(
+    "src/modules/sii/application/checkTaxpayerStatus.ts",
+    {
+      "./getSiiStatus": {
+        getSiiStatus: async () => {
+          throw new Error("SII unavailable");
+        },
+      },
+    },
+  );
+
+  const result = await checkTaxpayerStatus.checkTaxpayerStatus("76.123.456-7");
+
+  assert.equal(result.status, "DISCONNECTED");
 });
 
 test("SII status API route exists and requires auth", () => {

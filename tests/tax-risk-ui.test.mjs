@@ -17,19 +17,17 @@ test("User risk page exists at /riesgo", () => {
   assert.match(source, /\/api\/risk\/evaluate/);
 });
 
-test("Expert risk page exists at /experto/riesgo", () => {
-  const source = read("src/app/(protected)/experto/riesgo/page.tsx");
-
-  assert.match(source, /Panel de Riesgo Tributario/);
-  assert.match(source, /\/api\/risk\/scores/);
-  assert.match(source, /\/experto\/alertas/);
+test("Legacy expert risk page remains removed", () => {
+  assert.equal(
+    fs.existsSync(path.join(root, "src/app/(protected)/experto/riesgo/page.tsx")),
+    false,
+  );
 });
 
-test("Risk pages display score level and breakdown", () => {
+test("Current user risk page displays score level and breakdown", () => {
   const userSource = read("src/app/(protected)/riesgo/page.tsx");
-  const expertSource = read("src/app/(protected)/experto/riesgo/page.tsx");
 
   assert.match(userSource, /score.level/);
   assert.match(userSource, /breakdown/);
-  assert.match(expertSource, /level/);
+  assert.match(userSource, /\/api\/risk\/score/);
 });

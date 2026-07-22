@@ -13,7 +13,8 @@ test("billing checkout domain includes future payment providers", () => {
 test("billing checkout domain defines canonical checkout plans", () => {
   assert.match(source, /PERSONAL/);
   assert.match(source, /PROFESIONAL/);
-  assert.match(source, /EMPRESA/);
+  assert.doesNotMatch(source, /EMPRESA/);
+  assert.match(source, /COMMERCIAL_PLANS/);
 });
 
 test("billing checkout return URL uses checkout status and payment id", () => {

@@ -9,38 +9,40 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
-test("checkout page shows coupon input and apply button", () => {
+test("public checkout does not advertise inactive campaign codes", () => {
   const source = read("src/app/checkout/page.tsx");
 
-  assert.match(source, /Código promocional/);
-  assert.match(source, /Aplicar/);
-  assert.match(source, /LANZAMIENTO50/);
+  assert.doesNotMatch(source, /LANZAMIENTO50/);
+  assert.doesNotMatch(source, /Código promocional/);
+  assert.doesNotMatch(source, /coupon:/);
 });
 
-test("checkout page displays discount and final amount", () => {
-  const source = read("src/app/checkout/page.tsx");
+test("checkout calculates the payable amount from server-owned plan prices", () => {
+  const source = read("src/app/api/billing/checkout/route.ts");
 
-  assert.match(source, /discountAmount/);
-  assert.match(source, /finalAmount/);
-  assert.match(source, /Total a pagar/);
+  assert.match(source, /getCheckoutPlanConfig\(plan, interval\)/);
+  assert.match(source, /amount: config\.amount/);
+  assert.match(source, /netAmount: config\.netAmount/);
+  assert.match(source, /taxAmount: config\.taxAmount/);
+  assert.doesNotMatch(source, /body\.amount/);
+  assert.doesNotMatch(source, /body\.discountAmount/);
 });
 
-test("checkout page calls coupon validation API", () => {
-  const source = read("src/app/checkout/page.tsx");
-
-  assert.match(source, /\/api\/billing\/coupons\/validate/);
-});
-
-test("checkout page persists coupon in pendingCheckout", () => {
-  const source = read("src/app/checkout/page.tsx");
-
-  assert.match(source, /coupon:/);
-  assert.match(source, /originalAmount/);
-  assert.match(source, /discountAmount/);
-});
-
-test("checkout coupon validation API emits telemetry", () => {
+test("coupon validation remains server-side and validates all inputs", () => {
   const source = read("src/app/api/billing/coupons/validate/route.ts");
 
+  assert.match(source, /validateCoupon/);
+  assert.match(source, /if \(!code\)/);
+  assert.match(source, /if \(!plan\)/);
+  assert.match(source, /if \(amount <= 0\)/);
   assert.match(source, /coupon_validated/);
+});
+
+test("coupon administration remains restricted to administrators", () => {
+  const source = read("src/app/api/billing/coupons/route.ts");
+
+  assert.match(source, /getSessionFromRequest/);
+  assert.match(source, /role === "admin"/);
+  assert.match(source, /role === "super_admin"/);
+  assert.match(source, /status: 403/);
 });

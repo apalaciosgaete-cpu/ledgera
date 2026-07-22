@@ -23,23 +23,20 @@ test("Expert dashboard page renders executive title and sections", () => {
   assert.match(source, /Pagos pendientes/);
 });
 
-test("Expert layout includes dashboard link", () => {
-  const source = read("src/app/(protected)/experto/layout.tsx");
+test("Unified shell replaces the removed legacy expert dashboard navigation", () => {
+  const source = read("src/app/(protected)/layout.tsx");
 
-  assert.match(source, /Dashboard/);
-  assert.match(source, /\/experto\/dashboard/);
+  assert.match(source, /\/profesional\/clientes/);
+  assert.doesNotMatch(source, /\/experto\/dashboard/);
 });
 
-test("Investor dashboard includes new user widgets", () => {
+test("Investor dashboard renders the current asset summary", () => {
   const source = read("src/app/(protected)/panel/InvestorDashboard.tsx");
 
-  assert.match(source, /\/api\/dashboard\/user/);
-  assert.match(source, /Mi Riesgo Tributario/);
-  assert.match(source, /Alertas Abiertas/);
-  assert.match(source, /Estado Tributario/);
-  assert.match(source, /Estado Suscripción/);
-  assert.match(source, /WidgetRisk/);
-  assert.match(source, /WidgetAlerts/);
-  assert.match(source, /WidgetTax/);
-  assert.match(source, /WidgetSubscription/);
+  assert.match(source, /\/api\/assets\/summary/);
+  assert.match(source, /\/api\/assets\/visibility/);
+  assert.match(source, /Valor total actual/);
+  assert.match(source, /Diferencia vs\. base de costo/);
+  assert.match(source, /Activos detectados/);
+  assert.match(source, /PortfolioValuationChart/);
 });

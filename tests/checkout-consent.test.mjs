@@ -9,71 +9,64 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
-test("checkout page renders consent section with checkboxes", () => {
+test("checkout renders a canonical plan summary before contracting", () => {
   const source = read("src/app/checkout/page.tsx");
 
-  assert.match(source, /type="checkbox"/);
-  assert.match(source, /ConsentStep/);
-  assert.match(source, /PaymentStep/);
+  assert.match(source, /PLAN_SUMMARIES/);
+  assert.match(source, /rawPlan === "PERSONAL" \|\| rawPlan === "PROFESIONAL"/);
+  assert.match(source, /Resumen de contratación/);
+  assert.match(source, /Valor del plan/);
+  assert.match(source, /\+ IVA\/\{period\}/);
 });
 
-test("checkout page mentions secure payment redirection", () => {
+test("checkout preserves the selected plan when authentication is required", () => {
   const source = read("src/app/checkout/page.tsx");
 
-  assert.match(source, /plataforma de pago segura/i);
+  assert.match(source, /const resumePath = plan/);
+  assert.match(source, /\/login\?next=/);
+  assert.match(source, /\/register\?next=/);
+  assert.match(source, /Inicia sesión o crea tu cuenta/);
 });
 
-test("checkout page links to legal terms, privacy and commercial policy", () => {
+test("authenticated checkout delegates payment creation to the guarded button", () => {
   const source = read("src/app/checkout/page.tsx");
 
-  assert.match(source, /href="\/legal\/terminos"/);
-  assert.match(source, /href="\/legal\/privacidad"/);
-  assert.match(source, /href="\/legal\/comercial"/);
+  assert.match(source, /isAuthenticated/);
+  assert.match(source, /<BillingCheckoutButton/);
+  assert.match(source, /plan=\{plan\}/);
+  assert.match(source, /billing=\{billing\}/);
 });
 
-test("checkout page persists consent in sessionStorage and emits telemetry", () => {
-  const source = read("src/app/checkout/page.tsx");
+test("public plan selection persists only resumable checkout intent", () => {
+  const source = read("src/components/billing/BillingCheckoutButton.tsx");
 
-  assert.match(source, /sessionStorage\.setItem\(\s*"checkoutConsent"/);
   assert.match(source, /sessionStorage\.setItem\(\s*"pendingCheckout"/);
-  assert.match(source, /sessionStorage\.setItem\(\s*"paidFirstCheckout"/);
-  assert.match(source, /checkout_terms_accepted/);
-  assert.match(source, /checkout_payment_completed/);
+  assert.match(source, /flow: "checkout_first"/);
+  assert.match(source, /router\.push\(`\/checkout/);
+  assert.doesNotMatch(source, /paidFirstCheckout/);
+  assert.doesNotMatch(source, /checkout_payment_completed/);
 });
 
-test("checkout page has two-step flow: consent then payment", () => {
-  const source = read("src/app/checkout/page.tsx");
+test("billing stays fail-closed until a live external provider is configured", () => {
+  const source = read("src/app/api/billing/checkout/route.ts");
+  const guardIndex = source.indexOf("if (!isLiveBillingEnabled())");
+  const authIndex = source.indexOf("getSessionFromRequest(request)");
+  const paymentIndex = source.indexOf("prisma.billingPayment.create");
 
-  assert.match(source, /type CheckoutStep = "consent" \| "payment"/);
-  assert.match(source, /setStep\("payment"\)/);
-  assert.match(source, /Continuar después del pago/);
+  assert.ok(guardIndex >= 0);
+  assert.ok(authIndex > guardIndex);
+  assert.ok(paymentIndex > authIndex);
+  assert.match(source, /status: 503/);
+  assert.match(source, /createExternalGatewayCheckout/);
 });
 
-test("checkout page integrates coupon input and validation", () => {
-  const source = read("src/app/checkout/page.tsx");
-
-  assert.match(source, /Código promocional/);
-  assert.match(source, /\/api\/billing\/coupons\/validate/);
-  assert.match(source, /discountAmount/);
-  assert.match(source, /finalAmount/);
-
-  const apiSource = read("src/app/api/billing/coupons/validate/route.ts");
-  assert.match(apiSource, /coupon_validated/);
-});
-
-test("checkout page disables continue button until all consents are accepted", () => {
-  const source = read("src/app/checkout/page.tsx");
-
-  assert.match(source, /canContinue/);
-  assert.match(source, /disabled=\{!canContinue\}/);
-});
-
-test("planes page redirects paid monthly plans to checkout", () => {
+test("planes page sends paid monthly and annual plans through checkout", () => {
   const source = read("src/app/planes/page.tsx");
 
   assert.match(source, /BillingCheckoutButton/);
-  assert.match(source, /checkoutMode/);
-  assert.match(source, /checkoutPlan/);
+  assert.match(source, /checkoutPlan: "PERSONAL"/);
+  assert.match(source, /checkoutPlan: "PROFESIONAL"/);
+  assert.match(source, /billing=\{billing\}/);
 });
 
 test("legal commercial policy page exists", () => {
@@ -85,7 +78,7 @@ test("legal commercial policy page exists", () => {
   assert.match(source, /reembolsos/i);
 });
 
-test("next.config redirects /legal/terminos and /legal/privacidad", () => {
+test("next.config redirects legacy legal paths", () => {
   const source = read("next.config.mjs");
 
   assert.match(source, /\/legal\/terminos/);
