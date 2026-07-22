@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { httpClient } from "@/shared/http/httpClient";
@@ -177,43 +177,122 @@ function statusMeta(status: string) {
 
 function DateSortHeader({ value, onChange }: { value: DateSortOrder; onChange: (value: DateSortOrder) => void }) {
   const oldestFirst = value === "oldest";
+  const [isOpen, setIsOpen] = useState(false);
+  const [hoveredOption, setHoveredOption] = useState<DateSortOrder | null>(null);
+  const menuRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function closeOnOutsideClick(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setIsOpen(false);
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false);
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isOpen]);
+
+  function selectOrder(order: DateSortOrder) {
+    onChange(order);
+    setIsOpen(false);
+  }
+
   return (
-    <span style={{ alignItems: "center", display: "flex", gap: 5 }}>
+    <span ref={menuRef} style={{ alignItems: "center", display: "flex", gap: 5, position: "relative" }}>
       <span>Fecha</span>
-      <span
+      <button
+        type="button"
+        aria-label="Ordenar por fecha"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        title={oldestFirst ? "Orden actual: más antiguo a más nuevo" : "Orden actual: más nuevo a más antiguo"}
+        onClick={() => setIsOpen((open) => !open)}
         style={{
           alignItems: "center",
-          background: "transparent",
-          border: "1px solid transparent",
+          background: isOpen ? "var(--bg-elev)" : "transparent",
+          border: `1px solid ${isOpen ? "var(--accent)" : "transparent"}`,
           borderRadius: 6,
-          color: "var(--text-soft)",
+          color: isOpen ? "var(--accent)" : "var(--text-soft)",
+          cursor: "pointer",
           display: "inline-flex",
           height: 20,
           justifyContent: "center",
-          position: "relative",
+          padding: 0,
           width: 20,
         }}
       >
         <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1 }}>{oldestFirst ? "↑" : "↓"}</span>
-        <select
-          aria-label="Ordenar por fecha"
-          title={oldestFirst ? "Orden actual: más antiguo a más nuevo" : "Orden actual: más nuevo a más antiguo"}
-          value={value}
-          onChange={(event) => onChange(event.target.value as DateSortOrder)}
+      </button>
+      {isOpen && (
+        <span
+          role="menu"
+          aria-label="Opciones de orden por fecha"
           style={{
-            border: 0,
-            cursor: "pointer",
-            height: "100%",
-            inset: 0,
-            opacity: 0,
+            background: "var(--bg-elev)",
+            border: "1px solid var(--accent)",
+            borderRadius: 10,
+            boxShadow: "0 14px 32px rgba(0, 0, 0, .38), 0 0 0 1px rgba(203, 170, 76, .1)",
+            display: "grid",
+            gap: 3,
+            left: 0,
+            minWidth: 224,
+            padding: 5,
             position: "absolute",
-            width: "100%",
+            top: "calc(100% + 8px)",
+            zIndex: 20,
           }}
         >
-          <option value="oldest">Más antiguo a más nuevo</option>
-          <option value="newest">Más nuevo a más antiguo</option>
-        </select>
-      </span>
+          {([
+            ["oldest", "Más antiguo a más nuevo", "↑"],
+            ["newest", "Más nuevo a más antiguo", "↓"],
+          ] as const).map(([order, label, arrow]) => {
+            const selected = value === order;
+            const hovered = hoveredOption === order;
+            return (
+              <button
+                key={order}
+                type="button"
+                role="menuitemradio"
+                aria-checked={selected}
+                onClick={() => selectOrder(order)}
+                onMouseEnter={() => setHoveredOption(order)}
+                onMouseLeave={() => setHoveredOption(null)}
+                style={{
+                  alignItems: "center",
+                  background: selected || hovered ? "var(--bg-sunken)" : "transparent",
+                  border: `1px solid ${selected ? "var(--accent)" : "transparent"}`,
+                  borderRadius: 7,
+                  color: selected ? "var(--accent)" : "var(--text)",
+                  cursor: "pointer",
+                  display: "grid",
+                  fontFamily: fonts.body,
+                  fontSize: 12,
+                  fontWeight: selected ? 900 : 700,
+                  gap: 8,
+                  gridTemplateColumns: "16px 1fr 14px",
+                  letterSpacing: 0,
+                  padding: "9px 10px",
+                  textAlign: "left",
+                  textTransform: "none",
+                  width: "100%",
+                }}
+              >
+                <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: 14 }}>{arrow}</span>
+                <span>{label}</span>
+                <span aria-hidden="true" style={{ color: "var(--accent)" }}>{selected ? "✓" : ""}</span>
+              </button>
+            );
+          })}
+        </span>
+      )}
     </span>
   );
 }
