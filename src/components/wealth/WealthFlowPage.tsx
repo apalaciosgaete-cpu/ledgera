@@ -11,8 +11,7 @@ type SourceOptionKey = "bancos" | "exchanges" | "wallets" | "documentacion";
 type AssetViewKey = "transacciones" | "activos-detectados" | "pendientes";
 type LoadState = "LOADING" | "READY" | "ERROR";
 type TableMode = "confirmed" | "pending";
-type TransactionFilterKey = "date" | "source" | "asset" | "movement" | "amount" | "status";
-type TransactionFilters = Record<TransactionFilterKey, string>;
+type DateSortOrder = "newest" | "oldest";
 
 type SourceOption = { key: SourceOptionKey; icon: string; label: string; hint: string };
 type AssetView = { key: AssetViewKey; label: string; value: string; hint: string };
@@ -47,24 +46,6 @@ type AssetPosition = {
   balance: number;
   count: number;
   lastDate: string;
-};
-
-const TRANSACTION_FILTER_KEYS: TransactionFilterKey[] = [
-  "date",
-  "source",
-  "asset",
-  "movement",
-  "amount",
-  "status",
-];
-
-const EMPTY_TRANSACTION_FILTERS: TransactionFilters = {
-  date: "",
-  source: "",
-  asset: "",
-  movement: "",
-  amount: "",
-  status: "",
 };
 
 const SOURCE_OPTIONS: SourceOption[] = [
@@ -194,51 +175,18 @@ function statusMeta(status: string) {
   }
 }
 
-function transactionFilterValue(item: StagingItem, key: TransactionFilterKey): string {
-  switch (key) {
-    case "date": return formatDate(item.occurredAt);
-    case "source": return sourceLabel(item);
-    case "asset": return extractAsset(item);
-    case "movement": return item.title;
-    case "amount": return amountOnly(item);
-    case "status": return statusMeta(item.status).label;
-  }
-}
-
-function uniqueFilterOptions(
-  items: StagingItem[],
-  key: TransactionFilterKey,
-): string[] {
-  return Array.from(
-    new Set(items.map((item) => transactionFilterValue(item, key)).filter(Boolean)),
-  );
-}
-
-function TransactionHeaderFilter({
-  label,
-  value,
-  options,
-  onChange,
-  align = "left",
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-  align?: "left" | "right";
-}) {
-  const active = value !== "";
-
+function DateSortHeader({ value, onChange }: { value: DateSortOrder; onChange: (value: DateSortOrder) => void }) {
+  const oldestFirst = value === "oldest";
   return (
-    <span style={{ alignItems: "center", display: "flex", gap: 5, justifyContent: align === "right" ? "flex-end" : "flex-start" }}>
-      <span>{label}</span>
+    <span style={{ alignItems: "center", display: "flex", gap: 5 }}>
+      <span>Fecha</span>
       <span
         style={{
           alignItems: "center",
-          background: active ? "var(--accent-soft)" : "transparent",
-          border: `1px solid ${active ? "var(--accent)" : "transparent"}`,
+          background: "transparent",
+          border: "1px solid transparent",
           borderRadius: 6,
-          color: active ? "var(--accent)" : "var(--text-soft)",
+          color: "var(--text-soft)",
           display: "inline-flex",
           height: 20,
           justifyContent: "center",
@@ -246,14 +194,12 @@ function TransactionHeaderFilter({
           width: 20,
         }}
       >
-        <svg aria-hidden="true" width="11" height="11" viewBox="0 0 12 12" fill="none">
-          <path d="M1.75 2.25h8.5L7.1 6.05v2.9L4.9 10V6.05L1.75 2.25Z" fill="currentColor" />
-        </svg>
+        <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1 }}>{oldestFirst ? "↑" : "↓"}</span>
         <select
-          aria-label={`Filtrar por ${label.toLowerCase()}`}
-          title={active ? `Filtro activo: ${value}` : `Filtrar por ${label.toLowerCase()}`}
+          aria-label="Ordenar por fecha"
+          title={oldestFirst ? "Orden actual: más antiguo a más nuevo" : "Orden actual: más nuevo a más antiguo"}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => onChange(event.target.value as DateSortOrder)}
           style={{
             border: 0,
             cursor: "pointer",
@@ -264,12 +210,26 @@ function TransactionHeaderFilter({
             width: "100%",
           }}
         >
-          <option value="">Todos</option>
-          {options.map((option) => <option key={option} value={option}>{option}</option>)}
+          <option value="oldest">Más antiguo a más nuevo</option>
+          <option value="newest">Más nuevo a más antiguo</option>
         </select>
       </span>
     </span>
   );
+}
+
+function sortByDate(items: StagingItem[], order: DateSortOrder): StagingItem[] {
+  return [...items].sort((left, right) => {
+    const leftTime = new Date(left.occurredAt).getTime();
+    const rightTime = new Date(right.occurredAt).getTime();
+    const leftValid = Number.isFinite(leftTime);
+    const rightValid = Number.isFinite(rightTime);
+
+    if (!leftValid && !rightValid) return 0;
+    if (!leftValid) return 1;
+    if (!rightValid) return -1;
+    return order === "oldest" ? leftTime - rightTime : rightTime - leftTime;
+  });
 }
 
 function reviewReason(item: StagingItem) {
@@ -308,23 +268,8 @@ function DataState({ state, error, retry }: { state: LoadState; error: string; r
 }
 
 function TransactionsTable({ items, mode }: { items: StagingItem[]; mode: TableMode }) {
-  const [filters, setFilters] = useState<TransactionFilters>(EMPTY_TRANSACTION_FILTERS);
-  const filterOptions = useMemo(
-    () => Object.fromEntries(
-      TRANSACTION_FILTER_KEYS.map((key) => [key, uniqueFilterOptions(items, key)]),
-    ) as Record<TransactionFilterKey, string[]>,
-    [items],
-  );
-  const visibleItems = useMemo(
-    () => items.filter((item) => TRANSACTION_FILTER_KEYS.every(
-      (key) => !filters[key] || transactionFilterValue(item, key) === filters[key],
-    )),
-    [filters, items],
-  );
-
-  function updateFilter(key: TransactionFilterKey, value: string) {
-    setFilters((current) => ({ ...current, [key]: value }));
-  }
+  const [dateSortOrder, setDateSortOrder] = useState<DateSortOrder>("newest");
+  const sortedItems = useMemo(() => sortByDate(items, dateSortOrder), [dateSortOrder, items]);
 
   if (items.length === 0) {
     return (
@@ -345,23 +290,15 @@ function TransactionsTable({ items, mode }: { items: StagingItem[]; mode: TableM
     <div style={{ border: "1px solid var(--border)", borderRadius: 18, background: "var(--bg-elev)", overflowX: "auto" }}>
       <div style={{ minWidth: mode === "pending" ? 1020 : 860 }}>
         <div style={{ display: "grid", gridTemplateColumns: columns, gap: 16, padding: "11px 14px", background: "var(--bg-sunken)", color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".04em", textTransform: "uppercase" }}>
-          <TransactionHeaderFilter label="Fecha" value={filters.date} options={filterOptions.date} onChange={(value) => updateFilter("date", value)} />
-          <TransactionHeaderFilter label="Fuente" value={filters.source} options={filterOptions.source} onChange={(value) => updateFilter("source", value)} />
-          <TransactionHeaderFilter label="Activo" value={filters.asset} options={filterOptions.asset} onChange={(value) => updateFilter("asset", value)} />
-          <TransactionHeaderFilter label="Movimiento" value={filters.movement} options={filterOptions.movement} onChange={(value) => updateFilter("movement", value)} />
-          <span style={{ paddingRight: 8 }}>
-            <TransactionHeaderFilter label="Monto" value={filters.amount} options={filterOptions.amount} onChange={(value) => updateFilter("amount", value)} align="right" />
-          </span>
+          <DateSortHeader value={dateSortOrder} onChange={setDateSortOrder} />
+          <span>Fuente</span>
+          <span>Activo</span>
+          <span>Movimiento</span>
+          <span style={{ paddingRight: 8, textAlign: "right" }}>Monto</span>
           {mode === "pending" && <span>Motivo</span>}
-          <span style={{ paddingLeft: 18 }}>
-            <TransactionHeaderFilter label="Estado" value={filters.status} options={filterOptions.status} onChange={(value) => updateFilter("status", value)} />
-          </span>
+          <span style={{ paddingLeft: 18 }}>Estado</span>
         </div>
-        {visibleItems.length === 0 ? (
-          <div role="status" style={{ borderTop: "1px solid var(--border)", color: "var(--text-soft)", fontSize: 12.5, padding: "22px 14px", textAlign: "center" }}>
-            No hay movimientos que coincidan con los filtros seleccionados.
-          </div>
-        ) : visibleItems.map((item) => {
+        {sortedItems.map((item) => {
           const status = statusMeta(item.status);
           return (
             <div key={item.id} style={{ display: "grid", gridTemplateColumns: columns, gap: 16, padding: "12px 14px", borderTop: "1px solid var(--border)", color: "var(--text)", fontSize: 12.5, alignItems: "center" }}>
@@ -510,4 +447,3 @@ export function WealthFlowPage({ activeStep }: { activeStep: WealthStepKey }) {
     </main>
   );
 }
-
