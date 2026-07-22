@@ -20,7 +20,8 @@ test("account deletion still anonymizes identity, revokes sessions and records e
   assert.match(route, /users\.updateMany\(\{/);
   assert.doesNotMatch(route, /users\.update\(\{/);
   assert.match(route, /anonymized\.count !== 1/);
-  assert.match(route, /status: "deleted"/);
+  assert.match(route, /status: "inactive"/);
+  assert.doesNotMatch(route, /status: "deleted"/);
   assert.match(route, /eliminado\+\$\{userId\}@anonimizado\.ledgera\.cl/);
   assert.match(route, /deleteSessionsByUserId\(userId\)/);
   assert.match(route, /type: "ERASURE"/);

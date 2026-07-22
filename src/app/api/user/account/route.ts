@@ -69,7 +69,10 @@ export async function DELETE(req: NextRequest) {
     },
   });
   if (!existing) return fail("Usuario no encontrado.", 404);
-  if (existing.status === "deleted") {
+  if (
+    existing.status === "inactive" &&
+    existing.email === `eliminado+${userId}@anonimizado.ledgera.cl`
+  ) {
     return fail("La cuenta ya fue eliminada.", 409);
   }
 
@@ -78,10 +81,10 @@ export async function DELETE(req: NextRequest) {
   const anonymized = await prisma.users.updateMany({
     where: {
       id: userId,
-      status: { not: "deleted" },
+      status: "active",
     },
     data: {
-      status: "deleted",
+      status: "inactive",
       email: `eliminado+${userId}@anonimizado.ledgera.cl`,
       full_name: "Cuenta eliminada",
       rut: null,
