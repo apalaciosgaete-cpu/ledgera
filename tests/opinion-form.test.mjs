@@ -11,6 +11,8 @@ test("opinion page uses an integrated form instead of mailto", () => {
   const form = read("src/app/opinion/OpinionForm.tsx");
 
   assert.doesNotMatch(page, /mailto:/);
+  assert.match(page, /title: "Opinión",/);
+  assert.doesNotMatch(page, /title: "Opinión \| LEDGERA"/);
   assert.match(page, /<OpinionForm \/>/);
   assert.match(form, /httpClient\("\/api\/opinion"/);
   assert.match(form, /aria-live="polite"/);

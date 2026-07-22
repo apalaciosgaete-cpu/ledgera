@@ -5,8 +5,8 @@ import { OpinionForm } from "./OpinionForm";
 import styles from "./opinion.module.css";
 
 export const metadata: Metadata = {
-  title: "Opinión | LEDGERA",
-  description: "Ayúdanos a mejorar LEDGERA con feedback orgánico sobre claridad, utilidad y funcionamiento.",
+  title: "Opinión",
+  description: "Comparte tu experiencia y ayúdanos a hacer LEDGERA más clara, útil y fácil de usar.",
 };
 
 export default function OpinionPage() {
