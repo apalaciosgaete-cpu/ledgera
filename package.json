@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node --test tests/assistant-intent-regression.test.mjs",
     "build": "node scripts/deploy-database.mjs && next build",
     "start": "next start",
     "lint": "eslint",
