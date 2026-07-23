@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
       pathname,
       isAuthenticated: Boolean(session),
       context,
+      oidcToken: request.headers.get("x-vercel-oidc-token"),
     });
 
     return NextResponse.json(
@@ -105,7 +106,6 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Error desconocido";
     console.error("[assistant-ai] unavailable", message);
 
-    // La interfaz recibe una respuesta controlada para no activar el antiguo motor de frases.
     return NextResponse.json(
       {
         ok: true,
