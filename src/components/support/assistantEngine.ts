@@ -1,14 +1,4 @@
-export type AssistantLink = {
-  label: string;
-  href: string;
-};
-
-export type AssistantReply = {
-  text: string;
-  links?: AssistantLink[];
-  meta?: string;
-  intent: AssistantIntent;
-};
+export type AssistantLink = { label: string; href: string };
 
 export type AssistantIntent =
   | "PRODUCT"
@@ -27,15 +17,17 @@ export type AssistantIntent =
   | "PERSONAL_TAX"
   | "UNKNOWN";
 
+export type AssistantReply = {
+  text: string;
+  links?: AssistantLink[];
+  meta?: string;
+  intent: AssistantIntent;
+};
+
 export type AssistantContext = {
   generatedAt: string;
   stage: "EMPTY" | "IMPORT_REVIEW" | "DATA_REVIEW" | "TAX_REVIEW" | "READY_TO_REPORT" | "REPORT_READY";
-  nextAction: {
-    title: string;
-    detail: string;
-    href: string;
-    label: string;
-  };
+  nextAction: { title: string; detail: string; href: string; label: string };
   counts: {
     movements: number;
     buys: number;
@@ -65,11 +57,7 @@ export type AssistantContext = {
     generatedAt: string;
     isCurrent: boolean;
   } | null;
-  exchanges: Array<{
-    exchange: string;
-    status: string;
-    lastSyncAt: string | null;
-  }>;
+  exchanges: Array<{ exchange: string; status: string; lastSyncAt: string | null }>;
 };
 
 type IntentDefinition = {
@@ -82,38 +70,29 @@ type IntentDefinition = {
 const TOKEN_ALIASES: Record<string, string> = {
   empiezo: "empezar",
   empieza: "empezar",
-  empezar: "empezar",
   comenzamos: "comenzar",
   comienzo: "comenzar",
   comienza: "comenzar",
-  comenzar: "comenzar",
   parto: "partir",
-  partir: "partir",
   inicio: "iniciar",
-  iniciar: "iniciar",
   sirve: "servir",
   sirven: "servir",
-  servir: "servir",
   funciona: "funcionar",
   funcionan: "funcionar",
   funcionamiento: "funcionar",
   hago: "hacer",
-  hacer: "hacer",
+  hace: "hacer",
   reviso: "revisar",
   revisa: "revisar",
-  revisar: "revisar",
   importo: "importar",
   importa: "importar",
-  importar: "importar",
   genero: "generar",
   genera: "generar",
-  generar: "generar",
   descargo: "descargar",
   descarga: "descargar",
-  descargar: "descargar",
   debo: "deber",
   necesito: "necesitar",
-  necesito: "necesitar",
+  ofrece: "ofrecer",
 };
 
 const INTENTS: IntentDefinition[] = [
@@ -156,65 +135,31 @@ const INTENTS: IntentDefinition[] = [
   },
   {
     id: "IMPORT",
-    phrases: [
-      "como importo",
-      "subir operaciones",
-      "cargar archivo",
-      "conectar binance",
-      "sincronizar exchange",
-      "agregar operaciones",
-    ],
+    phrases: ["como importo", "subir operaciones", "cargar archivo", "conectar binance", "sincronizar exchange", "agregar operaciones"],
     keywords: ["importar", "importacion", "binance", "exchange", "csv", "archivo", "cargar", "sincronizar", "operaciones"],
     threshold: 3,
   },
   {
     id: "PENDING",
-    phrases: [
-      "donde reviso pendientes",
-      "que operaciones faltan",
-      "por que esta pendiente",
-      "como confirmo una operacion",
-      "tengo errores",
-    ],
+    phrases: ["donde reviso pendientes", "que operaciones faltan", "por que esta pendiente", "como confirmo una operacion", "tengo errores"],
     keywords: ["pendiente", "pendientes", "revisar", "revision", "confirmar", "inconsistencia", "error", "observacion"],
     threshold: 3,
   },
   {
     id: "ASSETS",
-    phrases: [
-      "como veo mis activos",
-      "que activos tengo",
-      "como se calcula el saldo",
-      "ver trazabilidad",
-      "base de costo",
-    ],
+    phrases: ["como veo mis activos", "que activos tengo", "como se calcula el saldo", "ver trazabilidad", "base de costo"],
     keywords: ["activo", "activos", "criptoactivo", "portafolio", "saldo", "trazabilidad", "costo", "inventario"],
     threshold: 3,
   },
   {
     id: "TAX_STATUS",
-    phrases: [
-      "estado tributario",
-      "tengo impuestos por pagar",
-      "debo pagar impuestos",
-      "que significa el semaforo",
-      "por que esta rojo",
-      "por que esta amarillo",
-      "por que esta verde",
-      "cuanto impuesto",
-    ],
+    phrases: ["estado tributario", "tengo impuestos por pagar", "debo pagar impuestos", "que significa el semaforo", "por que esta rojo", "por que esta amarillo", "por que esta verde", "cuanto impuesto"],
     keywords: ["impuesto", "tributario", "semaforo", "pagar", "declarar", "rojo", "amarillo", "verde", "obligacion"],
     threshold: 3,
   },
   {
     id: "DECLARATION",
-    phrases: [
-      "como genero el respaldo",
-      "donde descargo el pdf",
-      "donde esta el excel",
-      "puedo generar la declaracion",
-      "mi respaldo esta actualizado",
-    ],
+    phrases: ["como genero el respaldo", "donde descargo el pdf", "donde esta el excel", "puedo generar la declaracion", "mi respaldo esta actualizado"],
     keywords: ["declaracion", "declaraciones", "pdf", "excel", "respaldo", "f22", "extracto", "descargar", "generar"],
     threshold: 3,
   },
@@ -250,13 +195,7 @@ const INTENTS: IntentDefinition[] = [
   },
   {
     id: "PERSONAL_TAX",
-    phrases: [
-      "vivo fuera de chile",
-      "soy residente en otro pais",
-      "esto tributa en chile",
-      "como calcula la ganancia",
-      "puedo descontar la perdida",
-    ],
+    phrases: ["vivo fuera de chile", "soy residente en otro pais", "esto tributa en chile", "como calcula la ganancia", "puedo descontar la perdida"],
     keywords: ["residencia", "domicilio", "sii", "renta", "ganancia", "perdida", "tributa", "chile", "extranjero"],
     threshold: 3,
   },
@@ -304,13 +243,13 @@ function matchesProductPattern(value: string): boolean {
 function scoreIntent(value: string, definition: IntentDefinition): number {
   const tokens = canonicalTokens(value);
   let score = 0;
+  let keywordMatches = 0;
 
   for (const phrase of definition.phrases) {
     if (value === phrase) score += 16;
     else if (value.includes(phrase)) score += 10;
   }
 
-  let keywordMatches = 0;
   for (const keyword of definition.keywords) {
     const canonical = TOKEN_ALIASES[keyword] ?? keyword;
     if (tokens.has(canonical)) {
@@ -330,7 +269,6 @@ function scoreIntent(value: string, definition: IntentDefinition): number {
 export function detectAssistantIntent(input: string): { intent: AssistantIntent; confidence: number } {
   const value = normalizeAssistantText(input);
   if (!value) return { intent: "UNKNOWN", confidence: 0 };
-
   if (matchesProductPattern(value)) return { intent: "PRODUCT", confidence: 0.98 };
   if (matchesStartPattern(value)) return { intent: "START", confidence: 0.98 };
 
@@ -340,13 +278,12 @@ export function detectAssistantIntent(input: string): { intent: AssistantIntent;
   const best = ranked[0];
   const second = ranked[1];
 
-  if (!best || best.score < best.definition.threshold) {
-    return { intent: "UNKNOWN", confidence: 0 };
-  }
-
+  if (!best || best.score < best.definition.threshold) return { intent: "UNKNOWN", confidence: 0 };
   const separation = Math.max(0, best.score - (second?.score ?? 0));
-  const confidence = Math.min(0.99, 0.54 + best.score * 0.03 + separation * 0.02);
-  return { intent: best.definition.id, confidence };
+  return {
+    intent: best.definition.id,
+    confidence: Math.min(0.99, 0.54 + best.score * 0.03 + separation * 0.02),
+  };
 }
 
 function plural(value: number, singular: string, pluralValue: string): string {
@@ -394,15 +331,11 @@ function describeRoute(pathname: string): string {
   return "esta sección de LEDGERA";
 }
 
-export function buildNextStepReply(
-  context: AssistantContext | null,
-  isAuthenticated: boolean,
-): AssistantReply {
+export function buildNextStepReply(context: AssistantContext | null, isAuthenticated: boolean): AssistantReply {
   if (!isAuthenticated) {
     return {
       intent: "START",
-      text:
-        "Empieza creando una cuenta o iniciando sesión. Luego incorpora tus operaciones en Importaciones, confirma los registros correctos, resuelve los pendientes, revisa el estado tributario y finalmente genera el respaldo PDF o Excel.",
+      text: "Empieza creando una cuenta o iniciando sesión. Luego incorpora tus operaciones en Importaciones, confirma los registros correctos, resuelve los pendientes, revisa el estado tributario y finalmente genera el respaldo PDF o Excel.",
       links: [
         { label: "Crear cuenta", href: "/register" },
         { label: "Iniciar sesión", href: "/login" },
@@ -413,15 +346,13 @@ export function buildNextStepReply(
   if (!context) {
     return {
       intent: "START",
-      text:
-        "Tu punto de partida depende de lo que ya exista en la cuenta. Mientras termino de leer el resumen de avance, el flujo correcto es Importaciones → pendientes → Activos → estado tributario → Declaraciones.",
+      text: "Tu punto de partida depende de lo que ya exista en la cuenta. Mientras termino de leer el resumen, el flujo correcto es Importaciones → pendientes → Activos → estado tributario → Declaraciones.",
       links: [protectedLink("Abrir panel", "/panel", isAuthenticated)],
     };
   }
 
   const counts = context.counts;
   let evidence = "";
-
   switch (context.stage) {
     case "EMPTY":
       evidence = context.exchanges.length > 0
@@ -458,8 +389,7 @@ export function buildNextStepReply(
 function buildProductReply(isAuthenticated: boolean): AssistantReply {
   return {
     intent: "PRODUCT",
-    text:
-      "LEDGERA transforma operaciones de exchanges y archivos en información tributaria trazable. Importa y normaliza movimientos, construye activos y bases de costo, detecta pendientes, muestra un estado tributario preliminar y genera respaldos en PDF y Excel. No es un exchange ni una billetera, y no reemplaza la revisión profesional cuando faltan antecedentes o se requiere una conclusión jurídica.",
+    text: "LEDGERA transforma operaciones de exchanges y archivos en información tributaria trazable. Importa y normaliza movimientos, construye activos y bases de costo, detecta pendientes, muestra un estado tributario preliminar y genera respaldos en PDF y Excel. No es un exchange ni una billetera, y no reemplaza la revisión profesional cuando faltan antecedentes o se necesita una conclusión jurídica.",
     links: isAuthenticated
       ? [
           { label: "Ir al panel", href: "/panel" },
@@ -476,8 +406,7 @@ function buildTaxStatusReply(context: AssistantContext | null, isAuthenticated: 
   if (!context) {
     return {
       intent: "TAX_STATUS",
-      text:
-        "El semáforo depende de operaciones confirmadas, pendientes, ventas, costos y clasificación. Verde significa que no se detectó una acción de pago con los datos incorporados; amarillo exige revisión; rojo indica una acción tributaria potencial.",
+      text: "El semáforo depende de operaciones confirmadas, pendientes, ventas, costos y clasificación. Verde significa que no se detectó una acción de pago con los datos incorporados; amarillo exige revisión; rojo indica una acción tributaria potencial.",
       links: [protectedLink("Ver estado tributario", "/obligaciones-tributarias", isAuthenticated)],
     };
   }
@@ -515,46 +444,49 @@ export function buildAssistantReply(params: {
   const { intent } = detectAssistantIntent(input);
   const meta = accountMeta(context);
 
-  if (intent === "PRODUCT") return buildProductReply(isAuthenticated);
-  if (intent === "START") return buildNextStepReply(context, isAuthenticated);
-
-  if (intent === "GREETING") {
-    return {
-      intent,
-      text:
-        "Puedo explicar qué hace LEDGERA, orientarte para comenzar, revisar en qué etapa estás, identificar pendientes, interpretar el estado tributario y llevarte al módulo correcto.",
-      links: isAuthenticated
-        ? [{ label: "Ir al panel", href: "/panel" }]
-        : [{ label: "Conocer LEDGERA", href: "/como-funciona" }],
-    };
-  }
-
-  if (intent === "IMPORT") {
-    if (context?.counts.pendingImports) {
+  switch (intent) {
+    case "PRODUCT":
+      return buildProductReply(isAuthenticated);
+    case "START":
+      return buildNextStepReply(context, isAuthenticated);
+    case "GREETING":
       return {
         intent,
-        text: `La importación ya comenzó: tienes ${plural(context.counts.pendingImports, "registro pendiente", "registros pendientes")}. Conviene revisarlos antes de cargar más información para evitar duplicados o resultados incompletos.`,
-        links: [protectedLink("Revisar importaciones", "/importaciones", isAuthenticated)],
+        text: "Puedo explicar qué hace LEDGERA, orientarte para comenzar, revisar en qué etapa estás, identificar pendientes, interpretar el estado tributario y llevarte al módulo correcto.",
+        links: isAuthenticated
+          ? [{ label: "Ir al panel", href: "/panel" }]
+          : [{ label: "Conocer LEDGERA", href: "/como-funciona" }],
+      };
+    case "IMPORT": {
+      if (context?.counts.pendingImports) {
+        return {
+          intent,
+          text: `La importación ya comenzó: tienes ${plural(context.counts.pendingImports, "registro pendiente", "registros pendientes")}. Conviene revisarlos antes de cargar más información para evitar duplicados o resultados incompletos.`,
+          links: [protectedLink("Revisar importaciones", "/importaciones", isAuthenticated)],
+          meta,
+        };
+      }
+      const exchangeText = context?.exchanges.length
+        ? `Ya tienes conectado: ${context.exchanges.map((item) => item.exchange).join(", ")}.`
+        : "Puedes comenzar con Binance u otro origen disponible, mediante conexión o archivo.";
+      return {
+        intent,
+        text: `${exchangeText} Después de importar, confirma los registros correctos y resuelve los pendientes para que Activos y Obligaciones tributarias sean confiables.`,
+        links: [
+          protectedLink("Abrir Importaciones", "/importaciones", isAuthenticated),
+          protectedLink("Importar desde Binance", "/import/binance", isAuthenticated),
+        ],
         meta,
       };
     }
-
-    const exchangeText = context?.exchanges.length
-      ? `Ya tienes conectado: ${context.exchanges.map((item) => item.exchange).join(", ")}.`
-      : "Puedes comenzar con Binance u otro origen disponible, mediante conexión o archivo.";
-    return {
-      intent,
-      text: `${exchangeText} Después de importar, confirma los registros correctos y resuelve los pendientes para que Activos y Obligaciones tributarias sean confiables.`,
-      links: [
-        protectedLink("Abrir Importaciones", "/importaciones", isAuthenticated),
-        protectedLink("Importar desde Binance", "/import/binance", isAuthenticated),
-      ],
-      meta,
-    };
-  }
-
-  if (intent === "PENDING") {
-    if (context) {
+    case "PENDING": {
+      if (!context) {
+        return {
+          intent,
+          text: "Los pendientes se resuelven en Importaciones. Revisa fecha, activo, cantidad, tipo de operación, precio y fuente antes de confirmar.",
+          links: [protectedLink("Revisar operaciones", "/importaciones", isAuthenticated)],
+        };
+      }
       const total = context.counts.pendingImports + context.counts.movementReview;
       return {
         intent,
@@ -565,128 +497,109 @@ export function buildAssistantReply(params: {
         meta,
       };
     }
-    return {
-      intent,
-      text: "Los pendientes se resuelven en Importaciones. Revisa fecha, activo, cantidad, tipo de operación, precio y fuente antes de confirmar.",
-      links: [protectedLink("Revisar operaciones", "/importaciones", isAuthenticated)],
-    };
-  }
-
-  if (intent === "ASSETS") {
-    const summary = context
-      ? `Tu cuenta tiene ${plural(context.counts.assets, "activo detectado", "activos detectados")} respaldados por ${plural(context.counts.movements, "operación", "operaciones")}.`
-      : "Activos consolida las posiciones construidas desde operaciones confirmadas.";
-    return {
-      intent,
-      text: `${summary} La sección muestra trazabilidad, cantidad, costo y observaciones; no representa necesariamente el saldo en tiempo real de un exchange.`,
-      links: [protectedLink("Abrir Activos", "/cryptoactivos", isAuthenticated)],
-      meta,
-    };
-  }
-
-  if (intent === "TAX_STATUS") return buildTaxStatusReply(context, isAuthenticated);
-
-  if (intent === "DECLARATION") {
-    if (context?.latestDeclaration) {
+    case "ASSETS": {
+      const summary = context
+        ? `Tu cuenta tiene ${plural(context.counts.assets, "activo detectado", "activos detectados")} respaldados por ${plural(context.counts.movements, "operación", "operaciones")}.`
+        : "Activos consolida las posiciones construidas desde operaciones confirmadas.";
       return {
         intent,
-        text: `Ya existe un respaldo del año tributario ${context.latestDeclaration.taxYear}, generado el ${formatDate(context.latestDeclaration.generatedAt)}. ${context.latestDeclaration.isCurrent ? "Está actualizado respecto de las operaciones registradas." : "Hay operaciones posteriores, por lo que conviene generar una nueva versión."}`,
-        links: [protectedLink(context.latestDeclaration.isCurrent ? "Ver respaldos" : "Actualizar respaldo", "/declaraciones", isAuthenticated)],
+        text: `${summary} La sección muestra trazabilidad, cantidad, costo y observaciones; no representa necesariamente el saldo en tiempo real de un exchange.`,
+        links: [protectedLink("Abrir Activos", "/cryptoactivos", isAuthenticated)],
         meta,
       };
     }
-    if (context && (context.counts.pendingImports > 0 || context.counts.movementReview > 0)) {
+    case "TAX_STATUS":
+      return buildTaxStatusReply(context, isAuthenticated);
+    case "DECLARATION": {
+      if (context?.latestDeclaration) {
+        return {
+          intent,
+          text: `Ya existe un respaldo del año tributario ${context.latestDeclaration.taxYear}, generado el ${formatDate(context.latestDeclaration.generatedAt)}. ${context.latestDeclaration.isCurrent ? "Está actualizado respecto de las operaciones registradas." : "Hay operaciones posteriores, por lo que conviene generar una nueva versión."}`,
+          links: [protectedLink(context.latestDeclaration.isCurrent ? "Ver respaldos" : "Actualizar respaldo", "/declaraciones", isAuthenticated)],
+          meta,
+        };
+      }
+      if (context && (context.counts.pendingImports > 0 || context.counts.movementReview > 0)) {
+        return {
+          intent,
+          text: `Antes de generar el PDF o Excel debes resolver ${plural(context.counts.pendingImports + context.counts.movementReview, "pendiente", "pendientes")}. Un respaldo con información incompleta puede cambiar después.`,
+          links: [protectedLink("Resolver pendientes", "/importaciones", isAuthenticated)],
+          meta,
+        };
+      }
       return {
         intent,
-        text: `Antes de generar el PDF o Excel debes resolver ${plural(context.counts.pendingImports + context.counts.movementReview, "pendiente", "pendientes")}. Un respaldo con información incompleta puede cambiar después.`,
-        links: [protectedLink("Resolver pendientes", "/importaciones", isAuthenticated)],
+        text: "El PDF y el Excel se generan en Declaraciones después de confirmar las operaciones y revisar el resultado tributario. El PDF es el documento de lectura y el Excel conserva la trazabilidad estructurada.",
+        links: [protectedLink("Generar respaldo", "/declaraciones", isAuthenticated)],
         meta,
       };
     }
-    return {
-      intent,
-      text: "El PDF y el Excel se generan en Declaraciones después de confirmar las operaciones y revisar el resultado tributario. El PDF es el documento de lectura y el Excel conserva la trazabilidad estructurada.",
-      links: [protectedLink("Generar respaldo", "/declaraciones", isAuthenticated)],
-      meta,
-    };
-  }
-
-  if (intent === "FX") {
-    return {
-      intent,
-      text: "LEDGERA utiliza el dólar observado oficial del Banco Central para la fecha correspondiente. La fecha y la fuente deben acompañar al valor; una cotización anterior no debe presentarse como vigente.",
-      links: [protectedLink("Volver al panel", "/panel", isAuthenticated)],
-    };
-  }
-
-  if (intent === "SECURITY") {
-    return {
-      intent,
-      text: "El segundo factor se administra en Seguridad. Verifica que la hora del dispositivo sea automática y usa el código vigente de seis dígitos. Nunca compartas códigos 2FA, contraseñas, claves privadas ni secretos de API.",
-      links: [
-        protectedLink("Abrir Seguridad", "/configuracion/seguridad", isAuthenticated),
-        { label: "Recuperar 2FA", href: "/recuperar-2fa" },
-      ],
-    };
-  }
-
-  if (intent === "PASSWORD") {
-    return {
-      intent,
-      text: isAuthenticated
-        ? "Puedes cambiar la contraseña desde Seguridad. Si no recuerdas la clave, utiliza el flujo de recuperación; LEDGERA nunca debe pedirte la contraseña actual por chat o correo."
-        : "Utiliza el flujo de recuperación de contraseña. LEDGERA nunca debe solicitarte la clave actual por chat o correo.",
-      links: [
-        isAuthenticated
+    case "FX":
+      return {
+        intent,
+        text: "LEDGERA utiliza el dólar observado oficial del Banco Central para la fecha correspondiente. La fecha y la fuente deben acompañar al valor; una cotización anterior no debe presentarse como vigente.",
+        links: [protectedLink("Volver al panel", "/panel", isAuthenticated)],
+      };
+    case "SECURITY":
+      return {
+        intent,
+        text: "El segundo factor se administra en Seguridad. Verifica que la hora del dispositivo sea automática y usa el código vigente de seis dígitos. Nunca compartas códigos 2FA, contraseñas, claves privadas ni secretos de API.",
+        links: [
+          protectedLink("Abrir Seguridad", "/configuracion/seguridad", isAuthenticated),
+          { label: "Recuperar 2FA", href: "/recuperar-2fa" },
+        ],
+      };
+    case "PASSWORD":
+      return {
+        intent,
+        text: isAuthenticated
+          ? "Puedes cambiar la contraseña desde Seguridad. Si no recuerdas la clave, utiliza el flujo de recuperación; LEDGERA nunca debe pedirte la contraseña actual por chat o correo."
+          : "Utiliza el flujo de recuperación de contraseña. LEDGERA nunca debe solicitarte la clave actual por chat o correo.",
+        links: [isAuthenticated
           ? protectedLink("Abrir Seguridad", "/configuracion/seguridad", isAuthenticated)
-          : { label: "Recuperar contraseña", href: "/forgot-password" },
-      ],
-    };
+          : { label: "Recuperar contraseña", href: "/forgot-password" }],
+      };
+    case "BILLING":
+      return {
+        intent,
+        text: "Puedes comparar planes y administrar la facturación desde Configuración. Cualquier cobro, cambio o cancelación debe requerir confirmación explícita.",
+        links: [
+          { label: "Ver planes", href: "/planes" },
+          protectedLink("Administrar facturación", "/configuracion/facturacion", isAuthenticated),
+        ],
+      };
+    case "SUPPORT":
+      return {
+        intent,
+        text: "Puedes enviar una opinión de producto o contactar soporte para un caso específico. Describe el problema y la pantalla en que ocurre, sin incluir contraseñas, códigos 2FA, claves privadas ni secretos de integración.",
+        links: [
+          { label: "Enviar opinión", href: "/opinion" },
+          { label: "Contactar soporte", href: "/contacto" },
+        ],
+      };
+    case "PERSONAL_TAX": {
+      const accountEvidence = context
+        ? `En tu cuenta se observan ${plural(context.counts.sells, "venta", "ventas")}, ${plural(context.counts.staking, "registro de staking", "registros de staking")} y ${plural(context.counts.movementReview, "antecedente pendiente", "antecedentes pendientes")}. `
+        : "";
+      return {
+        intent,
+        text: `${accountEvidence}La respuesta tributaria personal puede depender de residencia, domicilio, período, naturaleza de la operación, costo y documentación. Puedo explicar el cálculo de LEDGERA y señalar qué antecedente falta, pero una conclusión jurídica definitiva requiere revisión profesional.`,
+        links: [
+          protectedLink("Abrir análisis tributario", "/obligaciones-tributarias", isAuthenticated),
+          { label: "Solicitar revisión", href: "/contacto" },
+        ],
+        meta,
+      };
+    }
+    case "UNKNOWN":
+    default:
+      return {
+        intent: "UNKNOWN",
+        text: `No identifiqué con precisión el tema de la consulta. Estás en ${describeRoute(pathname)}. Puedo responder sobre qué hace LEDGERA, cómo comenzar, importaciones, pendientes, activos, estado tributario, respaldos, seguridad o planes. Escribe el tema con una frase más específica.`,
+        links: [
+          { label: "Qué hace LEDGERA", href: "/como-funciona" },
+          { label: "Preguntas frecuentes", href: "/preguntas" },
+        ],
+      };
   }
-
-  if (intent === "BILLING") {
-    return {
-      intent,
-      text: "Puedes comparar planes y administrar la facturación desde Configuración. Cualquier cobro, cambio o cancelación debe requerir confirmación explícita.",
-      links: [
-        { label: "Ver planes", href: "/planes" },
-        protectedLink("Administrar facturación", "/configuracion/facturacion", isAuthenticated),
-      ],
-    };
-  }
-
-  if (intent === "SUPPORT") {
-    return {
-      intent,
-      text: "Puedes enviar una opinión de producto o contactar soporte para un caso específico. Describe el problema y la pantalla en que ocurre, sin incluir contraseñas, códigos 2FA, claves privadas ni secretos de integración.",
-      links: [
-        { label: "Enviar opinión", href: "/opinion" },
-        { label: "Contactar soporte", href: "/contacto" },
-      ],
-    };
-  }
-
-  if (intent === "PERSONAL_TAX") {
-    const accountEvidence = context
-      ? `En tu cuenta se observan ${plural(context.counts.sells, "venta", "ventas")}, ${plural(context.counts.staking, "registro de staking", "registros de staking")} y ${plural(context.counts.movementReview, "antecedente pendiente", "antecedentes pendientes")}. `
-      : "";
-    return {
-      intent,
-      text: `${accountEvidence}La respuesta tributaria personal puede depender de residencia, domicilio, período, naturaleza de la operación, costo y documentación. Puedo explicar el cálculo de LEDGERA y señalar qué antecedente falta, pero una conclusión jurídica definitiva requiere revisión profesional.`,
-      links: [
-        protectedLink("Abrir análisis tributario", "/obligaciones-tributarias", isAuthenticated),
-        { label: "Solicitar revisión", href: "/contacto" },
-      ],
-      meta,
-    };
-  }
-
-  return {
-    intent: "UNKNOWN",
-    text: `No identifiqué con precisión el tema de la consulta. Estás en ${describeRoute(pathname)}. Puedo responder sobre qué hace LEDGERA, cómo comenzar, importaciones, pendientes, activos, estado tributario, respaldos, seguridad o planes. Escribe el tema con una frase más específica.`,
-    links: [
-      { label: "Qué hace LEDGERA", href: "/como-funciona" },
-      { label: "Preguntas frecuentes", href: "/preguntas" },
-    ],
-  };
 }
