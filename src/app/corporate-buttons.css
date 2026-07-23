@@ -1,0 +1,249 @@
+/*
+ * LEDGERA · sistema cromático global para controles de acción.
+ *
+ * La aplicación combina botones nativos, inputs de acción y enlaces que actúan
+ * visualmente como botones. Esta capa unifica únicamente color, borde, sombra y
+ * estados interactivos; no modifica dimensiones, radios ni distribución.
+ */
+
+:root {
+  --button-brand-primary-bg: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 48%, #38bdf8 100%);
+  --button-brand-primary-hover-bg: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 46%, #7dd3fc 100%);
+  --button-brand-primary-text: #020617;
+  --button-brand-primary-border: rgba(186, 230, 253, 0.88);
+  --button-brand-primary-shadow: 0 8px 24px rgba(56, 189, 248, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+
+  --button-brand-secondary-bg: linear-gradient(135deg, rgba(125, 211, 252, 0.13) 0%, rgba(11, 17, 32, 0.96) 68%);
+  --button-brand-secondary-hover-bg: linear-gradient(135deg, rgba(125, 211, 252, 0.22) 0%, rgba(11, 17, 32, 0.98) 72%);
+  --button-brand-secondary-text: #bae6fd;
+  --button-brand-secondary-border: rgba(125, 211, 252, 0.34);
+  --button-brand-secondary-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+
+  --button-brand-danger-bg: linear-gradient(135deg, rgba(253, 164, 175, 0.17) 0%, rgba(11, 17, 32, 0.97) 72%);
+  --button-brand-danger-hover-bg: linear-gradient(135deg, rgba(253, 164, 175, 0.25) 0%, rgba(11, 17, 32, 0.98) 72%);
+  --button-brand-warning-bg: linear-gradient(135deg, rgba(252, 211, 77, 0.16) 0%, rgba(11, 17, 32, 0.97) 72%);
+  --button-brand-warning-hover-bg: linear-gradient(135deg, rgba(252, 211, 77, 0.24) 0%, rgba(11, 17, 32, 0.98) 72%);
+}
+
+/* Controles que funcionan visualmente como botones. */
+:is(
+  button,
+  input[type="button"],
+  input[type="reset"],
+  input[type="submit"],
+  [role="button"],
+  a[role="button"],
+  a[style*="display: inline-flex"][style*="border-radius"],
+  a[style*="display: flex"][style*="border-radius"][style*="padding"],
+  a[class*="bg-[var(--color-accent)]"],
+  a[class*="bg-[var(--color-primary)]"],
+  a[class*="bg-[var(--color-surface)]"][class*="rounded"],
+  a[class*="bg-[var(--color-surface-alt)]"][class*="rounded"]
+) {
+  background: var(--button-brand-secondary-bg) !important;
+  background-color: transparent !important;
+  border-color: var(--button-brand-secondary-border) !important;
+  color: var(--button-brand-secondary-text) !important;
+  box-shadow: var(--button-brand-secondary-shadow) !important;
+  transition-property: background, border-color, color, box-shadow, opacity !important;
+  transition-duration: 160ms !important;
+  transition-timing-function: ease !important;
+}
+
+:is(
+  button,
+  input[type="button"],
+  input[type="reset"],
+  input[type="submit"],
+  [role="button"],
+  a[role="button"],
+  a[style*="display: inline-flex"][style*="border-radius"],
+  a[style*="display: flex"][style*="border-radius"][style*="padding"],
+  a[class*="bg-[var(--color-accent)]"],
+  a[class*="bg-[var(--color-primary)]"],
+  a[class*="bg-[var(--color-surface)]"][class*="rounded"],
+  a[class*="bg-[var(--color-surface-alt)]"][class*="rounded"]
+):not(:disabled):not([aria-disabled="true"]):hover {
+  background: var(--button-brand-secondary-hover-bg) !important;
+  border-color: rgba(125, 211, 252, 0.58) !important;
+  color: #e0f2fe !important;
+  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Acción principal: CTA, envío y botones ya declarados con el acento de marca. */
+:is(
+  button[type="submit"],
+  input[type="submit"],
+  [data-button-variant="primary"],
+  button[style*="background: var(--accent)"],
+  button[style*="background-color: var(--accent)"],
+  a[style*="background: var(--accent)"],
+  a[style*="background-color: var(--accent)"],
+  button[class*="bg-[var(--color-accent)]"],
+  button[class*="bg-[var(--color-primary)]"],
+  a[class*="bg-[var(--color-accent)]"],
+  a[class*="bg-[var(--color-primary)]"],
+  button.bg-sky-200,
+  button.bg-sky-300,
+  button.bg-sky-400,
+  button.bg-cyan-300,
+  button.bg-cyan-400,
+  button.bg-blue-500,
+  button.bg-blue-600,
+  button.bg-blue-700,
+  button.bg-emerald-500,
+  button.bg-emerald-600,
+  button.bg-emerald-700,
+  a.bg-sky-200,
+  a.bg-sky-300,
+  a.bg-sky-400,
+  a.bg-cyan-300,
+  a.bg-cyan-400,
+  a.bg-blue-500,
+  a.bg-blue-600,
+  a.bg-blue-700,
+  a.bg-emerald-500,
+  a.bg-emerald-600,
+  a.bg-emerald-700
+):not([data-button-variant="secondary"]):not([data-button-variant="danger"]):not([data-button-variant="warning"]) {
+  background: var(--button-brand-primary-bg) !important;
+  background-color: transparent !important;
+  border-color: var(--button-brand-primary-border) !important;
+  color: var(--button-brand-primary-text) !important;
+  box-shadow: var(--button-brand-primary-shadow) !important;
+}
+
+:is(
+  button[type="submit"],
+  input[type="submit"],
+  [data-button-variant="primary"],
+  button[style*="background: var(--accent)"],
+  button[style*="background-color: var(--accent)"],
+  a[style*="background: var(--accent)"],
+  a[style*="background-color: var(--accent)"],
+  button[class*="bg-[var(--color-accent)]"],
+  button[class*="bg-[var(--color-primary)]"],
+  a[class*="bg-[var(--color-accent)]"],
+  a[class*="bg-[var(--color-primary)]"],
+  button.bg-sky-200,
+  button.bg-sky-300,
+  button.bg-sky-400,
+  button.bg-cyan-300,
+  button.bg-cyan-400,
+  button.bg-blue-500,
+  button.bg-blue-600,
+  button.bg-blue-700,
+  button.bg-emerald-500,
+  button.bg-emerald-600,
+  button.bg-emerald-700,
+  a.bg-sky-200,
+  a.bg-sky-300,
+  a.bg-sky-400,
+  a.bg-cyan-300,
+  a.bg-cyan-400,
+  a.bg-blue-500,
+  a.bg-blue-600,
+  a.bg-blue-700,
+  a.bg-emerald-500,
+  a.bg-emerald-600,
+  a.bg-emerald-700
+):not([data-button-variant="secondary"]):not([data-button-variant="danger"]):not([data-button-variant="warning"]):not(:disabled):not([aria-disabled="true"]):hover {
+  background: var(--button-brand-primary-hover-bg) !important;
+  border-color: #e0f2fe !important;
+  color: #020617 !important;
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Acciones destructivas mantienen la semántica de riesgo, combinada con el navy corporativo. */
+:is(
+  [data-button-variant="danger"],
+  button[class*="bg-red-"],
+  button[class*="bg-rose-"],
+  button[class*="text-red-"],
+  button[class*="text-rose-"],
+  button[style*="var(--loss)"],
+  button[aria-label*="Eliminar"],
+  button[aria-label*="eliminar"],
+  button[title*="Eliminar"],
+  button[title*="eliminar"]
+) {
+  background: var(--button-brand-danger-bg) !important;
+  border-color: rgba(253, 164, 175, 0.42) !important;
+  color: var(--loss) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+:is(
+  [data-button-variant="danger"],
+  button[class*="bg-red-"],
+  button[class*="bg-rose-"],
+  button[class*="text-red-"],
+  button[class*="text-rose-"],
+  button[style*="var(--loss)"],
+  button[aria-label*="Eliminar"],
+  button[aria-label*="eliminar"],
+  button[title*="Eliminar"],
+  button[title*="eliminar"]
+):not(:disabled):hover {
+  background: var(--button-brand-danger-hover-bg) !important;
+  border-color: rgba(253, 164, 175, 0.68) !important;
+  color: #fecdd3 !important;
+}
+
+/* Advertencias: amarillo funcional sobre la base navy de LEDGERA. */
+:is(
+  [data-button-variant="warning"],
+  button[class*="bg-amber-"],
+  button[class*="bg-yellow-"],
+  button[class*="text-amber-"],
+  button[class*="text-yellow-"],
+  button[style*="var(--warn)"]
+) {
+  background: var(--button-brand-warning-bg) !important;
+  border-color: rgba(252, 211, 77, 0.42) !important;
+  color: var(--warn) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+:is(
+  [data-button-variant="warning"],
+  button[class*="bg-amber-"],
+  button[class*="bg-yellow-"],
+  button[class*="text-amber-"],
+  button[class*="text-yellow-"],
+  button[style*="var(--warn)"]
+):not(:disabled):hover {
+  background: var(--button-brand-warning-hover-bg) !important;
+  border-color: rgba(252, 211, 77, 0.66) !important;
+  color: #fde68a !important;
+}
+
+:is(
+  button,
+  input[type="button"],
+  input[type="reset"],
+  input[type="submit"],
+  [role="button"],
+  a[role="button"],
+  a[style*="display: inline-flex"][style*="border-radius"],
+  a[style*="display: flex"][style*="border-radius"][style*="padding"]
+):focus-visible {
+  outline: 2px solid #7dd3fc !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(125, 211, 252, 0.16) !important;
+}
+
+:is(
+  button,
+  input[type="button"],
+  input[type="reset"],
+  input[type="submit"],
+  [role="button"],
+  a[role="button"]
+):disabled,
+:is(button, input, [role="button"], a[role="button"])[aria-disabled="true"] {
+  cursor: not-allowed !important;
+  filter: saturate(0.45) !important;
+  opacity: 0.52 !important;
+  box-shadow: none !important;
+}
