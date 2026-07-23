@@ -1,14 +1,35 @@
 import { prisma } from "@/lib/prisma";
 
 const MINDICADOR_API = "https://mindicador.cl/api/dolar";
-const DAY_MS = 24 * 60 * 60 * 1000;
+const FETCH_TIMEOUT_MS = 5_000;
+const CHILE_TIME_ZONE = "America/Santiago";
 
 interface DolarObservadoResponse {
   serie?: Array<{ fecha: string; valor: number }>;
 }
 
+type RateOptions = {
+  forceRefresh?: boolean;
+};
+
 function toUtcDateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+function toChileDateKey(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CHILE_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) return toUtcDateKey(date);
+  return `${year}-${month}-${day}`;
 }
 
 function startOfUtcDay(dateKey: string): Date {
@@ -33,21 +54,33 @@ function previousBusinessDay(date: Date): Date {
   return adjusted;
 }
 
+function readRateForDate(data: DolarObservadoResponse, dateKey: string): number | null {
+  const series = Array.isArray(data.serie) ? data.serie : [];
+  const exact = series.find((entry) => entry.fecha?.slice(0, 10) === dateKey);
+  const candidate = exact ?? series[0];
+  const value = Number(candidate?.valor);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
 export class FxRateService {
-  static async getDolarObservado(fecha: Date): Promise<number> {
+  static async getDolarObservado(fecha: Date, options: RateOptions = {}): Promise<number> {
     const dateKey = toUtcDateKey(fecha);
     const date = startOfUtcDay(dateKey);
 
-    const cached = await prisma.fxRate.findUnique({
-      where: { currency_date: { currency: "USD", date } },
-    });
+    if (!options.forceRefresh) {
+      const cached = await prisma.fxRate.findUnique({
+        where: { currency_date: { currency: "USD", date } },
+      });
 
-    if (cached && cached.valueClp > 0) {
-      return cached.valueClp;
+      if (cached && cached.valueClp > 0) {
+        return cached.valueClp;
+      }
     }
 
     const response = await fetch(`${MINDICADOR_API}/${formatMindicadorDate(date)}`, {
       headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -55,16 +88,16 @@ export class FxRateService {
     }
 
     const data = (await response.json()) as DolarObservadoResponse;
-    const value = data.serie?.[0]?.valor;
+    const value = readRateForDate(data, dateKey);
 
-    if (!value || value <= 0) {
+    if (!value) {
       throw new Error(`No hay dolar observado para ${dateKey}`);
     }
 
     await prisma.fxRate.upsert({
       where: { currency_date: { currency: "USD", date } },
-      update: { valueClp: value, source: "mindicador" },
-      create: { currency: "USD", date, valueClp: value, source: "mindicador" },
+      update: { valueClp: value, source: "mindicador.cl" },
+      create: { currency: "USD", date, valueClp: value, source: "mindicador.cl" },
     });
 
     return value;
@@ -94,19 +127,8 @@ export class FxRateService {
     }
   }
 
-  static async syncDailyRate(): Promise<void> {
-    const today = startOfUtcDay(toUtcDateKey(new Date()));
-    const tomorrow = new Date(today.getTime() + DAY_MS);
-
-    const existing = await prisma.fxRate.findFirst({
-      where: {
-        currency: "USD",
-        date: { gte: today, lt: tomorrow },
-      },
-    });
-
-    if (existing) return;
-
-    await this.getRateForTransaction(today);
+  static async syncDailyRate(): Promise<number> {
+    const today = startOfUtcDay(toChileDateKey(new Date()));
+    return this.getDolarObservado(today, { forceRefresh: true });
   }
 }
