@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
 const MINDICADOR_API = "https://mindicador.cl/api/dolar";
-const BCCH_HOME_URL = "https://www.bcentral.cl/inicio";
-const FETCH_TIMEOUT_MS = 5_000;
+const BCCH_BDE_URL = "https://si3.bcentral.cl/Siete/ES/Siete/Cuadro/CAP_TIPO_CAMBIO/MN_TIPO_CAMBIO4/DOLAR_OBS_ADO";
+const FETCH_TIMEOUT_MS = 7_500;
 const CHILE_TIME_ZONE = "America/Santiago";
 
 interface DolarObservadoResponse {
@@ -45,15 +45,11 @@ function formatMindicadorDate(date: Date): string {
   return `${day}-${month}-${year}`;
 }
 
-function formatSpanishDate(dateKey: string): string | null {
+function formatBcchTableDate(dateKey: string): string | null {
   const [year, month, day] = dateKey.split("-").map(Number);
-  const months = [
-    "enero", "febrero", "marzo", "abril", "mayo", "junio",
-    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-  ];
-
+  const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   if (!year || !month || !day || !months[month - 1]) return null;
-  return `${day} de ${months[month - 1]} de ${year}`;
+  return `${String(day).padStart(2, "0")}.${months[month - 1]}.${year}`;
 }
 
 function previousBusinessDay(date: Date): Date {
@@ -89,8 +85,8 @@ function htmlToPlainText(html: string): string {
     .trim();
 }
 
-function parseBcchCurrentRate(html: string, dateKey: string): number | null {
-  const expectedDate = formatSpanishDate(dateKey);
+function parseBcchBdeRate(html: string, dateKey: string): number | null {
+  const expectedDate = formatBcchTableDate(dateKey);
   if (!expectedDate) return null;
 
   const normalized = htmlToPlainText(html)
@@ -98,22 +94,26 @@ function parseBcchCurrentRate(html: string, dateKey: string): number | null {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-  if (!normalized.includes(expectedDate)) return null;
+  const dateMatches = normalized.match(/\b\d{2}\.(?:ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\.\d{4}\b/g) ?? [];
+  const dateIndex = dateMatches.indexOf(expectedDate);
+  if (dateIndex < 0) return null;
 
-  const labelIndex = normalized.indexOf("dolar observado");
-  if (labelIndex < 0) return null;
+  const seriesIndex = normalized.indexOf("dolar observado");
+  if (seriesIndex < 0) return null;
 
-  const nearby = normalized.slice(labelIndex, labelIndex + 500);
-  const match = nearby.match(/\$\s*([\d.]+,\d{2})/);
-  if (!match) return null;
+  const values = normalized
+    .slice(seriesIndex)
+    .match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g) ?? [];
+  const rawValue = values[dateIndex];
+  if (!rawValue) return null;
 
-  const value = Number(match[1].replace(/\./g, "").replace(",", "."));
+  const value = Number(rawValue.replace(/\./g, "").replace(",", "."));
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 async function fetchBcchCurrentRate(dateKey: string): Promise<number | null> {
   try {
-    const response = await fetch(BCCH_HOME_URL, {
+    const response = await fetch(BCCH_BDE_URL, {
       headers: {
         Accept: "text/html,application/xhtml+xml",
         "User-Agent": "LEDGERA/1.0 (+https://ledgera.cl)",
@@ -123,7 +123,7 @@ async function fetchBcchCurrentRate(dateKey: string): Promise<number | null> {
     });
 
     if (!response.ok) return null;
-    return parseBcchCurrentRate(await response.text(), dateKey);
+    return parseBcchBdeRate(await response.text(), dateKey);
   } catch {
     return null;
   }
@@ -200,15 +200,13 @@ export class FxRateService {
   static async syncDailyRate(): Promise<number> {
     const dateKey = toChileDateKey(new Date());
     const today = startOfUtcDay(dateKey);
+    const officialValue = await fetchBcchCurrentRate(dateKey);
 
-    try {
-      return await this.getDolarObservado(today, { forceRefresh: true });
-    } catch (mindicadorError) {
-      const officialValue = await fetchBcchCurrentRate(dateKey);
-      if (!officialValue) throw mindicadorError;
-
-      await persistRate(today, officialValue, "bcentral.cl");
+    if (officialValue) {
+      await persistRate(today, officialValue, "bcentral.cl/bde");
       return officialValue;
     }
+
+    return this.getDolarObservado(today, { forceRefresh: true });
   }
 }
