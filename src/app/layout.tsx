@@ -8,7 +8,7 @@ import "./corporate-buttons.css";
 import { AuthProvider } from "@/modules/identity/client/authContext";
 import CookieBanner from "@/components/CookieBanner";
 import AnalyticsProviders from "@/components/analytics/AnalyticsProviders";
-import FeedbackWidget from "@/components/feedback/FeedbackWidget";
+import LedgeraSupportWidget from "@/components/support/LedgeraSupportWidget";
 
 // ── LEDGERA design system · Propuesta B "Cierre" ──
 // Display: cifras destacadas, headlines, logo · Body: nav/texto/labels · Mono: montos, folios, tablas
@@ -153,8 +153,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: safeJsonLd(softwareSchema),
           }}
         />
-        <AuthProvider>{children}</AuthProvider>
-        <FeedbackWidget />
+        <AuthProvider>
+          {children}
+          <LedgeraSupportWidget />
+        </AuthProvider>
         <AnalyticsProviders />
         <CookieBanner />
       </body>
