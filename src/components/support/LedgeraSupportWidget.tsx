@@ -9,6 +9,12 @@ import {
   type ConsentSnapshot,
 } from "@/lib/privacy/consent";
 import { useAuth } from "@/modules/identity/client/authContext";
+import {
+  buildAssistantReply,
+  buildNextStepReply,
+  type AssistantContext,
+  type AssistantLink,
+} from "./assistantEngine";
 
 type Position = {
   x: number;
@@ -16,6 +22,7 @@ type Position = {
 };
 
 type WidgetView = "assistant" | "feedback";
+type ContextStatus = "idle" | "loading" | "ready" | "unavailable";
 
 type StoredWidgetState = {
   collapsed: boolean;
@@ -23,16 +30,12 @@ type StoredWidgetState = {
   activeView: WidgetView;
 };
 
-type AssistantLink = {
-  label: string;
-  href: string;
-};
-
 type ChatMessage = {
   id: string;
   role: "assistant" | "user";
   text: string;
   links?: AssistantLink[];
+  meta?: string;
 };
 
 type RouteContext = {
@@ -40,26 +43,15 @@ type RouteContext = {
   description: string;
 };
 
+type AssistantContextResponse = {
+  ok?: boolean;
+  data?: AssistantContext;
+};
+
 const STORAGE_KEY = "ledgera-support-widget-v1";
 const VIEWPORT_MARGIN = 12;
 const DRAG_THRESHOLD = 4;
-
-const QUICK_PROMPTS = [
-  "¿Cómo importo operaciones?",
-  "¿Dónde reviso pendientes?",
-  "¿Cómo veo mi estado tributario?",
-  "¿Cómo genero un respaldo?",
-];
-
-const PROTECTED_LINKS = new Set([
-  "/importaciones",
-  "/cryptoactivos",
-  "/obligaciones-tributarias",
-  "/declaraciones",
-  "/configuracion/seguridad",
-  "/configuracion/facturacion",
-  "/panel",
-]);
+const CONTEXT_TTL_MS = 60_000;
 
 function isPosition(value: unknown): value is Position {
   if (!value || typeof value !== "object") return false;
@@ -93,46 +85,32 @@ function removeStoredWidgetState(): void {
   } catch {}
 }
 
-function normalize(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function includesAny(value: string, terms: string[]): boolean {
-  return terms.some((term) => value.includes(term));
-}
-
 function getRouteContext(pathname: string): RouteContext {
   if (pathname.startsWith("/importaciones") || pathname.startsWith("/import/")) {
     return {
       label: "Importaciones",
-      description: "Aquí incorporas y confirmas movimientos provenientes de exchanges o archivos.",
+      description: "Aquí incorporas, revisas y confirmas movimientos provenientes de exchanges o archivos.",
     };
   }
 
   if (pathname.startsWith("/cryptoactivos")) {
     return {
       label: "Activos",
-      description: "Aquí revisas los activos detectados y la trazabilidad de sus operaciones.",
+      description: "Aquí revisas los activos detectados, su costo y la trazabilidad de las operaciones.",
     };
   }
 
   if (pathname.startsWith("/obligaciones-tributarias")) {
     return {
       label: "Obligaciones tributarias",
-      description: "Aquí LEDGERA muestra el resultado preliminar y los registros que requieren revisión.",
+      description: "Aquí LEDGERA presenta el resultado preliminar y los antecedentes que requieren revisión.",
     };
   }
 
   if (pathname.startsWith("/declaraciones")) {
     return {
       label: "Declaraciones",
-      description: "Aquí generas los respaldos PDF y Excel a partir de información confirmada.",
+      description: "Aquí generas y revisas respaldos PDF y Excel a partir de información confirmada.",
     };
   }
 
@@ -146,153 +124,22 @@ function getRouteContext(pathname: string): RouteContext {
   if (pathname.startsWith("/panel")) {
     return {
       label: "Panel principal",
-      description: "Aquí tienes una vista resumida del avance y estado general de tu información.",
+      description: "Aquí tienes una vista resumida del avance y del estado general de la cuenta.",
     };
   }
 
   return {
     label: "LEDGERA",
-    description: "Puedo orientarte por la plataforma y llevarte al módulo correcto.",
+    description: "Puedo identificar tu etapa actual, explicar resultados y llevarte a la siguiente acción correcta.",
   };
 }
 
-function resolveHref(href: string, isAuthenticated: boolean): string {
-  if (isAuthenticated || !PROTECTED_LINKS.has(href)) return href;
-  return "/login";
-}
-
-function buildReply(input: string, pathname: string, isAuthenticated: boolean): Omit<ChatMessage, "id" | "role"> {
-  const value = normalize(input);
-  const protectedLink = (label: string, href: string): AssistantLink => ({
-    label: isAuthenticated ? label : "Iniciar sesión",
-    href: resolveHref(href, isAuthenticated),
-  });
-
-  if (!value) {
-    return {
-      text: "Escribe una pregunta sobre el uso de LEDGERA o selecciona una de las opciones rápidas.",
-    };
-  }
-
-  if (includesAny(value, ["hola", "buenas", "ayuda", "que puedes hacer", "como funciona el asistente"])) {
-    return {
-      text: "Puedo explicarte cómo importar operaciones, revisar pendientes, entender los estados de la plataforma, generar respaldos y encontrar configuraciones. No reemplazo una revisión tributaria profesional ni concluyo impuestos dentro del chat.",
-      links: [
-        protectedLink("Ir al panel", "/panel"),
-        { label: "Ver preguntas frecuentes", href: "/preguntas" },
-      ],
-    };
-  }
-
-  if (includesAny(value, ["importar", "importacion", "binance", "exchange", "csv", "archivo", "operaciones"])) {
-    return {
-      text: "Para incorporar operaciones, entra en Importaciones, selecciona el origen y carga el archivo o integración disponible. Después confirma los registros correctos y deja en revisión los que necesiten antecedentes.",
-      links: [
-        protectedLink("Abrir Importaciones", "/importaciones"),
-        protectedLink("Revisar Binance", "/import/binance"),
-      ],
-    };
-  }
-
-  if (includesAny(value, ["pendiente", "pendientes", "revisar", "revision", "inconsistencia", "error de operacion", "confirmar movimiento"])) {
-    return {
-      text: "Los registros pendientes se resuelven en Importaciones. Revisa fecha, activo, cantidad, tipo de operación y fuente antes de confirmar. Mientras existan pendientes, el resultado tributario puede cambiar.",
-      links: [protectedLink("Revisar operaciones", "/importaciones")],
-    };
-  }
-
-  if (includesAny(value, ["activo", "activos", "criptoactivo", "portafolio", "saldo", "trazabilidad"])) {
-    return {
-      text: "La sección Activos consolida los criptoactivos detectados y permite revisar qué operaciones respaldan cada resultado. No debe interpretarse como un saldo de exchange en tiempo real.",
-      links: [protectedLink("Abrir Activos", "/cryptoactivos")],
-    };
-  }
-
-  if (includesAny(value, ["estado tributario", "obligacion tributaria", "semaforo", "accion requerida", "sin impuestos", "impuesto por pagar", "debo pagar", "cuanto impuesto"])) {
-    return {
-      text: "El estado tributario de LEDGERA es preliminar y depende de que la información esté completa. Verde indica que no se detectaron eventos con impacto en los datos incorporados; amarillo exige revisión; rojo indica operaciones que requieren acción. El chat no determina tu impuesto final.",
-      links: [
-        protectedLink("Ver estado tributario", "/obligaciones-tributarias"),
-        { label: "Solicitar revisión", href: "/contacto" },
-      ],
-    };
-  }
-
-  if (includesAny(value, ["declaracion", "declaraciones", "pdf", "excel", "respaldo", "f22", "extracto"])) {
-    return {
-      text: "Los respaldos se generan en Declaraciones una vez que las operaciones relevantes están confirmadas. El PDF sirve como documento de lectura y el Excel como soporte estructurado de trazabilidad.",
-      links: [protectedLink("Generar respaldo", "/declaraciones")],
-    };
-  }
-
-  if (includesAny(value, ["dolar", "usd", "tipo de cambio", "banco central", "cotizacion"])) {
-    return {
-      text: "LEDGERA utiliza el dólar observado oficial del Banco Central para la fecha correspondiente. La fuente y fecha deben mostrarse junto al valor; una cotización atrasada no debe presentarse como vigente.",
-      links: [protectedLink("Volver al panel", "/panel")],
-    };
-  }
-
-  if (includesAny(value, ["2fa", "segundo factor", "autenticador", "seguridad", "codigo no funciona", "recuperar acceso"])) {
-    return {
-      text: "La configuración del segundo factor está en Seguridad. Nunca compartas códigos 2FA, contraseñas, claves privadas ni secretos de API dentro del chat o en formularios de soporte.",
-      links: [
-        protectedLink("Abrir Seguridad", "/configuracion/seguridad"),
-        { label: "Recuperar 2FA", href: "/recuperar-2fa" },
-      ],
-    };
-  }
-
-  if (includesAny(value, ["contrasena", "password", "olvide mi clave", "restablecer clave"])) {
-    return {
-      text: isAuthenticated
-        ? "Puedes administrar la seguridad de tu cuenta desde Configuración. Para una contraseña olvidada, utiliza el flujo de recuperación y evita enviar credenciales por soporte."
-        : "Utiliza el flujo de recuperación de contraseña. LEDGERA nunca debe solicitarte la contraseña actual por correo o chat.",
-      links: [
-        isAuthenticated
-          ? protectedLink("Abrir Seguridad", "/configuracion/seguridad")
-          : { label: "Recuperar contraseña", href: "/forgot-password" },
-      ],
-    };
-  }
-
-  if (includesAny(value, ["plan", "planes", "suscripcion", "pago", "facturacion", "precio", "cobro"])) {
-    return {
-      text: "Puedes comparar los planes disponibles y administrar la facturación desde las secciones correspondientes. Una acción de cobro o cancelación siempre debe requerir confirmación explícita.",
-      links: [
-        { label: "Ver planes", href: "/planes" },
-        protectedLink("Administrar facturación", "/configuracion/facturacion"),
-      ],
-    };
-  }
-
-  if (includesAny(value, ["opinion", "feedback", "sugerencia", "problema", "contactar", "soporte", "hablar con alguien"])) {
-    return {
-      text: "Puedes enviar una opinión sobre la plataforma o contactar soporte. No incluyas contraseñas, códigos 2FA, claves privadas ni secretos de integración.",
-      links: [
-        { label: "Enviar opinión", href: "/opinion" },
-        { label: "Contactar soporte", href: "/contacto" },
-      ],
-    };
-  }
-
-  if (includesAny(value, ["ganancia", "perdida", "renta", "tributa", "sii", "domicilio", "residencia", "declarar en chile"])) {
-    return {
-      text: "Esa consulta puede depender de antecedentes personales, residencia, tipo de operación, base de costo y período tributario. Para evitar una conclusión incorrecta, revisa primero el análisis de LEDGERA y solicita evaluación profesional cuando corresponda.",
-      links: [
-        protectedLink("Abrir análisis tributario", "/obligaciones-tributarias"),
-        { label: "Contactar soporte", href: "/contacto" },
-      ],
-    };
-  }
-
-  const context = getRouteContext(pathname);
-  return {
-    text: `No tengo una respuesta cerrada para esa consulta en esta primera versión. Estás en ${context.label}. Puedo orientarte sobre importaciones, activos, pendientes, estado tributario, respaldos, seguridad o facturación.`,
-    links: [
-      { label: "Contactar soporte", href: "/contacto" },
-      { label: "Ver preguntas frecuentes", href: "/preguntas" },
-    ],
-  };
+function statusLabel(status: ContextStatus, isAuthenticated: boolean): string {
+  if (!isAuthenticated) return "Orientación general";
+  if (status === "loading") return "Analizando tu cuenta";
+  if (status === "ready") return "Contexto de cuenta activo";
+  if (status === "unavailable") return "Contexto temporalmente no disponible";
+  return "Preparando contexto";
 }
 
 export default function LedgeraSupportWidget() {
@@ -308,6 +155,9 @@ export default function LedgeraSupportWidget() {
   const canPersistRef = useRef(false);
   const ignoreNextClickRef = useRef(false);
   const messageIdRef = useRef(1);
+  const assistantContextRef = useRef<AssistantContext | null>(null);
+  const contextLoadedAtRef = useRef(0);
+  const contextRequestRef = useRef<Promise<AssistantContext | null> | null>(null);
   const dragRef = useRef({
     pointerId: null as number | null,
     offsetX: 0,
@@ -323,11 +173,14 @@ export default function LedgeraSupportWidget() {
   const [position, setPosition] = useState<Position | null>(null);
   const [dragging, setDragging] = useState(false);
   const [input, setInput] = useState("");
+  const [isResponding, setIsResponding] = useState(false);
+  const [assistantContext, setAssistantContext] = useState<AssistantContext | null>(null);
+  const [contextStatus, setContextStatus] = useState<ContextStatus>("idle");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      text: "Soy el Asistente LEDGERA. Puedo ayudarte a encontrar funciones y entender el flujo de la plataforma. No reemplazo una revisión tributaria profesional.",
+      text: "Soy el Asistente LEDGERA. Puedo revisar en qué etapa estás, detectar qué te falta y explicarte cuál es la siguiente acción correcta.",
     },
   ]);
 
@@ -371,6 +224,53 @@ export default function LedgeraSupportWidget() {
     setPosition(next);
   }, [clampPosition]);
 
+  const refreshAssistantContext = useCallback(async (force = false): Promise<AssistantContext | null> => {
+    if (!isAuthenticated) {
+      assistantContextRef.current = null;
+      contextLoadedAtRef.current = 0;
+      setAssistantContext(null);
+      setContextStatus("idle");
+      return null;
+    }
+
+    const cached = assistantContextRef.current;
+    if (!force && cached && Date.now() - contextLoadedAtRef.current < CONTEXT_TTL_MS) {
+      return cached;
+    }
+
+    if (contextRequestRef.current) return contextRequestRef.current;
+
+    const request = (async () => {
+      setContextStatus("loading");
+      try {
+        const response = await fetch("/api/assistant/context", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(`Contexto no disponible (${response.status})`);
+
+        const payload = (await response.json()) as AssistantContextResponse;
+        if (!payload.ok || !payload.data) throw new Error("Respuesta de contexto inválida");
+
+        assistantContextRef.current = payload.data;
+        contextLoadedAtRef.current = Date.now();
+        setAssistantContext(payload.data);
+        setContextStatus("ready");
+        return payload.data;
+      } catch {
+        setContextStatus("unavailable");
+        return assistantContextRef.current;
+      } finally {
+        contextRequestRef.current = null;
+      }
+    })();
+
+    contextRequestRef.current = request;
+    return request;
+  }, [isAuthenticated]);
+
   useEffect(() => {
     const consent = readConsentSnapshot();
     const canPersist = consent?.categories.functional === true;
@@ -407,6 +307,29 @@ export default function LedgeraSupportWidget() {
 
   useEffect(() => {
     if (!hydrated) return;
+    void refreshAssistantContext(true);
+  }, [hydrated, isAuthenticated, refreshAssistantContext]);
+
+  useEffect(() => {
+    if (!assistantContext || !isAuthenticated) return;
+
+    setMessages((current) => {
+      if (current.length !== 1 || current[0]?.id !== "welcome") return current;
+      const reply = buildNextStepReply(assistantContext, true);
+      return [
+        {
+          id: "welcome",
+          role: "assistant",
+          text: `Ya revisé el avance de tu cuenta. ${reply.text}`,
+          links: reply.links,
+          meta: reply.meta,
+        },
+      ];
+    });
+  }, [assistantContext, isAuthenticated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
 
     const frame = window.requestAnimationFrame(() => {
       placeWithinViewport(positionRef.current);
@@ -433,7 +356,7 @@ export default function LedgeraSupportWidget() {
       top: messageListRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, isResponding]);
 
   function setCollapsedState(nextCollapsed: boolean) {
     collapsedRef.current = nextCollapsed;
@@ -553,29 +476,44 @@ export default function LedgeraSupportWidget() {
     persistCurrentState();
   }
 
-  function submitQuestion(question: string) {
+  async function submitQuestion(question: string) {
     const trimmed = question.trim().slice(0, 500);
-    if (!trimmed) return;
+    if (!trimmed || isResponding) return;
 
     const userMessage: ChatMessage = {
       id: `user-${messageIdRef.current++}`,
       role: "user",
       text: trimmed,
     };
-    const reply = buildReply(trimmed, pathname, isAuthenticated);
+
+    setMessages((current) => [...current, userMessage].slice(-18));
+    setInput("");
+    setIsResponding(true);
+
+    const context = isAuthenticated
+      ? await refreshAssistantContext(false)
+      : null;
+    const reply = buildAssistantReply({
+      input: trimmed,
+      pathname,
+      isAuthenticated,
+      context,
+    });
     const assistantMessage: ChatMessage = {
       id: `assistant-${messageIdRef.current++}`,
       role: "assistant",
-      ...reply,
+      text: reply.text,
+      links: reply.links,
+      meta: reply.meta,
     };
 
-    setMessages((current) => [...current, userMessage, assistantMessage].slice(-18));
-    setInput("");
+    setMessages((current) => [...current, assistantMessage].slice(-18));
+    setIsResponding(false);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    submitQuestion(input);
+    void submitQuestion(input);
   }
 
   if (!hydrated) return null;
@@ -586,6 +524,10 @@ export default function LedgeraSupportWidget() {
     onPointerUp: endDrag,
     onPointerCancel: endDrag,
   };
+
+  const contextDescription = assistantContext
+    ? `${assistantContext.nextAction.title}: ${assistantContext.nextAction.detail}`
+    : routeContext.description;
 
   return (
     <div
@@ -640,8 +582,8 @@ export default function LedgeraSupportWidget() {
                 Asistente LEDGERA
               </p>
               <p className="m-0 mt-1 flex items-center gap-2 text-[11px] font-semibold text-text-faint">
-                <span className="h-2 w-2 rounded-full bg-gain" aria-hidden="true" />
-                Orientación de plataforma
+                <span className={`h-2 w-2 rounded-full ${contextStatus === "unavailable" ? "bg-warn" : "bg-gain"}`} aria-hidden="true" />
+                {statusLabel(contextStatus, isAuthenticated)}
               </p>
             </div>
 
@@ -682,10 +624,10 @@ export default function LedgeraSupportWidget() {
             <div className="select-text">
               <div className="border-b border-border bg-bg-sunken/60 px-4 py-3">
                 <p className="m-0 text-[10px] font-black uppercase tracking-[0.14em] text-accent">
-                  Sección actual · {routeContext.label}
+                  {assistantContext ? "Prioridad detectada" : `Sección actual · ${routeContext.label}`}
                 </p>
                 <p className="m-0 mt-1 text-xs leading-5 text-text-soft">
-                  {routeContext.description}
+                  {contextDescription}
                 </p>
               </div>
 
@@ -694,6 +636,7 @@ export default function LedgeraSupportWidget() {
                 role="log"
                 aria-live="polite"
                 aria-relevant="additions"
+                aria-busy={isResponding}
                 className="grid max-h-[330px] min-h-[260px] gap-3 overflow-y-auto px-4 py-4"
               >
                 {messages.map((message) => (
@@ -706,6 +649,11 @@ export default function LedgeraSupportWidget() {
                     }`}
                   >
                     <p className="m-0 whitespace-pre-wrap">{message.text}</p>
+                    {message.meta && (
+                      <p className="m-0 mt-2 border-t border-border pt-2 text-[10px] font-semibold text-text-faint">
+                        {message.meta}
+                      </p>
+                    )}
                     {message.links && message.links.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {message.links.map((link) => (
@@ -722,23 +670,15 @@ export default function LedgeraSupportWidget() {
                     )}
                   </article>
                 ))}
+
+                {isResponding && (
+                  <article className="mr-auto max-w-[88%] rounded-2xl border border-border bg-bg-sunken px-3.5 py-3 text-[12.5px] leading-5 text-text-faint">
+                    Analizando la consulta y el estado de tu cuenta…
+                  </article>
+                )}
               </div>
 
               <div className="border-t border-border px-4 py-3">
-                <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-                  {QUICK_PROMPTS.map((prompt) => (
-                    <button
-                      key={prompt}
-                      type="button"
-                      data-button-variant="secondary"
-                      onClick={() => submitQuestion(prompt)}
-                      className="min-h-9 shrink-0 rounded-xl border px-3 text-[11px] font-black"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-
                 <form onSubmit={handleSubmit} className="flex items-end gap-2">
                   <label htmlFor="ledgera-assistant-input" className="sr-only">
                     Pregunta para el Asistente LEDGERA
@@ -749,13 +689,14 @@ export default function LedgeraSupportWidget() {
                     onChange={(event) => setInput(event.target.value)}
                     maxLength={500}
                     autoComplete="off"
-                    placeholder="Pregunta sobre LEDGERA"
-                    className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg-sunken px-3 text-sm text-text outline-none placeholder:text-text-faint focus:border-accent"
+                    placeholder="Escribe tu pregunta"
+                    disabled={isResponding}
+                    className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg-sunken px-3 text-sm text-text outline-none placeholder:text-text-faint focus:border-accent disabled:opacity-50"
                   />
                   <button
                     type="submit"
                     data-button-variant="primary"
-                    disabled={!input.trim()}
+                    disabled={!input.trim() || isResponding}
                     aria-label="Enviar pregunta"
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border"
                   >
@@ -763,7 +704,7 @@ export default function LedgeraSupportWidget() {
                   </button>
                 </form>
                 <p className="m-0 mt-2 text-[10px] leading-4 text-text-faint">
-                  No compartas contraseñas, códigos 2FA, claves privadas ni secretos de API.
+                  Usa datos generales de avance. No compartas contraseñas, códigos 2FA, claves privadas ni secretos de API.
                 </p>
               </div>
             </div>
