@@ -59,6 +59,7 @@ type TaxAnalysis = {
 };
 
 type AnalysisState = "CLEAR" | "REVIEW" | "IMPACT";
+type TrafficLightState = AnalysisState | "UNKNOWN";
 
 const card: CSSProperties = {
   background: "var(--bg-elev)",
@@ -76,6 +77,12 @@ const genericSourceLabels = new Set([
   "API",
   "ARCHIVO",
 ]);
+
+const trafficLights = [
+  { state: "IMPACT" as const, color: "var(--loss)", label: "Acción requerida" },
+  { state: "REVIEW" as const, color: "#E8B84B", label: "Revisión pendiente" },
+  { state: "CLEAR" as const, color: "#3FA687", label: "Sin impuestos por pagar" },
+];
 
 function extractAsset(item: StagingItem): string {
   return item.amountLabel.match(/\b[A-Z0-9]{2,12}\b$/)?.[0]
@@ -177,15 +184,61 @@ function analyzeEvents(events: TaxEvent[]): TaxAnalysis {
   };
 }
 
-function ButtonLink({
-  href,
-  children,
-  primary = false,
-}: {
-  href: string;
-  children: ReactNode;
-  primary?: boolean;
-}) {
+function TaxTrafficLight({ state, statusLabel }: { state: TrafficLightState; statusLabel: string }) {
+  return (
+    <div
+      role="status"
+      aria-label={`Estado tributario: ${statusLabel}`}
+      title="Rojo: acción requerida · Amarillo: revisión pendiente · Verde: sin impuestos por pagar"
+      style={{
+        width: "fit-content",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 9,
+        padding: "7px 10px",
+        border: "1px solid var(--border)",
+        borderRadius: 999,
+        background: "var(--bg-sunken)",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 5,
+          padding: "4px 6px",
+          border: "1px solid var(--border)",
+          borderRadius: 999,
+          background: "var(--bg-elev)",
+        }}
+      >
+        {trafficLights.map((light) => {
+          const active = state === light.state;
+          return (
+            <span
+              key={light.state}
+              style={{
+                width: 9,
+                height: 9,
+                borderRadius: 999,
+                background: active ? light.color : "color-mix(in srgb, var(--text-soft) 20%, transparent)",
+                boxShadow: active ? `0 0 0 4px color-mix(in srgb, ${light.color} 16%, transparent)` : "none",
+                opacity: active ? 1 : 0.58,
+                transition: "background 160ms ease, box-shadow 160ms ease, opacity 160ms ease",
+              }}
+            />
+          );
+        })}
+      </span>
+      <span style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".08em", textTransform: "uppercase" }}>
+        Estado tributario
+      </span>
+    </div>
+  );
+}
+
+function ButtonLink({ href, children, primary = false }: { href: string; children: ReactNode; primary?: boolean }) {
   return (
     <Link
       href={href}
@@ -344,23 +397,20 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
 
   const resultCopy = analysisState === "REVIEW"
     ? {
-        eyebrow: "Información pendiente",
+        statusLabel: "Revisión pendiente",
         title: "Tu situación tributaria todavía no está completa",
         body: `Encontramos ${attentionCount} ${attentionCount === 1 ? "registro que necesita" : "registros que necesitan"} revisión antes de cerrar el análisis. El resultado puede cambiar cuando se complete esa información.`,
-        signal: "#E8B84B",
       }
     : analysisState === "IMPACT"
       ? {
-          eyebrow: "Revisión tributaria",
+          statusLabel: "Acción requerida",
           title: "Detectamos operaciones que debes revisar",
           body: `LEDGERA calculó resultado para ${taxAnalysis.taxable.length} ${taxAnalysis.taxable.length === 1 ? "operación" : "operaciones"}. El resultado acumulado es ${formatClp(taxAnalysis.realizedPnlClp)}; esta cifra no corresponde todavía al impuesto final.`,
-          signal: "var(--loss)",
         }
       : {
-          eyebrow: "Estado tributario",
+          statusLabel: "Sin impuestos por pagar",
           title: "Sin impuestos por pagar",
           body: `LEDGERA revisó ${summary.confirmed.length} ${summary.confirmed.length === 1 ? "operación confirmada" : "operaciones confirmadas"} asociadas a ${summary.assetCount} ${summary.assetCount === 1 ? "activo" : "activos"}. No se encontraron eventos clasificados con impacto tributario en la información incorporada.`,
-          signal: "#3FA687",
         };
 
   const sourceLabel = summary.sources.length > 0
@@ -400,19 +450,17 @@ export function CryptoFirstModulePage({ module, sections }: Props) {
         <section style={{ ...card, minHeight: 250, display: "grid", placeItems: "center", color: "var(--text-soft)", fontSize: 13 }}>Analizando tu situación tributaria…</section>
       ) : !hasConfirmed ? (
         <section style={{ ...card, minHeight: 250, display: "grid", placeItems: "center", textAlign: "center" }}>
-          <div style={{ maxWidth: 560 }}>
-            <h2 style={{ color: "var(--text)", fontSize: "clamp(1.2rem,2.5vw,1.55rem)", fontWeight: 950, margin: "0 0 8px", fontFamily: fonts.display }}>Aún no hay operaciones para analizar</h2>
-            <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5, margin: "0 0 14px" }}>Primero incorpora información en Origen de Fondos y confirma los movimientos en Importaciones.</p>
+          <div style={{ maxWidth: 560, display: "grid", justifyItems: "center", gap: 10 }}>
+            <TaxTrafficLight state="UNKNOWN" statusLabel="Sin evaluación" />
+            <h2 style={{ color: "var(--text)", fontSize: "clamp(1.2rem,2.5vw,1.55rem)", fontWeight: 950, margin: 0, fontFamily: fonts.display }}>Aún no hay operaciones para analizar</h2>
+            <p style={{ color: "var(--text-soft)", fontSize: 13.5, lineHeight: 1.5, margin: "0 0 4px" }}>Primero incorpora información en Origen de Fondos y confirma los movimientos en Importaciones.</p>
             <ButtonLink href="/origen-fondos" primary>Incorporar información</ButtonLink>
           </div>
         </section>
       ) : (
         <>
           <section style={{ ...card, background: "var(--bg-elev)", border: "1px solid var(--border)", padding: "clamp(20px,3vw,30px)", display: "grid", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <span aria-hidden="true" style={{ width: 11, height: 11, flex: "0 0 11px", borderRadius: 999, background: resultCopy.signal, boxShadow: `0 0 0 4px color-mix(in srgb, ${resultCopy.signal} 16%, transparent)` }} />
-              <p style={{ color: "var(--text-soft)", fontSize: 11, fontWeight: 900, letterSpacing: ".08em", margin: 0, textTransform: "uppercase" }}>{resultCopy.eyebrow}</p>
-            </div>
+            <TaxTrafficLight state={analysisState} statusLabel={resultCopy.statusLabel} />
             <h2 style={{ color: "var(--text)", fontSize: "clamp(1.45rem,3vw,2rem)", fontWeight: 950, margin: 0, letterSpacing: "-.035em", fontFamily: fonts.display }}>{resultCopy.title}</h2>
             <p style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.6, margin: 0, maxWidth: 920 }}>{resultCopy.body}</p>
             <p style={{ color: "var(--text-soft)", fontSize: 12, lineHeight: 1.5, margin: "2px 0 0" }}>Resultado preliminar basado únicamente en las operaciones y respaldos actualmente incorporados.</p>
