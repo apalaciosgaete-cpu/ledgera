@@ -3,11 +3,16 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
-import speakeasy from "speakeasy";
 
 import { prisma } from "@/lib/prisma";
-import { readTwoFactorRecovery } from "@/modules/identity/application/twoFactorRecovery";
-import { encryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import {
+  prepareTwoFactorRecovery,
+  readTwoFactorRecovery,
+} from "@/modules/identity/application/twoFactorRecovery";
+import {
+  createTwoFactorOtpAuthUrl,
+  createTwoFactorSetup,
+} from "@/modules/identity/application/twoFactorTotp";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 export async function POST(req: NextRequest) {
@@ -57,37 +62,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret = speakeasy.generateSecret({
-      name: `LEDGERA (${user.email})`,
-      issuer: "LEDGERA",
-      length: 20,
-    });
-
-    if (!secret.base32 || !secret.otpauth_url) {
-      throw new Error("No fue posible generar el secreto TOTP.");
+    const generatedSecret = identity.pendingSecret
+      ? null
+      : createTwoFactorSetup(user.email).secret;
+    const prepared = identity.pendingSecret
+      ? identity
+      : await prepareTwoFactorRecovery(token, generatedSecret!);
+    const pendingSecret = prepared?.pendingSecret;
+    if (!pendingSecret) {
+      throw new Error("No fue posible preparar el nuevo secreto TOTP.");
     }
 
-    const qrCode = await QRCode.toDataURL(secret.otpauth_url);
-
-    const updated = await prisma.users.updateMany({
-      where: { id: user.id },
-      data: {
-        twoFactorSecret: encryptTwoFactorSecret(secret.base32),
-        twoFactorEnabled: true,
-        updated_at: new Date(),
-      },
-    });
-
-    if (updated.count !== 1) {
-      throw new Error("No fue posible guardar el nuevo secreto TOTP.");
-    }
+    const qrCode = await QRCode.toDataURL(
+      createTwoFactorOtpAuthUrl(pendingSecret, user.email),
+    );
 
     return NextResponse.json({
       ok: true,
       message: "Nuevo autenticador generado.",
       data: {
         qrCode,
-        secret: secret.base32,
+        secret: pendingSecret,
         email: user.email,
       },
     });

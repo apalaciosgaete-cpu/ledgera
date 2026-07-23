@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import speakeasy from "speakeasy";
 
 import {
   issueAdminReauthenticationToken,
@@ -14,6 +13,7 @@ import {
 } from "@/modules/identity/application/requirePlatformRole";
 import { verifyPassword } from "@/modules/identity/application/passwordHash";
 import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import { validateTwoFactorCode } from "@/modules/identity/application/twoFactorTotp";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { enforceCsrfProtection } from "@/modules/security/application/csrfProtection";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
@@ -65,12 +65,10 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordIsValid = await verifyPassword(password, user.passwordHash);
-    const twoFactorIsValid = speakeasy.totp.verify({
+    const twoFactorIsValid = validateTwoFactorCode({
       secret: decryptTwoFactorSecret(user.twoFactorSecret),
-      encoding: "base32",
-      token: code,
-      window: 1,
-    });
+      code,
+    }) !== null;
 
     if (!passwordIsValid || !twoFactorIsValid) {
       return fail("Reautenticación inválida.", 401, {

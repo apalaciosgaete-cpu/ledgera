@@ -14,13 +14,16 @@ function hashToken(token: string) {
 export async function issueOneTimeToken(input: {
   identifier: string;
   ttlMs: number;
+  revokeIdentifierPrefix?: string;
 }) {
   const token = crypto.randomBytes(32).toString("base64url");
   const expires = new Date(Date.now() + input.ttlMs);
 
   await prisma.$transaction([
     prisma.oneTimeToken.deleteMany({
-      where: { identifier: input.identifier },
+      where: input.revokeIdentifierPrefix
+        ? { identifier: { startsWith: input.revokeIdentifierPrefix } }
+        : { identifier: input.identifier },
     }),
     prisma.oneTimeToken.create({
       data: {
@@ -98,4 +101,24 @@ export async function revokeOneTimeToken(token: string) {
   await prisma.oneTimeToken.deleteMany({
     where: { token: hashToken(normalized) },
   });
+}
+
+export async function replaceOneTimeTokenIdentifier(input: {
+  token: string;
+  currentIdentifier: string;
+  nextIdentifier: string;
+}) {
+  const normalized = String(input.token ?? "").trim();
+  if (!normalized) return false;
+
+  const updated = await prisma.oneTimeToken.updateMany({
+    where: {
+      token: hashToken(normalized),
+      identifier: input.currentIdentifier,
+      expires: { gt: new Date() },
+    },
+    data: { identifier: input.nextIdentifier },
+  });
+
+  return updated.count === 1;
 }

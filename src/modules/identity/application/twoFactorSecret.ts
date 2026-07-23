@@ -15,6 +15,7 @@ import {
 // Formato del cipher: "<iv hex 24>:<authTag hex 32>:<data hex>".
 // Un base32 TOTP nunca contiene ":", así que esto discrimina sin ambigüedad.
 const ENCRYPTED_FORMAT = /^[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/i;
+const LEGACY_BASE32_FORMAT = /^[A-Z2-7]+=*$/i;
 
 export function isEncryptedSecret(value: string): boolean {
   return ENCRYPTED_FORMAT.test(value);
@@ -37,7 +38,10 @@ export function encryptTwoFactorSecret(plain: string): string {
 /** Devuelve la semilla TOTP en claro. Acepta valores legados en texto plano. */
 export function decryptTwoFactorSecret(stored: string): string {
   if (!stored) return stored;
-  if (!isEncryptedSecret(stored)) return stored; // legado en texto plano
+  if (!isEncryptedSecret(stored)) {
+    if (LEGACY_BASE32_FORMAT.test(stored.trim())) return stored.trim();
+    throw new Error("Formato de semilla TOTP almacenada inválido.");
+  }
   try {
     return decryptSecret(stored);
   } catch (error) {
@@ -45,6 +49,6 @@ export function decryptTwoFactorSecret(stored: string): string {
       "[2fa] No se pudo descifrar la semilla TOTP almacenada.",
       error instanceof Error ? error.message : error,
     );
-    return stored;
+    throw new Error("No se pudo descifrar la semilla TOTP almacenada.");
   }
 }

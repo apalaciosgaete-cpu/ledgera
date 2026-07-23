@@ -2,7 +2,6 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from "next/server";
-import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
@@ -12,6 +11,10 @@ import {
   decryptTwoFactorSecret,
   encryptTwoFactorSecret,
 } from "@/modules/identity/application/twoFactorSecret";
+import {
+  createTwoFactorOtpAuthUrl,
+  createTwoFactorSetup,
+} from "@/modules/identity/application/twoFactorTotp";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 export async function GET(req: NextRequest) {
@@ -45,11 +48,10 @@ export async function GET(req: NextRequest) {
 
     // Si ya tiene secret y no pide regenerar, reutilizarlo
     if (!regenerate && existingSecret) {
-      const otpauthUrl = speakeasy.otpauthURL({
-        secret: existingSecret,
-        label: `Ledgera (${session.user.email})`,
-        encoding: "base32",
-      });
+      const otpauthUrl = createTwoFactorOtpAuthUrl(
+        existingSecret,
+        session.user.email,
+      );
       const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
       return NextResponse.json({
@@ -60,17 +62,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Generar nuevo secret
-    const secret = speakeasy.generateSecret({
-      name: `Ledgera (${session.user.email})`,
-      length: 20,
-    });
-
-    const qrCodeDataUrl = await QRCode.toDataURL(secret.otpauth_url!);
+    const setup = createTwoFactorSetup(session.user.email);
+    const qrCodeDataUrl = await QRCode.toDataURL(setup.otpauthUrl);
 
     await prisma.users.update({
       where: { id: session.user.id },
       data: {
-        twoFactorSecret: encryptTwoFactorSecret(secret.base32),
+        twoFactorSecret: encryptTwoFactorSecret(setup.secret),
         updated_at: new Date(),
       },
     });
@@ -78,7 +76,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       qrCode: qrCodeDataUrl,
-      secret: secret.base32,
+      secret: setup.secret,
     });
   } catch (error) {
     console.error("[2fa/setup]", error);

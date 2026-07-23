@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import speakeasy from "speakeasy";
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -18,7 +17,8 @@ import {
   consumeTwoFactorRecovery,
   readTwoFactorRecovery,
 } from "@/modules/identity/application/twoFactorRecovery";
-import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import { encryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import { validateTwoFactorCode } from "@/modules/identity/application/twoFactorTotp";
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import {
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       !user ||
       user.email.toLowerCase() !== identity.email ||
       user.status !== "active" ||
-      !user.twoFactorSecret
+      !identity.pendingSecret
     ) {
       return NextResponse.json(
         { ok: false, message: "La cuenta no está disponible para recuperación." },
@@ -85,12 +85,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isValid = speakeasy.totp.verify({
-      secret: decryptTwoFactorSecret(user.twoFactorSecret),
-      encoding: "base32",
-      token: code,
-      window: 1,
-    });
+    const isValid = validateTwoFactorCode({
+      secret: identity.pendingSecret,
+      code,
+    }) !== null;
 
     if (!isValid) {
       return NextResponse.json(
@@ -103,7 +101,8 @@ export async function POST(req: NextRequest) {
     if (
       !consumedIdentity ||
       consumedIdentity.userId !== user.id ||
-      consumedIdentity.email !== user.email.toLowerCase()
+      consumedIdentity.email !== user.email.toLowerCase() ||
+      consumedIdentity.pendingSecret !== identity.pendingSecret
     ) {
       return NextResponse.json(
         { ok: false, message: "El enlace ya fue utilizado o expiró." },
@@ -114,6 +113,7 @@ export async function POST(req: NextRequest) {
     const updated = await prisma.users.updateMany({
       where: { id: user.id },
       data: {
+        twoFactorSecret: encryptTwoFactorSecret(identity.pendingSecret),
         twoFactorEnabled: true,
         updated_at: new Date(),
       },

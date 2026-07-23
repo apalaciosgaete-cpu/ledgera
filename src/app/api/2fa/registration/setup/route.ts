@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
-import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
 import { encryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import { createTwoFactorSetup } from "@/modules/identity/application/twoFactorTotp";
 
 // Force dynamic rendering because routes use request.headers/cookies
 export const dynamic = "force-dynamic";
@@ -75,34 +75,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret = speakeasy.generateSecret({
-      name: `LEDGERA (${user.email})`,
-      issuer: "LEDGERA",
-      length: 20,
-    });
-
-    if (!secret.base32 || !secret.otpauth_url) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message: "No fue posible generar el secreto 2FA.",
-        },
-        { status: 500 },
-      );
-    }
-
-    const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+    const setup = createTwoFactorSetup(user.email);
+    const qrCode = await QRCode.toDataURL(setup.otpauthUrl);
 
     await prisma.users.update({
       where: { id: user.id },
       data: {
-        twoFactorSecret: encryptTwoFactorSecret(secret.base32),
+        twoFactorSecret: encryptTwoFactorSecret(setup.secret),
         twoFactorEnabled: false,
         updated_at: new Date(),
       },
     });
 
-    const setupToken = signSetupToken(user.id, user.email, secret.base32);
+    const setupToken = signSetupToken(user.id, user.email, setup.secret);
 
     return NextResponse.json({
       ok: true,
@@ -111,7 +96,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         email: user.email,
         qrCode,
-        secret: secret.base32,
+        secret: setup.secret,
         setupToken,
       },
     });

@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 import crypto from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
-import speakeasy from "speakeasy";
 
 import {
   buildSessionExpirationDate,
@@ -13,6 +12,7 @@ import {
 import { rotateSessionForUser } from "@/modules/identity/infrastructure/sessionRepository";
 import { prisma } from "@/lib/prisma";
 import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import { validateTwoFactorCode } from "@/modules/identity/application/twoFactorTotp";
 import { recordAuditEvent } from "@/modules/audit/application/recordAuditEvent";
 
 export const runtime = "nodejs";
@@ -150,12 +150,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isValid = speakeasy.totp.verify({
+    const isValid = validateTwoFactorCode({
       secret: secretPlain,
-      encoding: "base32",
-      token: code,
-      window: 1,
-    });
+      code,
+    }) !== null;
 
     if (!isValid) {
       return NextResponse.json(

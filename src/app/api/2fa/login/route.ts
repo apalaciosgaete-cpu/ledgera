@@ -2,7 +2,6 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import speakeasy from "speakeasy";
 
 import {
   createAdminAuditLog,
@@ -10,6 +9,7 @@ import {
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import { validateTwoFactorCode } from "@/modules/identity/application/twoFactorTotp";
 import {
   consumeTwoFactorLoginChallenge,
   readTwoFactorLoginChallenge,
@@ -103,16 +103,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isValid = speakeasy.totp.verify({
-      secret: decryptTwoFactorSecret(user.twoFactorSecret),
-      encoding: "base32",
-      token: code,
-      window: 1,
+    const secret = decryptTwoFactorSecret(user.twoFactorSecret);
+    const validationDelta = validateTwoFactorCode({
+      secret,
+      code,
     });
 
-    if (!isValid) {
+    if (validationDelta === null) {
+      const clockDriftDelta = validateTwoFactorCode({
+        secret,
+        code,
+        window: 10,
+      });
+      const clockDriftDetected = clockDriftDelta !== null;
+      console.warn("[2fa/login] token rejected", {
+        reason: clockDriftDetected ? "CLOCK_DRIFT" : "TOKEN_MISMATCH",
+        driftSteps: clockDriftDelta,
+      });
+
       return NextResponse.json(
-        { ok: false, message: "Código inválido. Intenta nuevamente." },
+        {
+          ok: false,
+          message: clockDriftDetected
+            ? "La hora de tu autenticador está desincronizada. Activa la fecha y hora automáticas e intenta nuevamente."
+            : "Código inválido. Verifica que corresponda a LEDGERA o recupera tu autenticador.",
+        },
         { status: 401 },
       );
     }

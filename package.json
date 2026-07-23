@@ -27,6 +27,7 @@
     "ccxt": "^4.5.64",
     "next": "^14.2.35",
     "orionx-sdk": "^2.0.0",
+    "otpauth": "9.5.1",
     "papaparse": "^5.5.3",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.18.0",
@@ -37,7 +38,6 @@
     "react-dom": "^18.3.1",
     "resend": "^6.12.3",
     "server-only": "^0.0.1",
-    "speakeasy": "^2.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -48,7 +48,6 @@
     "@types/pg": "^8.20.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.12",
-    "@types/speakeasy": "^2.0.10",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.35",

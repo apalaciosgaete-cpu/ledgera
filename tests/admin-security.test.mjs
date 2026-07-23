@@ -52,7 +52,7 @@ test("admin reauthentication verifies password and TOTP", () => {
   const source = read("src/app/api/admin/reauth/route.ts");
 
   assert.match(source, /verifyPassword/);
-  assert.match(source, /speakeasy\.totp\.verify/);
+  assert.match(source, /validateTwoFactorCode/);
   assert.match(source, /issueAdminReauthenticationToken/);
   assert.match(source, /ADMIN_REAUTHENTICATED/);
   assert.match(source, /enforceRequestRateLimit/);

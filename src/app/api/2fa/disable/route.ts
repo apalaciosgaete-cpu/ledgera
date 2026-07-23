@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import speakeasy from "speakeasy";
 
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/modules/identity/application/sessionToken";
 import { getUserById } from "@/modules/identity/infrastructure/userRepository";
 import { decryptTwoFactorSecret } from "@/modules/identity/application/twoFactorSecret";
+import { validateTwoFactorCode } from "@/modules/identity/application/twoFactorTotp";
 import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
 
 
@@ -49,12 +49,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isValid = speakeasy.totp.verify({
+    const isValid = validateTwoFactorCode({
       secret: decryptTwoFactorSecret(user.twoFactorSecret),
-      encoding: "base32",
-      token: code,
-      window: 1,
-    });
+      code,
+    }) !== null;
 
     if (!isValid) {
       return NextResponse.json(
