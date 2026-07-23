@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   CONSENT_EVENT,
   readConsentSnapshot,
@@ -16,13 +25,10 @@ import {
   type AssistantLink,
 } from "./assistantEngine";
 
-type Position = {
-  x: number;
-  y: number;
-};
-
+type Position = { x: number; y: number };
 type WidgetView = "assistant" | "feedback";
 type ContextStatus = "idle" | "loading" | "ready" | "unavailable";
+type EngineStatus = "ai" | "loading" | "fallback";
 
 type StoredWidgetState = {
   collapsed: boolean;
@@ -38,17 +44,22 @@ type ChatMessage = {
   meta?: string;
 };
 
-type RouteContext = {
-  label: string;
-  description: string;
-};
-
 type AssistantContextResponse = {
   ok?: boolean;
   data?: AssistantContext;
 };
 
-const STORAGE_KEY = "ledgera-support-widget-v1";
+type AssistantChatResponse = {
+  ok?: boolean;
+  data?: {
+    text?: string;
+    links?: AssistantLink[];
+    meta?: string;
+    engine?: "ai";
+  };
+};
+
+const STORAGE_KEY = "ledgera-support-widget-v2";
 const VIEWPORT_MARGIN = 12;
 const DRAG_THRESHOLD = 4;
 const CONTEXT_TTL_MS = 60_000;
@@ -67,7 +78,6 @@ function readStoredWidgetState(): StoredWidgetState | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-
     const parsed = JSON.parse(raw) as Partial<StoredWidgetState>;
     return {
       collapsed: parsed.collapsed === true,
@@ -85,67 +95,63 @@ function removeStoredWidgetState(): void {
   } catch {}
 }
 
-function getRouteContext(pathname: string): RouteContext {
+function routeDescription(pathname: string): string {
   if (pathname.startsWith("/importaciones") || pathname.startsWith("/import/")) {
-    return {
-      label: "Importaciones",
-      description: "Aquí incorporas, revisas y confirmas movimientos provenientes de exchanges o archivos.",
-    };
+    return "Importaciones: incorpora, revisa y confirma movimientos de exchanges o archivos.";
   }
-
   if (pathname.startsWith("/cryptoactivos")) {
-    return {
-      label: "Activos",
-      description: "Aquí revisas los activos detectados, su costo y la trazabilidad de las operaciones.",
-    };
+    return "Activos: revisa posiciones, costo y trazabilidad de las operaciones.";
   }
-
   if (pathname.startsWith("/obligaciones-tributarias")) {
-    return {
-      label: "Obligaciones tributarias",
-      description: "Aquí LEDGERA presenta el resultado preliminar y los antecedentes que requieren revisión.",
-    };
+    return "Obligaciones tributarias: revisa el resultado preliminar y los antecedentes pendientes.";
   }
-
   if (pathname.startsWith("/declaraciones")) {
-    return {
-      label: "Declaraciones",
-      description: "Aquí generas y revisas respaldos PDF y Excel a partir de información confirmada.",
-    };
+    return "Declaraciones: genera y revisa respaldos PDF y Excel.";
   }
-
   if (pathname.startsWith("/configuracion/seguridad")) {
-    return {
-      label: "Seguridad",
-      description: "Aquí administras contraseña, segundo factor y controles de acceso.",
-    };
+    return "Seguridad: administra contraseña, segundo factor y controles de acceso.";
   }
-
   if (pathname.startsWith("/panel")) {
-    return {
-      label: "Panel principal",
-      description: "Aquí tienes una vista resumida del avance y del estado general de la cuenta.",
-    };
+    return "Panel principal: revisa el avance y el estado general de la cuenta.";
   }
-
-  return {
-    label: "LEDGERA",
-    description: "Puedo identificar tu etapa actual, explicar resultados y llevarte a la siguiente acción correcta.",
-  };
+  return "Puedo explicar LEDGERA, mantener el contexto de la conversación y orientarte al siguiente paso.";
 }
 
-function statusLabel(status: ContextStatus, isAuthenticated: boolean): string {
-  if (!isAuthenticated) return "Orientación general";
-  if (status === "loading") return "Analizando tu cuenta";
-  if (status === "ready") return "Contexto de cuenta activo";
-  if (status === "unavailable") return "Contexto temporalmente no disponible";
-  return "Preparando contexto";
+function assistantStatusLabel(params: {
+  engineStatus: EngineStatus;
+  contextStatus: ContextStatus;
+  isAuthenticated: boolean;
+}): string {
+  if (params.engineStatus === "loading") return "La IA está analizando";
+  if (params.engineStatus === "fallback") return "Modo de respaldo activo";
+  if (!params.isAuthenticated) return "Chatbot IA · orientación general";
+  if (params.contextStatus === "loading") return "IA preparando contexto de cuenta";
+  if (params.contextStatus === "ready") return "Chatbot IA · contexto de cuenta activo";
+  if (params.contextStatus === "unavailable") return "Chatbot IA · contexto limitado";
+  return "Chatbot IA";
+}
+
+function normalizeFallbackQuestion(question: string, history: ChatMessage[]): string {
+  const normalized = question
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (/^(como|y como) transforma/.test(normalized)) return "para que sirve ledgera";
+  if (/^(como|y como)$/.test(normalized)) {
+    const previousAssistant = [...history].reverse().find((message) => message.role === "assistant");
+    if (previousAssistant?.text.toLowerCase().includes("ledgera")) return "como funciona ledgera";
+  }
+  return question;
 }
 
 export default function LedgeraSupportWidget() {
   const pathname = usePathname() || "/";
   const { isAuthenticated } = useAuth();
-  const routeContext = useMemo(() => getRouteContext(pathname), [pathname]);
+  const currentRouteDescription = useMemo(() => routeDescription(pathname), [pathname]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
@@ -176,17 +182,17 @@ export default function LedgeraSupportWidget() {
   const [isResponding, setIsResponding] = useState(false);
   const [assistantContext, setAssistantContext] = useState<AssistantContext | null>(null);
   const [contextStatus, setContextStatus] = useState<ContextStatus>("idle");
+  const [engineStatus, setEngineStatus] = useState<EngineStatus>("ai");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      text: "Soy el Asistente LEDGERA. Puedo revisar en qué etapa estás, detectar qué te falta y explicarte cuál es la siguiente acción correcta.",
+      text: "Soy el chatbot IA de LEDGERA. Puedo mantener el contexto de la conversación, explicar cómo funciona la plataforma y, al iniciar sesión, orientar el siguiente paso según el estado real de tu cuenta.",
     },
   ]);
 
   const persistCurrentState = useCallback(() => {
     if (!canPersistRef.current) return;
-
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
@@ -202,7 +208,6 @@ export default function LedgeraSupportWidget() {
   const clampPosition = useCallback((candidate: Position, width: number, height: number): Position => {
     const maxX = Math.max(VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN);
     const maxY = Math.max(VIEWPORT_MARGIN, window.innerHeight - height - VIEWPORT_MARGIN);
-
     return {
       x: Math.min(Math.max(candidate.x, VIEWPORT_MARGIN), maxX),
       y: Math.min(Math.max(candidate.y, VIEWPORT_MARGIN), maxY),
@@ -212,14 +217,12 @@ export default function LedgeraSupportWidget() {
   const placeWithinViewport = useCallback((candidate: Position | null) => {
     const node = containerRef.current;
     if (!node) return;
-
     const rect = node.getBoundingClientRect();
     const fallback = {
       x: window.innerWidth - rect.width - 24,
       y: window.innerHeight - rect.height - 24,
     };
     const next = clampPosition(candidate || fallback, rect.width, rect.height);
-
     positionRef.current = next;
     setPosition(next);
   }, [clampPosition]);
@@ -234,10 +237,7 @@ export default function LedgeraSupportWidget() {
     }
 
     const cached = assistantContextRef.current;
-    if (!force && cached && Date.now() - contextLoadedAtRef.current < CONTEXT_TTL_MS) {
-      return cached;
-    }
-
+    if (!force && cached && Date.now() - contextLoadedAtRef.current < CONTEXT_TTL_MS) return cached;
     if (contextRequestRef.current) return contextRequestRef.current;
 
     const request = (async () => {
@@ -250,7 +250,6 @@ export default function LedgeraSupportWidget() {
           headers: { Accept: "application/json" },
         });
         if (!response.ok) throw new Error(`Contexto no disponible (${response.status})`);
-
         const payload = (await response.json()) as AssistantContextResponse;
         if (!payload.ok || !payload.data) throw new Error("Respuesta de contexto inválida");
 
@@ -296,7 +295,6 @@ export default function LedgeraSupportWidget() {
       const snapshot = (event as CustomEvent<ConsentSnapshot>).detail;
       const nextCanPersist = snapshot?.categories.functional === true;
       canPersistRef.current = nextCanPersist;
-
       if (nextCanPersist) persistCurrentState();
       else removeStoredWidgetState();
     }
@@ -312,41 +310,34 @@ export default function LedgeraSupportWidget() {
 
   useEffect(() => {
     if (!assistantContext || !isAuthenticated) return;
-
     setMessages((current) => {
       if (current.length !== 1 || current[0]?.id !== "welcome") return current;
       const reply = buildNextStepReply(assistantContext, true);
-      return [
-        {
-          id: "welcome",
-          role: "assistant",
-          text: `Ya revisé el avance de tu cuenta. ${reply.text}`,
-          links: reply.links,
-          meta: reply.meta,
-        },
-      ];
+      return [{
+        id: "welcome",
+        role: "assistant",
+        text: `Ya revisé el avance de tu cuenta. ${reply.text}`,
+        links: reply.links,
+        meta: "Contexto de cuenta preparado para el chatbot IA",
+      }];
     });
   }, [assistantContext, isAuthenticated]);
 
   useEffect(() => {
     if (!hydrated) return;
-
     const frame = window.requestAnimationFrame(() => {
       placeWithinViewport(positionRef.current);
       persistCurrentState();
     });
-
     return () => window.cancelAnimationFrame(frame);
   }, [activeView, collapsed, hydrated, persistCurrentState, placeWithinViewport]);
 
   useEffect(() => {
     if (!hydrated) return;
-
     function handleResize() {
       placeWithinViewport(positionRef.current);
       persistCurrentState();
     }
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [hydrated, persistCurrentState, placeWithinViewport]);
@@ -370,12 +361,10 @@ export default function LedgeraSupportWidget() {
     persistCurrentState();
   }
 
-  function beginDrag(event: React.PointerEvent<HTMLElement>) {
+  function beginDrag(event: ReactPointerEvent<HTMLElement>) {
     if (event.button !== 0) return;
-
     const node = containerRef.current;
     if (!node) return;
-
     const rect = node.getBoundingClientRect();
     dragRef.current = {
       pointerId: event.pointerId,
@@ -385,92 +374,62 @@ export default function LedgeraSupportWidget() {
       startY: event.clientY,
       moved: false,
     };
-
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(true);
   }
 
-  function moveDrag(event: React.PointerEvent<HTMLElement>) {
+  function moveDrag(event: ReactPointerEvent<HTMLElement>) {
     const drag = dragRef.current;
     if (drag.pointerId !== event.pointerId) return;
-
     const node = containerRef.current;
     if (!node) return;
-
     if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= DRAG_THRESHOLD) {
       drag.moved = true;
     }
-
     const rect = node.getBoundingClientRect();
     const next = clampPosition(
-      {
-        x: event.clientX - drag.offsetX,
-        y: event.clientY - drag.offsetY,
-      },
+      { x: event.clientX - drag.offsetX, y: event.clientY - drag.offsetY },
       rect.width,
       rect.height,
     );
-
     positionRef.current = next;
     setPosition(next);
   }
 
-  function endDrag(event: React.PointerEvent<HTMLElement>) {
+  function endDrag(event: ReactPointerEvent<HTMLElement>) {
     const drag = dragRef.current;
     if (drag.pointerId !== event.pointerId) return;
-
     ignoreNextClickRef.current = drag.moved;
     dragRef.current.pointerId = null;
     setDragging(false);
     persistCurrentState();
-
     try {
       event.currentTarget.releasePointerCapture(event.pointerId);
     } catch {}
-
     window.setTimeout(() => {
       ignoreNextClickRef.current = false;
     }, 0);
   }
 
-  function moveWithKeyboard(event: React.KeyboardEvent<HTMLElement>) {
+  function moveWithKeyboard(event: ReactKeyboardEvent<HTMLElement>) {
     const current = positionRef.current;
     const node = containerRef.current;
     if (!current || !node) return;
-
     const step = event.shiftKey ? 32 : 12;
     let deltaX = 0;
     let deltaY = 0;
-
-    switch (event.key) {
-      case "ArrowLeft":
-        deltaX = -step;
-        break;
-      case "ArrowRight":
-        deltaX = step;
-        break;
-      case "ArrowUp":
-        deltaY = -step;
-        break;
-      case "ArrowDown":
-        deltaY = step;
-        break;
-      default:
-        return;
-    }
-
+    if (event.key === "ArrowLeft") deltaX = -step;
+    else if (event.key === "ArrowRight") deltaX = step;
+    else if (event.key === "ArrowUp") deltaY = -step;
+    else if (event.key === "ArrowDown") deltaY = step;
+    else return;
     event.preventDefault();
-
     const rect = node.getBoundingClientRect();
     const next = clampPosition(
-      {
-        x: current.x + deltaX,
-        y: current.y + deltaY,
-      },
+      { x: current.x + deltaX, y: current.y + deltaY },
       rect.width,
       rect.height,
     );
-
     positionRef.current = next;
     setPosition(next);
     persistCurrentState();
@@ -485,30 +444,68 @@ export default function LedgeraSupportWidget() {
       role: "user",
       text: trimmed,
     };
+    const conversation = [...messages, userMessage].slice(-12);
 
-    setMessages((current) => [...current, userMessage].slice(-18));
+    setMessages(conversation);
     setInput("");
     setIsResponding(true);
+    setEngineStatus("loading");
 
-    const context = isAuthenticated
-      ? await refreshAssistantContext(false)
-      : null;
-    const reply = buildAssistantReply({
-      input: trimmed,
-      pathname,
-      isAuthenticated,
-      context,
-    });
-    const assistantMessage: ChatMessage = {
-      id: `assistant-${messageIdRef.current++}`,
-      role: "assistant",
-      text: reply.text,
-      links: reply.links,
-      meta: reply.meta,
-    };
+    try {
+      const response = await fetch("/api/assistant/chat", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pathname,
+          messages: conversation.map((message) => ({
+            role: message.role,
+            text: message.text,
+          })),
+        }),
+      });
 
-    setMessages((current) => [...current, assistantMessage].slice(-18));
-    setIsResponding(false);
+      const payload = (await response.json()) as AssistantChatResponse;
+      if (!response.ok || !payload.ok || !payload.data?.text) {
+        throw new Error("Respuesta IA no disponible");
+      }
+
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${messageIdRef.current++}`,
+        role: "assistant",
+        text: payload.data.text,
+        links: payload.data.links,
+        meta: payload.data.meta,
+      };
+      setMessages((current) => [...current, assistantMessage].slice(-18));
+      setEngineStatus("ai");
+    } catch {
+      const context = isAuthenticated
+        ? await refreshAssistantContext(false)
+        : null;
+      const fallbackInput = normalizeFallbackQuestion(trimmed, conversation);
+      const reply = buildAssistantReply({
+        input: fallbackInput,
+        pathname,
+        isAuthenticated,
+        context,
+      });
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${messageIdRef.current++}`,
+        role: "assistant",
+        text: reply.text,
+        links: reply.links,
+        meta: "Respuesta de respaldo; el motor IA no estuvo disponible",
+      };
+      setMessages((current) => [...current, assistantMessage].slice(-18));
+      setEngineStatus("fallback");
+    } finally {
+      setIsResponding(false);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -527,7 +524,8 @@ export default function LedgeraSupportWidget() {
 
   const contextDescription = assistantContext
     ? `${assistantContext.nextAction.title}: ${assistantContext.nextAction.detail}`
-    : routeContext.description;
+    : currentRouteDescription;
+  const status = assistantStatusLabel({ engineStatus, contextStatus, isAuthenticated });
 
   return (
     <div
@@ -543,31 +541,30 @@ export default function LedgeraSupportWidget() {
         <button
           type="button"
           data-button-variant="primary"
-          aria-label="Abrir Asistente LEDGERA. Puedes arrastrar este botón para moverlo."
-          title="Abrir Asistente LEDGERA"
+          aria-label="Abrir chatbot IA de LEDGERA. Puedes arrastrar este botón para moverlo."
+          title="Abrir chatbot IA de LEDGERA"
           className={`inline-flex min-h-12 items-center gap-2 rounded-full border px-4 py-3 text-sm font-black shadow-[0_18px_50px_rgba(2,8,23,0.45)] backdrop-blur-xl transition hover:-translate-y-0.5 focus-visible:outline-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
           style={{ touchAction: "none" }}
           onClick={() => {
-            if (ignoreNextClickRef.current) return;
-            setCollapsedState(false);
+            if (!ignoreNextClickRef.current) setCollapsedState(false);
           }}
           onKeyDown={moveWithKeyboard}
           {...commonPointerHandlers}
         >
           <AssistantIcon />
-          Asistente LEDGERA
+          Chatbot IA LEDGERA
         </button>
       ) : (
         <section
           role="complementary"
-          aria-label="Asistente y soporte de LEDGERA"
+          aria-label="Chatbot IA y soporte de LEDGERA"
           className="w-[390px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[28px] border border-accent bg-bg-elev/95 shadow-[0_24px_80px_rgba(2,8,23,0.55)] backdrop-blur-xl"
         >
           <header className="flex items-center gap-3 border-b border-border px-4 py-3">
             <button
               type="button"
               data-button-variant="secondary"
-              aria-label="Mover panel del asistente"
+              aria-label="Mover panel del chatbot"
               title="Arrastrar panel"
               className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-text-faint ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
               style={{ touchAction: "none" }}
@@ -579,18 +576,18 @@ export default function LedgeraSupportWidget() {
 
             <div className="min-w-0 flex-1">
               <p className="m-0 text-xs font-black uppercase tracking-[0.16em] text-accent">
-                Asistente LEDGERA
+                Chatbot IA LEDGERA
               </p>
               <p className="m-0 mt-1 flex items-center gap-2 text-[11px] font-semibold text-text-faint">
-                <span className={`h-2 w-2 rounded-full ${contextStatus === "unavailable" ? "bg-warn" : "bg-gain"}`} aria-hidden="true" />
-                {statusLabel(contextStatus, isAuthenticated)}
+                <span className={`h-2 w-2 rounded-full ${engineStatus === "fallback" ? "bg-warn" : "bg-gain"}`} aria-hidden="true" />
+                {status}
               </p>
             </div>
 
             <button
               type="button"
               data-button-variant="secondary"
-              aria-label="Ocultar Asistente LEDGERA"
+              aria-label="Ocultar chatbot IA de LEDGERA"
               title="Ocultar"
               onClick={() => setCollapsedState(true)}
               className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border"
@@ -607,7 +604,7 @@ export default function LedgeraSupportWidget() {
               onClick={() => setView("assistant")}
               className="min-h-10 rounded-xl border px-3 text-xs font-black"
             >
-              Asistente
+              Chatbot IA
             </button>
             <button
               type="button"
@@ -624,11 +621,9 @@ export default function LedgeraSupportWidget() {
             <div className="select-text">
               <div className="border-b border-border bg-bg-sunken/60 px-4 py-3">
                 <p className="m-0 text-[10px] font-black uppercase tracking-[0.14em] text-accent">
-                  {assistantContext ? "Prioridad detectada" : `Sección actual · ${routeContext.label}`}
+                  Contexto actual
                 </p>
-                <p className="m-0 mt-1 text-xs leading-5 text-text-soft">
-                  {contextDescription}
-                </p>
+                <p className="m-0 mt-1 text-xs leading-5 text-text-soft">{contextDescription}</p>
               </div>
 
               <div
@@ -642,19 +637,15 @@ export default function LedgeraSupportWidget() {
                 {messages.map((message) => (
                   <article
                     key={message.id}
-                    className={`max-w-[88%] rounded-2xl border px-3.5 py-3 text-[12.5px] leading-5 ${
-                      message.role === "user"
-                        ? "ml-auto border-accent bg-accent-soft text-text"
-                        : "mr-auto border-border bg-bg-sunken text-text-soft"
-                    }`}
+                    className={`max-w-[88%] rounded-2xl border px-3.5 py-3 text-[12.5px] leading-5 ${message.role === "user" ? "ml-auto border-accent bg-accent-soft text-text" : "mr-auto border-border bg-bg-sunken text-text-soft"}`}
                   >
                     <p className="m-0 whitespace-pre-wrap">{message.text}</p>
-                    {message.meta && (
+                    {message.meta ? (
                       <p className="m-0 mt-2 border-t border-border pt-2 text-[10px] font-semibold text-text-faint">
                         {message.meta}
                       </p>
-                    )}
-                    {message.links && message.links.length > 0 && (
+                    ) : null}
+                    {message.links?.length ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {message.links.map((link) => (
                           <Link
@@ -667,21 +658,20 @@ export default function LedgeraSupportWidget() {
                           </Link>
                         ))}
                       </div>
-                    )}
+                    ) : null}
                   </article>
                 ))}
-
-                {isResponding && (
+                {isResponding ? (
                   <article className="mr-auto max-w-[88%] rounded-2xl border border-border bg-bg-sunken px-3.5 py-3 text-[12.5px] leading-5 text-text-faint">
-                    Analizando la consulta y el estado de tu cuenta…
+                    La IA está interpretando la conversación y preparando una respuesta…
                   </article>
-                )}
+                ) : null}
               </div>
 
               <div className="border-t border-border px-4 py-3">
                 <form onSubmit={handleSubmit} className="flex items-end gap-2">
                   <label htmlFor="ledgera-assistant-input" className="sr-only">
-                    Pregunta para el Asistente LEDGERA
+                    Pregunta para el chatbot IA de LEDGERA
                   </label>
                   <input
                     id="ledgera-assistant-input"
@@ -704,7 +694,7 @@ export default function LedgeraSupportWidget() {
                   </button>
                 </form>
                 <p className="m-0 mt-2 text-[10px] leading-4 text-text-faint">
-                  Usa datos generales de avance. No compartas contraseñas, códigos 2FA, claves privadas ni secretos de API.
+                  No compartas contraseñas, códigos 2FA, claves privadas, semillas ni secretos de API.
                 </p>
               </div>
             </div>
@@ -715,7 +705,7 @@ export default function LedgeraSupportWidget() {
               </div>
               <h2 className="m-0 mt-4 text-lg font-black text-text">Ayúdanos a mejorar LEDGERA</h2>
               <p className="m-0 mt-2 text-sm leading-6 text-text-soft">
-                Cuéntanos qué falta, qué no se entiende o qué deberíamos corregir. La opinión de producto se mantiene separada de las consultas del asistente.
+                Cuéntanos qué falta, qué no se entiende o qué deberíamos corregir. La opinión de producto se mantiene separada del chatbot.
               </p>
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 <Link
@@ -733,9 +723,6 @@ export default function LedgeraSupportWidget() {
                   Contactar soporte
                 </Link>
               </div>
-              <p className="m-0 mt-4 text-[10px] leading-4 text-text-faint">
-                No incluyas credenciales, códigos de autenticación ni secretos de integración.
-              </p>
             </div>
           )}
         </section>
@@ -757,12 +744,9 @@ function AssistantIcon() {
 function GripIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 fill-current">
-      <circle cx="6" cy="5" r="1.35" />
-      <circle cx="14" cy="5" r="1.35" />
-      <circle cx="6" cy="10" r="1.35" />
-      <circle cx="14" cy="10" r="1.35" />
-      <circle cx="6" cy="15" r="1.35" />
-      <circle cx="14" cy="15" r="1.35" />
+      <circle cx="6" cy="5" r="1.35" /><circle cx="14" cy="5" r="1.35" />
+      <circle cx="6" cy="10" r="1.35" /><circle cx="14" cy="10" r="1.35" />
+      <circle cx="6" cy="15" r="1.35" /><circle cx="14" cy="15" r="1.35" />
     </svg>
   );
 }
@@ -778,8 +762,7 @@ function CloseIcon() {
 function SendIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m3 10 13-6-4 12-2.4-4.2L3 10Z" />
-      <path d="m9.6 11.8 3.2-3.2" />
+      <path d="m3 10 13-6-4 12-2.4-4.2L3 10Z" /><path d="m9.6 11.8 3.2-3.2" />
     </svg>
   );
 }
@@ -787,8 +770,7 @@ function SendIcon() {
 function FeedbackIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 5h16v11H9l-5 4V5Z" />
-      <path d="M8 9h8M8 12h5" />
+      <path d="M4 5h16v11H9l-5 4V5Z" /><path d="M8 9h8M8 12h5" />
     </svg>
   );
 }
