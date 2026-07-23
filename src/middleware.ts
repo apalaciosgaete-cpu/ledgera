@@ -25,6 +25,7 @@ const csrfBypassApiPrefixes = [
   "/api/billing/webhook",
   "/api/verify",
   "/api/health",
+  "/api/assistant/chat",
 ];
 
 const publicPagePrefixes = [
