@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/shared";
-import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+
 import { buildAssistantAccountContext } from "@/modules/assistant/application/buildAssistantAccountContext";
 import {
   generateAssistantAiReply,
   type AssistantAiMessage,
 } from "@/modules/assistant/application/generateAssistantAiReply";
+import { enforceRequestRateLimit } from "@/modules/security/application/enforceRequestRateLimit";
+import { getSession } from "@/shared";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 const MAX_MESSAGES = 12;
 const MAX_MESSAGE_LENGTH = 1000;
@@ -54,18 +56,27 @@ export async function POST(request: NextRequest) {
   });
   if (rateLimited) return rateLimited;
 
+  let body: Record<string, unknown>;
   try {
-    const body = (await request.json()) as Record<string, unknown>;
-    const messages = sanitizeMessages(body.messages);
-    const pathname = sanitizePathname(body.pathname);
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: "La consulta no contiene un JSON válido." },
+      { status: 400 },
+    );
+  }
 
-    if (!messages.length || messages[messages.length - 1]?.role !== "user") {
-      return NextResponse.json(
-        { ok: false, message: "La conversación no contiene una pregunta válida." },
-        { status: 400 },
-      );
-    }
+  const messages = sanitizeMessages(body.messages);
+  const pathname = sanitizePathname(body.pathname);
 
+  if (!messages.length || messages[messages.length - 1]?.role !== "user") {
+    return NextResponse.json(
+      { ok: false, message: "La conversación no contiene una pregunta válida." },
+      { status: 400 },
+    );
+  }
+
+  try {
     const session = await getSession(request);
     const context = session
       ? await buildAssistantAccountContext(session.user.id)
@@ -92,18 +103,20 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error desconocido";
-    console.error("[assistant-ai]", message);
+    console.error("[assistant-ai] unavailable", message);
 
+    // La interfaz recibe una respuesta controlada para no activar el antiguo motor de frases.
     return NextResponse.json(
       {
-        ok: false,
-        message: "El chatbot IA no está disponible temporalmente.",
-        data: { code: "AI_UNAVAILABLE" },
+        ok: true,
+        data: {
+          text: "El chatbot IA está temporalmente no disponible. No generaré una respuesta automática de respaldo porque podría perder el contexto de la conversación. Intenta nuevamente en unos instantes.",
+          links: [],
+          meta: "La respuesta con IA no pudo generarse",
+          engine: "ai",
+        },
       },
-      {
-        status: 503,
-        headers: { "Cache-Control": "private, no-store, max-age=0" },
-      },
+      { headers: { "Cache-Control": "private, no-store, max-age=0" } },
     );
   }
 }
