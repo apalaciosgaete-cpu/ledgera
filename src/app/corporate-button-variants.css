@@ -1,0 +1,24 @@
+/* Variantes explícitas compartidas por botones y enlaces de acción. */
+[data-button-variant="secondary"] {
+  background: var(--button-brand-secondary-bg) !important;
+  background-color: transparent !important;
+  border-color: var(--button-brand-secondary-border) !important;
+  color: var(--button-brand-secondary-text) !important;
+  box-shadow: var(--button-brand-secondary-shadow) !important;
+  transition-property: background, border-color, color, box-shadow, opacity !important;
+  transition-duration: 160ms !important;
+  transition-timing-function: ease !important;
+}
+
+[data-button-variant="secondary"]:not(:disabled):not([aria-disabled="true"]):hover {
+  background: var(--button-brand-secondary-hover-bg) !important;
+  border-color: rgba(125, 211, 252, 0.58) !important;
+  color: #e0f2fe !important;
+  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-button-variant]:focus-visible {
+  outline: 2px solid #7dd3fc !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(125, 211, 252, 0.16) !important;
+}
