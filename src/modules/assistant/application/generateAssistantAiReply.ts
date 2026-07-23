@@ -214,12 +214,16 @@ function resolveLinks(actions: AssistantAction[], isAuthenticated: boolean): Ass
   return links.slice(0, 3);
 }
 
-function resolveProvider(): {
+function resolveProvider(runtimeOidcToken?: string | null): {
   apiKey: string;
   endpoint: string;
   model: string;
 } {
-  const gatewayKey = process.env.AI_GATEWAY_API_KEY?.trim() || process.env.VERCEL_OIDC_TOKEN?.trim();
+  const gatewayKey =
+    runtimeOidcToken?.trim() ||
+    process.env.AI_GATEWAY_API_KEY?.trim() ||
+    process.env.VERCEL_OIDC_TOKEN?.trim();
+
   if (gatewayKey) {
     return {
       apiKey: gatewayKey,
@@ -245,8 +249,9 @@ export async function generateAssistantAiReply(params: {
   pathname: string;
   isAuthenticated: boolean;
   context: AssistantAccountContext | null;
+  oidcToken?: string | null;
 }): Promise<AssistantAiReply> {
-  const provider = resolveProvider();
+  const provider = resolveProvider(params.oidcToken);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25_000);
 
