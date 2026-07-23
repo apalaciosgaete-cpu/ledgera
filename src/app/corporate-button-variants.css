@@ -47,6 +47,7 @@ section[aria-label="Asistente y soporte de LEDGERA"] [role="log"] {
   min-height: 120px !important;
   max-height: none !important;
   flex: 1 1 auto;
+  overscroll-behavior: contain;
 }
 
 section[aria-label="Asistente y soporte de LEDGERA"] [role="log"] + div {
@@ -54,11 +55,6 @@ section[aria-label="Asistente y soporte de LEDGERA"] [role="log"] + div {
   z-index: 1;
   flex: 0 0 auto;
   background: var(--bg-elev);
-}
-
-/* Se eliminan las preguntas rápidas; el usuario escribe directamente en el campo. */
-section[aria-label="Asistente y soporte de LEDGERA"] [role="log"] + div > div:first-child {
-  display: none !important;
 }
 
 section[aria-label="Asistente y soporte de LEDGERA"] > .select-text.p-6 {
