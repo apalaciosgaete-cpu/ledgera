@@ -67,18 +67,6 @@ function formatDateTime(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
 }
 
-function normalizeSource(value: string | null | undefined) {
-  if (!value) return "Sin fuente";
-  const clean = value.trim().toLowerCase();
-  if (clean === "binance") return "Binance";
-  if (clean === "stablecoin") return "Stablecoin";
-  if (clean === "mindicador.cl") return "mindicador.cl";
-  if (clean === "open.er-api.com") return "open.er-api.com";
-  if (clean === "fallback" || clean === "respaldo_temporal") return "respaldo temporal";
-  if (clean === "sin_precio") return "Sin precio";
-  return value;
-}
-
 function resultColor(value: number | null | undefined) {
   if (value == null || value === 0) return "var(--text-soft)";
   return value > 0 ? "var(--gain)" : "var(--loss)";
@@ -262,7 +250,7 @@ export function InvestorDashboard() {
           <aside style={{ background: "var(--bg-elev)", border: "1px solid var(--border)", borderRadius: 18, padding: 14, minWidth: 240, display: "grid", gap: 7, justifyItems: "center", textAlign: "center" }}>
             <span style={{ color: "var(--text-faint)", fontSize: 12, fontWeight: 800 }}>Tipo de cambio usado</span>
             <strong style={{ color: "var(--text)", fontSize: 20, fontWeight: 800 }}>{summary ? `$${formatNumber(summary.usdClp, 2)} CLP` : loading ? "Cargando..." : "—"}</strong>
-            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>Fuente: {summary ? normalizeSource(summary.fxSource) : "—"}</span>
+            <span style={{ color: "var(--text-soft)", fontSize: 12 }}>Fuente: Banco Central</span>
             <span style={{ color: "var(--text-faint)", fontSize: 12 }}>Actualizado: {summary ? formatDateTime(summary.generatedAt) : "—"}</span>
           </aside>
         </section>
