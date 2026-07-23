@@ -94,14 +94,14 @@ function parseBcchBdeRate(html: string, dateKey: string): number | null {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-  const dateMatches = normalized.match(/\b\d{2}\.(?:ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\.\d{4}\b/g) ?? [];
+  const dateMatches: string[] = normalized.match(/\b\d{2}\.(?:ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\.\d{4}\b/g) ?? [];
   const dateIndex = dateMatches.indexOf(expectedDate);
   if (dateIndex < 0) return null;
 
   const seriesIndex = normalized.indexOf("dolar observado");
   if (seriesIndex < 0) return null;
 
-  const values = normalized
+  const values: string[] = normalized
     .slice(seriesIndex)
     .match(/\b\d{1,3}(?:\.\d{3})*,\d{2}\b/g) ?? [];
   const rawValue = values[dateIndex];
