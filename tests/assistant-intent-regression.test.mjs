@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import { createRequire } from "node:module";
 import ts from "typescript";
+
+const require = createRequire(import.meta.url);
 
 function loadAssistantEngine() {
   const sourcePath = path.join(process.cwd(), "src", "components", "support", "assistantEngine.ts");
