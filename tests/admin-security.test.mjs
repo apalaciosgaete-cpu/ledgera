@@ -37,47 +37,29 @@ test("support is redirected away from tax application routes", () => {
   assert.match(source, /if \(isSupport && appRoute\)/);
 });
 
-test("admin reauthentication tokens are signed, session-bound and short-lived", () => {
-  const source = read("src/modules/admin/application/adminReauthentication.ts");
-
-  assert.match(source, /createHmac\("sha256"/);
-  assert.match(source, /timingSafeEqual/);
-  assert.match(source, /sessionId === input\.auth\.session\.id/);
-  assert.match(source, /ADMIN_REAUTH_TTL_SECONDS = 10 \* 60/);
-  assert.match(source, /ADMIN_REAUTH_REQUIRED/);
-  assert.match(source, /ADMIN_2FA_REQUIRED/);
-});
-
-test("admin reauthentication verifies password and TOTP", () => {
-  const source = read("src/app/api/admin/reauth/route.ts");
-
-  assert.match(source, /verifyPassword/);
-  assert.match(source, /validateTwoFactorCode/);
-  assert.match(source, /issueAdminReauthenticationToken/);
-  assert.match(source, /ADMIN_REAUTHENTICATED/);
-  assert.match(source, /enforceRequestRateLimit/);
-});
-
 for (const routePath of [
   "src/app/api/admin/users/[id]/route.ts",
   "src/app/api/admin/users/[id]/status/route.ts",
   "src/app/api/admin/users/[id]/subscription/route.ts",
 ]) {
-  test(`${routePath} requires recent admin reauthentication`, () => {
+  test(`${routePath} accepts mutations only from an authenticated administrator`, () => {
     const source = read(routePath);
-    assert.match(source, /requireAdminReauthentication/);
+    assert.match(source, /enforceCsrfProtection/);
+    assert.match(source, /requirePlatformRole\(req, \["admin"\]\)/);
     assert.match(source, /isPlatformAuth/);
-    assert.match(source, /reauthenticated: true/);
+    assert.match(source, /createAdminAuditLog/);
+    assert.match(source, /authorization: "admin_session"/);
+    assert.doesNotMatch(source, /requireAdminReauthentication/);
   });
 }
 
-test("admin UI obtains and sends the reauthentication header", () => {
+test("admin UI executes actions without requesting password and 2FA again", () => {
   const page = read("src/app/admin/page.tsx");
-  const client = read("src/modules/admin/client/adminReauthenticationClient.ts");
 
-  assert.match(page, /AdminReauthenticationModal/);
-  assert.match(page, /getAdminReauthenticationHeaders/);
-  assert.match(page, /headers: criticalHeaders\(\)/);
-  assert.match(client, /X-LEDGERA-ADMIN-REAUTH/);
-  assert.match(client, /window\.sessionStorage/);
+  assert.doesNotMatch(page, /AdminReauthenticationModal/);
+  assert.doesNotMatch(page, /getAdminReauthenticationHeaders/);
+  assert.doesNotMatch(page, /criticalHeaders/);
+  assert.doesNotMatch(page, /Confirmar acción crítica/);
+  assert.match(page, /onClick=\{\(\) => void toggleStatus\(user\)\}/);
+  assert.match(page, /onClick=\{\(\) => void updateSubscription\(\)\}/);
 });
