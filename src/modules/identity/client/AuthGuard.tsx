@@ -50,6 +50,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   const needsOnboarding = user?.needsOnboarding === true;
   const isSupport = user?.role === "support";
+  const isAdmin = user?.role === "admin";
   const canRenderFromCache = isLoading && isAuthenticated && isHydratedFromCache;
 
   useEffect(() => {
@@ -74,10 +75,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (isAuthenticated && needsOnboarding && !appRoute && !isSupport) {
+    if (isAuthenticated && needsOnboarding && !appRoute && !isSupport && !isAdmin) {
       router.replace("/panel");
     }
-  }, [appRoute, isAuthenticated, isLoading, isSupport, needsOnboarding, publicRoute, router]);
+  }, [appRoute, isAdmin, isAuthenticated, isLoading, isSupport, needsOnboarding, publicRoute, router]);
 
   if (isLoading && !canRenderFromCache) {
     return (

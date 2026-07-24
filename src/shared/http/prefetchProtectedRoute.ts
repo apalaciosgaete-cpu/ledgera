@@ -22,6 +22,8 @@ function endpointsForRoute(href: string): string[] {
       ];
     case "/configuracion":
       return ["/api/configuracion/perfil"];
+    case "/admin":
+      return ["/api/admin/users", "/api/admin/metrics"];
     default:
       return [];
   }
