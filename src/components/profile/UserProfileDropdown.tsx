@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LogoutButton } from "@/components/navigation/LogoutButton";
 
@@ -13,7 +14,6 @@ type Props = {
   isAdmin:        boolean;
   onLogout: () => void;
 };
-
 
 export function UserProfileDropdown({
   name, initials, avatarGradient, badgeBg, badgeColor, roleLabel, isAdmin, onLogout,
@@ -34,7 +34,6 @@ export function UserProfileDropdown({
 
   return (
     <div ref={panelRef} style={{ position: "relative" }}>
-      {/* Pill trigger */}
       <button
         type="button"
         aria-expanded={open}
@@ -93,7 +92,6 @@ export function UserProfileDropdown({
         </svg>
       </button>
 
-      {/* Dropdown panel — identity + config + logout only */}
       {open && (
         <div style={{
           position:     "absolute",
@@ -109,7 +107,6 @@ export function UserProfileDropdown({
           flexDirection:"column",
           padding:      "8px",
         }}>
-          {/* Identity header */}
           <div style={{
             padding:      "12px 12px 10px",
             borderBottom: "1px solid rgba(255,255,255,0.07)",
@@ -123,7 +120,27 @@ export function UserProfileDropdown({
             </p>
           </div>
 
-          <div style={{ paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          {isAdmin ? (
+            <div style={{ padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                style={{
+                  display: "block",
+                  borderRadius: "9px",
+                  padding: "10px 12px",
+                  color: "var(--text)",
+                  fontSize: "13px",
+                  fontWeight: 750,
+                  textDecoration: "none",
+                }}
+              >
+                Panel administrativo
+              </Link>
+            </div>
+          ) : null}
+
+          <div style={{ paddingTop: "6px" }}>
             <LogoutButton onClick={() => { setOpen(false); onLogout(); }} />
           </div>
         </div>
