@@ -10,6 +10,9 @@ import {
   requirePlatformRole,
 } from "@/modules/identity/application/requirePlatformRole";
 import {
+  deleteSessionsByUserId,
+} from "@/modules/identity/infrastructure/sessionRepository";
+import {
   deleteUser,
   getUserById,
 } from "@/modules/identity/infrastructure/userRepository";
@@ -63,9 +66,16 @@ export async function DELETE(
       );
     }
 
-    const deleted = await deleteUser(id);
+    const deletionResult = await deleteUser(id);
 
-    if (!deleted) {
+    if (deletionResult === "not_found") {
+      return NextResponse.json(
+        { ok: false, message: "Usuario no encontrado", data: null },
+        { status: 404 },
+      );
+    }
+
+    if (deletionResult === "failed") {
       return NextResponse.json(
         {
           ok: false,
@@ -75,6 +85,11 @@ export async function DELETE(
         { status: 500 },
       );
     }
+
+    const revokedSessions = await deleteSessionsByUserId(id).catch((error) => {
+      console.error("[admin/users DELETE] session revocation failed", error);
+      return 0;
+    });
 
     await createAdminAuditLog({
       action: "USER_DELETED",
@@ -87,6 +102,9 @@ export async function DELETE(
         source: "api/admin/users/[id]",
         authorization: "admin_session",
         sessionId: auth.session.id,
+        deletionMode: "anonymized",
+        idempotentRetry: deletionResult === "already_deleted",
+        revokedSessions,
         deletedRole: user.role,
         deletedStatus: user.status,
         deletedSubscriptionPlan: user.subscriptionPlan,
@@ -95,10 +113,14 @@ export async function DELETE(
 
     return NextResponse.json({
       ok: true,
-      message: `Usuario ${user.email} eliminado correctamente`,
+      message:
+        deletionResult === "already_deleted"
+          ? "La cuenta ya estaba eliminada."
+          : `Usuario ${user.email} eliminado correctamente`,
       data: {
         id: user.id,
         email: user.email,
+        deletionMode: "anonymized",
       },
     });
   } catch (error) {
