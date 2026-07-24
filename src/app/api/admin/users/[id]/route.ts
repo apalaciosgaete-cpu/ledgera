@@ -2,15 +2,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  isPlatformAuth,
-} from "@/modules/identity/application/requirePlatformRole";
-import {
-  requireAdminReauthentication,
-} from "@/modules/admin/application/adminReauthentication";
-import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
+import {
+  isPlatformAuth,
+  requirePlatformRole,
+} from "@/modules/identity/application/requirePlatformRole";
 import {
   deleteUser,
   getUserById,
@@ -28,7 +26,7 @@ export async function DELETE(
   const csrfResponse = enforceCsrfProtection(req);
   if (csrfResponse) return csrfResponse;
 
-  const auth = await requireAdminReauthentication(req);
+  const auth = await requirePlatformRole(req, ["admin"]);
   if (!isPlatformAuth(auth)) return auth;
 
   const { id } = params;
@@ -87,7 +85,7 @@ export async function DELETE(
       ...getAuditRequestContext(req),
       metadata: {
         source: "api/admin/users/[id]",
-        reauthenticated: true,
+        authorization: "admin_session",
         sessionId: auth.session.id,
         deletedRole: user.role,
         deletedStatus: user.status,
