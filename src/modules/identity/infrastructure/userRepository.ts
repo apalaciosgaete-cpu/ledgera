@@ -18,6 +18,29 @@ interface UpdateSubscriptionInput {
   expiresAt: Date;
 }
 
+const ANONYMIZED_EMAIL_SUFFIX = "@anonimizado.ledgera.cl";
+
+export type DeleteUserResult =
+  | "deleted"
+  | "already_deleted"
+  | "not_found"
+  | "failed";
+
+export function getAnonymizedUserEmail(id: string) {
+  return `eliminado+${id}${ANONYMIZED_EMAIL_SUFFIX}`;
+}
+
+export function isAnonymizedUser(input: {
+  id: string;
+  email: string;
+  status: string;
+}) {
+  return (
+    input.status === "inactive" &&
+    input.email === getAnonymizedUserEmail(input.id)
+  );
+}
+
 const baseUserSelect = {
   id:                      true,
   email:                   true,
@@ -85,6 +108,11 @@ function mapRowToUser(row: BaseUserRow): User {
 
 export async function getUsers(): Promise<User[]> {
   const users = await prisma.users.findMany({
+    where: {
+      NOT: {
+        email: { endsWith: ANONYMIZED_EMAIL_SUFFIX },
+      },
+    },
     orderBy: { created_at: "desc" },
     select: baseUserSelect,
   });
@@ -130,12 +158,52 @@ export async function createUser(input: CreateUserInput): Promise<User> {
   return mapRowToUser(user);
 }
 
-export async function deleteUser(id: string): Promise<boolean> {
+/**
+ * Closes an account without physically deleting the user row. Tax, billing and
+ * audit records keep their referential integrity while direct identifiers are
+ * removed. The operation is idempotent so retrying an administrative deletion
+ * cannot leave the account in an inconsistent state.
+ */
+export async function deleteUser(id: string): Promise<DeleteUserResult> {
+  const anonymizedEmail = getAnonymizedUserEmail(id);
+
   try {
-    await prisma.users.delete({ where: { id } });
-    return true;
-  } catch {
-    return false;
+    const existing = await prisma.users.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        status: true,
+      },
+    });
+
+    if (!existing) return "not_found";
+    if (isAnonymizedUser(existing)) return "already_deleted";
+
+    const result = await prisma.users.updateMany({
+      where: { id },
+      data: {
+        status:                  "inactive",
+        email:                   anonymizedEmail,
+        full_name:               "Cuenta eliminada",
+        email_verified_at:       null,
+        subscription_plan:       "BASICO",
+        subscription_expires_at: null,
+        rut:                     null,
+        phone:                   null,
+        address:                 null,
+        commune:                 null,
+        country:                 null,
+        twoFactorEnabled:        false,
+        twoFactorSecret:         null,
+        updated_at:              new Date(),
+      },
+    });
+
+    return result.count === 1 ? "deleted" : "failed";
+  } catch (error) {
+    console.error("[userRepository.deleteUser]", error);
+    return "failed";
   }
 }
 
