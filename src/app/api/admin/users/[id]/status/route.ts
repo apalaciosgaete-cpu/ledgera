@@ -2,14 +2,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  requireAdminReauthentication,
-} from "@/modules/admin/application/adminReauthentication";
-import {
   createAdminAuditLog,
   getAuditRequestContext,
 } from "@/modules/admin/infrastructure/adminAuditLogRepository";
 import {
   isPlatformAuth,
+  requirePlatformRole,
 } from "@/modules/identity/application/requirePlatformRole";
 import {
   getUserById,
@@ -30,7 +28,7 @@ export async function PATCH(
   const csrfResponse = enforceCsrfProtection(req);
   if (csrfResponse) return csrfResponse;
 
-  const auth = await requireAdminReauthentication(req);
+  const auth = await requirePlatformRole(req, ["admin"]);
   if (!isPlatformAuth(auth)) return auth;
 
   const { id } = params;
@@ -113,7 +111,7 @@ export async function PATCH(
       ...getAuditRequestContext(req),
       metadata: {
         source: "api/admin/users/[id]/status",
-        reauthenticated: true,
+        authorization: "admin_session",
         sessionId: auth.session.id,
         previousStatus: user.status,
         newStatus: status,
