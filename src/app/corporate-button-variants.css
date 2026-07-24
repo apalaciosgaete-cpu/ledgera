@@ -23,19 +23,19 @@
   box-shadow: 0 0 0 5px rgba(125, 211, 252, 0.16) !important;
 }
 
-/* El compositor del asistente debe permanecer visible en cualquier altura de pantalla. */
-section[aria-label="Asistente y soporte de LEDGERA"] {
+/* El compositor del chatbot debe permanecer visible en cualquier altura de pantalla. */
+section[aria-label="Chatbot IA y soporte de LEDGERA"] {
   display: flex;
   max-height: calc(100dvh - 24px);
   flex-direction: column;
 }
 
-section[aria-label="Asistente y soporte de LEDGERA"] > header,
-section[aria-label="Asistente y soporte de LEDGERA"] > header + div {
+section[aria-label="Chatbot IA y soporte de LEDGERA"] > header,
+section[aria-label="Chatbot IA y soporte de LEDGERA"] > header + div {
   flex: 0 0 auto;
 }
 
-section[aria-label="Asistente y soporte de LEDGERA"] > .select-text:not(.p-6) {
+section[aria-label="Chatbot IA y soporte de LEDGERA"] > .select-text:not(.p-6) {
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
@@ -43,31 +43,36 @@ section[aria-label="Asistente y soporte de LEDGERA"] > .select-text:not(.p-6) {
   overflow: hidden;
 }
 
-section[aria-label="Asistente y soporte de LEDGERA"] [role="log"] {
+/* El contexto continúa disponible para la IA, pero no ocupa espacio en la interfaz. */
+section[aria-label="Chatbot IA y soporte de LEDGERA"] > .select-text:not(.p-6) > div:first-child {
+  display: none !important;
+}
+
+section[aria-label="Chatbot IA y soporte de LEDGERA"] [role="log"] {
   min-height: 120px !important;
   max-height: none !important;
   flex: 1 1 auto;
   overscroll-behavior: contain;
 }
 
-section[aria-label="Asistente y soporte de LEDGERA"] [role="log"] + div {
+section[aria-label="Chatbot IA y soporte de LEDGERA"] [role="log"] + div {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
   background: var(--bg-elev);
 }
 
-section[aria-label="Asistente y soporte de LEDGERA"] > .select-text.p-6 {
+section[aria-label="Chatbot IA y soporte de LEDGERA"] > .select-text.p-6 {
   overflow-y: auto;
 }
 
 @media (max-height: 640px) {
-  section[aria-label="Asistente y soporte de LEDGERA"] {
+  section[aria-label="Chatbot IA y soporte de LEDGERA"] {
     max-height: calc(100dvh - 16px);
     border-radius: 20px;
   }
 
-  section[aria-label="Asistente y soporte de LEDGERA"] [role="log"] {
+  section[aria-label="Chatbot IA y soporte de LEDGERA"] [role="log"] {
     min-height: 88px !important;
   }
 }
