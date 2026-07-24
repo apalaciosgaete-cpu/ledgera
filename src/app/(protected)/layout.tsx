@@ -44,6 +44,10 @@ const BASE_SIDEBAR_GROUPS: SidebarGroup[] = [
   { items: [{ href: "/ayuda", label: "Ayuda" }] },
 ];
 
+const ADMIN_SIDEBAR_GROUP: SidebarGroup = {
+  items: [{ href: "/admin", label: "Administración" }],
+};
+
 function Sidebar({
   open,
   onClose,
@@ -58,7 +62,10 @@ function Sidebar({
   isAdmin: boolean;
 }) {
   const pathname = usePathname();
-  const sidebarGroups = BASE_SIDEBAR_GROUPS
+  const availableGroups = isAdmin
+    ? [...BASE_SIDEBAR_GROUPS, ADMIN_SIDEBAR_GROUP]
+    : BASE_SIDEBAR_GROUPS;
+  const sidebarGroups = availableGroups
     .map((group) => ({
       items: group.items.filter(
         (item) => !item.feature || isAdmin || canAccessFeature(plan, item.feature),
