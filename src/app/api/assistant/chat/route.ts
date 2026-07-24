@@ -48,6 +48,13 @@ function sanitizeMessages(value: unknown): AssistantAiMessage[] {
   return bounded;
 }
 
+function resolveRuntimeOidcToken(request: NextRequest): string | null {
+  // Una clave directa de OpenAI debe poder activar el chatbot aunque AI Gateway
+  // esté pendiente de verificación comercial en Vercel.
+  if (process.env.OPENAI_API_KEY?.trim()) return null;
+  return request.headers.get("x-vercel-oidc-token");
+}
+
 export async function POST(request: NextRequest) {
   const rateLimited = enforceRequestRateLimit(request, {
     scope: "assistant-ai-chat",
@@ -87,7 +94,7 @@ export async function POST(request: NextRequest) {
       pathname,
       isAuthenticated: Boolean(session),
       context,
-      oidcToken: request.headers.get("x-vercel-oidc-token"),
+      oidcToken: resolveRuntimeOidcToken(request),
     });
 
     return NextResponse.json(
