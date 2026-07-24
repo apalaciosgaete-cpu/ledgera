@@ -43,6 +43,21 @@ type StructuredReply = {
   actions: AssistantAction[];
 };
 
+type AssistantProvider =
+  | {
+      kind: "groq";
+      apiKey: string;
+      endpoint: string;
+      model: string;
+      fallbackModel: string;
+    }
+  | {
+      kind: "responses";
+      apiKey: string;
+      endpoint: string;
+      model: string;
+    };
+
 const ACTIONS: Record<Exclude<AssistantAction, "NONE">, AssistantAiLink> = {
   LOGIN: { label: "Iniciar sesión", href: "/login" },
   REGISTER: { label: "Crear cuenta", href: "/register" },
@@ -154,8 +169,12 @@ CONTEXTO ACTUAL
 - Sección visible: ${routeDescription(params.pathname)}.
 - Resumen privado de cuenta: ${accountContext}
 
-ACCIONES
-Selecciona como máximo 3 acciones de la lista estructurada. No selecciones rutas protegidas si el usuario no está autenticado; en ese caso usa LOGIN o REGISTER. Usa NONE cuando no corresponde enlace.`;
+FORMATO OBLIGATORIO
+- Devuelve exclusivamente un objeto JSON válido, sin markdown ni texto antes o después.
+- Estructura exacta: {"answer":"respuesta para el usuario","actions":["NONE"]}.
+- Usa como máximo tres acciones. Acciones permitidas: ${Object.keys({ NONE: true, ...ACTIONS }).join(", ")}.
+- No selecciones rutas protegidas si el usuario no está autenticado; en ese caso usa LOGIN o REGISTER.
+- Usa NONE cuando no corresponde enlace.`;
 }
 
 function extractOutputText(payload: unknown): string | null {
@@ -180,8 +199,35 @@ function extractOutputText(payload: unknown): string | null {
   return null;
 }
 
+function extractGroqChatText(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") return null;
+  const choices = Array.isArray((payload as Record<string, unknown>).choices)
+    ? ((payload as Record<string, unknown>).choices as unknown[])
+    : [];
+  const first = choices[0];
+  if (!first || typeof first !== "object") return null;
+  const message = (first as Record<string, unknown>).message;
+  if (!message || typeof message !== "object") return null;
+  const content = (message as Record<string, unknown>).content;
+  return typeof content === "string" ? content : null;
+}
+
+function normalizeJsonText(value: string): string {
+  const withoutFence = value
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  const firstBrace = withoutFence.indexOf("{");
+  const lastBrace = withoutFence.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return withoutFence.slice(firstBrace, lastBrace + 1);
+  }
+  return withoutFence;
+}
+
 function parseStructuredReply(value: string): StructuredReply {
-  const parsed = JSON.parse(value) as Partial<StructuredReply>;
+  const parsed = JSON.parse(normalizeJsonText(value)) as Partial<StructuredReply>;
   if (typeof parsed.answer !== "string" || !parsed.answer.trim()) {
     throw new Error("La IA no devolvió una respuesta válida.");
   }
@@ -194,7 +240,7 @@ function parseStructuredReply(value: string): StructuredReply {
 
   return {
     answer: parsed.answer.trim().slice(0, 1800),
-    actions: actions.slice(0, 3),
+    actions: actions.length ? actions.slice(0, 3) : ["NONE"],
   };
 }
 
@@ -214,11 +260,28 @@ function resolveLinks(actions: AssistantAction[], isAuthenticated: boolean): Ass
   return links.slice(0, 3);
 }
 
-function resolveProvider(runtimeOidcToken?: string | null): {
-  apiKey: string;
-  endpoint: string;
-  model: string;
-} {
+function resolveProvider(runtimeOidcToken?: string | null): AssistantProvider {
+  const groqKey = process.env.GROQ_API_KEY?.trim();
+  if (groqKey) {
+    return {
+      kind: "groq",
+      apiKey: groqKey,
+      endpoint: "https://api.groq.com/openai/v1/chat/completions",
+      model: process.env.GROQ_ASSISTANT_MODEL?.trim() || "qwen/qwen3.6-27b",
+      fallbackModel: process.env.GROQ_ASSISTANT_FALLBACK_MODEL?.trim() || "openai/gpt-oss-20b",
+    };
+  }
+
+  const openAiKey = process.env.OPENAI_API_KEY?.trim();
+  if (openAiKey) {
+    return {
+      kind: "responses",
+      apiKey: openAiKey,
+      endpoint: "https://api.openai.com/v1/responses",
+      model: process.env.LEDGERA_ASSISTANT_MODEL?.trim() || process.env.OPENAI_MODEL?.trim() || "gpt-5-mini",
+    };
+  }
+
   const gatewayKey =
     runtimeOidcToken?.trim() ||
     process.env.AI_GATEWAY_API_KEY?.trim() ||
@@ -226,22 +289,134 @@ function resolveProvider(runtimeOidcToken?: string | null): {
 
   if (gatewayKey) {
     return {
+      kind: "responses",
       apiKey: gatewayKey,
       endpoint: "https://ai-gateway.vercel.sh/v1/responses",
       model: process.env.LEDGERA_ASSISTANT_MODEL?.trim() || "openai/gpt-5-mini",
     };
   }
 
-  const openAiKey = process.env.OPENAI_API_KEY?.trim();
-  if (openAiKey) {
-    return {
-      apiKey: openAiKey,
-      endpoint: "https://api.openai.com/v1/responses",
-      model: process.env.LEDGERA_ASSISTANT_MODEL?.trim() || process.env.OPENAI_MODEL?.trim() || "gpt-5-mini",
-    };
+  throw new Error("No existe una credencial de IA disponible.");
+}
+
+function providerErrorCode(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object" || !("error" in payload)) return null;
+  const code = (payload as { error?: { code?: unknown; type?: unknown } }).error?.code;
+  if (typeof code === "string") return code;
+  const type = (payload as { error?: { type?: unknown } }).error?.type;
+  return typeof type === "string" ? type : null;
+}
+
+async function requestGroqReply(params: {
+  provider: Extract<AssistantProvider, { kind: "groq" }>;
+  model: string;
+  strictSchema: boolean;
+  messages: AssistantAiMessage[];
+  pathname: string;
+  isAuthenticated: boolean;
+  context: AssistantAccountContext | null;
+  signal: AbortSignal;
+}): Promise<StructuredReply> {
+  const responseFormat = params.strictSchema
+    ? {
+        type: "json_schema",
+        json_schema: {
+          name: "ledgera_assistant_reply",
+          strict: true,
+          schema: RESPONSE_SCHEMA,
+        },
+      }
+    : { type: "json_object" };
+
+  const response = await fetch(params.provider.endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${params.provider.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    signal: params.signal,
+    cache: "no-store",
+    body: JSON.stringify({
+      model: params.model,
+      messages: [
+        { role: "system", content: buildInstructions(params) },
+        ...params.messages.map((message) => ({ role: message.role, content: message.text })),
+      ],
+      response_format: responseFormat,
+      reasoning_effort: params.strictSchema ? "low" : "none",
+      reasoning_format: "hidden",
+      temperature: params.strictSchema ? 0.2 : 0.35,
+      max_completion_tokens: 700,
+      stream: false,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    console.error("[assistant-ai] Groq request failed", {
+      status: response.status,
+      code: providerErrorCode(payload),
+      model: params.model,
+    });
+    throw new Error(`Groq no respondió correctamente (${response.status}).`);
   }
 
-  throw new Error("No existe una credencial de IA disponible.");
+  const outputText = extractGroqChatText(payload);
+  if (!outputText) throw new Error("Groq no devolvió texto.");
+  return parseStructuredReply(outputText);
+}
+
+async function requestResponsesReply(params: {
+  provider: Extract<AssistantProvider, { kind: "responses" }>;
+  messages: AssistantAiMessage[];
+  pathname: string;
+  isAuthenticated: boolean;
+  context: AssistantAccountContext | null;
+  signal: AbortSignal;
+}): Promise<StructuredReply> {
+  const response = await fetch(params.provider.endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${params.provider.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    signal: params.signal,
+    cache: "no-store",
+    body: JSON.stringify({
+      model: params.provider.model,
+      store: false,
+      reasoning: { effort: "low" },
+      instructions: buildInstructions(params),
+      input: params.messages.map((message) => ({
+        role: message.role,
+        content: message.text,
+      })),
+      max_output_tokens: 700,
+      text: {
+        verbosity: "low",
+        format: {
+          type: "json_schema",
+          name: "ledgera_assistant_reply",
+          description: "Respuesta segura y estructurada del chatbot IA de LEDGERA.",
+          strict: true,
+          schema: RESPONSE_SCHEMA,
+        },
+      },
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    console.error("[assistant-ai] provider request failed", {
+      status: response.status,
+      code: providerErrorCode(payload),
+    });
+    throw new Error("El proveedor IA no respondió correctamente.");
+  }
+
+  const outputText = extractOutputText(payload);
+  if (!outputText) throw new Error("El proveedor IA no devolvió texto.");
+  return parseStructuredReply(outputText);
 }
 
 export async function generateAssistantAiReply(params: {
@@ -256,53 +431,49 @@ export async function generateAssistantAiReply(params: {
   const timeout = setTimeout(() => controller.abort(), 25_000);
 
   try {
-    const response = await fetch(provider.endpoint, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${provider.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      signal: controller.signal,
-      cache: "no-store",
-      body: JSON.stringify({
-        model: provider.model,
-        store: false,
-        reasoning: { effort: "low" },
-        instructions: buildInstructions(params),
-        input: params.messages.map((message) => ({
-          role: message.role,
-          content: message.text,
-        })),
-        max_output_tokens: 700,
-        text: {
-          verbosity: "low",
-          format: {
-            type: "json_schema",
-            name: "ledgera_assistant_reply",
-            description: "Respuesta segura y estructurada del chatbot IA de LEDGERA.",
-            strict: true,
-            schema: RESPONSE_SCHEMA,
-          },
-        },
-      }),
-    });
+    let structured: StructuredReply;
+    let model = provider.model;
 
-    const payload = (await response.json().catch(() => null)) as unknown;
-    if (!response.ok) {
-      const providerCode =
-        payload && typeof payload === "object" && "error" in payload
-          ? (payload as { error?: { code?: unknown } }).error?.code
-          : null;
-      console.error("[assistant-ai] provider request failed", {
-        status: response.status,
-        code: typeof providerCode === "string" ? providerCode : null,
+    if (provider.kind === "groq") {
+      try {
+        structured = await requestGroqReply({
+          provider,
+          model: provider.model,
+          strictSchema: false,
+          messages: params.messages,
+          pathname: params.pathname,
+          isAuthenticated: params.isAuthenticated,
+          context: params.context,
+          signal: controller.signal,
+        });
+      } catch (primaryError) {
+        if (provider.fallbackModel === provider.model) throw primaryError;
+        console.warn("[assistant-ai] Qwen unavailable; using Groq structured fallback", {
+          primaryModel: provider.model,
+          fallbackModel: provider.fallbackModel,
+        });
+        model = provider.fallbackModel;
+        structured = await requestGroqReply({
+          provider,
+          model: provider.fallbackModel,
+          strictSchema: true,
+          messages: params.messages,
+          pathname: params.pathname,
+          isAuthenticated: params.isAuthenticated,
+          context: params.context,
+          signal: controller.signal,
+        });
+      }
+    } else {
+      structured = await requestResponsesReply({
+        provider,
+        messages: params.messages,
+        pathname: params.pathname,
+        isAuthenticated: params.isAuthenticated,
+        context: params.context,
+        signal: controller.signal,
       });
-      throw new Error("El proveedor IA no respondió correctamente.");
     }
-
-    const outputText = extractOutputText(payload);
-    if (!outputText) throw new Error("El proveedor IA no devolvió texto.");
-    const structured = parseStructuredReply(outputText);
 
     return {
       text: structured.answer,
@@ -310,7 +481,7 @@ export async function generateAssistantAiReply(params: {
       meta: params.context
         ? "Respuesta de IA basada en la conversación y el estado actual de tu cuenta"
         : "Respuesta generada por el chatbot IA de LEDGERA",
-      model: provider.model,
+      model,
     };
   } finally {
     clearTimeout(timeout);
